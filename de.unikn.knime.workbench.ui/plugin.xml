@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+     <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            name="Hades Data Analysis Workbench"
+            icon="icons/perspective.png"
+            class="de.unikn.knime.workbench.ui.perspective.ModellerPerspectiveFactory"
+            id="de.unikn.knime.workbench.ui.ModellerPerspective">
+         <description>
+            Hades Data Analysis Workbench
+         </description>
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
+         <view
+               ratio="0.2"
+               relative="org.eclipse.ui.editorss"
+               relationship="left"
+               id="org.eclipse.ui.views.ResourceNavigator">
+         </view>
+         <view
+               ratio="0.4"
+               showTitle="true"
+               relative="org.eclipse.ui.views.ResourceNavigator"
+               closeable="false"
+               visible="true"
+               relationship="bottom"
+               id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
+         </view>
+         <view
+               relative="de.unikn.knime.workbench.repository.views.repository.RepositoryView"
+               relationship="bottom"
+               id="org.eclipse.ui.views.ContentOutline">
+         </view>
+         <view
+               closeable="false"
+               visible="true"
+               ratio="0.7"
+               relationship="bottom"
+               relative="org.eclipse.ui.editorss"
+               id="org.eclipse.ui.console.ConsoleView"/>
+         <view
+               closeable="false"
+               relationship="stack"
+               relative="org.eclipse.ui.console.ConsoleView"
+               id="org.eclipse.ui.views.ProgressView"/>
+         <view
+               closeable="true"
+               id="de.unikn.knime.workbench.helpview"
+               moveable="true"
+               ratio="1.0"
+               relationship="right"
+               relative="org.eclipse.ui.editorss"/>
+      </perspectiveExtension>
+      <perspectiveExtension
+            targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
+         <viewShortcut
+               id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
+         </viewShortcut>
+         <viewShortcut id="org.eclipse.ui.views.ResourceNavigator"/>
+         <viewShortcut id="org.eclipse.ui.console.ConsoleView"/>
+         <viewShortcut id="org.eclipse.ui.views.ProgressView"/>
+         <viewShortcut
+               id="org.eclipse.ui.views.ContentOutline">
+         </viewShortcut>
+         <viewShortcut id="de.unikn.knime.workbench.helpview"/>
+         <viewShortcut
+               id="org.eclipse.pde.runtime.LogView">
+         </viewShortcut>
+      </perspectiveExtension>
+      <perspectiveExtension
+            targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
+         <perspectiveShortcut
+               id="org.eclipse.jdt.ui.JavaPerspective">
+         </perspectiveShortcut>
+         <perspectiveShortcut
+               id="org.eclipse.pde.ui.PDEPerspective">
+         </perspectiveShortcut>
+         <newWizardShortcut
+               id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard">
+         </newWizardShortcut>
+         <newWizardShortcut
+               id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard">
+         </newWizardShortcut>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <primaryWizard
+            id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard">
+      </primaryWizard>
+      <primaryWizard id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"/>
+      <category
+            name="Hades Workbench"
+            id="de.unikn.knime.workbench.ui.wizards.category">
+      </category>
+      <wizard
+            name="New Hades Project"
+            id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard"
+            category="de.unikn.knime.workbench.ui.wizards.category"
+            class="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard"
+            descriptionImage="icons/projectWizard32x32.png"
+            icon="icons/projectWizard16x16.png"
+            finalPerspective="de.unikn.knime.workbench.ui.ModellerPerspective"
+            project="true"
+            preferredPerspectives="de.unikn.knime.workbench.ui.ModellerPerspective">
+         <description>
+            This wizard creates a new Hades project that can contain several Workflows.
+         </description>
+      </wizard>
+      <wizard
+            name="New Hades Workflow"
+            id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"
+            category="de.unikn.knime.workbench.ui.wizards.category"
+            class="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"
+            descriptionImage="icons/workflowWizard32x32.png"
+            icon="icons/workflowWizard16x16.png"
+            finalPerspective="de.unikn.knime.workbench.ui.ModellerPerspective"
+            project="false"
+            preferredPerspectives="de.unikn.knime.workbench.ui.ModellerPerspective">
+         <description>
+            This wizard creates a new Hades workflow file (*.hflow) inside a given project.
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.eclipse.ui.internal.dialogs.EmptyPreferencePage"
+            id="de.unikn.knime.workbench.ui.preferences"
+            name="Hades"/>
+      <page
+            category="de.unikn.knime.workbench.ui.preferences"
+            class="de.unikn.knime.workbench.ui.preferences.MainPreferencePage"
+            id="de.unikn.knime.workbench.ui.preferences.workbench"
+            name="General">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="de.unikn.knime.workbench.ui.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         id="HadesProjectBuilder"
+         name="HadesProjectBuilder"
+         point="org.eclipse.core.resources.builders">
+      <builder>
+         <run
+               class="de.unikn.knime.workbench.ui.builder.HadesProjectBuilder">
+         </run>
+      </builder>
+   </extension>
+   <extension
+         id="HadesProjectNature"
+         name="Hades project nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="de.unikn.knime.workbench.ui.nature.HadesProjectNature">
+         </run>
+      </runtime>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="de.unikn.knime.workbench.ui.category"
+            name="Hades Views"/>
+      <view
+            allowMultiple="true"
+            category="de.unikn.knime.workbench.ui.category"
+            class="de.unikn.knime.workbench.ui.views.EmbeddedNodeView"
+            icon="icons/knime.png"
+            id="de.unikn.knime.workbench.ui.views.EmbeddedNodeView"
+            name="Node View"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="de.unikn.knime.workbench.ui.actionSet1"
+            label="de.unikn.knime.workbench.ui.actionSet1"
+            visible="true">
+         <menu
+               id="de.unikn.knime.workbench.ui.menu1"
+               label="View2"/>
+      </actionSet>
+   </extension>
+
+</plugin>

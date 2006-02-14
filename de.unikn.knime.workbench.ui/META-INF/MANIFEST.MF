@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-Name: Hades Workbench UI
+Bundle-SymbolicName: de.unikn.knime.workbench.ui; singleton=true
+Bundle-Version: 0.3.0
+Bundle-ClassPath: workbench-ui.jar
+Bundle-Activator: de.unikn.knime.workbench.ui.HadesUIPlugin
+Bundle-Vendor: ALTANA Chair for Applied Computer Science
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.core.resources,
+ org.eclipse.ui.ide,
+ de.unikn.knime.workbench.core,
+ de.unikn.knime.base,
+ de.unikn.knime.workbench.repository
+Eclipse-AutoStart: true
+Provide-Package: de.unikn.knime.workbench.ui,
+ de.unikn.knime.workbench.ui.preferences,
+ de.unikn.knime.workbench.ui.views,
+ de.unikn.knime.workbench.ui.wizards.file,
+ de.unikn.knime.workbench.ui.wizards.project,
+ de.unikn.knime.workbench.ui.wrapper
