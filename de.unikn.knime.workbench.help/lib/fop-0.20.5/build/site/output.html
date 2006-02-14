@@ -1,0 +1,743 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>FOP Output Options</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">Output Targets</font></span>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>FOP Output Options</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="output.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<p>
+<font size="-2">by&nbsp;Keiron Liddle,&nbsp;Art Welch</font>
+</p>
+<ul class="minitoc">
+<li>
+<a href="#general">General Information</a>
+<ul class="minitoc">
+<li>
+<a href="#general-fonts">Fonts</a>
+</li>
+<li>
+<a href="#general-direct-output">Output to a Printer or Other Device</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#pdf">PDF</a>
+<ul class="minitoc">
+<li>
+<a href="#pdf-fonts">Fonts</a>
+</li>
+<li>
+<a href="#pdf-postprocess">Post-processing</a>
+</li>
+<li>
+<a href="#pdf-watermark">Watermarks</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#pcl">PCL</a>
+<ul class="minitoc">
+<li>
+<a href="#pcl-limitations">Limitations</a>
+</li>
+<li>
+<a href="#pcl-additional">Additional Features</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#ps">PostScript</a>
+<ul class="minitoc">
+<li>
+<a href="#ps-limitations">Limitations</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#rtf">RTF</a>
+</li>
+<li>
+<a href="#svg">SVG</a>
+</li>
+<li>
+<a href="#xml">XML</a>
+</li>
+<li>
+<a href="#print">Print</a>
+</li>
+<li>
+<a href="#awt">AWT</a>
+</li>
+<li>
+<a href="#mif">MIF</a>
+</li>
+<li>
+<a href="#txt">TXT</a>
+</li>
+</ul>
+    
+<p>
+FOP supports multiple output formats by using a different renderer for each format.
+The renderers do not all have the same set of capabilities, sometimes because of the output format itself, sometimes because some renderers get more development attention than others.
+    </p>
+
+<a name="N101CD"></a><a name="general"></a>
+<h3>General Information</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N101D3"></a><a name="general-fonts"></a>
+<h4>Fonts</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+Most FOP renderers use a FOP-specific system for font registration.
+However, the AWT and print renderers use the java awt package, which gets its font information from the operating system registration.
+This can result in several differences, including actually using different fonts, and having different font metrics for the same font.
+The net effect is that the layout of a given FO document can be quite different between renderers that do not use the same font information.
+    </p>
+</div>
+<a name="N101DD"></a><a name="general-direct-output"></a>
+<h4>Output to a Printer or Other Device</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The most obvious way to print your document is to use the FOP <a href="#print">print renderer</a>, which uses the Java API (AWT).
+However, you can also send output from the Postscript renderer directly to a Postscript device, or output from the PCL renderer directly to a PCL device.
+    </p>
+<p>
+Here are Windows command-line examples for Postscript and PCL:
+    </p>
+<pre class="code">fop ... -ps \\computername\printer</pre>
+<pre class="code">fop ... -pcl \\computername\printer</pre>
+<p>
+Here is some Java code to accomplish the task in UNIX:
+    </p>
+<pre class="code">proc = Runtime.getRuntime().exec("lp -d" + print_queue + " -o -dp -");
+out = proc.getOutputStream();</pre>
+<p>
+Set the OutputStream (out) to the PCLRenderer and it happily sends the
+PCL to the UNIX printer queue.
+    </p>
+</div>
+</div>
+
+<a name="N10201"></a><a name="pdf"></a>
+<h3>PDF</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+PDF is the best supported output format. It is also the most accurate
+with text and layout. This creates a PDF document that is streamed out
+as each page is rendered. This means that the internal page index
+information is stored near the end of the document.
+The PDF version supported is 1.3 which is currently the most popular
+version for Acrobat Reader (4.0), PDF versions are forwards/backwards
+compatible.
+  </p>
+<p>Note that FOP does not currently support "tagged pdf".</p>
+<a name="N1020D"></a><a name="pdf-fonts"></a>
+<h4>Fonts</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      PDF has a set of fonts that are always available to all PDF viewers,
+      to quote from the PDF Specification:
+
+<em>"PDF prescribes a set of 14 standard fonts that can be used without prior
+definition.
+These include four faces each of three Latin text typefaces (Courier,
+Helvetica, and Times), as well as two symbolic fonts (Symbol and ITC Zapf
+Dingbats). These fonts, or suitable substitute fonts with the same metrics, are
+guaranteed to be available in all PDF viewer applications."</em>
+    
+</p>
+</div>
+<a name="N1021A"></a><a name="pdf-postprocess"></a>
+<h4>Post-processing</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP does not currently support several desirable PDF features: document properties (title, author, etc.), and watermarks. One workaround is to use Adobe Acrobat (the full version, not the Reader) to process the file manually or with scripting that it supports.</p>
+<p>Another popular post-processing tool is <a href="http://www.lowagie.com/iText">iText</a>, which has tools for adding security features, document properties, watermarks, and many other features to PDF files.
+    </p>
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">Caveat: iText swallows PDF bookmarks.</div>
+</div>
+<p>Here is some sample code that uses iText to encrypt a FOP-generated PDF. (Note that FOP now supports <a href="pdfencryption.html">PDF encryption</a>. However the principles for using iText for other PDF features are similar.)</p>
+<pre class="code">public static void main(String args[]) {
+  try {
+    ByteArrayOutputStream fopout=new ByteArrayOutputStream();
+    FileOutputStream outfile=new FileOutputStream(args[2]);
+    Driver driver =new Driver();
+    driver.setOutputStream(fopout);
+    driver.setRenderer(Driver.RENDER_PDF);
+    Transformer transformer=TransformerFactory
+      .newInstance().newTransformer(new StreamSource(new File(args[1])));
+    transformer.transform(new StreamSource(new File(args[0])),
+       new SAXResult(driver.getContentHandler()));
+    PdfReader reader = new PdfReader(fopout.toByteArray());
+    int n = reader.getNumberOfPages();
+    Document document = new Document(reader.getPageSizeWithRotation(1));
+    PdfWriter writer = PdfWriter.getInstance(document, outfile);
+    writer.setEncryption(PdfWriter.STRENGTH40BITS, "pdf", null,
+      PdfWriter.AllowCopy);
+    document.open();
+    PdfContentByte cb = writer.getDirectContent();
+    PdfImportedPage page;
+    int rotation;
+    int i = 0;
+    while (i &lt; n) {
+      i++;
+      document.setPageSize(reader.getPageSizeWithRotation(i));
+      document.newPage();
+      page = writer.getImportedPage(reader, i);
+      rotation = reader.getPageRotation(i);
+      if (rotation == 90 || rotation == 270) {
+        cb.addTemplate(page, 0, -1f, 1f, 0, 0,
+         reader.getPageSizeWithRotation(i).height());  }
+      else {
+        cb.addTemplate(page, 1f, 0, 0, 1f, 0, 0);
+      }
+      System.out.println("Processed page " + i);
+    }
+    document.close();
+  }
+  catch( Exception e) {
+    e.printStackTrace();
+  }
+}</pre>
+<p>Check the iText tutorial and documentation for setting access flags, password, encryption strength and other parameters.
+    </p>
+</div>
+<a name="N1023C"></a><a name="pdf-watermark"></a>
+<h4>Watermarks</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      In addition to the <a href="#pdf-postprocess">PDF Post-processing</a> options, consider the following workarounds:
+    </p>
+<ul>
+      
+<li>
+        Use a background image for the body region.
+      </li>
+      
+<li>
+        (submitted by Trevor_Campbell@kaz.com.au) Place an image in a
+        region that overlaps the flowing text. For example, make
+        region-before large enough to contain your image. Then include a
+        block (if necessary, use an absolutely positioned block-container)
+        containing the watermark image in the static-content for the
+        region-before. Note that the image will be drawn on top of the
+        normal content.
+      </li>
+    
+</ul>
+</div>
+</div>
+
+<a name="N10254"></a><a name="pcl"></a>
+<h3>PCL</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This format is for the Hewlett-Packard PCL printers.
+It should produce output as close to identical as possible to the
+printed output of the PDFRenderer within the limitations of the
+renderer, and output device.
+    </p>
+<p>
+The output created by the PCLRenderer is generic PCL 5 as documented
+in the "HP PCL 5 Printer Language Technical Reference Manual" (copyright 1990).
+This should allow any device fully supporting PCL 5 to be able to
+print the output generated by the PCLRenderer.
+    </p>
+<a name="N10260"></a><a name="pcl-limitations"></a>
+<h4>Limitations</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+        
+<li>Text or graphics outside the left or top of the printable area are not rendered properly. In general things that should print to the left of the printable area are shifted to the right so that they start at the left edge of the printable area and an error message is generated.</li>
+        
+<li>The Helvetica and Times fonts are not well supported among PCL printers so Helvetica is mapped to Arial and Times is mapped to Times New. This is done in the PCLRenderer, no changes are required in the FO's. The metrics and appearance for Helvetica/Arial and Times/Times New are nearly identical, so this has not been a problem so far.</li>
+        
+<li>Only the original fonts built into FOP are supported.</li>
+        
+<li>For the non-symbol fonts, the ISO 8859/1 symbol set is used (PCL set "0N").</li>
+        
+<li>Multibyte characters are not supported.</li>
+        
+<li>SVG support is limited. Currently only lines, rectangles (may be rounded), circles, ellipses, text, simple paths, and images are supported. Colors are supported (dithered black and white) but not gradients.</li>
+        
+<li>Images print black and white only (not dithered). When the renderer prints a color image it uses a threshold value, colors above the threshold are printed as white and below are black. If you need to print a non-monochrome image you should dither it first.</li>
+        
+<li>Image scaling is accomplished by modifying the effective resolution of the image data. The available resolutions are 75, 100, 150, 300, and 600 DPI.</li>
+        
+<li>Color printing is not supported. Colors are rendered by mapping the color intensity to one of the PCL fill sknime (from white to black in 9 steps).</li>
+        
+<li>SVG clipping is not supported.</li>
+      
+</ul>
+</div>
+<a name="N10288"></a><a name="pcl-additional"></a>
+<h4>Additional Features</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>There are some special features that are controlled by some public variables on the PCLRenderer class.</p>
+<dl>
+        
+<dt>orientation</dt>
+        
+<dd>The logical page orientation is controlled by the public orientation variable. Legal values are:
+          <!--ul>
+            <li>0 Portrait</li>
+            <li>1 Landscape</li>
+            <li>2 Reverse Portrait</li>
+            <li>3 Reverse Landscape</li>
+          </ul-->
+        </dd>
+        
+<dt>curdiv, paperheight</dt>
+        
+<dd>The curdiv and paperheight variables allow multiple virtual pages to be printed on a piece of paper. This allows a standard laser printer to use perforated paper where every perforation will represent an individual page. The paperheight sets the height of a piece of paper in decipoints. This will be divided by the page.getHeight() to determine the number of equal sized divisions (pages) that will fit on the paper. The curdiv variable may be read/written to get/set the current division on the page (to set the starting division and read the ending division for multiple invocations).</dd>
+        
+<dt>topmargin, leftmargin</dt>
+        
+<dd>The topmargin and leftmargin may be used to increase the top and left margins for printing.</dd>
+      
+</dl>
+</div>
+</div>
+
+<a name="N102AA"></a><a name="ps"></a>
+<h3>PostScript</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The PostScript renderer is still in its early stages and therefore still
+missing some features. It provides good support for most text and layout.
+Images and SVG are not fully supported, yet. Currently, the PostScript
+renderer generates PostScript Level 3 with most DSC comments. Actually,
+the only Level 3 feature used is FlateDecode, everthing else is Level 2.
+    </p>
+<a name="N102B3"></a><a name="ps-limitations"></a>
+<h4>Limitations</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+        
+<li>Images and SVG may not be display correctly. SVG support is far from being complete. No image transparency is available.</li>
+        
+<li>Character spacing may be wrong.</li>
+        
+<li>No font embedding is supported.</li>
+        
+<li>Multibyte characters are not supported.</li>
+        
+<li>PPD support is still missing.</li>
+        
+<li>The renderer is not yet configurable.</li>
+      
+</ul>
+</div>
+</div>
+
+<a name="N102D0"></a><a name="rtf"></a>
+<h3>RTF</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This is currently not integrated with FOP but it will soon.
+This will create an rtf (rich text format) document that will
+attempt to contain as much information from the fo document as
+possible.
+    </p>
+</div>
+
+<a name="N102DA"></a><a name="svg"></a>
+<h3>SVG</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This format creates an SVG document that has links between the pages.
+This is primarily for slides and creating svg images of pages.
+Large documents will create SVG files that are far too large for
+and SVG viewer to handle. Since fo documents usually have text the
+SVG document will have a large number of text elements.
+The font information for the text is obtained from the jvm in the
+same way as the AWT viewer, if the svg is view where the fonts are
+different, such as another platform, then the page will appear wrong.
+    </p>
+</div>
+
+<a name="N102E4"></a><a name="xml"></a>
+<h3>XML</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This is for testing and verification. The XML created is simply
+a representation of the internal area tree put into XML. It does
+not perform any other purpose.
+    </p>
+</div>
+
+<a name="N102EE"></a><a name="print"></a>
+<h3>Print</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+It is possible to directly print the document from the command line.
+This is done with the same code that renders to the AWT renderer.
+    </p>
+</div>
+
+<a name="N102F8"></a><a name="awt"></a>
+<h3>AWT</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The AWT viewer shows a window with the pages displayed inside a
+java graphic. It displays one page at a time.
+The fonts used for the formatting and viewing depend on the fonts
+available to your JRE.
+    </p>
+</div>
+
+<a name="N10302"></a><a name="mif"></a>
+<h3>MIF</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This format is the Maker Interchange Format which is used by
+Adobe Framemaker. This is currently not fully implemented.
+    </p>
+</div>
+
+<a name="N1030C"></a><a name="txt"></a>
+<h3>TXT</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The text renderer produces plain ASCII text output
+that attempts to match the output of the PDFRenderer as closely as
+possible. This was originally developed to accommodate an archive system
+that could only accept plain text files, and is primarily useful for getting
+a quick-and-dirty view of the document text. The renderer is very limited,
+so do not be surprised if it gives unsatisfactory results.
+    </p>
+<p>
+The Text renderer works with a fixed size page buffer. The size of this
+buffer is controlled with the textCPI and textLPI public variables.
+The textCPI is the effective horizontal characters per inch to use.
+The textLPI is the vertical lines per inch to use. From these values
+and the page width and height the size of the buffer is calculated.
+The formatting objects to be rendered are then mapped to this grid.
+Graphic elements (lines, borders, etc) are assigned a lower priority
+than text, so text will overwrite any graphic element representations.
+    </p>
+<p>Because FOP lays the text onto a grid during layout, there are frequently extra or missing spaces between characters and lines, which is generally unsatisfactory.
+Users have reported that the optimal settings to avoid such spacing problems are:</p>
+<ul>
+      
+<li>font-family="Courier"</li>
+      
+<li>font-size="7.3pt"</li>
+      
+<li>line-height="10.5pt"</li>
+    
+</ul>
+</div>
+
+    
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

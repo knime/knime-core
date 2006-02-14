@@ -1,0 +1,26 @@
+<?xml version="1.0"?> 
+<s1 title="About Saxon Applets">
+  <s2 title="Transforming XML to HTML in an Applet">
+    <ol> 
+      <li>
+        <p>Include
+        com.icl.saxon.XSLTProcessorApplet
+        in an HTML client.</p>
+      </li>
+      <li>
+        <p>Specify the XML source document and XSL
+        stylesheet.</p>
+        <p>You can use the DocumentURL and StyleURL PARAM tags 
+        or the setDocumentURL() and setStyleURL() methods. 
+        If the XML document contains a stylesheet Processing
+        Instruction (PI), you do not need to specify an XSL
+        stylesheet.</p>
+      </li>
+      <li>
+        <p>Call the getHtmlText() method, which performs
+        the transformation and returns the new document as a
+        String.</p>
+      </li>
+    </ol>
+  </s2>
+</s1>

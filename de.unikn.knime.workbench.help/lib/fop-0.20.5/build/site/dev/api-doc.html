@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>FOP API Documentation (javadocs)</title>
+<link type="text/css" href="../skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="../skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="../skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="../images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="../images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="../skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="../skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="../skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="../index.html"><font face="Arial, Helvetica, Sans-serif">Home</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Development</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Introduction</font>
+<ul>
+      
+<li>
+<a href="index.html">Basics</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Design</font>
+<ul>
+      
+      
+<li>
+<a href="http://xml.apache.org/fop/design/index.html">Resolved</a>
+</li>      
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/wiki/apachewiki.cgi?FOPProjectPages">Unresolved (Wiki)</a>
+</li>
+      
+<li>
+<a href="svg.html">SVG</a>
+</li>
+      
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+      
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Develop</font>
+<ul>
+      
+<li>
+<span class="sel"><font color="#ffcc00">API Doc</font></span>
+</li>
+      
+<li>
+<a href="implement.html">Walk-Thru</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=%5BPATCH%5D&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&namedcmd=Fop+all&newqueryname=fop+patch+queue&tofooter=1&order=Reuse+same+sort+as+last+time">Patch queue</a>
+</li>
+      
+<li>
+<a href="conventions.html">Conventions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Test</font>
+<ul>
+      
+<li>
+<a href="testing.html">Testing</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Deploy</font>
+<ul>
+      
+<li>
+<a href="doc.html">Doc Mgmt</a>
+</li>
+      
+<li>
+<a href="release.html">Release</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&order=bugs.component">Bugs</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+      
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+      
+<li>
+<a href="tools.html">Tools</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://cvs.apache.org/viewcvs.cgi/xml-fop">ViewCVS</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">SubPackages</font>
+<ul>
+      
+<li>
+<a href="rtflib.html">RTFlib</a>
+</li>
+    
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>FOP API Documentation (javadocs)</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="api-doc.pdf"><img alt="printer" src="../skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<li>
+<a href="#gump">On-line Access (through Gump)</a>
+</li>
+<li>
+<a href="#self-built">Building them Yourself</a>
+</li>
+</ul>
+    
+<a name="N101BE"></a><a name="gump"></a>
+<h3>On-line Access (through Gump)</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP (and many other Apache projects) use <a href="http://jakarta.apache.org/gump">Apache Gump</a> to do a test build several times each day. One of the useful byproducts of this process is that javadocs can be created and made available.</p>
+<p>First, determine which line of development code you wish to see. If you don't know, you probably want the "Maintenance Branch", which is the line that currently produces FOP releases. See <a href="index.html#lines">Development Lines</a> for more details.</p>
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">Javadocs for both development lines are made from current CVS code, and are not tied to any particular release. Both the documentation and the API may be different, even if you are working with the correct branch. Currently, the only way to obtain API documentation for a specific release is to <a href="#self-built">build it yourself</a>.</div>
+</div>
+<ul>
+        
+<li>
+<a href="http://nagoya.apache.org/gump/javadoc/xml-fop-maintenance/build/javadocs/index.html">Javadocs for Maintenance Branch</a>
+</li>
+        
+<li>
+<a href="http://nagoya.apache.org/gump/javadoc/xml-fop/build/javadocs/index.html">Javadocs for Trunk (Redesign)</a>
+</li>
+      
+</ul>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">If the links return an "Object not found!" message or otherwise do not work properly, it is probably because of a build error. Please raise a question on the <a href="../maillist.html#fop-user">fop-user mailing list</a> so that any problems can be fixed before the next build.</div>
+</div>
+</div>
+    
+<a name="N101EE"></a><a name="self-built"></a>
+<h3>Building them Yourself</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>See <a href="../download.html#source">Source Download</a> for instructions on obtaining the source code. Then see <a href="../compiling.html">Building FOP</a> for instructions on running the build process. The Ant build target that you will use to generate the API documentation is "javadocs", and the results will be stored in xml-fop/build/javadocs.</p>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="../skin/images/spacer.gif"><a href="../skin/images/label.gif"></a><a href="../skin/images/page.gif"></a><a href="../skin/images/chapter.gif"></a><a href="../skin/images/chapter_open.gif"></a><a href="../skin/images/current.gif"></a><a href="..//favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

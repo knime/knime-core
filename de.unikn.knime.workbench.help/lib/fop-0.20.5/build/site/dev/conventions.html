@@ -1,0 +1,536 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>FOP Development: Coding Conventions</title>
+<link type="text/css" href="../skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="../skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="../skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="../images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="../images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="../skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="../skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="../skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="../index.html"><font face="Arial, Helvetica, Sans-serif">Home</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Development</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Introduction</font>
+<ul>
+      
+<li>
+<a href="index.html">Basics</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Design</font>
+<ul>
+      
+      
+<li>
+<a href="http://xml.apache.org/fop/design/index.html">Resolved</a>
+</li>      
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/wiki/apachewiki.cgi?FOPProjectPages">Unresolved (Wiki)</a>
+</li>
+      
+<li>
+<a href="svg.html">SVG</a>
+</li>
+      
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+      
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Develop</font>
+<ul>
+      
+<li>
+<a href="api-doc.html">API Doc</a>
+</li>
+      
+<li>
+<a href="implement.html">Walk-Thru</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=%5BPATCH%5D&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&namedcmd=Fop+all&newqueryname=fop+patch+queue&tofooter=1&order=Reuse+same+sort+as+last+time">Patch queue</a>
+</li>
+      
+<li>
+<span class="sel"><font color="#ffcc00">Conventions</font></span>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Test</font>
+<ul>
+      
+<li>
+<a href="testing.html">Testing</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Deploy</font>
+<ul>
+      
+<li>
+<a href="doc.html">Doc Mgmt</a>
+</li>
+      
+<li>
+<a href="release.html">Release</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&order=bugs.component">Bugs</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+      
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+      
+<li>
+<a href="tools.html">Tools</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://cvs.apache.org/viewcvs.cgi/xml-fop">ViewCVS</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">SubPackages</font>
+<ul>
+      
+<li>
+<a href="rtflib.html">RTFlib</a>
+</li>
+    
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>FOP Development: Coding Conventions</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="conventions.pdf"><img alt="printer" src="../skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<li>
+<a href="#cvs">CVS Repository</a>
+</li>
+<li>
+<a href="#java">Java</a>
+<ul class="minitoc">
+<li>
+<a href="#java-style">Java Style</a>
+</li>
+<li>
+<a href="#java-checkstyle">Checkstyle</a>
+</li>
+<li>
+<a href="#java-best-practices">Java Best Practices</a>
+</li>
+<li>
+<a href="#java-resources">Resources</a>
+</li>
+<li>
+<a href="#java-links">Related Links</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#xml">XML</a>
+</li>
+</ul>
+    
+<p>Acknowledgement: Some content in this guide was adapted from other Apache projects such as Avalon, Cactus, Turbine and Velocity.</p>
+    
+<a name="N101C1"></a><a name="cvs"></a>
+<h3>CVS Repository</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>Conventions in this section apply to Repository content, regardless of type:</p>
+<ul>
+        
+<li>Files checked in must conform to the code conventions for that type of file (java files must conform to java requirements, xml to xml requirements, etc.). If a submitted patch does not conform, it is the responsibility of the committer to bring it into conformance before checking it in. Developers submitting patches are encouraged to follow the code conventions to reduce the work load on the the committers.</li>
+        
+<li>To reduce the amount of spurious deltas, all text (non-binary) files checked into CVS must have Unix-style line endings (LF only). Many IDEs and editors (even on non-Unix platforms) have settings that can facilitate this convention.</li>
+      
+</ul>
+</div>
+    
+<a name="N101D4"></a><a name="java"></a>
+<h3>Java</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N101DA"></a><a name="java-style"></a>
+<h4>Java Style</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>In order to facilitate the human reading of FOP source code, the FOP developers have agreed on a set of coding conventions.
+The basis of these coding conventions is documented in the <a href="http://xml.apache.org/source.html">Apache XML Project Guidelines</a>, which requires that <strong>all Java Language source code in the repository must be written in conformance to Sun's</strong> <a href="http://java.sun.com/docs/codeconv/html/CodeConvTOC.doc.html">Code Conventions for the Java Programming Language</a>.
+In addition, the FOP developers have agreed to other conventions, which are summarized in the following table:</p>
+<table class="ForrestTable" cellspacing="1" cellpadding="4">
+          
+<tr>
+            
+<th colspan="1" rowspan="1">Convention</th>
+            <th colspan="1" rowspan="1">Rationale</th>
+            <th colspan="1" rowspan="1">Enforced By</th>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Every Java source file starts with the Apache licence header.</td>
+            <td colspan="1" rowspan="1">Required by Apache.</td>
+            <td colspan="1" rowspan="1">checkstyle</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">No tabs in content</td>
+            <td colspan="1" rowspan="1">Programmers should not have to adjust the tab settings in their editor to be able to read the source code.</td>
+            <td colspan="1" rowspan="1">checkstyle</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Indentation of 4 spaces per level</td>
+            <td colspan="1" rowspan="1">Maximize readability.</td>
+            <td colspan="1" rowspan="1">Not enforced</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Comments must be in English</td>
+            <td colspan="1" rowspan="1">To avoid the need for everyone to learn all languages, English has become the standard language for many technology projects, and is the only human language that all FOP developers are expected to know.</td>
+            <td colspan="1" rowspan="1">Not enforced</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Fully qualify all import statements (no "import java.util.*")</td>
+            <td colspan="1" rowspan="1">Clarity</td>
+            <td colspan="1" rowspan="1">checkstyle</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">No underscores in variable names except for static finals.</td>
+            <td colspan="1" rowspan="1">Upper/lower case distinctions can be made in all other variable names, eliminating the need for artificial word boundaries.</td>
+            <td colspan="1" rowspan="1">checkstyle</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Opening brace for a block should be on the same line as its control statement (if, while, etc.).</td>
+            <td colspan="1" rowspan="1">Standardization, general preference.</td>
+            <td colspan="1" rowspan="1">checkstyle</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Write appropriate javadoc entries for all public and protected classes, methods, and variables.</td>
+            <td colspan="1" rowspan="1">Basic API documentation is needed.</td>
+            <td colspan="1" rowspan="1">checkstyle</td>
+          
+</tr>
+        
+</table>
+<p>For developers that dislike these conventions, one workaround is to develop using their own style, then use a formatting tool like <a href="http://astyle.sourceforge.net/">astyle</a> (Artistic Style) before committing.</p>
+</div>
+<a name="N1029B"></a><a name="java-checkstyle"></a>
+<h4>Checkstyle</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>The java syntax checker "<a target="_top" href="http://checkstyle.sourceforge.net">Checkstyle</a>" is used to enforce many of the FOP coding standards.
+The standards enforced through Checkstyle are documented in its configuration file (xml-fop/checkstyle.cfg).
+The conventions defined in the configuration file are an integral part of FOP's coding conventions, and should not be changed without common consent.
+In other words, the configuration file contains additional conventions that are not documented on this page, but are generally accepted as good style within the java community (i.e. they are the default behavior of checkstyle, which the FOP developers have decided to adopt <em>de facto</em>).
+Any apparent contradiction between the configuration file and this document should be raised on the fop-dev mailing list so that it can be clarified.</p>
+<p>To use the "checkstyle" target in FOP's build process, download the source from the <a target="_top" href="http://checkstyle.sourceforge.net">Checkstyle web site</a>, place checkstyle-all-*.jar in the lib directory and call "build checkstyle". Output (in the build directory) includes checkstyle_report.txt and checkstyle_report.xml. If you copy the file contrib/checkstyle-noframes.xsl from Checkstyle into FOP's root directory, you will also get an HTML report.</p>
+<p>Checkstyle is probably most useful when integrated into your IDE. See the Checkstyle web site for more information about IDE plugins.</p>
+</div>
+<a name="N102B6"></a><a name="java-best-practices"></a>
+<h4>Java Best Practices</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>The following general principles are a distillation of best practice expectations on the FOP project.</p>
+<ul>
+          
+<li>Apply common sense when coding. When coding keep in mind that others will read your code and have to understand it.</li>
+          
+<li>Readability comes before performance, at least initially.</li>
+          
+<li>If you can refactor some code to make it more understandable, please do so.</li>
+          
+<li>Properly document code, especially where it's important.</li>
+          
+<li>Use interfaces instead of implementations where possible.
+This favors a clearer design and makes switching between implementations easier (Examples: List instead of ArrayList/Vector, Map instead of HashMap/Hashtable).</li>
+
+
+          
+<li>Avoid using exceptions for flow control.</li>
+          
+<li>Try to catch exceptions as much as possible and rethrow higher level exceptions (meaning hiding the low level detailed and putting a message that is more related to the function of your code).</li> 
+          
+<li>It is important not to lose the stack trace which contains important information.
+Use chained exception for that. Avalon Framework provides <a target="_top" href="http://jakarta.apache.org/avalon/api/org/apache/avalon/framework/CascadingException.htm">CascadingException</a> (and similar) for this.
+Exception class names and stack traces must be treated like gold.
+Do whatever is required so that this information is not lost.
+Printing error messages to System.err or System.out is useless in a server-side environment where this info is usually lost.</li>
+          
+<li>Always log the exception at the higher level (i.e. where it is handled and not rethrown).</li> 
+          
+<li>Try to avoid catching Throwable or Exception and catch specific exceptions instead.</li>
+        
+</ul>
+</div>
+<a name="N102E5"></a><a name="java-resources"></a>
+<h4>Resources</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+          
+<li>[book on code style] Code Complete by Steve McConnell.</li>
+          
+<li>[code formatting software] <a target="_top" href="http://jrefactory.sourceforge.net">JRefactory</a>.</li>
+        
+</ul>
+</div>
+<a name="N102F9"></a><a name="java-links"></a>
+<h4>Related Links</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+          
+<li>
+<a target="_top" href="http://xml.apache.org/source.html">Apache Source Repositories</a>
+</li>
+          
+<li>
+<a target="_top" href="http://jakarta.apache.org/site/faqs.html#Coding%20Conventions%20and%20Standards">Jakarta Code Conventions and Standards</a> (see Coding Conventions and Standards section)</li>
+          
+<li>
+<a target="_top" href="http://jakarta.apache.org/avalon/code-standards.html">Avalon Project - Coding Standards</a>
+</li>
+        
+</ul>
+</div>
+</div>
+    
+<a name="N10314"></a><a name="xml"></a>
+<h3>XML</h3>
+<div style="margin-left: 0 ; border: 2px">
+<table class="ForrestTable" cellspacing="1" cellpadding="4">
+        
+<tr>
+          
+<th colspan="1" rowspan="1">Convention</th>
+          <th colspan="1" rowspan="1">Rationale</th>
+          <th colspan="1" rowspan="1">Enforced By</th>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">XML files must always be well-formed. Validation is optional.</td>
+          <td colspan="1" rowspan="1">Document integrity</td>
+          <td colspan="1" rowspan="1">Not enforced</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">No tabs in content.</td>
+          <td colspan="1" rowspan="1">Users should not have to adjust tab settings in their editor to be able to read the content.</td>
+          <td colspan="1" rowspan="1">Not enforced</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">Indentation of 2 spaces per level</td>
+          <td colspan="1" rowspan="1">Maximize readability</td>
+          <td colspan="1" rowspan="1">Not enforced</td>
+        
+</tr>
+      
+</table>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="../skin/images/spacer.gif"><a href="../skin/images/label.gif"></a><a href="../skin/images/page.gif"></a><a href="../skin/images/chapter.gif"></a><a href="../skin/images/chapter_open.gif"></a><a href="../skin/images/current.gif"></a><a href="..//favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

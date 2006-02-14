@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>Apache XML Commons Resolver Tools package</title>
+</head>
+<body>
+<p>Apache XML Commons Resolver Tools package.</p>
+
+<p>This package implements several tool classes for catalog-based
+entity resolution:</p>
+
+<dl>
+<dt><code>org.apache.xml.resolver.tools.CatalogResolver</code></dt>
+<dd>This class provides a SAX EntityResolver and a JAXP URIResolver.
+</dd>
+
+<dt><code>org.apache.xml.resolver.tools.ResolvingXMLReader</code></dt>
+<dd>This class provides a SAX2 XMLReader with catalog support.
+The parser uses a CatalogResolver to provide entity resolution.
+</dd>
+
+<dt><code>org.apache.xml.resolver.tools.ResolvingParser</code></dt>
+<dd>This class provides a SAX1 Parser with catalog support.
+The parser uses a CatalogResolver to provide entity resolution.
+</dd>
+</dl>
+
+<p>Typically, these classes can be used in other applications. For example,
+running the <a href="http://saxon.sourceforge.net/">Saxon</a>
+XSLT processor with the arguments:</p>
+
+<pre>
+    -x org.apache.xml.resolver.tools.ResolvingXMLReader
+    -y org.apache.xml.resolver.tools.ResolvingXMLReader
+    -r org.apache.xml.resolver.tools.CatalogResolver
+</pre>
+
+<p>will provide catalog-based entity resolution for all of the entities
+and stylesheets that you use. (The CatalogResolver can only be used
+with Saxon 6.1 or later.)</p>
+
+<h2>Requirements</h2>
+
+<p>In order to use these classes, you must have the JAXP 1.1 jar files
+in your <tt>CLASSPATH</tt>.</p>
+
+</body>
+</html>

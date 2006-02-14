@@ -1,0 +1,32 @@
+FOP readme
+
+    What is FOP?
+    FOP is the world's first print formatter driven by XSL formatting
+    objects. It is a Java application that reads a formatting object
+    tree conforming to the XSL-FO Version 1.0 W3C Recommendation and 
+    then turns it into a PDF document or allows you to preview it 
+    directly on screen. 
+    
+    FOP is part of Apache's XML project. The homepage of FOP is 
+    http:/xml.apache.org/fop 
+
+    HTML-Documentation can be found in the subdirectory build/site 
+
+    The names of the committers of this project and what the developers are working on
+    can be found in the file STATUS in root.
+
+    A list of all changes to the source can be found in the file CHANGES
+
+    Please report bugs to bugzilla at http://nagoya.apache.org/bugzilla/
+
+    Discussion of Fop takes place in fop-dev@xml.apache.org (subscribe at 
+    fop-dev-subscribe@xml.apache.org)
+    User questions should be sent to fop-user@xml.apache.org
+    Archives are available at: http://marc.theaimsgroup.com
+
+    Before you post any questions, please have a look at the FAQ at 
+    build/site/faq.html
+    (or http://xml.apache.org/fop/faq.html for latest version)
+    Another FAQ is available at: http://www.owal.co.uk/cgi-bin/fopfaq.cgi
+
+

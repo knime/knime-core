@@ -1,0 +1,429 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Implementation Overview</title>
+<link type="text/css" href="../skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="../skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="../skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="../images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="../images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="../skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="../skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="../skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="../index.html"><font face="Arial, Helvetica, Sans-serif">Home</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Development</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Introduction</font>
+<ul>
+      
+<li>
+<a href="index.html">Basics</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Design</font>
+<ul>
+      
+      
+<li>
+<a href="http://xml.apache.org/fop/design/index.html">Resolved</a>
+</li>      
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/wiki/apachewiki.cgi?FOPProjectPages">Unresolved (Wiki)</a>
+</li>
+      
+<li>
+<a href="svg.html">SVG</a>
+</li>
+      
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+      
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Develop</font>
+<ul>
+      
+<li>
+<a href="api-doc.html">API Doc</a>
+</li>
+      
+<li>
+<span class="sel"><font color="#ffcc00">Walk-Thru</font></span>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=%5BPATCH%5D&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&namedcmd=Fop+all&newqueryname=fop+patch+queue&tofooter=1&order=Reuse+same+sort+as+last+time">Patch queue</a>
+</li>
+      
+<li>
+<a href="conventions.html">Conventions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Test</font>
+<ul>
+      
+<li>
+<a href="testing.html">Testing</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Deploy</font>
+<ul>
+      
+<li>
+<a href="doc.html">Doc Mgmt</a>
+</li>
+      
+<li>
+<a href="release.html">Release</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&order=bugs.component">Bugs</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+      
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+      
+<li>
+<a href="tools.html">Tools</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://cvs.apache.org/viewcvs.cgi/xml-fop">ViewCVS</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">SubPackages</font>
+<ul>
+      
+<li>
+<a href="rtflib.html">RTFlib</a>
+</li>
+    
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>Implementation Overview</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="implement.pdf"><img alt="printer" src="../skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<h3>Following a Document Through FOP</h3>
+<p>
+<font size="-2">by&nbsp;Arved Sandstrom</font>
+</p>
+<ul class="minitoc">
+<li>
+<a href="#Overview">Overview</a>
+</li>
+<li>
+<a href="#Startup">Startup</a>
+</li>
+<li>
+<a href="#Formatting+Object+Tree">Formatting Object Tree</a>
+</li>
+<li>
+<a href="#Layout">Layout</a>
+</li>
+<li>
+<a href="#Area+Tree">Area Tree</a>
+</li>
+<li>
+<a href="#Rendering">Rendering</a>
+</li>
+</ul>
+    
+<p>The purpose of this document is to tie together the FOP design (interface) with some of the key points where control is passed within FOP (implementation), so that developers can quickly find the section of code that is relevant to their needs. The process described is for a "typical" command-line document. All classes are in org.apache.fop unless otherwise designated.</p>
+    
+<a name="N101CB"></a><a name="Overview"></a>
+<h3>Overview</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>The input FO document is sent to the FO tree builder via SAX events. Fragments of an FO Tree are built from this process. As each page-sequence element is completed, it is passed to a layout processor, which in turn converts it into an Area Tree. The Area Tree is then given to the Renderer, which converts it into a stream of data containing the output document. The sections below will provide additional details. Where needed differences between the trunk and maintenance branches are shown in tabular format.</p>
+</div>
+    
+<a name="N101D5"></a><a name="Startup"></a>
+<h3>Startup</h3>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+        
+<li>The job starts in <em>apps.Fop.main()</em>.</li>
+        
+<li>Control is passed to <em>apps.CommandLineStarter.run()</em>.</li>
+        
+<li>Control is passed to <em>apps.Driver.render()</em>. This class fires up a SAX parser, the events from which indirectly control the remaining processing, including building the FO Tree, building the Area Tree, rendering, output and logging.</li>
+      
+</ul>
+</div>
+    
+<a name="N101F1"></a><a name="Formatting+Object+Tree"></a>
+<h3>Formatting Object Tree</h3>
+<div style="margin-left: 0 ; border: 2px">
+<table class="ForrestTable" cellspacing="1" cellpadding="4">
+        
+<tr>
+          
+<th colspan="1" rowspan="1">Trunk</th><th colspan="1" rowspan="1">Maintenance</th>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="2" rowspan="1">The SAX events that the parser creates are handled by <em>fo.FOTreeBuilder</em>, which uses <span class="codefrag">startElement()</span>, <span class="codefrag">endElement()</span>, and <span class="codefrag">characters()</span> methods to build the FO Tree.</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><span class="codefrag">fo.FOTreeBuilder.endElement()</span> runs the <span class="codefrag">end()</span> method for each node as it is created. The <em>fo.pagination.PageSequence</em> class overrides this <span class="codefrag">end()</span> method to run <span class="codefrag">apps.LayoutHandler.endPageSequence()</span>, which in turn runs <span class="codefrag">fo.pagination.PageSequence.format()</span>.</td>
+          <td colspan="1" rowspan="1">the end of a PageSequence element causes the PageSequence object to be passed to <span class="codefrag">apps.StreamRenderer.render()</span>, which in turn runs <span class="codefrag">fo.pagination.PageSequence.format()</span>.</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><span class="codefrag">fo.pagination.PageSequence.format()</span> creates a <em>layoutmgr.PageLayoutManager</em>, passing the AreaTree and PageSequence objects to it, then calls its <span class="codefrag">run()</span> method.</td>
+          <td colspan="1" rowspan="1"><span class="codefrag">fo.pagination.PageSequence.addFlow()</span> programatically adds a Flow object to the page sequence.</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">.</td>
+          <td colspan="1" rowspan="1"><span class="codefrag">fo.pagination.PageSequence.makePage()</span> creates a BodyArea and passes it to <em>fo.Flow.layout</em></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">.</td>
+          <td colspan="1" rowspan="1">the layout process is then driven from <span class="codefrag">fo.pagination.PageSequence.format()</span>.</td>
+        
+</tr>
+      
+</table>
+</div>
+    
+<a name="N10277"></a><a name="Layout"></a>
+<h3>Layout</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>There are layout managers for each type of layout decision.
+They take an FO Tree as input and build a laid-out Area Tree from it.
+The layout process involves finding out where line breaks and page breaks should be made, then creating the areas on the page.
+Static areas can then be added for any static regions.
+As pages are completed, they are added to the Area Tree.</p>
+</div>
+    
+<a name="N10281"></a><a name="Area+Tree"></a>
+<h3>Area Tree</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>The area tree is a data structure designed to hold the page areas.
+These pages are then filled with the page regions and various areas.
+The area tree is used primarily as a minimal structure that can be rendered
+by the renderers.</p>
+<p>The area tree is supported by an area tree model. This model
+handles the adding of pages to the area tree. It also handles
+page sequence starts, document level extensions, id references
+and unresolved id areas. This model allows the pages to be handled
+directly by a renderer or to store the pages for later use.
+</p>
+</div>
+    
+<a name="N1028E"></a><a name="Rendering"></a>
+<h3>Rendering</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The renderer receives pages from the area tree and renders those pages.
+If a renderer supports out of order rendering then it will either
+render or prepare a page in the correct order. Otherwise the
+pages are rendered in order.
+The task of the renderer is to take the pages and output them to
+the requested type.
+In the case of the AWTRenderer it needs to be able to view any page.
+</p>
+<p>
+When rendering a page it takes the page and renders each page region.
+The main work for a renderer implementation is to handle the viewports
+and inline areas. The inline areas need to be drawn on the page in the
+correct place.
+</p>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="../skin/images/spacer.gif"><a href="../skin/images/label.gif"></a><a href="../skin/images/page.gif"></a><a href="../skin/images/chapter.gif"></a><a href="../skin/images/chapter_open.gif"></a><a href="../skin/images/current.gif"></a><a href="..//favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

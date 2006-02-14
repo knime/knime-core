@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<g>
+
+<a xlink:href="#svgView(viewBox(110,110,80,80))">
+<rect x="10" y="10" width="80" height="80" style="fill:darkred;stroke:black;stroke-width:3"/>
+<text x="15" y="60" style="font-size:18;fill:green">GREEN</text>
+</a>
+
+<a xlink:href="http://xml.apache.org/fop/">
+<rect x="110" y="10" width="80" height="80" style="fill:lightblue;stroke:black;stroke-width:3"/>
+<text x="130" y="60" style="font-size:18;fill:blue">FOP</text>
+</a>
+
+<a xlink:href="images.svg#svgView(viewBox(0,0,200,200))">
+<rect x="10" y="110" width="80" height="80" style="fill:yellow;stroke:black;stroke-width:3"/>
+<text x="20" y="150" style="font-size:14;fill:purple">Another</text>
+<text x="35" y="165" style="font-size:14;fill:purple">file</text>
+</a>
+
+<a xlink:href="#svgView(viewBox(10,10,80,80))">
+<rect x="110" y="110" width="80" height="80" style="fill:darkgreen;stroke:black;stroke-width:3"/>
+<text x="130" y="160" style="font-size:18;fill:red">RED</text>
+</a>
+
+</g>
+
+</svg>
+

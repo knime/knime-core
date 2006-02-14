@@ -1,0 +1,17 @@
+FOP Embedding Examples Readme
+
+This directory contains several examples on using FOP in Java.
+
+To compile the examples you can use the build.bat/build.sh scripts.
+You can also directly run the individual examples with these scripts.
+Just call
+
+Windows: build -projecthelp
+Unix:    ./build.sh -projecthelp
+
+for a listing of all available examples.
+
+
+
+Please go to the page indicated below to find more information:
+http://xml.apache.org/fop/embedding.html

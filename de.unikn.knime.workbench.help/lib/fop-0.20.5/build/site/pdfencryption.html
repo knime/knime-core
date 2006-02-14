@@ -1,0 +1,554 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>PDF encryption.</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">PDF encryption</font></span>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>PDF encryption.</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="pdfencryption.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<p>
+<font size="-2">by&nbsp;J.Pietschmann,&nbsp;Jeremias M&auml;rki</font>
+</p>
+<ul class="minitoc">
+<li>
+<a href="#Overview">Overview</a>
+</li>
+<li>
+<a href="#Usage+%28command+line%29">Usage (command line)</a>
+</li>
+<li>
+<a href="#Usage+%28embedded%29">Usage (embedded)</a>
+</li>
+<li>
+<a href="#Environment">Environment</a>
+</li>
+<li>
+<a href="#install_crypto">Installing a crypto provider</a>
+</li>
+</ul>
+    
+<a name="N101C9"></a><a name="Overview"></a>
+<h3>Overview</h3>
+<div style="margin-left: 0 ; border: 2px">
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">PDF Encryption is available in Release 0.20.5 and later. The comments on this page do not apply to releases earlier than 0.20.5.</div>
+</div>
+<p>
+        FOP supports encryption of PDF output, thanks to Patrick
+        C. Lankswert. This feature is commonly used to prevent
+        unauthorized viewing, printing, editing, copying text from the
+        document and doing annotations. It is also possible to ask the
+        user for a password in order to view the contents. Note that
+        there already exist third party applications which can decrypt
+        an encrypted PDF without effort and allow the aforementioned
+        operations, therefore the degree of protection is limited.
+      </p>
+<p>
+        For further information about features and restrictions regarding PDF
+        encryption, look at the documentation coming with Adobe Acrobat or the
+        technical documentation on the Adobe web site.
+      </p>
+</div>
+    
+<a name="N101D9"></a><a name="Usage+%28command+line%29"></a>
+<h3>Usage (command line)</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        Encryption is enabled by supplying any of the encryption related
+        options.
+      </p>
+<p>
+        An owner password is set with the <span class="codefrag">-o</span> option. This
+        password is actually used as encryption key. Many tools for
+        PDF processing ask for this password to disregard any
+        restriction imposed on the PDF document.
+      </p>
+<p>
+        If no owner password has been supplied but FOP was asked to apply some
+        restrictions, a random password is used. In this case it is obviously
+        impossiible to disregard restrictions in PDF processing tools.
+      </p>
+<p>
+        A user password, supplied with the <span class="codefrag">-u</span> option, will
+        cause the PDF display software to ask the reader for this password in
+        order to view the contents of the document. If no user password was
+        supplied, viewing the content is not restricted.
+      </p>
+<p>
+        Further restrictions can be imposed by using the <span class="codefrag">-noprint</span>,
+        <span class="codefrag">-nocopy</span>, <span class="codefrag">-noedit</span> and
+        <span class="codefrag">-noannotations</span> options, which disable printing, copying
+        text, editing in Adobe Acrobat and making annotations, respectively.
+      </p>
+</div>
+    
+<a name="N10201"></a><a name="Usage+%28embedded%29"></a>
+<h3>Usage (embedded)</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        When FOP is embedded in another Java application you need to set an 
+        options map on the renderer. These are the supported options:
+      </p>
+<table class="ForrestTable" cellspacing="1" cellpadding="4">
+        
+<tr>
+          
+<th colspan="1" rowspan="1">Option</th>
+          <th colspan="1" rowspan="1">Description</th>
+          <th colspan="1" rowspan="1">Values</th>
+          <th colspan="1" rowspan="1">Default</th>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">ownerPassword</td>
+          <td colspan="1" rowspan="1">The owner password</td>
+          <td colspan="1" rowspan="1">String</td>
+          <td colspan="1" rowspan="1"></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">userPassword</td>
+          <td colspan="1" rowspan="1">The user password</td>
+          <td colspan="1" rowspan="1">String</td>
+          <td colspan="1" rowspan="1"></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">allowPrint</td>
+          <td colspan="1" rowspan="1">Allows/disallows printing of the PDF</td>
+          <td colspan="1" rowspan="1">"TRUE" or "FALSE"</td>
+          <td colspan="1" rowspan="1">"TRUE"</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">allowCopyContent</td>
+          <td colspan="1" rowspan="1">Allows/disallows copy/paste of content</td>
+          <td colspan="1" rowspan="1">"TRUE" or "FALSE"</td>
+          <td colspan="1" rowspan="1">"TRUE"</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">allowEditContent</td>
+          <td colspan="1" rowspan="1">Allows/disallows editing of content</td>
+          <td colspan="1" rowspan="1">"TRUE" or "FALSE"</td>
+          <td colspan="1" rowspan="1">"TRUE"</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">allowEditAnnotations</td>
+          <td colspan="1" rowspan="1">Allows/disallows editing of annotations</td>
+          <td colspan="1" rowspan="1">"TRUE" or "FALSE"</td>
+          <td colspan="1" rowspan="1">"TRUE"</td>
+        
+</tr>
+      
+</table>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">
+        Encryption is enabled as soon as one of these options is set.
+      </div>
+</div>
+<p>
+        An example to enable PDF encryption in Java code:
+      </p>
+<pre class="code">
+Driver driver = new Driver();
+driver.setRenderer(Driver.RENDER_PDF);
+Map rendererOptions = new java.util.HashMap();
+rendererOptions.put("ownerPassword", "mypassword");
+rendererOptions.put("allowCopyContent", "FALSE");
+rendererOptions.put("allowEditContent", "FALSE");
+rendererOptions.put("allowPrint", "FALSE");
+driver.getRenderer().setOptions(rendererOptions);
+driver.setOutputStream(...</pre>
+</div>
+    
+<a name="N102B7"></a><a name="Environment"></a>
+<h3>Environment</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        In order to use PDF encryption, FOP has to be compiled with
+        cryptography support. Currently, only <a href="http://java.sun.com/j2se/1.4/docs/guide/security/jce/JCERefGuide.html">JCE</a>
+        is supported. JCE is part of JDK 1.4. For earlier JDKs, it can
+        be installed separately. The build process automatically
+        detects JCE presence and installs PDF encryption support if
+        possible, otherwise a stub is compiled in.
+      </p>
+<p>
+        Cryptography support must also be present at run time. In particular, a
+        provider for the RC4 cipher is needed. Unfortunately, the sample JCE
+        provider in Sun's JDK 1.4 does <strong>not</strong> provide RC4. If you
+        get a message saying
+      </p>
+<pre class="code">"Cannot find any provider supporting RC4"</pre>
+<p>
+        then you don't have the needed infrastructure.
+      </p>
+<p>
+        There are several commercial and a few Open Source packages which
+        provide RC4. A pure Java implementation is produced by <a href="http://www.bouncycastle.org/">The Legion of the Bouncy
+        Castle</a>. <a href="http://www.mozilla.org/projects/security/pki/jss/">Mozilla
+        JSS</a> is an interface to a native implementation.
+      </p>
+</div>
+    
+<a name="N102DD"></a><a name="install_crypto"></a>
+<h3>Installing a crypto provider</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        The pure Java implementation from <a href="http://www.bouncycastle.org/">Bouncy Castle</a> is easy to
+        install.
+      </p>
+<ol>
+        
+<li>
+          Download the binary distribution for your JDK version. If you have JDK
+          1.3 or earlier you must also download a JCE from the same page.
+        </li>
+        
+<li>
+          Unpack the distribution. Add the jar file to your classpath. A
+          convenient way to use the jar on Linux is to simply drop it into the
+          FOP lib directory, it will be automatically picked up by
+          <span class="codefrag">fop.sh</span>.  If you have JDK 1.3 or earlier don't forget to
+          install the JCE as well.
+        </li>
+        
+<li>
+          Open the <span class="codefrag">java.security</span> file and add<br>
+          
+<span class="codefrag">security.provider.6=org.bouncycastle.jce.provider.BouncyCastleProvider</span>,<br>
+          preferably at the end of the block defining the other crypto
+          providers. For JDK 1.4 this is detailed on <a href="http://java.sun.com/j2se/1.4/docs/guide/security/jce/JCERefGuide.html#InstallProvider">Sun's web site</a>.
+        </li>
+      
+</ol>
+<p>
+        If you have any experience with Mozilla JSS or any other
+        cryptography provider, please post it to the fop-user list.
+      </p>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

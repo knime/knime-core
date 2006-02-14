@@ -1,0 +1,176 @@
+<html>
+
+<head>
+<title>XSLT Patterns</title>
+
+<body leftmargin="150" bgcolor="#ddeeff">
+<div align=right><a href="index.html">SAXON home page</a></div>
+
+<h1><font FACE="Arial, Helvetica, sans-serif" color="#FF0080" size="7">XSLT Patterns</font></h1>
+
+
+<hr>
+<font FACE="Arial, Helvetica, sans-serif" SIZE="4">
+
+<table width="723">
+  <tr>
+    <td width="719" bgcolor="#0000FF"><font color="#FFFFFF"><big><b>Contents</b></big></font></td>
+  </tr>
+
+  <tr>
+    <td VALIGN="top"  bgcolor="#00FFFF">
+    <a href="#Introduction">Introduction</a><br>
+    <a href="#Syntax">Pattern syntax</a><br>
+    </td>
+
+  </tr>
+</table>
+
+<h2><font face="Arial, Helvetica, sans-serif" size="4"><a name="Introduction">Introduction</a></font></h2>
+
+<font FACE="Arial, Helvetica, sans-serif" SIZE="3">
+
+<p>This document gives an informal description of the syntax of XSLT patterns.
+For a formal specification, see the XSLT recommendation.</p>
+
+<p>Patterns define a condition that a node may or may not satisfy: a node either matches the
+pattern, or it does not. The syntax of patterns is a subset of that for Nodeset Expressions
+(defined in <a href="expressions.html">expressions.html</a>), and formally, a node matches
+a pattern if it is a member of the node set selected by the corresponding expression, with
+some ancestor of the node acting as the current node for evaluating the expression. For example
+a TITLE node matches the pattern "TITLE" because it is a member of the node set selected by the
+expression "TITLE" when evaluated at the immediate parent node.</p>
+
+<p>XSLT patterns may be used either in an XSLT stylesheet, or as a parameter to various Java
+interfaces in the Saxon API. The syntax is the same in both cases. In the Java interface, patterns are encapsulated
+by the <b>com.icl.saxon.Pattern</b> class, and are created by calling the static method Pattern.make().</p>
+
+<p>In style sheets, patterns are used primarily in the <b>match</b> attribute of the xsl:template element.
+They are also used in the <b>count</b> and <b>from</b> attributes of xsl:number, and the
+<b>match</b> attribute of xsl:key.
+In Java applications, patterns are used when nominating a node handler using Controller.setHandler().
+</p>
+
+
+
+<a name="syntax"><h3>Pattern syntax</h3></a>
+
+<p>Saxon supports the full XSLT syntax for patterns. The rules below describe
+a simplified form of this syntax (for example, it omits the legal but useless pattern
+'@comment()'):</p>
+
+<font face="Courier" size="3">
+<pre>
+pattern          ::= path ( '|' path )*
+path             ::= anchor? remainder? (Note 1)
+
+anchor           ::= '/' | '//' | id | key
+id               ::= 'id' '(' literal ')'
+key              ::= 'key' '(' literal ',' literal ')'
+
+remainder        ::= path-part ( sep path-part )* 
+sep              ::= '/' | '//'
+path-part        ::= node-match predicate+
+node-match       ::= element-match | text-match | attribute-match | pi-match | node-match
+element-match    ::= 'child::'? ( name | '*' ) 
+text-match       ::= 'text' '(' ')' 
+attribute-match  ::= ('attribute::' | '@') ( name | '*' ) 
+pi-match         ::= 'processing-instruction' '(' literal? ')'
+node-match       ::= 'node' '(' ')'
+
+predicate        ::= '[' ( boolean-expression | numeric-expression ) ']'
+</pre></font>
+
+<font FACE="Arial, Helvetica, sans-serif" SIZE="3">
+
+<p>Note 1: not all combinations are allowed.
+ If the anchor is '//' then the remainder is mandatory.</p>
+
+<p>The form of a literal is as defined in expressions; and a predicate is itself a boolean
+ or numeric expression. As with predicates in expressions, a numeric predicate [P] is shorthand
+ for the boolean predicate [position()=P].</p>
+
+<p>Informally, a pattern consists of either a single path or a sequence of paths separated
+ by vertical bars. An element matches the match-pattern if it matches any one of the paths.</p>
+
+<p>A path consists of a sequence of path-parts separated by either "/" or "//".
+ There is an optional separator ("/" or "//") at the start; a "//" has no effect and
+ can be ignored. The last path-part may be an element-match, a text-match, an
+  attribute-match, a pi-match, or a node-match; in practice, a path-part other than the last
+   should be an element-match. </p>
+
+<p>The axis syntax child:: and attribute:: may also be used in patterns, as described in the XSLT
+specification.</p>
+
+
+<p>Examples of patterns:</p>
+
+<table BORDER="1" CELLSPACING="1" CELLPADDING="7" WIDTH="590">
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2"><b>Pattern</b></font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2"><b>Meaning</b></font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">XXX</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any element whose name (tag) is XXX</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2"><b>*</b></font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any element</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">XXX/YYY</i></font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any YYY element 
+    whose parent is an XXX</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">XXX//YYY</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any YYY element that has an ancestor named XXX</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">/*/XXX</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any XXX element that is immediately below
+    the top-level element in the document</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">*[@NAME]</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any element with a NAME attribute</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">SECTION/PARA[1]</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any PARA element that is the first PARA child of
+    a SECTION element</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">SECTION[TITLE="Contents"]</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any SECTION element whose first TITLE child element
+    has the value "Contents"</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">A/TITLE | B/TITLE | C/TITLE</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any TITLE element whose parent is of type A or B or C
+    (Note that this cannot be written "(A|B|C)/TITLE", although that is a valid node-set expression.)</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">/BOOK//*</font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any element in a document provided the top-level element in
+    the document is named "BOOK"</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">A/text() </font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches the character content of an A element</font></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">A/@* </font></td>
+    <td WIDTH="50%" VALIGN="TOP"><font SIZE="2">Matches any attribute of an A element</font></td>
+  </tr>
+</table>
+
+</font>
+
+
+<hr>
+<p align="center"><a HREF="mailto:michael.h.kay@ntlworld.com">Michael H. Kay</a> <br>
+13 April 2000</p>
+</body>
+</html>

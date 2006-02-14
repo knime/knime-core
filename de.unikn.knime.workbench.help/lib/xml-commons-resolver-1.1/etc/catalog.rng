@@ -1,0 +1,235 @@
+<?xml version="1.0"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         ns="urn:oasis:names:tc:entity:xmlns:xml:catalog"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+  <!-- $Id: catalog.rng,v 1.1 2003/04/22 14:53:32 ndw Exp $ -->
+
+  <start>
+    <choice>
+      <ref name="Catalog"/>
+    </choice>
+  </start>
+
+  <define name="pubIdChars">
+    <data type="string">
+      <param name="pattern">[a-zA-Z0-9-'()+,./:=?;!*#@$_%]*</param>
+    </data>
+  </define>
+
+  <define name="publicIdentifier">
+    <ref name="pubIdChars"/>
+  </define>
+
+  <define name="partialPublicIdentifier">
+    <ref name="pubIdChars"/>
+  </define>
+
+  <define name="systemOrPublic">
+    <choice>
+      <value>system</value>
+      <value>public</value>
+    </choice>
+  </define>
+
+  <define name="uriReference">
+    <data type="anyURI"/>
+  </define>
+
+  <define name="OptionalAttributes">
+    <optional>
+      <attribute name="id">
+	<data type="ID"/>
+      </attribute>
+    </optional>
+    <zeroOrMore>
+      <attribute>
+        <anyName>
+          <except>
+            <nsName ns=""/>
+            <nsName/>
+           </except>
+         </anyName>
+      </attribute>
+    </zeroOrMore>
+  </define>
+
+  <define name="PreferAttribute">
+    <attribute name="prefer">
+      <ref name="systemOrPublic"/>
+    </attribute>
+  </define>
+
+  <define name="Catalog">
+    <element name="catalog">
+      <ref name="OptionalAttributes"/>
+      <optional>
+        <ref name="PreferAttribute"/>
+      </optional>
+      <oneOrMore>
+        <choice>
+          <ref name="Group"/>
+          <ref name="Public"/>
+          <ref name="System"/>
+          <ref name="Uri"/>
+          <ref name="RewriteSystem"/>
+          <ref name="RewriteURI"/>
+          <ref name="DelegatePublic"/>
+          <ref name="DelegateSystem"/>
+          <ref name="DelegateURI"/>
+          <ref name="NextCatalog"/>
+          <ref name="AnyOtherElement"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+
+  <define name="Group">
+    <element name="group">
+      <ref name="OptionalAttributes"/>
+      <optional>
+        <ref name="PreferAttribute"/>
+      </optional>
+      <oneOrMore>
+        <choice>
+          <ref name="Public"/>
+          <ref name="System"/>
+          <ref name="Uri"/>
+          <ref name="RewriteSystem"/>
+          <ref name="RewriteURI"/>
+          <ref name="DelegatePublic"/>
+          <ref name="DelegateSystem"/>
+          <ref name="DelegateURI"/>
+          <ref name="NextCatalog"/>
+          <ref name="AnyOtherElement"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+
+  <define name="Public">
+    <element name="public">
+      <attribute name="publicId">
+	<ref name="publicIdentifier"/>
+      </attribute>
+      <attribute name="uri">
+	<ref name="uriReference"/>
+      </attribute>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="System">
+    <element name="system">
+      <attribute name="systemId"/>
+      <attribute name="uri">
+	<ref name="uriReference"/>
+      </attribute>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="Uri">
+    <element name="uri">
+      <attribute name="name"/>
+      <attribute name="uri">
+	<ref name="uriReference"/>
+      </attribute>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="RewriteSystem">
+    <element name="rewriteSystem">
+      <attribute name="systemIdStartString"/>
+      <attribute name="rewritePrefix"/>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="RewriteURI">
+    <element name="rewriteURI">
+      <attribute name="uriStartString"/>
+      <attribute name="rewritePrefix"/>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="DelegatePublic">
+    <element name="delegatePublic">
+      <attribute name="publicIdStartString"/>
+      <attribute name="catalog"/>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="DelegateSystem">
+    <element name="delegateSystem">
+      <attribute name="systemIdStartString"/>
+      <attribute name="catalog"/>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="DelegateURI">
+    <element name="delegateURI">
+      <attribute name="uriStartString"/>
+      <attribute name="catalog"/>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="NextCatalog">
+    <element name="nextCatalog">
+      <attribute name="catalog"/>
+      <ref name="OptionalAttributes"/>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="AnyOtherElement">
+    <choice>
+      <element>
+        <anyName>
+          <except>
+            <nsName ns=""/>
+            <nsName/>
+          </except>
+        </anyName>
+        <zeroOrMore>
+          <attribute>
+            <anyName/>
+          </attribute>
+        </zeroOrMore>
+        <ref name="AnyContent"/>
+      </element>
+      <text/>
+    </choice>
+  </define>
+
+  <define name="AnyContent">
+    <mixed>
+      <zeroOrMore>
+        <element>
+          <anyName/>
+          <zeroOrMore>
+            <attribute>
+              <anyName/>
+            </attribute>
+          </zeroOrMore>
+          <zeroOrMore>
+            <ref name="AnyContent"/>
+          </zeroOrMore>
+        </element>
+      </zeroOrMore>
+    </mixed>
+  </define>
+</grammar>

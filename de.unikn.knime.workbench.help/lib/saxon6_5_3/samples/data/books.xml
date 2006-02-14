@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../styles/books.xsl"?>
+<!DOCTYPE BOOKLIST SYSTEM "books.dtd">
+<BOOKLIST>
+<BOOKS>
+	<ITEM CAT="S">
+    	<TITLE>Number, the Language of Science</TITLE>
+    	<AUTHOR>Danzig</AUTHOR>
+    	<PRICE>5.95</PRICE>
+    	<QUANTITY>3</QUANTITY>
+	</ITEM>
+	<ITEM CAT="F">
+		<TITLE>Tales of Grandpa Cat</TITLE>
+		<PUBLISHER>Associated Press</PUBLISHER>
+		<AUTHOR>Wardlaw, Lee</AUTHOR>
+		<PRICE>6.58</PRICE>
+		<QUANTITY>5</QUANTITY>
+	</ITEM>
+	<ITEM CAT="S">
+		<TITLE>Language &amp; the Science of Number</TITLE>
+		<AUTHOR>Danzig</AUTHOR>
+		<PRICE>8.95</PRICE>
+		<QUANTITY>5</QUANTITY>
+	</ITEM>
+	<ITEM CAT="S">
+		<TITLE>Evolution of Complexity in Animal Culture</TITLE>
+		<AUTHOR>Bonner</AUTHOR>
+		<PRICE>5.95</PRICE>
+		<QUANTITY>2</QUANTITY>
+	</ITEM>
+	<ITEM CAT="X">
+		<TITLE>Patterns of Crime in Animal Culture</TITLE>
+		<AUTHOR>Bonner</AUTHOR>
+		<PRICE>15.95</PRICE>
+		<QUANTITY>0</QUANTITY>
+	</ITEM>
+
+	<ITEM CAT="F" TAX="7.5">
+		<TITLE>When We Were Very Young</TITLE>
+		<AUTHOR>Milne, A. A.</AUTHOR>
+		<PRICE>12.50</PRICE>
+		<QUANTITY>1</QUANTITY>
+	</ITEM>
+	<ITEM CAT="C">
+		<TITLE>Learn Java Now</TITLE>
+		<AUTHOR>Stephen R. Davis</AUTHOR>
+		<PUBLISHER>Microsoft Corporation</PUBLISHER>
+		<PRICE>9.95</PRICE>
+		<QUANTITY>12</QUANTITY>
+	</ITEM>
+	<ITEM CAT="U" TAX="12.5">
+		<TITLE>Design Patterns</TITLE>
+		<AUTHOR>Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides</AUTHOR>
+		<PUBLISHER>Addison Wesley</PUBLISHER>
+		<PRICE>49.95</PRICE>
+		<QUANTITY>2</QUANTITY>
+	</ITEM>
+	<?testpi1 here is a message ?>
+	<?testpi2 here is a message ?>
+</BOOKS>
+<CATEGORIES DESC="Miscellaneous categories">
+A list of categories
+	<CATEGORY CODE="S" DESC="Science"/>
+	<CATEGORY CODE="I" DESC="Science" NOTE="Limited Stock"/>
+	<CATEGORY CODE="C" DESC="Computing"/>
+	<CATEGORY CODE="X" DESC="Crime"/>
+	<CATEGORY CODE="F" DESC="Fiction"/>
+</CATEGORIES>
+</BOOKLIST>

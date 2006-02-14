@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-Name: Hades Workbench Help
+Bundle-SymbolicName: de.unikn.knime.workbench.help; singleton=true
+Bundle-Version: 0.3.0
+Bundle-ClassPath: workbench-help.jar
+Bundle-Activator: de.unikn.knime.workbench.help.HadesHelpPlugin
+Bundle-Vendor: ALTANA Chair for Applied Computer Science
+Bundle-Localization: plugin
+Provide-Package: de.unikn.knime.workbench.help
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.help,
+ org.eclipse.help.base,
+ org.eclipse.ui,
+ org.eclipse.ui.intro,
+ de.unikn.knime.workbench.ui
+Eclipse-AutoStart: true

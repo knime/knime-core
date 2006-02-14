@@ -1,0 +1,400 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>FOP: Hyphenation</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">Hyphenation</font></span>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>FOP: Hyphenation</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="hyphenation.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<li>
+<a href="#intro">Introduction</a>
+</li>
+<li>
+<a href="#license-issues">License Issues</a>
+</li>
+<li>
+<a href="#sources">Sources of Hyphenation Pattern Files</a>
+</li>
+<li>
+<a href="#install">Installing Custom Hyphenation Patterns</a>
+</li>
+</ul>
+    
+<a name="N101BE"></a><a name="intro"></a>
+<h3>Introduction</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP uses an XML-based TeX-like hyphenation pattern scheme.
+Hyphenation pattern files for many languages are included in the standard FOP distribution.
+However, because of <a href="#license-issues">licensing issues</a>, there are currently some significant holes in FOP's hyphenation support.
+The information on this page is intended to help you work around these limitations, if possible, add support for other languages, or enhance FOP's support of current languages.</p>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">If you have access to hyphenation patterns that are licensed in an Apache-compatible way, or if you have made improvements to an existing FOP hyphenation pattern, or if you have created one from scratch, please consider contributing these to FOP so that they can benefit other FOP users as well. Please inquire on the <a href="maillist.html#fop-user">FOP User mailing list</a>.</div>
+</div>
+</div>
+    
+<a name="N101D3"></a><a name="license-issues"></a>
+<h3>License Issues</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>Many of the hyphenation files distributed with TeX and its offspring are licenced under the <a target="_blank" href="http://www.latex-project.org/lppl.html">LaTeX Project Public License (LPPL)</a>, which prevents them from being distributed with Apache software.
+Although Apache FOP cannot redistribute hyphenation pattern files that do not conform with its license scheme, that does not necessarily prevent users from using such hyphenation patterns with FOP.
+However, it does place on the user the responsibility for determining whether the user can rightly use such hyphenation patterns under the hyphenation pattern license.</p>
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">The user is responsible to settle license issues for hyphenation pattern files that are obtained from non-Apache sources.</div>
+</div>
+</div>
+    
+<a name="N101E4"></a><a name="sources"></a>
+<h3>Sources of Hyphenation Pattern Files</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>The most important source of hyphenation pattern files is the <a target="_blank" href="http://www.ctan.org/tex-archive/language/hyphenation/">CTAN TeX Archive</a>.</p>
+</div>
+    
+<a name="N101F2"></a><a name="install"></a>
+<h3>Installing Custom Hyphenation Patterns</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>To install custom a custom hyphenation pattern for use with FOP:</p>
+<ol>
+        
+<li>Convert the TeX hyphenation pattern file to the FOP format. The FOP format is an xml file conforming to the DTD found at <span class="codefrag">{fop-dir}/src/hyph/hyphenation.dtd</span>.</li>
+        
+<li>Name this new file following this schema: <span class="codefrag">languageCode_countryCode.xml</span>.
+The country code is optional, and should be used only if needed. For example:
+          <ul>
+            
+<li>
+<span class="codefrag">en_US.xml</span> would be the file name for an American English hyphenation pattern.</li>
+            
+<li>
+<span class="codefrag">it.xml</span> would be the file name for an Italian hyphenation pattern.</li>
+          
+</ul>
+The language and country codes must match the XSL-FO input, which follows <a href="http://www.ics.uci.edu/pub/ietf/http/related/iso639.txt">ISO 639</a> (languages) and
+<a href="http://www.ics.uci.edu/pub/ietf/http/related/iso3166.txt">ISO 3166</a> (countries).
+NOTE: The ISO 639/ISO 3166 convention is that language names are written in lower case, while country codes are written in upper case.</li>
+        
+<li>There are two ways to make the FOP-compatible hyphenation pattern file accessible to FOP:
+          <ul>
+            
+<li>Place the FOP-compatible hyphenation pattern file into the directory {fop-dir}/src/hyph and rebuild FOP. The file will be picked up and added to fop.jar.</li>
+            
+<li>Put the file into a directory of your choice and configure FOP to look for custom patterns in this directory, by setting the <a href="configuration.html#hyphenation-dir">&lt;hyphenation-dir&gt; configuration option</a>.</li>
+          
+</ul>
+        
+</li>
+      
+</ol>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

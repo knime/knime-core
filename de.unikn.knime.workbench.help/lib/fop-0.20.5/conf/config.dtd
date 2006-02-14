@@ -1,0 +1,6 @@
+<!ELEMENT configuration (entry+)>
+<!ELEMENT entry (key,(value | list))>
+<!ELEMENT key (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT list (value+ | subentry+)>
+<!ELEMENT subentry (key,value+)>

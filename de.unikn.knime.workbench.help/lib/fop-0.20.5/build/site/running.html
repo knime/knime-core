@@ -1,0 +1,561 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Running FOP</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">Run</font></span>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>Running FOP</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="running.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<li>
+<a href="#require">System Requirements</a>
+</li>
+<li>
+<a href="#install">Installation</a>
+<ul class="minitoc">
+<li>
+<a href="#install-instruct">Instructions</a>
+</li>
+<li>
+<a href="#install-problems">Problems</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#standalone-start">Starting FOP as a Standalone Application</a>
+</li>
+<li>
+<a href="#check-input">Using Xalan to Check XSL-FO Input</a>
+</li>
+<li>
+<a href="#memory">Memory Usage</a>
+</li>
+<li>
+<a href="#problems">Problems</a>
+</li>
+</ul>
+    
+<a name="N101BE"></a><a name="require"></a>
+<h3>System Requirements</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>The following software must be installed:</p>
+<ul>
+        
+<li>Java 1.2.x or later Runtime Environment.</li>
+        
+<li>FOP. The <a href="download.html">FOP distribution</a> includes all libraries that you will need to run a basic FOP installation. These can be found in the xml-fop/lib directory. These libraries include the following:
+          <ul>
+            
+<li>
+<a target="_top" href="http://xml.apache.org/xerces-j/index.html">Apache Xerces-J</a> for XML parsing. You can use other XML parsers which support SAX and DOM.</li>
+            
+<li>
+<a target="_top" href="http://xml.apache.org/xalan-j/index.html">Apache Xalan-J</a>, an XSLT processor.</li>
+            
+<li>
+<a target="_top" href="http://xml.apache.org/batik/">Apache Batik</a>, an SVG library.</li>
+          
+</ul>
+        
+</li>
+      
+</ul>
+<p>The following sofware is optional, depending on your needs:</p>
+<ul>
+        
+<li>Graphics libraries. Support for some graphics formats requires additional packages. See <a href="graphics.html">FOP: Graphics Formats</a> for details.</li>
+        
+<li>PDF encryption. See <a href="pdfencryption.html">FOP: PDF Encryption</a> for details.</li>
+      
+</ul>
+<p>In addition, the following system requirements apply:</p>
+<ul>
+        
+<li>If you will be using FOP to process SVG, you must do so in a graphical environment. See <a href="graphics.html#batik">FOP: Graphics (Batik)</a> for details.</li>
+      
+</ul>
+</div>
+    
+<a name="N1020B"></a><a name="install"></a>
+<h3>Installation</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10211"></a><a name="install-instruct"></a>
+<h4>Instructions</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>Basic FOP installation consists of first unzipping the <span class="codefrag">.gz</span> file that is the distribution medium, then unarchiving the resulting <span class="codefrag">.tar</span> file in a directory/folder that is convenient on your system. Please consult your operating system documentation or Zip application software documentation for instructions specific to your site.</p>
+</div>
+<a name="N10221"></a><a name="install-problems"></a>
+<h4>Problems</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>Some Mac OSX users have experienced filename truncation problems using Stuffit to unzip and unarchive their distribution media. This is a legacy of older Mac operating systems, which had a 31-character pathname limit. Several Mac OSX users have recommended that Mac OSX users use the shell command <span class="codefrag">tar -xzf</span> instead.</p>
+</div>
+</div>
+    
+<a name="N1022F"></a><a name="standalone-start"></a>
+<h3>Starting FOP as a Standalone Application</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>The usual and recommended practice for starting FOP from the command line is to run the batch file fop.bat (Windows) or the shell script fop.sh (Unix/Linux).
+If you write your own scripts, be sure to review these standard scripts to make sure that you get your environment properly configured.</p>
+<p>The standard scripts for starting FOP require that the environment variable JAVA_HOME be set to a path pointing to the appropriate Java installation on your system. Macintosh OSX includes a Java environment as part of its distribution. We are told by Mac OSX users that the path to use in this case is <span class="codefrag">/Library/Java/Home</span>. <strong>Caveat: </strong>We suspect that, as Apple releases new Java environments and as FOP upgrades the minimum Java requirements, the two will inevitably not match on some systems. Please see <a target="_top" href="http://developer.apple.com/java/faq">Java on Mac OSX FAQ</a> for information as it becomes available.</p>
+<p>
+<span class="codefrag">fop [options] [-fo|-xml] infile [-xsl file] [-awt|-pdf|-mif|-pcl|-ps|-txt|-svg|-at|-print] &lt;outfile&gt;</span>
+</p>
+<p>[OPTIONS]</p>
+<pre class="code">
+      -d             debug mode
+      -x             dump configuration settings
+      -q             quiet mode
+      -c cfg.xml     use additional configuration file cfg.xml
+      -l lang        the language to use for user information
+      -s             (-at output) omit tree below block areas
+      -txt.encoding  (-txt output encoding use the encoding for the output file.
+                     The encoding must be a valid java encoding.
+      -o [password]  pdf file will be encrypted with option owner password
+      -u [password]  pdf file will be encrypted with option user password
+      -noprint       pdf file will be encrypted without printing permission
+      -nocopy        pdf file will be encrypted without copy content permission
+      -noedit        pdf file will be encrypted without edit content permission
+      -noannotations pdf file will be encrypted without edit annotation permission</pre>
+<p>[INPUT]</p>
+<pre class="code">      infile            XSLFO input file (the same as the next)
+      -fo  infile       xsl:fo input file
+      -xml infile       xml input file, must be used together with -xsl
+      -xsl stylesheet   xslt stylesheet</pre>
+<p>[OUTPUT]</p>
+<pre class="code">      outfile           input will be rendered as pdf file into outfile
+      -pdf outfile      input will be rendered as pdf file (outfile req'd)
+      -awt              input will be displayed on screen
+      -mif outfile      input will be rendered as mif file (outfile req'd)
+      -pcl outfile      input will be rendered as pcl file (outfile req'd)
+      -ps outfile       input will be rendered as PostScript file (outfile req'd)
+      -txt outfile      input will be rendered as text file (outfile req'd)
+      -svg outfile      input will be rendered as an svg slides file (outfile req'd)
+      -at outfile       representation of area tree as XML (outfile req'd)
+      -print            input file will be rendered and sent to the printer
+                        see print specific options with "-print help"</pre>
+<p>[Examples]</p>
+<pre class="code">      fop foo.fo foo.pdf
+      fop -fo foo.fo -pdf foo.pdf (does the same as the previous line)
+      fop -xsl foo.xsl -xml foo.xml -pdf foo.pdf
+      fop foo.fo -mif foo.mif
+      fop foo.fo -print or fop -print foo.fo
+      fop foo.fo -awt</pre>
+<p>PDF encryption is only available if FOP was compiled with encryption support <strong>and</strong> if compatible encryption support is availabe at run time. Currently, only the JCE is supported. Check the <a href="pdfencryption.html">Details</a>.</p>
+</div>
+    
+<a name="N10270"></a><a name="check-input"></a>
+<h3>Using Xalan to Check XSL-FO Input</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP sessions that use -xml and -xsl input instead of -fo input are actually controlling two distinct conversions: Tranforming XML to XSL-FO, then formatting the XSL-FO to PDF (or another FOP output format).
+Although FOP controls both of these processes, the first is included merely as a convenience and for performance reasons.
+Only the second is part of FOP's core processing.
+If a user has a problem running FOP, it is important to determine which of these two processes is causing the problem.
+If the problem is in the first process, the user's stylesheet is likely the cause.
+The FOP development team does not have resources to help with stylesheet issues, although we have included links to some useful <a href="resources.html#specs">Specifications</a> and <a href="resources.html#articles">Books/Articles</a>.
+If the problem is in the second process, FOP may have a bug or an unimplemented feature that does require attention from the FOP development team.</p>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">The user is always responsible to provide correct XSL-FO code to FOP.</div>
+</div>
+<p>In the case of using -xml and -xsl input, although the user is responsible for the XSL-FO code that is FOP's input, it is not visible to the user. To make the intermediate FO file visible, the FOP distribution includes xalan.bat (Windows batch file) and xalan.sh (Unix/Linux script), which run only the first (transformation) step, and write the results to a file.</p>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">When asking for help on the FOP mailing lists, <em>never</em> attach XML and XSL to illustrate the issue. Always run the xalan script and send the resulting XSL-FO file instead. Of course, be sure that the XSL-FO file is correct before sending it.</div>
+</div>
+<p>
+        The scripts are invoked the same way that <a href="http://xml.apache.org/xalan-j/commandline.html">Xalan</a> is:
+      </p>
+<p>
+        
+<span class="codefrag">xalan -in xmlfile -xsl file -out outfile</span>
+      
+</p>
+<p>
+        Note that there are some subtle differences between the "fop" and "xalan" command lines.
+      </p>
+</div>
+    
+<a name="N1029E"></a><a name="memory"></a>
+<h3>Memory Usage</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+FOP can consume quite a bit of memory, even though this has been continually improved.
+This is partly inherent to the formatting process and partly caused by implementation choices.
+All FO processors currently on the market have memory problems with certain layouts.
+      </p>
+<p>
+If you are running out of memory when using FOP, here are some ideas that may help:
+      </p>
+<ul>
+        
+<li>
+Increase memory available to the JVM. See <a href="http://java.sun.com/j2se/1.3/docs/tooldocs/solaris/java.html">the -Xmx option</a> for more information.
+          <!--<warning>-->
+(Warning: It is usually unwise to increase the memory allocated to the JVM beyond the amount of physical RAM, as this will generally cause significantly slower performance.)
+          <!--</warning>-->
+        </li>
+        
+<li>
+Avoid forward references.
+Forward references are references to some later part of a document.
+Examples include page number citations which refer to pages which follow the citation, tables of contents at the beginning of a document, and page numbering schemes that include the total number of pages in the document (<a href="faq.html#pagenum">"page N of TOTAL"</a>).
+Forward references cause all subsequent pages to be held in memory until the reference can be resolved, i.e. until the page with the referenced element is encountered.
+Forward references may be required by the task, but if you are getting a memory overflow, at least consider the possibility of eliminating them.
+A table of contents might be eliminated, relying on PDF bookmarks instead.
+Or it might be moved to the end of the document without dimishing its value very much.
+Or, in some circumstances, the paper could even be reshuffled after printing.
+        </li>
+        
+<li>
+Avoid large images, especially if they are scaled down.
+If they need to be scaled, scale them in another application upstream from FOP.
+For many image formats, memory consumption is driven mainly by the size of the image file itself, not its dimensions (width*height), so increasing the compression rate may help.
+        </li>
+        
+<li>
+Use multiple page sequences.
+FOP starts rendering after the end of a page sequence is encountered.
+While the actual rendering is done page-by-page, some additional memory allocated for other purposes could be freed after the page sequence has been rendered.
+        </li>
+        
+<li>
+Break down large tables.
+If you don't use table headers and footers, just start a new table every N rows.
+With headers and footers, consider integrating them as normal table rows, or, if they are used at page breaks, try to put the information into static content.
+You can then use markers to change them.
+        </li>
+        
+<li>
+Clear the image cache. At the moment, images in the cache are not released automatically when an OutOfMemoryError is imminent.
+Starting with version 0.20.5 however, you can call <span class="codefrag">org.apache.fop.image.FopImageFactory.resetCache()</span> to empty the 
+<a target="_top" href="graphics.html#caching">image cache</a>.
+        </li>
+      
+</ul>
+<p>
+There are currently some bugs which cause FOP to go into a nonterminating loop, which will also often result in a memory overflow.
+A characteristic symptom is continuous <a href="faq.html#boxoverflow">box overflows</a> in the log.
+Most of these loops are triggered by elements that do not fit in the available space, such as big images or an improperly specified width in nested block elements.
+The only workaround is to locate such problems and correct them.
+      </p>
+<p>
+One of FOP's stated design goals is to be able to process input of arbitrary size.
+Addressing this goal is one of the prime motivations behind the <a href="dev/index.html">FOP Redesign</a>.
+      </p>
+</div>
+    
+<a name="N102E1"></a><a name="problems"></a>
+<h3>Problems</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>If you have problems running FOP, please see the <a target="_top" href="gethelp.html">"How to get Help" page</a>.</p>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

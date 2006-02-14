@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+  <fo:layout-master-set>
+    <fo:simple-page-master 
+	margin-right="1.5cm"
+	margin-left="1.5cm"
+	margin-bottom="2cm"
+	margin-top="1cm"
+	page-width="21cm"
+	page-height="17cm"
+	master-name="first">
+      <fo:region-body column-count="3" margin-top="1cm" margin-bottom="1.5cm"/>
+      <fo:region-before extent="1cm"/>
+      <fo:region-after extent="1.5cm"/>
+    </fo:simple-page-master>
+  </fo:layout-master-set>
+  
+  <fo:page-sequence master-reference="first">
+    <fo:static-content flow-name="xsl-region-before">
+      <fo:block line-height="14pt" font-size="10pt" 
+		text-align="end">table examples</fo:block>
+    </fo:static-content>
+    <fo:static-content flow-name="xsl-region-after">
+      <fo:block line-height="14pt" font-size="10pt" 
+		text-align="end">Page <fo:page-number/></fo:block>
+    </fo:static-content>
+    
+    <fo:flow flow-name="xsl-region-body">
+
+      <fo:block space-before.optimum="3pt" space-after.optimum="15pt">
+      Tests for widows and orphans on a table.
+      </fo:block>
+
+      <fo:block space-before.optimum="240pt" space-after.optimum="15pt">
+      Table 1: normal table with widows of 1
+      </fo:block>
+
+    <fo:block widows="1">
+      <fo:table border-width="0.5pt" border-color="red" table-layout="fixed">
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+
+    <fo:table-body>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	</fo:table-body>
+      </fo:table>
+      </fo:block>
+
+      <fo:block space-before.optimum="225pt" space-after.optimum="15pt">
+      Table 2: normal table with widows of 3
+      </fo:block>
+
+    <fo:block widows="3">
+      <fo:table border-width="0.5pt" border-color="red" table-layout="fixed">
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+
+    <fo:table-body>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	</fo:table-body>
+      </fo:table>
+      </fo:block>
+
+      <fo:block break-before="page" space-before.optimum="240pt" space-after.optimum="15pt">
+      Table 3: normal table with orphans of 1
+      </fo:block>
+
+    <fo:block orphans="1">
+      <fo:table border-width="0.5pt" border-color="red" table-layout="fixed">
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+
+    <fo:table-body>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	</fo:table-body>
+      </fo:table>
+      </fo:block>
+
+      <fo:block space-before.optimum="225pt" space-after.optimum="15pt">
+      Table 4: normal table with orphans of 3
+      </fo:block>
+
+    <fo:block orphans="3">
+      <fo:table border-width="0.5pt" border-color="red" table-layout="fixed">
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+
+    <fo:table-body>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	</fo:table-body>
+      </fo:table>
+      </fo:block>
+
+      <fo:block break-before="page" space-before.optimum="240pt" space-after.optimum="15pt">
+      Table 3: normal table with widows 4 orphans of 3
+      </fo:block>
+
+    <fo:block widows="4" orphans="3">
+      <fo:table border-width="0.5pt" border-color="red" table-layout="fixed">
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+
+    <fo:table-body>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	</fo:table-body>
+      </fo:table>
+      </fo:block>
+
+      <fo:block space-before.optimum="180pt" space-after.optimum="15pt">
+      Table 4: normal table with orphans of 4 (and default widows 2)
+      </fo:block>
+
+    <fo:block orphans="4">
+      <fo:table border-width="0.5pt" border-color="red" table-layout="fixed">
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+	<fo:table-column column-width="2cm"/>
+
+    <fo:table-body>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	  <fo:table-row border-width="0.5pt">
+	    <fo:table-cell>
+	      <fo:block text-align="center">A</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">B</fo:block>
+	    </fo:table-cell>
+	    <fo:table-cell>
+	      <fo:block text-align="center">C</fo:block>
+	    </fo:table-cell>
+	  </fo:table-row>
+	</fo:table-body>
+      </fo:table>
+      </fo:block>
+
+    </fo:flow>
+  </fo:page-sequence>
+</fo:root>

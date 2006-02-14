@@ -1,0 +1,40 @@
+This file contains the PGP keys of various developers.
+Please don't use them for email unless you have to. Their main
+purpose is code signing.
+
+Users: pgp < KEYS
+Developers: 
+        pgp -kxa <your name> and append it to this file.
+        (pgpk -ll <your name> && pgpk -xa <your name>) >> this file.
+        (gpg --list-sigs <your name>
+             && gpg --armor --export <your name>) >> this file.
+
+pub  1024D/8408F755 2003-01-20 Christian Geisert <chrisg@apache.org>
+sub  1024g/41D98B12 2003-01-20
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: Weitere Infos: siehe http://www.gnupg.org
+
+mQGiBD4rT6kRBADPozVPJAOKLqcgtnGFHj0Qav5OBPqjTprJji0BgxPrcZLZQFUO
+0AmeJpzwgE0vDISx+DgGOKPcqeCLnSqtoR3rYc5Tf57FPlZ/E2/fzMwC0soYzJ6e
+E9uSsXBIPeeRHcrxyCYJx69g2D/zS2vGnAIr0LYLXhadvChK1zngU0pFswCg5z0a
+TjCH+9VWzerOLaEQYqVyGgMD/i456FFD2lWes8amcN+wpBLSpxysyrbu1FOZ3sVi
+MjYsODDeLKRB1Cxn6UMx7WE+Av+UhtoJkoTsvcGBtkj+rFfEav2WmCsYDvLwbqpE
+P5Pun7qgXbznbzCqdNUavXM0goBQtyFhtGkJSoOVXM6H5raO3THEPXU971gkOC9+
+agZDA/0WdV3VumDwi9DvII58Fv8K5HKxkZrLeUWAYJzgzeroYgfvuNKr/SrAFuyR
+W8XxDMPMAMvO1qKUU1Zjffx6RUjeiptmF4ozLvU3I/Pr6atWJL8SPH6rrk6xDpZ5
+Ev/we0MmRU5kk9Y8KGavAsOjbMbTv77DL2AZ8qapUQYqfuuiR7QlQ2hyaXN0aWFu
+IEdlaXNlcnQgPGNocmlzZ0BhcGFjaGUub3JnPohXBBMRAgAXBQI+K0+pBQsHCgME
+AxUDAgMWAgECF4AACgkQc84u+4QI91W/OwCffMPR+FpADYlte9AabXRuzomhdh4A
+oNvl89kJdg43/nMw5CErpMvMFNjVuQENBD4rT6sQBACr7d7g+yOPuYaFeS9+wXlO
+vz3gVWZNUOPalrJwWPQ2yXxCzEd4chpBDUsq7TusEe/RCSUuSQYe0FAET2der4Uj
+6TJPB7SuJos3hrqsUQOluoEHS8bCPD7mpXIjd1+tQu57jxgcW4/VnEn3/c57blgY
+V2/rpAUE8nDRPB1Z8oveJwAECwQAp0zOTs1ehN4MFzy/3T1xO8HVN7LiaZSc4mEs
+oyIcEcD3iwxJqsVPmJLOfP8fhuqyv4QfG+7gdNBZqji5WTUK2o1vYgnEbvsnGDst
+Lx9kwaWCalGMXdbuEzXoheX2JJCeP8YkPQw/r9rCeP0jLXExU3B6RJkDXBrZB7L3
+Jdj2mxKIRgQYEQIABgUCPitPqwAKCRBzzi77hAj3VeUxAKCJXCs0vrCcfMSO/2M/
+Eq/rMruVPwCg34SJtFP5wtlgHa7kdhBLKoenD7g=
+=+cef
+-----END PGP PUBLIC KEY BLOCK-----
+

@@ -1,0 +1,1198 @@
+<html>
+
+<head>
+  <title>Saxon Extensions</title>
+  <link rel="stylesheet" type="text/css" href="saxon-style.css">
+</head>
+
+<div align=right><a href="index.html">Saxon home page</a></div>
+
+<h1>SAXON Extensions</h1>
+
+
+<p>This page describes the extension functions and extension elements supplied with the
+SAXON product.</p>
+
+<p>If you want to implement your own extensions,
+ see <a href="extensibility.html">extensibility.html</a>.</p>
+
+<p>These extension functions and elements have been provided because there are things that are difficult
+to achieve, or inefficient, using standard XSLT facilities alone. As always, it is best to stick to
+standard if you possibly can: and most things <i>are</i> possible, even if it's not obvious at first
+sight.</p>
+
+<table width="100%">
+<tr><td bgcolor="#ffff00" align="center">
+<b>Before using a Saxon extension, check whether there is an equivalent <a href="#EXSLT">EXSLT</a>
+extension available. EXSLT extensions are more likely to be portable across XSLT processors.
+</b></td></tr></table>
+
+<p>&nbsp;</p>
+
+<table width="100%">
+  <tr>
+    <td  colspan="3" bgcolor="#0000FF"><font color="#FFFFFF"><big><b>Contents</b></big></font></td>
+  </tr>
+
+  <tr>
+    <td VALIGN="top"  bgcolor="#00FFFF" width="33%">
+    <a href="#extension attributes"><b>Extension attributes</b></a><br>
+    <a href="#trace">saxon:trace</a><br>
+	<a href="#allow-avt">saxon:allow-avt</a><br>
+    <a href="#disable">saxon:disable-output-escaping</a><br>
+    <a href="#output">additional xsl:output and xsl:document attributes</a>
+    </td>
+
+    <td VALIGN="top"  bgcolor="#00FFFF" width="33%">
+    <a href="#extension functions"><b>Extension functions</b></a><br>
+    <a href="#after">saxon:after()</a><br>
+    <a href="#before">saxon:before()</a><br>
+    <a href="#closure">saxon:closure()</a><br>
+    <a href="#difference">saxon:difference()</a><br>
+    <a href="#distinct">saxon:distinct()</a><br>
+    <a href="#evaluate">saxon:evaluate()</a><br>
+    <a href="#exists">saxon:exists()</a><br>
+    <a href="#expression">saxon:expression()</a><br>
+    <a href="#forall">saxon:forAll()</a><br>
+    <a href="#getpseudoattribute">saxon:getPseudoAttribute()</a><br>
+    <a href="#getuserdata">saxon:getUserData()</a><br>
+    <a href="#hassamenodes">saxon:hasSameNodes()</a><br>  
+    <a href="#highest">saxon:highest()</a><br>
+    <a href="#if">saxon:if()</a><br>
+    <a href="#ifnull">saxon:ifNull()</a><br>
+    <a href="#intersection">saxon:intersection()</a><br>    
+    <a href="#leading">saxon:leading()</a><br>    
+    <a href="#linenumber">saxon:lineNumber()</a><br>  
+    <a href="#lowest">saxon:lowest()</a><br>
+    <a href="#max">saxon:max()</a><br>
+    <a href="#min">saxon:min()</a><br>
+    <a href="#nodeset">saxon:nodeSet()</a><br>
+    <a href="#path">saxon:path()</a><br>
+    <a href="#range">saxon:range()</a><br>
+    <a href="#setuserdata">saxon:setUserData()</a><br>
+    <a href="#sum">saxon:sum()</a><br>
+    <a href="#systemid">saxon:systemId()</a><br>
+    <a href="#tokenize">saxon:tokenize()</a><br>
+    </td>
+    
+    <td VALIGN="top" bgcolor="#00FFFF">
+    <a href="#extension elements"><b>Extension elements</b></a><br>
+    <a href="#saxon:assign">saxon:assign</a><br>
+    <a href="#saxon:doctype">saxon:doctype</a><br>
+    <a href="#saxon:entity-ref">saxon:entity-ref</a><br>
+    <a href="#saxon:function">saxon:function</a><br>
+    <a href="#saxon:group">saxon:group</a><br>
+    <a href="#saxon:handler">saxon:handler</a><br>
+    <a href="#saxon:item">saxon:item</a><br>
+    <a href="#saxon:output">saxon:output</a><br>
+    <a href="#saxon:preview">saxon:preview</a><br>
+    <a href="#saxon:return">saxon:return</a><br>
+    <a href="#saxon:script">saxon:script</a><br>
+    <a href="#saxon:while">saxon:while</a><br>
+    </td>
+  </tr>
+</table>
+
+<H3><a name="EXSLT">EXSLT</a></H3>
+
+<p><a href="http://www.exslt.org/">EXSLT</a> is
+ an initiative to define a standardized set of extension functions 
+and extension elements that can be used across different XSLT processors.</p>
+
+<p>Saxon now supports the EXSLT modules Common, Math, Sets, DatesAndTimes, and Functions. The full list
+of EXSLT extension functions implemented is:</p>
+
+<ul>
+<li>exslt:node-set()</li>
+<li>exslt:object-type()</li>
+<li>math:min()</li>
+<li>math:max()</li>
+<li>math:highest()</li>
+<li>math:lowest()</li>
+<li>set:difference()</li>
+<li>set:intersection()</li>
+<li>set:distinct()</li>
+<li>set:leading()</li>
+<li>set:trailing()</li>
+<li>set:has-same-node()</li>
+</ul>
+
+<p>Also the following functions in the dates-and-times module:
+ date-time(), date(), time(), year(), leap-year(), month-in-year(),
+month-name(), month-abbreviation(), week-in-year(), week-in-month(), day-in-year(),
+day-in-month(), day-of-week-in-month(), day-in-week(), day-abbreviation(), 
+hour-in-day(), minute-in-hour(), second-in-minute().</p>
+
+<p>plus the following elements:
+
+<ul>
+<li>func:function</li>
+<li>func:result</li>
+</ul>
+
+<p>These have considerable overlap with extension function and elements that have previously been
+provided in the Saxon namespace. The Saxon versions of the functions remain available,
+for the time being, but the EXSLT versions are preferred.</p>
+
+<hr>
+
+<a name="extension attributes"><h2>Extension attributes</h2></a>
+
+<p>An extension attribute is an extra attribute on an XSL-defined element. Following the rules
+of XSLT, such attributes must be in a non-default namespace. For SAXON extension elements,
+the namespace must be the SAXON namespace URI "http://icl.com/saxon"</p>
+
+<p>For example, the saxon:trace attribute can be set as follows:
+
+<pre><code>
+&lt;xsl:template match="item" saxon:trace="yes" 
+    xmlns:saxon="http://icl.com/saxon"&gt;
+</code></pre>
+
+<p>The extension attributes supplied with the SAXON product are as follows:</p>
+
+<table>
+
+<a name="trace"></a>
+<tr><td valign="top" width="40%"><b>saxon:trace</b></td>
+<td>This attribute may be set on the xsl:stylesheet element or the xsl:template element.
+If set to the value "yes", it causes
+execution of template rules to be traced to the standard error output. If present on xsl:stylesheet,
+all template rules are traced; otherwise only selected templates are traced. When present on xsl:stylesheet,
+it also outputs a list of all the top-level elements in the expanded stylesheet, along with their import
+precedence.</td></tr>
+
+<a name="allow-avt"></a>
+<tr><td valign="top" width="40%"><b>saxon:allow-avt</b></td>
+<td>This attribute may be set on the xsl:call-template element.
+If set to the value "yes", it causes the name attribute of xsl:call-template to be
+interpreted as an attribute value template. This allows the selection of the called template
+to be decided at run-time. Typical usage is:<br>
+ <b>&lt;xsl:call-template name="{$tname}" saxon:allow-avt="yes"&gt;</b></td></tr>
+
+<a name="disable"></a>
+<tr><td valign="top" width="40%"><b>saxon:disable-output-escaping</b></td>
+<td>This attribute may be set on the xsl:attribute element.
+If set to the value "yes", it causes the value of the attribute to be output "as is", without
+escaping special characters. For example, this allows a URL value to be output containing
+an unescaped ampersand, e.g. &lt;a href="http://www.acme.com/buy.asp?product=widget&amp;price=12.95"&gt;.
+This also suppresses the escaping of non-ASCII characters in a URL by %HH sequences.</td>
+</tr>
+
+</table>
+
+<a name="output"><h3>Additional attributes for xsl:output and xsl:document</h3></a>
+
+<p>A number of additional attributes, or attribute values, are allowed on the xsl:output
+and xsl:document elements, beyond those defined in the XSLT 1.1 specification.</p>
+
+<p>Like the standard attributes of xsl:output and xsl:document, these are all interpreted
+as attribute value templates.</p>
+
+<h4>The method attribute</h4>
+
+<p>The <b>method</b> attribute of xsl:output and xsl:document can take the standard values "xml",
+"html", or "text", or a <i>QName</i>.</p>
+
+<p>If a QName is specified, the local name may be:</p>
+
+<ul>
+<li>the value "fop", which directs output to Apache's
+FOP processor (which must be installed separately from www.apache.org)</li>
+
+<li>the value "xhtml", which outputs the result tree in XHTML format.
+This follows the same rules as
+method="xml", except that it follows the guidelines for making the XML acceptable to legacy HTML
+browsers. Specifically (a) empty elements such as &lt;br/&gt; are output as &lt;br/&gt;, and
+(b) empty elements such as &lt;p/&gt; are output as &lt;p&gt;&lt;/p&gt;. The indent attribute
+defaults to "yes", and indenting follows the HTML rather than XML rules. Other attributes may
+be specified as for XML output, e.g. cdata-section-elements and omit-xml-declaration.</li>
+
+<li>the fully-qualified
+class name of a class that implements either the SAX org.xml.sax.DocumentHandler interface, or the
+SAX2 org.xml.sax.ContentHandler interface, or that is a subclass of the
+com.icl.saxon.output.Emitter class. If such a value is specified,
+output is directed to the user-supplied class.</li>
+</ul>
+
+<p> The prefix of the <i>QName</i> must correspond to a valid
+namespace URI. It is recommended to use the SAXON URI "http://icl.com/saxon",
+but this is not enforced.</p>
+
+<p>Two additional attributes are available on the <b>xsl:output</b> and <b>xsl:document</b>
+elements, for use when <code>method="saxon:fop"</code>. (Note, these are not fully
+tested).</p>
+
+<ul>
+<li><b>fop:renderer</b> specifies the name of a FOP Renderer class, for example
+<code>fop:renderer="org.apache.fop.render.pdf.PDFRenderer"</code>.</li>
+<li><b>fop:configuration</b> specifies the name of a FOP user configuration file, for
+example <code>fop:configuration="c:\config\fop.xml"</code></li>
+</ul>
+
+<p>Here <b>fop:</b> is the prefix of a namespace whose URI must be
+ <code>http://icl.com/saxon/fop</code></p>
+
+
+<h4>The saxon:indent-spaces attribute</h4>
+
+<p>When the output is XML or HTML with indent="yes", the saxon:indent-spaces attribute may
+be used to control the amount of indentation. The value must be an integer.</p>
+
+<h4>The saxon:character-representation attribute</h4>
+
+<p>This attribute allows greater control
+over how non-ASCII characters will be represented on output.</p>
+
+<p>With method="xml", two values are supported: "decimal" and "hex". These control whether
+numeric character references are output in decimal or hexadecimal when the character
+is not available in the selected encoding. </p>
+
+<p>With HTML, the value
+may hold two strings, separated by a semicolon. The first string defines how non-ASCII
+characters within the character encoding will be represented, the values being "native",
+"entity", "decimal", or "hex". The second string defines how characters outside the
+encoding will be represented, the values being "entity", "decimal", or "hex". Here "native"
+means output the character as itself; "entity" means use a defined entity reference (such
+as "&amp;eacute;") if known; "decimal" and "hex" refer to numeric character references.
+For example "entity;decimal" (the default) means that with encoding="iso-8859-1",
+characters in the range 160-255 will be represented using standard HTML entity
+references, while Unicode characters above 255 will be represented as decimal character
+references.</p>
+
+<h4>The saxon:omit-meta-tag attribute</h4>
+
+<p>This attribute may be set on the xsl:output element when method="html".
+The normal action of the HTML output method, as specified in the XSLT standard,
+is to generate a &lt;META&gt; tag immediately after the &lt;HEAD&gt; tag, containing
+details of the media type and character encoding. Setting this attribute to "yes"
+causes this output to be suppressed. Typical usage is</p>
+<p><code>
+ <b>&lt;xsl:output method="html" saxon:omit-meta-tag="yes"&gt;</b>
+</code></p> 
+
+<h4>The saxon:next-in-chain attribute</h4>
+
+<p>The <b>saxon:next-in-chain</b> attribute is used to direct the output to another stylesheet. The
+value is the URL of a stylesheet that should be used to process the output stream. In this case
+the output stream must always be pure XML, and attributes that control the format of the output
+(e.g. method, cdata-section-elements, etc) will have no effect. The output of the second stylesheet
+will be directed to the destination that would have been used for the first stylesheet if
+no saxon:next-in-chain attribute were present: for xsl:output, this means the original 
+transformation result destination; for xsl:document, it means the file specified by the href
+attribute.</p>
+
+<h4>User defined attributes</h4>
+
+<p>Any number of
+user-defined attributes may be defined on both xsl:output and xsl:document. These 
+attributes must have names in a non-null namespace, which must not be either the XSLT
+or the Saxon namespace. These attributes are interpreted as attribute value templates.
+The value of the attribute is inserted into the Properties object made available to 
+the Emitter handling the output; they will be ignored by the standard output methods,
+but can supply arbitrary information to a user-defined output method. The name of the
+property will be the expanded name of the attribute in JAXP format, for example
+"{http://my-namespace/uri}local-name", and the value will be the value as given,
+after evaluation as an attribute value template.</p>
+
+
+
+<hr>
+
+<a name="extension functions"><h2>Extension functions</h2></a>
+
+<p>A SAXON extension function is invoked using a name such as <b>saxon:localname()</b>.</p>
+
+<p>The <b>saxon</b> prefix (or whatever prefix you choose to use) must be associated with the
+SAXON namespace URI "http://icl.com/saxon" or (for backwards compatibility) any URI ending
+with "/com.icl.saxon.functions.Extensions". </p>
+
+<p>For example, to invoke the node-set function, write:</p>
+
+<p><code><pre>
+&lt;xsl:variable name="fragment">value&lt;/xsl:variable>
+..
+&lt;xsl:apply-templates
+     select="saxon:node-set($fragment)"
+     mode="postprocess"
+     xmlns:saxon="http://icl.com/saxon"/>
+</pre></code></p>
+
+
+<p>The extension functions supplied with the SAXON product are as follows:</p>
+
+<table>
+
+<tr><td valign="top" width="40%"><a name="after"></a><b>after(node-set-1, node-set-2)</b></td>
+<td>This returns a node-set that contains all the nodes in node-set-2 that follow
+(in document order) at least one node of node-set-2. If node-set-2 is empty, the function
+returns an empty set. This function corresponds to the XQuery AFTER operator and
+(approximately) to the EXSLT trailing() function.</td></tr>
+
+<tr><td valign="top" width="40%"><a name="before"></a><b>before(node-set-1, node-set-2)</b></td>
+<td>This returns a node-set that contains all the nodes in node-set-2 that precede
+(in document order) at least one node of node-set-2. If node-set-2 is empty, the function
+returns an empty set. This function corresponds to the XQuery BEFORE operator and
+(approximately) to the EXSLT leading() function.</td></tr>
+
+<tr><td valign="top" width="40%"><a name="closure"></a><b>closure(node-set, expression)</b></td>
+<td>This returns a node-set obtained as the transitive closure of applying
+the given expression to each node in the supplied node-set. For example, saxon:closure(.,
+saxon:expression('*')) returns all the descendant elements of the context node, and 
+saxon:closure(., saxon:expression(id(@idref))) returns all the elements that can be reached
+by following the @idref attribute treating it as the ID of another element. The function
+does not detect cycles: if cycles are present in the data, it will recurse indefinitely 
+until it runs out of stack space. To allow expressions such as "*[@father=current()/@name]",
+each time the expression is evaluated the current node is set to be the same as the
+context node.</td></tr>
+
+<tr><td valign="top" width="40%"><a name="difference"></a><b>difference(node-set-1, node-set-2)</b></td>
+<td>This returns a node-set that is the difference of the two supplied node-sets, that is, it contains
+all the nodes that are in node-set-1 that are not also in node-set-2. <i>This function
+is deprecated: use the EXSLT difference() function instead, for portability.</i></td></tr>
+
+
+<tr><td valign="top"><a name="distinct"></a><b>distinct(node-set-1, [stored-expression])</b></td>
+<td><p>This returns a node-set obtained by eliminating nodes in node-set-1 that have duplicate
+values for the supplied stored expression, evaluated as a string. A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function. If no stored expression is supplied, the default is
+expression('.'), that is, the string-value of the node. If several nodes produce the same string value,
+the one that is first in document order will be retained.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1.</p>
+
+<p>Example: &lt;xsl:for-each select="saxon:distinct(surname, saxon:expression('substring(.,1,1)')"&gt; will
+process the first surname starting with each letter of the alphabet in turn.</p>
+
+<p><i>Note: for the single-argument version, the EXSLT distinct() function should be
+used in preference, for portability reasons.</i></p></td></tr>
+
+<tr><td valign="top"><a name="eval"></a><b>eval(stored-expression)</b></td>
+<td><p>This returns the result of evaluating the supplied stored expression.
+A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated in the current context, that is, the context node is the current
+node, and the context position and context size are the same as the result of calling position() or last()
+respectively.<p/>
+
+<p>Example: saxon:eval(saxon:expression(concat(2, $op, 2)))</td></tr>
+
+
+<tr><td valign="top"><a name="evaluate"></a><b>evaluate(string)</b></td>
+<td>The supplied string must contain an XPath expression. The result of the function is the result of
+evaluating the XPath expression. This is useful where an expression needs to be constructed
+at run-time or passed to the stylesheet as a parameter, for example where the sort key is determined
+dynamically. The context for the expression (e.g. which variables and namespaces are available)
+is exactly the same as if the expression were written explicitly at this point in the stylesheet.
+The function saxon:evaluate(string) is shorthand for saxon:eval(saxon:expression(string)).</td></tr>
+
+
+<tr><td valign="top"><a name="exists"></a><b>exists(node-set-1, stored-expression)</b></td>
+<td><p>This returns true if the supplied stored expression evaluates to true for some 
+node in node-set-1, when evaluated as a boolean. Otherwise it returns false.
+A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1.<p/>
+
+<p>Example: <b>saxon:exists(sale, saxon:expression('@price * @qty &amp;gt; 1000'))</b> will return true
+if the context node has a child &lt;sale&gt; element for which the product of price and qty exceeds 1000.</td></tr>
+
+
+
+
+<tr><td valign="top"><a name="expression"></a><b>expression(string)</b></td>
+<td>The supplied string must contain an XPath expression. The result of the function is a <i>stored
+expression</i>, which may be supplied as an argument to other extension functions such as
+<a href="#eval">saxon:eval()</a>, <a href="#sum">saxon:sum()</a> and <a href="#sum">saxon:distinct()</a>. The result of
+the expression will usually depend on the current node. The expression may contain references to
+variables that are in scope at the point where saxon:expression() is called: these variables will be replaced
+in the stored expression with the values they take at the time saxon:expression() is called, not the
+values of the variables at the time the stored expression is evaluated.
+Similarly, if the expression contains namespace prefixes, these are interpreted
+in terms of the namespace declarations in scope at the point where the saxon:expression() function is
+called, not those in scope where the stored expression is evaluated.</td></tr>
+
+<tr><td valign="top"><a name="forall"></a><b>for-all(node-set-1, stored-expression)</b></td>
+<td><p>This returns true if the supplied stored expression evaluates to true for every 
+node in node-set-1, when evaluated as a boolean. Otherwise it returns false.
+A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1.<p/>
+
+<p>Example: <b>saxon:forAll(sale, saxon:expression('@price * @qty &amp;gt; 1000'))</b> will return true
+if for every child &lt;sale&gt; element of the context node, the product of price and qty exceeds 1000.</td></tr>
+
+<tr><td valign="top" width="40%"><a name="getpseudoattribute"></a><b>get-pseudo-attribute(string)</b></td>
+<td>This function parses the contents of a processing instruction whose content follows the
+conventional attribute="value" structure (as defined for the &lt;?xsl-stylesheet?&gt; processing
+instruction). The context node should be a processing instruction; the function returns the value
+of the pseudo-attribute named in the first argument if it is present, or an empty string otherwise.</td></tr>
+
+<tr><td valign="top" width="40%"><a name="getuserdata"></a><b>get-user-data(string)</b></td>
+<td>This returns user data associated with the context node in the source document. The user data
+must be set up previously using the <a href="#setuserdata">saxon:setUserData()</a> function.</td></tr>
+
+<tr><td valign="top"><a name="hassamenodes"></a><b>has-same-nodes(node-set-1, node-set-2)</b></td>
+<td>This returns a boolean that is true if and only if node-set-1 and node-set-2 contain the same
+set of nodes. Note this is quite different from the "=" operator, which tests whether there is a
+pair of nodes with the same string-value.</td></tr>
+
+
+<tr><td valign="top"><a name="highest"></a><b>highest(node-set-1 [, stored-expression])</b></td>
+<td><p>This returns (as a node-set) the node from node-set-1 that has the highest value of
+the supplied stored expression, evaluated as a number. If the stored expression is
+omitted, the expression "number(.)" is evaluated: that is, the string value of the node, converted
+to a number. A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1. Any NaN values are ignored. If the node-set is empty, the result
+is an empty node-set. If several nodes have the highest value, the result node-set contains the
+one that is first in document order. <i>This differs from the EXSLT highest() function, which returns
+all the nodes that have the maximum value.</i><p/>
+
+<p>Example: saxon:highest(sale, saxon:expression('@price * @qty')) will evaluate price times
+ quantity for each child &lt;sale&gt; element, and return the node for which this has the highest
+ value.</td></tr>
+
+
+
+<tr><td valign="top"><a name="if"></a><b>if(condition, value-1, value-2)</b></td>
+<td>The first argument is evaluated as a boolean; if it is true, the function returns the value
+value-1, if it is false, it returns value-2. The value may be of any type. Both the second and
+third arguments are evaluated even though only one of the values is used.</td>
+</tr>
+
+
+<tr><td valign="top"><a name="ifnull"></a><b>if-null(java-object)</b></td>
+<td>The first argument must be a Java object wrapper returned from an external Java function.
+The function returns true if the wrapped Java object is null.</td>
+</tr>
+
+
+<tr><td valign="top"><a name="intersection"></a><b>intersection(node-set-1, node-set-2)</b></td>
+<td>This returns a node-set that is the intersection of the two supplied node-sets, that is, it contains
+all the nodes that are in both sets. Note that the union operation can be done using the built-in
+operator "|". <i>The intersection() function is deprecated: use the EXSLT intersection() function
+instead, for portability.</i></td></tr>
+
+
+<tr><td valign="top"><a name="leading"></a><b>leading(node-set-1, stored-expression)</b></td>
+<td><p>This returns a node-set containing all those nodes from node-set-1 up to and excluding the
+first one (in document order) for which the stored-expression evaluates to false.
+A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1 (taken in document
+order), and with the context size equal to the size of node-set-1.<p/>
+
+<p>Example: <b>saxon:leading(following-sibling::*, saxon:expression('self::para'))</b> will return 
+the &lt;para&gt; elements following the current node, stopping at the first element that is not a
+&lt/;para&gt;</p>
+
+<p><i>Note: this function is quite different from the EXSLT leading() function, though both fulfil
+a similar purpose.</i></td></tr>
+
+
+
+<tr><td valign="top"><a name="linenumber"></a><b>line-number()</b></td>
+<td>This returns the line number of the context node in the source document within the entity
+that contains it. There are no arguments. If line numbers are not maintained for the current
+document, the function returns -1. (To ensure that line numbers are maintained, use the -l
+option on the command line)</td>
+</tr>
+
+
+<tr><td valign="top"><a name="lowest"></a><b>lowest(node-set-1 [, stored-expression])</b></td>
+<td><p>This returns (as a node-set) the node from node-set-1 that has the lowest value of
+the supplied stored expression, evaluated as a number. If the stored expression is
+omitted, the expression "number(.)" is evaluated: that is, the string value of the node, converted
+to a number. A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1. Any NaN values are ignored. If the node-set is empty, the result
+is an empty node-set. If several nodes have the lowest value, the result node-set contains the
+one that is first in document order. <i>This differs from the EXSLT lowest() function, which returns
+all the nodes that have the minimum value.</i><p/>
+
+<p>Example: saxon:lowest(sale, saxon:expression('@price * @qty')) will evaluate price times
+ quantity for each child &lt;sale&gt; element, and return the node for which this has the lowest
+ value.</td></tr>
+
+
+
+<tr><td valign="top"><a name="max"></a><b>max(node-set-1 [, stored-expression])</b></td>
+<td><p>This returns the maximimum value of a numeric expression resulting from evaluating the supplied stored expression for each
+node in node-set-1 in turn, as a number. If the stored expression is
+omitted, the expression "number(.)" is evaluated: that is, the string value of the node, converted
+to a number. A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1. Any NaN values are ignored. If the node-set is empty, the result
+is negative infinity.<p/>
+
+<p><i>For the single-argument version of this function, use the EXSLT max() function instead,
+for portability.</i></p>
+
+<p>Example: saxon:max(sale, saxon:expression('@price * @qty')) will evaluate price times
+ quantity for each child &lt;sale&gt; element, and return the maximum amount.</td></tr>
+
+
+<tr><td valign="top"><a name="min"></a><b>min(node-set-1 [, stored-expression])</b></td>
+<td><p>This returns the minimum value of a numeric expression resulting from evaluating the supplied stored expression for each
+node in node-set-1 in turn, as a number. If the stored expression is
+omitted, the expression "number(.)" is evaluated: that is, the string value of the node, converted
+to a number. A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1. Any NaN values are ignored. If the node-set is empty, the result
+is positive infinity.<p/>
+
+<p><i>For the single-argument version of this function, use the EXSLT min() function instead,
+for portability.</i></p>
+
+<p>Example: saxon:min(sale, saxon:expression('@price * @qty')) will evaluate price times
+ quantity for each child &lt;sale&gt; element, and return the minimum amount.</td></tr>
+
+
+<tr><td valign="top" width="40%"><a name="nodeset"></a><b>node-set($fragment)</b></td>
+<td><i>When <code>version="1.1"</code>, a result-tree-fragment is converted implicitly
+to a node-set if it is used in a context where a node-set is required. However, for 
+portability with other XSLT 1.0 processors, it may be better to use the EXSLT node-set() function.</i>
+The function takes a single argument that is a result tree fragment.
+Its function is to convert the result tree fragment to a node-set. The resulting node-set contains a single
+node, which is a root node (class DocumentInfo); below this are the actual nodes added to the result tree
+fragment, which may be element nodes, text nodes, or anything
+else. Note that a result tree fragment is not in general a well-formed document, for example there may
+be multiple element nodes or text nodes as children of the root.</td></tr>
+
+
+
+<tr><td valign="top" width="40%"><a name="path"></a><b>path()</b></td>
+<td>This takes no arguments. It returns a string whose value is an XPath expression identifying
+ the context node in the
+source tree. This can be useful for diagnostics, or to create an XPointer value, or when generating
+another stylesheet to process the same document. The resulting string can be used as input to the
+evaluate() function, provided that any namespace prefixes it uses are declared.</td></tr>
+
+
+
+<tr><td valign="top"><a name="range"></a><b>range(number-1, number-2)</b></td>
+<td>The two arguments are converted to numbers and then rounded to integers. A new node-set is
+constructed containing one node for each integer in the range number-1 to number-2 inclusive; if
+number-2 is less than number-1 the result will be empty. The string-value of each node will be the
+relevant number; for example range(2, 5) generates a set of four nodes with string-values "2", "3",
+"4", and "5". The main intended usage is &lt;xsl:for-each select="range($from, $to)"&gt; which simulates
+a conventional for loop in other programming languages.</td></tr>
+
+
+<tr><td valign="top" width="40%"><a name="setuserdata"></a><b>set-user-data(string, value)</b></td>
+<td><p>This function sets user data associated with the context node in the source document. The data
+may be retrieved later (during the same stylesheet execution only) using the
+<a href="#getuserdata">saxon:get-user-data()</a> function. The string serves as a name for this
+property, allowing multiple pieces of user data to be associated with the same node. The value
+may be any XPath value. This function returns an empty string as its nominal result.
+<b>Note:</b> set-user-data() is particularly useful to save data read during preview mode processing
+(see <a href="#saxon:preview">saxon:preview</a>) for later use during normal processing. However, take
+care (a) not to store the data with a node that will be deleted after the preview, and (b) not to
+store a node-set containing nodes that will be deleted after the preview. It is safest
+to store simple values such as strings and numbers: use the string() or number() function if necessary
+to do the conversion.</p>
+
+<p>Like saxon:assign, this function breaks the XSLT no-side-effects rule. There is always a risk
+that the Saxon optimizer will execute expressions more than once, or not at all, or in a different
+order from that expected.</p></td></tr>
+
+
+<tr><td valign="top"><a name="sum"></a><b>sum(node-set-1, stored-expression)</b></td>
+<td><p>This returns the total resuling from evaluating the supplied stored expression for each
+node in node-set-1 in turn, as a number. If the result is NaN for any node, the total will be NaN.
+A stored expression may be obtained as the result of calling
+the <a href="#expression">saxon:expression()</a> function.</p>
+
+<p>The stored expression is evaluated for each node in node-set-1 in turn, with that node as the context
+node, with the context position equal to the position of that node in node-set-1, and with the context size
+equal to the size of node-set-1.<p/>
+
+<p>Example: saxon:sum(sale, saxon:expression('@price * @qty')) will evaluate price times
+ quantity for each child &lt;sale&gt; element, and return the total amount.</td></tr>
+
+
+
+<tr><td valign="top"><a name="systemid"></a><b>systemId()</b></td>
+<td>This returns the system identifier (URI) of the entity in the
+source document that contains the context node . There are no arguments.</td>
+</tr>
+
+
+<tr><td valign="top"><a name="tokenize"></a><b>tokenize(string-1, string-2?)</b></td>
+<td>The first argument is converted to a string and is treated as a list of separated tokens.
+If the second argument is present, any character in string-2 is taken as a delimiter character,
+and any sequence of delimiter characters is taken as a token separator. If the second argument
+is omitted, any sequence of whitespace is taken as a token separator: or to put it another way,
+the default for string-2 is '&amp;#x09;&amp;#x0A;&amp;#x0D;&amp;#x20;'.<br> 
+A new node-set is constructed containing one node for each token; if the string is empty or
+ contains a separator only then the result will be empty. The string-value of each node will be the
+relevant token; for example tokenize("a cup of tea") generates a set of four nodes with
+ string-values "a", "cup", "of", and "tea". </td></tr>
+</table>
+
+
+</p>
+
+
+
+<p>The source code of these methods, which in most cases is extremely simple,
+ can be used as an example for writing
+other user extension functions. It is found in class com.icl.saxon.functions.Extensions</p>
+
+<hr>
+<a name="Extension elements"><h2>Extension elements</h2></a>
+
+<p>A SAXON extension element is invoked using a name such as <b>&lt;saxon:localname&gt;</b>.</p>
+
+<p>The <b>saxon</b> prefix (or whatever prefix you choose to use) must be associated with the
+SAXON namespace URI "http://icl.com/saxon". The prefix must also be designated as an
+extension element prefix by including it in the
+<b>extension-element-prefixes</b> attribute on the xsl:stylesheet element, or the
+<b>xsl:extension-element-prefixes</b> attribute on any enclosing literal result element or
+extension element.</p></p>
+
+<p>However, top-level elements such as saxon:handler and saxon:preview can be used without
+designating the prefix as an extension element prefix.</p>
+
+
+<hr>
+
+<h3><a name="saxon:assign">saxon:assign</a></h3>
+
+<p>The <b>saxon:assign</b> element is used to change the value of a local or global variable that
+has previously been declared using xsl:variable (or xsl:param). The variable or parameter
+must be marked as assignable by including the extra attribute saxon:assignable="yes"</p>
+
+<p>As with xsl:variable, the name of the variable is given in the mandatory <b>name</b> attribute,
+and the new value may be given either by an expression in the <b>select</b> attribute, or by expanding
+the content of the saxon:assign element</p>
+
+<p>Example:</p>
+
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><pre>
+&lt;xsl:variable name="i" select="0" saxon:assignable="yes"/&gt;
+&lt;saxon:while test="$i &amp;lt; 10"&gt;
+    The value of i is &lt;xsl:value-of select="$i"/&gt;
+    &lt;saxon:assign name="i" select="$i+1"/&gt;
+&lt;/saxon:while>
+    </pre></font></td>
+  </tr>
+</table>
+
+
+
+<hr>
+
+<h3><a name="saxon:doctype">saxon:doctype</a></h3>
+
+<p>The <b>saxon:doctype</b> instruction is used to insert a document type declaration into the
+current output file. It must be instantiated before the first element in the output file is written.</p>
+
+<p>The saxon:doctype instruction takes no attributes. The content of the element is a template-body
+that is instantiated to create an XML document that represents the DTD to be generated; this XML
+document is then serialized using a special output method that produces DTD syntax rather than
+XML syntax.</p>
+
+<p>If this element is present the doctype-system and doctype-public attributes of xsl:output are
+ignored</p>
+
+<p>The generated XML document uses the following elements, where the namespace prefix "dtd" is
+used for the namespace URI "http://icl.com/saxon/dtd":</p>
+
+<table>
+
+<tr><td valign="top" width="30%"/>dtd:doctype</td>
+<td>Represents the document type declaration. This is always the top-level element. The element
+may contain dtd:element, dtd:attlist, dtd:entity, and dtd:notation elements. It may have the following
+attributes:<br />
+<b>name</b> (mandatory) The name of the document type<br />
+<b>system</b> The system ID<br />
+<b>public</b> The public ID
+</td></tr>
+
+<tr><td valign="top" width="30%"/>dtd:element</td>
+<td>Represents an element type declaration. This is always a child of dtd:doctype. The element
+is always empty. It may have the following attributes:<br />
+<b>name</b> (mandatory) The name of the element type<br />
+<b>content</b> (mandatory) The content model, exactly as it appears in a DTD, for example
+content="(#PCDATA)" or content="( a | b | c)*"<br />
+</td></tr>
+
+<tr><td valign="top" width="30%"/>dtd:attlist</td>
+<td>Represents an attribute list declaration. This is always a child of dtd:doctype. The element
+will generally have one or more dtd:attribute children. It may have the following attributes:<br />
+<b>element</b> (mandatory) The name of the element type<br />
+</td></tr>
+
+<tr><td valign="top" width="30%"/>dtd:attribute</td>
+<td>Represents an attribute declaration within an attribute list.
+ This is always a child of dtd:attlist. The element
+will always be empty. It may have the following attributes:<br />
+<b>name</b> (mandatory) The name of the attribute<br />
+<b>type</b> (mandatory) The type of the attribute, exactly as it appears in a DTD, for example
+type="ID" or type="( red | green | blue)"<br />
+<b>value</b> (mandatory) The default value of the attribute, exactly as it appears in a DTD, for example
+value="#REQUIRED" or value="#FIXED 'blue'"<br />
+</td></tr>
+
+<tr><td valign="top" width="30%"/>dtd:entity</td>
+<td>Represents an entity declaration.
+ This is always a child of dtd:doctype. The element may be empty, or it may have content. The
+ content is a template body, which is instantiated to define the value of an internal parsed
+ entity. Note that this value includes the delimiting quotes. The xsl:entity element
+  may have the following attributes:<br />
+<b>name</b> (mandatory) The name of the entity<br />
+<b>system</b> The system identifier<br />
+<b>public</b> The public identifier<br />
+<b>parameter</b> Set to "yes" for a parameter entity<br />
+<b>notation</b> The name of a notation, for an unparsed entity<br />
+</td></tr>
+
+<tr><td valign="top" width="30%"/>dtd:notation</td>
+<td>Represents a notation declaration.
+ This is always a child of dtd:doctype. The element will always be empty. It
+  may have the following attributes:<br />
+<b>name</b> (mandatory) The name of the notation<br />
+<b>system</b> The system identifier<br />
+<b>public</b> The public identifier<br />
+</td></tr>
+
+</table>
+
+<p>Note that Saxon will perform only minimal validation on the DTD being generated; it will
+output the components requested but will not check that this generates well-formed XML, let
+alone that the output document instance is valid according to this DTD.</p>
+
+
+<p>Example:</p>
+
+
+
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><pre>
+&lt;xsl:template match="/"&gt;
+  &lt;saxon:doctype xsl:extension-element-prefixes="saxon">
+  &lt;dtd:doctype name="booklist"
+        xmlns:dtd="http://icl.com/saxon/dtd" xsl:exclude-result-prefixes="dtd">
+    &lt;dtd:element name="booklist" content="(book)*"/>
+    &lt;dtd:element name="book" content="EMPTY"/>
+    &lt;dtd:attlist element="book">
+      &lt;dtd:attribute name="isbn" type="ID" value="#REQUIRED"/>
+      &lt;dtd:attribute name="title" type="CDATA" value="#IMPLIED"/>
+    &lt;/dtd:attlist>
+    &lt;dtd:entity name="blurb">'A &lt;i>cool&lt;/i> book with &amp;gt; 200 pictures!'&lt;/dtd:entity>
+    &lt;dtd:entity name="cover" system="cover.gif" notation="GIF"/>
+    &lt;dtd:notation name="GIF" system="http://gif.org/"/>
+  &lt;/dtd:doctype>
+  &lt;/saxon:doctype>
+  &lt;xsl:apply-templates/>
+&lt;/xsl:template></pre></font></td>
+  </tr>
+</table>
+
+<p>Although not shown in this example, there is nothing to stop the DTD being generated as the
+output of a transformation, using instructions such as xsl:value-of and xsl:call-template.
+It is also possible to use xsl:text with disable-output-escaping="yes" to output DTD constructs not
+covered by this syntax, for example conditional sections and references to parameter entities.</p>
+
+
+
+
+
+
+<hr>
+
+<h3><a name="saxon:entity-ref">saxon:entity-ref</a></h3>
+
+
+<p>The saxon:entity-ref element is useful to generate entities such as &amp;nbsp; in HTML output.
+ To do this, write:</p>
+
+<p>
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><pre>
+        &lt;saxon:entity-ref name="nbsp"/&gt;
+</pre></font></td>
+  </tr>
+</table>
+</p>
+
+
+
+<hr>
+
+<h3><a name="saxon:function">saxon:function</a></h3>
+
+<p>The <b>saxon:function</b> element is used to declare an extension function
+implemented in the XSLT language. <i>The effect is identical to the func:function element
+defined in EXSLT, and the EXSLT version should be used in preference, for portability.</i></p>
+
+<p>This is a top-level element; its content is a template-body, optionally preceded by
+one or more xsl:param elements.</p>
+
+<p>There must be a <b>name</b> attribute; its value is a QName, and it must have a non-null
+namespace URI.</p>
+
+<p>The function definition will normally contain one or more <a href="#saxon:return">saxon:return</a>
+instructions to define the return value; if the function exits without encountering
+a saxon:return, the result is an empty string. It is an error if more than one saxon:return instruction is 
+instantiated (remember that the execution model is not sequential, so saxon:return does not cause 
+an immediate exit - it merely defines the return value.).</p>
+
+<p>The parameters are interpreted positionally. If there are more parameters declared
+using xsl:param than are supplied in the function call, the excess parameters take their
+default values. It is an error to have more arguments in the function call than there are
+parameters declared in the function body.</p>
+
+<p>In a function call where the function name has a non-null namespace URI, the system
+searches first for a matching saxon:function definition, then for an external Java function.
+If there are several functions with the same name, the one with highest import precedence is
+chosen; if there are several of these, the one that appears last in the stylesheet wins.</p>
+
+<p>Calling a function does not change the current node or the values of position() and last().</p>
+
+<p>A function body may contain local variables in the same way as a template body.</p>
+
+<p>Functions provide an alternative to named templates. The main differences are that the
+syntax for calling them is simpler (it is a standard XPath function call) and that they
+can return a value of any type.</p>
+
+<p>A function is not allowed to write anything to the result tree. More precisely, it
+is not allowed to write to the current output destination of the code that calls it.
+It is, however, allowed to create a new result tree fragment within the code of the function,
+ or a new xsl:document destination, and write to this. The reason for this restriction is that
+ it is generally unpredictable when and how often a function will be called, especially
+ if it is used inside a predicate, so it is safest for it to have no side-effects.</p>
+
+<p>One particular use for XSLT extension functions is to provide wrappers for Java extension
+functions, making them more convenient to call from XPath expressions. Another use is in contexts
+where named templates cannot be called, for example in the expressions used to define a named key
+ (xsl:key) or a sort key (xsl:sort), or in the predicate of a match pattern.</p>
+ 
+ <p>The <b>saxon:function</b> element automatically declares the Saxon namespace as
+ an extension namespace, so that <b>saxon:return</b> is recognized.</p>
+
+
+<p>Example:</p>
+
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><pre>
+&lt;saxon:function name="my:initial">
+    &lt;xsl:param name="size"/>
+    &lt;saxon:return select="substring(.,1,$size)"/>
+&lt;/saxon:function>
+
+&lt;xsl:template match="text()">
+    &lt;xsl:value-of select="my:initial(3)"/>
+&lt;/xsl:template>
+
+</pre></td></tr></table>
+
+
+
+<hr>
+
+
+<h3><a name="saxon:group">saxon:group</a></h3>
+
+
+<p>The <b>&lt;saxon:group&gt;</b> element causes iteration over the nodes selected by a node-set expression.</p>
+
+<p>There is a mandatory attribute, <b>select</b>, which defines
+the nodes over which the statement will iterate. This is analogous to the select attribute of &lt;xsl:for-each&gt;</p>
+
+<p>There is also a mandatory <b>group-by</b> attribute to control grouping. The value of this attribute is
+a string expression, which is applied to each item selected by the <b>select</b> expression.
+The XSL statements subordinate to the &lt;saxon:group&gt; element
+are applied once to each group of consecutive source nodes selected by the select expression that have the
+ same value for the group-by expression.<p>
+
+<p>The &lt;saxon:group&gt; element may have one or more <b>&lt;xsl:sort&gt;</b> child elements to define the order of
+ sorting. The sort keys are specified in major-to-minor order. Note that group-by does not itself cause sorting, but it can conveniently be used in conjunction
+ with sorting. The group-by key will often be the same as the major sort key.</p>
+
+<p>
+The &lt;saxon:group&gt; element must contain somewhere within it an &lt;saxon:item&gt; element. The XSL instructions
+outside the &lt;saxon:item&gt; element are executed only once for each group of consecutive elements with the
+same value for the grouping key; the instructions within the saxon:item are executed once for each
+individual item in the saxon:group selection. </p>
+
+<p>The context for the select expression is the usual context for expressions within an XSL element, i.e. it
+is based on the current node and current node list of the containing template body.</b>
+
+<p>The context for the group-by expression is as if the expression were written inside the saxon:group loop.
+If the select expression selects a node-set S, then for each node N within S, the group-by expression is evaluated
+with N as the context node, with count(S) as the context size, and with the context position taking the values
+ 1..count(S) in turn. The context position represents the position of the node in the node-set <i>after sorting</i>.</p>
+
+<p>If there is an &lt;xsl:sort&gt; element present, then the context for evaluating the sort key follows exactly
+the same rules as for &lt;xsl:for-each&gt;. In particular, the context position is the position <i>before sorting</i>.</p>
+
+<p>Within the &lt;saxon:group&gt; element, and also within the &lt;saxon:item&gt;; element, the context reflects the
+ full node-set being processed (that is, the node-set selected by the select attribute).
+ The context position is the position of the node within this node-set, and the
+ context size is the size of this node-set. It is not possible to determine the size of an individual group, or the
+ position of the current node within an individual group. The instructions preceding &lt;saxon:item&gt; are executed with
+ the first node of a group as the current node, and the instructions following &lt;saxon:item&gt; are executed with
+ the last node of a group as the current node.</p> 
+
+<p>The expressions used for sorting and grouping can be any string expressions. The following are
+particularly useful:</p>
+
+<ul>
+<li>element-name, e.g. TITLE: sorts or groups on the value of a child element</li>
+<li>attribute-name, e.g. @CODE: sorts or groups on the value of an attribute</li>
+<li>".": sorts or groups on the character content of the element</li>
+<li>"name(.)": sorts or groups on the name of the element</li>
+</ul>
+
+
+
+<p>Example: This example groups the BOOK elements having the same AUTHOR.</p>
+
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><xmp>
+<xsl:template match="BOOKLIST">
+    <h2>
+        <saxon:group select="BOOK" group-by="AUTHOR">
+            <xsl:sort select="AUTHOR"/>
+            <h3>AUTHOR: <xsl:value-of select="AUTHOR"></h3>
+            <saxon:item>
+                <p>TITLE: <xsl:value-of select="TITLE"/></p>
+            </saxon:item>
+            <hr/>
+        </saxon:group>          
+    </h2>
+</xsl:template></xmp>
+    </font></td>
+  </tr>
+</table>
+</div><font SIZE="2">
+
+
+
+<hr>
+
+<h3><a name="saxon:handler">saxon:handler</a></h3>
+
+
+<p>The saxon:handler element is used at the top level of the stylesheet, in the same way as
+xsl:template. It takes attributes match, mode, name, and priority in the same way as xsl:template,
+and is considered along with all XSL templates when searching for a template to execute in response
+to xsl:apply-templates or xsl:call-template. However, the action performed when a saxon:handler
+is invoked is to call the user-written Java NodeHandler named in the mandatory <b>handler</b> attribute.</p>
+
+<p>The Java node handler must be written as a subclass of com.icl.saxon.handlers.NodeHandler. It is
+supplied with a Context parameter, which gives access to a wide range of information and services,
+including the current context in the source document, any parameters on the call, and the Outputter
+ object used to write to the result tree. The Context parameter also provides access to a method
+ applyTemplates() which allows the Java node handler to make a call back to process XSLT templates
+ in the stylesheet.</p>   
+
+
+<hr>
+
+<h3><a name="saxon:item">saxon:item</a></h3>
+
+
+<p>The <b>saxon:item</b> element is always used within a <b>saxon:group</b> element.
+The XSL instructions outside the saxon:item element are executed once for each group (that is, each
+group of consecutive items with the same value for the group-by expression), while the XSL instructions
+within the saxon:item element are executed once for each individual item.</p>
+
+<p>See <a href=#saxon:group>saxon:group</a> for further details.</p>
+
+
+<hr>
+
+<h3><a name="saxon:output">saxon:output</a></h3>
+
+
+<p>The <b>saxon:output</b> instruction is a synonym for
+ <a href="xsl-elements#xsl:document">xsl:document</a>, introduced
+in the working draft of XSLT 1.1. While <code>xsl:document</code> is available only when
+<code>version="1.1"</code>, <code>saxon:output</code> is always available, provided the
+relevant namespace is declared as an extension namespace.
+ The attributes are identical to those of <code>xsl:document</code>.</p>
+
+<hr>
+
+
+<h3><a name="saxon:preview">saxon:preview</a></h3>
+
+
+<p>The <b>saxon:preview</b> element is a top-level element used to identify elements in the
+source document that will
+be processed in <i>preview</i> mode. The purpose of preview mode is to enable XSLT processing
+of very large documents that are too big to fit in memory: the idea is that subtrees of the
+document can be processed and then discarded as soon as they are encountered.</p>
+
+<p>There are two mandatory attributes: <b>mode</b> identifies the mode in which the relevant
+templates will be applied, and <b>elements</b> is a space-separated list of element names that
+will be processed in preview mode.</p>
+
+<p>While the source XML document is being read, if an element end tag is encountered for
+an element that is in the list of preview elements, the relevant template is found (using the normal
+matching rules, with mode equal to the specified preview mode). This template is then executed.
+After the template has completed execution, the child nodes of the preview element (but not the element
+itself, nor its attributes) are deleted from the tree to save memory.</p>
+
+<p>During the matching of a preview element and during the execution of the preview template,
+ only part of the source document is visible. This part includes
+the ancestors of the preview element, the descendants of the preview element, and
+all nodes that precede the preview element in document order,
+except for nodes that are descendants of another preview element.</p>
+
+<p>Global variables are not available to a preview template. The supplied values of
+global parameters are available, but not the default values of unsupplied parameters.</p>
+
+<p>A preview template may write to
+a secondary output destination using saxon:output, or it may set global variables using saxon:assign.
+It can save information using the extension function <a href="#setuserdata">setUserData()</a>, which
+can be accessed later using <a href="#getuserdata">getUserData()</a>. This is useful to save information
+that would otherwise disappear when the subtree rooted at the preview element is deleted from the tree.
+ The preview template may also write directly to the
+principal output destination, but note that in this case each instantiation of the preview template
+will produce a subtree immediately below the root of the output tree. Normally this means the output
+document will have multiple element nodes as children of the root. This is not well-formed XML, but you
+can easily construct a well-formed XML document by referencing this file as an external entity.</p>
+
+<p>One simple use for saxon:preview is simply to delete unwanted parts of the tree to reduce
+the amount of memory needed. In this case, just provide a preview template that does nothing.</p>
+
+<p>Preview templates are called while the tree is being built. When the tree has been completely
+built, it will contain the preview elements themselves, but any nodes that were descendants of the
+preview elements will have been deleted. At this stage the stylesheet is applied to the root of the
+tree, in "default" mode, in the normal way. If you don't want any further processing to take place
+at this stage, write a root template that does nothing: &lt;xsl:template match="/"/&gt;.</p>
+
+<p>&lt;saxon:preview&gt; is not supported when a transformation is run using the JAXP 1.1 
+TransformerHandler interface. It works when using the Saxon command line, or when invoking
+a transformation using the transform() method.</p>
+<hr>
+
+
+<h3><a name="saxon:return">saxon:return</a></h3>
+
+
+<p>The <b>saxon:return</b> element is an instruction that can only occur within a saxon:function
+definition. It must not have any following sibling
+instructions other than xsl:fallback. However, there can be more than one saxon:return instruction
+in a function, for example one in each branch of an xsl:choose. <i>The saxon:return instruction
+is a synonym of the EXSLT func:result instruction: the EXSLT version is preferred, for portability
+reasons.</i></p>
+
+<p>Instantiating a saxon:return element causes exit from the call of the enclosing
+ saxon:function.</p>
+
+<p>The saxon:return element has an optional <b>select</b> attribute, whose value is an
+ XPath expression. If the select attribute is present, this expression is evaluated and its
+ value constitutes the return value of the function. If it is absent, the content of the
+ saxon:return element is instantiated and the result is returned as a result tree fragment.
+ If the element is empty and has no select attribute, the function returns an empty string.</p>
+
+<p>If a function completes without instantiating a saxon:return instruction, the return value
+of the function is an empty string. It is an error for a function to instantiate more than one
+saxon:return instruction.</p>
+
+
+
+
+<hr>
+
+<h3><a name="saxon:script">saxon:script</a></h3>
+
+
+<p>The <b>saxon:script</b> element is a top-level element. It is a synonym of
+<a href="xsl-elements#xsl:script">xsl:script</a>, except that it is available
+regardless of the setting of the <code>version</code> attribute on <code>xsl:stylesheet</code>.</p>
+
+<p>The reason for providing saxon:script as a separate element is that any processor
+other than Saxon will ignore it. This makes it possible to define an implementation
+for an extension function that will be used by Saxon, but not by other processors. With
+other processors, a different implementation can be selected, using mechanisms defined
+by that processor (for example, xalan:script).</p>
+
+<p>If you want to use extension functions such as xx:intersection() which are available
+as built-in extensions in several XSLT processors, you can define the Saxon implementation
+as follows:</p>
+
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><xmp>
+<saxon:script implements-prefix="xx" language="java" 
+              src="java:com.icl.saxon.functions.Extensions">
+</xmp>
+    </font></td>
+  </tr>
+</table>
+</div>
+
+
+
+<hr>
+
+
+
+<h3><a name="saxon:while">saxon:while</a></h3>
+
+
+<p>The <b>saxon:while</b> element is used to iterate while some condition is true.</p>
+
+<p>The condition is given as a boolean expression in the mandatory test attribute. Because
+this expression must change its value if the loop is to terminate, the condition will always
+reference a variable that is updated somewhere in the loop using an saxon:assign element.</p>
+
+<p>Example:</p>
+
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><pre>
+&lt;xsl:variable name="i" expr="0"/&gt;
+&lt;saxon:while test="$i &amp;lt; 10"&gt;
+    The value of i is &lt;xsl:value-of select="$i"/&gt;
+    &lt;saxon:assign name="i" expr="$i+1"/&gt;
+&lt;/saxon:while>
+    </pre></font></td>
+  </tr>
+</table>
+
+
+
+
+<hr>
+<p align="center"><a HREF="mailto:michael.h.kay@ntlworld.com">Michael H. Kay</a> <br>
+10 August 2003</p>
+</body>
+</html>
+

@@ -1,0 +1,275 @@
+<html>
+
+<head>
+<title>Instant SAXON</title>
+
+</head>
+
+<body leftmargin="150" bgcolor="#ddeeff"><font face="Arial, Helvetica, sans-serif">
+
+<h1><big><big><font color="#FF0080">Instant SAXON</font></big></big></h1>
+
+<p align="right"><big><big><font color="#FF0080">version 6.5.2</font></big></big></p>
+
+<hr>
+
+<p>&nbsp;</p>
+
+<table width="100%">
+  <tr>
+    <td bgcolor="#0000FF"><font color="#FFFFFF"><big><b>Contents</b></big></font></td>
+  </tr>
+  <tr>
+    <td VALIGN="top" bgcolor="#00FFFF"><a HREF="#Scope">What is Instant SAXON?</a><br>
+    <a HREF="#Installation">Installation</a><br>
+    <a HREF="#Writing">Writing a stylesheet</a><br>    
+    <a HREF="#Running">Running a stylesheet</a><br>
+    <a HREF="#Conditions">Conditions of Use</a><br>
+    <a HREF="#Full">Full SAXON</a><br>
+    <a HREF="#Support">Technical support</a><br>
+  </tr>
+</table>
+
+
+<p><b>Version 6.5.3 clears a number of bugs; you will find these listed on the project
+page at <a href="http://sourceforge.net/projects/saxon/">http://sourceforge.net/projects/saxon</a></b></p>
+
+<hr>
+<a NAME="Scope">
+<h2>What is Instant SAXON?</h2>
+</a>
+
+<p>Instant SAXON is a cut-down version of the full
+<a href="http://saxon.sourceforge.net/">SAXON</a>
+package. It provides an XSLT processor that can be executed directly on Windows 95/98/NT/2000
+ platforms. It includes the same executable code as full Saxon, but omits source code,
+ API documentation, and sample applications.</p>
+ 
+ <p><i>Microsoft no longer ship their Java VM with new releases of Windows. If the Microsoft Java VM is not
+ installed on your system, you should use the full Saxon product, together with the latest
+ Java VM from Sun.</i></p>
+ 
+ <p><i>Note: the name "Instant" was originally chosen for two reasons: ease of download
+ and installation, and execution speed. The advantage in execution speed arose because
+ a packaged executable was much faster to load than a conventional Java archive. This
+ is no longer true; in fact, Saxon runs up to three times faster using Sun's JDK 1.3
+ Java VM than it does with the Microsoft Java VM. For high performance, the full Saxon
+ product, run under JDK 1.3, is therefore recommended.</i></p>
+ 
+
+<p>The XSLT processor is a complete implementation of the W3C 
+XSLT 1.0 specification from the World Wide Web Consortium, found at
+ <a href="http://www.w3.org/TR/1999/REC-xslt-19991116">
+http://www.w3.org/TR/1999/REC-xslt-19991116</a> (including the associated XPath syntax)
+with a number of powerful extensions</p>
+
+<hr>
+<A name="Installation"><h2>Installation</h2></a>
+
+<h3>Prerequisites</h3>
+
+<p>You need a machine running Windows (95, 98, NT, or 2000), with the Microsoft Java Virtual
+Machine.</p>
+
+<p>You will need an unzip utility such as WinZIP.</p>
+
+<p>Because the product is run from the command line, you might find it useful to have a text editor
+with better command-line support than the standard DOS window. I use <b>Programmer's File Editor (PFE)</b>,
+a free product available from a number of download sites, 
+<a href="http://www.lancs.ac.uk/people/cpaap/pfe/">listed here</a>.
+Another suitable product (available as shareware) is
+ <a href="http://www.ultraedit.com/">UltraEdit</a>.</p>
+
+<p>No other software is required. Instant SAXON comes with a bundled XML parser, the AElfred parser
+from <a href="http://www.microstar.com/">Microstar</a>. This version of Aelfred has been modified to support
+the SAX2 interface and to fix known errors.</p>
+
+<h3>Download</h3>
+
+<p>Download the file instant-saxonVVV.zip (400 Kb) to a convenient directory. You will find
+an index of the available versions of this file on the 
+<a href="http://saxon.sourceforge.net/">Saxon home page</a>.</p>
+
+<p>Unzip the file into the directory from which you intend to execute it, e.g. <b>c:\saxon</b></p>
+
+<p>It contains two files: <b>saxon.exe</b>, which is the XSLT processor, and <b>instant.html</b>,
+which is a copy of the HTML page you are reading.</p>
+
+<hr>
+<A name="Writing"><h2>Writing a stylesheet</h2></a>
+
+<p>The syntax for stylesheets is exactly the same as for the full SAXON product. It is described
+in the following pages:</p>
+
+<ul>
+<li><a href="http://saxon.sourceforge.net/saxon6.5.3/xsl-elements.html">XSL elements</a></li>
+<li><a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XSL expressions</a></li>
+<li><a href="http://saxon.sourceforge.net/saxon6.5.3/patterns.html">XSL patterns</a></li>
+<li><a href="http://saxon.sourceforge.net/saxon6.5.3/conformance.html">XSL conformance</a></li>
+<li><a href="http://saxon.sourceforge.net/saxon6.5.3/extensions.html">SAXON extensions</a></li>
+</ul>
+
+<p>For more advanced functionality, such as writing your own extension functions, or
+embedding Saxon within an application, please see the documentation that comes with
+<a href="http://saxon.sourceforge.net/">the full SAXON package</a>. </p>
+
+<hr>
+<A name="Running"><h2>Running a stylesheet</h2></a>
+
+<p>The SAXON XSLT interpreter is designed to be run from the command line:</p>
+
+<ul>
+<li>Open a DOS window</li>
+<li>Change to the directory in which you installed saxon.exe
+(e.g. <font color="#FF0080">cd c:\saxon</font>) or place this directory on your PATH</li>
+<li>Run the command:
+
+<p><strong><font color="#FF0080">saxon <i>
+&nbsp;[options]&nbsp;&nbsp; source.xml&nbsp;&nbsp; style.xsl</i>&nbsp;&nbsp;  [ <i>params&#133;</i>]</font></strong></p>
+
+<p>The options must come first, then the two file names, then the params.
+The stylesheet is omitted if the -a option is present.</p>
+
+<p>The options are:</p>
+
+<table>
+
+<tr><td valign="top" width="25%">-a</dt>
+<td>Use the xml-stylesheet processing instruction in the source document
+to identify the stylesheet to be used. The style-doc argument should be omitted.
+Stylesheets embedded within the source document are not supported at this release.</td></tr>
+
+<tr><td valign="top">-ds | -dt</td>
+<td>Selects the implementation of the internal tree model. -dt selects the "tinytree"
+model (the default). -ds selects the traditional tree model.</td></tr>
+
+<tr><td valign="top">-l</td>
+<td>Switches line numbering on for the source document. Line numbers are accessible
+through the extension function saxon:line-number(), or from a trace listener.</td></tr>
+
+<tr><td valign="top">-m classname</td>
+<td>Use the specified Emitter to process the output from xsl:message. The class must implement
+the com.icl.saxon.output.Emitter class. This interface is similar to a SAX ContentHandler,
+it takes a stream of events to generate output. In general the content of a message is an XML
+fragment. By default the standard XML emitter is used, configured to write to the standard error
+stream, and to include no XML declaration. Each message is output as a new document.</td></tr>
+
+<tr><td valign="top">-noext</td>
+<td>Suppress calls on extension functions, other than system-supplied Saxon and EXSLT extension
+functions. This option is useful when loading an untrusted stylesheet, perhaps from a remote
+site using an <code>http://</code> URL; it ensures that the stylesheet cannot call Java methods
+and thereby gain privileged access to resources on your machine.
+</td></tr>
+
+<tr><td valign="top">-r classname</td>
+<td>Use the specified URIResolver to process all URIs. The URIResolver is a user-defined class,
+that extends the com.icl.saxon.URIResolver class, whose function is to take a URI supplied as
+a string, and return a SAX InputSource. It is invoked to process URIs used in the document() function,
+in the xsl:include and xsl:import elements, and (if -u is also specified) to process the URIs
+of the source file and stylesheet file provided on the command line.</td></tr>
+
+<tr><td valign="top">-o filename</td>
+<td>Send output to named file. In the absence of this option, output goes to standard output.
+The file extension of the output file is used to decide the default output method
+if none is specified.</td></tr>
+
+<tr><td valign="top">-t</td>
+<td>Display version and timing information to the standard error output</td></tr>
+
+<tr><td valign="top">-T</td>
+<td>Display stylesheet tracing information to the standard error output. Also
+switches line numbering on for the source document.</td></tr>
+
+<tr><td valign="top">-TL classname</td>
+<td>Run the stylesheet using the specified TraceListener. The classname names a user-defined
+class, which must implement com.icl.saxon.trace.TraceListener</td></tr>
+
+<tr><td valign="top">-u</td>
+<td>Indicates that the names of the source document and the style document are URLs;
+otherwise they are taken as filenames, unless they start with "http:" or "file:", in which
+case they are taken as URLs</td></tr>
+
+<tr><td valign="top">-w0, w1, or w2</td>
+<td>Indicates the policy for handling recoverable errors in the stylesheet: w0 means
+recover silently, w1 means recover after writing a warning message to the system error
+output, w2 means signal the error and do not attempt recovery. (Note, this does not
+currently apply to all errors that the XSLT recommendation describes as recoverable).
+The default is w1.</td></tr>
+
+<tr><td valign="top">-x classname</td>
+<td>Use the specified SAX parser for source file and for any files loaded using the document() function.
+ The parser must be the fully-qualified class name
+of a Java class that implements the org.xml.sax.Parser or org.xml.sax.XMLReader interface</td></tr>
+
+<tr><td valign="top">-y classname</td>
+<td>Use the specified SAX parser for all stylesheet files, including any loaded using xsl:include
+or xsl:import. The parser must be the fully-qualified class name
+of a Java class that implements the org.xml.sax.Parser or org.xml.sax.XMLReader interface</td></tr>
+
+<tr><td valign="top">-?</td><td>Display command syntax</td></tr>
+
+</table>
+
+<p>A param takes the form <i>name=value</i>, <i>name</i> being the
+name of the parameter, and <i>value</i> the value of the parameter. These parameters are
+accessible within the stylesheet as normal variables, using the $name syntax, provided
+they are declared using a top-level xsl:param element. If there is no such declaration, the supplied
+ parameter value is silently ignored.</p>
+
+<p>You can specify a parameter value containing spaces by enclosing it in double quotes, for
+example <b>name="John Brown"</b>
+ 
+<p>If the -a option is used, the name of the stylesheet is
+omitted. The &lt;?xml-stylesheet?&gt; processing instruction must have a pseudo-attribute href that
+identifies the relative or absolute URL of the stylsheet document, and a pseudo-attribute type whose
+value is "text/xml", "application/xml", or "text/xsl". For example:
+
+<p><strong><font color="#FF0080">&lt;?xml-stylesheet type="text/xsl" href="../style3.xsl" ?&gt;
+</font></strong></p>
+
+
+<hr>
+<a name="Full"><h2>Full SAXON</h2></a>
+
+<p>The full SAXON distribution includes source and object code,
+ documentation, and sample applications</a>.</p>
+
+<p>You will find it at <a HREF="http://saxon.sourceforge.net/">
+http://saxon.sourceforge.net/</a></p>
+
+
+<hr>
+<a NAME="Conditions">
+<h2>Conditions of Use</h2>
+</a>
+<p>SAXON is free. Please see the
+ <a href="http://saxon.sourceforge.net/saxon6.5.2/conditions.html">conditions of use</a></p>.
+
+
+<hr>
+<a NAME="Support"><h2>Technical Support</h2></a>
+
+<p>Saxon comes with no warranty and no formal technical support service.</p>
+
+<p>If you have questions, however, you can usually get an answer by raising them on the Saxon
+discussion list at <a href="http://lists.sourceforge.net/lists/listinfo/saxon-help">http://lists.sourceforge.net/lists/listinfo/saxon-help</a>.</p>
+
+<p>Once registered, you can post messages to <a href="mailto:saxon-help@lists.sourceforge.net">saxon-help@lists.sourceforge.net</a>.</p>
+
+<p>If you hit something that looks like a bug, please check the known errors on
+<a href="http://sourceforge.net/projects/saxon">the Saxon project pages at SourceForge</a>.
+Also check the list archives.</p>
+
+<p>If the query relates to the XSLT/XPath language rather than Saxon itself, it is better to use
+ the <a href="http://www.mulberrytech.com/xsl/xsl-list/">XSL-list</a>: check first that the query
+ isn't already covered in the FAQ. Another useful site for XSLT information is
+ <a href="http://www.xslinfo.com">www.xslinfo.com</a></p>
+
+<hr>
+
+<p align="center"><a HREF="mailto:michael.h.kay@ntlworld.com">Michael H. Kay</a> <br>
+10 August 2003</p>
+
+</font>
+</body>
+</html>
