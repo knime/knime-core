@@ -1,0 +1,35 @@
+Manifest-Version: 1.0
+Bundle-Name: Hades Workbench Flow-Editor
+Bundle-SymbolicName: de.unikn.knime.workbench.editor; singleton=true
+Bundle-Version: 0.3.0
+Bundle-ClassPath: workbench-editor.jar
+Bundle-Activator: de.unikn.knime.workbench.HadesEditorPlugin
+Bundle-Vendor: ALTANA Chair for Applied Computer Science
+Bundle-Localization: plugin
+Provide-Package: de.unikn.knime.workbench,
+ de.unikn.knime.workbench.editor2,
+ de.unikn.knime.workbench.editor2.actions,
+ de.unikn.knime.workbench.editor2.actions.job,
+ de.unikn.knime.workbench.editor2.commands,
+ de.unikn.knime.workbench.editor2.editparts,
+ de.unikn.knime.workbench.editor2.editparts.anchor,
+ de.unikn.knime.workbench.editor2.editparts.policy,
+ de.unikn.knime.workbench.editor2.extrainfo,
+ de.unikn.knime.workbench.editor2.figures
+Require-Bundle: org.eclipse.core.resources,
+ org.eclipse.core.runtime,
+ org.eclipse.draw2d,
+ org.eclipse.gef,
+ org.eclipse.jface,
+ org.eclipse.osgi,
+ org.eclipse.swt,
+ org.eclipse.ui,
+ org.eclipse.ui.ide,
+ org.eclipse.ui.views,
+ org.eclipse.ui.workbench,
+ de.unikn.knime.workbench.core,
+ de.unikn.knime.workbench.repository,
+ de.unikn.knime.workbench.ui,
+ de.unikn.knime.base,
+ org.eclipse.ui.console
+Eclipse-AutoStart: true
