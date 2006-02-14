@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+     <extension-point id="nodes" name="Node" schema="schema/Node.exsd"/>
+   <extension-point id="categories" name="Category" schema="schema/Category.exsd"/>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Node Repository"
+            icon="icons/view.png"
+            category="de.unikn.knime.workbench.ui.category"
+            class="de.unikn.knime.workbench.repository.view.RepositoryView"
+            id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
+         <description>
+            This contains all known nodes, grouped into categories, that can be used to model
+a data &quot;workflow&quot;
+         </description>
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.ui.resourcePerspective">
+         <view
+               ratio="0.5"
+               moveable="true"
+               relative="org.eclipse.ui.views.ResourceNavigator"
+               closeable="false"
+               relationship="bottom"
+               id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
+         </view>
+      </perspectiveExtension>
+   </extension>
+
+</plugin>

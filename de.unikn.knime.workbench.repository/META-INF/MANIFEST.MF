@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-Name: Hades Workbench Repository
+Bundle-SymbolicName: de.unikn.knime.workbench.repository; singleton=true
+Bundle-Version: 0.3.0
+Bundle-ClassPath: workbench-repository.jar
+Bundle-Activator: de.unikn.knime.workbench.repository.HadesRepositoryPlugin
+Bundle-Vendor: ALTANA Chair for Applied Computer Science
+Bundle-Localization: plugin
+Provide-Package: de.unikn.knime.workbench.repository,
+ de.unikn.knime.workbench.repository.model,
+ de.unikn.knime.workbench.repository.view
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.ui.views,
+ de.unikn.knime.workbench.core;reprovide=true,
+ org.eclipse.gef
+Eclipse-AutoStart: true
