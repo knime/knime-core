@@ -1,6 +1,4 @@
-/*+
- * 
- * @(#)$RCSfile$ 
+/* @(#)$RCSfile$ 
  * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
