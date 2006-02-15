@@ -80,7 +80,7 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
-import de.unikn.knime.core.node.HadesConstants;
+import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.meta.MetaNodeContainer;
@@ -156,10 +156,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         addAppender(ConsoleViewAppender.WARN_APPENDER);
         try {
             ConsoleViewAppender.WARN_APPENDER
-                    .write(HadesConstants.WELCOME_MESSAGE);
+                    .write(KNIMEConstants.WELCOME_MESSAGE);
 
             ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
-                    + HadesConstants.HADES_HOME_DIR + File.separator
+                    + KNIMEConstants.KNIME_HOME_DIR + File.separator
                     + NodeLogger.LOG_FILE + "\n");
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);

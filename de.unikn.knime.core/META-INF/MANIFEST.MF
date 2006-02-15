@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-Name: Hades Framework Core
+Bundle-Name: KNIME Framework Core
 Bundle-SymbolicName: de.unikn.knime.core
 Bundle-Version: 0.3.0
 Bundle-Vendor: ALTANA Chair for Applied Computer Science

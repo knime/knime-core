@@ -60,7 +60,7 @@ public final class NodeLogger {
         ALL
     }
 
-    /** The HADES log file name. */
+    /** The KNIME log file name. */
     public static final String LOG_FILE = "knime.log";
 
     /** Assertions are on or off. */
@@ -110,7 +110,7 @@ public final class NodeLogger {
         root.addAppender(serr);
         try {
             // get user home
-            String tmpDir = HadesConstants.HADES_HOME_DIR + File.separator;
+            String tmpDir = KNIMEConstants.KNIME_HOME_DIR + File.separator;
             // check if home/.knime exists
             File tempDir = new File(tmpDir);
             if (!tempDir.exists()) {
@@ -142,7 +142,7 @@ public final class NodeLogger {
             NodeLogger logger = getLogger(NodeLogger.class);
             logger.error(
                     "Could not create temp-file: "
-                            + HadesConstants.HADES_HOME_DIR + File.separator
+                            + KNIMEConstants.KNIME_HOME_DIR + File.separator
                             + LOG_FILE, ioe);
         }
     }
@@ -152,7 +152,7 @@ public final class NodeLogger {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
         l.info("#                                                           #");
-        l.info("# Hades Logging " + new Date());
+        l.info("# KNIME Logging " + new Date());
         l.info("#                                                           #");
         l.info("#############################################################");
         l.info("#                                                           #");
@@ -160,7 +160,7 @@ public final class NodeLogger {
         l.info("#                                                           #");
         l.info("#############################################################");
         l.info("# For more details see:                                     #");
-        l.info("# " + HadesConstants.HADES_HOME_DIR + File.separator
+        l.info("# " + KNIMEConstants.KNIME_HOME_DIR + File.separator
                         + LOG_FILE);
         l.info("#-----------------------------------------------------------#");
         // logger.info("user.name=" + System.getProperty("user.name"));

@@ -122,8 +122,8 @@ public abstract class NodeView {
         // init frame
         m_frame = new JFrame();
         setViewName(title);
-        if (HadesConstants.HADES16X16 != null) {
-            m_frame.setIconImage(HadesConstants.HADES16X16.getImage());
+        if (KNIMEConstants.KNIME16X16 != null) {
+            m_frame.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
         m_frame.setBackground(COLOR_BACKGROUND);
         m_frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);

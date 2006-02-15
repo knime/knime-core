@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.LinkedList;
 
-import de.unikn.knime.core.node.HadesConstants;
+import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -83,7 +83,7 @@ public final class StringHistory {
      */
     private StringHistory(final int maxLength, final String id) {
         m_maxLength = maxLength;
-        String file = HadesConstants.HADES_HOME_DIR + File.separator
+        String file = KNIMEConstants.KNIME_HOME_DIR + File.separator
             + "history_" + id + ".txt";
         m_historyFile = new File(file);
         m_list = new LinkedList<String>();

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.1"?>
 
-<product name="Hades - Information Mining Platform" id="org.eclipse.platform.ide" application="de.unikn.knime.workbench.product.HADES_APPLICATION" useFeatures="false">
+<product name="KNIME - Konstanz Information Miner" id="org.eclipse.platform.ide" application="de.unikn.knime.workbench.product.KNIME_APPLICATION" useFeatures="false">
 
    <aboutInfo>
       <image path="/de.unikn.knime.workbench/icons/banner.gif"/>
       <text>
-         Hades - Information Mining Platform
+         KNIME - Konstanz Information Miner
       </text>
    </aboutInfo>
 
@@ -18,8 +18,7 @@
 
    <windowImages small="/de.unikn.knime.workbench/icons/logo.gif" large="/de.unikn.knime.workbench/icons/bioml_group_logo.gif"/>
 
-
-   <launcher name="Hades">
+   <launcher name="knime">
       <solaris/>
       <win useIco="false">
          <bmp/>

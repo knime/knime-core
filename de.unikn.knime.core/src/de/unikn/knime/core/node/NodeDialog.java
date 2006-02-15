@@ -229,8 +229,8 @@ final class NodeDialog {
     /** Inits the underlying dialog with title and icon. */
     private JDialog initDialog(final String title) {
         JFrame dummy = new JFrame();
-        if (HadesConstants.HADES16X16 != null) {
-            dummy.setIconImage(HadesConstants.HADES16X16.getImage());
+        if (KNIMEConstants.KNIME16X16 != null) {
+            dummy.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
         // init underlying dialog
         JDialog dialog = new JDialog(dummy);

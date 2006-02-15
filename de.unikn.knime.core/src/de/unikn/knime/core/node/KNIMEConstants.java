@@ -32,7 +32,7 @@ import javax.swing.ImageIcon;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class HadesConstants {
+public final class KNIMEConstants {
 
     /**
      * The directory where knime will put log files and configuration files.
@@ -40,42 +40,42 @@ public final class HadesConstants {
      * <code>$USER_HOME$</code> is the user's home directory. This variable
      * does not have a trailing file separator character.
      */
-    public static final String HADES_HOME_DIR = System.getProperty("user.home")
+    public static final String KNIME_HOME_DIR = System.getProperty("user.home")
             + File.separator + ".knime";
 
     /**
-     * <i>Welcome to the HADES Information Mining Workbench</i>.
+     * <i>Welcome to KNIME Konstanz Information Miner</i>.
      */
     public static final String WELCOME_MESSAGE = 
    "************************************************************************\n"
- + "***   Welcome to the HADES OpenSource Information Mining Workbench   ***\n"
+ + "***        Welcome to KNIME. The Konstanz Information Miner          ***\n"
  + "*** Copyright 2003-2006 Konstanz University, Germany, Prof. Berthold ***\n"
  + "************************************************************************\n";
 
     /** Path to the <i>knime.png</i> icon. */
-    private static final String HADES_ICON_PATH = HadesConstants.class
+    private static final String KNIME_ICON_PATH = KNIMEConstants.class
             .getPackage().getName().replace('.', '/')
             + "/knime.png";
 
     /** Icon 16 times 16 pixel. */
-    public static final ImageIcon HADES16X16;
+    public static final ImageIcon KNIME16X16;
 
     /** Load icon. */
     static {
         ImageIcon icon;
         try {
-            ClassLoader loader = HadesConstants.class.getClassLoader();
-            icon = new ImageIcon(loader.getResource(HADES_ICON_PATH));
+            ClassLoader loader = KNIMEConstants.class.getClassLoader();
+            icon = new ImageIcon(loader.getResource(KNIME_ICON_PATH));
         } catch (Exception e) {
             icon = null;
         }
-        HADES16X16 = icon;
+        KNIME16X16 = icon;
     }
 
     /**
      * Hides public constructor.
      */
-    private HadesConstants() {
+    private KNIMEConstants() {
     }
 
 }
