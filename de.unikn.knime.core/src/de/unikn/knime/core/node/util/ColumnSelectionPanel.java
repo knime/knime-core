@@ -155,8 +155,13 @@ public class ColumnSelectionPanel extends JPanel {
             }
             if (selectMe != null) {
                 m_chooser.setSelectedItem(selectMe);
+            } else {
+                // select last element
+                int size = m_chooser.getItemCount();
+                if (size > 0) {
+                    m_chooser.setSelectedIndex(size - 1);
+                }
             }
-
         }
     }
 
