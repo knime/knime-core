@@ -1,0 +1,39 @@
+<!--
+====================================================================
+This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+
+Copyright, 2003 - 2006 
+Universitaet Konstanz, Germany.
+Lehrstuhl fuer Angewandte Informatik
+Prof. Dr. Michael R. Berthold
+
+You may not modify, publish, transmit, transfer or sell, reproduce,
+create derivative works from, distribute, perform, display, or in 
+any way exploit any of the content, in whole or in part, except as 
+otherwise expressly permitted in writing by the copyright owner.
+====================================================================
+-->
+<body>
+Contains the API of the core elements like data cells, data tables, nodes, and
+all elements the infrastructure of the flow is based on.
+
+In the subpackage <code>data</code> you'll find all definitions of elements 
+needed to store and access the actual data (the data that is transported 
+through the different nodes in the flow and being analyzed, manipulated, mined,
+etc.). These are <code>DataCell</code>s (with their different flavours like
+<code>DoubleCells</code>, <code>IntCell</code>, etc.), the interface definitions
+for the <code>DataTable</code> (which carries all attribute vectors) and related
+classes. There are also default implementations for these data containers,
+which are all simple objects storing the data in memory.
+
+The other big subpackage is <code>node</code>. It contains all classes needed
+to define the infrastructure of the dataflow. The most important ones are the
+<code>Node</code>, which uses the abstract classes <code>NodeModel</code>, 
+<code>NodeDialog</code>, and <code>NodeView</code>. These will be implemented
+by a designer of a new node for the workflow. <br>
+You also find an implementation of a default workflow manager in the 
+<code>node</code> package. It is an object that allows for defining flows 
+(by adding nodes and connections), and executing the nodes in parallel.
+<body>
+

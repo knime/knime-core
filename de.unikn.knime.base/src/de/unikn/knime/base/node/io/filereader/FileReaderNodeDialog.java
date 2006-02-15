@@ -1,0 +1,1488 @@
+/* @(#)$RCSfile$ 
+ * $Revision$ $Date$ $Author$
+ * 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   23.03.2005 (ohl): created
+ */
+package de.unikn.knime.base.node.io.filereader;
+
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.NoSuchElementException;
+import java.util.Vector;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import de.unikn.knime.base.node.io.filetokenizer.Comment;
+import de.unikn.knime.base.node.io.filetokenizer.Delimiter;
+import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
+import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataColumnSpec;
+import de.unikn.knime.core.data.DataColumnSpecCreator;
+import de.unikn.knime.core.data.DataRow;
+import de.unikn.knime.core.data.DataTable;
+import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DoubleValue;
+import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.data.StringType;
+import de.unikn.knime.core.data.def.DefaultRow;
+import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.NodeDialogPane;
+import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.tableview.TableView;
+
+/**
+ * 
+ * @author ohl, University of Konstanz
+ */
+class FileReaderNodeDialog extends NodeDialogPane {
+
+    private static final int HORIZ_SPACE = 10;
+
+    private static final int COMP_HEIGHT = 30;
+
+    private static final int PANEL_WIDTH = 5000;
+
+    private static final Delimiter[] DEFAULT_DELIMS = new Delimiter[]{
+            new Delimiter(",", false, false, false),
+            new Delimiter(" ", false, false, false),
+            new Delimiter("\t", false, false, false),
+            new Delimiter(";", false, false, false)};
+
+    /*
+     * the settings object holding the current state of all settings. The
+     * components immediately write their state into this object. There is a
+     * load function transfering the settings from this object into the
+     * component.
+     */
+    private FileReaderNodeSettings m_frSettings;
+
+    private JTextField m_dataFileURL;
+
+    private JButton m_recentButton;
+
+    private TableView m_previewTableView;
+
+    private JCheckBox m_hasRowHeaders;
+
+    private JCheckBox m_hasColHeaders;
+
+    private JComboBox m_delimField;
+
+    private JCheckBox m_cStyleComment;
+
+    private JTextField m_singleLineComment;
+
+    /*
+     * the properties of the first column in case people are (un)checking the
+     * 'fileHasRowHeaders' box, we save it here.
+     */
+    private ColProperty m_firstColProp;
+
+    /* flag to break recusrion */
+    private boolean m_insideLoadDelim;
+
+    private boolean m_insideDelimChange;
+
+    private boolean m_insideLoadComment;
+
+    private boolean m_insideCommentChange;
+
+    private boolean m_insideWSChange;
+
+    private boolean m_insideLoadWS;
+
+    private JPanel m_dialogPanel;
+
+    private JCheckBox m_readPosValues;
+
+    private JCheckBox m_ignoreWS;
+
+    // the dialog stores the previous WSs, because they can be deleted with
+    // only one click - boom gone.
+    private Vector<String> m_prevWhiteSpaces;
+
+    private JLabel m_analWarning;
+
+    private FileReaderPreviewTable m_previewTable;
+
+    /**
+     * Creates a new file reader dialog pain.
+     */
+    FileReaderNodeDialog() {
+        super("ASCII Data File Reader");
+        m_frSettings = new FileReaderNodeSettings();
+        m_insideLoadDelim = false;
+        m_insideDelimChange = false;
+        m_insideLoadComment = false;
+        m_insideCommentChange = false;
+
+        m_prevWhiteSpaces = null;
+
+        m_dialogPanel = new JPanel();
+        m_dialogPanel.setLayout(new BoxLayout(m_dialogPanel, BoxLayout.Y_AXIS));
+
+        m_dialogPanel.add(Box.createVerticalGlue());
+
+        m_dialogPanel.add(createFileNamePanel());
+        m_dialogPanel.add(createSettingsPanel());
+        m_dialogPanel.add(createPreviewPanel());
+
+        m_dialogPanel.add(Box.createVerticalGlue());
+        super.addTab("Settings", m_dialogPanel);
+    }
+
+    private JPanel createFileNamePanel() {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(),
+                "Enter ASCII data file location: (press 'Enter' to update "
+                        + "preview)"));
+
+        Box fileBox = Box.createHorizontalBox();
+
+        Box nameBox = Box.createHorizontalBox();
+        nameBox.add(Box.createHorizontalGlue());
+        nameBox.add(new JLabel("valid URL:"));
+        nameBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
+
+        m_dataFileURL = new JTextField();
+        m_dataFileURL.setMaximumSize(new Dimension(PANEL_WIDTH, COMP_HEIGHT));
+        m_dataFileURL.setMinimumSize(new Dimension(350, 25));
+        m_dataFileURL.setPreferredSize(new Dimension(350, 25));
+        m_dataFileURL.setToolTipText("Enter an URL of an ASCII data"
+                + "file, select from recent files, or browse");
+        nameBox.add(m_dataFileURL);
+
+        Box outerNameBox = Box.createVerticalBox();
+        outerNameBox.add(Box.createVerticalGlue());
+        outerNameBox.add(nameBox);
+        outerNameBox.add(Box.createVerticalGlue());
+        fileBox.add(outerNameBox);
+        fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
+
+        Box buttonBox = Box.createVerticalBox();
+        JButton browse = new JButton("Browse...");
+        browse.setMaximumSize(new Dimension(100, 15));
+        m_recentButton = new JButton("Recent...");
+        m_recentButton.setMaximumSize(new Dimension(100, 15));
+        m_recentButton.setEnabled(false); // enable if loading settings w/
+        // hist
+        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(browse);
+        buttonBox.add(m_recentButton);
+        buttonBox.add(Box.createVerticalGlue());
+        fileBox.add(buttonBox);
+        fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
+        fileBox.add(Box.createVerticalStrut(70));
+        fileBox.add(Box.createHorizontalGlue());
+
+        panel.add(fileBox);
+        panel.setMaximumSize(new Dimension(PANEL_WIDTH, 70));
+        panel.setMinimumSize(new Dimension(PANEL_WIDTH, 70));
+        /* install action listeners */
+        // set stuff to update preview when file location changes
+        m_dataFileURL.addKeyListener(new KeyAdapter() {
+            public void keyTyped(final KeyEvent e) {
+                if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+                    // update on 'Return'
+                    analyzeDataFileAndUpdatePreview(false);
+                }
+            }
+        });
+        m_dataFileURL.addFocusListener(new FocusAdapter() {
+            public void focusLost(final FocusEvent e) {
+                // analyze file on focus lost.
+                analyzeDataFileAndUpdatePreview(false);
+            }
+        });
+        m_dataFileURL.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(final DocumentEvent e) {
+                m_previewTableView.setDataTable(null);
+            }
+
+            public void insertUpdate(final DocumentEvent e) {
+                m_previewTableView.setDataTable(null);
+            }
+
+            public void removeUpdate(final DocumentEvent e) {
+                m_previewTableView.setDataTable(null);
+            }
+        });
+
+        browse.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                // sets the path in the file text field.
+                String newFile = popupFileChooser(m_dataFileURL.getText(),
+                        false);
+                if (newFile != null) {
+                    m_dataFileURL.setText(newFile);
+                    analyzeDataFileAndUpdatePreview(false);
+                }
+            }
+        });
+        m_recentButton.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                String[] hist = FileReaderNodeModel.getFileHistory();
+                int recentIdx = popupRecentDialog(hist);
+                if ((recentIdx > -1) && (recentIdx < hist.length)) {
+                    m_dataFileURL.setText(hist[recentIdx]);
+                    analyzeDataFileAndUpdatePreview(false);
+                }
+            }
+        });
+        return panel;
+    }
+
+    private int popupRecentDialog(final String[] hist) {
+        assert hist != null;
+        assert hist.length > 0;
+
+        // figure out the parent to be able to make the dialog modal
+        Frame f = null;
+        Container c = getPanel().getParent();
+        while (c != null) {
+            if (c instanceof Frame) {
+                f = (Frame)c;
+                break;
+            }
+            c = c.getParent();
+        }
+
+        RecentFilesDialog dlg = new RecentFilesDialog(f, hist);
+        return dlg.openDialog();
+    }
+
+    private JPanel createPreviewPanel() {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Preview"));
+
+        Box hintBox = Box.createHorizontalBox();
+        Box tableBox = Box.createHorizontalBox();
+
+        hintBox.add(Box.createGlue());
+        hintBox.add(new JLabel("Click column header to change "
+                + "column properties (* = name/type user settings)"));
+        hintBox.add(Box.createGlue());
+
+        PreviewTableContentView ptcv = new PreviewTableContentView();
+        m_previewTableView = new TableView(ptcv);
+
+        tableBox.add(m_previewTableView);
+
+        panel.add(Box.createGlue());
+        panel.add(hintBox);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(tableBox);
+        panel.add(Box.createGlue());
+
+        // this is the callback for the preview table header click
+        ptcv.addPropertyChangeListener(
+                PreviewTableContentView.PROPERTY_SPEC_CHANGED,
+                new PropertyChangeListener() {
+                    public void propertyChange(final PropertyChangeEvent evt) {
+                        // thats the col idx the mouse was clicked on
+                        Integer colNr = (Integer)evt.getNewValue();
+                        setNewUserSettingsForColumn(colNr.intValue());
+                    }
+                });
+
+        return panel;
+
+    }
+
+    private JPanel createSettingsPanel() {
+        m_hasRowHeaders = new JCheckBox("read row headers");
+        m_hasRowHeaders.setToolTipText("Check if the file contains row headers"
+                + " in the first column");
+        m_hasColHeaders = new JCheckBox("read column headers");
+        m_hasColHeaders.setToolTipText("Check if the file contains column"
+                + " headers in the first line");
+        JLabel deliLabel = new JLabel("Column delimiter:");
+        m_delimField = new JComboBox();
+        m_delimField.setMaximumSize(new Dimension(70, 20));
+        m_delimField.setMinimumSize(new Dimension(70, 20));
+        m_delimField.setPreferredSize(new Dimension(70, 20));
+        m_delimField.setEditable(true);
+        Delimiter[] selDelims = DEFAULT_DELIMS;
+        m_delimField.setModel(new DefaultComboBoxModel(selDelims));
+        deliLabel.setToolTipText("Specify the data delimiter character(s)");
+        m_delimField.setToolTipText("Specify the data delimiter character(s)");
+        m_cStyleComment = new JCheckBox("Java-style comments");
+        m_cStyleComment.setToolTipText("Check to add support for '//' and "
+                + "\"'/*' and '*/'\" comment");
+        m_singleLineComment = new JTextField(2);
+        m_singleLineComment.setMaximumSize(new Dimension(55, 20));
+        m_singleLineComment.setMinimumSize(new Dimension(55, 20));
+        m_singleLineComment.setPreferredSize(new Dimension(55, 20));
+        JLabel commentLabel = new JLabel("Single line comment:");
+        JButton advanced = new JButton("Advanced...");
+        m_readPosValues = new JCheckBox("read all poss. values");
+        m_ignoreWS = new JCheckBox("ignore spaces and tabs");
+        m_ignoreWS.setToolTipText("If checked, whitespaces (spaces and tabs)"
+                + " will be discarded (if not quoted)");
+        // put them together in a panel
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(3, 3));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Basic Settings"));
+        // top row
+        Box rowBox = Box.createHorizontalBox();
+        rowBox.add(m_hasRowHeaders);
+        rowBox.add(Box.createGlue());
+        Box delimBox = Box.createHorizontalBox();
+        delimBox.add(Box.createHorizontalStrut(4));
+        delimBox.add(deliLabel);
+        delimBox.add(Box.createHorizontalStrut(3));
+        delimBox.add(m_delimField);
+        delimBox.add(Box.createGlue());
+        Box advBox = Box.createHorizontalBox();
+        advBox.add(Box.createGlue());
+        advBox.add(advanced);
+        advBox.add(Box.createGlue());
+        // middle row
+        Box colBox = Box.createHorizontalBox();
+        colBox.add(m_hasColHeaders);
+        colBox.add(Box.createGlue());
+        Box wsBox = Box.createHorizontalBox();
+        wsBox.add(m_ignoreWS);
+        wsBox.add(Box.createGlue());
+        // bottom row
+        Box pValBox = Box.createHorizontalBox();
+        pValBox.add(m_readPosValues);
+        pValBox.add(Box.createGlue());
+        Box cCmtBox = Box.createHorizontalBox();
+        cCmtBox.add(m_cStyleComment);
+        cCmtBox.add(Box.createGlue());
+        Box slcBox = Box.createHorizontalBox();
+        slcBox.add(commentLabel);
+        slcBox.add(Box.createHorizontalStrut(3));
+        slcBox.add(m_singleLineComment);
+        slcBox.add(Box.createGlue());
+        // now fill the grid
+        // first row
+        panel.add(rowBox);
+        panel.add(delimBox);
+        panel.add(advBox);
+        // second row
+        panel.add(colBox);
+        panel.add(wsBox);
+        panel.add(new JLabel(""));
+        // third row
+        panel.add(pValBox);
+        panel.add(cCmtBox);
+        panel.add(slcBox);
+        // and install listeners
+        int componentsHeight = (2 * COMP_HEIGHT) + 30 + 20;
+        // some extra for the border and for the space bewteen the two rows.
+        panel.setMaximumSize(new Dimension(PANEL_WIDTH, componentsHeight));
+        advanced.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                advancedSettings();
+            }
+        });
+        m_hasRowHeaders.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                rowHeadersSettingsChanged();
+            }
+        });
+        m_hasColHeaders.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                colHeadersSettingsChanged();
+            }
+        });
+        m_cStyleComment.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                commentSettingsChanged();
+            }
+        });
+        m_delimField.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                delimSettingsChanged();
+            }
+        });
+        m_readPosValues.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                readPosValuesChanged();
+            }
+        });
+        m_ignoreWS.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                ignoreWSChanged();
+            }
+        });
+        // set a filter to the single line comment.
+        m_singleLineComment.getDocument().addDocumentListener(
+                new DocumentListener() {
+                    public void changedUpdate(final DocumentEvent e) {
+                        commentSettingsChanged();
+                    }
+                    public void insertUpdate(final DocumentEvent e) {
+                        commentSettingsChanged();
+                    }
+                    public void removeUpdate(final DocumentEvent e) {
+                        commentSettingsChanged();
+                    }
+                });
+        // add a panel for the analyzer warning:
+        m_analWarning = new JLabel("");
+        m_analWarning.setForeground(Color.red);
+        JPanel analWarn = new JPanel();
+        analWarn.setLayout(new BoxLayout(analWarn, BoxLayout.X_AXIS));
+        analWarn.add(Box.createHorizontalGlue());
+        analWarn.add(m_analWarning);
+        // reserve a certain height for the (in the beginning invisible) label
+        analWarn.add(Box.createVerticalStrut(25));
+        analWarn.add(Box.createHorizontalGlue());
+
+        JPanel result = new JPanel();
+        result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
+        result.add(panel);
+        result.add(analWarn);
+        return result;
+    }
+
+    /**
+     * reads the settings of the 'fileHasRowHeaders' checkbox and transfers them
+     * into the internal settings object.
+     */
+    protected void rowHeadersSettingsChanged() {
+
+        m_frSettings.setFileHasRowHeadersUserSet(true);
+
+        if (m_frSettings.getFileHasRowHeaders()
+                && !m_hasRowHeaders.isSelected()) {
+            // settings changed to not reading row headers from file.
+            // that adds one column to the table
+            m_frSettings.setFileHasRowHeaders(false);
+            m_frSettings
+                    .setNumberOfColumns(m_frSettings.getNumberOfColumns() + 1);
+            // we must create a new colProperty for it - if not already created
+            if (m_firstColProp == null) {
+                DataColumnSpec firstColSpec = new DataColumnSpecCreator("Col0",
+                        StringType.STRING_TYPE).createSpec();
+                m_firstColProp = new ColProperty();
+                m_firstColProp.setColumnSpec(firstColSpec);
+                m_firstColProp.setMissingValuePattern("?");
+                m_firstColProp.setReadPossibleValuesFromFile(true);
+                m_firstColProp.setMaxNumberOfPossibleValues(2000);
+                m_firstColProp.setReadBoundsFromFile(false);
+                m_firstColProp.setUserSettings(false);
+            }
+
+            Vector<ColProperty> colProps = m_frSettings.getColumnProperties();
+            colProps.add(0, m_firstColProp);
+            m_frSettings.setColumnProperties(colProps);
+            if (!m_frSettings.getFileHasColumnHeaders()) {
+                // re-generate the column names - and 'fix' the first column
+                // if it's a duplicate - even if it's set by the user.
+                recreateColNames(true);
+            }
+            updatePreview();
+        } else if (!m_frSettings.getFileHasRowHeaders()
+                && m_hasRowHeaders.isSelected()) {
+            // somebody checked the hasRowheader box - that removes one column
+            m_frSettings.setFileHasRowHeaders(true);
+            m_frSettings
+                    .setNumberOfColumns(m_frSettings.getNumberOfColumns() - 1);
+            Vector<ColProperty> colProps = m_frSettings.getColumnProperties();
+            // save the first colProp in case user changes his mind...
+            m_firstColProp = colProps.remove(0);
+            m_frSettings.setColumnProperties(colProps);
+            if (!m_frSettings.getFileHasColumnHeaders()) {
+                // re-generate the column names
+                recreateColNames(false);
+            }
+            updatePreview();
+        }
+    }
+
+    /**
+     * reads the settings of the 'fileHasColHeaders' checkbox and transfers them
+     * into the internal settings object.
+     */
+    protected void colHeadersSettingsChanged() {
+        m_frSettings.setFileHasColumnHeadersUserSet(true);
+        m_frSettings.setFileHasColumnHeaders(m_hasColHeaders.isSelected());
+        if (!m_frSettings.getFileHasColumnHeaders()) {
+            recreateColNames(false);
+        }
+        updatePreview();
+
+    }
+
+    /**
+     * called whenever the state of the "read possible Values" checkbox changes.
+     * Transfers the current state into the global settings object. Sets the
+     * readRange flag for double and int cols, and the readPossValues flag for
+     * String columns.
+     */
+    protected void readPosValuesChanged() {
+
+        boolean readPosVals = m_readPosValues.isSelected();
+        m_readPosValues.setText("read all poss. values");
+
+        for (int c = 0; c < m_frSettings.getNumberOfColumns(); c++) {
+            ColProperty cProp = (ColProperty)m_frSettings.getColumnProperties()
+                    .get(c);
+
+            if (cProp.getColumnSpec().getType() instanceof StringType) {
+                // read nominal values for string columns
+                cProp.setReadPossibleValuesFromFile(readPosVals);
+                cProp.setMaxNumberOfPossibleValues(2000);
+                cProp.setReadBoundsFromFile(false);
+            } else if (cProp.getColumnSpec().getType().isCompatible(
+                    DoubleValue.class)) {
+                // read ranges for numerical cells (this should cover IntCells)
+                cProp.setReadPossibleValuesFromFile(false);
+                cProp.setReadBoundsFromFile(readPosVals);
+            } else {
+                // Int, Double, and StringCells is all the FileReader supports.
+                assert false : "Unsupported column type";
+                cProp.setReadPossibleValuesFromFile(false);
+                cProp.setReadBoundsFromFile(false);
+            }
+        }
+
+    }
+
+    /**
+     * the item changed listener to the 'ignore whitespaces' check box.
+     */
+    protected void ignoreWSChanged() {
+
+        if (m_insideLoadWS) {
+            return;
+        }
+        m_insideWSChange = true;
+
+        m_frSettings.setWhiteSpaceUserSet(true);
+
+        boolean checked = m_ignoreWS.isSelected();
+
+        // if the box gets unchecked we store the previous whitespaces. That is
+        // for support of extended settings which may allow for defining
+        // whitespaces, other than space and tab. Then, - if we wouldn't store
+        // the previous WSs the user could delete his definitions with one click
+        // by unchecking the box, and wouldn't get them back by checking it
+        // again.
+
+        if (checked) {
+            if (m_prevWhiteSpaces != null) {
+                // we just re-set the old whitespaces again
+                for (String ws : m_prevWhiteSpaces) {
+                    m_frSettings.addWhiteSpaceCharacter(ws);
+                }
+            } else {
+                // no previously user defined whitespaces, use our space+tab
+                // default.
+                m_frSettings.addWhiteSpaceCharacter(" ");
+                m_frSettings.addWhiteSpaceCharacter("\t");
+            }
+        } else {
+            // save the current whitespace definitions
+            m_prevWhiteSpaces = m_frSettings.getAllWhiteSpaces();
+            // and blow them all away.
+            m_frSettings.removeAllWhiteSpaces();
+        }
+
+        analyzeDataFileAndUpdatePreview(true); // force re-analyze
+
+        m_insideWSChange = false;
+    }
+
+    private void loadWhiteSpaceSettings() {
+
+        if (m_insideWSChange) {
+            return;
+        }
+        m_insideLoadWS = true;
+
+        m_ignoreWS.setSelected(m_frSettings.getAllWhiteSpaces().size() > 0);
+        m_prevWhiteSpaces = null;
+
+        m_insideLoadWS = false;
+    }
+
+    /**
+     * loads the settings from the global settings object into the panel's
+     * checkbox.
+     * 
+     */
+    private void loadReadPosValuesSettings() {
+
+        // count the number of cols we should read vals or range for
+        int readPosValsCols = 0;
+        int userSpecified = 0;
+
+        for (int c = 0; c < m_frSettings.getNumberOfColumns(); c++) {
+            ColProperty cProp = (ColProperty)m_frSettings.getColumnProperties()
+                    .get(c);
+            if (cProp.getReadPossibleValuesFromFile()
+                    || cProp.getReadBoundsFromFile()) {
+                readPosValsCols++;
+            }
+            if (cProp.getUserSettings()) {
+                userSpecified++;
+            }
+        }
+        // now set the checkbox accordingly
+        m_readPosValues.setText("read all poss. values");
+        if (readPosValsCols == 0) {
+            m_readPosValues.setSelected(false);
+        } else if (readPosValsCols == m_frSettings.getNumberOfColumns()) {
+            m_readPosValues.setSelected(true);
+        } else {
+            m_readPosValues.setSelected(true);
+            m_readPosValues.setText("read values of some cols");
+        }
+
+        // as soon as we have some user specified settings, we disable this box
+        if (userSpecified > 0) {
+            m_readPosValues.setEnabled(false);
+            m_readPosValues.setToolTipText("Disable due to user domain "
+                    + "settings. Click on preview header to change.");
+        } else {
+            m_readPosValues.setEnabled(true);
+            m_readPosValues.setToolTipText("Check to analyze the entire file "
+                    + "for possible values and ranges of all attributes");
+        }
+
+    }
+
+    /**
+     * reads the settings of the column delimiter box and transfers them into
+     * the internal settings object.
+     */
+    protected void delimSettingsChanged() {
+
+        if (m_insideLoadDelim) {
+            // when we load delimiter settings the delimStettings change - of
+            // course. We are not triggering any action then, though.
+            return;
+        }
+
+        m_insideDelimChange = true;
+
+        m_frSettings.setDelimiterUserSet(true);
+
+        // remove all delimiters except row delimiters
+        for (Delimiter delim : m_frSettings.getAllDelimiters()) {
+            if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
+                continue;
+            }
+            m_frSettings.removeDelimiterPattern(delim.getDelimiter());
+        }
+
+        // now set the selected one
+        String delimStr = null;
+        if (m_delimField.getSelectedIndex() > -1) {
+            delimStr = ((Delimiter)m_delimField.getSelectedItem())
+                    .getDelimiter();
+        } else {
+            delimStr = (String)m_delimField.getSelectedItem();
+            delimStr = FileTokenizerSettings.unescapeString(delimStr);
+        }
+        if ((delimStr != null) && (!delimStr.equals(""))) {
+            try {
+                m_frSettings.addDelimiterPattern(delimStr, false, false, false);
+            } catch (IllegalArgumentException iae) {
+                setErrorTable(new String[]{iae.getMessage()});
+                m_insideDelimChange = false;
+                return;
+            }
+        }
+
+        analyzeDataFileAndUpdatePreview(true); // force re-analyze
+        m_insideDelimChange = false;
+    }
+
+    /**
+     * loads the settings from the global settings object into the delimiter box
+     * and creates the basicDelim vector.
+     */
+    private void loadDelimSettings() {
+
+        if (m_insideDelimChange) {
+            return;
+        }
+
+        m_insideLoadDelim = true;
+
+        m_delimField.removeAllItems();
+
+        m_delimField.setModel(new DefaultComboBoxModel(DEFAULT_DELIMS));
+
+        for (Delimiter delim : m_frSettings.getAllDelimiters()) {
+            if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
+                continue;
+            }
+
+            if (((DefaultComboBoxModel)m_delimField.getModel())
+                    .getIndexOf(delim) < 0) {
+                // add all delimiters to the selection list of the combo box
+                m_delimField.addItem(delim);
+            }
+            m_delimField.setSelectedItem(delim);
+
+        }
+        m_insideLoadDelim = false;
+    }
+
+    /**
+     * called whenever the Java-Style comment box is clickered.
+     */
+    protected void commentSettingsChanged() {
+
+        if (m_insideLoadComment) {
+            return;
+        }
+
+        m_insideCommentChange = true;
+
+        m_frSettings.setCommentUserSet(true);
+
+        m_frSettings.removeAllComments();
+
+        boolean addedJSingleLine = false;
+
+        if (m_cStyleComment.isSelected()) {
+            m_frSettings.addBlockCommentPattern("/*", "*/", false, false);
+            m_frSettings.addSingleLineCommentPattern("//", false, false);
+            addedJSingleLine = true;
+        }
+
+        String slc = m_singleLineComment.getText().trim();
+        if (slc.length() > 0) {
+            if (!(slc.equals("//") && addedJSingleLine)) {
+                try {
+                    m_frSettings.addSingleLineCommentPattern(slc, false, false);
+                } catch (IllegalArgumentException iae) {
+                    setErrorTable(new String[]{iae.getMessage()});
+                    return;
+                }
+            }
+        }
+
+        analyzeDataFileAndUpdatePreview(true);
+
+        m_insideCommentChange = false;
+    }
+
+    /*
+     * sets the Java-Style comment check box from the current settings object
+     */
+    private void loadCommentSettings() {
+
+        if (m_insideCommentChange) {
+            return;
+        }
+
+        m_insideLoadComment = true;
+
+        boolean jBlockFound = false;
+        boolean jSingleLineFound = false;
+        Comment singleLine = null; // there might be an extra sl comment
+
+        for (Comment comment : m_frSettings.getAllComments()) {
+            if (comment.getEnd().equals("\n")) {
+                // its a single line comment
+                if (comment.getBegin().equals("//")) {
+                    jSingleLineFound = true;
+                } else {
+                    singleLine = comment;
+                }
+            } else {
+                // its a block comment
+                if (comment.getBegin().equals("/*")
+                        && comment.getEnd().equals("*/")) {
+                    jBlockFound = true;
+                }
+                // all other block comments we ignore - but the analyzer doesnt
+                // add them - and the user cant (without expert settings!)
+            }
+        }
+
+        m_cStyleComment.setSelected(jBlockFound && jSingleLineFound);
+        String singlePattern = "";
+        if (singleLine != null) {
+            singlePattern = singleLine.getBegin();
+        }
+        m_singleLineComment.setText(singlePattern);
+
+        m_insideLoadComment = false;
+
+    }
+
+    /**
+     * Pops open the dialog of the columnProperties object of the specified
+     * column. This will allow the user to enter new column name, type and
+     * missing value. Also changes the domain and 'read from file' flag.
+     * 
+     * @param colIdx the index of the column to get new user settings for
+     */
+    protected void setNewUserSettingsForColumn(final int colIdx) {
+
+        assert colIdx >= 0;
+        assert colIdx < m_frSettings.getColumnProperties().size();
+
+        Vector<ColProperty> cProps = m_frSettings.getColumnProperties();
+
+        Frame f = null;
+        Container c = getPanel().getParent();
+        while (c != null) {
+            if (c instanceof Frame) {
+                f = (Frame)c;
+                break;
+            }
+            c = c.getParent();
+        }
+
+        Vector<ColProperty> newColProps = ColPropertyDialog.openUserDialog(f,
+                colIdx, cProps);
+
+        if (newColProps != null) {
+            // user pressed okay for new settings
+            m_frSettings.setColumnProperties(newColProps);
+            loadReadPosValuesSettings();
+            updatePreview();
+        }
+
+    }
+
+    /**
+     * @see NodeDialogPane#loadSettingsFrom(NodeSettings,DataTableSpec[])
+     */
+    @Override
+    protected void loadSettingsFrom(final NodeSettings settings,
+            final DataTableSpec[] specs) {
+        assert (settings != null && specs != null);
+
+        try {
+            // this will fail if the settings are invalid (which will be the
+            // case when they come from an uninitialized model). We create
+            // an empty settings object in the catch block.
+            m_frSettings = new FileReaderNodeSettings(settings);
+        } catch (InvalidSettingsException ice) {
+            m_frSettings = new FileReaderNodeSettings();
+        }
+
+        /*
+         * This is a hack to speed up test flows. This will allow for setting a
+         * default data file location in the reader dialog. With this the only
+         * action in the file reader dialog is clicking okay (assuming the
+         * default settings of the analyzer are okay). This is a hack because
+         * settings that only contain the file name are not valid. So we accept
+         * a part of invalid settings here. It's really not good practice - but
+         * may help testing.
+         */
+        try {
+            URL dataFileLocation = new URL(settings
+                    .getString(FileReaderSettings.CFGKEY_DATAURL));
+            m_frSettings.setDataFileLocationAndUpdateTableName(
+                    dataFileLocation);
+        } catch (MalformedURLException mfue) {
+            // don't set the data location if it bombs
+        } catch (InvalidSettingsException ice) {
+            // don't set the data location if it bombs
+        }
+        /* end of hack */
+
+        // transfer settings from the structure in the dialog's components
+        if ((m_frSettings.getDataFileLocation() != null)
+                && (m_frSettings.getColumnProperties() != null)
+                && (m_frSettings.getColumnProperties().size() > 0)) {
+            // do not analyze file if we got settings to use
+            m_dataFileURL
+                    .setText(m_frSettings.getDataFileLocation().toString());
+            
+            loadSettings(false);
+        } else {
+            // load settings and analyze file
+            loadSettings(true);
+        }
+
+        updatePreview();
+    }
+
+    /**
+     * @see NodeDialogPane#saveSettingsTo(NodeSettings)
+     */
+    protected void saveSettingsTo(final NodeSettings settings)
+            throws InvalidSettingsException {
+
+        saveSettings();
+        if (m_previewTable.getErrorOccured()) {
+            // display the last row - which contains the error message
+            if (m_previewTableView.getContentModel().getRowCount() > 0) {
+                m_previewTableView.goToRow(m_previewTableView.getContentModel()
+                        .getRowCount() - 1);
+            }
+            // and let'em know.
+            throw new InvalidSettingsException("With the current settings"
+                    + " the file contains invalid data. Please check the last"
+                    + " row of the preview.");
+        }
+        m_frSettings.saveToConfiguration(settings);
+
+    }
+
+    /**
+     * updates the preview table, if a new and valid URL was specified in the
+     * data file name textfield. It will override all current settings with the
+     * settings from the file analyzer and display the data file contents with
+     * these new settings. It will do this only when a new and valid URL is set;
+     * if its invalid it will just clear the preview leaving the settings
+     * unchanged, and if the URL is the same than in the global settings object
+     * it will not (re)analyze the data file (and thus not change settings).
+     * Unless the parameter forceAnalyze is set true.
+     * 
+     * @param forceAnalyze forces the analysis of the datafile eventhough it
+     *            might be the one set in the global settings (and thus already
+     *            being analyzed).
+     *            <p>
+     *            NOTE: May change the global settings object completely.
+     * 
+     */
+    protected void analyzeDataFileAndUpdatePreview(final boolean forceAnalyze) {
+
+        URL newURL;
+
+        // clear preview first.
+        m_previewTableView.setDataTable(null);
+
+        try {
+            newURL = textToURL(m_dataFileURL.getText());
+        } catch (Exception e) {
+            // leave settings unchanged.
+            setErrorTable(new String[]{"Malformed URL '"
+                    + m_dataFileURL.getText() + "'."});
+            return;
+        }
+
+        boolean displayAnalWarning = false;
+
+        if (forceAnalyze 
+                || !newURL.equals(m_frSettings.getDataFileLocation())) {
+
+            // get new settings from the analyzer
+
+            if (!newURL.equals(m_frSettings.getDataFileLocation())) {
+                // start from scratch
+                FileReaderNodeSettings newFRNS = new FileReaderNodeSettings();
+                newFRNS.setDataFileLocationAndUpdateTableName(newURL);
+                try {
+                    m_frSettings = FileAnalyzer.analyze(newFRNS);
+                    displayAnalWarning = !m_frSettings.analyzeUsedAllRows();
+                } catch (IOException ioe) {
+                    setErrorTable(new String[]{"Can't access '" 
+                            + newURL + "'"});
+                    return;
+                }
+            } else {
+                // keep the old user settings - just blow away generated names
+                // and number of cols.
+                Vector<ColProperty> oldColProps = m_frSettings
+                        .getColumnProperties();
+
+                // prepare the settings object for re-analysis
+                m_frSettings.setNumberOfColumns(-1);
+                Vector<ColProperty> newProps = new Vector<ColProperty>();
+                if (oldColProps != null) {
+                    for (ColProperty cProp : oldColProps) {
+                        // take over only the ones modified by the user
+                        if (cProp.getUserSettings()) {
+                            newProps.add(cProp);
+                        } else {
+                            newProps.add(null);
+                        }
+                    }
+                }
+                m_frSettings.setColumnProperties(newProps);
+                m_frSettings.setDataFileLocationAndUpdateTableName(newURL);
+                try {
+                    m_frSettings = FileAnalyzer.analyze(m_frSettings);
+                    displayAnalWarning = !m_frSettings.analyzeUsedAllRows();
+                } catch (IOException ioe) {
+                    m_frSettings.setColumnProperties(oldColProps);
+                    setErrorTable(new String[]{"Can't access '" 
+                            + newURL + "'"});
+                    return;
+                }
+            }
+        }
+
+        loadSettings(false);
+
+        updatePreview();
+
+        // updatePreview clears the analWarning
+        if (displayAnalWarning) {
+            m_analWarning.setText("WARNING: suggested settings are based on "
+                    + "a partial file analysis only! Please verify.");
+        }
+    }
+
+    /*
+     * from the current settings it creates a data table and displays it in the
+     * preview pane. Will read column headers if set so.
+     */
+    private void updatePreview() {
+        // something in the settings changed - clear warning
+        m_analWarning.setText("");
+
+        // update preview
+        if ((m_frSettings.getDataFileLocation() == null)
+                || (m_frSettings.getDataFileLocation().equals(""))) {
+            // if there is no data file specified display empty table
+            m_previewTableView.setDataTable(null);
+            return;
+        }
+        SettingsStatus status = m_frSettings.getStatusOfSettings(true, null);
+        if (status.getNumOfErrors() > 0) {
+            String[] msgs = new String[status.getNumOfErrors()];
+            for (int m = 0; m < status.getNumOfErrors(); m++) {
+                msgs[m] = status.getErrorMessage(m);
+            }
+            setErrorTable(msgs);
+            return;
+        }
+        if (m_frSettings.getFileHasColumnHeaders()) {
+            try {
+                m_frSettings.readColumnHeadersFromFile();
+            } catch (IOException ioe) {
+                setErrorTable(new String[]{"I/O Error reading column headers"
+                        + " from file '"
+                        + m_frSettings.getDataFileLocation().toString() 
+                        + "'."});
+                return;
+            }
+
+        }
+        DataTableSpec tSpec = m_frSettings.createDataTableSpecNoValues();
+        tSpec = modifyPreviewColNames(tSpec);
+        m_previewTable = new FileReaderPreviewTable(tSpec, m_frSettings);
+        m_previewTableView.setDataTable(m_previewTable);
+    }
+
+    /*
+     * returns a new table spec object with the same content - just different
+     * column names. If the current settings have the 'user settings' flag set
+     * true for a column a asterisk is appended to the column name.
+     */
+    private DataTableSpec modifyPreviewColNames(final DataTableSpec tSpec) {
+        assert tSpec != null;
+        if (tSpec == null) {
+            return null;
+        }
+
+        int numCols = tSpec.getNumColumns();
+        DataColumnSpec[] colSpecs = new DataColumnSpec[numCols];
+        for (int c = 0; c < numCols; c++) {
+            DataColumnSpec cSpec = tSpec.getColumnSpec(c);
+            DataCell name;
+            boolean userSet = m_frSettings.getColumnProperties().get(c)
+                    .getUserSettings();
+            if (userSet) {
+                name = new DefaultStringCell(cSpec.getName().toString() + "*");
+            } else {
+                name = new DefaultStringCell(cSpec.getName().toString());
+            }
+            DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name,
+                    cSpec.getType());
+            dcsc.setDomain(cSpec.getDomain());
+            DataColumnSpec newSpec = dcsc.createSpec(); 
+            colSpecs[c] = newSpec;
+        }
+
+        return new DataTableSpec(colSpecs);
+
+    }
+
+    /*
+     * transfers the settings from the private member m_frSettings into the
+     * components. Will not transfer the file location unless specified by the
+     * parameter.
+     */
+    private void loadSettings(final boolean loadFileLocation) {
+
+        assert m_frSettings != null;
+
+        if (loadFileLocation) {
+            if (m_frSettings.getDataFileLocation() != null) {
+                m_dataFileURL.setText(m_frSettings.getDataFileLocation()
+                        .toString());
+            } else {
+                m_dataFileURL.setText("");
+            }
+            analyzeDataFileAndUpdatePreview(true);
+        }
+        m_hasRowHeaders.setSelected(m_frSettings.getFileHasRowHeaders());
+        m_hasColHeaders.setSelected(m_frSettings.getFileHasColumnHeaders());
+        // dis/enable the select recent files button
+        String[] hist = FileReaderNodeModel.getFileHistory();
+        boolean enable = (hist != null) && (hist.length > 0);
+        m_recentButton.setEnabled(enable);
+        loadDelimSettings();
+        loadCommentSettings();
+        loadReadPosValuesSettings();
+        loadWhiteSpaceSettings();
+
+    }
+
+    /*
+     * transfers the components settings into the FileNodeSettings object.
+     * Actually, as all components immediately set their state in the object,
+     * the only thing left is the file name from the data file location text
+     * field.
+     */
+    private void saveSettings() throws InvalidSettingsException {
+
+        try {
+            URL dataURL = textToURL(m_dataFileURL.getText());
+            m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
+            return;
+        } catch (MalformedURLException mfue) {
+            throw new InvalidSettingsException("Invalid (malformed) URL for "
+                    + "the data file location.");
+        }
+    }
+
+    /*
+     * traverses through the col properties and re-sets the column names that
+     * are not set by the user. The flag indicating a user set name is the
+     * 'useFileHeader' property. We start with "Col0" and make sure names are
+     * unique.
+     */
+    private void recreateColNames(final boolean uniquifyFirstColName) {
+        Vector<ColProperty> colProps = m_frSettings.getColumnProperties();
+
+        for (int c = 0; c < colProps.size(); c++) {
+            ColProperty cProp = colProps.get(c);
+            if ((cProp.getUserSettings())
+                    && (!((c == 0) && uniquifyFirstColName))) {
+                // name was set by user - consider it fixed.
+                continue;
+            }
+            String name;
+            if ((c == 0) && uniquifyFirstColName) {
+                // if we uniquify even the first col - we at least start with
+                // its current name as default
+                name = cProp.getColumnSpec().getName().toString();
+            } else {
+                name = "Col" + c;
+            }
+            // make sure the name is unique
+            boolean unique = false;
+            int count = 1;
+            while (!unique) {
+                unique = true;
+                for (int comp = 0; comp < colProps.size(); comp++) {
+                    // compare it with all user set columns til the end, because
+                    // we can't change the fixed column names.
+                    if (comp == c) {
+                        // don't compare it with it's old name. Gonna change.
+                        continue;
+                    }
+                    ColProperty compProp = colProps.get(comp);
+                    if (!compProp.getUserSettings()) {
+                        // don't compare to generated headers - gonna change.
+                        continue;
+                    }
+                    DataCell compName = compProp.getColumnSpec().getName();
+                    if (compName.toString().equals(name)) {
+                        unique = false;
+                        count++;
+                        name = "Col" + c + "(" + count + ")";
+                        break; // start all over again
+                    }
+                }
+            }
+            cProp.changeColumnName(new DefaultStringCell(name));
+        }
+        // We've changed the names in the colProperty objects - no need to
+        // write back the vector
+    }
+
+    /**
+     * Called when the user presses the "Advanced Settings..." button.
+     */
+    protected void advancedSettings() {
+        // figure out the parent to be able to make the dialog modal
+        Frame f = null;
+        Container c = getPanel().getParent();
+        while (c != null) {
+            if (c instanceof Frame) {
+                f = (Frame)c;
+                break;
+            }
+            c = c.getParent();
+        }
+        // pop open the advanced settings dialog with our current settings
+        FileReaderAdvancedDialog advDlg = new FileReaderAdvancedDialog(f,
+                m_frSettings);
+        advDlg.setModal(true);
+        advDlg.setVisible(true);
+        // will not continue until user closes the dialog
+
+        // first check if user closed via the readXML button
+        if (advDlg.closedViaReadXML()) {
+            readXMLSettings();
+            analyzeDataFileAndUpdatePreview(false); // don't reanalyze
+        } else if (advDlg.closedViaOk()) {
+            advDlg.overrideSettings(m_frSettings);
+            analyzeDataFileAndUpdatePreview(false); // don't reanalyze
+        }
+    }
+
+    /**
+     * pops up a file chooser dialog and reads the settings fromt the selected
+     * xml file.
+     */
+    protected void readXMLSettings() {
+        String xmlPath = popupFileChooser(m_dataFileURL.getText(), true);
+
+        if (xmlPath == null) {
+            // user canceled.
+            return;
+        }
+
+        FileReaderNodeSettings newFrns;
+
+        try {
+
+            newFrns = FileReaderNodeSettings.readSettingsFromXMLFile(xmlPath);
+
+        } catch (IllegalStateException ise) {
+            JOptionPane.showConfirmDialog(m_dialogPanel, ise.getMessage(),
+                    "Attention: Settings not read!",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        m_frSettings = newFrns;
+        loadSettings(false); // don't trigger file analysis
+        m_dataFileURL.setText(m_frSettings.getDataFileLocation().toString());
+        updatePreview();
+    }
+
+    /**
+     * pops up the file selection dialog and returns the path to the selected
+     * file - or null if the user canceled.
+     * 
+     * @param startingPath the path the dialog starts in.
+     * @param readXml if true the filter will be set to '*.xml' files
+     * @return the path to the selected file, or null if user canceled.
+     */
+    protected String popupFileChooser(final String startingPath,
+            final boolean readXml) {
+        // before opening the dialog, try to figure out a nice starting dir
+        String tryThis = startingPath;
+        if ((tryThis == null) || (tryThis.length() == 0)) {
+            // if we didn't get anything, use the first path in the
+            // file history (if we got any) - should be better than nothing
+            String[] hist = FileReaderNodeModel.getFileHistory();
+            if ((hist != null) && (hist.length > 0)) {
+                tryThis = hist[0];
+            }
+        }
+        String startingDir = "";
+        try {
+            URL newURL = textToURL(tryThis);
+            if (newURL.getProtocol().equals("file")) {
+                File tmpFile = new File(newURL.getPath());
+                startingDir = tmpFile.getAbsolutePath();
+            }
+        } catch (Exception e) {
+            // no valid path - start in the default dir of the file chooser
+        }
+
+        JFileChooser chooser;
+        chooser = new JFileChooser(startingDir);
+        if (readXml) {
+            chooser.setFileFilter(new FileReaderFileFilter("xml",
+                    "XML settings files"));
+        }
+
+        // make dialog modal
+        int returnVal = chooser.showOpenDialog(getPanel().getParent());
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            String path;
+            try {
+                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
+                        .toString();
+            } catch (Exception e) {
+                path = "<Error: Couldn't create URL for file>";
+            }
+            return path;
+        }
+        // user canceled - return null
+        return null;
+    }
+
+    /**
+     * Tries to create an URL from the passed string.
+     * 
+     * @param url the string to transform into an URL
+     * @return URL if entered value could be properly tranformed, or
+     * @throws MalformedURLException if the value passed was invalid
+     */
+    static URL textToURL(final String url) throws MalformedURLException {
+
+        if ((url == null) || (url.equals(""))) {
+            throw new MalformedURLException("Specify a not empty valid URL");
+        }
+
+        URL newURL;
+        try {
+            newURL = new URL(url);
+        } catch (Exception e) {
+            // see if they specified a file without giving the protocol
+            File tmp = new File(url);
+
+            // if that blows off we let the exception go up the stack.
+            newURL = tmp.getAbsoluteFile().toURL();
+        }
+        return newURL;
+    }
+
+    private void setErrorTable(final String[] errorMsgs) {
+        m_previewTableView.setDataTable(new ErrTable(errorMsgs));
+    }
+
+    /**
+     * Helper class to show error messages in preview table.
+     * 
+     * @author ohl, University of Konstanz
+     */
+    private final class ErrTable implements DataTable {
+        private DataTableSpec m_tSpec;
+
+        private String[] m_errMsgs;
+
+        /**
+         * A table containing error messages to be displayed in the preview.
+         * 
+         * @param errMessages the error messages showing each in one row.
+         */
+        private ErrTable(final String[] errMessages) {
+            m_tSpec = null;
+            m_errMsgs = errMessages;
+        }
+
+        /**
+         * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+         */
+        public DataTableSpec getDataTableSpec() {
+            if (m_tSpec == null) {
+                m_tSpec = new DataTableSpec(
+                        new DataCell[]{new DefaultStringCell("ErrorMessages")},
+                        new DataType[]{StringType.STRING_TYPE});
+            }
+            return m_tSpec;
+        }
+
+        /**
+         * @see de.unikn.knime.core.data.DataTable#iterator()
+         */
+        public RowIterator iterator() {
+            return new ErrRowIterator(m_errMsgs);
+        }
+
+    }
+
+    /**
+     * Helper class to show error messages in preview table.
+     * 
+     * @author ohl, University of Konstanz
+     */
+    private final class ErrRowIterator extends RowIterator {
+
+        private String[] m_errMsgs;
+
+        private int m_nextIdx;
+
+        /**
+         * RowIterator class for ErrTable.
+         * 
+         * @param errMsgs pass the error message the iterator should produce
+         */
+        private ErrRowIterator(final String[] errMsgs) {
+            m_errMsgs = errMsgs;
+            m_nextIdx = 0;
+        }
+
+        /**
+         * @see de.unikn.knime.core.data.RowIterator#hasNext()
+         */
+        public boolean hasNext() {
+            return m_nextIdx < m_errMsgs.length;
+        }
+
+        /**
+         * @see de.unikn.knime.core.data.RowIterator#next()
+         */
+        public DataRow next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException(
+                        "The row iterator proceeded beyond the last error msg");
+            }
+            // we know that we have to create one column with a string cell.
+            DataCell rowID = new DefaultStringCell("Err" + (m_nextIdx + 1));
+            return new DefaultRow(rowID, new String[]{m_errMsgs[m_nextIdx++]});
+        }
+    }
+
+}

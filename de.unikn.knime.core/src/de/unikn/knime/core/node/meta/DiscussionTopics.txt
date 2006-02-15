@@ -1,0 +1,15 @@
+Execute within a meta workflow.
+	- inner and outer workflow must be connected to trigger a backward
+		execution.
+		-> Problem: at the moment the data table is only set into the meta input
+			nodes if the meta node was executed from outside.
+			=> no inner execution possible so far without execution of the
+				outer node
+				
+Local - Global reset for n-fold stuff
+	- idea: when propagating a reset check for special nodes like meta output
+		nodes, etc. 
+		- Problem: two kinds of reset neccessary (at least a boolean indicator)
+		
+How to realize a special n-fold meta node
+	- derive subclass

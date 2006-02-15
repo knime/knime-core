@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!--
+====================================================================
+This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+
+Copyright, 2003 - 2006 
+Universitaet Konstanz, Germany.
+Lehrstuhl fuer Angewandte Informatik
+Prof. Dr. Michael R. Berthold
+
+You may not modify, publish, transmit, transfer or sell, reproduce,
+create derivative works from, distribute, perform, display, or in 
+any way exploit any of the content, in whole or in part, except as 
+otherwise expressly permitted in writing by the copyright owner.
+====================================================================
+-->
+</head>
+<body>
+Contains all classes needed to implement a new node in the workflow.<br>
+<br>
+It contains classes Node, NodeInPort, and NodeOutPort (see 
+<code>Node.java</code>, <code>NodeOutPort.java</code>, and 
+<code>NodeInPort.java</code>) that will be
+instantiated when a new node is plugged into the workflow. And it
+provides abstract classes NodeModel, NodeView
+and NodeDialog (see <code>NodeModel.java</code>, <code>NodeView.java</code>
+and <code>NodeDialogPane.java</code>)
+that must be extended when a new type of node is implemented.<br>
+<br>
+Nodes are connected to each other through their ports. Data or models are
+exchanged over these connections. Nodes implement a certain task, like
+reading in data, analyzing, displaying, writing out data,
+etc. The final class Node, together with the abstract NodeModel,
+NodeDialog, and
+NodeView does most of the infrastructural work that is needed to
+connect a new node in the workflow.<br>
+<br>
+Nodes have different states: not executable, executable, or executed. A
+node is not executable until all ports are connected to predecessor
+nodes and all required parameters are set (which depends on the task of
+the specific node model). If a node is executable the execution
+can be invoked, causing the node to read in the DataTables (see
+the data package) and models from its inputs, to do what ever it is supposed to 
+do with the data and/or models (again depending on the specific incarnation of 
+the node model), and to provide new DataTables at its output ports. If execution
+finishes successfully the node is in the state "executed".<br>
+<br>
+Nodes should implement the following Model-View-Controller concept.
+The model computes and stores the content of the node. A view
+provides a view to the actual state of the model; it doesn't change the
+model. There could be more than one view, providing different kinds of
+views onto the model. The controller is the part that modifies the model. In our
+case there is more than one controller. The NodeDialogPane implements a
+controller that sets the parameters in the NodeModel before it can be
+executed.<br>
+<br>
+<img alt="the intestines of a node" src="doc-files/node.png"
+ style="height: 810px; width: 842px;"><br>
+<br>
+The communincation between the dialog and the model is happening
+through <code>NodeSettings</code> objects (see <code>NodeSettings.java</code>).
+The dialog will read the current settings of the model 
+before opening, and new user settings will be transfered back
+into the model. For this, the derived dialog and
+model must implement load and save settings methods, the model will
+have in addition a validate settings method. The transfer of these
+objects is implemented in the abstract classes.<br>
+<br>
+Things a new Node implementation (here called myNode...) must&nbsp;
+provide:<br>
+<ul>
+  <li>a new class <code style="text-decoration: underline;">myNodeFactory</code>
+derived from <code>NodeFactory</code>
+(see <code>NodeFactory.java</code>) : <code>myNodeFactory</code>
+returns
+new instances of
+myNodeModel, myNodeView, and myNodeDialog, if implemented. The
+instances created by one NodeFactory must work together and form the
+Model-View-Controller concept for that particular incarnation of a node. 
+NodeView and NodeDialog are optional (the NodeFactory can return null), 
+NodeModel has to be provided always.</li>
+  <li>a new class <code style="text-decoration: underline;">myNodeModel</code>
+derived from <code>NodeModel</code> (see <code>NodeModel.java</code>)
+representing the content model of a node. The <code>myNodeModel</code> must
+implement at least:</li>
+  <li>a method <code>myNodeModel.<span
+ style="text-decoration: underline;">execute</span>(...)</code>, which
+performs the actual task of the node, invoked during <code>executeNode()</code>.
+It gets the DataTable objects from the inputs of the node as parameters
+and must provide DataTable objects for the outputs of the node as
+result. <br>
+  </li>
+  <li>a method <code>myNodeModel.<span
+ style="text-decoration: underline;">configure</span></code>,
+which provides meta information about the DataTables that will be
+generated during execution - at a time before execution. Some nodes can
+provide information upfront about the
+structure of the DataTables they will create, either after
+parameters are set or after they've recieved information about the
+incoming DataTables. They should return this meta information in 
+<code>DataTableSpecs</code>
+as a
+result of this method. The others just return null. In addition, this
+method must indicate whether the model recieved all settings and is
+ready to be executed.<br>
+  </li>
+  <li>a method <code style="text-decoration: underline;">saveSettingsTo(...)</code>
+that will write out the current settings of the model into a 
+<code>NodeSettings</code>object.</li>
+  <li>a method <code style="text-decoration: underline;">validateSettings(...)</code>
+which checks a settings object telling if the settings in there are
+complete and consistent.</li>
+  <li>a method 
+	<code style="text-decoration: underline;">loadValidatedSettings(...)</code>
+which sets new values in the internal settings of the model from a
+valid settings object.<br>
+  </li>
+  <li>a method <code>myNodeModel.<span
+ style="text-decoration: underline;">reset</span>()</code> that clears
+out all internal data
+depending on or derived from any incoming data from predecessors.</li>
+</ul>
+In addition, a node should think about providing a <code>HiLiteHandler</code>
+(see <code>HiLiteHandler.java</code>). HiLiteHandler
+objects are independend
+and separate instances storing the hilite status for each data
+point in a DataTable. Any (part of a) node can
+ask a hilite handler for this property of a given row, and it can also register
+as listener to be notified of any change in the properties of any row.
+On the other hand each node can set new properties in a handler and can
+expect these properties to show in all nodes listening.<br>
+New hilite handler instances must be created by nodes that create
+datatables with new rowkeys at their outputs. In the method 
+<code>NodeModel.getOutHiLiteHandler(int)</code> the
+model decides for each output port which HiLiteHandler goes along
+with the DataTable provided at this output port. The default
+implementation in the abstract NodeModel just passes along the
+HiLiteHandler it receives at input port "0". (And if it has no input
+port, it will instantiate a new HiLiteHandler, as it must be the
+beginning of a data flow then.) There are default hilite handler
+implementations (see package node.property) that can be used when a new
+handler instance is needed.<br>
+<br>
+</body>
+</html>

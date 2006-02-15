@@ -1,0 +1,80 @@
+<!--
+====================================================================
+This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+
+Copyright, 2003 - 2006 
+Universitaet Konstanz, Germany.
+Lehrstuhl fuer Angewandte Informatik
+Prof. Dr. Michael R. Berthold
+
+You may not modify, publish, transmit, transfer or sell, reproduce,
+create derivative works from, distribute, perform, display, or in 
+any way exploit any of the content, in whole or in part, except as 
+otherwise expressly permitted in writing by the copyright owner.
+====================================================================
+-->
+<body>
+Contains a node implementation that reads in data from an ASCII file.
+<p>
+There are various settings to specify the format of the data file, all stored
+in the {@link de.unikn.knime.base.node.io.filereader.FileReaderNodeSettings} 
+object. They will be set in the file reader's dialog. In there the 
+{@link de.unikn.knime.base.node.io.filereader.FileAnalyzer} does the job of 
+guessing the settings by looking at the first couple of thousands of lines of 
+the file.<p>
+The node provides a {@link de.unikn.knime.base.io.filereader.FileTable} at its 
+output port. The actual job of reading in the file is done in the 
+{@link de.unikn.knime.base.io.filereader.RowIterator}. It reads in the data as 
+requested, line by line, as specified by the settings.
+<p>
+To 
+During the execution of the node it reads through the entire file once. The
+reason for that is, the row iterator fails if an unexpected data is read. 
+Unexpected data is for example an invalid number, or something it cannot 
+really deal with. If the filereader would not traverse the entire file once,
+the row iterator would fail at some later time, when a successor node is 
+executing - and it would be very hard for the user to relate the failure
+of a successor node to a problem during file reading. Another nice side effect
+of this is, the filereader can provide a <code>DataTableSpec</code> (after 
+execution) with domain information (like possible values or value ranges) filled
+in.
+
+
+
+
+
+The <code>FileTable</code> requires a XML file that specifies the location and 
+structure of the data to read (see xml package and FileTableSpec.dtd). A valid 
+<code>URL</code> of this XML file has to be passed to the <code>FileTable</code>
+constructor. Another constructor will accept a <code>FileTableSpec</code>.
+<p>
+A <strong><code>FileTableSpec</code></strong> (see FileTableSpec.java) contains 
+a <code>DataTableSpec</code> (see data package). An <code>URL</code> of a XML 
+file must be provided to the constructor. The <code>FileTableSpec</code> object 
+will read in the XML file during construction and extract the table structure 
+from there, without reading from the actual data location.
+<p>
+The actual job of reading the data from the source is done by the 
+<code>RowIterator</code> (see FileRowIterator.java). It uses the tokenizer 
+(see <code>FileTokenizer</code>) to split the stream into columns - the 
+behaviour of the tokenizer must be specified in the XML file passed to the 
+<code>FileTable</code> constructor.
+<p>
+Also contains the implementation of a node for the workflow
+which allows reading data from a location specified by an URL.<br>
+<br>
+The node makes use of the filereader in the <code>data</code> package
+(see
+<code>knime.data.filereader</code>). This node has one output providing
+the <code>DataTable</code> read from the specified source during
+execution. The node also provides a HiLiteHandler at this output
+which was freshly instantiated in the node.<br>
+<br>
+The node is instantiated at the start of the data flow whenever data
+should be read from a file or location. It reads in an XML file from
+the specified location which in turn defines the URL of the data to
+read and the format of the data.<br>
+<br>
+
+</body>

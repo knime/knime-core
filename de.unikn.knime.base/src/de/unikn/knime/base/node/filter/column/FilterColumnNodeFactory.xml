@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+		Includes (or excludes) certain columns from data.
+    </entry>
+	<entry key="fulldescription">
+		This node allows to filter certain columns from the input table that
+		are	then hidden in the node's output. Use the buttons to move columns 
+		from the one list (Include or Exclude) to the other. To briefly 
+		describe the dialog settings:
+    </entry>
+    <entry key="Include">
+    		This list contains the column names that are contained in the output
+    		table. The search field allows to find column names in this list.
+    </entry>
+    <entry key="Exclude">
+        Contains the names of the columns in the input table that are hidden
+        in the output table.
+    </entry>
+</properties>

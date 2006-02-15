@@ -1,0 +1,167 @@
+/* @(#)$RCSfile$ 
+ * $Revision$ $Date$ $Author$
+ * 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   24.10.2005 (gabriel): created
+ */
+package de.unikn.knime.core.node;
+
+import de.unikn.knime.core.data.DataTable;
+import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
+
+/**
+ * A output port used transfere <code>DataTable</code>, 
+ * <code>DataTableSpec</code>, and <code>HiLiteHandler</code> objects between 
+ * nodes.
+ *  
+ * @author Peter Ohl, University of Konstanz
+ */
+final class DataOutPort extends NodeOutPort implements NodePort.DataPort {
+    
+    /**
+     * The data table for this port - if any.
+     */
+    private DataTable m_dataTable;
+
+    /**
+     * The table spec for this port.
+     */
+    private DataTableSpec m_tableSpec;
+    
+    /**
+     * The highlight handler of this port.
+     */
+    private HiLiteHandler m_hiliteHdl;
+
+    /**
+     * Creates a new output data port. All tranfer objects are set to null.
+     * @param portId An unique ID.
+     */
+    public DataOutPort(final int portId) {
+        super(portId);
+        m_tableSpec = null;
+        m_dataTable = null;
+        m_hiliteHdl = null;
+    }
+    
+    /**
+     * Sets a new data table spec in this port. The port will notify all
+     * connected input ports and port views.
+     * 
+     * @param tSpec The new data table spec for this port or null.
+     */
+    void setDataTableSpec(final DataTableSpec tSpec) {
+        m_tableSpec = tSpec;
+        for (NodeInPort inPort : super.getConnectedInPorts()) {
+            ((DataInPort) inPort).newTableSpecAvailable();
+        }
+        if (getPortView() != null) {
+            ((DataOutPortView) getPortView()).updateDataTableSpec(m_tableSpec);
+        }
+    }
+
+    /**
+     * Returns the <code>DataTableSpec</code> or null if not available.
+     * 
+     * @return The <code>DataTableSpec</code> for this port.
+     */
+    public DataTableSpec getDataTableSpec() {
+        return m_tableSpec;
+    }
+    
+    /**
+     * Sets a new data table in this port. The port will notify all connected
+     * input ports and its view.
+     * 
+     * @param dataTable The new data table for this port or null.
+     */
+    public void setDataTable(final DataTable dataTable) {
+        m_dataTable = dataTable;
+        for (NodeInPort inPort : super.getConnectedInPorts()) {
+            ((DataInPort) inPort).newDataTableAvailable();
+        }
+        if (getPortView() != null) {
+            ((DataOutPortView) getPortView()).updateDataTable(m_dataTable);
+        }
+    }
+
+    /**
+     * Returns the DataTable for this port, as set by the node this port is
+     * output for.
+     * 
+     * @return DataTable the DataTable for this port. Could be null.
+     */
+    public DataTable getDataTable() {
+        return m_dataTable;
+    }
+    
+    /**
+     * Returns the hilite handler for this port as set by the node this port is
+     * output for.
+     * 
+     * @return The HiLiteHandler for this port or null.
+     */
+    public HiLiteHandler getHiLiteHandler() {
+        return m_hiliteHdl;
+    }
+    
+    /**
+     * Sets a new hilight handler in the port. The port will notify all
+     * connected input ports of a really new (i.e. not equal) hightlight handler
+     * available.
+     * 
+     * @param hiLiteHdl The new HiLiteHandler for this port.
+     */
+    void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
+
+        boolean equal;
+        if (hiLiteHdl == null) {
+            equal = (m_hiliteHdl == null);
+        } else {
+            equal = hiLiteHdl.equals(m_hiliteHdl);
+        }
+
+        if (!equal) {
+            m_hiliteHdl = hiLiteHdl;
+            for (NodeInPort inPort : super.getConnectedInPorts()) {
+                ((DataInPort) inPort).newHiLitHandlerAvailable();
+            }
+            if (getPortView() != null) {
+                ((DataOutPortView) getPortView()).updateHiliteHandler(
+                        m_hiliteHdl);
+            }
+        }
+    }
+    
+    /**
+     * Opens a view for this port displaying the current data table, data table
+     * spec, and hilite handler settings.
+     * @param nodeName The name of the node this port belongs to. 
+     */
+    public void openPortView(final String nodeName) {
+        if (getPortView() == null) {
+            super.setPortView(new DataOutPortView(nodeName, getPortName()));
+            ((DataOutPortView) getPortView()).updateDataTable(m_dataTable);
+            ((DataOutPortView) getPortView()).updateDataTableSpec(m_tableSpec);
+            ((DataOutPortView) getPortView()).updateHiliteHandler(m_hiliteHdl);
+        }
+        getPortView().openView();
+    }
+    
+}   // DataOutPort

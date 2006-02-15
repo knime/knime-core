@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+	    translates inputs from the MetaNode to the inner workflow.
+	</entry>
+	<entry key="fulldescription">
+		The MetaInputNode translates inputs from the MetaNode to the inner
+		workflow. DO NOT USE THIS NODE!
+	</entry>
+</properties>

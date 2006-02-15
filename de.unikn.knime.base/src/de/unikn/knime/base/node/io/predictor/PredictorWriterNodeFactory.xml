@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+	    Writes models as XML to file.
+	</entry>
+	<entry key="fulldescription">
+	 	This node saves any prediction model into a file. Connect the input port
+	 	to a model output port of any prediction model generating node. Enter
+	 	the destination location in the configuration dialog of the node. When
+	 	executed, the node saves the incoming model as XML description in the
+	 	specified file.
+	</entry>
+</properties>

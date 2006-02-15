@@ -1,0 +1,123 @@
+/*
+ * @(#)$RCSfile$ 
+ * $Revision$ $Date$ $Author$
+ * --------------------------------------------------------------------- *
+ *   This source code, its documentation and all appendant files         *
+ *   are protected by copyright law. All rights reserved.                *
+ *                                                                       *
+ *   Copyright, 2003 - 2006                                              *
+ *   Universitaet Konstanz, Germany.                                     *
+ *   Lehrstuhl fuer Angewandte Informatik                                *
+ *   Prof. Dr. Michael R. Berthold                                       *
+ *                                                                       *
+ *   You may not modify, publish, transmit, transfer or sell, reproduce, *
+ *   create derivative works from, distribute, perform, display, or in   *
+ *   any way exploit any of the content, in whole or in part, except as  *
+ *   otherwise expressly permitted in writing by the copyright owner.    *
+ * --------------------------------------------------------------------- *
+ * History
+ *   03.08.2005 (ohl): created on his birthday
+ */
+package de.unikn.knime.core.node;
+
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.WindowConstants;
+
+/**
+ * Implements a view to inspect the data, tablespec and other stuff currently
+ * stored in an output port.
+ * 
+ * @author ohl, University of Konstanz
+ */
+abstract class NodeOutPortView extends JFrame {
+
+    /** Keeps track if view has been opened before. */
+    private boolean m_wasOpened = false;
+    
+    /** Initial frame width. */
+    static final int INIT_WIDTH = 500;
+    
+    /** Initial frame height. */
+    static final int INIT_HEIGHT = 400;
+
+    /**
+     * A view showing the stuff stored in the specified ouput port.
+     * 
+     * @param name The name of the node the inspected port belongs to.
+     */
+    NodeOutPortView(final String name) {
+        super(name);
+        // init frame
+        super.setName(name + " View");
+        super.setBackground(NodeView.COLOR_BACKGROUND);
+        super.setSize(INIT_WIDTH, INIT_HEIGHT);
+        setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosed(final WindowEvent e) {
+                // called when Window is x-ed out
+            }
+        });
+
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("File");
+        menu.setMnemonic('F');
+        JMenuItem item = new JMenuItem("Close");
+        item.setMnemonic('C');
+        item.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent event) {
+                setVisible(false);
+            }
+        });
+        menu.add(item);
+        menuBar.add(menu);
+        setJMenuBar(menuBar);
+    }
+
+    /**
+     * shows this view and brings it to front.
+     */
+    void openView() {
+        if (!m_wasOpened) { // if the view was already visible
+            m_wasOpened = true;
+            updatePortView();
+            // TODO (tg) m_tabs.invalidate();
+            // TODO (tg) m_tabs.repaint();
+            // TODO (tg) pack();
+            setLocation();
+        }
+        setVisible(true);
+        toFront();
+    }
+    
+    /**
+     * Validates and repaints the super component.
+     */
+    final void updatePortView() {
+        invalidate();
+        validate();
+        repaint();
+    }
+
+    /**
+     * Sets this frame in the center of the screen observing the current screen
+     * size.
+     */
+    private void setLocation() {
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setBounds(Math.max(0, (screenSize.width - getWidth()) / 2), Math.max(0,
+                (screenSize.height - getHeight()) / 2), Math.min(
+                screenSize.width, getWidth()), Math.min(
+                        screenSize.height, getHeight()));
+    }
+    
+}

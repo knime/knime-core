@@ -1,0 +1,78 @@
+/* @(#)$RCSfile$ 
+ * $Revision$ $Date$ $Author$
+ * 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   17.01.2006(sieb, ohl): reviewed 
+ */
+package de.unikn.knime.core.node.config;
+
+/**
+ * Config entry for boolean objects.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
+ */
+final class ConfigBooleanEntry extends AbstractConfigEntry {
+   
+    /** The boolean value. */
+    private final boolean m_boolean;
+    
+    /**
+     * Creates a new entry for boolean objects. 
+     * @param key This entry's key.
+     * @param b The boolean value.
+     */
+    ConfigBooleanEntry(final String key, final boolean b) {
+        super(key, ConfigEntries.xboolean);
+        m_boolean = b;
+    }
+
+    /**
+     * Creates a new entry for boolean objects. 
+     * @param key This entry's key.
+     * @param b The boolean value as String.
+     */
+    ConfigBooleanEntry(final String key, final String b) {
+        super(key, ConfigEntries.xboolean);
+        m_boolean = Boolean.parseBoolean(b);
+    }
+    
+    /**
+     * @return The boolean value.
+     */
+    public boolean getBoolean() {
+        return m_boolean;
+    }
+    
+    /**
+     * @return A String representation of this boolean.
+     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see java.lang.Boolean#toString(boolean)
+     */
+    public String toStringValue() {
+        return Boolean.toString(m_boolean);
+    }
+    
+    /**
+     * @see AbstractConfigEntry#hasIdenticalValue(AbstractConfigEntry)
+     */
+    @Override
+    protected boolean hasIdenticalValue(final AbstractConfigEntry ace) {
+        return ((ConfigBooleanEntry)ace).m_boolean == m_boolean;
+    }
+ 
+}

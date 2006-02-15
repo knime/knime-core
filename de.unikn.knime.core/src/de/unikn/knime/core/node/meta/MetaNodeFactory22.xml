@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+	    MetaNode with two inputs and two outputs.
+	</entry>
+	<entry key="fulldescription">
+		MetaNode with two inputs and two outputs.
+		Right-click on this node to open the meta-workflow editor.
+	</entry>
+</properties>

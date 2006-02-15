@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!--
+====================================================================
+This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+
+Copyright, 2003 - 2005
+Universitaet Konstanz, Germany.
+Lehrstuhl fuer Angewandte Informatik
+Prof. Dr. Michael R. Berthold
+
+You may not modify, publish, transmit, transfer or sell, reproduce,
+create derivative works from, distribute, perform, display, or in 
+any way exploit any of the content, in whole or in part, except as 
+otherwise expressly permitted in writing by the copyright owner.
+====================================================================
+-->
+</head>
+<body>
+  <p>
+    <a href="DataCells are used everywhere to hold the data. Multiple of them, combined
+    together to a DataRow, form one feature vector.<p>
+ 
+    There are different kinds of DataCells for different kinds of data. Like 
+    DoubleCell (for storing floatingpoint values),  IntCell (for storing 
+    numbers), and StringCell (to store Strings) - just to name a few.
+  <p>
+    Each DataCell comes with (at least) three components:<br>
+    <ol>
+      <li>
+        an interface (derived from DataValue) naming its value 
+        (like e.g. <code>IntValue</code>, or <code>DoubleValue</code>), 
+        and defining methods to retrieve the value,
+      <li>
+        a type object holding comparator(s), missing cell singleton, 
+        renderer(s), etc. and also storing other compatible datacell
+        types (e.g. <code>IntDataType</code> or <code>DoubleDataType</code>).
+      <li>
+        a default implementation of the DataCell (implementing the
+        above interface) which holds the actual value, and also has a
+        static reference to its type.
+    </ol>
+  <p>
+    Each DataCell implements its interface (from above item 1)) (called
+    its native type) and possibly other interfaces if it can represent 
+    its value losslessly through other datatypes (like an integer could be 
+    represented losslessly as double).<br>
+    All additional DataValue interfaces, which a DataCell implements, 
+    <em>must</em> be registered in its DataType's constructor through the 
+    method  <code>addCompatibleType<code>.  With this, the type knows about the 
+    abilities of its datacell and can - if asked (method 
+    <code>getCommonSuperType()</code>) - return a Datatype that is a 
+    common super type to two given DataCells (by looking at the list of
+    compatible data types and returning a type both cells are compatible 
+    (i.e. typecastable) to). This super type can then be asked for a comparator 
+    or renderer, etc. that will be able to handle both cells. The determination
+    of a common supertype may be, for instance, necessary when to tables are
+    merged such that two columns are concatenated.
+  <p>
+    DataCells have a method <code>isMissing</code> in order to be able to 
+    represent a missing value. The missing status of a data cell 
+    <em>must</em> be checked <em><b>before</b></em> it is  typecasted to the 
+    alleged DataValue class. Typecasting of missing cells to 
+    DataValue will fail as missing cells cannot return any value. 
+  <p>
+    If you need to represent a missing value, it can be retrieved from the 
+    corresponding DataType. The DataType base class 
+    implements the <code>getMissingCell()</code> and returns a singleton of a 
+    datacell (of unknown (inner) type). 
+  <p>
+	New implementations for new kinds of data cells must provide the three 
+	objects	already mentioned above: the interface of its native type, an 
+	implementation of the data cell storing the data, and a new data type 
+	object.<br>
+	The new value interface must be derived from the common base 
+	"value interface" <code>DataValue</code> and define all methods to read the
+	value(s) stored in the new data cell.<br>
+	The new data cell implementation must extend <code>DataCell</code> and
+	implement its native value interface. It must also implement other 
+	interfaces if it can represent its complete value losslessly and 
+	meaningfully  through another interface. The implemented interface must 
+	match all native values of compatible types that the cell's DataType claims
+	to support. 	In the <code>getType()</code> method the data cell should 
+	return a static singleton instance of its  corresponding  
+	<code>DataType</code> (which is described in the next paragraph). 
+  <p>
+	The DataType that has to be implemented should be derived (directly) from 
+	<code>DataType</code>. This data type must override the 
+	<code>getNativeValue</code> method returning the class of the native value 
+	interface (from above). It should also provide a native DataCellComparator by 
+	overriding <code>getNativeComparator()</code>.
+	It is also preferable to provide a static singleton in this type class that
+	can be returned by each DataCell of this type. As noted above, in the 
+	constructor of your new type you should add compatible types, for example
+	the IntegerType implementation adds in its constructor the compatible 
+	DoubleType as each integer can also be represented as a double. The cell 
+	implementation of the IntegerType, i.e. IntCell, must implement the native
+	value of IntegerType and also of DoubleType. 
+
+	Here is the hierarchy of all types of data cells defined in the core:
+	<br>
+	<img alt="Types of data cells and their compatibility" src="newDataCell.gif"
+	 style="width: 1200px; height: 1400px;"><br>
+	<br>
+</body>
+</html>

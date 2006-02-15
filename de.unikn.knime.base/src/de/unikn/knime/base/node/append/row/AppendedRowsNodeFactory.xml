@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+		Concatenates two tables row-wise.
+	</entry>
+	<entry key="fulldescription">
+		Concatenates two tables. The top of the output table is given as 
+		the first input table (top input port), the bottom as the second table,
+		resp. If both tables contain the same column names, they are 
+		concatenated (the column type is the common base type of both input 
+		column types). If one input table contains a column name that the other
+		table doesn't, this column will be in output table as well but it will 
+		contain missing values for those row that are given by the table lacking
+		this column.
+		The dialog allows to treat duplicate row keys, two options are 
+		available:
+	</entry>
+	<entry key="Skip Rows">
+		Duplicate row keys in the bottom table are not in the output table.
+	</entry>
+	<entry key="Append Suffix">
+		The output table will contain all rows, but duplicate row keys are 
+		labeled with a suffix.
+	</entry>
+</properties>

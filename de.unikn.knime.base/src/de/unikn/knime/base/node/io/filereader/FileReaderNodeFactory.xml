@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+	    flexible reader for ASCII files.
+	</entry>
+	<entry key="fulldescription">
+		This node can be used to read data from an ASCII file or URL location.
+		It can be configured to read in various formats. When you open the 
+		node's configuration dialog and provide a filename, it will try to guess the reader's settings 
+		by analyzing the beginning of the file (after a filename was provided).
+		
+		
+		In the node's 
+		configuration dialog you can specify the separator, the comment 
+		characters, column names, etc. (specifics see below) and you get a 
+		preview table to verify the settings. 
+		
+		During execute the node
+		will traverse through the entire data once and will fill in possible
+		values of nominal attributes and ranges for numerical columns in the
+		data table for the successor nodes.
+
+	</entry>
+	
+</properties>

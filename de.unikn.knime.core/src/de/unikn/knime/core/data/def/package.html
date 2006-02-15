@@ -1,0 +1,33 @@
+<!--
+====================================================================
+This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+
+Copyright, 2003 - 2006 
+Universitaet Konstanz, Germany.
+Lehrstuhl fuer Angewandte Informatik
+Prof. Dr. Michael R. Berthold
+
+You may not modify, publish, transmit, transfer or sell, reproduce,
+create derivative works from, distribute, perform, display, or in 
+any way exploit any of the content, in whole or in part, except as 
+otherwise expressly permitted in writing by the copyright owner.
+====================================================================
+-->
+<body>
+Provides default implementations for all abstract 
+classes in the data package.<br>
+<br>
+The default implementations of classes derived from DataCell just store their
+values in members of the appropriate java type (like DoubleCell has a private
+member of Java type double, etc.).<br>
+<br>
+The default implementation of DataTable is meant to be used for 
+testing and debugging purposes only. It stores all data contained in the table
+in a (possibly huge!) array of individual DataCells in memory. Only use it when
+you know the table is guaranteed to stay small.<br>
+Sometimes there is no way around storing the entire data table. If expensive
+computations are needed, or if it's just newly created data. In this case, if
+it's too much data to store in memory, use the <code>DataContainer</code>.
+<br>
+</body>

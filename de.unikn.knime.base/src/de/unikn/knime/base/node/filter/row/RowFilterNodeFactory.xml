@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+		Allows filtering of datarows by certain criteria, like row ID, 
+		attribute value, and row number range.  
+    </entry>
+    <entry key="fulldescription">
+ 		The node allows for row filtering with certain criterias. It can include
+ 		or exclude certain ranges (by row number), include or exclude rows with
+ 		a certain row ID, and in- or exclude rows with a certain value in a
+ 		selectable column (attribute). Below are the steps to configure the node
+ 		in its configuration dialog:
+ 	</entry>
+ 	<entry key="1. The 'criteria' tab:">
+		From the three selection boxes, choose which criteria should be used to 
+		filter rows.
+		The default setting is to include all rows from the table. After a list
+		is set to include or exclude rows the corresponding tab will allow for 
+		adjustments of this criteria.
+     </entry>
+ 	<entry key="2. The 'by row number' tab:">
+ 		If, in the 'criteria' tab, row range filtering is enabled, specify here
+ 		the first and last row number to in- or exclude (or set a checkmark to
+ 		extend the range all the way to the end of the data table).
+ 	</entry>
+ 	<entry key="3. The 'by row ID' tab:">
+ 		If, in the 'criteria' tab, row ID matching is enabled, enter here a
+ 		regular expression all included or excluded rows must match. You can also
+ 		specify if the match should be case sensitive and if the id must fully
+ 		match or just start with the specified pattern. 
+     </entry>
+     <entry key="4. The 'column value' tab:">
+ 		If, in the 'criteria' tab, filtering by value in a column is enabled,
+ 		select the column here and specify the criteria how to match the value
+ 		in that column. The options are: matching the string representation
+ 		against a regular expression, or checking the value of the attribute
+ 		to be in a certain number range.  If the range checking is disabled,
+ 		you either selected a non-numerical column, or there is no information
+ 		available about the incoming data (then, execute the predecessor node
+ 		to make it available). 
+     </entry>
+</properties>

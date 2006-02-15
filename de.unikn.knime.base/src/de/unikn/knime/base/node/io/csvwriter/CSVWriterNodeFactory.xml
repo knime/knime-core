@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+	    saves a data table into a file in csv (comma separated value) format
+	</entry>
+	<entry key="fulldescription">
+ 		This node writes out the data table coming in through its input port
+ 		into a file. The attribute values will be separated by commas. In the
+ 		configuration dialog of the node, enter a valid destination filename
+ 		and set a checkmark, if the column headers should be written out (in the
+ 		first line), and each line should be preceeded by the row ID. Also, a
+ 		pattern can be specified that should be written out, when an attribute
+ 		value is missing.
+	</entry>
+	
+</properties>

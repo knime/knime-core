@@ -1,0 +1,185 @@
+/*
+ * @(#)$RCSfile$ 
+ * $Revision$ $Date$ $Author$
+ *
+ * --------------------------------------------------------------------- *
+ *   This source code, its documentation and all appendant files         *
+ *   are protected by copyright law. All rights reserved.                *
+ *                                                                       *
+ *   Copyright, 2003 - 2006                                              *
+ *   Universitaet Konstanz, Germany.                                     *
+ *   Lehrstuhl fuer Angewandte Informatik                                *
+ *   Prof. Dr. Michael R. Berthold                                       *
+ *                                                                       *
+ *   You may not modify, publish, transmit, transfer or sell, reproduce, *
+ *   create derivative works from, distribute, perform, display, or in   *
+ *   any way exploit any of the content, in whole or in part, except as  *
+ *   otherwise expressly permitted in writing by the copyright owner.    *
+ * --------------------------------------------------------------------- *
+ */
+package de.unikn.knime.core.data.util;
+
+
+import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.StringType;
+import de.unikn.knime.core.data.def.DefaultDoubleCell;
+import de.unikn.knime.core.data.def.DefaultIntCell;
+import de.unikn.knime.core.data.def.DefaultStringCell;
+
+/**
+ * Factory to get <code>DataCell</code> representation for various 
+ * (java-)objects. 
+ * 
+ * <p>This class is used within the <code>DefaultTable</code> to wrap
+ * java objects in <code>DataCell</code>. If you implement your own 
+ * <code>DataCell</code> and use the <code>DefaultTable</code>, you
+ * probably  want to override this class.
+ * <p>This default implementation serves to get <code>DataCell</code> instances
+ * for basic java objects like <code>String</code>, <code>Integer</code>, 
+ * <code>Double</code> and their generic types like <code>int</code>, 
+ * <code>byte</code>, <code>double</code> etc. 
+ * 
+ * <p>To implement additional functionality, you usually override the proper
+ * <code>createDataCell</code> method like this:
+ * <pre>
+ * ObjectToDataCellConverter converter = new ObjectToDataCellConverter() {
+ *     public DataCell createDataCell(final Object o) {
+ *         if (o instanceof FooObject) {
+ *             return new FooDataCell((FooObject)o);
+ *         }
+ *         if (o instanceof FooBarObject) {
+ *             return new FooBarDataCell((FooBarObject)o);
+ *         }
+ *         return super.createDataCell(o);
+ *     }
+ * };
+ * </pre>
+ * It is also up to the user to implement further handling in the factory method
+ * for generic data types.
+ * @see de.unikn.knime.core.data.def.DefaultTable#DefaultTable(
+ * Object[][], String[], String[], ObjectToDataCellConverter)
+ * @author Bernd Wiswedel, University of Konstanz
+ */
+public class ObjectToDataCellConverter {
+    
+    /** 
+     * Singleton to be used for default handling. This convenience object may
+     * be used when default handling is sufficient. 
+     */
+    public static final ObjectToDataCellConverter INSTANCE = 
+        new ObjectToDataCellConverter();
+    
+    /** 
+     * Factory method to get <code>DataCell</code>s from basic types. This 
+     * implementation creates <code>DataCell</code>s depending on the class 
+     * type of <code>o</code> as follows:
+     * <table>
+     * <tr>
+     *   <th>Class or value of <code>o</code></th>
+     *   <th>Return class</th>
+     * </tr>
+     * <tr>
+     *   <td><code>null</code></td> 
+     *   <td><code>DefaultStringCell.INSTANCE</code></td>
+     * </tr>
+     * <tr>
+     *   <td><code>String</code></td> <td><code>DefaultStringCell</code></td>
+     * </tr>
+     * <tr>
+     *   <td><code>Integer</code></td> <td><code>DefaultIntCell</code></td>
+     * </tr>
+     * <tr>
+     *   <td><code>Byte</code></td> <td><code>DefaultIntCell</code></td>
+     * </tr>
+     * <tr>
+     *   <td><code>Double</code></td> <td><code>DefaultDoubleCell</code></td>
+     * </tr>
+     * <tr>
+     *   <td><code>Float</code></td> <td><code>DefaultDoubleCell</code></td>
+     * </tr>
+     * </table>
+     *   
+     * @param o The object to be converted into a <code>DataCell</code> or 
+     *          <code>null</code> to indicate a missing value.
+     * @return a new <code>DataCell</code> representing <code>o</code>.
+     * @throws IllegalArgumentException if <code>o</code> is not an instance
+     *         of the classes mentioned above. Derivates may override this
+     *         behavior.
+     */
+    public DataCell createDataCell(final Object o) {
+        if (o == null) {
+            return StringType.STRING_TYPE.getMissingCell();
+        }
+        if (o instanceof String) {
+            return new DefaultStringCell((String)o);
+        }
+        if (o instanceof Integer) {
+            return new DefaultIntCell(((Integer)o).intValue());
+        }
+        if (o instanceof Byte) {
+            return new DefaultIntCell(((Byte)o).intValue());
+        }
+        if (o instanceof Double) {
+            return new DefaultDoubleCell(((Double)o).doubleValue());
+        }
+        if (o instanceof Float) {
+            return new DefaultDoubleCell(((Float)o).doubleValue());
+        }
+        throw new IllegalArgumentException("Cannot create DataCell from "
+                + "objects of type \"" + o.getClass().getName() + "\".");
+    } // createDataCell(Object)
+    
+    /** 
+     * Creates new <code>DefaultDoubleCell</code> for a double. 
+     * @param d Double to be wrapped in a <code>DataCell</code>
+     * @return <code>new DefaultDoubleCell(d);</code>
+     * @see DefaultDoubleCell
+     */
+    public DataCell createDataCell(final double d) {
+        return new DefaultDoubleCell(d);
+    }
+
+    /** 
+     * Creates new <code>DefaultDoubleCell</code> for a float. 
+     * @param f Float to be wrapped in a <code>DataCell</code>
+     * @return <code>new DefaultDoubleCell((double)f);</code>
+     * @see DefaultDoubleCell
+     */
+    public DataCell createDataCell(final float f) {
+        return createDataCell((double)f);
+    }
+
+    /** 
+     * Creates new <code>DefaultIntCell</code> for an int. 
+     * @param i Int to be wrapped in a <code>DataCell</code>
+     * @return <code>new DefaultIntCell(i);</code>
+     * @see DefaultIntCell
+     */
+    public DataCell createDataCell(final int i) {
+        return new DefaultIntCell(i); 
+    }
+
+    /** 
+     * Creates new <code>DefaultIntCell</code> for a byte. 
+     * @param b Byte to be wrapped in a <code>DataCell</code>
+     * @return <code>new DefaultIntCell((int)b);</code>
+     * @see DefaultIntCell
+     */
+    public DataCell createDataCell(final byte b) {
+        return new DefaultIntCell((int)b);
+    }
+
+    /** 
+     * Creates new <code>DefaultIntCell</code> for a boolean having value
+     * 1 if <code>b==true</code> or 0 if <code>b==false</code>. 
+     * @param b Boolean to be wrapped in a <code>DataCell</code>
+     * @return A new <code>DefaultIntCell</code> having either value 1 or 0 
+     *         depending on <code>b</code>
+     * @see DefaultIntCell
+     */
+    public DataCell createDataCell(final boolean b) {
+        final int i = b ? 1 : 0;
+        return createDataCell(i);
+    }
+
+}

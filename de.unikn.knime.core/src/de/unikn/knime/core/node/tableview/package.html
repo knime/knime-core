@@ -1,0 +1,57 @@
+<!--
+====================================================================
+This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+
+Copyright, 2003 - 2006 
+Universitaet Konstanz, Germany.
+Lehrstuhl fuer Angewandte Informatik
+Prof. Dr. Michael R. Berthold
+
+You may not modify, publish, transmit, transfer or sell, reproduce,
+create derivative works from, distribute, perform, display, or in 
+any way exploit any of the content, in whole or in part, except as 
+otherwise expressly permitted in writing by the copyright owner.
+====================================================================
+-->
+<HTML>
+<BODY>
+<P> Node implementation of a table view. This node is used in the Hades workflow
+	to display a <CODE>DataTable,</CODE> thus it has one inport and no outports.
+</P>
+
+<P> In order to provide a reasonably fast view the key class of this package,
+	i.e. <CODE>TableContentModel</CODE>, uses a caching strategy that reads rows
+	from the <CODE>DataTable</CODE> on request and (ring-)buffers only the last 
+	accessed sequence of rows. For further details refer to the description of
+	<a href="TableContentModel.html"><CODE>TableContentModel</CODE></a>.
+</P>
+
+<P>
+	<H3 id="relation">Class relationship</H3>
+	The following figure summarizes the role of the different classes in this 
+	package. For simplicity we ignore the general node classes 
+	<CODE>TableNodeFactory</CODE>, <CODE>TableNodeModel</CODE> and 
+	<CODE>TableNodeView</CODE> as they provide the usual node functionality.
+	<BR><BR>
+	<CENTER>
+		<IMG title="Relationship between DataTable and classes in this package" 
+			src="doc-files/table.png">
+	</CENTER>
+	
+	<CODE>TableContentModel</CODE> is certainly the class containing most of
+	the functionality. It is the <CODE>TableModel</CODE> for the 
+	<CODE>TableContentView</CODE> and has a reference to the 
+	<CODE>DataTable</CODE> to be displayed. It contains the row cache and also
+	serves as the <CODE>HiLiteListener</CODE> (as it knows which rows it has 
+	to care about). <br>
+	<CODE>TableHeaderModel</CODE> is also a class implementing 
+	<CODE>javax.swing.TableModel</CODE>. It keeps a reference to its 
+	<CODE>TableContentModel</CODE> and encapsulates the keys for each row in 
+	the <CODE>DataTable</CODE>. Hence, it always has exactly one column. We had
+	to detach this model from the content model since the main view, i.e.
+	<CODE>TableView</CODE> displays the row head in separate panel.
+</P>
+
+</BODY>
+</HTML>

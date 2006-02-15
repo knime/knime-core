@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.1"?>
+
+<product name="Hades - Information Mining Platform" id="org.eclipse.platform.ide" application="de.unikn.knime.workbench.product.HADES_APPLICATION" useFeatures="false">
+
+   <aboutInfo>
+      <image path="/de.unikn.knime.workbench/icons/banner.gif"/>
+      <text>
+         Hades - Information Mining Platform
+      </text>
+   </aboutInfo>
+
+   <configIni use="default"/>
+
+   <launcherArgs>
+      <vmArgs>-Xmx256M</vmArgs>
+   </launcherArgs>
+
+   <windowImages small="/de.unikn.knime.workbench/icons/logo.gif" large="/de.unikn.knime.workbench/icons/bioml_group_logo.gif"/>
+
+
+   <launcher name="Hades">
+      <solaris/>
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
+
+   <plugins>
+      <plugin id="de.unikn.knime.base"/>
+      <plugin id="de.unikn.knime.chem"/>
+      <plugin id="de.unikn.knime.core"/>
+      <plugin id="de.unikn.knime.dev"/>
+      <plugin id="de.unikn.knime.exp"/>
+      <plugin id="de.unikn.knime.r"/>
+      <plugin id="de.unikn.knime.soap"/>
+      <plugin id="de.unikn.knime.wekaext"/>
+      <plugin id="de.unikn.knime.workbench"/>
+      <plugin id="de.unikn.knime.workbench.core"/>
+      <plugin id="de.unikn.knime.workbench.editor"/>
+      <plugin id="de.unikn.knime.workbench.examples"/>
+      <plugin id="de.unikn.knime.workbench.extension"/>
+      <plugin id="de.unikn.knime.workbench.help"/>
+      <plugin id="de.unikn.knime.workbench.helpview"/>
+      <plugin id="de.unikn.knime.workbench.nodes.base"/>
+      <plugin id="de.unikn.knime.workbench.nodes.experimental"/>
+      <plugin id="de.unikn.knime.workbench.product"/>
+      <plugin id="de.unikn.knime.workbench.r.ui"/>
+      <plugin id="de.unikn.knime.workbench.repository"/>
+      <plugin id="de.unikn.knime.workbench.ui"/>
+      <plugin id="org.apache.ant"/>
+      <plugin id="org.apache.lucene"/>
+      <plugin id="org.eclipse.ant.core"/>
+      <plugin id="org.eclipse.ant.ui"/>
+      <plugin id="org.eclipse.compare"/>
+      <plugin id="org.eclipse.core.commands"/>
+      <plugin id="org.eclipse.core.expressions"/>
+      <plugin id="org.eclipse.core.filebuffers"/>
+      <plugin id="org.eclipse.core.resources"/>
+      <plugin id="org.eclipse.core.resources.compatibility"/>
+      <plugin id="org.eclipse.core.resources.win32"/>
+      <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.core.runtime.compatibility"/>
+      <plugin id="org.eclipse.core.variables"/>
+      <plugin id="org.eclipse.debug.core"/>
+      <plugin id="org.eclipse.debug.ui"/>
+      <plugin id="org.eclipse.draw2d"/>
+      <plugin id="org.eclipse.gef"/>
+      <plugin id="org.eclipse.help"/>
+      <plugin id="org.eclipse.help.appserver"/>
+      <plugin id="org.eclipse.help.base"/>
+      <plugin id="org.eclipse.jdt"/>
+      <plugin id="org.eclipse.jdt.core"/>
+      <plugin id="org.eclipse.jdt.debug"/>
+      <plugin id="org.eclipse.jdt.debug.ui"/>
+      <plugin id="org.eclipse.jdt.doc.isv"/>
+      <plugin id="org.eclipse.jdt.doc.user"/>
+      <plugin id="org.eclipse.jdt.junit"/>
+      <plugin id="org.eclipse.jdt.junit.runtime"/>
+      <plugin id="org.eclipse.jdt.launching"/>
+      <plugin id="org.eclipse.jdt.source"/>
+      <plugin id="org.eclipse.jdt.ui"/>
+      <plugin id="org.eclipse.jface"/>
+      <plugin id="org.eclipse.jface.text"/>
+      <plugin id="org.eclipse.ltk.core.refactoring"/>
+      <plugin id="org.eclipse.ltk.ui.refactoring"/>
+      <plugin id="org.eclipse.osgi"/>
+      <plugin id="org.eclipse.pde"/>
+      <plugin id="org.eclipse.pde.build"/>
+      <plugin id="org.eclipse.pde.core"/>
+      <plugin id="org.eclipse.pde.doc.user"/>
+      <plugin id="org.eclipse.pde.junit.runtime"/>
+      <plugin id="org.eclipse.pde.runtime"/>
+      <plugin id="org.eclipse.pde.source"/>
+      <plugin id="org.eclipse.pde.ui"/>
+      <plugin id="org.eclipse.platform"/>
+      <plugin id="org.eclipse.search"/>
+      <plugin id="org.eclipse.swt"/>
+      <plugin id="org.eclipse.swt.win32.win32.x86"/>
+      <plugin id="org.eclipse.team.core"/>
+      <plugin id="org.eclipse.text"/>
+      <plugin id="org.eclipse.ui"/>
+      <plugin id="org.eclipse.ui.cheatsheets"/>
+      <plugin id="org.eclipse.ui.console"/>
+      <plugin id="org.eclipse.ui.editors"/>
+      <plugin id="org.eclipse.ui.externaltools"/>
+      <plugin id="org.eclipse.ui.forms"/>
+      <plugin id="org.eclipse.ui.ide"/>
+      <plugin id="org.eclipse.ui.intro"/>
+      <plugin id="org.eclipse.ui.views"/>
+      <plugin id="org.eclipse.ui.win32"/>
+      <plugin id="org.eclipse.ui.workbench"/>
+      <plugin id="org.eclipse.ui.workbench.texteditor"/>
+      <plugin id="org.eclipse.update.configurator"/>
+      <plugin id="org.eclipse.update.core"/>
+      <plugin id="org.eclipse.update.core.win32"/>
+      <plugin id="org.eclipse.update.ui"/>
+      <plugin id="org.junit"/>
+   </plugins>
+
+</product>

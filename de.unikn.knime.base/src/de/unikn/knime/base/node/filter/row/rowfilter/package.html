@@ -1,0 +1,48 @@
+<!--
+====================================================================
+This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+
+Copyright, 2003 - 2006 
+Universitaet Konstanz, Germany.
+Lehrstuhl fuer Angewandte Informatik
+Prof. Dr. Michael R. Berthold
+
+You may not modify, publish, transmit, transfer or sell, reproduce,
+create derivative works from, distribute, perform, display, or in 
+any way exploit any of the content, in whole or in part, except as 
+otherwise expressly permitted in writing by the copyright owner.
+====================================================================
+-->
+<body>
+Contains all filters currently implemented for the row filter node. <p>
+
+There is one base class <code>RowFilter</code> (see RowFilter.java) all filters
+must be derived from. It forces you to implement three functions for each new
+row filter: <br>
+<code>matches</code>, which returns a boolean result indicating whether or not 
+to include the row into the result,<br>
+<code>saveSettings</code>, a method saving the filter's settings into a config 
+object, and<br>
+<code>loadSettingsFrom</code> which should read the settings from a config
+object. <p>
+
+In order to recreate a filter from a given config object there exists a
+rowfilter factory (see <code>RowFilterFactory</class>). The abstract RowFilter
+adds an identifier string to the config object (before it delegates the
+actual saving of the settings to the derived class) and the factory reads
+this ID string (at loading time) to create the corresponding filter class. 
+As a consequence of this, each new filter must be registered with the
+<class>RowFilterFactory</class>. The wheres and hows can be easily figured
+out by looking at the comments in RowFilterFactory.java and to look at the
+existing examples there.
+
+Filters must decide in the <code>matches</code> method if a row should be
+included (result <code>true</code>) or filtered out (result <code>false</code>)
+from the result table. For that the entire row and the row number is passed to
+this function. However, if a filter can already tell the result for the current 
+row and all following rows, it can throw an exception and will not be bothered
+for any more rows. There is a <code>EndOfTableException</code> and a 
+<code>IncludeFromNowOn</code> exception which can be thrown to exclude/include 
+resp. the current and all following rows. 
+</body>

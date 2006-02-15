@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="shortdescription">
+		reads ARFF files.
+	</entry>
+    <entry key="fulldescription">
+ 		This node reads in ARFF data from any URL. In the configuration dialog
+		specify a valid URL and set a row prefix. A row ID will be generated 
+		by the reader in the form 'prefix + rownumber'. If no prefix is 
+		specified, the row ids are just the row numbers. Sparce ARFF files are
+		currently NOT SUPPORTED!
+	</entry>
+</properties>

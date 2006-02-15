@@ -1,0 +1,37 @@
+Manifest-Version: 1.0
+Bundle-Name: Hades Framework Base
+Bundle-SymbolicName: de.unikn.knime.base
+Bundle-Version: 0.3.0
+Bundle-ClassPath: knime-base.jar,
+ lib/ij.jar
+Bundle-Vendor: ALTANA Chair for Applied Computer Science
+Bundle-Localization: plugin
+Require-Bundle: de.unikn.knime.core;reprovide=true
+Provide-Package: de.unikn.knime.base.data.append.column,
+ de.unikn.knime.base.data.append.row,
+ de.unikn.knime.base.data.filter.column,
+ de.unikn.knime.base.data.util,
+ de.unikn.knime.base.node.append.row,
+ de.unikn.knime.base.node.filter.column,
+ de.unikn.knime.base.node.filter.row,
+ de.unikn.knime.base.node.filter.row.rowfilter,
+ de.unikn.knime.base.node.io.arffreader,
+ de.unikn.knime.base.node.io.arffwriter,
+ de.unikn.knime.base.node.io.csvwriter,
+ de.unikn.knime.base.node.io.def,
+ de.unikn.knime.base.node.io.filereader,
+ de.unikn.knime.base.node.io.filetokenizer,
+ de.unikn.knime.base.node.io.predictor,
+ de.unikn.knime.base.node.util,
+ de.unikn.knime.base.node.view.table,
+ ij,
+ ij.gui,
+ ij.io,
+ ij.macro,
+ ij.measure,
+ ij.plugin,
+ ij.plugin.filter,
+ ij.plugin.frame,
+ ij.process,
+ ij.text,
+ ij.util
