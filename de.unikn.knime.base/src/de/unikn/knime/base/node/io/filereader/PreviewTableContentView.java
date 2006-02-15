@@ -26,7 +26,7 @@ import javax.swing.table.JTableHeader;
 import de.unikn.knime.core.node.tableview.TableContentView;
 
 /**
- * Extension of an Hades table view that reacts on mouse events in the header.
+ * Extension of an KNIME table view that reacts on mouse events in the header.
  * It will sent a property change event to anyone interested in whenever
  * the column header in the table is clicked on. It will sent the column index
  * with the event as "new value" (last argument), the "old value" (middle

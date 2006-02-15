@@ -191,7 +191,7 @@ public class ARFFTable implements DataTable {
                     // the type was a list of nominal values
                     possVals = extractNominalVals(colType, fileLoc.toString(),
                             tokenizer.getLineNumber());
-                    // Hades uses string cells for nominal values.
+                    // KNIME uses string cells for nominal values.
                     type = StringType.STRING_TYPE;
                     readUntilEOL(tokenizer, fileLoc.toString());
                 } else {

@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-Name: Hades Framework Base
+Bundle-Name: KNIME Framework Basic Nodes
 Bundle-SymbolicName: de.unikn.knime.base
 Bundle-Version: 0.3.0
 Bundle-ClassPath: knime-base.jar,
