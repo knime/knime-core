@@ -6,7 +6,7 @@
          <meta.schema plugin="de.unikn.knime.workbench.repository" id="node" name="Node"/>
       </appInfo>
       <documentation>
-         This extension point can be used to plug new Hades Nodes into the repository.
+         This extension point can be used to plug new KNIME Nodes into the repository.
       </documentation>
    </annotation>
 

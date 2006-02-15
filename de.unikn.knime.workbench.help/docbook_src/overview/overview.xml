@@ -14,7 +14,7 @@
       - - - - - - - - - - - - - - - - -
       -->
     <sect1 id="overview_1">
-        <title>About the Hades Workbench</title>
+        <title>About the Konstanz Information Miner</title>
         <para></para>
 
     	<sect2 id="overview_1_1">
@@ -76,7 +76,7 @@
         <para></para>
         
             <sect2 id="overview_2_1">
-        		<title>The Hades Framework</title>
+        		<title>The Konstanz Information Miner Framework</title>
         		<para></para>
     		</sect2>
     

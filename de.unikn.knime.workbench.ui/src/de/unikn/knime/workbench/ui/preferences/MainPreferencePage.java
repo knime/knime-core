@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import de.unikn.knime.workbench.ui.HadesUIPlugin;
+import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * This class represents a preference page that is contributed to the
@@ -56,10 +56,10 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         super(GRID);
 
         // we use the pref store of the UI plugin
-        setPreferenceStore(HadesUIPlugin.getDefault()
+        setPreferenceStore(KNIMEUIPlugin.getDefault()
                 .getPreferenceStore());
 
-        setDescription("Hades workbench global preferences");
+        setDescription("Konstanz Information Miner global preferences");
     }
 
     /**

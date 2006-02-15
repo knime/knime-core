@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="Hades documentation" default="docbook2eclipse">
+<project name="Konstanz Information Miner documentation" default="docbook2eclipse">
 
     <description>
        Creates the documentation (plain html and eclipse-style) from the docbook source

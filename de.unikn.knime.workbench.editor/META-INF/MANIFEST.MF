@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
-Bundle-Name: Hades Workbench Flow-Editor
+Bundle-Name: KNIME Workbench Flow-Editor
 Bundle-SymbolicName: de.unikn.knime.workbench.editor; singleton=true
 Bundle-Version: 0.3.0
 Bundle-ClassPath: workbench-editor.jar
-Bundle-Activator: de.unikn.knime.workbench.HadesEditorPlugin
+Bundle-Activator: de.unikn.knime.workbench.KNIMEEditorPlugin
 Bundle-Vendor: ALTANA Chair for Applied Computer Science
 Bundle-Localization: plugin
 Provide-Package: de.unikn.knime.workbench,

@@ -37,13 +37,13 @@ import org.osgi.framework.BundleContext;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class HadesCorePlugin extends Plugin {
+public class KNIMECorePlugin extends Plugin {
 
     /** Make sure that this *always* matches the ID in plugin.xml. */
     public static final String PLUGIN_ID = "de.unikn.knime.workbench.core";
 
     // The shared instance.
-    private static HadesCorePlugin plugin;
+    private static KNIMECorePlugin plugin;
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
@@ -51,7 +51,7 @@ public class HadesCorePlugin extends Plugin {
     /**
      * The constructor.
      */
-    public HadesCorePlugin() {
+    public KNIMECorePlugin() {
         super();
         plugin = this;
     }
@@ -84,7 +84,7 @@ public class HadesCorePlugin extends Plugin {
      * 
      * @return Singleton instance of the Core Plugin
      */
-    public static HadesCorePlugin getDefault() {
+    public static KNIMECorePlugin getDefault() {
         return plugin;
     }
 
@@ -97,7 +97,7 @@ public class HadesCorePlugin extends Plugin {
      *         bundle
      */
     public static String getResourceString(final String key) {
-        ResourceBundle bundle = HadesCorePlugin.getDefault()
+        ResourceBundle bundle = KNIMECorePlugin.getDefault()
                 .getResourceBundle();
         try {
             return (bundle != null) ? bundle.getString(key) : key;

@@ -32,14 +32,14 @@ import org.osgi.framework.BundleContext;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class HadesUIPlugin extends AbstractUIPlugin {
+public class KNIMEUIPlugin extends AbstractUIPlugin {
     // Make sure that this *always* matches the ID in plugin.xml
 
     /** The plugin ID. */
     public static final String PLUGIN_ID = "de.unikn.knime.workbench.ui";
 
     // The shared instance.
-    private static HadesUIPlugin plugin;
+    private static KNIMEUIPlugin plugin;
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
@@ -47,7 +47,7 @@ public class HadesUIPlugin extends AbstractUIPlugin {
     /**
      * The constructor.
      */
-    public HadesUIPlugin() {
+    public KNIMEUIPlugin() {
         super();
         plugin = this;
     }
@@ -84,7 +84,7 @@ public class HadesUIPlugin extends AbstractUIPlugin {
      * 
      * @return The shared plugin instance
      */
-    public static HadesUIPlugin getDefault() {
+    public static KNIMEUIPlugin getDefault() {
         return plugin;
     }
 
@@ -96,7 +96,7 @@ public class HadesUIPlugin extends AbstractUIPlugin {
      * @return The resource string
      */
     public static String getResourceString(final String key) {
-        ResourceBundle bundle = HadesUIPlugin.getDefault().getResourceBundle();
+        ResourceBundle bundle = KNIMEUIPlugin.getDefault().getResourceBundle();
         try {
             return (bundle != null) ? bundle.getString(key) : key;
         } catch (MissingResourceException e) {

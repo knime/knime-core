@@ -432,7 +432,7 @@ public class NumericCoordinate extends Coordinate {
     /**
      * Calculates a numeric mapping assuming a <code>DoubleDataCell</code>.
      * 
-     * @see de.unikn.hades.core.data.coordinate.Coordinate#calculateMappedValue(de.unikn.hades.core.data.DataCell,
+     * @see de.unikn.knime.core.data.coordinate.Coordinate#calculateMappedValue(de.unikn.knime.core.data.DataCell,
      *      double, boolean)
      */
     @Override
@@ -459,7 +459,7 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.hades.core.data.coordinate.Coordinate#isNominal()
+     * @see de.unikn.knime.core.data.coordinate.Coordinate#isNominal()
      */
     @Override
     public boolean isNominal() {
@@ -469,7 +469,7 @@ public class NumericCoordinate extends Coordinate {
     /**
      * A numeric coordinate does not has a unused distance range.
      * 
-     * @see de.unikn.hades.core.data.coordinate.Coordinate#getUnusedDistBetweenTicks(double)
+     * @see de.unikn.knime.core.data.coordinate.Coordinate#getUnusedDistBetweenTicks(double)
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {

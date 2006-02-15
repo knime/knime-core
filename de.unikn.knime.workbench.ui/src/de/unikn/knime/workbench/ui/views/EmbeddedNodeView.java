@@ -42,7 +42,7 @@ import org.eclipse.ui.part.ViewPart;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * View for showing Workbench-embedded Hades Node-Views.
+ * View for showing Workbench-embedded KNIME Node-Views.
  * 
  * @author Florian Georg, University of Konstanz
  */

@@ -24,7 +24,7 @@ package de.unikn.knime.workbench.ui.preferences;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import de.unikn.knime.workbench.ui.HadesUIPlugin;
+import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Class used to initialize default preference values.
@@ -40,7 +40,7 @@ public class PreferenceInitializer extends
      */
     public void initializeDefaultPreferences() {
         // get the preference store for the UI plugin
-        IPreferenceStore store = HadesUIPlugin.getDefault()
+        IPreferenceStore store = KNIMEUIPlugin.getDefault()
                 .getPreferenceStore();
 
         // set default values

@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
-Bundle-Name: Hades Workbench Help
+Bundle-Name: KNIME Workbench Help
 Bundle-SymbolicName: de.unikn.knime.workbench.help; singleton=true
 Bundle-Version: 0.3.0
 Bundle-ClassPath: workbench-help.jar
-Bundle-Activator: de.unikn.knime.workbench.help.HadesHelpPlugin
+Bundle-Activator: de.unikn.knime.workbench.help.KNIMEHelpPlugin
 Bundle-Vendor: ALTANA Chair for Applied Computer Science
 Bundle-Localization: plugin
 Provide-Package: de.unikn.knime.workbench.help

@@ -17,7 +17,7 @@ import de.unikn.knime.workbench.core.WorkbenchErrorLogger;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class HadesRepositoryPlugin extends Plugin {
+public class KNIMERepositoryPlugin extends Plugin {
 
     // Make sure that this *always* matches the ID in plugin.xml
     /** The plugin-id. */
@@ -25,7 +25,7 @@ public class HadesRepositoryPlugin extends Plugin {
             + "repository";
 
     // The shared instance.
-    private static HadesRepositoryPlugin plugin;
+    private static KNIMERepositoryPlugin plugin;
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
@@ -36,7 +36,7 @@ public class HadesRepositoryPlugin extends Plugin {
     /**
      * The constructor.
      */
-    public HadesRepositoryPlugin() {
+    public KNIMERepositoryPlugin() {
         super();
         plugin = this;
     }
@@ -92,7 +92,7 @@ public class HadesRepositoryPlugin extends Plugin {
         try {
             RepositoryManager.INSTANCE.create();
         } catch (Exception e) {
-            WorkbenchErrorLogger.error("FATAL: error initializing Hades"
+            WorkbenchErrorLogger.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
         } finally {
 //            splashWin.close();
@@ -118,7 +118,7 @@ public class HadesRepositoryPlugin extends Plugin {
      * 
      * @return The plugin instance (singleton)
      */
-    public static HadesRepositoryPlugin getDefault() {
+    public static KNIMERepositoryPlugin getDefault() {
         return plugin;
     }
 
@@ -130,7 +130,7 @@ public class HadesRepositoryPlugin extends Plugin {
      * @return The string
      */
     public static String getResourceString(final String key) {
-        ResourceBundle bundle = HadesRepositoryPlugin.getDefault()
+        ResourceBundle bundle = KNIMERepositoryPlugin.getDefault()
                 .getResourceBundle();
         try {
             return (bundle != null) ? bundle.getString(key) : key;
@@ -185,9 +185,9 @@ public class HadesRepositoryPlugin extends Plugin {
     }
 
     /**
-     * This only works for images located in the HadesRepositry Plugin !
+     * This only works for images located in the KNIMERepositry Plugin !
      * 
-     * @param filename The filename, relative to the HadesRepositryPlugin root
+     * @param filename The filename, relative to the KNIMERepositryPlugin root
      * @return The image, default will be supplied if missing.
      */
     public Image getImage(final String filename) {

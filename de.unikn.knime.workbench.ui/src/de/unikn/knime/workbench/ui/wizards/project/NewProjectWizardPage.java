@@ -33,7 +33,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.swtdesigner.ResourceManager;
 
-import de.unikn.knime.workbench.ui.HadesUIPlugin;
+import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Page that is used as the "New Project" wizards' GUI.
@@ -54,11 +54,11 @@ public class NewProjectWizardPage extends WizardPage {
      */
     public NewProjectWizardPage() {
         super("wizardPage");
-        setTitle("New Hades Project Wizard");
+        setTitle("New KNIME Project Wizard");
         setDescription("Create a new project layout for data analysis."
-                + "\r\nThis may serve as container for Hades workflows.");
+                + "\r\nThis may serve as container for KNIME workflows.");
         setImageDescriptor(ResourceManager.getPluginImageDescriptor(
-                HadesUIPlugin.getDefault(), "icons/logo32x32.png"));
+                KNIMEUIPlugin.getDefault(), "icons/logo32x32.png"));
     }
 
     /**

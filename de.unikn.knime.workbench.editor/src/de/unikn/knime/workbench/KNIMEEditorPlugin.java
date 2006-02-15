@@ -32,14 +32,14 @@ import org.osgi.framework.BundleContext;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class HadesEditorPlugin extends AbstractUIPlugin {
+public class KNIMEEditorPlugin extends AbstractUIPlugin {
 
     // Make sure that this *always* matches the ID in plugin.xml
     /** The Plugin ID. */
     public static final String PLUGIN_ID = "de.unikn.knime.workbench.editor";
 
     // The shared instance.
-    private static HadesEditorPlugin plugin;
+    private static KNIMEEditorPlugin plugin;
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
@@ -47,7 +47,7 @@ public class HadesEditorPlugin extends AbstractUIPlugin {
     /**
      * The constructor.
      */
-    public HadesEditorPlugin() {
+    public KNIMEEditorPlugin() {
         super();
         plugin = this;
     }
@@ -80,7 +80,7 @@ public class HadesEditorPlugin extends AbstractUIPlugin {
      * 
      * @return The shared instance of this plugin
      */
-    public static HadesEditorPlugin getDefault() {
+    public static KNIMEEditorPlugin getDefault() {
         return plugin;
     }
 
@@ -92,7 +92,7 @@ public class HadesEditorPlugin extends AbstractUIPlugin {
      * @return The resource string
      */
     public static String getResourceString(final String key) {
-        ResourceBundle bundle = HadesEditorPlugin.getDefault()
+        ResourceBundle bundle = KNIMEEditorPlugin.getDefault()
                 .getResourceBundle();
         try {
             return (bundle != null) ? bundle.getString(key) : key;

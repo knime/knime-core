@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <welcomePage
-   title="Welcome to the Hades Workbench"
+   title="Welcome to the Konstanz Information Miner"
    format="wrap">
   
   <intro>
   This page will help familarize you with the 
-  <b>Hades Workbench</b> - the integrated environment for
+  <b>Konstanz Information Miner</b> - an integrated environment for
   intelligent data analysis, information mining and visualization.
   </intro>
    
@@ -14,7 +14,7 @@
   <b>Flow Editor</b> 
   This <topic id="/de.unikn.knime.workbench.help/toc.xml">editor</topic> 
   enables you to create complex workflows consisting of
-  different <topic id="??">nodes</topic>, that mnipulate the data.
+  different <topic id="??">nodes</topic>, that manipulate the data.
   </item>
   
   <item>

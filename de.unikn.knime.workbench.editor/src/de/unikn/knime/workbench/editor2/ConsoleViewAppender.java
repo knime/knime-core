@@ -44,7 +44,7 @@ import de.unikn.knime.core.node.NodeLogger;
 public final class ConsoleViewAppender extends Writer {
 
     /** Name for the console view. * */
-    public static final String CONSOLE_NAME = "Hades Console";
+    public static final String CONSOLE_NAME = "KNIME Console";
     
     /** Color: fatal error. * */
     public static final Color COLOR_FATAL_ERROR = Display.getDefault()

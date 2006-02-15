@@ -29,18 +29,18 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.workbench.ui.HadesUIPlugin;
+import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
- * Builder for Hades Projects. TODO Not used yet - may be used e.g. to validate
- * project/workflows and attach resource markers to the .hflow files.
+ * Builder for KNIME Projects. TODO Not used yet - may be used e.g. to validate
+ * project/workflows and attach resource markers to the .knime files.
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class HadesProjectBuilder extends IncrementalProjectBuilder {
+public class KNIMEProjectBuilder extends IncrementalProjectBuilder {
     
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(HadesProjectBuilder.class);
+        NodeLogger.getLogger(KNIMEProjectBuilder.class);
 
     /**
      * Builder id.
@@ -48,13 +48,13 @@ public class HadesProjectBuilder extends IncrementalProjectBuilder {
      * NOTE: This is always constructed by the ID of the plugin(!) + the ID as
      * defined in plugin.xml !
      */
-    public static final String BUILDER_ID = HadesUIPlugin.PLUGIN_ID
-            + ".HadesProjectBuilder";
+    public static final String BUILDER_ID = KNIMEUIPlugin.PLUGIN_ID
+            + ".KNIMEProjectBuilder";
 
     /**
      * Constructor.
      */
-    public HadesProjectBuilder() {
+    public KNIMEProjectBuilder() {
         super();
     }
 
@@ -65,7 +65,7 @@ public class HadesProjectBuilder extends IncrementalProjectBuilder {
     protected IProject[] build(final int kind, final Map args,
             final IProgressMonitor monitor) throws CoreException {
 
-        LOGGER.debug("Hades project builder invoked...");
+        LOGGER.debug("KNIME project builder invoked...");
 
         return new IProject[0];
     }

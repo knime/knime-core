@@ -27,7 +27,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import de.unikn.knime.workbench.HadesEditorPlugin;
+import de.unikn.knime.workbench.KNIMEEditorPlugin;
 
 /**
  * This manages all the (internal) images of the Editor-Plugin. Images are
@@ -91,11 +91,11 @@ public final class ImageRepository {
             + "default.gif";
 
     // The internal registry
-    private static ImageRegistry registry = HadesEditorPlugin.getDefault()
+    private static ImageRegistry registry = KNIMEEditorPlugin.getDefault()
             .getImageRegistry();
 
     // default plugin ID, used to lookup the default "scope"
-    private static final String PLUGIN_ID = HadesEditorPlugin.PLUGIN_ID;
+    private static final String PLUGIN_ID = KNIMEEditorPlugin.PLUGIN_ID;
 
     /**
      * Adds an image(-descriptor) to the registry.

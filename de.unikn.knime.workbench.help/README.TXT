@@ -11,7 +11,7 @@ de.unikn.knime.workbench.help
 
 Description
 ----------------
-This plugin contributes help for the Hades Modeller/Framework into
+This plugin contributes help for the KNIME Framework into
 the Eclipse Help-System.
 Additionally, this contains the official design documents 
 (UML diagrams, javadoc, ...)

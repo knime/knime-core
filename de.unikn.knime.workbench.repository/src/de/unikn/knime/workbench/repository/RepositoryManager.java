@@ -45,7 +45,7 @@ import de.unikn.knime.workbench.repository.model.NodeTemplate;
 import de.unikn.knime.workbench.repository.model.Root;
 
 /**
- * Manages the (global) Hades Repository. This class collects all the
+ * Manages the (global) KNIME Repository. This class collects all the
  * contributed extensions from the extension points and creates an arbitrary
  * model. Additionally, you can ask this to load/save workflows using the
  * appropriate eclipse classloaders

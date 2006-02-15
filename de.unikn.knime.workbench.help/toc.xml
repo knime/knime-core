@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<toc label="Hades Data Analysis Workbench" topic="index.html">
+<toc label="Konstanz Information Miner" topic="index.html">
    <topic label="Overview" href="overview.html">
-      <topic label="About the Hades Workbench" href="overview_1.html">
+      <topic label="About the Konstanz Information Miner" href="overview_1.html">
          <topic label="Features" href="overview_1_1.html"/>
          <topic label="The Vision" href="overview_1_2.html"/>
       </topic>
       <topic label="The Platform Components" href="overview_2.html">
-         <topic label="The Hades Framework" href="overview_2_1.html"/>
+         <topic label="The Konstanz Information Miner Framework" href="overview_2_1.html"/>
          <topic label="The Workbench GUI" href="overview_2_2.html"/>
       </topic>
    </topic>
@@ -31,7 +31,7 @@
          </topic>
       </topic>
       <topic label="Writing Extensions" href="guide_3.html">
-         <topic label="The Hades API" href="guide_3_1.html"/>
+         <topic label="The KNIME API" href="guide_3_1.html"/>
          <topic label="Implementing the Model" href="guide_3_2.html"/>
          <topic label="Implementing the Controller" href="guide_3_3.html"/>
          <topic label="Implementing a View" href="guide_3_4.html"/>

@@ -61,8 +61,8 @@ public class NewWorkflowPage extends WizardPage {
      */
     public NewWorkflowPage(final ISelection selection) {
         super("wizardPage");
-        setTitle("New Hades Workflow File");
-        setDescription("This wizard creates a new Hades workflow file.");
+        setTitle("New KNIME Workflow File");
+        setDescription("This wizard creates a new KNIME workflow file.");
         this.m_selection = selection;
     }
 
@@ -96,7 +96,7 @@ public class NewWorkflowPage extends WizardPage {
             }
         });
         label = new Label(container, SWT.NULL);
-        label.setText("&File name for the new workflow (*.hflow):");
+        label.setText("&File name for the new workflow (*.knime):");
 
         m_fileText = new Text(container, SWT.BORDER | SWT.SINGLE);
         gd = new GridData(GridData.FILL_HORIZONTAL);
@@ -134,7 +134,7 @@ public class NewWorkflowPage extends WizardPage {
                 m_containerText.setText(container.getFullPath().toString());
             }
         }
-        m_fileText.setText("new_file.hflow");
+        m_fileText.setText("new_file.knime");
     }
 
     /**
@@ -188,8 +188,8 @@ public class NewWorkflowPage extends WizardPage {
         int dotLoc = fileName.lastIndexOf('.');
         if (dotLoc != -1) {
             String ext = fileName.substring(dotLoc + 1);
-            if (!ext.equalsIgnoreCase("hflow")) {
-                updateStatus("File extension must be \"hflow\"");
+            if (!ext.equalsIgnoreCase("knime")) {
+                updateStatus("File extension must be \"knime\"");
                 return;
             }
         }

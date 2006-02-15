@@ -113,7 +113,7 @@
         <para></para>
 
     	<sect2 id="guide_3_1">
-        	<title>The Hades API</title>
+        	<title>The KNIME API</title>
         	<para>Node, NodeFactory, ...</para>
     	</sect2>
     

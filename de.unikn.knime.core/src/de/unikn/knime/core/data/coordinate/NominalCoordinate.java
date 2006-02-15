@@ -126,7 +126,7 @@ public class NominalCoordinate extends Coordinate {
      * Calculates a numeric mapping assuming a column with a given number of
      * possible values.
      * 
-     * @see de.unikn.hades.core.data.coordinate.Coordinate#calculateMappedValue(de.unikn.hades.core.data.DataCell,
+     * @see de.unikn.knime.core.data.coordinate.Coordinate#calculateMappedValue(de.unikn.knime.core.data.DataCell,
      *      double, boolean)
      */
     @Override
@@ -161,7 +161,7 @@ public class NominalCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.hades.core.data.coordinate.Coordinate#isNominal()
+     * @see de.unikn.knime.core.data.coordinate.Coordinate#isNominal()
      */
     @Override
     public boolean isNominal() {
@@ -169,7 +169,7 @@ public class NominalCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.hades.core.data.coordinate.Coordinate#getUnusedDistBetweenTicks(int)
+     * @see de.unikn.knime.core.data.coordinate.Coordinate#getUnusedDistBetweenTicks(int)
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {

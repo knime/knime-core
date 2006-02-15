@@ -30,7 +30,7 @@ import org.osgi.framework.Bundle;
 import de.unikn.knime.core.eclipseUtil.ClassCreator;
 
 /**
- * Class creator, used inside Eclipse to load classes for the Hades core. We
+ * Class creator, used inside Eclipse to load classes for the KNIME core. We
  * need this to lookup classes from the contributing plugins.
  * 
  * This class is kinda hack ... it first tries to load classes from the core and
@@ -74,7 +74,7 @@ public class EclipseClassCreator implements ClassCreator {
 
         // first, try the core and editor
         try {
-            Bundle p = HadesCorePlugin.getDefault().getBundle();
+            Bundle p = KNIMECorePlugin.getDefault().getBundle();
             clazz = p.loadClass(className);
             return clazz;
         } catch (Exception ex) {

@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-Name: Hades Information Mining Platform
+Bundle-Name: KNIME Konstanz Information Miner
 Bundle-SymbolicName: de.unikn.knime.workbench
 Bundle-Version: 0.3.0
 Bundle-Vendor: ALTANA Chair for Applied Computer Science, University of Konstanz

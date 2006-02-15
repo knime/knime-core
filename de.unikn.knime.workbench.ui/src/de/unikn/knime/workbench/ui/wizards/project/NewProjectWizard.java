@@ -50,8 +50,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.workbench.ui.builder.HadesProjectBuilder;
-import de.unikn.knime.workbench.ui.nature.HadesProjectNature;
+import de.unikn.knime.workbench.ui.builder.KNIMEProjectBuilder;
+import de.unikn.knime.workbench.ui.nature.KNIMEProjectNature;
 
 /**
  * Wizard for the creation of a new modeller project. TODO FIXME not yet
@@ -65,21 +65,21 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             .getLogger(NewProjectWizard.class);
 
     /**
-     * Build command invoking Hades project builder.
+     * Build command invoking KNIME project builder.
      */
-    public static final ICommand HADES_BUILDER;
+    public static final ICommand KNIME_BUILDER;
 
     /** List of natures that should be given to the new project. */
-    public static final String[] HADES_NATURES;
+    public static final String[] KNIME_NATURES;
 
     /** List of build commands that should be given to the new project. * */
-    public static final ICommand[] HADES_BUILDSPECS;
+    public static final ICommand[] KNIME_BUILDSPECS;
 
     static {
-        HADES_BUILDER = new BuildCommand();
-        HADES_BUILDER.setBuilderName(HadesProjectBuilder.BUILDER_ID);
-        HADES_NATURES = new String[] {HadesProjectNature.class.getName()};
-        HADES_BUILDSPECS = new ICommand[] {HADES_BUILDER};
+        KNIME_BUILDER = new BuildCommand();
+        KNIME_BUILDER.setBuilderName(KNIMEProjectBuilder.BUILDER_ID);
+        KNIME_NATURES = new String[] {KNIMEProjectNature.class.getName()};
+        KNIME_BUILDSPECS = new ICommand[] {KNIME_BUILDER};
     }
 
     private NewProjectWizardPage m_page;
@@ -153,7 +153,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * Worker method, creates the project using the given options.
      * 
      * @param projectName Name of the project to create in workspace
-     * @param addWorkflowFile flag, indicating that a default.hflow should be
+     * @param addWorkflowFile flag, indicating that a default.knime should be
      *            created
      * @param addDataset flag, indicating that an example dataset (IRIS) should
      *            be copied into the new project
@@ -177,8 +177,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         // Create project description, set the nature IDs and build-commands
         IProject project = root.getProject(projectName);
         ProjectDescription description = new ProjectDescription();
-        description.setNatureIds(HADES_NATURES);
-        description.setBuildSpec(HADES_BUILDSPECS);
+        description.setNatureIds(KNIME_NATURES);
+        description.setBuildSpec(KNIME_BUILDSPECS);
         // actually create the project in workspace
         project.create(description, monitor);
         // open the project
@@ -187,7 +187,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         //
         // 2. Create the optional files, if wanted
         //
-        final IFile defaultFile = project.getFile("default.hflow");
+        final IFile defaultFile = project.getFile("default.knime");
         if (addWorkflowFile) {
             InputStream is = new ByteArrayInputStream("".getBytes());
             defaultFile.create(is, true, monitor);

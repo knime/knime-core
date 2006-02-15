@@ -52,7 +52,7 @@ import org.eclipse.swt.widgets.Shell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.workbench.ui.HadesUIPlugin;
+import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * JFace implementation of a dialog containing the wrapped Panel from the
@@ -98,7 +98,7 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
-        Image img = HadesUIPlugin.getDefault().getImageRegistry().get("knime");
+        Image img = KNIMEUIPlugin.getDefault().getImageRegistry().get("knime");
         newShell.setImage(img);
         m_menuBar = new Menu(newShell, SWT.BAR);
         newShell.setMenuBar(m_menuBar);

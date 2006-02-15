@@ -5,7 +5,7 @@
          point="org.eclipse.ui.commands">
       <category
             description="Commands available for the workflow editor"
-            name="Hades Workflow Editor commands"
+            name="KNIME Workflow Editor commands"
             id="knime.command.category"/>
             
       <command
@@ -42,18 +42,18 @@
             class="de.unikn.knime.workbench.editor2.WorkflowEditor"
             contributorClass="de.unikn.knime.workbench.editor2.EditorActionBarContributor"
             default="true"
-            extensions="hflow"
-            filenames="hflow"
+            extensions="knime"
+            filenames="knime"
             icon="icons/editor.png"
             id="de.unikn.knime.workbench.editor.WorkflowEditor"
-            name="Hades Workflow Editor"/>
+            name="KNIME Workflow Editor"/>
       <editor
             class="de.unikn.knime.workbench.editor2.MetaWorkflowEditor"
             contributorClass="de.unikn.knime.workbench.editor2.EditorActionBarContributor"
             default="false"
             icon="icons/editor.png"
             id="de.unikn.knime.workbench.editor.MetaWorkflowEditor"
-            name="Hades Meta Workflow Editor"/>
+            name="KNIME Meta Workflow Editor"/>
    </extension>
    <extension
          point="org.eclipse.ui.editorActions">

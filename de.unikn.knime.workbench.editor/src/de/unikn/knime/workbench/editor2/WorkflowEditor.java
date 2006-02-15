@@ -108,7 +108,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditor.class);
 
-    private static final String EDITOR_ROOT_NAME = "hflow";
+    private static final String EDITOR_ROOT_NAME = "knime";
 
     /** root model object (=editor input) that is handled by the editor. * */
     private WorkflowManager m_manager;
@@ -228,7 +228,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         setSite(site);
         setInput(input);
 
-        // register listener to check wether the underlying hflow file
+        // register listener to check wether the underlying knime file
         // has been deleted or renamed
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
                 IResourceChangeEvent.POST_CHANGE);

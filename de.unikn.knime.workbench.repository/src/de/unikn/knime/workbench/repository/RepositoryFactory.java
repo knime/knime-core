@@ -73,9 +73,9 @@ public final class RepositoryFactory {
         node.setPluginID(pluginID);
 
         // FIXME dispose this somewhere !!
-        node.setIcon(HadesRepositoryPlugin.getDefault()
+        node.setIcon(KNIMERepositoryPlugin.getDefault()
                 .getImage(pluginID, icon));
-        node.setIconDescriptor(HadesRepositoryPlugin.getDefault()
+        node.setIconDescriptor(KNIMERepositoryPlugin.getDefault()
                 .getImageDescriptor(pluginID, icon));
 
         node.setCategoryPath(str(element.getAttribute("category-path"), "/"));
@@ -120,9 +120,9 @@ public final class RepositoryFactory {
         cat.setDescription(str(element.getAttribute("description"), ""));
         cat.setName(str(element.getAttribute("name"), "!name is missing!"));
         cat.setAfterID(str(element.getAttribute("after"), ""));
-        cat.setIcon(HadesRepositoryPlugin.getDefault().getImage(pluginID,
+        cat.setIcon(KNIMERepositoryPlugin.getDefault().getImage(pluginID,
                 str(element.getAttribute("icon"), "")));
-        cat.setIconDescriptor(HadesRepositoryPlugin.getDefault()
+        cat.setIconDescriptor(KNIMERepositoryPlugin.getDefault()
                 .getImageDescriptor(pluginID,
                         str(element.getAttribute("icon"), "")));
 
@@ -174,7 +174,7 @@ public final class RepositoryFactory {
                     category.setName(segments[i]);
                     category.setPath(pathSoFar);
                     // this loads the default icon
-                    category.setIcon(HadesRepositoryPlugin.getDefault()
+                    category.setIcon(KNIMERepositoryPlugin.getDefault()
                             .getImage(pluginID, ""));
 
                     // add this category to the current container

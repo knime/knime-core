@@ -5,12 +5,12 @@
      <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="Hades Data Analysis Workbench"
+            name="Konstanz Information Miner"
             icon="icons/perspective.png"
             class="de.unikn.knime.workbench.ui.perspective.ModellerPerspectiveFactory"
             id="de.unikn.knime.workbench.ui.ModellerPerspective">
          <description>
-            Hades Data Analysis Workbench
+            Konstanz Information Miner
          </description>
       </perspective>
    </extension>
@@ -97,11 +97,11 @@
       </primaryWizard>
       <primaryWizard id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"/>
       <category
-            name="Hades Workbench"
+            name="Konstanz Information Miner"
             id="de.unikn.knime.workbench.ui.wizards.category">
       </category>
       <wizard
-            name="New Hades Project"
+            name="New KNIME Project"
             id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard"
             category="de.unikn.knime.workbench.ui.wizards.category"
             class="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard"
@@ -111,11 +111,11 @@
             project="true"
             preferredPerspectives="de.unikn.knime.workbench.ui.ModellerPerspective">
          <description>
-            This wizard creates a new Hades project that can contain several Workflows.
+            This wizard creates a new KNIME project that can contain several Workflows.
          </description>
       </wizard>
       <wizard
-            name="New Hades Workflow"
+            name="New KNIME Workflow"
             id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"
             category="de.unikn.knime.workbench.ui.wizards.category"
             class="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"
@@ -125,7 +125,7 @@
             project="false"
             preferredPerspectives="de.unikn.knime.workbench.ui.ModellerPerspective">
          <description>
-            This wizard creates a new Hades workflow file (*.hflow) inside a given project.
+            This wizard creates a new KNIME workflow file (*.knime) inside a given project.
          </description>
       </wizard>
    </extension>
@@ -134,7 +134,7 @@
       <page
             class="org.eclipse.ui.internal.dialogs.EmptyPreferencePage"
             id="de.unikn.knime.workbench.ui.preferences"
-            name="Hades"/>
+            name="KNIME"/>
       <page
             category="de.unikn.knime.workbench.ui.preferences"
             class="de.unikn.knime.workbench.ui.preferences.MainPreferencePage"
@@ -149,22 +149,22 @@
       </initializer>
    </extension>
    <extension
-         id="HadesProjectBuilder"
-         name="HadesProjectBuilder"
+         id="KNIMEProjectBuilder"
+         name="KNIMEProjectBuilder"
          point="org.eclipse.core.resources.builders">
       <builder>
          <run
-               class="de.unikn.knime.workbench.ui.builder.HadesProjectBuilder">
+               class="de.unikn.knime.workbench.ui.builder.KNIMEProjectBuilder">
          </run>
       </builder>
    </extension>
    <extension
-         id="HadesProjectNature"
-         name="Hades project nature"
+         id="KNIMEProjectNature"
+         name="KNIME project nature"
          point="org.eclipse.core.resources.natures">
       <runtime>
          <run
-               class="de.unikn.knime.workbench.ui.nature.HadesProjectNature">
+               class="de.unikn.knime.workbench.ui.nature.KNIMEProjectNature">
          </run>
       </runtime>
    </extension>
@@ -172,7 +172,7 @@
          point="org.eclipse.ui.views">
       <category
             id="de.unikn.knime.workbench.ui.category"
-            name="Hades Views"/>
+            name="KNIME Views"/>
       <view
             allowMultiple="true"
             category="de.unikn.knime.workbench.ui.category"

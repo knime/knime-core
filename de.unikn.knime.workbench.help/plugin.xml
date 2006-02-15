@@ -23,7 +23,7 @@
             id="de.unikn.knime.workbench.help.intro"/>
       <introProductBinding
             introId="de.unikn.knime.workbench.help.intro"
-            productId="de.unikn.knime.workbench.product.HADES_PRODUCT"/>
+            productId="de.unikn.knime.workbench.product.KNIME_PRODUCT"/>
    </extension>
    <extension
          point="org.eclipse.ui.intro.config">

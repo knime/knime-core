@@ -47,7 +47,7 @@ import de.unikn.knime.workbench.editor2.actions.OpenViewAction;
 import de.unikn.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import de.unikn.knime.workbench.ui.HadesUIPlugin;
+import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 import de.unikn.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
@@ -148,7 +148,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 int numNodeViews = container.getNumViews();
                 // FG: if global setting is true, then open embedded views.
                 //
-                boolean openEmbedded = HadesUIPlugin.getDefault()
+                boolean openEmbedded = KNIMEUIPlugin.getDefault()
                         .getPreferenceStore().getString(
                                 PreferenceConstants.P_CHOICE_VIEWMODE).equals(
                                 PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);

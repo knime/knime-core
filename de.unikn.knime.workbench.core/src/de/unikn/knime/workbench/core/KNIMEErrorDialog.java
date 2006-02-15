@@ -33,7 +33,7 @@ import org.eclipse.swt.widgets.Shell;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class HadesErrorDialog extends ErrorDialog {
+public class KNIMEErrorDialog extends ErrorDialog {
 
     /**
      * Main constructor, takes all possible arguments.
@@ -44,7 +44,7 @@ public class HadesErrorDialog extends ErrorDialog {
      * @param status Statuscode, like <code>IStatus.ERROR</code>
      * @param displayMask mask for filtering children
      */
-    public HadesErrorDialog(final Shell parentShell, final String dialogTitle,
+    public KNIMEErrorDialog(final Shell parentShell, final String dialogTitle,
             final String text, final IStatus status, final int displayMask) {
         super(parentShell, dialogTitle, text, status, displayMask);
     }
@@ -62,7 +62,7 @@ public class HadesErrorDialog extends ErrorDialog {
      */
     public static int openError(final Shell parentShell, final String title,
             final String message, final IStatus status, final int displayMask) {
-        HadesErrorDialog dialog = new HadesErrorDialog(parentShell, title,
+        KNIMEErrorDialog dialog = new KNIMEErrorDialog(parentShell, title,
                 message, status, displayMask);
         return dialog.open();
     }
@@ -79,7 +79,7 @@ public class HadesErrorDialog extends ErrorDialog {
      */
     public static int openError(final Shell parentShell, final String title,
             final String message, final IStatus status) {
-        return HadesErrorDialog.openError(parentShell, title, message, status,
+        return KNIMEErrorDialog.openError(parentShell, title, message, status,
                 IStatus.OK | IStatus.INFO | IStatus.WARNING | IStatus.ERROR);
     }
 
@@ -93,8 +93,8 @@ public class HadesErrorDialog extends ErrorDialog {
      * @return <code>Window.OK</code> or <code>Window.CANCEL</code>
      */
     public static int openError(final String message, final IStatus status) {
-        return HadesErrorDialog.openError(
+        return KNIMEErrorDialog.openError(
                 Display.getCurrent().getActiveShell(),
-                "Hades Workbench: Error occured", message, status);
+                "KNIME Workbench: Error occured", message, status);
     }
 }

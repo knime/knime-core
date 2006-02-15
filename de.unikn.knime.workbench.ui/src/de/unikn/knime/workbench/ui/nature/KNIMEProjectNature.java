@@ -26,11 +26,11 @@ import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
 
 /**
- * Project nature for Hades projects, not used by now.
+ * Project nature for KNIME projects, not used by now.
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class HadesProjectNature implements IProjectNature {
+public class KNIMEProjectNature implements IProjectNature {
 
     private IProject m_project;
 

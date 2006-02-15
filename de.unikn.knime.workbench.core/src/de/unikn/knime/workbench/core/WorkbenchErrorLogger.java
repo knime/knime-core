@@ -38,7 +38,7 @@ public final class WorkbenchErrorLogger {
     }
 
     /**
-     * Logs a message with the plugin ID of the HadesCorePlugin.
+     * Logs a message with the plugin ID of the KNIMECorePlugin.
      * 
      * @param severity Severity code e.g. <code>IStatus.WARN</code>
      * @param code Status code e.g. <code>IStatus.OK</code>
@@ -47,10 +47,10 @@ public final class WorkbenchErrorLogger {
      */
     public static void log(final int severity, final int code,
             final String message, final Throwable throwable) {
-        IStatus stat = createStatus(severity, HadesCorePlugin.PLUGIN_ID, code,
+        IStatus stat = createStatus(severity, KNIMECorePlugin.PLUGIN_ID, code,
                 message, throwable);
 
-        HadesCorePlugin.getDefault().getLog().log(stat);
+        KNIMECorePlugin.getDefault().getLog().log(stat);
 
     }
 
@@ -71,8 +71,8 @@ public final class WorkbenchErrorLogger {
      */
     public static void error(final String message, final Throwable throwable) {
         log(IStatus.ERROR, IStatus.OK, message, throwable);
-        HadesErrorDialog.openError(message, createStatus(IStatus.ERROR,
-                HadesCorePlugin.PLUGIN_ID, IStatus.OK, throwable.getMessage(), 
+        KNIMEErrorDialog.openError(message, createStatus(IStatus.ERROR,
+                KNIMECorePlugin.PLUGIN_ID, IStatus.OK, throwable.getMessage(), 
                 throwable));
     }
 
