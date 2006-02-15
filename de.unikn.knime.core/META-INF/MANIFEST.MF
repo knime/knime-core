@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-Name: KNIME Framework Core
+Bundle-Name: Hades Framework Core
 Bundle-SymbolicName: de.unikn.knime.core
 Bundle-Version: 0.3.0
 Bundle-Vendor: ALTANA Chair for Applied Computer Science
@@ -12,6 +12,7 @@ Bundle-ClassPath: lib/junit.jar,
  lib/log4j.jar,
  knime-core.jar
 Provide-Package: de.unikn.knime.core.data,
+ de.unikn.knime.core.data.coordinate,
  de.unikn.knime.core.data.def,
  de.unikn.knime.core.data.property,
  de.unikn.knime.core.data.renderer,
