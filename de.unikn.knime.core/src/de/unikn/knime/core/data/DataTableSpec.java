@@ -304,7 +304,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                 }
             }
         }
-        return -1;
+        return idx;
     }
     
     private int searchColorHandler() {
