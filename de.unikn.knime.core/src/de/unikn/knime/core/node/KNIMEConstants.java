@@ -48,7 +48,7 @@ public final class KNIMEConstants {
      */
     public static final String WELCOME_MESSAGE = 
    "************************************************************************\n"
- + "***        Welcome to KNIME. The Konstanz Information Miner          ***\n"
+ + "***        Welcome to KNIME. The Konstanz Information Miner.         ***\n"
  + "*** Copyright 2003-2006 Konstanz University, Germany, Prof. Berthold ***\n"
  + "************************************************************************\n";
 
