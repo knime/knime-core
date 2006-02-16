@@ -554,19 +554,7 @@ public class Node {
             // INVOKE MODEL'S EXECUTE
             newOutData = m_nodeModel.executeModel(inData, exec);
 
-            // get the warning message if available and create a status
-            // also notify all listeners
-            String warningMessage = m_nodeModel.getWarningMessage();
-            if (warningMessage != null) {
-
-                m_logger.warn("Model warning message: " + warningMessage);
-                m_nodeStatus = new NodeStatus(NodeStatus.WARNING, "Warning: "
-                        + warningMessage);
-
-                this.notifyStateListeners(m_nodeStatus);
-                // reset the warning message
-                m_nodeModel.setWarningMessage(null);
-            }
+            processModelWarnings();
 
         } catch (CanceledExecutionException cee) {
             // execution was canceled
@@ -644,6 +632,27 @@ public class Node {
         this.notifyStateListeners(new NodeStatus(NodeStatus.END_EXECUTE));
         return true;
     } // executeNode(ExecutionMonitor)
+
+    /**
+     * Checks the warnings in the model and notifies registered listeners.
+     *
+     */
+    private void processModelWarnings() {
+        
+        // get the warning message if available and create a status
+        // also notify all listeners
+        String warningMessage = m_nodeModel.getWarningMessage();
+        if (warningMessage != null) {
+
+            m_logger.warn("Model warning message: " + warningMessage);
+            m_nodeStatus = new NodeStatus(NodeStatus.WARNING, "Warning: "
+                    + warningMessage);
+
+            this.notifyStateListeners(m_nodeStatus);
+            // reset the warning message
+            m_nodeModel.setWarningMessage(null);
+        }
+    }
 
     /**
      * Resets this node. The method will first reset all connected successors
@@ -1007,6 +1016,9 @@ public class Node {
                 // update data table spec
                 m_outDataPorts[p].setDataTableSpec(newSpecs[p]);
             }
+            
+            // check for model warnings
+            processModelWarnings();
         } catch (InvalidSettingsException ise) {
             m_logger.debug("Configure failed: " + ise.getMessage());
             notConfigured();
