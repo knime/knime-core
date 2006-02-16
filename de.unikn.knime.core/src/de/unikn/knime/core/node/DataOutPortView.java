@@ -57,6 +57,8 @@ final class DataOutPortView extends NodeOutPortView {
 
     private final JTabbedPane m_tabs;
 
+    private DataTable m_data;
+    
     private final TableView m_specView;
 
     private final TableView m_propView;
@@ -116,6 +118,7 @@ final class DataOutPortView extends NodeOutPortView {
      * @param newDataTable The new data table (or null) to display in the view.
      */
     void updateDataTable(final DataTable newDataTable) {
+        m_data = newDataTable;
         m_dataView.setDataTable(newDataTable);
         m_attrView.setDataTable(createRowAttrTable(newDataTable));
     }
@@ -497,11 +500,10 @@ final class DataOutPortView extends NodeOutPortView {
                         "got no Iterator")});
             }
 
-            RowKey key = m_iter.next().getKey();
-            ColorAttr attr = null;
-            if (key != null) {
-                attr = key.getColorAttr();
-            }
+            DataRow thisRow = m_iter.next();
+            // get Color for this row
+            ColorAttr attr = m_data.getDataTableSpec().getRowColor(thisRow);
+            RowKey key = thisRow.getKey();
 
             return new DefaultRow(key,
                     new DataCell[]{

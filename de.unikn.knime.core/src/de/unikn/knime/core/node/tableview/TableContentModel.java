@@ -612,7 +612,7 @@ public class TableContentModel extends AbstractTableModel
         DataRow r = getRow(row);
         assert (row >= (m_rowCountOfInterestInIterator - getCacheSize()) 
                 && row < m_rowCountOfInterestInIterator);
-        return r.getKey().getColorAttr();
+        return m_data.getDataTableSpec().getRowColor(r);
     }
     
     /** 
