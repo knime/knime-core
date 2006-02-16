@@ -21,10 +21,8 @@
  */
 package de.unikn.knime.workbench.editor2.actions;
 
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.internal.Workbench;
 
@@ -153,23 +151,21 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         job.schedule();
 
         // open the view now in another thread
-        Display.getDefault().syncExec(new Runnable() {
+        new Thread(new Runnable() {
             public void run() {
                 // first wait for the execution of the node
+
                 try {
                     job.join();
                 } catch (Exception e) {
-                    LOGGER.error("Join of node execution thread failed. "
-                            + "View will not be opened" + e.getMessage());
-                    return;
+                    // LOGGER.error("Join of node execution thread failed. "
+                    // + "View will not be opened" + e.getMessage());
+                    // return;
                 }
 
-                if (job.getResult().equals(Status.OK_STATUS)) {
-
-                    nodeParts[0].getNodeContainer().showView(0);
-                }
+                nodeParts[0].getNodeContainer().showView(0);
             }
-        });
+        }).start();
 
     }
 }
