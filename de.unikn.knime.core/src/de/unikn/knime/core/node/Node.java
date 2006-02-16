@@ -559,6 +559,8 @@ public class Node {
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
+            m_nodeStatus = new NodeStatus(NodeStatus.ERROR, "Execute canceled: "
+                    + cee.getMessage());
             notifyStateListeners(new NodeStatus(NodeStatus.END_EXECUTE));
             return false;
         } catch (Exception e) {
@@ -699,7 +701,7 @@ public class Node {
             m_nodeModel.resetModel();
         } catch (Exception e) {
             m_logger
-                    .error("Node model could not be reseted: " + e.getMessage());
+                  .error("Node model could not be reseted: " + e.getMessage());
             m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
                     "Node model could not be reseted: " + e.getMessage());
             this.notifyStateListeners(m_nodeStatus);
