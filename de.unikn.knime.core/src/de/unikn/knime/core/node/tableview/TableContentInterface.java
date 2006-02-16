@@ -24,6 +24,7 @@ package de.unikn.knime.core.node.tableview;
 import javax.swing.event.TableModelListener;
 
 import de.unikn.knime.core.data.RowKey;
+import de.unikn.knime.core.node.property.ColorAttr;
 
 /** 
  * Interface used by the row header view of a table. It allows to retrieve 
@@ -47,6 +48,14 @@ public interface TableContentInterface {
      * @throws IndexOutOfBoundsException If the index is out of range.
      */
     RowKey getRowKey(final int row);
+    
+    /** Get the color of a requested row, The color is shown as icon in front
+     * of the row key.
+     * @param row The row index.
+     * @return The color attribute for this row.
+     * @throws IndexOutOfBoundsException If the index is out of range.
+     */
+    ColorAttr getColorAttr(final int row);
 
     /** 
      * Is the Row <code>row</code> highlighted? The row with the index will

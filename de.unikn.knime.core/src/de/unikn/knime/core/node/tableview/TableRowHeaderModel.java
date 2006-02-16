@@ -221,7 +221,7 @@ public class TableRowHeaderModel extends AbstractTableModel {
      * @see TableContentModel#getColorAttr(int)
      */
     public ColorAttr getColorAttr(final int row) {
-        return m_contentInterface.getRowKey(row).getColorAttr();
+        return m_contentInterface.getColorAttr(row);
     } // getColorAttr(int)
 
     /** 
@@ -263,6 +263,14 @@ public class TableRowHeaderModel extends AbstractTableModel {
          */
         public RowKey getRowKey(final int row) {
             return UNKNOWN;
+        }
+        
+        /**
+         * Returns a default color.
+         * @see TableContentInterface#getColorAttr(int) 
+         */
+        public ColorAttr getColorAttr(final int row) {
+            return ColorAttr.DEFAULT;
         }
 
         /**
