@@ -243,10 +243,6 @@ public class TableNodeView extends NodeView {
      * @see de.unikn.knime.core.node.NodeView#modelChanged()
      */
     protected void modelChanged() {
-        HiLiteHandler newProp = getNodeModel().getInHiLiteHandler(
-                TableNodeModel.INPORT);
-        // will also trigger an update()
-        setHiLiteHandler(newProp);
         if (isOpen()) {
             countRowsInBackground();
         }
@@ -257,7 +253,6 @@ public class TableNodeView extends NodeView {
      */
     protected void onClose() {
         // unregister from highlight handler
-        setHiLiteHandler((HiLiteHandler)null);
         m_tableView.cancelRowCountingInBackground();
     }
 

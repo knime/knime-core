@@ -98,6 +98,7 @@ public class TableNodeModel extends NodeModel {
      */ 
     protected void reset() {
         m_contModel.setDataTable(null);
+        m_contModel.setHiLiteHandler(null);
         assert (!m_contModel.hasData());
     }
     
