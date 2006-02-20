@@ -647,14 +647,12 @@ public class NodeContainer implements NodeStateListener {
             throw new IllegalStateException("Node is not in executable state");
         }
         // make sure node is not already executing (should not happen)
-        synchronized (this) {
-            if (m_executionRunning) {
-                m_logger.error("Node is already/still running, new execute"
-                        + " is not allowed. (" + this.getID() + ")");
-                return;
-            }
-            m_executionRunning = true;
+        if (m_executionRunning) {
+            m_logger.error("Node is already/still running, new execute"
+                    + " is not allowed. (" + this.getID() + ")");
+            return;
         }
+        m_executionRunning = true;
         // ok, let's start execution:
         
         // so far execution was unsuccessful
