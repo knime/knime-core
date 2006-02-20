@@ -96,7 +96,7 @@ public class ExecuteAction extends AbstractNodeAction {
             atLeastOneNodeIsExecutable |= parts[i].getNodeContainer()
                     .isExecutableUpToHere();
         }
-        return (parts.length >= 1) && atLeastOneNodeIsExecutable;
+        return atLeastOneNodeIsExecutable;
 
     }
 
