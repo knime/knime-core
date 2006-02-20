@@ -60,11 +60,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowManager.class);
 
-    /**
-     * Default JavaBean serialVersionUID.
-     */
-    private static final long serialVersionUID = 1L;
-
     // quick access to nodes by ID
     private final HashMap<Integer, NodeContainer> m_nodesByID;
 
