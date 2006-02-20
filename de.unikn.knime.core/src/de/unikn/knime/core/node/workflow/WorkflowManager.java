@@ -576,6 +576,12 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 thisNodeC.setState(NodeContainer.STATE_IS_EXECUTABLE);
                 newExecutable++;
             }
+            if ((thisNodeC.isAutoExecutable()) && (thisNodeC.getState()
+                    == NodeContainer.STATE_IDLE)
+            && (thisNodeC.getNode().isExecutable())) {
+                thisNodeC.setState(NodeContainer.STATE_IS_EXECUTABLE);
+                newExecutable++;
+            }
         }
         return newExecutable;
     }
