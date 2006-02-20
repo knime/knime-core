@@ -218,6 +218,14 @@ public class NodeContainer implements NodeStateListener {
     public String getNodeName() {
         return m_node.getNodeName();
     }
+    
+    /**
+     * @return If this node is auto executable.
+     * @see Node#isAutoExecutable()
+     */
+    public boolean isAutoExecutable() {
+        return m_node.isAutoExecutable();
+    }
 
     /**
      * @return This node's name with id.
@@ -267,11 +275,24 @@ public class NodeContainer implements NodeStateListener {
         return m_state;
     }
 
-    /** Set new state of node.
-     * 
+    /** 
+     * Set new state of node.
      * @param s new state of this node
+     * @throws IllegalArgumentException If the argument is out of range, 
+     * i.e. not one of STATE_CURRENTLY_EXECUTING, STATE_IDLE, 
+     * STATE_IS_EXECUTABLE, STATE_WAITING_FOR_EXECUTION, or 
+     * STATE_WAITING_TO_BE_EXECUTABLE.
      */
     void setState(final int s) {
+        switch (s) {
+            case STATE_CURRENTLY_EXECUTING:
+            case STATE_IDLE:
+            case STATE_IS_EXECUTABLE:
+            case STATE_WAITING_FOR_EXECUTION:
+            case STATE_WAITING_TO_BE_EXECUTABLE: break;
+            default: throw new IllegalArgumentException(
+                    "Invalid state identifier: " + s);
+        }
         m_state = s;
     }
 

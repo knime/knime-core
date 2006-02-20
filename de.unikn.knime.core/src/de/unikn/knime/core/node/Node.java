@@ -375,6 +375,15 @@ public class Node {
         boundOutPort(portID);
         return m_nodeModel.getOutputDescription(portID);
     }
+    
+    /** 
+     * Delegate method to the model's <code>isAutoExecutable()</code> method.
+     * @return If the the underlying node model should be immediately executed
+     * when possible.
+     */
+    public boolean isAutoExecutable() {
+        return m_nodeModel.isAutoExecutable();
+    }
 
     /**
      * Returns <code>true</code> if this node instance has been configured,
