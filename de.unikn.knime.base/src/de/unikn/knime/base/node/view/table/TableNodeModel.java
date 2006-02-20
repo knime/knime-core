@@ -53,6 +53,7 @@ public class TableNodeModel extends NodeModel {
         super(1, 0);
         // models have empty content
         m_contModel = new TableContentModel();
+        super.setAutoExecutable(true);
     }
 
     /** 
