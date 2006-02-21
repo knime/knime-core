@@ -303,29 +303,37 @@ public class TableContentModel extends AbstractTableModel
         
         // check for rows whose highlight status has changed
         if (hasData()) {
-            // init with nonsense values - will change soon
-            int firstRow = m_cachedRows.length; // first row changed
-            int lastRow = -1;                   // and last one, resp.
-            for (int i = 0; i < m_cachedRows.length; i++) {
-                final DataRow current = m_cachedRows[i];
-                if (current == null) { // rows haven't been cached yet
-                    break;             // everything after is also null
+            if (showsHighlightedOnly()) {
+                m_isRowCountOfInterestFinal = false;
+                m_rowCountOfInterest = 0;
+                clearCache();
+                cacheNextRow();
+                fireTableDataChanged();
+            } else {
+                // init with nonsense values - will change soon
+                int firstRow = m_cachedRows.length; // first row changed
+                int lastRow = -1;                   // and last one, resp.
+                for (int i = 0; i < m_cachedRows.length; i++) {
+                    final DataRow current = m_cachedRows[i];
+                    if (current == null) { // rows haven't been cached yet
+                        break;             // everything after is also null
+                    }
+                    final DataCell key = current.getKey().getId();
+                    // do the highlight sync
+                    final boolean wasHiLit = m_hilitSet.get(i);
+                    final boolean isHiLit = (hiliter != null
+                        ? hiliter.isHiLit(key) : false);
+                    
+                    // either hilite or color changed
+                    if (wasHiLit != isHiLit) {
+                        firstRow = Math.min(firstRow, i);
+                        lastRow = Math.max(lastRow, i);
+                        m_hilitSet.set(i, isHiLit);
+                    }
                 }
-                final DataCell key = current.getKey().getId();
-                // do the highlight sync
-                final boolean wasHiLit = m_hilitSet.get(i);
-                final boolean isHiLit = (hiliter != null
-                    ? hiliter.isHiLit(key) : false);
-                
-                // either hilite or color changed
-                if (wasHiLit != isHiLit) {
-                    firstRow = Math.min(firstRow, i);
-                    lastRow = Math.max(lastRow, i);
-                    m_hilitSet.set(i, isHiLit);
-                }
+                // will swallow the event when firstRow > lastRow
+                fireRowsInCacheUpdated(firstRow, lastRow);
             }
-            // will swallow the event when firstRow > lastRow
-            fireRowsInCacheUpdated(firstRow, lastRow);
         }
         m_propertySupport.firePropertyChange(
                 PROPERTY_HIGHLIGHT, oldHandler, m_hiLiteHdl);
