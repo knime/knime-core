@@ -26,6 +26,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Map.Entry;
 
 import javax.swing.JPanel;
 
@@ -185,14 +188,17 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     /**
-     * Linux hack: must explicitly invoke <code>getInitialSize()</code>.
+     * Linux (GTK) hack: must explicitly invoke <code>getInitialSize()</code>.
      * 
      * @see org.eclipse.jface.window.Window#create()
      */
     @Override
     public void create() {
         super.create();
-        getShell().setSize(getInitialSize());
+        String os = System.getProperty("os.name");
+        if (os != null && os.toLowerCase().startsWith("linux")) {
+            getShell().setSize(getInitialSize());
+        }
     }
 
     /**
