@@ -88,7 +88,7 @@ public class ExecuteAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts = getSelectedParts();
+        NodeContainerEditPart[] parts = getSelectedNodeParts();
 
         // enable if we have at least one executable node in our selection
         boolean atLeastOneNodeIsExecutable = false;

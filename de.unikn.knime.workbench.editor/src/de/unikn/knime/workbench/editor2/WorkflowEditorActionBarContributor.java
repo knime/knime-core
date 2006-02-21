@@ -39,7 +39,7 @@ import org.eclipse.ui.actions.ActionFactory;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class EditorActionBarContributor extends ActionBarContributor {
+public class WorkflowEditorActionBarContributor extends ActionBarContributor {
 
     /**
      * @see org.eclipse.gef.ui.actions.ActionBarContributor#buildActions()
@@ -51,9 +51,6 @@ public class EditorActionBarContributor extends ActionBarContributor {
 
         addRetargetAction(new ZoomInRetargetAction());
         addRetargetAction(new ZoomOutRetargetAction());
-        
-        
-
     }
 
     /**
@@ -66,7 +63,6 @@ public class EditorActionBarContributor extends ActionBarContributor {
         addGlobalActionKey(ActionFactory.PASTE.getId());
         addGlobalActionKey(ActionFactory.COPY.getId());
         addGlobalActionKey(ActionFactory.CUT.getId());
-
     }
 
     /**

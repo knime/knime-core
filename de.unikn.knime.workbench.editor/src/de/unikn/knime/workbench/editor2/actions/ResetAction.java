@@ -118,7 +118,7 @@ public class ResetAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts = getSelectedParts();
+        NodeContainerEditPart[] parts = getSelectedNodeParts();
         
         for (int i = 0; i < parts.length; i++) {
             NodeContainerEditPart part = parts[i];

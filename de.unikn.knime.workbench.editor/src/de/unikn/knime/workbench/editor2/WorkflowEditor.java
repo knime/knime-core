@@ -88,9 +88,11 @@ import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
+import de.unikn.knime.workbench.editor2.actions.CopyAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
+import de.unikn.knime.workbench.editor2.actions.PasteAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
 import de.unikn.knime.workbench.repository.RepositoryManager;
 
@@ -100,6 +102,7 @@ import de.unikn.knime.workbench.repository.RepositoryManager;
  * (command stack) and hooks into the workbench to provide actions etc. ...
  * 
  * @author Florian Georg, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
@@ -109,6 +112,13 @@ public class WorkflowEditor extends GraphicalEditor implements
             .getLogger(WorkflowEditor.class);
 
     private static final String EDITOR_ROOT_NAME = "knime";
+
+    public static final String CLIPBOARD_ROOT_NAME = "clipboard";
+    
+    /**
+     * The static clipboard for copy/cut/paste.
+     */
+    private static ClipboardObject m_clipboard;
 
     /** root model object (=editor input) that is handled by the editor. * */
     private WorkflowManager m_manager;
@@ -151,6 +161,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * static if you want to have a console for each Workbench
      */
     private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
+
     static {
         // Level: warn
         addAppender(ConsoleViewAppender.WARN_APPENDER);
@@ -212,6 +223,32 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
+     * Returns the clipboard content for this editor.
+     * 
+     * @return the clipboard for this editor
+     */
+    public ClipboardObject getClipboardContent() {
+
+        return m_clipboard;
+//        if (m_clipboard == null) {
+//            m_clipboard = new Clipboard(getSite().getShell().getDisplay());
+//        }
+//
+//        return m_clipboard;
+    }
+    
+    /**
+     * Sets the clipboard content for this editor.
+     * 
+     * @param content the content to set into the clipboard
+     * 
+     */
+    public void setClipboardContent(final ClipboardObject content) {
+
+        m_clipboard = content;      
+    }
+
+    /**
      * @see org.eclipse.ui.IEditorPart #init(org.eclipse.ui.IEditorSite,
      *      org.eclipse.ui.IEditorInput)
      */
@@ -242,6 +279,11 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
+
+        // the clipboard copy action is registered globaly
+        CopyAction copyAction = new CopyAction(this);
+        site.getActionBars().setGlobalActionHandler(ActionFactory.COPY.getId(),
+                copyAction);
 
     }
 
@@ -309,6 +351,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
 
+        // copy / paste action
+        CopyAction copy = new CopyAction(this);
+        PasteAction paste = new PasteAction(this);
+
         // register the actions
         m_actionRegistry.registerAction(undo);
         m_actionRegistry.registerAction(redo);
@@ -320,6 +366,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(execute);
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
+
+        m_actionRegistry.registerAction(copy);
+        m_actionRegistry.registerAction(paste);
 
         // remember ids for later updates via 'updateActions'
         m_editorActions = new ArrayList<String>();
@@ -333,6 +382,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(execute.getId());
         m_editorActions.add(executeAndView.getId());
         m_editorActions.add(reset.getId());
+
+        m_editorActions.add(copy.getId());
+        m_editorActions.add(paste.getId());
     }
 
     /**
@@ -506,7 +558,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Updates the actions of this workflow editor. Can be used from subclassing
      * objects to update the actions.
      */
-    void updateActions() {
+    public void updateActions() {
         updateActions(m_editorActions);
     }
 
@@ -612,8 +664,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         try {
             // try to refresh project
-            m_fileResource.getProject().refreshLocal(
-                    IResource.DEPTH_INFINITE, monitor);
+            m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
+                    monitor);
         } catch (CoreException e) {
             // TODO Auto-generated catch block
             LOGGER.debug("", e);
@@ -793,8 +845,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             } else if ((delta.getKind() == IResourceDelta.REMOVED)) {
                 LOGGER.info(m_fileResource.getName()
                         + " resource has been removed.");
-                
-                //close the editor
+
+                // close the editor
                 Display.getDefault().asyncExec(new Runnable() {
                     public void run() {
                         getEditorSite().getPage().closeEditor(

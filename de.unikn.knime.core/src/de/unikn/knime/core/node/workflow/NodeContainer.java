@@ -57,10 +57,13 @@ public class NodeContainer implements NodeStateListener {
 
     // remember node itself...
     private final Node m_node;
+
     // ...it's ID
-    private final int m_id;
+    private int m_id;
+
     // ...for each port a list of successors...
     private final Vector<List<NodeContainer>> m_succ;
+
     // ...and an array of predecessors (only one per port!)
     private final Vector<NodeContainer> m_pred;
 
@@ -76,14 +79,19 @@ public class NodeContainer implements NodeStateListener {
      */
     /** not waiting for anything. */
     public static final int STATE_IDLE = 0;
+
     /** is waiting to be excuted once the underlying node is executable. */
     public static final int STATE_WAITING_TO_BE_EXECUTABLE = 1;
+
     /** can be executed. */
     public static final int STATE_IS_EXECUTABLE = 2;
+
     /** has been returned as EXECUTABLE and waits for thread to start. */
     public static final int STATE_WAITING_FOR_EXECUTION = 3;
+
     /** is currently being executed. */
     public static final int STATE_CURRENTLY_EXECUTING = 4;
+
     /** properties (extra info) have changed. */
     public static final int EVENT_EXTRAINFO_CHANGED = 1000;
 
@@ -95,15 +103,19 @@ public class NodeContainer implements NodeStateListener {
     // to the node state!). The status is used by e.g. a GUI to display
     // things that went wrong during execution or setup. So it may explain
     // the reasons why a specific state has (or has not) been reached.
-    //private NodeStatus m_nodeStatus;
+    // private NodeStatus m_nodeStatus;
 
     // for execution of the Node in it's own Thread, hold status
     // information of the execution thread...
     private boolean m_executionRunning;
+
     private boolean m_executionSuccess;
+
     private boolean m_executionCanceled;
+
     // ... and a progress monitor as well as the thread itself.
     private NodeProgressMonitor m_progressMonitor;
+
     private Thread m_workerThread;
 
     // store list of listeners - essentially this Container will listen
@@ -111,7 +123,8 @@ public class NodeContainer implements NodeStateListener {
     // event and forward it.
     private final ArrayList<NodeStateListener> m_eventListeners;
 
-    /** Create new container using an existing Node and a predefined ID.
+    /**
+     * Create new container using an existing Node and a predefined ID.
      * 
      * @param n node to wrap
      * @param id identifier of the node
@@ -136,7 +149,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node;
     }
 
-    /** Checks whether the in port given by its index is a PredictorParams port,
+    /**
+     * Checks whether the in port given by its index is a PredictorParams port,
      * that is, the port takes information about a predictor model as an input.
      * 
      * @param portNumber the port number
@@ -147,8 +161,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isPredictorInPort(portNumber);
     }
 
-    /** Checks whether the out port given by its index is a PredictorParams
-     * port.
+    /**
+     * Checks whether the out port given by its index is a PredictorParams port.
      * 
      * @param portNumber the port number
      * 
@@ -158,7 +172,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isPredictorOutPort(portNumber);
     }
 
-    /** Returns the number of views for this node.
+    /**
+     * Returns the number of views for this node.
      * 
      * @return number views of this node
      */
@@ -166,7 +181,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getNumViews();
     }
 
-    /** Opens the node's view. (Which may be empty if node is not executed.)
+    /**
+     * Opens the node's view. (Which may be empty if node is not executed.)
      * 
      * @param viewIndex the index of the view (=0 if there is only one)
      */
@@ -174,7 +190,8 @@ public class NodeContainer implements NodeStateListener {
         m_node.showView(viewIndex);
     }
 
-    /** Returns the node's view.
+    /**
+     * Returns the node's view.
      * 
      * @param viewIndex the index of the view (if more than one)
      * @return The view, or <code>null</code> in case of an error
@@ -183,7 +200,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getView(viewIndex);
     }
 
-    /** Returns the view name for the given index.
+    /**
+     * Returns the view name for the given index.
      * 
      * @param viewIndex the index of the view (if more than one)
      * @return the name of the given view
@@ -199,7 +217,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.hasDialog();
     }
 
-    /** Opens the node's dialog.
+    /**
+     * Opens the node's dialog.
      */
     public void showDialog() {
         m_node.showDialog();
@@ -257,7 +276,8 @@ public class NodeContainer implements NodeStateListener {
         return m_extraInfo;
     }
 
-    /** Overwrite <code>ExtraInfo</code> object of this node.
+    /**
+     * Overwrite <code>ExtraInfo</code> object of this node.
      * 
      * @param ei new extra information object for this node
      */
@@ -275,8 +295,10 @@ public class NodeContainer implements NodeStateListener {
         return m_state;
     }
 
-    /** 
+    /**
      * Set new state of node.
+     * 
+    
      * @param s new state of this node
      * @throws IllegalArgumentException If the argument is out of range, 
      * i.e. not one of STATE_CURRENTLY_EXECUTING, STATE_IDLE, 
@@ -299,8 +321,9 @@ public class NodeContainer implements NodeStateListener {
     //
     // TODO: remove the next two functions - no deep access to NodePorts!
     //
-    
-    /** Returns all in ports of this node.
+
+    /**
+     * Returns all in ports of this node.
      * 
      * @return the in ports of this node.
      */
@@ -312,7 +335,8 @@ public class NodeContainer implements NodeStateListener {
         return inPorts;
     }
 
-    /** Returns all out ports of this node.
+    /**
+     * Returns all out ports of this node.
      * 
      * @return the out ports of this node.
      */
@@ -336,7 +360,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getDialogPane();
     }
 
-    /** Opens the port view of this node for the given port.
+    /**
+     * Opens the port view of this node for the given port.
      * 
      * @param index the index of the port to open the view for
      */
@@ -345,7 +370,8 @@ public class NodeContainer implements NodeStateListener {
         port.openPortView(m_node.getNodeName() + " (#" + index + ")");
     }
 
-    /** Returns the number of output ports of the underlying node.
+    /**
+     * Returns the number of output ports of the underlying node.
      * 
      * @return the number of outports
      */
@@ -353,7 +379,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getNrOutPorts();
     }
 
-    /** Returns the number of input ports of the underlying node.
+    /**
+     * Returns the number of input ports of the underlying node.
      * 
      * @return the number of inports
      */
@@ -361,7 +388,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getNrInPorts();
     }
 
-    /** Delegation method to nodes's <code>getOutputDescription</code> method.
+    /**
+     * Delegation method to nodes's <code>getOutputDescription</code> method.
      * 
      * @param port The port id of interest.
      * @return The description to that port.
@@ -371,7 +399,8 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getOutputPortDescription(port);
     }
 
-    /** Delegation method to the node's <code>getInputDescription</code>
+    /**
+     * Delegation method to the node's <code>getInputDescription</code>
      * method.
      * 
      * @param port The port id of interest
@@ -388,9 +417,10 @@ public class NodeContainer implements NodeStateListener {
         return m_node.toString();
     }
 
-    /** Check if node can be executed - this is also true if all nodes
-     * leading up to this node can be executed. In a GUI this would mean
-     * that this node will show up "yellow".
+    /**
+     * Check if node can be executed - this is also true if all nodes leading up
+     * to this node can be executed. In a GUI this would mean that this node
+     * will show up "yellow".
      * 
      * @return true if node can be used to initiate an execution up to here.
      */
@@ -431,14 +461,16 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isExecuted();
     }
 
-    /** Resets the node. Will reset the entire flow from here by propagating
-     * this through the output ports.
+    /**
+     * Resets the node. Will reset the entire flow from here by propagating this
+     * through the output ports.
      */
     public void resetNode() {
         m_node.resetNode();
     }
 
-    /** Adds an outgoing connection to a specified port. Note that more than one
+    /**
+     * Adds an outgoing connection to a specified port. Note that more than one
      * outgoing connection can exist for each port.
      * 
      * @param port index of outgoing port
@@ -461,7 +493,8 @@ public class NodeContainer implements NodeStateListener {
         m_succ.get(port).add(nc);
     }
 
-    /** Adds an incoming connection to a specified port. Only one incoming
+    /**
+     * Adds an incoming connection to a specified port. Only one incoming
      * connection is allowed per port - if this port is already connected it
      * will simply overwrite the previous connection.
      * 
@@ -487,7 +520,8 @@ public class NodeContainer implements NodeStateListener {
         m_pred.set(port, nc);
     }
 
-    /** Deletes an incoming connection.
+    /**
+     * Deletes an incoming connection.
      * 
      * @param port index of port to be disconnected
      */
@@ -495,7 +529,8 @@ public class NodeContainer implements NodeStateListener {
         m_pred.set(port, null);
     }
 
-    /** Remove an outgoing connection.
+    /**
+     * Remove an outgoing connection.
      * 
      * @param port index of outgoing port
      * @param node node the connection to be deleted points to
@@ -505,7 +540,8 @@ public class NodeContainer implements NodeStateListener {
         list.remove(node);
     }
 
-    /** Return array of predecessors of this node.
+    /**
+     * Return array of predecessors of this node.
      * 
      * @return an array of NodeContainers, one entry for each InPort.
      */
@@ -513,7 +549,8 @@ public class NodeContainer implements NodeStateListener {
         return m_pred.toArray(new NodeContainer[0]);
     }
 
-    /** Return array of successors of this node.
+    /**
+     * Return array of successors of this node.
      * 
      * @return a matrix of NodeContainers, one row for each OutPort.
      */
@@ -530,8 +567,9 @@ public class NodeContainer implements NodeStateListener {
         return result;
     }
 
-    /** Test if a given node is among the (direct or indirect) successors of
-     * this node.
+    /**
+     * Test if a given node is among the (direct or indirect) successors of this
+     * node.
      * 
      * @param target node to be searched for
      * @return true if target is a successor somewhere down the line
@@ -557,16 +595,18 @@ public class NodeContainer implements NodeStateListener {
         return hasReached;
     }
 
-    //////////////////////////
+    // ////////////////////////
     // NodeContainer save&load
-    //////////////////////////
+    // ////////////////////////
 
     /** Key for extra info's class name. */
     protected static final String KEY_EXTRAINFOCLASS = "extraInfoClassName";
+
     /** Key for this node's internal ID. */
     protected static final String KEY_ID = "id";
 
-    /** Stores all information into the given configuration.
+    /**
+     * Stores all information into the given configuration.
      * 
      * @param config The configuration to write to current settings into.
      * @see #createNewNodeContainer
@@ -584,7 +624,8 @@ public class NodeContainer implements NodeStateListener {
         }
     }
 
-    /** Creates a new NodeContainer and reads it's status and information from
+    /**
+     * Creates a new NodeContainer and reads it's status and information from
      * the NodeSettings object. Note that the list of predecessors and
      * successors will NOT be initalized correctly. The Workflow manager is
      * required to take care of re-initializing the connections.
@@ -608,7 +649,8 @@ public class NodeContainer implements NodeStateListener {
         return newNC;
     }
 
-    /** Creates the <code>NodeExtraInfo</code> from given settings, describing
+    /**
+     * Creates the <code>NodeExtraInfo</code> from given settings, describing
      * whatever additional information was stored (graphical layout?).
      * 
      * @param sett the setting to construct the extra info from
@@ -617,7 +659,7 @@ public class NodeContainer implements NodeStateListener {
      */
     protected static NodeExtraInfo createExtraInfo(final NodeSettings sett)
             throws InvalidSettingsException {
-        NodeExtraInfo extraInfo = null;  // null if it doesn't exist
+        NodeExtraInfo extraInfo = null; // null if it doesn't exist
         if (sett.containsKey(NodeContainer.KEY_EXTRAINFOCLASS)) {
             // if it does exist, determine type of extrainfo
             String extraInfoClassName = sett
@@ -651,10 +693,10 @@ public class NodeContainer implements NodeStateListener {
         }
     }
 
-    /////////////////////
+    // ///////////////////
     // Execution Handling
-    /////////////////////
-    
+    // ///////////////////
+
     /**
      * Starts the execution. The node must not be already started and has to be
      * in executable state.
@@ -664,7 +706,7 @@ public class NodeContainer implements NodeStateListener {
     public synchronized void startExecution(final NodeProgressMonitor pm) {
 
         if (!m_node.isExecutable()) {
-            
+
             throw new IllegalStateException("Node is not in executable state");
         }
         // make sure node is not already executing (should not happen)
@@ -675,7 +717,7 @@ public class NodeContainer implements NodeStateListener {
         }
         m_executionRunning = true;
         // ok, let's start execution:
-        
+
         // so far execution was unsuccessful
         m_executionSuccess = false;
         // ...and not canceled
@@ -734,7 +776,7 @@ public class NodeContainer implements NodeStateListener {
         if (m_progressMonitor != null) {
             m_progressMonitor.setExecuteCanceled();
             // TODO needs to come back from Monitor not just set here!
-            //   but we need Node to tell us that execution was cancelled...
+            // but we need Node to tell us that execution was cancelled...
             m_executionCanceled = true;
         }
     }
@@ -760,9 +802,9 @@ public class NodeContainer implements NodeStateListener {
         return m_executionCanceled;
     }
 
-    //////////////////////////
+    // ////////////////////////
     // Event Listener handling
-    //////////////////////////
+    // ////////////////////////
 
     /**
      * Adds a listener, has no effect if the listener is already registered.
@@ -801,10 +843,9 @@ public class NodeContainer implements NodeStateListener {
      * 
      * @param state Indicates the type of status change of this node.
      * @param id identifier from <code>Node</code>: will be overwritten with
-     *   NodeContainer ID
+     *            NodeContainer ID
      */
-    public synchronized void stateChanged(final NodeStatus state,
-            final int id) {
+    public synchronized void stateChanged(final NodeStatus state, final int id) {
 
         if (state.getStatusId() == NodeStatus.END_EXECUTE) {
             // do not immediately forward this event. We will generate a
@@ -820,8 +861,8 @@ public class NodeContainer implements NodeStateListener {
 
     /**
      * Notifies all state listeners that the state of this
-     * <code>NodeContainer</code> has changed.
-     * Protected so that <code>MetaNodeContainer</code> can use it.
+     * <code>NodeContainer</code> has changed. Protected so that
+     * <code>MetaNodeContainer</code> can use it.
      * 
      * @param state <code>NodeStateListener</code>
      */
@@ -832,7 +873,18 @@ public class NodeContainer implements NodeStateListener {
             listener.stateChanged(state, m_id);
         }
     }
-    
+
+    /**
+     * This method is only intended to change the id in case a node was copied
+     * to create assign a unique id.
+     * 
+     * @param id the new id to assign
+     */
+    void changeId(final int id) {
+        
+        m_id = id;
+    }
+
     /**
      * Returns the node status object of this <code>Node</code>.
      * 

@@ -58,5 +58,12 @@ public interface NodeExtraInfo {
      * @return true if infos are set properly
      */
     boolean isFilledProperly();
-
+    
+    /**
+     * Changes the position according to
+     * the given moving distance.
+     * 
+     * @param moveDist the distance to change position
+     */
+    public void changePosition(final int moveDist);
 }

@@ -86,11 +86,11 @@ public class OpenDialogAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     protected boolean calculateEnabled() {
-        if (getSelectedParts().length != 1) {
+        if (getSelectedNodeParts().length != 1) {
             return false;
         }
 
-        NodeContainerEditPart part = getSelectedParts()[0];
+        NodeContainerEditPart part = getSelectedNodeParts()[0];
 
         return part.getNodeContainer().hasDialog();
     }

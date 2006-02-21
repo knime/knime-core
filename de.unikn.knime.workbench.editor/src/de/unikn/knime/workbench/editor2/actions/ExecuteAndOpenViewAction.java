@@ -91,7 +91,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     protected boolean calculateEnabled() {
 
-        NodeContainerEditPart[] parts = getSelectedParts();
+        NodeContainerEditPart[] parts = getSelectedNodeParts();
 
         // only if just one node part is selected
         if (parts.length != 1) {

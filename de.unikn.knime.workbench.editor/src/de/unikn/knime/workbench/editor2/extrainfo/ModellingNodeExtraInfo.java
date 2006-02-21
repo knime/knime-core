@@ -102,7 +102,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      * @see de.unikn.knime.core.node.workflow.NodeExtraInfo#isFilledProperly()
      */
     public boolean isFilledProperly() {
-        
+
         if (m_bounds == null) {
             return false;
         }
@@ -115,7 +115,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         if (m_iconPath == null || m_iconPath.trim().equals("")) {
             return false;
         }
-        
+
         return true;
     }
 
@@ -218,6 +218,19 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void setDescription(final String description) {
         m_description = description;
+    }
+
+    /**
+     * Changes the position by setting the bounds left top corner according to
+     * the given moving distance.
+     * 
+     * @param moveDist the distance to change the left top corner
+     */
+    public void changePosition(final int moveDist) {
+        
+        // first change the x value
+        m_bounds[0] = m_bounds[0] + moveDist;
+        m_bounds[1] = m_bounds[1] + moveDist;
     }
 
 }

@@ -40,7 +40,7 @@
          point="org.eclipse.ui.editors">
       <editor
             class="de.unikn.knime.workbench.editor2.WorkflowEditor"
-            contributorClass="de.unikn.knime.workbench.editor2.EditorActionBarContributor"
+            contributorClass="de.unikn.knime.workbench.editor2.WorkflowEditorActionBarContributor"
             default="true"
             extensions="knime"
             filenames="knime"
@@ -49,7 +49,7 @@
             name="KNIME Workflow Editor"/>
       <editor
             class="de.unikn.knime.workbench.editor2.MetaWorkflowEditor"
-            contributorClass="de.unikn.knime.workbench.editor2.EditorActionBarContributor"
+            contributorClass="de.unikn.knime.workbench.editor2.WorkflowEditorActionBarContributor"
             default="false"
             icon="icons/editor.png"
             id="de.unikn.knime.workbench.editor.MetaWorkflowEditor"
