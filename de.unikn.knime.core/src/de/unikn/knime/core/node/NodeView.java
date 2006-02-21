@@ -210,14 +210,14 @@ public abstract class NodeView {
             modelChanged();
         } catch (NullPointerException npe) {
             throw new IllegalStateException(
-                    "Implementation error of NodeModel.modelChanged(). "
+                    "Implementation error of NodeView.modelChanged(). "
                     + "NullPointerException during notification of a changed "
                             + "model. Reason: "
                             + npe.getMessage());
         } catch (Exception e) {
             throw new IllegalStateException("Error during notification "
-                    + "of a changed model (in NodeModel.modelChange). Reason: "
-                    + e.getMessage());
+                    + "of a changed model (in NodeView.modelChanged()). "
+                    + "Reason: " + e.getMessage());
         }
 
     }
