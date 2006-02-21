@@ -192,7 +192,7 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     public void create() {
         super.create();
-
+        getShell().setSize(getInitialSize());
     }
 
     /**
