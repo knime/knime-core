@@ -126,7 +126,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
          * @see HiLiteListener#resetHiLite()
          */
         public void resetHiLite() {
-            // TODO Auto-generated method stub
+            m_set.clear();
         }
     }   // MyTestHiLiteHandler
     /*
