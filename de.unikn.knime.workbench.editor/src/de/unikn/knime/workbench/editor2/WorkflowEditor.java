@@ -89,6 +89,7 @@ import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
 import de.unikn.knime.workbench.editor2.actions.CopyAction;
+import de.unikn.knime.workbench.editor2.actions.CutAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
@@ -114,7 +115,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private static final String EDITOR_ROOT_NAME = "knime";
 
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
-    
+
     /**
      * The static clipboard for copy/cut/paste.
      */
@@ -200,6 +201,12 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // initialize actions (can't be in init(), as setInput is called before)
         createActions();
+
+    }
+
+    public GraphicalViewer getViewer() {
+        
+        return getGraphicalViewer();
     }
 
     /**
@@ -210,6 +217,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     static void addAppender(final ConsoleViewAppender app) {
         NodeLogger.addWriter(app, app.getLevel(), app.getLevel());
         APPENDERS.add(app);
+
     }
 
     /**
@@ -230,13 +238,13 @@ public class WorkflowEditor extends GraphicalEditor implements
     public ClipboardObject getClipboardContent() {
 
         return m_clipboard;
-//        if (m_clipboard == null) {
-//            m_clipboard = new Clipboard(getSite().getShell().getDisplay());
-//        }
-//
-//        return m_clipboard;
+        // if (m_clipboard == null) {
+        // m_clipboard = new Clipboard(getSite().getShell().getDisplay());
+        // }
+        //
+        // return m_clipboard;
     }
-    
+
     /**
      * Sets the clipboard content for this editor.
      * 
@@ -245,7 +253,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public void setClipboardContent(final ClipboardObject content) {
 
-        m_clipboard = content;      
+        m_clipboard = content;
     }
 
     /**
@@ -279,12 +287,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
-
-        // the clipboard copy action is registered globaly
-        CopyAction copyAction = new CopyAction(this);
-        site.getActionBars().setGlobalActionHandler(ActionFactory.COPY.getId(),
-                copyAction);
-
     }
 
     /**
@@ -351,8 +353,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
 
-        // copy / paste action
+        // copy / cut / paste action
         CopyAction copy = new CopyAction(this);
+        CutAction cut = new CutAction(this);
         PasteAction paste = new PasteAction(this);
 
         // register the actions
@@ -368,6 +371,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(reset);
 
         m_actionRegistry.registerAction(copy);
+        m_actionRegistry.registerAction(cut);
         m_actionRegistry.registerAction(paste);
 
         // remember ids for later updates via 'updateActions'
@@ -384,6 +388,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(reset.getId());
 
         m_editorActions.add(copy.getId());
+        m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
     }
 

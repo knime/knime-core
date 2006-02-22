@@ -155,22 +155,19 @@ public abstract class AbstractNodeAction extends SelectionAction {
     }
 
     /**
-     * Returns all edit parts corresponding and a reference edit part to the
-     * given ids.
+     * Returns all edit parts with the given ids.
      * 
-     * @param referencePart an edit part which is needed to determine the root
-     *            editpart (neccessary to get all childre)
      * @param ids the ids to retrieve the edit parts for
      * @return the edit parts of the specified ids
      */
-    protected static List<AbstractWorkflowEditPart> getEditPartsById(
-            AbstractWorkflowEditPart referencePart, final int[] ids) {
+    protected List<AbstractWorkflowEditPart> getEditPartsById(final int[] ids) {
 
         // the result
         ArrayList<AbstractWorkflowEditPart> parts = new ArrayList<AbstractWorkflowEditPart>();
 
         // get the parent from the reference part and then the children
-        List<EditPart> allParts = referencePart.getParent().getChildren();
+        List<EditPart> allParts = m_editor.getViewer().getRootEditPart()
+                .getChildren();
 
         // check all parts for the given ids
         // if a part has the appropriate id add it to the result

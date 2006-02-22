@@ -122,7 +122,7 @@ public class PasteAction extends AbstractClipboardAction {
             return;
         }
 
-        EditPartViewer partViewer = nodeParts[0].getRoot().getViewer();
+        EditPartViewer partViewer = getEditor().getViewer();
 
         // deselect the current selection and select the new pasted parts
         for (NodeContainerEditPart nodePart : nodeParts) {
@@ -136,8 +136,7 @@ public class PasteAction extends AbstractClipboardAction {
         }
 
         // get the new ediparts and select them
-        List<AbstractWorkflowEditPart> newParts = getEditPartsById(
-                nodeParts[0], newPartIds);
+        List<AbstractWorkflowEditPart> newParts = getEditPartsById(newPartIds);
 
         for (AbstractWorkflowEditPart newPart : newParts) {
 

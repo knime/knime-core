@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.MouseEvent;
+import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.swt.graphics.Image;
@@ -42,6 +44,7 @@ import de.unikn.knime.workbench.editor2.editparts.policy.NodeContainerComponentE
 import de.unikn.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import de.unikn.knime.workbench.editor2.figures.NodeContainerFigure;
+import de.unikn.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * Edit part for node containers. This also listens to interesting events, like
@@ -50,7 +53,7 @@ import de.unikn.knime.workbench.editor2.figures.NodeContainerFigure;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
-        NodeStateListener {
+        NodeStateListener, MouseListener {
 
     /**
      * The time (in ms) within two clicks are treated as double click. TODO: get
@@ -59,6 +62,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     // private static final long DOUBLE_CLICK_TIME = 400;
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainerEditPart.class);
+
+    private static final long DOUBLE_CLICK_TIME = 500;
 
     /**
      * Remembers the time of the last <code>MousePressed</code> event. This is
@@ -77,6 +82,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * node is busy *
      */
     private boolean m_isLocked;
+
+    /**
+     * To implement manually the double click event.
+     */
+    private long m_lastClick;
 
     /**
      * @return The <code>NodeContainer</code>(= model)
@@ -143,6 +153,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // create the visuals for the node container
         NodeContainerFigure nodeFigure = new NodeContainerFigure();
+
+        nodeFigure.addMouseListener(this);
 
         return nodeFigure;
     }
@@ -405,6 +417,51 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         } else {
             containerFigure.removeMessages();
         }
+    }
+
+    /**
+     * Implements a manual double click to open a nodes dialog. TODO: at the
+     * moment every 4th pressed event is not submitted to this listener. Find
+     * out why. Seems to be a draw2D problme.
+     * 
+     * @see org.eclipse.draw2d.MouseListener#mousePressed(org.eclipse.draw2d.MouseEvent)
+     */
+    public void mousePressed(final MouseEvent me) {
+
+        if (System.currentTimeMillis() - m_lastClick < DOUBLE_CLICK_TIME) {
+
+            LOGGER.debug("Opening node dialog after double click...");
+            NodeContainer container = (NodeContainer)getModel();
+
+            //  
+            // This is embedded in a special JFace wrapper dialog
+            //
+            WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
+                    .getActiveShell(), container);
+            dlg.open();
+
+        }
+        m_lastClick = System.currentTimeMillis();
+    }
+
+    /**
+     * Does nothing.
+     * 
+     * @see org.eclipse.draw2d.MouseListener#mouseReleased(org.eclipse.draw2d.MouseEvent)
+     */
+    public void mouseReleased(final MouseEvent me) {
+        // do nothing yet
+
+    }
+
+    /**
+     * Does nothing.
+     * 
+     * @see org.eclipse.draw2d.MouseListener#mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
+     */
+    public void mouseDoubleClicked(final MouseEvent me) {
+
+        // do nothing here
     }
 
     // TODO: double click event can not be received (maybe due to draw2d bug

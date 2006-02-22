@@ -21,6 +21,7 @@
  */
 package de.unikn.knime.workbench.editor2;
 
+
 /**
  * Holds a clipboard object and additional information.
  * 
