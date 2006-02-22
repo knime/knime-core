@@ -24,6 +24,9 @@ package de.unikn.knime.workbench.editor2.actions;
 import java.util.List;
 
 import org.eclipse.gef.EditPartViewer;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -64,6 +67,23 @@ public class PasteAction extends AbstractClipboardAction {
     public String getId() {
 
         return ActionFactory.PASTE.getId();
+    }
+
+    /**
+     * @see org.eclipse.jface.action.IAction#getImageDescriptor()
+     */
+    public ImageDescriptor getImageDescriptor() {
+
+        ISharedImages sharedImages = PlatformUI.getWorkbench()
+                .getSharedImages();
+        return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_PASTE);
+    }
+
+    /**
+     * @see org.eclipse.jface.action.IAction#getText()
+     */
+    public String getText() {
+        return "Paste";
     }
 
     /**

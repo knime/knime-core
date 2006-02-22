@@ -243,6 +243,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // }
         //
         // return m_clipboard;
+        
     }
 
     /**
@@ -390,6 +391,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
+        
     }
 
     /**

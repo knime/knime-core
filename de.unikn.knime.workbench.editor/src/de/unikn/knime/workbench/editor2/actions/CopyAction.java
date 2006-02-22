@@ -21,6 +21,9 @@
  */
 package de.unikn.knime.workbench.editor2.actions;
 
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 
 import de.unikn.knime.core.node.NodeLogger;
@@ -61,6 +64,23 @@ public class CopyAction extends AbstractClipboardAction {
     public String getId() {
 
         return ActionFactory.COPY.getId();
+    }
+
+    /**
+     * @see org.eclipse.jface.action.IAction#getImageDescriptor()
+     */
+    public ImageDescriptor getImageDescriptor() {
+
+        ISharedImages sharedImages = PlatformUI.getWorkbench()
+                .getSharedImages();
+        return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_COPY);
+    }
+
+    /**
+     * @see org.eclipse.jface.action.IAction#getText()
+     */
+    public String getText() {
+        return "Copy";
     }
 
     /**
@@ -131,7 +151,7 @@ public class CopyAction extends AbstractClipboardAction {
 
         LOGGER.debug("Clipboard copy action invoked for " + nodeParts.length
                 + " node(s) and " + connectionParts.length + " connection(s).");
-        
+
         // create the settings object to put in the clipboard
 
         // the information about the nodes is stored in the config XML format
@@ -140,9 +160,11 @@ public class CopyAction extends AbstractClipboardAction {
         // new Object[]{getNodeSettings(nodeParts,
         // connectionParts)},
         // new Transfer[]{ResourceTransfer.getInstance()});
-        getEditor().setClipboardContent(new ClipboardObject(
-                getNodeSettings(nodeParts, connectionParts)));
-        
+        getEditor()
+                .setClipboardContent(
+                        new ClipboardObject(getNodeSettings(nodeParts,
+                                connectionParts)));
+
         // update the actions
         getEditor().updateActions();
 
