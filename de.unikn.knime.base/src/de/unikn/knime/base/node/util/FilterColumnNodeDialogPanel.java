@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -41,6 +42,7 @@ import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 import de.unikn.knime.core.data.DataCell;
@@ -121,43 +123,49 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
     public FilterColumnNodeDialogPanel() {
 
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
-        final JPanel buttonPan = new JPanel(new GridLayout(0, 1, 15, 15));
+        final JPanel buttonPan = new JPanel();
+        buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
+        buttonPan.add(new JPanel());
 
         final JButton remButton = new JButton("remove >>");
-        remButton.setPreferredSize(new Dimension(125, 25));
+        remButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(remButton);
         remButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onRemIt();
             }
         });
+        buttonPan.add(new JPanel());
 
         final JButton remAllButton = new JButton("remove all >>");
-        remAllButton.setPreferredSize(new Dimension(125, 25));
+        remAllButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(remAllButton);
         remAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onRemAll();
             }
         });
+        buttonPan.add(new JPanel());
 
         final JButton addButton = new JButton("<< add");
-        addButton.setPreferredSize(new Dimension(125, 25));
+        addButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(addButton);
         addButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onAddIt();
             }
         });
-
+        buttonPan.add(new JPanel());
+        
         final JButton addAllButton = new JButton("<< add all");
-        addAllButton.setPreferredSize(new Dimension(125, 25));
+        addAllButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(addAllButton);
         addAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onAddAll();
             }
         });
+        buttonPan.add(new JPanel());
 
         // include list
         m_inclMdl = new DefaultListModel();
@@ -242,14 +250,18 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
         excludePanel.add(exclSearchPanel, BorderLayout.NORTH);
         excludePanel.add(jspExcl, BorderLayout.CENTER);
 
-        // adds include, button, exclude component
-        super.setLayout(new BorderLayout());
-        super.add(includePanel, BorderLayout.WEST);
-        JPanel buttonPan2 = new JPanel(new FlowLayout());
-        buttonPan2.setBorder(BorderFactory.createTitledBorder(" Select "));
+        JPanel buttonPan2 = new JPanel(new GridLayout());
+        Border border = BorderFactory.createTitledBorder(" Select ");
+        buttonPan2.setBorder(border);
         buttonPan2.add(buttonPan);
-        super.add(buttonPan2, BorderLayout.CENTER);
-        super.add(excludePanel, BorderLayout.EAST);
+        
+        // adds include, button, exclude component
+        JPanel center = new JPanel(new BorderLayout());
+        super.setLayout(new BorderLayout());
+        center.add(includePanel, BorderLayout.CENTER);
+        center.add(buttonPan2, BorderLayout.EAST);
+        super.add(center, BorderLayout.WEST);
+        super.add(excludePanel, BorderLayout.CENTER);
     } // FilterColumnNodeDialogPanel()
 
     /**
