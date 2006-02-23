@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="lib" path="lib/junit.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/crimson.jar"/>
 	<classpathentry exported="true" sourcepath="C:/Programme/Java/jdk1.5.0_01/src.zip" kind="lib" path="lib/jaxp.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/xerces.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jdom.jar"/>

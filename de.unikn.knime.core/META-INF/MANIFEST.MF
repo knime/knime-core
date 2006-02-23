@@ -5,7 +5,6 @@ Bundle-Version: 0.3.0
 Bundle-Vendor: ALTANA Chair for Applied Computer Science
 Bundle-Localization: plugin
 Bundle-ClassPath: lib/junit.jar,
- lib/crimson.jar,
  lib/jaxp.jar,
  lib/xerces.jar,
  lib/jdom.jar,
@@ -39,10 +38,6 @@ Provide-Package: de.unikn.knime.core.data,
  junit.runner,
  junit.swingui,
  junit.textui,
- org.apache.crimson.jaxp,
- org.apache.crimson.parser,
- org.apache.crimson.tree,
- org.apache.crimson.util,
  org.apache.html.dom,
  org.apache.log4j,
  org.apache.log4j.chainsaw,
@@ -101,7 +96,4 @@ Provide-Package: de.unikn.knime.core.data,
  org.jdom.output,
  org.jdom.transform,
  org.w3c.dom,
- org.w3c.dom.ls,
- org.xml.sax,
- org.xml.sax.ext,
- org.xml.sax.helpers
+ org.w3c.dom.ls
