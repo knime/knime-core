@@ -75,7 +75,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
         // set exclusion list on the panel
         FilterColumnNodeDialogPanel p = 
             (FilterColumnNodeDialogPanel) getTab(TAB);
-        p.update(specs[FilterColumnNodeModel.INPORT], list, true);
+        p.update(specs[FilterColumnNodeModel.INPORT], true, list);
     } 
     
     /**

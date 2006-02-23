@@ -150,6 +150,7 @@ public class ColumnSelectionPanel extends JPanel {
                         if (current.getName().equals(selColName)) {
                             selectMe = current;
                         }
+                        break;
                     }
                 }
             }

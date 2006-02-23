@@ -25,7 +25,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,6 +49,7 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
@@ -93,35 +94,53 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_excludeBorder;
     
-    private final Set<DataType> m_types = new HashSet<DataType>();
+    /** Show only columns of types that are compatible 
+     * to one of theses classes. */
+    private final Class<? extends DataValue>[] m_filterClasses;
+    
 
     /**
      * Creates a new filter column panel with three component which are the
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The include list then will contain all values to
      * filter.
-     * @param types An array of types only allowed for selection. Will be 
-     *        check during update.
      * 
-     * @see #update(DataTableSpec, Set, boolean)
-     */
-    public FilterColumnNodeDialogPanel(final DataType... types) {
-        this();
-        for (int i = 0; i < types.length; i++) {
-            m_types.add(types[i]);
-        }
-    }
-    
-    /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
-     * 
-     * @see #update(DataTableSpec, Set, boolean)
+     * @see #update(DataTableSpec, boolean, Set)
+     * @see #update(DataTableSpec, boolean, DataCell...)
      */
     public FilterColumnNodeDialogPanel() {
+        this(DataValue.class);
+    }
+    
+    /** Only used to init the filter class array. */
+    private static Class<? extends DataValue>[] init(
+            final Class<? extends DataValue>... filterValueClasses) {
+        if (filterValueClasses == null || filterValueClasses.length == 0) {
+            throw new NullPointerException("Classes must not be null");
+        }
+        List<Class<? extends DataValue>> list = 
+            Arrays.asList(filterValueClasses);
+        if (list.contains(null)) {
+            throw new NullPointerException("List of value classes must not " 
+                    + "contain null elements.");
+        }
+        return filterValueClasses;
+    }
 
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter.
+     * @param filterValueClasses An array of type <code>DataValue</code> classes
+     *        only allowed for selection. Will be check during update.
+     * 
+     * @see #update(DataTableSpec, boolean, Set)
+     * @see #update(DataTableSpec, boolean, DataCell...)
+     */
+    public FilterColumnNodeDialogPanel(
+            final Class<? extends DataValue>... filterValueClasses) {
+        m_filterClasses = init(filterValueClasses);
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
@@ -359,44 +378,15 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      */
     public void update(final DataTableSpec spec, final boolean exclude,
             final DataCell... cells) {
-        assert (spec != null && cells != null);
-        m_order.clear();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
-        List<DataCell> list = Arrays.asList(cells);
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            final DataColumnSpec cSpec = spec.getColumnSpec(i);
-            if (!typeAllowed(cSpec.getType())) {
-                continue;
-            }
-            final DataCell c = cSpec.getName();
-            m_order.add(cSpec);
-            if (exclude) {
-                if (list.contains(c)) {
-                    m_exclMdl.addElement(cSpec);
-                } else {
-                    m_inclMdl.addElement(cSpec);
-                }
-            } else {
-                if (list.contains(c)) {
-                    m_inclMdl.addElement(cSpec);
-                } else {
-                    m_exclMdl.addElement(cSpec);
-                }
-            }
-        }
-        repaint();
+        this.update(spec, exclude, Arrays.asList(cells));
     }
     
     /** Checks if the given type is included in the list of allowed types. If 
      * the list is empty, all types are valid.
      */
     private boolean typeAllowed(final DataType type) {
-        if (m_types.isEmpty()) {
-            return true;
-        }
-        for (DataType thisType : m_types) {
-            if (thisType.equals(type)) {
+        for (Class<? extends DataValue> cl : m_filterClasses) {
+            if (type.isCompatible(cl)) {
                 return true;
             }
         }
@@ -409,12 +399,27 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * from the spec afterwards.
      * 
      * @param spec The spec to retrieve the column names from.
-     * @param excl The list of columns to exclude or include.
      * @param exclude The flag if <code>excl</code> contains the columns to
      *            exclude otherwise include.
+     * @param excl The list of columns to exclude or include.
      */
-    public void update(final DataTableSpec spec, final Set<DataCell> excl,
-            final boolean exclude) {
+    public void update(final DataTableSpec spec, final boolean exclude,
+            final Set<DataCell> excl) {
+        this.update(spec, exclude, (Collection<DataCell>) excl);
+    }
+
+    /**
+     * Updates this filter panel by removing all current selections from the
+     * include and exclude list. The include list will contains all column names
+     * from the spec afterwards.
+     * 
+     * @param spec The spec to retrieve the column names from.
+     * @param exclude The flag if <code>excl</code> contains the columns to
+     *            exclude otherwise include.
+     * @param excl The list of columns to exclude or include.
+     */
+    private void update(final DataTableSpec spec, final boolean exclude,
+            final Collection<DataCell> excl) {
         assert (spec != null && excl != null);
         m_order.clear();
         m_inclMdl.removeAllElements();
@@ -441,43 +446,8 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
             }
         }
         repaint();
-    }
-
-//    /**
-//     * Updates this filter panel by removing all current selections from the
-//     * include and exclude list. The include list will contain all column 
-//     * names from the spec afterwards.
-//     * 
-//     * @param set The <code>DataCell</code> elements to add.
-//     * @param excl The list of columns to exclude or include.
-//     * @param exclude The flag if <code>excl</code> contains the columns to
-//     *            exclude otherwise include.
-//     */
-//    public void update(final Set<DataCell> set, final Set<DataCell> excl,
-//            final boolean exclude) {
-//        assert (set != null && excl != null);
-//        m_order.clear();
-//        m_inclMdl.removeAllElements();
-//        m_exclMdl.removeAllElements();
-//        for (DataCell c : set) {
-//            m_order.add(c);
-//            if (exclude) {
-//                if (excl.contains(c)) {
-//                    m_exclMdl.addElement(c);
-//                } else {
-//                    m_inclMdl.addElement(c);
-//                }
-//            } else {
-//                if (excl.contains(c)) {
-//                    m_inclMdl.addElement(c);
-//                } else {
-//                    m_exclMdl.addElement(c);
-//                }
-//            }
-//        }
-//        repaint();
-//    }
-
+     }
+    
     /**
      * Returns all columns from the exclude list.
      * 
