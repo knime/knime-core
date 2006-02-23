@@ -242,8 +242,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // m_clipboard = new Clipboard(getSite().getShell().getDisplay());
         // }
         //
-        // return m_clipboard;
-        
+        // return m_clipboard;       
     }
 
     /**

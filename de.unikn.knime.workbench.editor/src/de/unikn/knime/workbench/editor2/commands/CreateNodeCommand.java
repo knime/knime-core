@@ -89,6 +89,10 @@ public class CreateNodeCommand extends Command {
         // create extra info and set it
         ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
         info.setNodeLocation(m_location.x, m_location.y, -1, -1);
+        
+       
+        
+        
 
         info.setFactoryName(template.getFactory().getName());
         info.setType(template.getType());

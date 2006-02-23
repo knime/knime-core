@@ -25,6 +25,7 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 
@@ -41,9 +42,9 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
-    
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(NewWorkflowContainerEditPolicy.class);
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(NewWorkflowContainerEditPolicy.class);
 
     /**
      * @see ContainerEditPolicy#
@@ -62,14 +63,27 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         // The node/description should be initially located here
         Point location = request.getLocation();
 
-        WorkflowRootEditPart workflowPart = (WorkflowRootEditPart) this
+        // adapt the location according to the zoom factor
+        // this seems to be a workaround for a bug in the framework
+        ZoomManager zoomManager = (ZoomManager)getTargetEditPart(request)
+                .getRoot().getViewer()
+                .getProperty(ZoomManager.class.toString());
+        
+        double zoomLevel = zoomManager.getZoom();
+        
+        System.out.println(zoomLevel);
+        
+        location.x = (int)Math.round(location.x * (1.0 / zoomLevel));
+        location.y = (int)Math.round(location.y * (1.0 / zoomLevel));
+        
+        WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this
                 .getHost();
         WorkflowManager manager = workflowPart.getWorkflowManager();
 
         // Case 1:
         // create a new node
         if (obj instanceof NodeFactory) {
-            NodeFactory factory = (NodeFactory) obj;
+            NodeFactory factory = (NodeFactory)obj;
 
             CreateNodeCommand cmd = new CreateNodeCommand(manager, factory,
                     location);
