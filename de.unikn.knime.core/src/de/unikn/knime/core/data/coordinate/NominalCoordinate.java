@@ -169,7 +169,7 @@ public class NominalCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.core.data.coordinate.Coordinate#getUnusedDistBetweenTicks(int)
+     * @see Coordinate#getUnusedDistBetweenTicks(double)
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {
