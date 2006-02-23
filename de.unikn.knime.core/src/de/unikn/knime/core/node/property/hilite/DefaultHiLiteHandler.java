@@ -184,11 +184,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * with all previously hilit row IDs.
      */
     public synchronized void resetHiLite() {
-            // TODO fireResetHiLiteEvent()
-        Set<DataCell> clone = 
-            Collections.unmodifiableSet(new HashSet<DataCell>(m_hiLitKeys));
         m_hiLitKeys.clear();
-        fireUnHiLiteEvent(new KeyEvent(this, clone));
+        fireResetHiLiteEvent();
     } 
     
     /** 
@@ -220,11 +217,11 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /** 
      * Informs all registered hilite listener to reset all hilit rows.
      */
-//    private synchronized void fireResetHiLiteEvent() {
-//        for (Iterator it = m_listenerList.iterator(); it.hasNext();) {
-//            HiLiteListener l = (HiLiteListener) it.next();
-//            l.resetHiLite();
-//        }
-//    }
+    private synchronized void fireResetHiLiteEvent() {
+        for (int l = m_listenerList.size() - 1; l >= 0; l--) {
+            HiLiteListener listener = m_listenerList.get(l);
+            listener.resetHiLite();
+        }
+    }
 
 } // DefaultHiLiteHandler
