@@ -26,7 +26,7 @@ import javax.swing.table.TableModel;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultStringCell;
-import de.unikn.knime.core.node.property.ColorAttr;
+import de.unikn.knime.core.data.property.ColorAttr;
 
 /** 
  * Model for a Row Header view in a table view that displays a 

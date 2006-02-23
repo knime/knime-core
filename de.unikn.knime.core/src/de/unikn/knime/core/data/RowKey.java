@@ -24,7 +24,7 @@ package de.unikn.knime.core.data;
 
 import java.io.Serializable;
 
-import de.unikn.knime.core.node.property.ColorAttr;
+import de.unikn.knime.core.data.property.ColorAttr;
 
 /**
  * Unique key for a specific row. It holds an identifier (of type

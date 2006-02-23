@@ -31,8 +31,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
+import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.data.renderer.DataCellRenderer;
-import de.unikn.knime.core.node.property.ColorAttr;
 
 /** 
  * Row Header for a table view on a <code>DataTable</code>. It displays a

@@ -19,10 +19,9 @@
  * History
  *   06.02.2006 (tg): created
  */
-package de.unikn.knime.core.node.property;
+package de.unikn.knime.core.data.property;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.property.PropertyHandler;
 
 /**
  * Interface for a Handler generating colors based on - usually

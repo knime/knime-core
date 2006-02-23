@@ -43,7 +43,7 @@ import de.unikn.knime.core.data.StringType;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.DefaultStringCell;
 import de.unikn.knime.core.data.def.DefaultTable;
-import de.unikn.knime.core.node.property.ColorAttr;
+import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.tableview.TableView;
 

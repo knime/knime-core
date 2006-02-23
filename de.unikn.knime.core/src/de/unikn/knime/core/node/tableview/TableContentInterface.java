@@ -24,7 +24,7 @@ package de.unikn.knime.core.node.tableview;
 import javax.swing.event.TableModelListener;
 
 import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.node.property.ColorAttr;
+import de.unikn.knime.core.data.property.ColorAttr;
 
 /** 
  * Interface used by the row header view of a table. It allows to retrieve 

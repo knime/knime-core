@@ -24,8 +24,8 @@ package de.unikn.knime.core.data;
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultDataColumnProperties;
 import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
-import de.unikn.knime.core.node.property.ColorHandler;
 
 /**
  * A Creator class that allows (as the only such way from outside this package)

@@ -46,9 +46,9 @@ import javax.swing.table.TableModel;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTable;
+import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.data.renderer.DataCellRenderer;
 import de.unikn.knime.core.data.renderer.DataCellRendererFamily;
-import de.unikn.knime.core.node.property.ColorAttr;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 

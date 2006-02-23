@@ -20,8 +20,8 @@ package de.unikn.knime.core.data;
 
 import java.util.Iterator;
 
+import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
-import de.unikn.knime.core.node.property.ColorHandler;
 
 /**
  * Interface describing the makeup of one column in a <code>DataTable</code>

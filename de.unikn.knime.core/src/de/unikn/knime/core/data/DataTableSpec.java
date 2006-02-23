@@ -26,9 +26,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.property.ColorAttr;
 
 /**
  * DataTableSpecs are used in two ways: As meta information to specify the

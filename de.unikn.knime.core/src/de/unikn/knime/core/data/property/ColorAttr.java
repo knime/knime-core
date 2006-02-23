@@ -17,7 +17,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.core.node.property;
+package de.unikn.knime.core.data.property;
 
 import java.awt.Color;
 import java.io.Serializable;
