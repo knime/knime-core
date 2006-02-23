@@ -211,9 +211,8 @@ public abstract class NodeView {
         } catch (NullPointerException npe) {
             throw new IllegalStateException(
                     "Implementation error of NodeView.modelChanged(). "
-                    + "NullPointerException during notification of a changed "
-                            + "model. Reason: "
-                            + npe.getMessage());
+                            + "NullPointerException during notification of a changed "
+                            + "model. Reason: " + npe.getMessage());
         } catch (Exception e) {
             throw new IllegalStateException("Error during notification "
                     + "of a changed model (in NodeView.modelChanged()). "
@@ -402,16 +401,17 @@ public abstract class NodeView {
         if (m_activeComp == comp) {
             return;
         }
+
         Container cont = m_frame.getContentPane();
         if (m_activeComp != null) {
             cont.remove(m_activeComp);
         }
+        
         m_activeComp = comp;
         comp.setBackground(COLOR_BACKGROUND);
         cont.add(m_activeComp, BorderLayout.CENTER);
-        m_frame.invalidate();
-        m_frame.validate();
-        m_frame.repaint();
+        
+        m_frame.pack();
     }
 
     /**
