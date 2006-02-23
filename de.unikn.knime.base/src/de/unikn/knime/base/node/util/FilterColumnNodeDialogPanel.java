@@ -557,27 +557,32 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
     }
     
     /**
-     * Renoves the given column form either include or exclude list and notfies
-     * all listeners.
-     * @param column The column to remove.
+     * Removes the given columns form either include or exclude list and notfies
+     * all listeners. Does not throw an exception if the argument contains 
+     * <code>null</code> elements or is not contained in any of the lists.
+     * @param columns The columns to remove.
      */
-    public final void hideColumn(final DataColumnSpec column) {
-        if (m_inclMdl.contains(column)) {
-            m_hideColumns.add(column);
-            m_inclMdl.removeElement(column);
-            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
-        } else {
-            if (m_exclMdl.contains(column)) {
+    public final void hideColumn(final DataColumnSpec... columns) {
+        boolean changed = false;
+        for (DataColumnSpec column : columns) {
+            if (m_inclMdl.contains(column)) {
                 m_hideColumns.add(column);
-                m_exclMdl.removeElement(column);
-                firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
+                m_inclMdl.removeElement(column);
+                changed = true;
+            } else {
+                if (m_exclMdl.contains(column)) {
+                    m_hideColumns.add(column);
+                    m_exclMdl.removeElement(column);
+                }
             }
+        }
+        if (changed) {
+            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
         }
     }
     
     /**
-     * Re-adds all remove/hidden columns to the exclude list and notofies all
-     * listeners.
+     * Re-adds all remove/hidden columns to the exclude list.
      */
     public final void resetHiding() {
         if (m_hideColumns.size() > 0) {
@@ -585,7 +590,6 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
                 m_exclMdl.addElement(column);
             }
             m_hideColumns.clear();
-            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
         }
     }
 
