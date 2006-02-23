@@ -62,16 +62,13 @@ import de.unikn.knime.core.node.util.DataColumnSpecListCellRenderer;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class FilterColumnNodeDialogPanel extends JPanel {
+public final class FilterColumnPanel extends JPanel {
 
     /** Settings key for the excluded columns. */
     public static final String INCLUDED_COLUMNS = "included_columns";
 
     /** Settings key for the excluded columns. */
     public static final String EXCLUDED_COLUMNS = "excluded_columns";
-
-    /** String for the change event when the include list changes. */
-    public static final String PROP_CHANGE_INCLUDE_LIST = "include_changed";
 
     /** Include list. */
     private final JList m_inclList;
@@ -111,7 +108,7 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Set)
      * @see #update(DataTableSpec, boolean, DataCell...)
      */
-    public FilterColumnNodeDialogPanel() {
+    public FilterColumnPanel() {
         this(DataValue.class);
     }
     
@@ -141,7 +138,7 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Set)
      * @see #update(DataTableSpec, boolean, DataCell...)
      */
-    public FilterColumnNodeDialogPanel(
+    public FilterColumnPanel(
             final Class<? extends DataValue>... filterValueClasses) {
         m_filterClasses = init(filterValueClasses);
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
@@ -284,7 +281,7 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
         center.add(buttonPan2, BorderLayout.EAST);
         super.add(center, BorderLayout.WEST);
         super.add(excludePanel, BorderLayout.CENTER);
-    } // FilterColumnNodeDialogPanel()
+    } // FilterColumnPanel()
 
     /**
      * Called by the 'remove >>' button to exclude the selected elements from
@@ -292,20 +289,15 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      */
     private void onRemIt() {
         Object[] incls = m_inclList.getSelectedValues();
-        boolean changed = incls.length > 0;
         for (int i = 0; i < incls.length; i++) {
             m_exclMdl.addElement(incls[i]);
             m_inclMdl.removeElement(incls[i]);
         }
-        List list = Arrays.asList(m_exclMdl.toArray());
-        m_exclMdl.removeAllElements();
+                m_exclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
-            if (list.contains(c)) {
+            if (!m_hideColumns.contains(c)) {
                 m_exclMdl.addElement(c);
             }
-        }
-        if (changed) {
-            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
         }
     }
 
@@ -314,14 +306,12 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * list.
      */
     private void onRemAll() {
-        boolean changed = !m_inclMdl.isEmpty();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
-            m_exclMdl.addElement(c);
-        }
-        if (changed) {
-            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
+            if (!m_hideColumns.contains(c)) {
+                m_exclMdl.addElement(c);
+            }
         }
     }
 
@@ -332,24 +322,17 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
     private void onAddIt() {
         // add all selected elements from the exclude to the include list
         Object[] o = m_exclList.getSelectedValues();
-        boolean changed = o.length > 0;
         if (o != null) {
             for (int i = 0; i < o.length; i++) {
                 m_inclMdl.addElement(o[i]);
                 m_exclMdl.removeElement(o[i]);
             }
         }
-        // again, remove all from the include list and start adding them from
-        // the table spec by double-checking the include list
-        List l = Arrays.asList(m_inclMdl.toArray());
         m_inclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
-            if (l.contains(c)) {
+            if (!m_hideColumns.contains(c)) {
                 m_inclMdl.addElement(c);
             }
-        }
-        if (changed) {
-            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
         }
     }
 
@@ -358,14 +341,12 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * exclude list.
      */
     private void onAddAll() {
-        boolean changed = !m_exclMdl.isEmpty();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
-            m_inclMdl.addElement(c);
-        }
-        if (changed) {
-            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
+            if (!m_hideColumns.contains(c)) {
+                m_inclMdl.addElement(c);
+            }
         }
     }
 
@@ -563,19 +544,14 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * @param columns The columns to remove.
      */
     public final void hideColumns(final DataColumnSpec... columns) {
-        boolean changed = false;
         for (DataColumnSpec column : columns) {
             if (m_inclMdl.contains(column)) {
                 m_hideColumns.add(column);
                 m_inclMdl.removeElement(column);
-                changed = true;
             } else if (m_exclMdl.contains(column)) {
                 m_hideColumns.add(column);
                 m_exclMdl.removeElement(column);
             }
-        }
-        if (changed) {
-            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
         }
     }
     
