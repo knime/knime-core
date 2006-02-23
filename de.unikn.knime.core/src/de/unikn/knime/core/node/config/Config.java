@@ -80,7 +80,7 @@ public abstract class Config extends AbstractConfigEntry implements
      * @param key The new Config's key.
      * @return A new instance of this Config.
      */
-    public abstract Config getInstance(final String key);
+    protected abstract Config getInstance(final String key);
 
     /**
      * Creates a new Config with the given key and returns it.

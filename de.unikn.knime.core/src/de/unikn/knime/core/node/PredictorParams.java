@@ -41,7 +41,7 @@ public final class PredictorParams extends NodeSettings {
     /**
      * @see de.unikn.knime.core.node.config.Config#getInstance(java.lang.String)
      */
-    public PredictorParams getInstance(final String key) {
+    protected PredictorParams getInstance(final String key) {
         return new PredictorParams(key);
     }
 

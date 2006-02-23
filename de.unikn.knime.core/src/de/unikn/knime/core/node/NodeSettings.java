@@ -46,7 +46,7 @@ public class NodeSettings extends Config {
     /**
      * @see Config#getInstance(java.lang.String)
      */
-    public NodeSettings getInstance(final String key) {
+    protected NodeSettings getInstance(final String key) {
         return new NodeSettings(key);
     }
 
