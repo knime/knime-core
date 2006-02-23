@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -98,6 +99,8 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * to one of theses classes. */
     private final Class<? extends DataValue>[] m_filterClasses;
     
+    private final HashSet<DataColumnSpec> m_hideColumns =
+        new HashSet<DataColumnSpec>();
 
     /**
      * Creates a new filter column panel with three component which are the
@@ -551,6 +554,39 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
     protected final void setListCellRenderer(final ListCellRenderer renderer) {
         m_inclList.setCellRenderer(renderer);
         m_exclList.setCellRenderer(renderer);
+    }
+    
+    /**
+     * Renoves the given column form either include or exclude list and notfies
+     * all listeners.
+     * @param column The column to remove.
+     */
+    public final void hideColumn(final DataColumnSpec column) {
+        if (m_inclMdl.contains(column)) {
+            m_hideColumns.add(column);
+            m_inclMdl.removeElement(column);
+            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
+        } else {
+            if (m_exclMdl.contains(column)) {
+                m_hideColumns.add(column);
+                m_exclMdl.removeElement(column);
+                firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
+            }
+        }
+    }
+    
+    /**
+     * Re-adds all remove/hidden columns to the exclude list and notofies all
+     * listeners.
+     */
+    public final void resetHiding() {
+        if (m_hideColumns.size() > 0) {
+            for (DataColumnSpec column : m_hideColumns) {
+                m_exclMdl.addElement(column);
+            }
+            m_hideColumns.clear();
+            firePropertyChange(PROP_CHANGE_INCLUDE_LIST, null, null);
+        }
     }
 
     /**
