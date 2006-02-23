@@ -562,18 +562,16 @@ public final class FilterColumnNodeDialogPanel extends JPanel {
      * <code>null</code> elements or is not contained in any of the lists.
      * @param columns The columns to remove.
      */
-    public final void hideColumn(final DataColumnSpec... columns) {
+    public final void hideColumns(final DataColumnSpec... columns) {
         boolean changed = false;
         for (DataColumnSpec column : columns) {
             if (m_inclMdl.contains(column)) {
                 m_hideColumns.add(column);
                 m_inclMdl.removeElement(column);
                 changed = true;
-            } else {
-                if (m_exclMdl.contains(column)) {
-                    m_hideColumns.add(column);
-                    m_exclMdl.removeElement(column);
-                }
+            } else if (m_exclMdl.contains(column)) {
+                m_hideColumns.add(column);
+                m_exclMdl.removeElement(column);
             }
         }
         if (changed) {
