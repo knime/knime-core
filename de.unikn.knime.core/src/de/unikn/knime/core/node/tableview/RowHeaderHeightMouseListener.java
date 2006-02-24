@@ -151,6 +151,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
             int height = m_table.getRowHeight(m_resizingRow);
             m_table.setRowHeight(height);
         }
+        m_isDragging = false;
     }
 
     /** Swaps the current cursor and the temp cursor. */
