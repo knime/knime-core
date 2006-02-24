@@ -416,6 +416,7 @@ public final class FilterColumnPanel extends JPanel {
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
+        m_hideColumns.clear();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             final DataColumnSpec cSpec = spec.getColumnSpec(i);
             if (!typeAllowed(cSpec.getType())) {
@@ -567,12 +568,22 @@ public final class FilterColumnPanel extends JPanel {
      * Re-adds all remove/hidden columns to the exclude list.
      */
     public final void resetHiding() {
-        if (m_hideColumns.size() > 0) {
-            for (DataColumnSpec column : m_hideColumns) {
-                m_exclMdl.addElement(column);
-            }
-            m_hideColumns.clear();
+        if (m_hideColumns.isEmpty()) {
+            return;
         }
+        // add all selected elements from the include to the exclude list
+        HashSet<Object> hash = new HashSet<Object>();
+        hash.addAll(m_hideColumns);
+        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
+            hash.add(e.nextElement());
+        }
+        m_exclMdl.removeAllElements();
+        for (DataColumnSpec c : m_order) {
+            if (hash.contains(c)) {
+                m_exclMdl.addElement(c);
+            }
+        }
+        m_hideColumns.clear();
     }
 
     /**
