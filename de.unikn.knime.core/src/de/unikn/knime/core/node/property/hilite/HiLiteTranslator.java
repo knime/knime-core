@@ -19,24 +19,26 @@
  */
 package de.unikn.knime.core.node.property.hilite;
 
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.Vector;
 
 import de.unikn.knime.core.data.DataCell;
 
 /**
- * A translator for hilite events between two <code>HiLiteHandler</code>, both
- * can be set independently as well as the mapping which is defined between
- * <code>DataCell</code> keys and <code>DataCellSet</code> objects.
+ * A translator for hilite events between two <code>HiLiteHandler</code>, the 
+ * the source hilite handler has to be set during creating of this object, 
+ * whereby the target hilite handlers can be set independently, as well as the 
+ * mapping which is defined between <code>DataCell</code> keys and 
+ * <code>DataCellSet</code> objects.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class HiLiteTranslator implements HiLiteListener {
     
     /** Handlers where to fire events to. Contains the patterns. */
-    private final Vector<HiLiteHandler> m_toHandlers;
+    private final Set<HiLiteHandler> m_toHandlers;
     /** Handler where events had fired from. Contains the patterns. */
     private final HiLiteHandler m_fromHandler;
     /** Containing cluster to pattern mapping. */
@@ -52,7 +54,7 @@ public class HiLiteTranslator implements HiLiteListener {
             throw new IllegalArgumentException("Handler must not be null.");
         }
         m_fromHandler = fromHandler;
-        m_toHandlers = new Vector<HiLiteHandler>();
+        m_toHandlers = new LinkedHashSet<HiLiteHandler>();
         m_mapper = null;
     }
     
@@ -78,7 +80,15 @@ public class HiLiteTranslator implements HiLiteListener {
         m_mapper = mapper;
     }
     
-    
+    /**
+     * Removes a to <code>HiLiteHandler</code>.
+     * @param toHandler The to hilite handler to remove.
+     */
+    public void removeToHiLiteHandler(final HiLiteHandler toHandler) {
+        if (toHandler != null) {
+            m_toHandlers.remove(toHandler);
+        }
+    }    
 
     /**
      * Adds a to <code>HiLiteHandler</code>.
@@ -87,14 +97,29 @@ public class HiLiteTranslator implements HiLiteListener {
     public void addToHiLiteHandler(final HiLiteHandler toHandler) {
         if (toHandler != null) {
             m_toHandlers.add(toHandler);
+            toHandler.addHiLiteListener(new HiLiteListener() {
+                public void hiLite(final KeyEvent event) {
+                    // TODO Auto-generated method stub
+                }
+                public void unHiLite(final KeyEvent event) {
+                    // TODO Auto-generated method stub
+                }
+                public void resetHiLite() {
+                    Set<DataCell> set = m_fromHandler.getHiLitKeys();
+                    if (set.size() > 0) {
+                        m_fromHandler.resetHiLite();
+                    }
+                }
+
+            });
         }
     }
     
     /**
-     * @return the current to hilit handlers.
+     * @return An unmodifiable set of target hilite handler.
      */
-    public Enumeration getToHiLiteHandlers() {
-        return m_toHandlers.elements();
+    public Set<HiLiteHandler> getToHiLiteHandlers() {
+        return Collections.unmodifiableSet(m_toHandlers);
     }
 
     /**
@@ -119,8 +144,8 @@ public class HiLiteTranslator implements HiLiteListener {
                 }     
             }
             if (!fireSet.isEmpty()) {
-                for (int i = 0; i < m_toHandlers.size(); i++) {
-                    m_toHandlers.get(i).hiLite(fireSet);
+                for (HiLiteHandler h : m_toHandlers) {
+                    h.hiLite(fireSet);
                 }
             }
         }
@@ -141,8 +166,8 @@ public class HiLiteTranslator implements HiLiteListener {
                 }     
             }
             if (!fireSet.isEmpty()) {
-                for (int i = 0; i < m_toHandlers.size(); i++) {
-                    m_toHandlers.get(i).unHiLite(fireSet);
+                for (HiLiteHandler h : m_toHandlers) {
+                    h.unHiLite(fireSet);
                 }
             }
         }
@@ -152,10 +177,9 @@ public class HiLiteTranslator implements HiLiteListener {
      * @see HiLiteListener#resetHiLite()
      */
     public void resetHiLite() {
-        for (int i = 0; i < m_toHandlers.size(); i++) {
-            m_toHandlers.get(i).resetHiLite();
+        for (HiLiteHandler h : m_toHandlers) {
+            h.resetHiLite();
         }
     }
-    
    
 }

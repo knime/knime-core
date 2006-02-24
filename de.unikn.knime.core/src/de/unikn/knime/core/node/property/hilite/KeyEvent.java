@@ -35,23 +35,25 @@ import de.unikn.knime.core.data.DataCell;
  */
 public class KeyEvent extends EventObject {
 
-    /** 
-     * Internal unmodifiable set of row IDs.
-     */
+    /** Internal unmodifiable set of row IDs. */
     private final Set<DataCell> m_keys;
 
     /** 
      * Creates a new event with the underlying source and one data cell.
      * @param  src The object on which the event initially occurred.
-     * @param  id A <code>DataCell</code> for which this event is created.
-     * @throws NullPointerException If the key is <code>null</code>.
-     * @throws IllegalArgumentException If the source is <code>null</code>.
+     * @param  ids An array of  <code>DataCell</code> elements for which this 
+     *         event is created.
+     * @throws IllegalArgumentException If the source is <code>null</code> or
+     *         the ids empty.
      * 
      * @see java.util.EventObject#EventObject(Object)
      */
-    public KeyEvent(final Object src, final DataCell... id) {
+    public KeyEvent(final Object src, final DataCell... ids) {
         super(src);
-        Set<DataCell> set = new LinkedHashSet<DataCell>(Arrays.asList(id));
+        if (ids.length == 0) {
+            throw new IllegalArgumentException("KeyEvent can not be empty.");
+        }
+        Set<DataCell> set = new LinkedHashSet<DataCell>(Arrays.asList(ids));
         m_keys = Collections.unmodifiableSet(set);
     }
     
@@ -60,13 +62,16 @@ public class KeyEvent extends EventObject {
      * @param  src  The object on which the event initially occurred.
      * @param  ids A set of <code>DataCell</code> row IDs for which the 
      *         event is created.
-     * @throws NullPointerException If ids are <code>null</code>.
-     * @throws IllegalArgumentException If the source is <code>null</code>.
+     * @throws IllegalArgumentException If the source is <code>null</code>, or
+     *         the ids <code>null</code> or empty.
      *
      * @see java.util.EventObject#EventObject(Object)
      */
     public KeyEvent(final Object src, final Set<DataCell> ids) {
         super(src);
+        if (ids == null || ids.size() == 0) {
+            throw new IllegalArgumentException("KeyEvent can not be empty.");
+        }       
         m_keys = Collections.unmodifiableSet(ids);
     }
 

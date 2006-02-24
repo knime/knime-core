@@ -18,9 +18,10 @@
  */
 package de.unikn.knime.core.node.property.hilite;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -41,26 +42,21 @@ import de.unikn.knime.core.data.DataCell;
  */
 public class DefaultHiLiteHandler implements HiLiteHandler {
 
-    /* 
-     * Keeps list of registered <code>HiLiteListener</code> to fire event to.
-     */
-    private final List<HiLiteListener> m_listenerList;
+    /** Keeps set of registered <code>HiLiteListener</code> to fire event to. */
+    private final Set<HiLiteListener> m_listenerList;
 
-    /* 
-     * Keeps list of all hilit items. 
-     */
-    private final HashSet<DataCell> m_hiLitKeys;
+    /** Keeps set of non-null hilit items. */
+    private final Set<DataCell> m_hiLitKeys;
 
     /** 
-     * Creates a new default hilite handler with an empty list of registered 
-     * listeners and an empty list of hilit items.
+     * Creates a new default hilite handler with an empty set of registered 
+     * listeners and an empty set of hilit items.
      */
     public DefaultHiLiteHandler() {
         // inits empty event listener list
-        m_listenerList = 
-            Collections.synchronizedList(new ArrayList<HiLiteListener>());
+        m_listenerList = new LinkedHashSet<HiLiteListener>();
         // initialize item list
-        m_hiLitKeys = new HashSet<DataCell>();
+        m_hiLitKeys = new LinkedHashSet<DataCell>();
     }
     
     /**
@@ -70,6 +66,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param  listener The hilite listener to append to the list.
      */
     public void addHiLiteListener(final HiLiteListener listener) {
+        assert (listener != null) : "listener is null.";
+        assert (!m_listenerList.contains(listener)) : "Listener already added.";
         m_listenerList.add(listener);
     }
 
@@ -78,45 +76,49 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param  listener The hilite listener to remove from the list.
      */
     public void removeHiLiteListener(final HiLiteListener listener) {
+        assert (listener != null) : "listener is null.";
+        assert (m_listenerList.contains(listener)) : "listener does not exist.";
         m_listenerList.remove(listener);
+    }
+    
+    /**
+     * Removes all hilite listener from the list. 
+     */
+    public void removeAllHiLiteListeners() {
+        m_listenerList.clear();
     }
 
     /**
-     * Returns <b>true</b> if the specified row key is hilit.
-     * @param  id The row ID to check the hilite status for.
-     * @return <b>true</b> if the row key is hilit.
-     * @throws NullPointerException If the given row key is <code>null</code>. 
+     * Returns <b>true</b> if the specified row Ids are hilit.
+     * @param  ids The row IDs to check the hilite status for.
+     * @return <b>true</b> if the row IDs are hilit.
      */
-    public boolean isHiLit(final DataCell id) {
-        return m_hiLitKeys.contains(id);
+    public boolean isHiLit(final DataCell... ids) {
+        List list = Arrays.asList(ids);
+        assert (!list.contains(null)) : "null-keys not allowed.";
+        return m_hiLitKeys.containsAll(list);
     } 
 
     /**
-     * Sets the status of the specified row key to 'hilit'. It will send a
-     * hilite event to all registered listeners - only if the key was not hilit
-     * before.
-     * @param  id The row ID to set hilited.
-     * @throws NullPointerException If the given row key is <code>null</code>. 
+     * Sets the status of the specified row IDs to 'hilit'. It will send a
+     * hilite event to all registered listeners - only if the keys were not 
+     * hilit before.
+     * @param  ids The row IDs to set hilited.
      */
-    public synchronized void hiLite(final DataCell id) {
-        if (id == null) { throw new NullPointerException(); } 
-        if (m_hiLitKeys.add(id)) {
-            fireHiLiteEvent(new KeyEvent(this, id));
-        }
+    public synchronized void hiLite(final DataCell... ids) {
+        List<DataCell> list = Arrays.asList(ids);
+        this.hiLite(new LinkedHashSet<DataCell>(list));
     }
 
     /**
-     * Sets the status of the specified row key to 'unhilit'. It will send a
-     * unhilite event to all registered listeners - only if the key was hilit
+     * Sets the status of the specified row IDs to 'unhilit'. It will send a
+     * unhilite event to all registered listeners - only if the keys were hilit
      * before.
-     * @param  id The row ID to set unhilited.
-     * @throws NullPointerException If the given row key is <code>null</code>. 
+     * @param  ids The row IDs to set unhilited.
      */    
-    public synchronized void unHiLite(final DataCell id) {
-        if (id == null) { throw new NullPointerException(); } 
-        if (m_hiLitKeys.remove(id)) {
-            fireUnHiLiteEvent(new KeyEvent(this, id));
-        }
+    public synchronized void unHiLite(final DataCell... ids) {
+        List<DataCell> list = Arrays.asList(ids);
+        this.unHiLite(new LinkedHashSet<DataCell>(list));
     }
 
     /**
@@ -124,18 +126,15 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * It will send a hilite event to all registered listeners - only for the 
      * IDs that were not hilit before.
      * @param  ids A set of row IDs to set hilited.
-     * @throws NullPointerException If the given set is <code>null</code> or
-     *           contains a null element. 
      */
-     public synchronized void hiLite(final Set<DataCell> ids) {
-        // check key set
-        if (ids == null) { throw new NullPointerException(); } 
-        // synchronize this block
+    public synchronized void hiLite(final Set<DataCell> ids) {
+        assert (ids != null) : "set is null.";
         // create list of row keys from input key array
         final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
         // iterates over all keys and adds them to the changed set
         for (DataCell id : ids) {
-            if (id == null) { throw new NullPointerException(); }
+            assert (id != null) : "key is null.";
+            assert (!m_hiLitKeys.contains(id)) : "key " + id + " already hilit";
             // if the key is already hilit, remove it from the cleaned list
             if (m_hiLitKeys.add(id)) {
                 changedIDs.add(id);
@@ -147,24 +146,22 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
             // throw hilite event
             fireHiLiteEvent(new KeyEvent(this, changedIDs));
         }
-    } // hiLite(DataCellSet)
+    } // hiLite(Set<DataCell>)
 
-     /**
-      * Sets the status of all specified row IDs in the set to 'unhilit'. 
-      * It will send a unhilite event to all registered listeners - only for 
-      * the IDs that were hilit before.
-      * @param  ids A set of row IDs to set unhilited.
-      * @throws NullPointerException If the given set is <code>null</code> or
-      *           contains a null element. 
-      */
-     public synchronized void unHiLite(final Set<DataCell> ids) {
-        // check IDs set
-        if (ids == null) { throw new NullPointerException(); } 
+    /**
+     * Sets the status of all specified row IDs in the set to 'unhilit'. 
+     * It will send a unhilite event to all registered listeners - only for 
+     * the IDs that were hilit before.
+     * @param  ids A set of row IDs to set unhilited.
+     */
+    public synchronized void unHiLite(final Set<DataCell> ids) {
+        assert (ids != null) : "set is null";
         // create list of row keys from input key array
         final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
         // iterate over all keys and removes all not hilit ones
         for (DataCell id : ids) {
-            if (id == null) { throw new NullPointerException(); }
+            assert (id != null) : "key is null.";
+            assert (m_hiLitKeys.contains(id)) : "key " + id + " is not hilit";
             // if the ID has not been hilit remove from the cleaned list 
             if (m_hiLitKeys.remove(id)) {
                 changedIDs.add(id);
@@ -176,16 +173,19 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
             // throw hilite event
             fireUnHiLiteEvent(new KeyEvent(this, changedIDs));
         }
-    }   // unHiLite(DataCellSet)
+    }   // unHiLite(Set<DataCell>)
         
     /**
      * Resets the hilit status of all row IDs. Every row ID will be unhilit
      * after the call to this method. Sends an event to all registered listeners
-     * with all previously hilit row IDs.
+     * with all previously hilit row IDs, IF at least one key was effected 
+     * by this call.
      */
     public synchronized void resetHiLite() {
-        m_hiLitKeys.clear();
-        fireResetHiLiteEvent();
+        if (!m_hiLitKeys.isEmpty()) {
+            m_hiLitKeys.clear();
+            fireResetHiLiteEvent();
+        }
     } 
     
     /** 
@@ -195,9 +195,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     private synchronized void fireHiLiteEvent(final KeyEvent event) {
         assert (event != null);
-        for (int l = m_listenerList.size() - 1; l >= 0; l--) {
-            HiLiteListener listener = m_listenerList.get(l);
-            listener.hiLite(event);
+        for (HiLiteListener l : m_listenerList) {
+            l.hiLite(event);
         }
     }
 
@@ -208,9 +207,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     private synchronized void fireUnHiLiteEvent(final KeyEvent event) {
         assert (event != null);
-        for (int l = m_listenerList.size() - 1; l >= 0; l--) {
-            HiLiteListener listener = m_listenerList.get(l);
-            listener.unHiLite(event);
+        for (HiLiteListener l : m_listenerList) {
+            l.unHiLite(event);
         }
     }
     
@@ -218,10 +216,16 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * Informs all registered hilite listener to reset all hilit rows.
      */
     private synchronized void fireResetHiLiteEvent() {
-        for (int l = m_listenerList.size() - 1; l >= 0; l--) {
-            HiLiteListener listener = m_listenerList.get(l);
-            listener.resetHiLite();
+        for (HiLiteListener l : m_listenerList) {
+            l.resetHiLite();
         }
+    }
+
+    /**
+     * @see HiLiteHandler#getHiLitKeys()
+     */
+    public Set<DataCell> getHiLitKeys() {
+        return Collections.unmodifiableSet(m_hiLitKeys);
     }
 
 } // DefaultHiLiteHandler
