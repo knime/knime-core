@@ -124,7 +124,10 @@ public class TableView extends JScrollPane {
             @Override
             public void mouseClicked(final MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    showPopup(e.getPoint());
+                    Point ePoint = e.getPoint();
+                    Point thisPoint = SwingUtilities.convertPoint(
+                            (Component)e.getSource(), ePoint, TableView.this);
+                    showPopup(thisPoint);
                 }
             }
         });
