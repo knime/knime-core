@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -288,14 +289,19 @@ public final class FilterColumnPanel extends JPanel {
      * the include list.
      */
     private void onRemIt() {
-        Object[] incls = m_inclList.getSelectedValues();
-        for (int i = 0; i < incls.length; i++) {
-            m_exclMdl.addElement(incls[i]);
-            m_inclMdl.removeElement(incls[i]);
+        // add all selected elements from the include to the exclude list
+        Object[] o = m_inclList.getSelectedValues();
+        HashSet<Object> hash = new HashSet<Object>();
+        hash.addAll(Arrays.asList(o));
+        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
+            hash.add(e.nextElement());
         }
-                m_exclMdl.removeAllElements();
+        for (int i = 0; i < o.length; i++) {
+            m_inclMdl.removeElement(o[i]);
+        }
+        m_exclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
-            if (!m_hideColumns.contains(c)) {
+            if (hash.contains(c)) {
                 m_exclMdl.addElement(c);
             }
         }
@@ -322,15 +328,17 @@ public final class FilterColumnPanel extends JPanel {
     private void onAddIt() {
         // add all selected elements from the exclude to the include list
         Object[] o = m_exclList.getSelectedValues();
-        if (o != null) {
-            for (int i = 0; i < o.length; i++) {
-                m_inclMdl.addElement(o[i]);
-                m_exclMdl.removeElement(o[i]);
-            }
+        HashSet<Object> hash = new HashSet<Object>();
+        hash.addAll(Arrays.asList(o));
+        for (Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
+            hash.add(e.nextElement());
+        }
+        for (int i = 0; i < o.length; i++) {
+            m_exclMdl.removeElement(o[i]);
         }
         m_inclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
-            if (!m_hideColumns.contains(c)) {
+            if (hash.contains(c)) {
                 m_inclMdl.addElement(c);
             }
         }
