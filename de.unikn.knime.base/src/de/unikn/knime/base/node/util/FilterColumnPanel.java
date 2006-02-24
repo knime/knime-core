@@ -20,7 +20,6 @@ package de.unikn.knime.base.node.util;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -144,6 +143,7 @@ public final class FilterColumnPanel extends JPanel {
         m_filterClasses = init(filterValueClasses);
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
+        buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(new JPanel());
 
@@ -218,10 +218,12 @@ public final class FilterColumnPanel extends JPanel {
         };
         searchFieldIncl.addActionListener(actionListenerIncl);
         searchButtonIncl.addActionListener(actionListenerIncl);
-        JPanel inclSearchPanel = new JPanel(new FlowLayout());
-        inclSearchPanel.add(new JLabel("Search: "));
-        inclSearchPanel.add(searchFieldIncl);
-        inclSearchPanel.add(searchButtonIncl);
+        JPanel inclSearchPanel = new JPanel(new BorderLayout());
+        inclSearchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
+        inclSearchPanel.setBorder(
+                BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
+        inclSearchPanel.add(searchButtonIncl, BorderLayout.EAST);
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(" Include ");
         includePanel.setBorder(m_includeBorder);
@@ -260,10 +262,12 @@ public final class FilterColumnPanel extends JPanel {
         };
         searchFieldExcl.addActionListener(actionListenerExcl);
         searchButtonExcl.addActionListener(actionListenerExcl);
-        JPanel exclSearchPanel = new JPanel(new FlowLayout());
-        exclSearchPanel.add(new JLabel("Search: "));
-        exclSearchPanel.add(searchFieldExcl);
-        exclSearchPanel.add(searchButtonExcl);
+        JPanel exclSearchPanel = new JPanel(new BorderLayout());
+        exclSearchPanel.setBorder(
+                BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        exclSearchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
+        exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
+        exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(" Exclude ");
         excludePanel.setBorder(m_excludeBorder);
