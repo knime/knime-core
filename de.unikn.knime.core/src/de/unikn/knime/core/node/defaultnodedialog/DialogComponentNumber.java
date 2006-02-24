@@ -44,9 +44,11 @@ public class DialogComponentNumber extends DialogComponent {
     /* final field to store the type, either int or double */
     private final Type m_type;
     
-    /* possible types */
+    /** possible types. */
     private enum Type {
+        /** Int type. */
         INT,
+        /** Double type. */
         DOUBLE
     }
     

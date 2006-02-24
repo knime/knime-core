@@ -184,11 +184,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      *             valid
      */
     public int[] createSubWorkflow(final NodeSettings settings,
-            int positionChangeMultiplier) throws InvalidSettingsException {
+            final int positionChangeMultiplier) 
+            throws InvalidSettingsException {
 
         NodeSettings nodes = settings.getConfig(KEY_NODES); // Node-Subconfig
-        // object
-        // get all keys in there
 
         // the new ids to return
         ArrayList<Integer> newIds = new ArrayList<Integer>();
@@ -299,7 +298,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             idArray[i] = newId.intValue();
             i++;
         }
-        
+
         return idArray;
 
     }
@@ -709,9 +708,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 thisNodeC.setState(NodeContainer.STATE_IS_EXECUTABLE);
                 newExecutable++;
             }
-            if ((thisNodeC.isAutoExecutable()) && (thisNodeC.getState()
-                    == NodeContainer.STATE_IDLE)
-            && (thisNodeC.getNode().isExecutable())) {
+            if ((thisNodeC.isAutoExecutable())
+                    && (thisNodeC.getState() == NodeContainer.STATE_IDLE)
+                    && (thisNodeC.getNode().isExecutable())) {
                 thisNodeC.setState(NodeContainer.STATE_IS_EXECUTABLE);
                 newExecutable++;
             }

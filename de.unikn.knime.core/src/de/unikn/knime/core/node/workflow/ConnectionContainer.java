@@ -214,8 +214,6 @@ public class ConnectionContainer {
      * these IDs.
      * 
      * @param config The configuration to write to current settings into.
-     * 
-     * @see #insertNewConnectionIntoWorkflow
      */
     public void save(final NodeSettings config) {
         config.addInt(KEY_ID, m_id);
