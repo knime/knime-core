@@ -179,25 +179,6 @@ public class TableView extends JScrollPane {
         }
         return content;
     }
-    
-    /**
-     * @see javax.swing.JScrollPane#createViewport()
-     */
-    @Override
-    protected JViewport createViewport() {
-        return new JViewport() {
-            @Override
-            public void scrollRectToVisible(final Rectangle contentRect) {
-                super.scrollRectToVisible(contentRect);
-                if (TableView.this.getColumnHeader() != null) {
-                    TableView.this.getColumnHeader().invalidate();
-                    TableView.this.getColumnHeader().repaint();
-                }
-                TableView.this.validate();
-                TableView.this.repaint();
-            }
-        };
-    }
 
     /** 
      * Get reference to table view that is in the scroll pane's view port.
