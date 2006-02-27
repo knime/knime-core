@@ -31,7 +31,6 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 
-import de.unikn.knime.core.eclipseUtil.ClassCreator;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
@@ -53,9 +52,9 @@ import de.unikn.knime.workbench.repository.model.Root;
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryManager {
-    
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(RepositoryManager.class);
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(RepositoryManager.class);
 
     /** The singleton instance. */
     public static final RepositoryManager INSTANCE = new RepositoryManager();
@@ -68,10 +67,13 @@ public final class RepositoryManager {
     private static final String ID_CATEGORY = "de.unikn.knime.workbench."
             + "repository.categories";
 
-    private Root m_root;
+    // set the eclipse class creator into the static global class creator class
+    static {
 
-    /** global class creator. * */
-    private ClassCreator m_classCreator;
+        GlobalClassCreator.setClassCreator(new EclipseClassCreator(ID_NODE));
+    }
+
+    private Root m_root;
 
     /**
      * 
@@ -117,8 +119,7 @@ public final class RepositoryManager {
         //
         // First, process the contributed categories
         //
-        ArrayList<IConfigurationElement> allElements = 
-            new ArrayList<IConfigurationElement>();
+        ArrayList<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
 
         for (int i = 0; i < categoryExtensions.length; i++) {
 
@@ -131,16 +132,15 @@ public final class RepositoryManager {
 
         // sort first by path-depth, so that everything is there in the
         // right order
-        IConfigurationElement[] categoryElements = 
-            (IConfigurationElement[]) allElements
+        IConfigurationElement[] categoryElements = (IConfigurationElement[])allElements
                 .toArray(new IConfigurationElement[allElements.size()]);
 
         Arrays.sort(categoryElements, new Comparator() {
 
             public int compare(final Object o1, final Object o2) {
-                String element1 = ((IConfigurationElement) o1)
+                String element1 = ((IConfigurationElement)o1)
                         .getAttribute("path");
-                String element2 = ((IConfigurationElement) o2)
+                String element2 = ((IConfigurationElement)o2)
                         .getAttribute("path");
                 if (element1.equals("/")) {
                     return -1;
@@ -165,13 +165,13 @@ public final class RepositoryManager {
 
             try {
                 Category category = RepositoryFactory.createCategory(m_root, e);
-                LOGGER.debug("Found category extension '"
-                        + category.getID() + "' on path '" + category.getPath()
-                        + "'");
+                LOGGER.debug("Found category extension '" + category.getID()
+                        + "' on path '" + category.getPath() + "'");
                 LOGGER.info("Found category: " + category.getID());
 
             } catch (Exception ex) {
-                ex.printStackTrace(); // <=== DON'T PRINT TO SYSTEM.OUT, PLEASE
+                ex.printStackTrace(); // <=== DON'T PRINT TO SYSTEM.OUT,
+                // PLEASE
                 WorkbenchErrorLogger.error("Could not load contributed "
                         + "extension, skipped: '" + e.getAttribute("id")
                         + "' from plugin '"
@@ -198,9 +198,9 @@ public final class RepositoryManager {
                     LOGGER.debug("Found node extension '" + node.getID()
                             + "': " + node.getName());
                     String nodeName = node.getID();
-                    nodeName = nodeName.substring(
-                            nodeName.lastIndexOf('.') + 1);
-                    //LOGGER.info("Found node: " + node.getName());
+                    nodeName = nodeName
+                            .substring(nodeName.lastIndexOf('.') + 1);
+                    // LOGGER.info("Found node: " + node.getName());
 
                     // Ask the root to lookup the category-container located at
                     // the given path
@@ -252,12 +252,6 @@ public final class RepositoryManager {
      */
     public WorkflowManager loadWorkflowFromConfig(final NodeSettings settings) {
         assert settings != null;
-
-        // create creator first
-        if (m_classCreator == null) {
-            m_classCreator = new EclipseClassCreator(ID_NODE);
-            GlobalClassCreator.setClassCreator(m_classCreator);
-        }
 
         WorkflowManager manager = new WorkflowManager();
         try {
