@@ -40,7 +40,7 @@ public abstract class NodeInPort extends NodePort {
      * The output port of the predecessor which is connected to this port, can
      * be <code>null</code>, if no connection exists.
      */
-    private NodeOutPort m_connPort;
+    private NodeOutPort m_connOutPort;
 
     /**
      * Creates a new input port with the unique ID assigned from the node.
@@ -55,7 +55,7 @@ public abstract class NodeInPort extends NodePort {
             throw new NullPointerException();
         }
         m_node = node;
-        m_connPort = null;
+        m_connOutPort = null;
     }
 
     /**
@@ -83,9 +83,9 @@ public abstract class NodeInPort extends NodePort {
                 && !(connPort instanceof NodePort.PredictorParamsPort)) {
             throw new IllegalArgumentException("Port types does not match.");
         }
-        NodeOutPort tmp = m_connPort;
-        m_connPort = connPort;
-        m_connPort.addInPort(this);
+        NodeOutPort tmp = m_connOutPort;
+        m_connOutPort = connPort;
+        m_connOutPort.addInPort(this);
         getNode().inportHasNewConnection(getPortID());
         return tmp;
     }
@@ -108,11 +108,11 @@ public abstract class NodeInPort extends NodePort {
      */
     public final NodeOutPort disconnectPort() {
         // see if we are connected
-        if (m_connPort != null) {
+        if (m_connOutPort != null) {
             getNode().inportWasDisconnected(getPortID());
-            m_connPort.removePort(this);
-            NodeOutPort tmp = m_connPort;
-            m_connPort = null;
+            m_connOutPort.removePort(this);
+            NodeOutPort tmp = m_connOutPort;
+            m_connOutPort = null;
             return tmp;
         } else {
             // nothing to do - we were not connected before
@@ -127,7 +127,7 @@ public abstract class NodeInPort extends NodePort {
      * @return <code>true</code> if connected, otherwise <code>false</code>.
      */
     public final boolean isConnected() {
-        return (m_connPort != null);
+        return (m_connOutPort != null);
     }
 
     /**
@@ -136,7 +136,7 @@ public abstract class NodeInPort extends NodePort {
      * @return NodeOutPort or <code>null</code> if not connected.
      */
     public final NodeOutPort getConnectedPort() {
-        return m_connPort;
+        return m_connOutPort;
     }
 
     /**
