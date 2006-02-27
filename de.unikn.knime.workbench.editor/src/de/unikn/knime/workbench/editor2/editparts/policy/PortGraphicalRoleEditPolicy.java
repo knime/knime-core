@@ -42,6 +42,7 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * TODO and out->node and in<-node (looks up the first free port as target)
  * 
  * @author Florian Georg, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 
@@ -61,13 +62,13 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
         if (!(getHost() instanceof AbstractPortEditPart)) {
             return null;
         }
-        NodeContainerEditPart nodePart = (NodeContainerEditPart) getHost()
+        NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost()
                 .getParent();
 
         if (getHost() instanceof NodeOutPortEditPart) {
             // request started on out port?
             cmd.setSourceNode(nodePart);
-            cmd.setSourcePortID(((NodeOutPortEditPart) getHost()).getId());
+            cmd.setSourcePortID(((NodeOutPortEditPart)getHost()).getId());
             cmd.setStartedOnOutPort(true);
             // LOGGER.debug("Started connection on out-port...");
         } else if (getHost() instanceof NodeInPortEditPart) {
@@ -81,7 +82,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 
         // we need the manager to execute the command
 
-        cmd.setManager(((WorkflowRootEditPart) nodePart.getParent())
+        cmd.setManager(((WorkflowRootEditPart)nodePart.getParent())
                 .getWorkflowManager());
 
         // we must remember this partially initialized command in the request.
@@ -101,8 +102,9 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
             final CreateConnectionRequest request) {
 
         // get the previously started command
-        CreateConnectionCommand cmd = (CreateConnectionCommand) request
+        CreateConnectionCommand cmd = (CreateConnectionCommand)request
                 .getStartCommand();
+
         if (cmd == null) {
             return null;
         }
@@ -116,18 +118,18 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 
             // LOGGER.debug("Ending connection on out-port...");
         } else if (target instanceof NodeInPortEditPart) {
-            cmd.setTargetPortID(((NodeInPortEditPart) target).getId());
-            cmd.setTargetNode((NodeContainerEditPart) target.getParent());
+            cmd.setTargetPortID(((NodeInPortEditPart)target).getId());
+            cmd.setTargetNode((NodeContainerEditPart)target.getParent());
 
             // LOGGER.debug("Ending connection on in-port...");
         } else if (target instanceof NodeContainerEditPart) {
 
             if (cmd.wasStartedOnOutPort()) {
                 cmd.setTargetPortID(-1);
-                cmd.setTargetNode((NodeContainerEditPart) target);
+                cmd.setTargetNode((NodeContainerEditPart)target);
             } else {
                 cmd.setSourcePortID(-1);
-                cmd.setSourceNode((NodeContainerEditPart) target);
+                cmd.setSourceNode((NodeContainerEditPart)target);
             }
             // LOGGER.debug("Ending connection on NODE...");
 
@@ -148,7 +150,25 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      *      org.eclipse.gef.requests.ReconnectRequest)
      */
     protected Command getReconnectSourceCommand(final ReconnectRequest req) {
-        // TODO Auto-generated method stub
+
+//        // get the connection to change
+//        ConnectionContainerEditPart connection 
+//            = (ConnectionContainerEditPart)getHost();
+//
+//        // get the workflow manager
+//        if (!(getHost() instanceof AbstractPortEditPart)) {
+//            return null;
+//        }
+//        NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost()
+//                .getParent();
+//        WorkflowManager manager = ((WorkflowRootEditPart)nodePart.getParent())
+//                .getWorkflowManager();
+//
+//        ReconnectConnectionCommand reconnectCommand = new ReconnectConnectionCommand(
+//                connection, manager, null, null);
+//        
+//        return reconnectCommand;
+        
         return null;
     }
 
@@ -158,7 +178,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      *      org.eclipse.gef.requests.ReconnectRequest)
      */
     protected Command getReconnectTargetCommand(final ReconnectRequest req) {
-        // TODO Auto-generated method stub
+        
         return null;
     }
 
