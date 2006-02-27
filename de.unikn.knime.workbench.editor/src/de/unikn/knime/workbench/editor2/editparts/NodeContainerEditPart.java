@@ -430,8 +430,19 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         if (System.currentTimeMillis() - m_lastClick < DOUBLE_CLICK_TIME) {
 
-            LOGGER.debug("Opening node dialog after double click...");
             NodeContainer container = (NodeContainer)getModel();
+
+            // if this node does not have a dialog
+            if (!container.hasDialog()) {
+
+                LOGGER.debug(container.getNodeName()
+                        + ": Opening node dialog after double "
+                        + "click not possible");
+                return;
+            }
+
+            LOGGER.debug(container.getNodeName()
+                    + ": Opening node dialog after double click...");
 
             //  
             // This is embedded in a special JFace wrapper dialog
