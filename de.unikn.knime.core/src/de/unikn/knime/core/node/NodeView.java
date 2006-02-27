@@ -100,6 +100,13 @@ public abstract class NodeView {
     private boolean m_wasOpened = false;
 
     /**
+     * Remembers the first time the actual component was set. The reason is the
+     * resizing, the first time the proper component (not the "no data"
+     * component) is set. This resizing should only occure the firs time.
+     */
+    private boolean m_componentSet = false;
+
+    /**
      * Creates a new view with the given title (<code>#getViewName()</code>),
      * a menu bar, and the panel (<code>#getComponent()</code>) in the
      * center. The default title is <i>View - </i>, and the default close
@@ -202,17 +209,24 @@ public abstract class NodeView {
      */
     final void callModelChanged() {
         if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
-            setComponentIntern(m_noDataComp);
+            setComponentIntern(m_noDataComp, false);
         } else {
-            setComponentIntern(m_comp);
+
+            if (!m_componentSet) {
+                setComponentIntern(m_comp, true);
+                m_componentSet = true;
+            } else {
+                setComponentIntern(m_comp, true);
+            }
+
         }
         try {
             modelChanged();
         } catch (NullPointerException npe) {
             throw new IllegalStateException(
                     "Implementation error of NodeView.modelChanged(). "
-                            + "NullPointerException during notification of a changed "
-                            + "model. Reason: " + npe.getMessage());
+                            + "NullPointerException during notification of "
+                            + "a changed model. Reason: " + npe.getMessage());
         } catch (Exception e) {
             throw new IllegalStateException("Error during notification "
                     + "of a changed model (in NodeView.modelChanged()). "
@@ -384,9 +398,15 @@ public abstract class NodeView {
      */
     protected void setComponent(final Component comp) {
         if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
-            setComponentIntern(m_noDataComp);
+            setComponentIntern(m_noDataComp, false);
         } else {
-            setComponentIntern(comp);
+
+            if (!m_componentSet) {
+                setComponentIntern(comp, true);
+                m_componentSet = true;
+            } else {
+                setComponentIntern(comp, false);
+            }
         }
         m_comp = comp;
     }
@@ -396,8 +416,10 @@ public abstract class NodeView {
      * update m_comp (which setComponent does).
      * 
      * @param comp The new component to show (might be m_noDataComp)
+     * @param doPack if true, the frame is packed which results in resizing the
      */
-    private void setComponentIntern(final Component comp) {
+    private void setComponentIntern(final Component comp, final 
+            boolean doPack) {
         if (m_activeComp == comp) {
             return;
         }
@@ -406,12 +428,18 @@ public abstract class NodeView {
         if (m_activeComp != null) {
             cont.remove(m_activeComp);
         }
-        
+
         m_activeComp = comp;
         comp.setBackground(COLOR_BACKGROUND);
         cont.add(m_activeComp, BorderLayout.CENTER);
-        
-        m_frame.pack();
+
+        if (doPack) {
+            m_frame.pack();
+        } else {
+            m_frame.invalidate();
+            m_frame.validate();
+            m_frame.repaint();
+        }
     }
 
     /**
