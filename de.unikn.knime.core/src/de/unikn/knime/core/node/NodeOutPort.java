@@ -50,7 +50,8 @@ public abstract class NodeOutPort extends NodePort {
      */
     protected NodeOutPort(final int portID) {
         super(portID);
-        m_connInPorts = new LinkedHashSet<NodeInPort>();
+        m_connInPorts = Collections
+                .synchronizedSet(new LinkedHashSet<NodeInPort>());
         m_portView = null;
     }
 
