@@ -60,7 +60,7 @@ public class NumericCoordinate extends Coordinate {
     /**
      * Default number of rounding digits.
      */
-    private static final int DEFAULT_DOMAIN_LABLE_LENGTH = 5;
+    private static final int DEFAULT_DOMAIN_LABLE_LENGTH = 6;
 
     /**
      * An optional prefix (extension) of the coordinate beyond the domain
@@ -229,6 +229,19 @@ public class NumericCoordinate extends Coordinate {
         endOfDomain = endOfDomain + domainLength * m_coordPostfix;
         domainLength = endOfDomain - startOfDomain;
 
+        // do a special treatment if the domain range is zero
+        if (domainLength == 0.0) {
+            // just one mapping is created in the middle of the available
+            // absolute length
+
+            double domainValue = startOfDomain;
+            double mappingValue = Math.round(absolutLength / 2);
+            mapping = new NumericCoordinateMapping[1];
+            mapping[0] = new NumericCoordinateMapping(
+                    formatNumber(domainValue), domainValue, mappingValue);
+            return mapping;
+        }
+
         // compute the number of ticks for the given absolute lenth
         int numberTicks = (int)(absolutLength / absoluteTickDistance);
 
@@ -375,30 +388,56 @@ public class NumericCoordinate extends Coordinate {
         if (decimalPointPos >= 0) {
             numberAsString = numberAsString.substring(0, decimalPointPos);
         }
+        
+        // the maximum prefix as number allowed given max lable length
+        // this is the power of 10 to the allowed length
+        double maxNumber = Math.pow(10, m_maxDomainLableLenght);
 
         int prefixLength = numberAsString.length();
+        String formatPattern = null;
+        // if the prefix length is longer than the max domain lable lenght
+        // the pattern is switched to scientific notation
+        if (maxAbsValue >= maxNumber) {
 
-        // calculate the remaining digits for the decimal postfix
-        int postfixLength = m_maxDomainLableLenght - prefixLength - 1;
+            StringBuffer afterDecimalDigits = new StringBuffer();
+            // -4 corresponds to the mandatory first position, the decimal point
+            // the E for the exponent and the exponent value (maybe it is larger
+            // but this is rather a fuzzy formating)
+            for (int i = 0; i < m_maxDomainLableLenght - 4; i++) {
 
-        // create the postfix patter according to the number postfix digits
-        // each # represents a postfix digit
-        StringBuffer postfixPatter = new StringBuffer();
-        for (int i = 0; i < postfixLength; i++) {
-
-            // the first digit appends the decimal point and a
-            // "0" which forces the digit to print even if it is a zero
-            if (i == 0) {
-                postfixPatter.append(".0");
-            } else {
-                postfixPatter.append("#");
+                afterDecimalDigits.append("#");
             }
+
+            // append the format string parts
+            formatPattern = "0." + afterDecimalDigits + "E0";
+
+        } else {
+
+            // calculate the remaining digits for the decimal postfix
+            // -1 is the decimal point
+            int postfixLength = m_maxDomainLableLenght - prefixLength - 1;
+
+            // create the postfix pattern according to the number postfix digits
+            // each # represents a postfix digit
+            StringBuffer postfixPatter = new StringBuffer();
+            for (int i = 0; i < postfixLength; i++) {
+
+                // the first digit appends the decimal point and a
+                // "0" which forces the digit to print even if it is a zero
+                if (i == 0) {
+                    postfixPatter.append(".0");
+                } else {
+                    postfixPatter.append("#");
+                }
+            }
+            
+            formatPattern = "0" + postfixPatter.toString();
         }
 
         // format the number according to the pattern
         DecimalFormat format = (DecimalFormat)DecimalFormat
                 .getInstance(new Locale("en"));
-        format.applyPattern("0" + postfixPatter.toString());
+        format.applyPattern(formatPattern);
         return format.format(number);
     }
 
@@ -444,6 +483,12 @@ public class NumericCoordinate extends Coordinate {
         // check if the domain value is usefull
         if (Double.isNaN(domainValue) || Double.isInfinite(domainValue)) {
             return -1.0;
+        }
+
+        // if min max is equal return the middle of the absolute length
+        if (m_minDomainValue == m_maxDomainValue) {
+
+            return Math.round(absolutLength / 2);
         }
 
         // calculate the mapping of the domain value
