@@ -83,7 +83,12 @@ public class DoubleCellRenderer extends DefaultDataCellRenderer {
         Object newValue;
         if (value instanceof DoubleValue) {
             DoubleValue cell = (DoubleValue)value;
-                newValue = m_format.format(cell.getDoubleValue());
+            double d = cell.getDoubleValue();
+            if (Double.isNaN(d)) {
+                newValue = "NaN";
+            } else {
+                newValue = m_format.format(d);
+            }
         } else {
             // missing data cells will also end up here
             newValue = value;
