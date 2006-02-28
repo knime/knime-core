@@ -131,7 +131,7 @@ public abstract class NodeModel {
         }
 
         // keeps set of registered views in the order they are added
-        m_views = new LinkedHashSet<NodeView>();
+        m_views = Collections.synchronizedSet(new LinkedHashSet<NodeView>());
 
         // set default input desciptions for data
         m_inDataPortDescription = new String[getNrDataIns()];
