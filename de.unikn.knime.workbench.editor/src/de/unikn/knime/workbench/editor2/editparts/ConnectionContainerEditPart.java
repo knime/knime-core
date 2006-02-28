@@ -93,6 +93,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         installEditPolicy(EditPolicy.CONNECTION_ROLE,
                 new NewConnectionComponentEditPolicy());
+        
     }
 
     /**

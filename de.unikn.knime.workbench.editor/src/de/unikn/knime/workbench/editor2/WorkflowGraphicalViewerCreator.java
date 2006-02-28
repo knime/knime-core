@@ -88,7 +88,7 @@ public class WorkflowGraphicalViewerCreator {
 
         // configure the m_viewer
         viewer.getControl().setBackground(ColorConstants.white);
-        ScalableFreeformRootEditPart part = new ScalableFreeformRootEditPart();
+        ScalableFreeformRootEditPart part = new ConnectionSelectingScalableFreeformRootEditPart();
         viewer.setRootEditPart(part);
         viewer.setKeyHandler(new GraphicalViewerKeyHandler(viewer));
 
@@ -101,7 +101,7 @@ public class WorkflowGraphicalViewerCreator {
         // - strange stuff %-)
         NodeTemplateDropTargetListener listener = null;
         listener = new NodeTemplateDropTargetListener(viewer);
-        viewer.addDropTargetListener((TransferDropTargetListener) listener);
+        viewer.addDropTargetListener((TransferDropTargetListener)listener);
 
         // configure context menu
         viewer.setContextMenu(new WorkflowContextMenuProvider(m_actionRegistry,
