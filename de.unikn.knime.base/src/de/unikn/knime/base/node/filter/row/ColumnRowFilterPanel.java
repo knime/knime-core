@@ -206,7 +206,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             });
             m_colIdx = null;
         } else {
-            m_colIdx = new JSpinner(new SpinnerNumberModel(1, 1,
+            m_colIdx = new JSpinner(new SpinnerNumberModel(1, 0,
                     Integer.MAX_VALUE, 1));
             m_colCombo = null;
         }
@@ -413,10 +413,17 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         }
 
         ColValRowFilter colFilter = (ColValRowFilter)filter;
+        Integer idx = new Integer(colFilter.getColumnIndex());
         if (m_colIdx != null) {
-            m_colIdx.setValue(new Integer(colFilter.getColumnIndex()));
+            if (idx >= 0) {
+                m_colIdx.setValue(idx);
+            } else {
+                m_colIdx.setValue(0);
+            }                
         } else {
-            m_colCombo.setSelectedIndex(colFilter.getColumnIndex());
+            if ((idx >= 0) && (idx < m_colCombo.getModel().getSize())) {
+                m_colCombo.setSelectedIndex(colFilter.getColumnIndex());
+            } 
         }
         if (colFilter.rangeSet()) {
             String upper = "";
