@@ -375,11 +375,12 @@ public class Node {
         boundOutPort(portID);
         return m_nodeModel.getOutputDescription(portID);
     }
-    
-    /** 
+
+    /**
      * Delegate method to the model's <code>isAutoExecutable()</code> method.
+     * 
      * @return If the the underlying node model should be immediately executed
-     * when possible.
+     *         when possible.
      */
     public boolean isAutoExecutable() {
         return m_nodeModel.isAutoExecutable();
@@ -568,8 +569,8 @@ public class Node {
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
-            m_nodeStatus = new NodeStatus(NodeStatus.ERROR, "Execute canceled: "
-                    + cee.getMessage());
+            m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
+                    "Execute canceled: " + cee.getMessage());
             notifyStateListeners(new NodeStatus(NodeStatus.END_EXECUTE));
             return false;
         } catch (Exception e) {
@@ -646,10 +647,10 @@ public class Node {
 
     /**
      * Checks the warnings in the model and notifies registered listeners.
-     *
+     * 
      */
     private void processModelWarnings() {
-        
+
         // get the warning message if available and create a status
         // also notify all listeners
         String warningMessage = m_nodeModel.getWarningMessage();
@@ -710,7 +711,7 @@ public class Node {
             m_nodeModel.resetModel();
         } catch (Exception e) {
             m_logger
-                  .error("Node model could not be reseted: " + e.getMessage());
+                    .error("Node model could not be reseted: " + e.getMessage());
             m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
                     "Node model could not be reseted: " + e.getMessage());
             this.notifyStateListeners(m_nodeStatus);
@@ -845,9 +846,12 @@ public class Node {
         try {
             configureNode();
         } catch (InvalidSettingsException ise) {
-            m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
-                    "Configure failed. Invalid settings: " + ise.getMessage());
-            this.notifyStateListeners(m_nodeStatus);
+
+            m_logger.warn("Configure failed. Invalid settings: "
+                    + ise.getMessage());
+//            m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
+//                    "Configure failed. Invalid settings: " + ise.getMessage());
+//            this.notifyStateListeners(m_nodeStatus);
         }
     }
 
@@ -898,9 +902,12 @@ public class Node {
         try {
             configureNode();
         } catch (InvalidSettingsException ise) {
-            m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
-                    "Configure failed. Invalid settings: " + ise.getMessage());
-            this.notifyStateListeners(m_nodeStatus);
+
+            m_logger.warn("Configure failed. Invalid settings: "
+                    + ise.getMessage());
+            // m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
+            // "Configure failed. Invalid settings: " + ise.getMessage());
+            // this.notifyStateListeners(m_nodeStatus);
         }
     }
 
@@ -1027,7 +1034,7 @@ public class Node {
                 // update data table spec
                 m_outDataPorts[p].setDataTableSpec(newSpecs[p]);
             }
-            
+
             // check for model warnings
             processModelWarnings();
         } catch (InvalidSettingsException ise) {
