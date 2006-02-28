@@ -580,10 +580,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      */
     public synchronized void removeConnection(
             final ConnectionContainer connection) {
-        // make sure connection exists
+        // if connection does not exist log it and return
         if (!(m_connectionsByID.containsKey(connection.getID()))) {
-            assert false; // fail during debug, be more tolerate otherwise
-            LOGGER.error("Could not find connection to delete: " + connection);
+
+            LOGGER.warn("Could not find connection to delete: " + connection);
             return;
         }
 

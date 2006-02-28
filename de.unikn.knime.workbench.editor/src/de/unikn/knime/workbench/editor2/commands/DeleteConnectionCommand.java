@@ -22,9 +22,6 @@
 package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
@@ -68,14 +65,8 @@ public class DeleteConnectionCommand extends Command {
      * @see org.eclipse.gef.commands.Command#execute()
      */
     public void execute() {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
-        mb.setText("Confirm deletion...");
-        mb.setMessage(
-                  "Do you really want to delete the selected connection ?");
-        if (mb.open() != SWT.YES) {
-            return;
-        }
+
+        // before removing the given connection check if it still exists
 
         // remove container from the WFM
         m_manager.removeConnection((ConnectionContainer) m_connection

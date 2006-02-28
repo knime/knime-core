@@ -116,7 +116,6 @@ public class CutAction extends AbstractClipboardAction {
             // if not locked
             if (delete.canExecute()) {
                 
-                delete.messageBoxVerification(false);
                 delete.execute();
             }
         }

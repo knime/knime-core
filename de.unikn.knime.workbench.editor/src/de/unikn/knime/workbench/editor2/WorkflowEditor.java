@@ -51,7 +51,6 @@ import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.tools.SelectionTool;
 import org.eclipse.gef.ui.actions.ActionRegistry;
-import org.eclipse.gef.ui.actions.DeleteAction;
 import org.eclipse.gef.ui.actions.GEFActionConstants;
 import org.eclipse.gef.ui.actions.PrintAction;
 import org.eclipse.gef.ui.actions.RedoAction;
@@ -92,6 +91,7 @@ import de.unikn.knime.workbench.editor2.actions.CopyAction;
 import de.unikn.knime.workbench.editor2.actions.CutAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
+import de.unikn.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
 import de.unikn.knime.workbench.editor2.actions.PasteAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
@@ -205,7 +205,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     public GraphicalViewer getViewer() {
-        
+
         return getGraphicalViewer();
     }
 
@@ -242,7 +242,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // m_clipboard = new Clipboard(getSite().getShell().getDisplay());
         // }
         //
-        // return m_clipboard;       
+        // return m_clipboard;
     }
 
     /**
@@ -341,7 +341,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         StackAction redo = new RedoAction(this);
 
         // Editor Actions
-        WorkbenchPartAction delete = new DeleteAction((IWorkbenchPart)this);
+        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(
+                (IWorkbenchPart)this);
         WorkbenchPartAction save = new SaveAction(this);
         WorkbenchPartAction print = new PrintAction(this);
 
@@ -390,7 +391,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
-        
+
     }
 
     /**

@@ -22,9 +22,6 @@
 package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
@@ -46,12 +43,6 @@ public class DeleteNodeContainerCommand extends Command {
     private WorkflowManager m_manager;
 
     /**
-     * If <code>true</code> the deletion is protected by a message box
-     * verification.
-     */
-    private boolean m_verify;
-
-    /**
      * Creates a new delete command for a <code>NodeContainer</code>.
      * 
      * @param nodePart The container edit part to delete
@@ -61,9 +52,6 @@ public class DeleteNodeContainerCommand extends Command {
             final WorkflowManager manager) {
         m_part = nodePart;
         m_manager = manager;
-        
-        // by default verification is on
-        m_verify = true;
     }
 
     /**
@@ -76,32 +64,9 @@ public class DeleteNodeContainerCommand extends Command {
     }
 
     /**
-     * To specify whether a message box should be displayed before deletion.
-     * 
-     * @param verify if true a message box is displayed
-     */
-    public void messageBoxVerification(final boolean verify) {
-
-        m_verify = verify;
-    }
-
-    /**
      * @see org.eclipse.gef.commands.Command#execute()
      */
     public void execute() {
-
-        // if verification is on, check the deletion decission with a message
-        // box
-        if (m_verify) {
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO
-                    | SWT.CANCEL);
-            mb.setText("Confirm deletion...");
-            mb.setMessage("Do you really want to delete the selected node ?");
-            if (mb.open() != SWT.YES) {
-                return;
-            }
-        }
 
         LOGGER.debug("Deleting node #" + m_part.getNodeContainer().getID()
                 + " from Workflow");

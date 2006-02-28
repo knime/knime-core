@@ -44,13 +44,13 @@ public class NodeContainerComponentEditPolicy extends ComponentEditPolicy {
      *      #getDeleteCommand(org.eclipse.gef.requests.GroupRequest)
      */
     protected Command getDeleteCommand(final GroupRequest request) {
-        NodeContainerEditPart nodePart = (NodeContainerEditPart) getHost();
 
         // we need the parent WFM ...
-        WorkflowManager manager = ((WorkflowRootEditPart) nodePart.getParent())
+        WorkflowManager manager = ((WorkflowRootEditPart)getHost().getParent())
                 .getWorkflowManager();
 
+        NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost();
         return new DeleteNodeContainerCommand(nodePart, manager);
-    }
 
+    }
 }
