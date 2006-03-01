@@ -60,8 +60,9 @@ public final class CSVFilesHistoryPanel extends JPanel {
      */
     public CSVFilesHistoryPanel() {
         m_textBox = new JComboBox(new DefaultComboBoxModel());
-        m_textBox.setRenderer(new MyComboBoxRenderer());
         m_textBox.setEditable(true);
+        m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        m_textBox.setRenderer(new MyComboBoxRenderer());
         m_chooseButton = new JButton("...");
         m_chooseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
