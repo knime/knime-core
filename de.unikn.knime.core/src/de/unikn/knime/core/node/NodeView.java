@@ -29,6 +29,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -105,13 +106,19 @@ public abstract class NodeView {
      * component) is set. This resizing should only occure the firs time.
      */
     private boolean m_componentSet = false;
-    
+
+    /**
+     * Determines if this view is always on top. Usefull if special views should
+     * stay on top all the time
+     */
+    private boolean m_alwaysOnTop = false;
+
     /**
      * This class sends property events when the status changes. So far, the
      * very only possible listenere is the EmbeddedNodeView that is informed
-     * when the view finally closes (e.g. because the node was deleted). 
-     * Once the member m_frame is deleted from this class, the frame will also
-     * be a potential listener. 
+     * when the view finally closes (e.g. because the node was deleted). Once
+     * the member m_frame is deleted from this class, the frame will also be a
+     * potential listener.
      */
     public static final String PROP_CHANGE_CLOSE = "nodeview_close";
 
@@ -153,7 +160,23 @@ public abstract class NodeView {
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("File");
         menu.setMnemonic('F');
-        JMenuItem item = new JMenuItem("Close");
+
+        // create always on top entry
+        JMenuItem item = new JCheckBoxMenuItem("Always on top", m_alwaysOnTop);
+        item.setMnemonic('T');
+        item.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent event) {
+
+                boolean selected = ((JCheckBoxMenuItem)event.getSource())
+                        .isSelected();
+                m_alwaysOnTop = selected;
+                m_frame.setAlwaysOnTop(m_alwaysOnTop);
+            }
+        });
+        menu.add(item);
+
+        // create close entry
+        item = new JMenuItem("Close");
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
@@ -300,12 +323,13 @@ public abstract class NodeView {
             setLocation();
         }
     }
-    
+
     /**
-     * Initializes all view components and returns the view's content pane.
-     * If you derive this class, <strong>do not</strong> call this method. 
-     * It's being used by the framework (if views are shown within a JFrame) 
-     * or by eclipse (if available, i.e. when views are embedded in eclipse)
+     * Initializes all view components and returns the view's content pane. If
+     * you derive this class, <strong>do not</strong> call this method. It's
+     * being used by the framework (if views are shown within a JFrame) or by
+     * eclipse (if available, i.e. when views are embedded in eclipse)
+     * 
      * @return The view's content pane.
      */
     public final Component openViewComponent() {
@@ -316,19 +340,18 @@ public abstract class NodeView {
         // return content pane
         return m_frame.getContentPane();
     }
-    
+
     /**
-     * Calls the onClose method and unregisters this view from the model.
-     * If you derive this class, <strong>do not</strong> call this method. 
-     * It's being used by the framework (if views are shown within a JFrame) 
-     * or by eclipse (if available, i.e. when views are embedded in eclipse).
+     * Calls the onClose method and unregisters this view from the model. If you
+     * derive this class, <strong>do not</strong> call this method. It's being
+     * used by the framework (if views are shown within a JFrame) or by eclipse
+     * (if available, i.e. when views are embedded in eclipse).
      */
     public final void closeViewComponent() {
         // allow subclasses to clean up.
         onClose();
         m_nodeModel.unregisterView(this);
     }
-    
 
     /**
      * Opens the view.
@@ -346,11 +369,13 @@ public abstract class NodeView {
         m_frame.toFront();
     }
 
-    /** Called by the node when it is deleted or by the "close" button. 
-     * Disposes the frame */
+    /**
+     * Called by the node when it is deleted or by the "close" button. Disposes
+     * the frame
+     */
     void closeView() {
         m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
-        // this will trigger a windowClosed event 
+        // this will trigger a windowClosed event
         // (listener see above) and call closeViewComponent()
         m_frame.setVisible(false);
         m_frame.dispose();
@@ -443,8 +468,7 @@ public abstract class NodeView {
      * @param comp The new component to show (might be m_noDataComp)
      * @param doPack if true, the frame is packed which results in resizing the
      */
-    private void setComponentIntern(final Component comp, final 
-            boolean doPack) {
+    private void setComponentIntern(final Component comp, final boolean doPack) {
         if (m_activeComp == comp) {
             return;
         }
@@ -481,6 +505,5 @@ public abstract class NodeView {
                         INIT_COMP_HEIGTH));
         return noData;
     }
-    
 
 }
