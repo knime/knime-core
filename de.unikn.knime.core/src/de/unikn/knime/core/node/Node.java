@@ -710,8 +710,8 @@ public class Node {
         try {
             m_nodeModel.resetModel();
         } catch (Exception e) {
-            m_logger
-                    .error("Node model could not be reseted: " + e.getMessage());
+            m_logger.error(
+                    "Node model could not be reseted: " + e.getMessage());
             m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
                     "Node model could not be reseted: " + e.getMessage());
             this.notifyStateListeners(m_nodeStatus);
@@ -762,10 +762,10 @@ public class Node {
         // reset this node first
         resetNodeWithoutConfigure();
         // close and unregister all views
-        for (NodeView view : m_nodeModel.getViews()) {
+        NodeView[] views = m_nodeModel.getViews().toArray(new NodeView[0]);
+        for (NodeView view : views) {
             // unregisters and closes the view
             view.closeView();
-            view = null;
         }
         // disconnect output ports
         for (int o = 0; o < m_outDataPorts.length; o++) {
@@ -850,7 +850,7 @@ public class Node {
             m_logger.warn("Configure failed. Invalid settings: "
                     + ise.getMessage());
 //            m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
-//                    "Configure failed. Invalid settings: " + ise.getMessage());
+//                  "Configure failed. Invalid settings: " + ise.getMessage());
 //            this.notifyStateListeners(m_nodeStatus);
         }
     }

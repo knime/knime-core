@@ -105,6 +105,15 @@ public abstract class NodeView {
      * component) is set. This resizing should only occure the firs time.
      */
     private boolean m_componentSet = false;
+    
+    /**
+     * This class sends property events when the status changes. So far, the
+     * very only possible listenere is the EmbeddedNodeView that is informed
+     * when the view finally closes (e.g. because the node was deleted). 
+     * Once the member m_frame is deleted from this class, the frame will also
+     * be a potential listener. 
+     */
+    public static final String PROP_CHANGE_CLOSE = "nodeview_close";
 
     /**
      * Creates a new view with the given title (<code>#getViewName()</code>),
@@ -136,7 +145,7 @@ public abstract class NodeView {
         m_frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         m_frame.addWindowListener(new WindowAdapter() {
             public void windowClosed(final WindowEvent e) {
-                onClose();
+                closeViewComponent();
             }
         });
 
@@ -291,10 +300,12 @@ public abstract class NodeView {
             setLocation();
         }
     }
-
+    
     /**
      * Initializes all view components and returns the view's content pane.
-     * 
+     * If you derive this class, <strong>do not</strong> call this method. 
+     * It's being used by the framework (if views are shown within a JFrame) 
+     * or by eclipse (if available, i.e. when views are embedded in eclipse)
      * @return The view's content pane.
      */
     public final Component openViewComponent() {
@@ -305,6 +316,19 @@ public abstract class NodeView {
         // return content pane
         return m_frame.getContentPane();
     }
+    
+    /**
+     * Calls the onClose method and unregisters this view from the model.
+     * If you derive this class, <strong>do not</strong> call this method. 
+     * It's being used by the framework (if views are shown within a JFrame) 
+     * or by eclipse (if available, i.e. when views are embedded in eclipse).
+     */
+    public final void closeViewComponent() {
+        // allow subclasses to clean up.
+        onClose();
+        m_nodeModel.unregisterView(this);
+    }
+    
 
     /**
      * Opens the view.
@@ -320,6 +344,16 @@ public abstract class NodeView {
         m_frame.setVisible(true); // triggers WindowEvent 'Opened' which
         // brings the frame to front
         m_frame.toFront();
+    }
+
+    /** Called by the node when it is deleted or by the "close" button. 
+     * Disposes the frame */
+    void closeView() {
+        m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
+        // this will trigger a windowClosed event 
+        // (listener see above) and call closeViewComponent()
+        m_frame.setVisible(false);
+        m_frame.dispose();
     }
 
     /**
@@ -340,15 +374,6 @@ public abstract class NodeView {
      */
     protected final boolean isOpen() {
         return m_frame.isVisible();
-    }
-
-    /**
-     * Called through the menu item 'File->Close' and from the node if deleted.
-     */
-    final void closeView() {
-        m_frame.setVisible(false);
-        m_nodeModel.unregisterView(this);
-        m_frame.dispose(); // triggers the WindowClosed action event!
     }
 
     /**
@@ -456,5 +481,6 @@ public abstract class NodeView {
                         INIT_COMP_HEIGTH));
         return noData;
     }
+    
 
 }

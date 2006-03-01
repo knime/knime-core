@@ -39,7 +39,8 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  */
 public abstract class NodeModel {
 
-    /** The node logger fot this class. */
+    /** The node logger for this class; do not make static to make sure
+     * the right class name is printed in messages. */
     private final NodeLogger m_logger;
 
     /** The number of input data tables. */
@@ -217,6 +218,8 @@ public abstract class NodeModel {
     final void registerView(final NodeView view) {
         assert view != null;
         m_views.add(view);
+        m_logger.debug("Registering view at  model (total count " 
+                + m_views.size() + ")");
     }
 
     /**
@@ -226,13 +229,21 @@ public abstract class NodeModel {
      */
     final void unregisterView(final NodeView view) {
         assert view != null;
-        m_views.remove(view);
+        boolean success = m_views.remove(view); 
+        if (success) {
+            m_logger.debug("Unregistering view from model (" + m_views.size() 
+                    + " remaining).");
+        } else {
+            m_logger.warn("Can't remove view from model, not registered.");
+        }
     }
 
     /**
      * Unregisters all views from the model.
      */
     final void unregisterAllViews() {
+        m_logger.debug("Removing all (" + m_views.size() 
+                + ") views from model.");
         m_views.clear();
     }
 
