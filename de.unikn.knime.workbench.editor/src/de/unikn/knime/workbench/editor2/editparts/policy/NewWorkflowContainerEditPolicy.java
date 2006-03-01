@@ -63,19 +63,27 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         // The node/description should be initially located here
         Point location = request.getLocation();
 
-        // adapt the location according to the zoom factor
+        // adapt the location according to the viewport location and the zoom
+        // factor
         // this seems to be a workaround for a bug in the framework
         ZoomManager zoomManager = (ZoomManager)getTargetEditPart(request)
                 .getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
-        
+
+        // adjust the location according to the viewport position
+        // seems to be a workaround for a bug in the framework
+        // (should imediately deliver the correct view position and not
+        // the position of the viewport)
+        Point viewPortLocation = zoomManager.getViewport().getViewLocation();
+        location.x += viewPortLocation.x;
+        location.y += viewPortLocation.y;
+
         double zoomLevel = zoomManager.getZoom();
-        
-        System.out.println(zoomLevel);
-        
+
+        // adapt the location accordint to the zoom level
         location.x = (int)Math.round(location.x * (1.0 / zoomLevel));
         location.y = (int)Math.round(location.y * (1.0 / zoomLevel));
-        
+
         WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this
                 .getHost();
         WorkflowManager manager = workflowPart.getWorkflowManager();
