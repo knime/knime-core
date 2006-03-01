@@ -234,7 +234,7 @@ public abstract class NodeModel {
             m_logger.debug("Unregistering view from model (" + m_views.size() 
                     + " remaining).");
         } else {
-            m_logger.warn("Can't remove view from model, not registered.");
+            m_logger.debug("Can't remove view from model, not registered.");
         }
     }
 
