@@ -34,17 +34,18 @@
                id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
          </view>
          <view
-               relative="de.unikn.knime.workbench.repository.views.repository.RepositoryView"
-               relationship="bottom"
-               id="org.eclipse.ui.views.ContentOutline">
-         </view>
-         <view
                closeable="false"
                visible="true"
                ratio="0.7"
                relationship="bottom"
                relative="org.eclipse.ui.editorss"
                id="org.eclipse.ui.console.ConsoleView"/>
+         <view
+               id="org.eclipse.ui.views.ContentOutline"
+               ratio="0.3"
+               relationship="left"
+               relative="org.eclipse.ui.console.ConsoleView">
+         </view>
          <view
                closeable="false"
                relationship="stack"
