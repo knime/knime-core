@@ -7,20 +7,23 @@
 	<entry key="fulldescription">
 		This node can be used to read data from an ASCII file or URL location.
 		It can be configured to read in various formats. When you open the 
-		node's configuration dialog and provide a filename, it will try to guess the reader's settings 
-		by analyzing the beginning of the file (after a filename was provided).
-		
-		
-		In the node's 
-		configuration dialog you can specify the separator, the comment 
-		characters, column names, etc. (specifics see below) and you get a 
-		preview table to verify the settings. 
-		
-		During execute the node
-		will traverse through the entire data once and will fill in possible
-		values of nominal attributes and ranges for numerical columns in the
-		data table for the successor nodes.
-
+		node's configuration dialog and provide a filename, it will try to guess
+		the reader's settings by analyzing the beginning of the file 
+		(after a filename was provided).
+		Check the results of these settings in the preview table. If the 
+		data showing is not correct or an error is reported, you can adjust the
+		settings manually: Check wether column and/or row headers are included
+		in the file, enter any column delimiter (or pick a standard
+		one from the drop down list), and specify the comment characters. If the
+		type or name of a column is not correct, click on the corresponding 
+		header in the preview table. In the following dialog you can enter
+		a new name and select a new column type. This is also the place to enter
+		a pattern that should be interpreted as missing value. In that dialog
+		you can also open another dialog to enter the domain (i.e. possible
+		values or range) of this column. There you have the choice between
+		manually entering the range or possible values, tell the filereader
+		to read the values during execution (which is the default anyway), and
+		to not set any domain information for this column.
 	</entry>
 	
 </properties>
