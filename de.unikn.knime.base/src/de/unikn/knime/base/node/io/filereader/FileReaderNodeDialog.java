@@ -370,6 +370,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         JLabel commentLabel = new JLabel("Single line comment:");
         JButton advanced = new JButton("Advanced...");
         m_readPosValues = new JCheckBox("read all poss. values");
+        m_readPosValues.setVisible(false); // supposed to always read values!
         m_ignoreWS = new JCheckBox("ignore spaces and tabs");
         m_ignoreWS.setToolTipText("If checked, whitespaces (spaces and tabs)"
                 + " will be discarded (if not quoted)");
