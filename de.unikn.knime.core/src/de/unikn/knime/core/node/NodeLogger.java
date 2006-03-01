@@ -33,6 +33,7 @@ import org.apache.log4j.PatternLayout;
 import org.apache.log4j.TTCCLayout;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
+import org.apache.log4j.varia.NullAppender;
 
 /**
  * The general logger used to write info, warnings, errors, debugging,
@@ -83,6 +84,10 @@ public final class NodeLogger {
     /** Map of additionally added writers: Writer -> Appender. */
     private static final HashMap<Writer, WriterAppender> WRITER = 
         new HashMap<Writer, WriterAppender>();
+    
+    private static final ConsoleAppender SERR_APPENDER;
+    private static final ConsoleAppender SOUT_APPENDER;
+    private static final Appender FILE_APPENDER;
 
     /**
      * Init Log4J logger and append <code>System.out</code> stream and
@@ -93,21 +98,22 @@ public final class NodeLogger {
         Logger root = Logger.getRootLogger();
         root.setLevel(Level.ALL);
         // add System.out
-        WriterAppender sout = new ConsoleAppender(new PatternLayout(
+        SOUT_APPENDER = new ConsoleAppender(new PatternLayout(
                 "%-5p\t %c{1}\t %m\n"), "System.out");
-        sout.setImmediateFlush(true);
+        SOUT_APPENDER.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(Level.DEBUG);
         filter.setLevelMax(Level.WARN);
-        sout.addFilter(filter);
+        SOUT_APPENDER.addFilter(filter);
         // sout.setThreshold(Level.INFO);
-        root.addAppender(sout);
+        root.addAppender(SOUT_APPENDER);
         // add System.err
-        WriterAppender serr = new ConsoleAppender(new PatternLayout(
+        SERR_APPENDER = new ConsoleAppender(new PatternLayout(
                 "%-5p\t %t : %c\t %m\n"), "System.err");
-        serr.setImmediateFlush(true);
-        serr.setThreshold(Level.ERROR);
-        root.addAppender(serr);
+        SERR_APPENDER.setImmediateFlush(true);
+        SERR_APPENDER.setThreshold(Level.ERROR);
+        root.addAppender(SERR_APPENDER);
+        FileAppender tempFileAppender;
         try {
             // get user home
             String tmpDir = KNIMEConstants.KNIME_HOME_DIR + File.separator;
@@ -123,16 +129,16 @@ public final class NodeLogger {
                 oldLog.delete();
             }
             // add knime.log file appender
-            WriterAppender file = new FileAppender(new TTCCLayout(
+            tempFileAppender = new FileAppender(new TTCCLayout(
                     "yy.MM.dd HH:mm:ss"), tmpDir + LOG_FILE);
             // WriterAppender file =
             // new DailyRollingFileAppender(
             // new TTCCLayout("yy.MM.dd HH:mm:ss"),
             // tmpDir + LOG_FILE, "yyMMdd");
-            file.setName(LOG_FILE);
-            file.setImmediateFlush(true);
-            file.setThreshold(Level.ALL);
-            root.addAppender(file);
+            tempFileAppender.setName(LOG_FILE);
+            tempFileAppender.setImmediateFlush(true);
+            tempFileAppender.setThreshold(Level.ALL);
+            root.addAppender(tempFileAppender);
             // write start logging message
             startMessage();
         } catch (IOException ioe) {
@@ -144,6 +150,12 @@ public final class NodeLogger {
                     "Could not create temp-file: "
                             + KNIMEConstants.KNIME_HOME_DIR + File.separator
                             + LOG_FILE, ioe);
+            tempFileAppender = null;
+        }
+        if (tempFileAppender == null) {
+            FILE_APPENDER = new NullAppender();
+        } else {
+            FILE_APPENDER = tempFileAppender;
         }
     }
 
@@ -434,7 +446,10 @@ public final class NodeLogger {
     public static final void removeWriter(final Writer writer) {
         Appender o = WRITER.get(writer);
         if (o != null) {
-            Logger.getRootLogger().removeAppender(o);
+            if (o != FILE_APPENDER 
+                    && o != SERR_APPENDER && o != SOUT_APPENDER) {
+                Logger.getRootLogger().removeAppender(o);
+            }
         } else {
             getLogger(NodeLogger.class).warn(
                     "Could not delete writer: " + writer);
@@ -442,19 +457,21 @@ public final class NodeLogger {
     }
     
     /**
-     * Sets an new minimum logging level for all registered appenders. The
-     * maximum loggings stays LEVEL.ALL for all appenders.
+     * Sets an new minimum logging level for all internal appenders, that are,
+     * log file, and System.out and System.err appender. The maximum loggings 
+     * stays LEVEL.ALL for all appenders.
      * @param level The new minimum logging level.
      */
-    public static void setLevel(final LEVEL level) {
-        for (Writer w : WRITER.keySet()) {
-            WriterAppender app = WRITER.get(w);
-            app.clearFilters();
-            LevelRangeFilter filter = new LevelRangeFilter();
-            filter.setLevelMin(getLevel(level));
-            filter.setLevelMax(getLevel(LEVEL.ALL));
-            app.addFilter(filter);
-        }
+    public static void setLevelIntern(final LEVEL level) {
+        LevelRangeFilter filter = new LevelRangeFilter();
+        filter.setLevelMin(getLevel(level));
+        filter.setLevelMax(getLevel(LEVEL.ALL));
+        FILE_APPENDER.clearFilters();
+        SERR_APPENDER.clearFilters();
+        SOUT_APPENDER.clearFilters();
+        FILE_APPENDER.addFilter(filter);
+        SERR_APPENDER.addFilter(filter);
+        SOUT_APPENDER.addFilter(filter);
     }
 
     private static Level getLevel(final LEVEL level) {
