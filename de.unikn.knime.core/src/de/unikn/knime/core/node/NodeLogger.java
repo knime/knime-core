@@ -440,6 +440,22 @@ public final class NodeLogger {
                     "Could not delete writer: " + writer);
         }
     }
+    
+    /**
+     * Sets an new minimum logging level for all registered appenders. The
+     * maximum loggings stays LEVEL.ALL for all appenders.
+     * @param level The new minimum logging level.
+     */
+    public static void setLevel(final LEVEL level) {
+        for (Writer w : WRITER.keySet()) {
+            WriterAppender app = WRITER.get(w);
+            app.clearFilters();
+            LevelRangeFilter filter = new LevelRangeFilter();
+            filter.setLevelMin(getLevel(level));
+            filter.setLevelMax(getLevel(LEVEL.ALL));
+            app.addFilter(filter);
+        }
+    }
 
     private static Level getLevel(final LEVEL level) {
         switch (level) {
