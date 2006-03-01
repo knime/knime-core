@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Flow-Editor
 Bundle-SymbolicName: de.unikn.knime.workbench.editor; singleton=true
-Bundle-Version: 0.3.0
+Bundle-Version: 0.9.0
 Bundle-ClassPath: workbench-editor.jar
 Bundle-Activator: de.unikn.knime.workbench.KNIMEEditorPlugin
 Bundle-Vendor: ALTANA Chair for Applied Computer Science
