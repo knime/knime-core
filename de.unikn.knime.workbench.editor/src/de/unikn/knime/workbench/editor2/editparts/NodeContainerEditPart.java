@@ -29,6 +29,7 @@ import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -64,6 +65,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             .getLogger(NodeContainerEditPart.class);
 
     private static final long DOUBLE_CLICK_TIME = 500;
+    
+    private static final String DEFAULT_IMAGE = "icons/16x16/default.png";
 
     /**
      * Remembers the time of the last <code>MousePressed</code> event. This is
@@ -370,9 +373,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         String name = getNodeContainer().getNodeName();
 
         // Icon image, scaled to 16x16
-        Image icon = ImageRepository.getScaledImage(AbstractUIPlugin
-                .imageDescriptorFromPlugin(plugin, iconPath), 16, 16);
-        f.setIcon(icon);
+        ImageDescriptor imageDescriptor = AbstractUIPlugin
+                .imageDescriptorFromPlugin(plugin, iconPath);
+        // if image descriptor is null try to get the default image
+        if (imageDescriptor == null) {
+            imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(
+                    plugin, DEFAULT_IMAGE);
+        }
+
+        Image icon = ImageRepository.getScaledImage(imageDescriptor, 16, 16);
+        if (icon != null) {
+            f.setIcon(icon);
+        }
         f.setType(type);
         f.setLabelText(name);
         f.setDescription(description);

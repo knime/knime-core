@@ -154,6 +154,11 @@ public final class ImageRepository {
      */
     public static Image getScaledImage(final ImageDescriptor descriptor,
             final int width, final int height) {
+
+        if (descriptor == null) {
+            return null;
+        }
+        
         String key = descriptor.toString();
         String finalKey = key + "_" + width + "x" + height;
 
