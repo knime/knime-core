@@ -167,7 +167,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
 
         // get the parent from the reference part and then the children
         List<EditPart> allParts = m_editor.getViewer().getRootEditPart()
-                .getChildren();
+                .getContents().getChildren();
 
         // check all parts for the given ids
         // if a part has the appropriate id add it to the result
