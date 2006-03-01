@@ -121,7 +121,6 @@ public class CSVWriter extends BufferedWriter {
             String rowKey = next.getKey().toString();
             String debugMessage = "Writing row " + (i + 1) 
                 + " (\"" + rowKey + "\")"; 
-            LOGGER.debug(debugMessage);
             exec.setProgress(-1, debugMessage);
             // Check if execution was canceled !
             exec.checkCanceled();
