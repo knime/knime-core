@@ -61,6 +61,9 @@ import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -82,6 +85,7 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeLogger.LEVEL;
 import de.unikn.knime.core.node.meta.MetaNodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
@@ -96,6 +100,8 @@ import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
 import de.unikn.knime.workbench.editor2.actions.PasteAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
 import de.unikn.knime.workbench.repository.RepositoryManager;
+import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
+import de.unikn.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * This is the implementation of the Eclipse Editor used for editing a
@@ -161,25 +167,85 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS = 
+        new ArrayList<ConsoleViewAppender>();
 
     static {
+        IPreferenceStore pStore = 
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        String logLevel = 
+            pStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
+        setLogLevel(logLevel);
         // Level: warn
-        addAppender(ConsoleViewAppender.WARN_APPENDER);
         try {
-            ConsoleViewAppender.WARN_APPENDER
-                    .write(KNIMEConstants.WELCOME_MESSAGE);
-
+            ConsoleViewAppender.WARN_APPENDER.write(
+                    KNIMEConstants.WELCOME_MESSAGE);
             ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
                     + KNIMEConstants.KNIME_HOME_DIR + File.separator
                     + NodeLogger.LOG_FILE + "\n");
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);
         }
-        // Level: error
-        addAppender(ConsoleViewAppender.ERROR_APPENDER);
-        // Level: fatal error
-        addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        pStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (event.getProperty().equals(
+                        PreferenceConstants.P_LOGLEVEL_CONSOLE)) {
+                    String newName = event.getNewValue().toString();
+                    setLogLevel(newName);
+                } else if (event.getProperty().equals(
+                        PreferenceConstants.P_LOGLEVEL_LOG_FILE)) {
+                    String newName = event.getNewValue().toString();
+                    LEVEL l = LEVEL.WARN;
+                    try {
+                        l = LEVEL.valueOf(newName);
+                    } catch (NullPointerException ne) {
+                        LOGGER.warn("Null is an invalid log level, using WARN");
+                    } catch (IllegalArgumentException iae) {
+                        LOGGER.warn("Invalid log level " 
+                                + newName + ", using WARN");
+                    }
+                    NodeLogger.setLevelIntern(l);
+                }
+            };
+        });
+    }
+    
+    /** Register the appenders according to logLevel, i.e. 
+     * PreferenceConstants.P_LOGLEVEL_DEBUG, 
+     * PreferenceConstants.P_LOGLEVEL_INFO, etc.
+     * @param logLevel The new log level.
+     */
+    private static void setLogLevel(final String logLevel) {
+        LOGGER.debug("Setting console log level to " + logLevel);
+        if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_DEBUG)) {
+            addAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            addAppender(ConsoleViewAppender.INFO_APPENDER);
+            addAppender(ConsoleViewAppender.WARN_APPENDER);
+            addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_INFO)) {
+            removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            addAppender(ConsoleViewAppender.INFO_APPENDER);
+            addAppender(ConsoleViewAppender.WARN_APPENDER);
+            addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_WARN)) {
+            removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            removeAppender(ConsoleViewAppender.INFO_APPENDER);
+            addAppender(ConsoleViewAppender.WARN_APPENDER);
+            addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_ERROR)) {
+            removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            removeAppender(ConsoleViewAppender.INFO_APPENDER);
+            removeAppender(ConsoleViewAppender.WARN_APPENDER);
+            addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else {
+            LOGGER.warn("Invalid log level " + logLevel 
+                    + "; setting to " + PreferenceConstants.P_LOGLEVEL_WARN);
+            setLogLevel(PreferenceConstants.P_LOGLEVEL_WARN);
+        }
     }
 
     /**
@@ -215,20 +281,24 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param app Appender to add.
      */
     static void addAppender(final ConsoleViewAppender app) {
-        NodeLogger.addWriter(app, app.getLevel(), app.getLevel());
-        APPENDERS.add(app);
-
+        if (!APPENDERS.contains(app)) {
+            NodeLogger.addWriter(app, app.getLevel(), app.getLevel());
+            APPENDERS.add(app);
+        }
     }
 
     /**
-     * Remove the given Appender from the NodeLogger.
+     * Removes the given Appender from the NodeLogger.
      * 
      * @param app Appender to remove.
      */
     static void removeAppender(final ConsoleViewAppender app) {
-        NodeLogger.removeWriter(app);
-        APPENDERS.remove(app);
+        if (APPENDERS.contains(app)) {
+            NodeLogger.removeWriter(app);
+            APPENDERS.remove(app);
+        }
     }
+    
 
     /**
      * Returns the clipboard content for this editor.

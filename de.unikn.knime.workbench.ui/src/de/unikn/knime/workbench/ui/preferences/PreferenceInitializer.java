@@ -44,23 +44,14 @@ public class PreferenceInitializer extends
                 .getPreferenceStore();
 
         // set default values
-        store
-                .setDefault(
-                        PreferenceConstants.P_FLAG_ENABLE_EXPERIMENTAL,
-                        false);
         store.setDefault(PreferenceConstants.P_CHOICE_VIEWMODE,
                 PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME);
 
-        store.setDefault(PreferenceConstants.P_PATTERN_LAYOUT,
-                "%d %-5p - %m%n");
-        store.setDefault(PreferenceConstants.P_LOGLEVEL,
+        store.setDefault(PreferenceConstants.P_LOGLEVEL_CONSOLE,
                 PreferenceConstants.P_LOGLEVEL_INFO);
 
-        store.setDefault(PreferenceConstants.P_FLAG_FILE_LOGGER,
-                false);
-        store.setDefault(PreferenceConstants.P_FILE_LOGGER_FILENAME,
-                "");
-
+        store.setDefault(PreferenceConstants.P_LOGLEVEL_LOG_FILE,
+                PreferenceConstants.P_LOGLEVEL_DEBUG);
 
     }
 

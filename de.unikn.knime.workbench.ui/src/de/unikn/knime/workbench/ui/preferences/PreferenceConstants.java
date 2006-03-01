@@ -21,6 +21,8 @@
  */
 package de.unikn.knime.workbench.ui.preferences;
 
+import de.unikn.knime.core.node.NodeLogger.LEVEL;
+
 /**
  * Constant definitions for plug-in preferences. Values are stored under these
  * keys in the PreferenceStore of the UI plugin.
@@ -29,13 +31,6 @@ package de.unikn.knime.workbench.ui.preferences;
  * @author Florian Georg, University of Konstanz
  */
 public class PreferenceConstants {
-
-    /** Peference constant for the global default path to datafiles. */
-    public static final String P_DATAFILES_PATH = "path.datafiles";
-
-    /** Peference constant: enable experimental stuff. */
-    public static final String P_FLAG_ENABLE_EXPERIMENTAL = "flag.enable."
-            + "experimental";
 
     /** Peference constant: select default view mode. */
     public static final String P_CHOICE_VIEWMODE = "choice.view.mode";
@@ -46,28 +41,24 @@ public class PreferenceConstants {
     /** Choice: open views in eclipse views. */
     public static final String P_CHOICE_VIEWMODE_VIEW = "eclipse.jframe";
 
-    /** Preference constant: Log4j pattern layout. */
-    public static final String P_PATTERN_LAYOUT = "logging.pattern.layout";
+    /** Preference constant: log level for console appender. */
+    public static final String P_LOGLEVEL_CONSOLE = 
+        "logging.loglevel.console";
 
-    /** Preference constant: minimal log level. */
-    public static final String P_LOGLEVEL = "logging.loglevel";
+    /** Preference constant: log level for console appender. */
+    public static final String P_LOGLEVEL_LOG_FILE = 
+        "logging.loglevel.logfile";
 
     /** Choice: log >= debug events. */
-    public static final String P_LOGLEVEL_DEBUG = "DEBUG";
+    public static final String P_LOGLEVEL_DEBUG = LEVEL.DEBUG.toString();
 
     /** Choice: log >= info events. */
-    public static final String P_LOGLEVEL_INFO = "INFO";
+    public static final String P_LOGLEVEL_INFO = LEVEL.INFO.toString();
 
     /** Choice: log >= warn events. */
-    public static final String P_LOGLEVEL_WARN = "WARN";
+    public static final String P_LOGLEVEL_WARN = LEVEL.WARN.toString();
 
     /** Choice: log >= error events. */
-    public static final String P_LOGLEVEL_ERROR = "ERROR";
-
-    /** Flag: redirect output to logfile? */
-    public static final String P_FLAG_FILE_LOGGER = "flag.use.logfile";
-
-    /** Filename for logfile. */
-    public static final String P_FILE_LOGGER_FILENAME = "logging.logfile";
+    public static final String P_LOGLEVEL_ERROR = LEVEL.ERROR.toString();
 
 }

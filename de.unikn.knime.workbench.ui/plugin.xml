@@ -133,14 +133,9 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="org.eclipse.ui.internal.dialogs.EmptyPreferencePage"
-            id="de.unikn.knime.workbench.ui.preferences"
-            name="KNIME"/>
-      <page
-            category="de.unikn.knime.workbench.ui.preferences"
             class="de.unikn.knime.workbench.ui.preferences.MainPreferencePage"
-            id="de.unikn.knime.workbench.ui.preferences.workbench"
-            name="General">
+            id="de.unikn.knime.workbench.ui.preferences"
+            name="KNIME">
       </page>
    </extension>
    <extension

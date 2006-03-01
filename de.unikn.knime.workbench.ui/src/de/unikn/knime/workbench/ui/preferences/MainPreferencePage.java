@@ -21,10 +21,7 @@
  */
 package de.unikn.knime.workbench.ui.preferences;
 
-import org.eclipse.jface.preference.BooleanFieldEditor;
-import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -45,19 +42,17 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class MainPreferencePage extends FieldEditorPreferencePage
-        implements IWorkbenchPreferencePage {
+public class MainPreferencePage extends FieldEditorPreferencePage implements
+        IWorkbenchPreferencePage {
 
     /**
-     * Constructor
-     * .
+     * Constructor .
      */
     public MainPreferencePage() {
         super(GRID);
 
         // we use the pref store of the UI plugin
-        setPreferenceStore(KNIMEUIPlugin.getDefault()
-                .getPreferenceStore());
+        setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
 
         setDescription("Konstanz Information Miner global preferences");
     }
@@ -70,63 +65,42 @@ public class MainPreferencePage extends FieldEditorPreferencePage
     public void createFieldEditors() {
         Composite parent = getFieldEditorParent();
 
-        // Path to datasets TODO: should be provided to the nodes?
-        addField(new DirectoryFieldEditor(
-                PreferenceConstants.P_DATAFILES_PATH,
-                "Default &path to datasets:", parent));
-
-        // Enable nodes that are flagged "experimental" ?
-        // TODO: introduce this flag in the extension point
-        addField(new BooleanFieldEditor(
-                PreferenceConstants.P_FLAG_ENABLE_EXPERIMENTAL,
-                "&Enable experimental stuff", parent));
-
         // Open views as JFrame or embedded in an eclipse view
         // TODO realize this !
         addField(new RadioGroupFieldEditor(
                 PreferenceConstants.P_CHOICE_VIEWMODE,
-                "Select the mode how &views are opened",
-                1,
-                new String[][] {
-                        {
-                                "External &JFrame",
+                "Select the mode how &views are opened", 1, new String[][]{
+                        {"External &JFrame",
                                 PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME},
-                        {
-                                "Eclipse &view (embedded)",
+                        {"Eclipse &view (embedded)",
                                 PreferenceConstants.P_CHOICE_VIEWMODE_VIEW}},
                 parent));
 
-        // Specify the minimum log level
+        // Specify the minimum log level for the console
         addField(new RadioGroupFieldEditor(
-                PreferenceConstants.P_LOGLEVEL,
-                "Minimum log-level",
-                1,
-                new String[][] {
-                        {"&DEBUG",
-                                PreferenceConstants.P_LOGLEVEL_DEBUG},
+                PreferenceConstants.P_LOGLEVEL_CONSOLE, "Console Log Level", 
+                4, new String[][]{
+                        {"&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG},
 
                         {"&INFO", PreferenceConstants.P_LOGLEVEL_INFO},
 
                         {"&WARN", PreferenceConstants.P_LOGLEVEL_WARN},
 
-                        {"&ERROR",
-                                PreferenceConstants.P_LOGLEVEL_ERROR}},
+                        {"&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR}},
                 parent));
 
-        // Enter a pattern for formating the log messages
-        addField(new StringFieldEditor(
-                PreferenceConstants.P_PATTERN_LAYOUT,
-                "Logging pattern layout (log4j):", parent));
-
-        // redirect output to logfile
-        addField(new BooleanFieldEditor(
-                PreferenceConstants.P_FLAG_FILE_LOGGER,
-                "&Redirect output to logfile", parent));
-
-        // logfile name
-        addField(new FileFieldEditor(
-                PreferenceConstants.P_FILE_LOGGER_FILENAME,
-                "&Logfile", parent));
+        // Specify the minimum log level
+        addField(new RadioGroupFieldEditor(
+                PreferenceConstants.P_LOGLEVEL_LOG_FILE, "Log File Log Level", 
+                4, new String[][]{
+                        {"&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG},
+                        
+                        {"&INFO", PreferenceConstants.P_LOGLEVEL_INFO},
+                        
+                        {"&WARN", PreferenceConstants.P_LOGLEVEL_WARN},
+                        
+                        {"&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR}},
+                        parent));
 
     }
 
@@ -137,5 +111,5 @@ public class MainPreferencePage extends FieldEditorPreferencePage
     public void init(final IWorkbench workbench) {
         // ignore
     }
-
+    
 }
