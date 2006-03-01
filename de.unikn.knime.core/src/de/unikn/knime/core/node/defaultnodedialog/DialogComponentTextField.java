@@ -17,46 +17,47 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   21.09.2005 (mb): created
+ *   16.11.2005 (gdf): created
  */
+
 package de.unikn.knime.core.node.defaultnodedialog;
 
-import java.awt.event.ItemListener;
+import java.awt.Dimension;
 
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.NodeSettings;
 
 /**
- * Provide a standard component for a dialog that allows to edit a boolean
- * value. Provides label and checkbox as well as functionality to load/store
- * into config object.
+ * Provide a standard component for a dialog that allows to edit a text field.
  * 
- * @author M. Berthold, University of Konstanz
+ * @author Thomas Gabriel, Konstanz University
+ * 
  */
-public final class DialogComponentBoolean extends DialogComponent {
-    
-    private final JCheckBox m_checkbox;
+public final class DialogComponentTextField extends DialogComponent {
+
+    private final JTextField m_textField;
+
     private final String m_configName;
-    private final boolean m_dftValue;
+    
+    private final String m_dftText;
 
     /**
-     * Constructor put label and checkbox into panel.
+     * Constructor put label and JTextField into panel.
      * 
      * @param configName name used in configuration file
-     * @param label label for dialog in front of checkbox
-     * @param isSelected default value for CheckBox.
+     * @param label label for dialog in front of JTextField
+     * @param dftText initial value if no value is stored in the config
      */
-    public DialogComponentBoolean(final String configName, final String label,
-            final boolean isSelected) {
+    public DialogComponentTextField(
+            final String configName, final String label, final String dftText) {
         this.add(new JLabel(label));
-        m_checkbox = new JCheckBox();
-        m_checkbox.setSelected(isSelected);
-        this.add(m_checkbox);
+        m_dftText = dftText;
+        m_textField = new JTextField(m_dftText);
+        this.add(m_textField);
         m_configName = configName;
-        m_dftValue = isSelected;
     }
     
     /**
@@ -67,8 +68,7 @@ public final class DialogComponentBoolean extends DialogComponent {
      */
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) {
-        boolean newBool = settings.getBoolean(m_configName, m_dftValue);
-        m_checkbox.setSelected(newBool);
+        m_textField.setText(settings.getString(m_configName, m_dftText));
     }
 
     /**
@@ -77,7 +77,7 @@ public final class DialogComponentBoolean extends DialogComponent {
      * @param settings The <code>NodeSettings</code> to write into.
      */
     public void saveSettingsTo(final NodeSettings settings) {
-        settings.addBoolean(m_configName, m_checkbox.getModel().isSelected());
+        settings.addString(m_configName, m_textField.getText());
     }
 
     /**
@@ -86,38 +86,16 @@ public final class DialogComponentBoolean extends DialogComponent {
      */
     @Override
     public void setEnabledComponents(final boolean enabled) {
-        m_checkbox.setEnabled(enabled);
+        m_textField.setEnabled(enabled);
     }
     
     /**
-     * Adds the listener to the underlying checkbox component.
-     * @param l The listener to add.
+     * Sets the preferred size of the internal component.
+     * @param width The width.
+     * @param height The height.
      */
-    public void addItemListener(final ItemListener l) {
-        m_checkbox.addItemListener(l);
-    }
-    
-    /**
-     * Removes the listener from the underlying checkbox component.
-     * @param l The listener to remove.
-     */
-    public void removeItemListener(final ItemListener l) {
-        m_checkbox.removeItemListener(l);
-    }
-    
-    /**
-     * @return true if the checkbox is selected.
-     */
-    public boolean isSelected() {
-        return m_checkbox.isSelected();
-    }
-
-    /**
-     * Set the selection state of the checkbox.
-     * @param select true or false.
-     */
-    public void setSelected(final boolean select) {
-        m_checkbox.setSelected(select);
+    public void setSizeComponents(final int width, final int height) {
+        m_textField.setPreferredSize(new Dimension(width, height));
     }
     
 }
