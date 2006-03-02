@@ -58,6 +58,9 @@ abstract class NodeOutPortView extends JFrame {
         super(name);
         // init frame
         super.setName(name + " View");
+        if (KNIMEConstants.KNIME16X16 != null) {
+            super.setIconImage(KNIMEConstants.KNIME16X16.getImage());
+        }
         super.setBackground(NodeView.COLOR_BACKGROUND);
         super.setSize(INIT_WIDTH, INIT_HEIGHT);
         setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
