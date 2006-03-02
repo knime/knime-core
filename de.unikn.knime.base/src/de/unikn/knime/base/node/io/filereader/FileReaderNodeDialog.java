@@ -201,9 +201,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_urlCombo = new JComboBox();
         m_urlCombo.setEditable(true);
         m_urlCombo.setRenderer(new MyComboBoxRenderer());
-        m_urlCombo.setMaximumSize(new Dimension(PANEL_WIDTH, COMP_HEIGHT));
-        m_urlCombo.setMinimumSize(new Dimension(350, 25));
-        m_urlCombo.setPreferredSize(new Dimension(350, 25));
+        m_urlCombo.setMaximumSize(new Dimension(PANEL_WIDTH, 20));
+        m_urlCombo.setMinimumSize(new Dimension(350, 20));
+        m_urlCombo.setPreferredSize(new Dimension(350, 20));
         m_urlCombo.setToolTipText("Enter an URL of an ASCII data"
                 + "file, select from recent files, or browse");
         nameBox.add(m_urlCombo);
