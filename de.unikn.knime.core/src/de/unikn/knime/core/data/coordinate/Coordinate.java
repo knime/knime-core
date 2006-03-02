@@ -62,7 +62,7 @@ public abstract class Coordinate {
             return new NumericCoordinate(dataColumnSpec);
         } else {
             Set possibleValuse = dataColumnSpec.getDomain().getValues();
-            if (possibleValuse.size() > 0) {
+            if (possibleValuse != null && possibleValuse.size() > 0) {
                 return new NominalCoordinate(dataColumnSpec);
             }
         }
