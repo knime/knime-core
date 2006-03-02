@@ -1,3 +1,4 @@
+
 /* @(#)$RCSfile$ 
  * $Revision$ $Date$ $Author$
  * 
@@ -83,3 +84,4 @@ public class ChangeNodeBoundsCommand extends Command {
     }
 
 }
+

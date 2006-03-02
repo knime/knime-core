@@ -28,7 +28,9 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.gef.Request;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -41,6 +43,7 @@ import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ImageRepository;
+import de.unikn.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import de.unikn.knime.workbench.editor2.editparts.policy.NodeContainerComponentEditPolicy;
 import de.unikn.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
@@ -65,7 +68,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             .getLogger(NodeContainerEditPart.class);
 
     private static final long DOUBLE_CLICK_TIME = 500;
-    
+
     private static final String DEFAULT_IMAGE = "icons/16x16/default.png";
 
     /**
@@ -485,6 +488,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public void mouseDoubleClicked(final MouseEvent me) {
 
         // do nothing here
+    }
+
+    /**
+     * Overridden to return a custom <code>DragTracker</code> for
+     * NodeContainerEditParts.
+     * 
+     * @see org.eclipse.gef.EditPart#getDragTracker(Request)
+     */
+    public DragTracker getDragTracker(final Request request) {
+        return new WorkflowSelectionDragEditPartsTracker(this);
     }
 
     // TODO: double click event can not be received (maybe due to draw2d bug

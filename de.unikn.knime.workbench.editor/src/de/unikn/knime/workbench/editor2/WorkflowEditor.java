@@ -271,6 +271,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
+    /**
+     * @return the graphical viewer of this editor.
+     */
     public GraphicalViewer getViewer() {
 
         return getGraphicalViewer();

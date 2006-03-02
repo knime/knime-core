@@ -29,15 +29,20 @@ import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolygonDecoration;
 import org.eclipse.draw2d.PolylineConnection;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.gef.Request;
+import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
+import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
+import de.unikn.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import de.unikn.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import de.unikn.knime.workbench.editor2.editparts.policy.NewConnectionComponentEditPolicy;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
@@ -61,6 +66,21 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     public ConnectionContainerEditPart(final boolean isModelConn) {
         m_isModelPortConnection = isModelConn;
+    }
+
+    /**
+     * Creates a GEF command to shift the connections bendpoints.
+     * 
+     * @param request the underlying request holding information about the shift
+     * @return the command to change the bendpoint locations
+     */
+    public Command getBendpointAdaptionCommand(final Request request) {
+
+        ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest)request;
+
+        Point moveDelta = boundsRequest.getMoveDelta();
+        return new ChangeBendPointLocationCommand(
+                (ConnectionContainer)getModel(), moveDelta);
     }
 
     /**
@@ -93,7 +113,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         installEditPolicy(EditPolicy.CONNECTION_ROLE,
                 new NewConnectionComponentEditPolicy());
-        
+
     }
 
     /**
@@ -111,7 +131,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         // Decorations
         PolygonDecoration pD = new PolygonDecoration();
         if (m_isModelPortConnection) {
-            //pD.setScale(9, 5);
+            // pD.setScale(9, 5);
             conn.setForegroundColor(Display.getCurrent().getSystemColor(
                     SWT.COLOR_BLUE));
             conn.setLineWidth(1);
