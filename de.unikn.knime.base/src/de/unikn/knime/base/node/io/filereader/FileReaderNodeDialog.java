@@ -193,11 +193,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         Box fileBox = Box.createHorizontalBox();
 
-        Box nameBox = Box.createHorizontalBox();
-        nameBox.add(Box.createHorizontalGlue());
-        nameBox.add(new JLabel("valid URL:"));
-        nameBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
-
         // Creating the brows button here in order to get its preferred height
         JButton browse = new JButton("Browse...");
         int buttonHeight = browse.getPreferredSize().height;
@@ -210,16 +205,12 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_urlCombo.setPreferredSize(new Dimension(350, buttonHeight));
         m_urlCombo.setToolTipText("Enter an URL of an ASCII data"
                 + "file, select from recent files, or browse");
-        nameBox.add(m_urlCombo);
 
-        Box outerNameBox = Box.createVerticalBox();
-        outerNameBox.add(Box.createVerticalGlue());
-        outerNameBox.add(nameBox);
-        outerNameBox.add(Box.createVerticalGlue());
-        fileBox.add(outerNameBox);
+        fileBox.add(Box.createHorizontalGlue());
+        fileBox.add(new JLabel("valid URL:"));
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
-
-
+        fileBox.add(m_urlCombo);
+        fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(browse);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(Box.createVerticalStrut(70));
