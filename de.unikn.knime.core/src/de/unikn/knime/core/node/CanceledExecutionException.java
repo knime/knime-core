@@ -27,17 +27,14 @@ package de.unikn.knime.core.node;
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-public class CanceledExecutionException extends Exception {
+public class CanceledExecutionException extends RuntimeException {
 
     /**
      * Constructs an <code>CancelExecutionException</code> with the specified
      * detail message.
      * 
-     * TODO (tg) The user has canceled this!
-     * 
-     * Use a helpful message here as it
-     * will be displayed to the user, and it is the only hint ones gets to
-     * correct the problem.
+     * Use a helpful message here as it will be displayed to the user, and it is
+     * the only hint ones gets to correct the problem.
      * 
      * @param s A detail message about the cancelation.
      */
