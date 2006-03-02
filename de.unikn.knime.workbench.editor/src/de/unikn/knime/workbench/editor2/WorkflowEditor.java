@@ -167,19 +167,18 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = 
-        new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
 
     static {
-        IPreferenceStore pStore = 
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
-        String logLevel = 
-            pStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
+        IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
+                .getPreferenceStore();
+        String logLevel = pStore
+                .getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
         setLogLevel(logLevel);
         // Level: warn
         try {
-            ConsoleViewAppender.WARN_APPENDER.write(
-                    KNIMEConstants.WELCOME_MESSAGE);
+            ConsoleViewAppender.WARN_APPENDER
+                    .write(KNIMEConstants.WELCOME_MESSAGE);
             ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
                     + KNIMEConstants.KNIME_HOME_DIR + File.separator
                     + NodeLogger.LOG_FILE + "\n");
@@ -201,18 +200,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                     } catch (NullPointerException ne) {
                         LOGGER.warn("Null is an invalid log level, using WARN");
                     } catch (IllegalArgumentException iae) {
-                        LOGGER.warn("Invalid log level " 
-                                + newName + ", using WARN");
+                        LOGGER.warn("Invalid log level " + newName
+                                + ", using WARN");
                     }
                     NodeLogger.setLevelIntern(l);
                 }
             };
         });
     }
-    
-    /** Register the appenders according to logLevel, i.e. 
-     * PreferenceConstants.P_LOGLEVEL_DEBUG, 
+
+    /**
+     * Register the appenders according to logLevel, i.e.
+     * PreferenceConstants.P_LOGLEVEL_DEBUG,
      * PreferenceConstants.P_LOGLEVEL_INFO, etc.
+     * 
      * @param logLevel The new log level.
      */
     private static void setLogLevel(final String logLevel) {
@@ -242,8 +243,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             addAppender(ConsoleViewAppender.ERROR_APPENDER);
             addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
         } else {
-            LOGGER.warn("Invalid log level " + logLevel 
-                    + "; setting to " + PreferenceConstants.P_LOGLEVEL_WARN);
+            LOGGER.warn("Invalid log level " + logLevel + "; setting to "
+                    + PreferenceConstants.P_LOGLEVEL_WARN);
             setLogLevel(PreferenceConstants.P_LOGLEVEL_WARN);
         }
     }
@@ -298,7 +299,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             APPENDERS.remove(app);
         }
     }
-    
 
     /**
      * Returns the clipboard content for this editor.
@@ -743,6 +743,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             // try to refresh project
             m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
                     monitor);
+            
+            //archive attribute aendern
         } catch (CoreException e) {
             // TODO Auto-generated catch block
             LOGGER.debug("", e);
