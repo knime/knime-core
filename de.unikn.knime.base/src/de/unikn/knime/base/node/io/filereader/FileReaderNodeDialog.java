@@ -22,18 +22,19 @@
 package de.unikn.knime.base.node.io.filereader;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -52,11 +53,15 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import de.unikn.knime.base.node.io.filetokenizer.Comment;
 import de.unikn.knime.base.node.io.filetokenizer.Delimiter;
@@ -104,9 +109,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
      */
     private FileReaderNodeSettings m_frSettings;
 
-    private JTextField m_dataFileURL;
-
-    private JButton m_recentButton;
+    private JComboBox m_urlCombo;
 
     private TableView m_previewTableView;
 
@@ -195,13 +198,15 @@ class FileReaderNodeDialog extends NodeDialogPane {
         nameBox.add(new JLabel("valid URL:"));
         nameBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
 
-        m_dataFileURL = new JTextField();
-        m_dataFileURL.setMaximumSize(new Dimension(PANEL_WIDTH, COMP_HEIGHT));
-        m_dataFileURL.setMinimumSize(new Dimension(350, 25));
-        m_dataFileURL.setPreferredSize(new Dimension(350, 25));
-        m_dataFileURL.setToolTipText("Enter an URL of an ASCII data"
+        m_urlCombo = new JComboBox();
+        m_urlCombo.setEditable(true);
+        m_urlCombo.setRenderer(new MyComboBoxRenderer());
+        m_urlCombo.setMaximumSize(new Dimension(PANEL_WIDTH, COMP_HEIGHT));
+        m_urlCombo.setMinimumSize(new Dimension(350, 25));
+        m_urlCombo.setPreferredSize(new Dimension(350, 25));
+        m_urlCombo.setToolTipText("Enter an URL of an ASCII data"
                 + "file, select from recent files, or browse");
-        nameBox.add(m_dataFileURL);
+        nameBox.add(m_urlCombo);
 
         Box outerNameBox = Box.createVerticalBox();
         outerNameBox.add(Box.createVerticalGlue());
@@ -210,18 +215,10 @@ class FileReaderNodeDialog extends NodeDialogPane {
         fileBox.add(outerNameBox);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
 
-        Box buttonBox = Box.createVerticalBox();
         JButton browse = new JButton("Browse...");
-        browse.setMaximumSize(new Dimension(100, 15));
-        m_recentButton = new JButton("Recent...");
-        m_recentButton.setMaximumSize(new Dimension(100, 15));
-        m_recentButton.setEnabled(false); // enable if loading settings w/
-        // hist
-        buttonBox.add(Box.createVerticalGlue());
-        buttonBox.add(browse);
-        buttonBox.add(m_recentButton);
-        buttonBox.add(Box.createVerticalGlue());
-        fileBox.add(buttonBox);
+//        browse.setMaximumSize(new Dimension(100, 15));
+//
+        fileBox.add(browse);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(Box.createVerticalStrut(70));
         fileBox.add(Box.createHorizontalGlue());
@@ -229,77 +226,55 @@ class FileReaderNodeDialog extends NodeDialogPane {
         panel.add(fileBox);
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, 70));
         panel.setMinimumSize(new Dimension(PANEL_WIDTH, 70));
+        m_urlCombo.addItemListener(new ItemListener() {
+           public void itemStateChanged(final ItemEvent e) {
+               analyzeDataFileAndUpdatePreview(false);
+           } 
+        });
         /* install action listeners */
         // set stuff to update preview when file location changes
-        m_dataFileURL.addKeyListener(new KeyAdapter() {
-            public void keyTyped(final KeyEvent e) {
-                if (e.getKeyChar() == KeyEvent.VK_ENTER) {
-                    // update on 'Return'
-                    analyzeDataFileAndUpdatePreview(false);
-                }
+        m_urlCombo.getEditor().addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                analyzeDataFileAndUpdatePreview(false);
             }
         });
-        m_dataFileURL.addFocusListener(new FocusAdapter() {
+        m_urlCombo.addFocusListener(new FocusAdapter() {
             public void focusLost(final FocusEvent e) {
                 // analyze file on focus lost.
                 analyzeDataFileAndUpdatePreview(false);
             }
         });
-        m_dataFileURL.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(final DocumentEvent e) {
-                m_previewTableView.setDataTable(null);
-            }
-
-            public void insertUpdate(final DocumentEvent e) {
-                m_previewTableView.setDataTable(null);
-            }
-
-            public void removeUpdate(final DocumentEvent e) {
-                m_previewTableView.setDataTable(null);
-            }
-        });
+        Component editor = m_urlCombo.getEditor().getEditorComponent();
+        if (editor instanceof JTextComponent) {
+            Document d = ((JTextComponent)editor).getDocument();
+            d.addDocumentListener(new DocumentListener() {
+                public void changedUpdate(final DocumentEvent e) {
+                    m_previewTableView.setDataTable(null);
+                }
+    
+                public void insertUpdate(final DocumentEvent e) {
+                    m_previewTableView.setDataTable(null);
+                }
+    
+                public void removeUpdate(final DocumentEvent e) {
+                    m_previewTableView.setDataTable(null);
+                }
+            });
+        }
 
         browse.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 // sets the path in the file text field.
-                String newFile = popupFileChooser(m_dataFileURL.getText(),
+                String newFile = popupFileChooser(
+                        m_urlCombo.getSelectedItem().toString(),
                         false);
                 if (newFile != null) {
-                    m_dataFileURL.setText(newFile);
-                    analyzeDataFileAndUpdatePreview(false);
-                }
-            }
-        });
-        m_recentButton.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                String[] hist = FileReaderNodeModel.getFileHistory();
-                int recentIdx = popupRecentDialog(hist);
-                if ((recentIdx > -1) && (recentIdx < hist.length)) {
-                    m_dataFileURL.setText(hist[recentIdx]);
+                    m_urlCombo.setSelectedItem(newFile);
                     analyzeDataFileAndUpdatePreview(false);
                 }
             }
         });
         return panel;
-    }
-
-    private int popupRecentDialog(final String[] hist) {
-        assert hist != null;
-        assert hist.length > 0;
-
-        // figure out the parent to be able to make the dialog modal
-        Frame f = null;
-        Container c = getPanel().getParent();
-        while (c != null) {
-            if (c instanceof Frame) {
-                f = (Frame)c;
-                break;
-            }
-            c = c.getParent();
-        }
-
-        RecentFilesDialog dlg = new RecentFilesDialog(f, hist);
-        return dlg.openDialog();
     }
 
     private JPanel createPreviewPanel() {
@@ -487,7 +462,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
         // reserve a certain height for the (in the beginning invisible) label
         analWarn.add(Box.createVerticalStrut(25));
         analWarn.add(Box.createHorizontalGlue());
-
         JPanel result = new JPanel();
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
         result.add(panel);
@@ -911,6 +885,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
             final DataTableSpec[] specs) {
         assert (settings != null && specs != null);
 
+        String[] history = FileReaderNodeModel.getFileHistory();
+        m_urlCombo.removeAllItems();
+        for (String str : history) {
+            m_urlCombo.addItem(str);
+        }
         try {
             // this will fail if the settings are invalid (which will be the
             // case when they come from an uninitialized model). We create
@@ -946,8 +925,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 && (m_frSettings.getColumnProperties() != null)
                 && (m_frSettings.getColumnProperties().size() > 0)) {
             // do not analyze file if we got settings to use
-            m_dataFileURL
-                    .setText(m_frSettings.getDataFileLocation().toString());
+            m_urlCombo.setSelectedItem(
+                    m_frSettings.getDataFileLocation().toString());
             
             loadSettings(false);
         } else {
@@ -1005,11 +984,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_previewTableView.setDataTable(null);
 
         try {
-            newURL = textToURL(m_dataFileURL.getText());
+            newURL = textToURL(m_urlCombo.getSelectedItem().toString());
         } catch (Exception e) {
             // leave settings unchanged.
             setErrorTable(new String[]{"Malformed URL '"
-                    + m_dataFileURL.getText() + "'."});
+                    + m_urlCombo.getSelectedItem() + "'."});
             return;
         }
 
@@ -1163,19 +1142,16 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         if (loadFileLocation) {
             if (m_frSettings.getDataFileLocation() != null) {
-                m_dataFileURL.setText(m_frSettings.getDataFileLocation()
-                        .toString());
+                m_urlCombo.setSelectedItem(
+                        m_frSettings.getDataFileLocation().toString());
             } else {
-                m_dataFileURL.setText("");
+                m_urlCombo.setSelectedItem("");
             }
             analyzeDataFileAndUpdatePreview(true);
         }
         m_hasRowHeaders.setSelected(m_frSettings.getFileHasRowHeaders());
         m_hasColHeaders.setSelected(m_frSettings.getFileHasColumnHeaders());
         // dis/enable the select recent files button
-        String[] hist = FileReaderNodeModel.getFileHistory();
-        boolean enable = (hist != null) && (hist.length > 0);
-        m_recentButton.setEnabled(enable);
         loadDelimSettings();
         loadCommentSettings();
         loadReadPosValuesSettings();
@@ -1192,7 +1168,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
     private void saveSettings() throws InvalidSettingsException {
 
         try {
-            URL dataURL = textToURL(m_dataFileURL.getText());
+            URL dataURL = textToURL(m_urlCombo.getSelectedItem().toString());
             m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
             return;
         } catch (MalformedURLException mfue) {
@@ -1293,7 +1269,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
      * xml file.
      */
     protected void readXMLSettings() {
-        String xmlPath = popupFileChooser(m_dataFileURL.getText(), true);
+        String xmlPath = popupFileChooser(
+                m_urlCombo.getSelectedItem().toString(), true);
 
         if (xmlPath == null) {
             // user canceled.
@@ -1315,7 +1292,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         m_frSettings = newFrns;
         loadSettings(false); // don't trigger file analysis
-        m_dataFileURL.setText(m_frSettings.getDataFileLocation().toString());
+        m_urlCombo.setSelectedItem(
+                m_frSettings.getDataFileLocation().toString());
         updatePreview();
     }
 
@@ -1483,6 +1461,70 @@ class FileReaderNodeDialog extends NodeDialogPane {
             // we know that we have to create one column with a string cell.
             DataCell rowID = new DefaultStringCell("Err" + (m_nextIdx + 1));
             return new DefaultRow(rowID, new String[]{m_errMsgs[m_nextIdx++]});
+        }
+    }
+    
+    /** Renderer that also supports to show customized tooltip. */
+    private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
+        
+        /**
+         * @see BasicComboBoxRenderer#getListCellRendererComponent(
+         * javax.swing.JList, java.lang.Object, int, boolean, boolean)
+         */
+        public Component getListCellRendererComponent(final JList list, 
+                final Object value, final int index, final boolean isSelected, 
+                final boolean cellHasFocus) {
+            if (index > -1) {
+                list.setToolTipText(value.toString());
+            }
+            return super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+        }
+
+        /** Does the clipping automatically, clips off characters from the 
+         * middle of the string.
+         * @see JLabel#getText()
+         */
+        @Override
+        public String getText() {
+            Insets ins = getInsets();
+            int width = getWidth() - ins.left - ins.right;
+            String s = super.getText();
+            FontMetrics fm = getFontMetrics(getFont());
+            String clipped = s;
+            while (clipped.length() > 5 && fm.stringWidth(clipped) > width) {
+                clipped = format(s, clipped.length() - 3);
+            }
+            return clipped;
+        }
+        
+        /**
+         * builds strings with the following pattern: if size is smaller than 
+         * 30, return the last 30 chars in the string; if the size is larger 
+         * than 30: return the first 12 chars + ... + chars from the end. 
+         * Size more than 55: the first 28 + ... + rest from the end.
+         */
+        private String format(final String str, final int size) {
+            String result;
+            if (str.length() <= size) {
+                // short enough - return it unchanged
+                return str;
+            }
+            if (size <= 30) {
+                result = "..." + str.substring(str.length() - size + 3,
+                        str.length());
+            } else if (size <= 55) {
+                result = str.substring(0, 12)
+                + "..."
+                + str.subSequence(str.length() - size + 15,
+                        str.length());
+            } else {
+                result = str.substring(0, 28)
+                + "..."
+                + str.subSequence(str.length() - size + 31,
+                        str.length());
+            }
+            return result;
         }
     }
 
