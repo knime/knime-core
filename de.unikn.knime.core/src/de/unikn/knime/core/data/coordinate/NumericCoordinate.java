@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
@@ -159,11 +160,31 @@ public class NumericCoordinate extends Coordinate {
         }
 
         // set the domain ragne
-        m_minDomainValue = ((DoubleValue)getDataColumnSpec().getDomain()
-                .getLowerBound()).getDoubleValue();
+        DataColumnDomain domain = getDataColumnSpec().getDomain();
+        if (domain == null) {
+            throw new NullPointerException(
+                    "Implementation error of node which created the"
+                            + " table specification. Domain is null.");
+        }
 
-        m_maxDomainValue = ((DoubleValue)getDataColumnSpec().getDomain()
-                .getUpperBound()).getDoubleValue();
+        DataCell lowerBound = domain.getLowerBound();
+        if (lowerBound == null) {
+            throw new NullPointerException(
+                    "Implementation error of node which created the"
+                            + " table specification. Lower bound not"
+                            + " set(is null).");
+        }
+        m_minDomainValue = ((DoubleValue)lowerBound).getDoubleValue();
+
+        DataCell upperBound = domain.getUpperBound();
+        if (upperBound == null) {
+            throw new NullPointerException(
+                    "Implementation error of node which created the"
+                            + " table specification. Upper bound not"
+                            + " set(is null).");
+        }
+        m_maxDomainValue = ((DoubleValue)upperBound).getDoubleValue();
+
         updateDomainRange();
 
         // check the rounding accuracy
@@ -388,7 +409,7 @@ public class NumericCoordinate extends Coordinate {
         if (decimalPointPos >= 0) {
             numberAsString = numberAsString.substring(0, decimalPointPos);
         }
-        
+
         // the maximum prefix as number allowed given max lable length
         // this is the power of 10 to the allowed length
         double maxNumber = Math.pow(10, m_maxDomainLableLenght);
@@ -430,7 +451,7 @@ public class NumericCoordinate extends Coordinate {
                     postfixPatter.append("#");
                 }
             }
-            
+
             formatPattern = "0" + postfixPatter.toString();
         }
 
