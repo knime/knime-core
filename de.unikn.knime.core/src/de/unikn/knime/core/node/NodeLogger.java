@@ -103,7 +103,7 @@ public final class NodeLogger {
         SOUT_APPENDER.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(Level.DEBUG);
-        filter.setLevelMax(Level.WARN);
+        filter.setLevelMax(Level.FATAL);
         SOUT_APPENDER.addFilter(filter);
         // sout.setThreshold(Level.INFO);
         root.addAppender(SOUT_APPENDER);
@@ -463,9 +463,11 @@ public final class NodeLogger {
      * @param level The new minimum logging level.
      */
     public static void setLevelIntern(final LEVEL level) {
+        getLogger(NodeLogger.class).info(
+                "Changing logging level to " + level.toString());
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(getLevel(level));
-        filter.setLevelMax(getLevel(LEVEL.ALL));
+        filter.setLevelMax(getLevel(LEVEL.FATAL));
         FILE_APPENDER.clearFilters();
         SERR_APPENDER.clearFilters();
         SOUT_APPENDER.clearFilters();
