@@ -27,7 +27,7 @@ package de.unikn.knime.core.node;
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-public class CanceledExecutionException extends RuntimeException {
+public class CanceledExecutionException extends Exception {
 
     /**
      * Constructs an <code>CancelExecutionException</code> with the specified
