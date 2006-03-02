@@ -48,7 +48,7 @@ public class PreferenceInitializer extends
                 PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME);
 
         store.setDefault(PreferenceConstants.P_LOGLEVEL_CONSOLE,
-                PreferenceConstants.P_LOGLEVEL_INFO);
+                PreferenceConstants.P_LOGLEVEL_WARN);
 
         store.setDefault(PreferenceConstants.P_LOGLEVEL_LOG_FILE,
                 PreferenceConstants.P_LOGLEVEL_DEBUG);
