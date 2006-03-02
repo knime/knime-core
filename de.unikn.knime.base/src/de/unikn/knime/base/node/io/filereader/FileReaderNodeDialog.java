@@ -198,12 +198,16 @@ class FileReaderNodeDialog extends NodeDialogPane {
         nameBox.add(new JLabel("valid URL:"));
         nameBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
 
+        // Creating the brows button here in order to get its preferred height
+        JButton browse = new JButton("Browse...");
+        int buttonHeight = browse.getPreferredSize().height;
+
         m_urlCombo = new JComboBox();
         m_urlCombo.setEditable(true);
         m_urlCombo.setRenderer(new MyComboBoxRenderer());
-        m_urlCombo.setMaximumSize(new Dimension(PANEL_WIDTH, 20));
-        m_urlCombo.setMinimumSize(new Dimension(350, 20));
-        m_urlCombo.setPreferredSize(new Dimension(350, 20));
+        m_urlCombo.setMaximumSize(new Dimension(PANEL_WIDTH, buttonHeight));
+        m_urlCombo.setMinimumSize(new Dimension(350, buttonHeight));
+        m_urlCombo.setPreferredSize(new Dimension(350, buttonHeight));
         m_urlCombo.setToolTipText("Enter an URL of an ASCII data"
                 + "file, select from recent files, or browse");
         nameBox.add(m_urlCombo);
@@ -215,9 +219,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         fileBox.add(outerNameBox);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
 
-        JButton browse = new JButton("Browse...");
-//        browse.setMaximumSize(new Dimension(100, 15));
-//
+
         fileBox.add(browse);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(Box.createVerticalStrut(70));
@@ -319,6 +321,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
     }
 
     private JPanel createSettingsPanel() {
+        // creating button first to get the preferred height
+        JButton advanced = new JButton("Advanced...");
+        int buttonHeight = advanced.getPreferredSize().height;
         m_hasRowHeaders = new JCheckBox("read row headers");
         m_hasRowHeaders.setToolTipText("Check if the file contains row headers"
                 + " in the first column");
@@ -327,9 +332,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 + " headers in the first line");
         JLabel deliLabel = new JLabel("Column delimiter:");
         m_delimField = new JComboBox();
-        m_delimField.setMaximumSize(new Dimension(70, 20));
-        m_delimField.setMinimumSize(new Dimension(70, 20));
-        m_delimField.setPreferredSize(new Dimension(70, 20));
+        m_delimField.setMaximumSize(new Dimension(70, buttonHeight));
+        m_delimField.setMinimumSize(new Dimension(70, buttonHeight));
+        m_delimField.setPreferredSize(new Dimension(70, buttonHeight));
         m_delimField.setEditable(true);
         Delimiter[] selDelims = DEFAULT_DELIMS;
         m_delimField.setModel(new DefaultComboBoxModel(selDelims));
@@ -339,11 +344,10 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_cStyleComment.setToolTipText("Check to add support for '//' and "
                 + "\"'/*' and '*/'\" comment");
         m_singleLineComment = new JTextField(2);
-        m_singleLineComment.setMaximumSize(new Dimension(55, 20));
-        m_singleLineComment.setMinimumSize(new Dimension(55, 20));
-        m_singleLineComment.setPreferredSize(new Dimension(55, 20));
+        m_singleLineComment.setMaximumSize(new Dimension(55, buttonHeight));
+        m_singleLineComment.setMinimumSize(new Dimension(55, buttonHeight));
+        m_singleLineComment.setPreferredSize(new Dimension(55, buttonHeight));
         JLabel commentLabel = new JLabel("Single line comment:");
-        JButton advanced = new JButton("Advanced...");
         m_readPosValues = new JCheckBox("read all poss. values");
         m_readPosValues.setVisible(false); // supposed to always read values!
         m_ignoreWS = new JCheckBox("ignore spaces and tabs");
@@ -401,7 +405,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         panel.add(cCmtBox);
         panel.add(slcBox);
         // and install listeners
-        int componentsHeight = (2 * COMP_HEIGHT) + 30 + 20;
+        int componentsHeight = (2 * COMP_HEIGHT) + 30 + buttonHeight;
         // some extra for the border and for the space bewteen the two rows.
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, componentsHeight));
         advanced.addActionListener(new ActionListener() {
@@ -441,17 +445,17 @@ class FileReaderNodeDialog extends NodeDialogPane {
         });
         // set a filter to the single line comment.
         m_singleLineComment.getDocument().addDocumentListener(
-                new DocumentListener() {
-                    public void changedUpdate(final DocumentEvent e) {
-                        commentSettingsChanged();
-                    }
-                    public void insertUpdate(final DocumentEvent e) {
-                        commentSettingsChanged();
-                    }
-                    public void removeUpdate(final DocumentEvent e) {
-                        commentSettingsChanged();
-                    }
-                });
+            new DocumentListener() {
+                public void changedUpdate(final DocumentEvent e) {
+                    commentSettingsChanged();
+                }
+                public void insertUpdate(final DocumentEvent e) {
+                    commentSettingsChanged();
+                }
+                public void removeUpdate(final DocumentEvent e) {
+                    commentSettingsChanged();
+                }
+            });
         // add a panel for the analyzer warning:
         m_analWarning = new JLabel("");
         m_analWarning.setForeground(Color.red);
