@@ -19,6 +19,7 @@
  * History
  *   16.11.2005 (gdf): created
  */
+
 package de.unikn.knime.core.node.defaultnodedialog;
 
 import java.awt.Dimension;
@@ -33,16 +34,15 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
 
 /**
- * Provide a standard component for a dialog that allows to edit a double value.
+ * Provide a standard component for a dialog that allows to edit a int value.
  * Provides label and JFormattedTextField that checks ranges as well as
  * functionality to load/store into config object.
  * 
- * @author Giuseppe Di Fatta, University of Konstanz and ICAR-CNR
- * 
+ * @author Thomas Gabriel, Konstanz University
  */
-public class DialogComponentDouble extends DialogComponent {
+public class DialogComponentInteger extends DialogComponent {
 
-    private final double m_dvalue;
+    private final int m_dvalue;
 
     private final JFormattedTextField m_dvalueField;
 
@@ -57,13 +57,13 @@ public class DialogComponentDouble extends DialogComponent {
      * @param label label for dialog in front of JFormattedTextField
      * @param defaultValue initial value if no value is stored in the config
      */
-    public DialogComponentDouble(final String configName, final String label,
-            final double defaultValue) {
+    public DialogComponentInteger(final String configName, final String label,
+            final int defaultValue) {
         this.add(new JLabel(label));
         m_dvalue = defaultValue;
-        m_dvalueFormat = NumberFormat.getNumberInstance();
+        m_dvalueFormat = NumberFormat.getIntegerInstance();
         m_dvalueField = new JFormattedTextField(m_dvalueFormat);
-        m_dvalueField.setValue(new Double(m_dvalue));
+        m_dvalueField.setValue(new Integer(m_dvalue));
         m_dvalueField.setColumns(6);
         this.add(m_dvalueField);
         m_configName = configName;
@@ -77,8 +77,8 @@ public class DialogComponentDouble extends DialogComponent {
      */
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) {
-         double value = settings.getDouble(m_configName, m_dvalue);
-         m_dvalueField.setValue(new Double(value));
+        int value = settings.getInt(m_configName, m_dvalue);
+        m_dvalueField.setValue(new Integer(value));
     }
 
     /**
@@ -92,10 +92,10 @@ public class DialogComponentDouble extends DialogComponent {
         try {
             m_dvalueField.commitEdit();
         } catch (ParseException e) {
-            throw new InvalidSettingsException("Only doubles please");
+            throw new InvalidSettingsException("Only ints please");
         }
-        double amount = ((Number)m_dvalueField.getValue()).doubleValue();
-        settings.addDouble(m_configName, amount);
+        int amount = ((Number)m_dvalueField.getValue()).intValue();
+        settings.addInt(m_configName, amount);
     }
 
     /**
@@ -103,7 +103,7 @@ public class DialogComponentDouble extends DialogComponent {
      *      #setEnabledComponents(boolean)
      */
     @Override
-    protected void setEnabledComponents(final boolean enabled) {
+    public void setEnabledComponents(final boolean enabled) {
         m_dvalueField.setEnabled(enabled);
     }
     
@@ -115,5 +115,5 @@ public class DialogComponentDouble extends DialogComponent {
     public void setSizeComponents(final int width, final int height) {
         m_dvalueField.setPreferredSize(new Dimension(width, height));
     }
-
 }
+

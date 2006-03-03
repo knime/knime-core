@@ -154,4 +154,5 @@ public final class DialogComponentPasswordField extends DialogComponent {
         byte[] decryptedText = cipher.doFinal(pw);
         return new String(decryptedText);
     }
+    
 }
