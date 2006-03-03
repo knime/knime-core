@@ -167,7 +167,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS = 
+        new ArrayList<ConsoleViewAppender>();
 
     static {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
@@ -217,35 +218,38 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param logLevel The new log level.
      */
     private static void setLogLevel(final String logLevel) {
-        LOGGER.debug("Setting console log level to " + logLevel);
+        boolean changed = false;
         if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_DEBUG)) {
-            addAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            addAppender(ConsoleViewAppender.INFO_APPENDER);
-            addAppender(ConsoleViewAppender.WARN_APPENDER);
-            addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
         } else if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_INFO)) {
-            removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            addAppender(ConsoleViewAppender.INFO_APPENDER);
-            addAppender(ConsoleViewAppender.WARN_APPENDER);
-            addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
         } else if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_WARN)) {
-            removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            removeAppender(ConsoleViewAppender.INFO_APPENDER);
-            addAppender(ConsoleViewAppender.WARN_APPENDER);
-            addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
         } else if (logLevel.equals(PreferenceConstants.P_LOGLEVEL_ERROR)) {
-            removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            removeAppender(ConsoleViewAppender.INFO_APPENDER);
-            removeAppender(ConsoleViewAppender.WARN_APPENDER);
-            addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
         } else {
             LOGGER.warn("Invalid log level " + logLevel + "; setting to "
                     + PreferenceConstants.P_LOGLEVEL_WARN);
             setLogLevel(PreferenceConstants.P_LOGLEVEL_WARN);
+        }
+        if (changed) {
+            LOGGER.info("Setting console log level to " + logLevel);
         }
     }
 
@@ -281,26 +285,31 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Add the given Appender to the NodeLogger.
-     * 
      * @param app Appender to add.
+     * @return If the given appender was not previously registered.
      */
-    static void addAppender(final ConsoleViewAppender app) {
+    static boolean addAppender(final ConsoleViewAppender app) {
         if (!APPENDERS.contains(app)) {
             NodeLogger.addWriter(app, app.getLevel(), app.getLevel());
             APPENDERS.add(app);
+            return true;
         }
+        return false;
     }
 
     /**
      * Removes the given Appender from the NodeLogger.
      * 
      * @param app Appender to remove.
+     * @return If the given appended was previously registered.
      */
-    static void removeAppender(final ConsoleViewAppender app) {
+    static boolean removeAppender(final ConsoleViewAppender app) {
         if (APPENDERS.contains(app)) {
             NodeLogger.removeWriter(app);
             APPENDERS.remove(app);
+            return true;
         }
+        return false;
     }
 
     /**
