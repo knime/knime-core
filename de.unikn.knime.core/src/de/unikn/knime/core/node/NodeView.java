@@ -434,7 +434,7 @@ public abstract class NodeView {
      * 
      * @param comp Component to set in the center of the view.
      */
-    protected final void setComponent(final Component comp) {
+    protected void setComponent(final Component comp) {
         if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
             setComponentIntern(m_noDataComp, false);
         } else {
