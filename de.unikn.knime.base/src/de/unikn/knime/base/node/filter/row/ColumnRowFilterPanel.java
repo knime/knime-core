@@ -22,6 +22,7 @@
 package de.unikn.knime.base.node.filter.row;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.text.ParseException;
@@ -129,8 +130,15 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             idxBox.add(new JLabel("Column index:"));
             idxBox.add(Box.createHorizontalStrut(3));
             idxBox.add(m_colIdx);
+            m_colIdx.setPreferredSize(new Dimension(75, 20));
+            m_colIdx.setMaximumSize(new Dimension(75, 20));        
+            m_colIdx.setPreferredSize(new Dimension(75, 20));
+
         } else {
             idxBox.add(m_colCombo);
+            m_colCombo.setPreferredSize(new Dimension(75, 20));
+            m_colCombo.setMaximumSize(new Dimension(75, 20));        
+            m_colCombo.setPreferredSize(new Dimension(75, 20));
         }
         idxBox.add(Box.createHorizontalGlue());
         panel.add(idxBox);
@@ -149,6 +157,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         exprBox.add(m_regLabel);
         exprBox.add(Box.createHorizontalStrut(3));
         exprBox.add(m_regExpr);
+        m_regExpr.setPreferredSize(new Dimension(100, 20));
+        m_regExpr.setMaximumSize(new Dimension(100, 20));        
+        m_regExpr.setPreferredSize(new Dimension(100, 20));
         matchPanel.add(exprBox);
         Box caseBox = Box.createHorizontalBox(); // case sensitive checkbox
         caseBox.add(Box.createHorizontalGlue());
@@ -163,12 +174,18 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         lbBox.add(m_lowerLabel);
         lbBox.add(Box.createHorizontalStrut(3));
         lbBox.add(m_lowerBound);
+        m_lowerBound.setPreferredSize(new Dimension(75, 20));
+        m_lowerBound.setMaximumSize(new Dimension(75, 20));        
+        m_lowerBound.setPreferredSize(new Dimension(75, 20));
         matchPanel.add(lbBox);
         Box ubBox = Box.createHorizontalBox(); // upper bound
         ubBox.add(Box.createHorizontalGlue());
         ubBox.add(m_upperLabel);
         ubBox.add(Box.createHorizontalStrut(3));
         ubBox.add(m_upperBound);
+        m_upperBound.setPreferredSize(new Dimension(75, 20));
+        m_upperBound.setMaximumSize(new Dimension(75, 20));        
+        m_upperBound.setPreferredSize(new Dimension(75, 20));
         matchPanel.add(ubBox);
 
         panel.add(Box.createVerticalStrut(7));
@@ -179,8 +196,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         Box errBox = Box.createHorizontalBox();
         errBox.add(Box.createHorizontalGlue());
         Box errLblBox = Box.createVerticalBox();
-        errLblBox.add(Box.createHorizontalStrut(200));
         errLblBox.add(m_errText);
+        m_errText.setMaximumSize(new Dimension(395, 30));
         errBox.add(errLblBox);
         errBox.add(Box.createHorizontalGlue());
         panel.add(errBox);
@@ -206,7 +223,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             });
             m_colIdx = null;
         } else {
-            m_colIdx = new JSpinner(new SpinnerNumberModel(1, 0,
+            m_colIdx = new JSpinner(new SpinnerNumberModel(1, 1,
                     Integer.MAX_VALUE, 1));
             m_colCombo = null;
         }
@@ -413,17 +430,10 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         }
 
         ColValRowFilter colFilter = (ColValRowFilter)filter;
-        Integer idx = new Integer(colFilter.getColumnIndex());
         if (m_colIdx != null) {
-            if (idx >= 0) {
-                m_colIdx.setValue(idx);
-            } else {
-                m_colIdx.setValue(0);
-            }                
+            m_colIdx.setValue(new Integer(colFilter.getColumnIndex()));
         } else {
-            if ((idx >= 0) && (idx < m_colCombo.getModel().getSize())) {
-                m_colCombo.setSelectedIndex(colFilter.getColumnIndex());
-            } 
+            m_colCombo.setSelectedIndex(colFilter.getColumnIndex());
         }
         if (colFilter.rangeSet()) {
             String upper = "";
@@ -581,7 +591,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                 return new DefaultStringCell(editField.getText());
             }
         } else {
-System.out.println("KOMISCHE SACHE!!!");
             // if we got no column type
             return new DefaultStringCell(editField.getText());
         }

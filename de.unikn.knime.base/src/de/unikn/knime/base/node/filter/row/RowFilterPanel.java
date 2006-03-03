@@ -26,7 +26,6 @@ import java.awt.Container;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
@@ -42,8 +41,6 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 public abstract class RowFilterPanel extends JPanel {
 
     private JPanel m_panel;
-
-    private JLabel m_label;
 
     /**
      * a rowfilter panel.
@@ -70,8 +67,6 @@ public abstract class RowFilterPanel extends JPanel {
 
         Box inVisText = Box.createHorizontalBox();
         inVisText.add(Box.createHorizontalGlue());
-        m_label = new JLabel("No adjustments to make here.");
-        inVisText.add(m_label);
         inVisText.add(Box.createHorizontalGlue());
         super.add(inVisText);
 
@@ -96,7 +91,6 @@ public abstract class RowFilterPanel extends JPanel {
         for (int c = 0; c < compos.length; c++) {
             setVisibleRec(visible, compos[c]);
         }
-        m_label.setVisible(!visible);
     }
 
     /*
