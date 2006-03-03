@@ -24,8 +24,10 @@ package de.unikn.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.editparts.ZoomManager;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
+import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
@@ -44,6 +46,8 @@ public class NewBendpointCreateCommand extends Command {
     private AbsoluteBendpoint m_bendpoint;
 
     private ConnectionContainer m_connection;
+    
+    private ZoomManager m_zoomManager;
 
     /**
      * New NewBendpointCreateCommand.
@@ -53,7 +57,7 @@ public class NewBendpointCreateCommand extends Command {
      * @param location where ?
      */
     public NewBendpointCreateCommand(final ConnectionContainer connection,
-            final int index, final Point location) {
+            final int index, final Point location, ZoomManager zoomManager) {
         m_connection = connection;
         m_extraInfo = (ModellingConnectionExtraInfo) connection.getExtraInfo();
         if (m_extraInfo == null) {
@@ -61,14 +65,20 @@ public class NewBendpointCreateCommand extends Command {
         }
         m_index = index;
         m_location = location;
+        
+        m_zoomManager = zoomManager;
     }
 
     /**
      * @see org.eclipse.gef.commands.Command#execute()
      */
     public void execute() {
-        m_bendpoint = new AbsoluteBendpoint(m_location);
-        m_bendpoint.setLocation(m_location);
+        
+        Point location = m_location.getCopy();
+        WorkflowEditor.adaptZoom(m_zoomManager, location);
+        
+        m_bendpoint = new AbsoluteBendpoint(location);
+        m_bendpoint.setLocation(location);
         m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
 
         // we need this to fire some update event up
@@ -79,7 +89,11 @@ public class NewBendpointCreateCommand extends Command {
      * @see org.eclipse.gef.commands.Command#redo()
      */
     public void redo() {
-        m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
+        
+        Point location = m_location.getCopy();
+        WorkflowEditor.adaptZoom(m_zoomManager, location);
+        
+        m_extraInfo.addBendpoint(location.x, location.y, m_index);
 
         // we need this to fire some update event up
         m_connection.setExtraInfo(m_extraInfo);

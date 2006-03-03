@@ -23,6 +23,7 @@ package de.unikn.knime.workbench.editor2.editparts.policy;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.BendpointEditPolicy;
 import org.eclipse.gef.requests.BendpointRequest;
 
@@ -47,8 +48,12 @@ public class ConnectionBendpointEditPolicy extends BendpointEditPolicy {
     protected Command getCreateBendpointCommand(final BendpointRequest req) {
         int index = req.getIndex();
         Point loc = req.getLocation();
-        ConnectionContainer model = (ConnectionContainer) getHost().getModel();
-        return new NewBendpointCreateCommand(model, index, loc);
+        ConnectionContainer model = (ConnectionContainer)getHost().getModel();
+
+        ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
+                .getProperty(ZoomManager.class.toString());
+
+        return new NewBendpointCreateCommand(model, index, loc, zoomManager);
     }
 
     /**
@@ -59,7 +64,7 @@ public class ConnectionBendpointEditPolicy extends BendpointEditPolicy {
     protected Command getDeleteBendpointCommand(final BendpointRequest req) {
         // get the index of the bendpoint to delete
         int index = req.getIndex();
-        ConnectionContainer model = (ConnectionContainer) getHost().getModel();
+        ConnectionContainer model = (ConnectionContainer)getHost().getModel();
 
         return new NewBendpointDeleteCommand(model, index);
     }
@@ -72,7 +77,7 @@ public class ConnectionBendpointEditPolicy extends BendpointEditPolicy {
         // index of the bendpoint to move
         int index = request.getIndex();
         Point loc = request.getLocation();
-        ConnectionContainer model = (ConnectionContainer) getHost().getModel();
+        ConnectionContainer model = (ConnectionContainer)getHost().getModel();
 
         return new NewBendpointMoveCommand(model, index, loc);
     }

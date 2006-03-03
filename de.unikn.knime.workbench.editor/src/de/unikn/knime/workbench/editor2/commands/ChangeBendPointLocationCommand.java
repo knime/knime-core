@@ -23,8 +23,10 @@ package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.editparts.ZoomManager;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
+import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
@@ -43,13 +45,15 @@ public class ChangeBendPointLocationCommand extends Command {
 
     private ModellingConnectionExtraInfo m_extraInfo;
 
+    private ZoomManager m_zoomManager;
+
     /**
      * @param container The node container to change
      * @param locationShift the values (x,y) to change the location of all
      *            bendpoints
      */
     public ChangeBendPointLocationCommand(final ConnectionContainer container,
-            final Point locationShift) {
+            final Point locationShift, final ZoomManager zoomManager) {
 
         // right info type
         assert (container.getExtraInfo() instanceof ModellingNodeExtraInfo);
@@ -57,6 +61,8 @@ public class ChangeBendPointLocationCommand extends Command {
         m_extraInfo = (ModellingConnectionExtraInfo)container.getExtraInfo();
         m_locationShift = locationShift;
         m_container = container;
+
+        m_zoomManager = zoomManager;
     }
 
     /**
@@ -82,12 +88,16 @@ public class ChangeBendPointLocationCommand extends Command {
     private void changeBendpointsExtraInfo(final boolean shiftBack) {
         int[][] bendpoints = m_extraInfo.getAllBendpoints();
 
+        Point locationShift = m_locationShift.getCopy();
+
+        WorkflowEditor.adaptZoom(m_zoomManager, locationShift);
+
         int length = bendpoints.length;
-        int shiftX = shiftBack ? m_locationShift.x * -1 : m_locationShift.x;
-        int shiftY = shiftBack ? m_locationShift.y * -1 : m_locationShift.y;
+        int shiftX = shiftBack ? locationShift.x * -1 : locationShift.x;
+        int shiftY = shiftBack ? locationShift.y * -1 : locationShift.y;
 
         for (int i = 0; i < length; i++) {
-            
+
             // get old
             int x = m_extraInfo.getBendpoint(i)[0];
             int y = m_extraInfo.getBendpoint(i)[1];
@@ -96,8 +106,7 @@ public class ChangeBendPointLocationCommand extends Command {
             m_extraInfo.removeBendpoint(i);
 
             // set the new point
-            m_extraInfo.addBendpoint(x + shiftX, y
-                    + shiftY, i);
+            m_extraInfo.addBendpoint(x + shiftX, y + shiftY, i);
         }
 
         // must set explicitly so that event is fired by container

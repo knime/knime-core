@@ -34,6 +34,7 @@ import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.eclipse.swt.SWT;
@@ -78,9 +79,12 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest)request;
 
+        ZoomManager zoomManager = (ZoomManager)(getRoot().getViewer()
+                .getProperty(ZoomManager.class.toString()));
+
         Point moveDelta = boundsRequest.getMoveDelta();
         return new ChangeBendPointLocationCommand(
-                (ConnectionContainer)getModel(), moveDelta);
+                (ConnectionContainer)getModel(), moveDelta, zoomManager);
     }
 
     /**

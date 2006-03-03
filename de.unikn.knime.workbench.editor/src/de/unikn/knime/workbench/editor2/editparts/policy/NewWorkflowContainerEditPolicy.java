@@ -32,6 +32,7 @@ import org.eclipse.gef.requests.CreateRequest;
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
+import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.commands.CreateNodeCommand;
 import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
@@ -74,15 +75,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         // seems to be a workaround for a bug in the framework
         // (should imediately deliver the correct view position and not
         // the position of the viewport)
-        Point viewPortLocation = zoomManager.getViewport().getViewLocation();
-        location.x += viewPortLocation.x;
-        location.y += viewPortLocation.y;
-
-        double zoomLevel = zoomManager.getZoom();
-
-        // adapt the location accordint to the zoom level
-        location.x = (int)Math.round(location.x * (1.0 / zoomLevel));
-        location.y = (int)Math.round(location.y * (1.0 / zoomLevel));
+        WorkflowEditor.adaptZoom(zoomManager, location);
 
         WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this
                 .getHost();

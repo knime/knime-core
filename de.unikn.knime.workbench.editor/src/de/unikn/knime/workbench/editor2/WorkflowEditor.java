@@ -37,6 +37,7 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.EditDomain;
 import org.eclipse.gef.EditPartViewer;
@@ -166,8 +167,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = 
-        new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
 
     static {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
@@ -284,6 +284,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Add the given Appender to the NodeLogger.
+     * 
      * @param app Appender to add.
      * @return If the given appender was not previously registered.
      */
@@ -737,7 +738,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         try {
 
             // make sure the resource is "fresh" before saving...
-            //m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
+            // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
             File file = m_fileResource.getLocation().toFile();
             FileOutputStream os = new FileOutputStream(file);
             cfg.saveToXML(os);
@@ -750,16 +751,16 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.warn("Could not save workflow");
         }
 
-//        try {
-//            // try to refresh project
-////            m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
-////                    monitor);
-//            
-//            //archive attribute aendern
-//        } catch (CoreException e) {
-//            // TODO Auto-generated catch block
-//            LOGGER.debug("", e);
-//        }
+        // try {
+        // // try to refresh project
+        // // m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
+        // // monitor);
+        //            
+        // //archive attribute aendern
+        // } catch (CoreException e) {
+        // // TODO Auto-generated catch block
+        // LOGGER.debug("", e);
+        // }
 
     }
 
@@ -1019,5 +1020,25 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public void removeEditor(final IEditorPart editor) {
         m_childEditors.remove(editor);
+    }
+
+    /**
+     * Adapts a point according to the given zoom manager.
+     * 
+     * @param zoomManager the zoom manager providing the zoom levels
+     * @param pointToAdapt the point to adapt
+     */
+    public static void adaptZoom(final ZoomManager zoomManager,
+            final Point pointToAdapt) {
+        
+        Point viewPortLocation = zoomManager.getViewport().getViewLocation();
+        pointToAdapt.x += viewPortLocation.x;
+        pointToAdapt.y += viewPortLocation.y;
+
+        double zoomLevel = zoomManager.getZoom();
+
+        // adapt the location accordint to the zoom level
+        pointToAdapt.x = (int)Math.round(pointToAdapt.x * (1.0 / zoomLevel));
+        pointToAdapt.y = (int)Math.round(pointToAdapt.y * (1.0 / zoomLevel));
     }
 }
