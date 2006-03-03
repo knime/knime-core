@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
@@ -738,7 +737,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         try {
 
             // make sure the resource is "fresh" before saving...
-            m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
+            //m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
             File file = m_fileResource.getLocation().toFile();
             FileOutputStream os = new FileOutputStream(file);
             cfg.saveToXML(os);
@@ -751,16 +750,16 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.warn("Could not save workflow");
         }
 
-        try {
-            // try to refresh project
-            m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
-                    monitor);
-            
-            //archive attribute aendern
-        } catch (CoreException e) {
-            // TODO Auto-generated catch block
-            LOGGER.debug("", e);
-        }
+//        try {
+//            // try to refresh project
+////            m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
+////                    monitor);
+//            
+//            //archive attribute aendern
+//        } catch (CoreException e) {
+//            // TODO Auto-generated catch block
+//            LOGGER.debug("", e);
+//        }
 
     }
 
