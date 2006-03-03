@@ -21,8 +21,13 @@
  */
 package de.unikn.knime.workbench.ui.wizards.project;
 
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -41,6 +46,8 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  * @author Florian Georg, University of Konstanz
  */
 public class NewProjectWizardPage extends WizardPage {
+
+    private final static String INITIAL_PROJECT_NAME = "Knime_project";
 
     private Button m_checkCreateWorkflow;
 
@@ -78,9 +85,12 @@ public class NewProjectWizardPage extends WizardPage {
         label.setText("&Name of the project to create:");
 
         m_projectName = new Text(container, SWT.BORDER);
-        m_projectName.setLayoutData(new GridData(
-                GridData.FILL_HORIZONTAL));
-        m_projectName.setText("new_project");
+        m_projectName.addModifyListener(new ModifyListener() {
+            public void modifyText(final ModifyEvent e) {
+                dialogChanged();
+            }
+        });
+        m_projectName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         final Group group = new Group(container, SWT.NONE);
         final GridLayout gridLayout1 = new GridLayout();
@@ -94,9 +104,53 @@ public class NewProjectWizardPage extends WizardPage {
         m_checkCreateWorkflow.setSelection(true);
         m_checkCreateWorkflow.setText("Create (empty) workflow file");
 
-        m_checkAddDataset = new Button(group, SWT.CHECK);
-        m_checkAddDataset.setEnabled(false);
-        m_checkAddDataset.setText("Add example dataset (iris)");
+        // initialize the new project name field
+        // set a default file name which is not already available
+        String projectName = INITIAL_PROJECT_NAME;
+
+        // if the default initial project name is already set, the name is
+        // appended by numbers until a new name has been found
+        IContainer project = (IContainer)ResourcesPlugin.getWorkspace()
+                .getRoot().findMember(new Path(projectName));
+
+        for (int i = 2; project != null; i++) {
+            projectName = INITIAL_PROJECT_NAME + i;
+            project = (IContainer)ResourcesPlugin.getWorkspace().getRoot()
+                    .findMember(new Path(projectName));
+        }
+
+        m_projectName.setText(projectName);
+
+        // m_checkAddDataset = new Button(group, SWT.CHECK);
+        // m_checkAddDataset.setEnabled(false);
+        // m_checkAddDataset.setText("Add example dataset (iris)");
+    }
+
+    private void updateStatus(final String message) {
+        setErrorMessage(message);
+        setPageComplete(message == null);
+    }
+
+    /**
+     * Ensures that the text field is set properly.
+     */
+    private void dialogChanged() {
+
+        String projectName = m_projectName.getText();
+        IContainer container = (IContainer)ResourcesPlugin.getWorkspace()
+                .getRoot().findMember(new Path(projectName));
+
+        if (projectName.trim().length() == 0) {
+            updateStatus("Project name must be specified");
+            return;
+        }
+
+        if (container != null) {
+            updateStatus("Project name already exists.");
+            return;
+        }
+
+        updateStatus(null);
     }
 
     /**

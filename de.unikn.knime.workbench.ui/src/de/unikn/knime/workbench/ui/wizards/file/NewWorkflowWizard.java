@@ -90,7 +90,7 @@ public class NewWorkflowWizard extends Wizard implements INewWizard {
      */
     public boolean performFinish() {
         final String containerName = m_page.getContainerName();
-        final String fileName = m_page.getFileName();
+        final String fileName = m_page.getFileName().trim();
         IRunnableWithProgress op = new IRunnableWithProgress() {
             public void run(final IProgressMonitor monitor)
                     throws InvocationTargetException {

@@ -46,8 +46,14 @@ import org.eclipse.ui.dialogs.ContainerSelectionDialog;
  * Page to enter the settings for the creation of a new workflow file.
  * 
  * @author Florian Georg, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class NewWorkflowPage extends WizardPage {
+
+    private final static String INITIAL_FILE_NAME_PREFIX = "Workflow";
+
+    private final static String INITIAL_FILE_NAME_EXTENSION = ".knime";
+
     private Text m_containerText;
 
     private Text m_fileText;
@@ -116,25 +122,41 @@ public class NewWorkflowPage extends WizardPage {
      */
     private void initialize() {
 
+        IContainer container = null;
         if (m_selection instanceof IStructuredSelection
                 && (!m_selection.isEmpty())) {
-            IStructuredSelection ssel = (IStructuredSelection) m_selection;
+            IStructuredSelection ssel = (IStructuredSelection)m_selection;
             if (ssel.size() > 1) {
                 return;
             }
             Object obj = ssel.getFirstElement();
             if (obj instanceof IResource) {
-                IContainer container;
+
                 if (obj instanceof IContainer) {
-                    container = (IContainer) obj;
+                    container = (IContainer)obj;
                 } else {
-                    container = ((IResource) obj).getParent();
+                    container = ((IResource)obj).getParent();
                 }
 
                 m_containerText.setText(container.getFullPath().toString());
             }
         }
-        m_fileText.setText("new_file.knime");
+
+        // set a default file name which is not already available
+        String fileNameToSet = INITIAL_FILE_NAME_PREFIX
+                + INITIAL_FILE_NAME_EXTENSION;
+        if (container != null) {
+            // if the default initial file name is already set, the name is
+            // appended by numbers until a new name has been found
+            IResource file = container.findMember(new Path(fileNameToSet));
+            for (int i = 2; file != null; i++) {
+                fileNameToSet = INITIAL_FILE_NAME_PREFIX + i
+                        + INITIAL_FILE_NAME_EXTENSION;
+                file = container.findMember(new Path(fileNameToSet));
+            }
+        }
+
+        m_fileText.setText(fileNameToSet);
     }
 
     /**
@@ -149,7 +171,7 @@ public class NewWorkflowPage extends WizardPage {
         if (dialog.open() == Window.OK) {
             Object[] result = dialog.getResult();
             if (result.length == 1) {
-                m_containerText.setText(((Path) result[0]).toString());
+                m_containerText.setText(((Path)result[0]).toString());
             }
         }
     }
@@ -159,17 +181,23 @@ public class NewWorkflowPage extends WizardPage {
      */
 
     private void dialogChanged() {
-        IResource container = ResourcesPlugin.getWorkspace().getRoot()
-                .findMember(new Path(getContainerName()));
+        IContainer container = (IContainer)ResourcesPlugin.getWorkspace()
+                .getRoot().findMember(new Path(getContainerName()));
         String fileName = getFileName();
 
         if (getContainerName().length() == 0) {
             updateStatus("File container must be specified");
             return;
         }
+
+        if (container == null) {
+            updateStatus("File container must exist");
+            return;
+        }
+
         boolean f = false;
         f = (container.getType() & (IResource.PROJECT | IResource.FOLDER)) == 0;
-        if (container == null || f) {
+        if (f) {
             updateStatus("File container must exist");
             return;
         }
@@ -185,11 +213,23 @@ public class NewWorkflowPage extends WizardPage {
             updateStatus("File name must be valid");
             return;
         }
+        if (container.findMember(fileName) != null) {
+            updateStatus("File already exists.");
+            return;
+        }
+
         int dotLoc = fileName.lastIndexOf('.');
         if (dotLoc != -1) {
+            String prefix = fileName.substring(0, dotLoc);
             String ext = fileName.substring(dotLoc + 1);
             if (!ext.equalsIgnoreCase("knime")) {
                 updateStatus("File extension must be \"knime\"");
+                return;
+            }
+
+            if (prefix.trim().equals("")) {
+                updateStatus("The file name prefix must not be an "
+                        + "empty string or consist only of space characters.");
                 return;
             }
         }

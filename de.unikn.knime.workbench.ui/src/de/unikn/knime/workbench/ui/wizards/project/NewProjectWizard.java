@@ -118,7 +118,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         final String projectName = m_page.getProjectName();
         final boolean addWorkflowFile = m_page.getCreateWorkflowFile();
-        final boolean addDataset = m_page.getAddDataset();
+        //final boolean addDataset = m_page.getAddDataset();
 
         // Create new runnable
         IRunnableWithProgress op = new IRunnableWithProgress() {
@@ -126,7 +126,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     throws InvocationTargetException {
                 try {
                     // call the worker method
-                    doFinish(projectName, addWorkflowFile, addDataset, monitor);
+                    doFinish(projectName, addWorkflowFile, false, monitor);
                 } catch (CoreException e) {
                     throw new InvocationTargetException(e);
                 } finally {
@@ -169,13 +169,13 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         //
         // 1. Create the project, throw exception if it exists already
         //
-        IResource resource = root.findMember(new Path(projectName));
+        IResource resource = root.findMember(new Path(projectName.trim()));
         if (resource != null) {
-            throwCoreException("Project \"" + projectName
+            throwCoreException("Project \"" + projectName.trim()
                     + "\" does already exist.");
         }
         // Create project description, set the nature IDs and build-commands
-        IProject project = root.getProject(projectName);
+        IProject project = root.getProject(projectName.trim());
         ProjectDescription description = new ProjectDescription();
         description.setNatureIds(KNIME_NATURES);
         description.setBuildSpec(KNIME_BUILDSPECS);
