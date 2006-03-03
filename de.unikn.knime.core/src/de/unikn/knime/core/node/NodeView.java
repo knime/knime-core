@@ -240,18 +240,7 @@ public abstract class NodeView {
      * <code>#modelChanged()</code> method.
      */
     final void callModelChanged() {
-        if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
-            setComponentIntern(m_noDataComp, false);
-        } else {
-
-            if (!m_componentSet) {
-                setComponentIntern(m_comp, true);
-                m_componentSet = true;
-            } else {
-                setComponentIntern(m_comp, true);
-            }
-
-        }
+        setComponent(m_comp);
         try {
             modelChanged();
         } catch (NullPointerException npe) {
@@ -264,7 +253,6 @@ public abstract class NodeView {
                     + "of a changed model (in NodeView.modelChanged()). "
                     + "Reason: " + e.getMessage());
         }
-
     }
 
     /**
@@ -446,11 +434,10 @@ public abstract class NodeView {
      * 
      * @param comp Component to set in the center of the view.
      */
-    protected void setComponent(final Component comp) {
+    protected final void setComponent(final Component comp) {
         if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
             setComponentIntern(m_noDataComp, false);
         } else {
-
             if (!m_componentSet) {
                 setComponentIntern(comp, true);
                 m_componentSet = true;
@@ -465,11 +452,11 @@ public abstract class NodeView {
      * Helper method that internally sets the current component; it does not
      * update m_comp (which setComponent does).
      * 
-     * @param comp The new component to show (might be m_noDataComp)
+     * @param cmp The new component to show (might be m_noDataComp)
      * @param doPack if true, the frame is packed which results in resizing the
      */
-    private void setComponentIntern(final Component comp, final boolean doPack) {
-        if (m_activeComp == comp) {
+    private void setComponentIntern(final Component cmp, final boolean doPack) {
+        if (m_activeComp == cmp) {
             return;
         }
 
@@ -478,8 +465,8 @@ public abstract class NodeView {
             cont.remove(m_activeComp);
         }
 
-        m_activeComp = comp;
-        comp.setBackground(COLOR_BACKGROUND);
+        m_activeComp = cmp;
+        cmp.setBackground(COLOR_BACKGROUND);
         cont.add(m_activeComp, BorderLayout.CENTER);
 
         if (doPack) {
