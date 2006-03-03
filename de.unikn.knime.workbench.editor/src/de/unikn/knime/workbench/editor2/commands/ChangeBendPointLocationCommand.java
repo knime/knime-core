@@ -86,6 +86,11 @@ public class ChangeBendPointLocationCommand extends Command {
     }
 
     private void changeBendpointsExtraInfo(final boolean shiftBack) {
+
+        if (m_extraInfo == null) {
+            return;
+        }
+        
         int[][] bendpoints = m_extraInfo.getAllBendpoints();
 
         Point locationShift = m_locationShift.getCopy();
