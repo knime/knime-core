@@ -28,7 +28,6 @@ import org.eclipse.gef.editparts.ZoomManager;
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
-import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * GEF Command for changing the location of a <code>ConnectionContainer</code>
@@ -55,8 +54,11 @@ public class ChangeBendPointLocationCommand extends Command {
     public ChangeBendPointLocationCommand(final ConnectionContainer container,
             final Point locationShift, final ZoomManager zoomManager) {
 
-        // right info type
-        assert (container.getExtraInfo() instanceof ModellingNodeExtraInfo);
+        if (container == null
+                || container.getExtraInfo() == null
+                || !(container.getExtraInfo() instanceof ModellingConnectionExtraInfo)) {
+            return;
+        }
 
         m_extraInfo = (ModellingConnectionExtraInfo)container.getExtraInfo();
         m_locationShift = locationShift;
@@ -90,7 +92,7 @@ public class ChangeBendPointLocationCommand extends Command {
         if (m_extraInfo == null) {
             return;
         }
-        
+
         int[][] bendpoints = m_extraInfo.getAllBendpoints();
 
         Point locationShift = m_locationShift.getCopy();
