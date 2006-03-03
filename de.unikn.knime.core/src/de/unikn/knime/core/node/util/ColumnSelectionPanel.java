@@ -180,7 +180,15 @@ public class ColumnSelectionPanel extends JPanel {
     }
     
     /**
-     * 
+     * Selects the given index in the combo box.
+     * @param index Select this item.
+     */
+    public final void setSelectedIndex(final int index) {
+        m_chooser.setSelectedIndex(index);
+    }
+    
+    /**
+     * @param enabled true if enabled otherwise false.
      * @see java.awt.Component#setEnabled(boolean)
      */
     @Override
