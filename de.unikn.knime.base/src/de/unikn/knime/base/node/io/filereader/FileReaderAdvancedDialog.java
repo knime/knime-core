@@ -58,8 +58,6 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     private boolean m_closedViaOK = false;
 
-    private Frame m_parent;
-
     private JTabbedPane m_jTabbedPane = null;
 
     // this contains the new settings. They must be correct at all time.
@@ -75,8 +73,7 @@ public class FileReaderAdvancedDialog extends JDialog {
      */
     FileReaderAdvancedDialog(final Frame parent,
             final FileReaderNodeSettings settings) {
-        super();
-        m_parent = parent;
+        super(parent);
         m_settings = settings;
         m_closedViaReadXML = false;
         m_closedViaOK = false;
@@ -192,9 +189,10 @@ public class FileReaderAdvancedDialog extends JDialog {
             m_xmlButton.setText("Read from XML file...");
             m_xmlButton.addActionListener(new ActionListener() {
                 public void actionPerformed(final ActionEvent e) {
-                    if (JOptionPane.showConfirmDialog(m_parent,
-                            "This is for reading the old and "
-                                    + "obsolete XML file format!!\n"
+                    if (JOptionPane.showConfirmDialog(
+                            FileReaderAdvancedDialog.this,
+                            "This is for reading the old "
+                                    + "XML file format!!\n"
                                     + "It will erase all current "
                                     + "settings and read new setings "
                                     + "from the file.\n" + "DO YOU WANT THIS?",
