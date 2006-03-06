@@ -456,7 +456,7 @@ public abstract class NodeView {
      * @param doPack if true, the frame is packed which results in resizing the
      */
     private void setComponentIntern(final Component cmp, final boolean doPack) {
-        if (m_activeComp == cmp) {
+        if (m_activeComp == cmp || cmp == null) {
             return;
         }
 
