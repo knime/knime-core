@@ -162,28 +162,25 @@ public class NumericCoordinate extends Coordinate {
         // set the domain ragne
         DataColumnDomain domain = getDataColumnSpec().getDomain();
         if (domain == null) {
-            throw new NullPointerException(
-                    "Implementation error of node which created the"
-                            + " table specification. Domain is null.");
+
+            m_minDomainValue = m_maxDomainValue = Double.NaN;
         }
 
         DataCell lowerBound = domain.getLowerBound();
         if (lowerBound == null) {
-            throw new NullPointerException(
-                    "Implementation error of node which created the"
-                            + " table specification. Lower bound not"
-                            + " set(is null).");
+
+            m_minDomainValue = Double.NaN;
+        } else {
+            m_minDomainValue = ((DoubleValue)lowerBound).getDoubleValue();
         }
-        m_minDomainValue = ((DoubleValue)lowerBound).getDoubleValue();
 
         DataCell upperBound = domain.getUpperBound();
         if (upperBound == null) {
-            throw new NullPointerException(
-                    "Implementation error of node which created the"
-                            + " table specification. Upper bound not"
-                            + " set(is null).");
+
+            m_maxDomainValue = Double.NaN;
+        } else {
+            m_maxDomainValue = ((DoubleValue)upperBound).getDoubleValue();
         }
-        m_maxDomainValue = ((DoubleValue)upperBound).getDoubleValue();
 
         updateDomainRange();
 
@@ -541,5 +538,45 @@ public class NumericCoordinate extends Coordinate {
     public double getUnusedDistBetweenTicks(final double absoluteLength) {
 
         return 0;
+    }
+
+    /**
+     * @return true if the lower domain range is set properly
+     */
+    public boolean isLowerDomainValueSet() {
+        if (m_minDomainValue != Double.NaN) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return true if the upper domain range is set properly
+     */
+    public boolean isUpperDomainValueSet() {
+        if (m_maxDomainValue != Double.NaN) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Sets the lower domain value.
+     * 
+     * @param value the lower value
+     */
+    public void setLowerDomainValue(final double value) {
+        m_minDomainValue = value;
+    }
+    
+    /**
+     * Sets the upper domain value.
+     * 
+     * @param value the upper value
+     */
+    public void setUpperDomainValue(final double value) {
+        m_maxDomainValue = value;
     }
 }
