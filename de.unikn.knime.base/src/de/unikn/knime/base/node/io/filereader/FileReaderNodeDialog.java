@@ -1242,7 +1242,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
             }
             c = c.getParent();
         }
-System.out.println("Got Parent for Advanced Dialog: " + f);        
         // pop open the advanced settings dialog with our current settings
         FileReaderAdvancedDialog advDlg = new FileReaderAdvancedDialog(f,
                 m_frSettings);
