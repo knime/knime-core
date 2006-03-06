@@ -21,6 +21,8 @@
  */
 package de.unikn.knime.base.node.io.predictor;
 
+import javax.swing.JFileChooser;
+
 import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import de.unikn.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
 
@@ -38,7 +40,7 @@ public class PredictorWriterNodeDialog extends DefaultNodeDialogPane {
         super("Writer Options");
         DialogComponentFileChooser fcComp
         = new DialogComponentFileChooser(PredictorWriterNodeModel.FILENAME, 
-                new String[] {".pmml"});
+                JFileChooser.SAVE_DIALOG, ".pmml");
         this.addDialogComponent(fcComp);
     }
     

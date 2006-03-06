@@ -47,15 +47,27 @@ public class DialogComponentFileChooser extends DialogComponent {
     private final JTextField m_fileURL;
 
     private final JButton m_browseButton;
-
+    
     /**
-     * Constructor.
+     * Constructor. Default is a JFileChooser.OPEN_DIALOG.
      * 
      * @param configName key for filename in config object
      * @param validExtensions prefer files with those extensions
      */
     public DialogComponentFileChooser(final String configName,
-            final String[] validExtensions) {
+            final String... validExtensions) {
+       this(configName, JFileChooser.OPEN_DIALOG, validExtensions); 
+    }
+
+    /**
+     * Constructor.
+     * 
+     * @param configName key for filename in config object
+     * @param dialogType JFileChooser.OPEN_DIALOG, SAVE_DIALOG, CUSTOM_DIALOG.
+     * @param validExtensions prefer files with those extensions
+     */
+    public DialogComponentFileChooser(final String configName,
+            final int dialogType, final String... validExtensions) {
         m_configName = configName;
         m_fileURL = new JTextField("n/a");
         m_fileURL.setBorder(BorderFactory.createTitledBorder(
@@ -67,8 +79,9 @@ public class DialogComponentFileChooser extends DialogComponent {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
                 JFileChooser chooser = new JFileChooser(m_fileURL.getText());
+                chooser.setDialogType(dialogType);
                 chooser.setFileFilter(new SimpleFileFilter(validExtensions));
-                int returnVal = chooser.showOpenDialog(getParent());
+                int returnVal = chooser.showDialog(getParent(), null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String newFile;
                     try {
