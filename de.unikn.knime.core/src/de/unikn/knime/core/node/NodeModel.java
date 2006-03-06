@@ -39,8 +39,10 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  */
 public abstract class NodeModel {
 
-    /** The node logger for this class; do not make static to make sure
-     * the right class name is printed in messages. */
+    /**
+     * The node logger for this class; do not make static to make sure the right
+     * class name is printed in messages.
+     */
     private final NodeLogger m_logger;
 
     /** The number of input data tables. */
@@ -66,9 +68,10 @@ public abstract class NodeModel {
 
     /** Flag for the isExecuted state. */
     private boolean m_executed;
-    
-    /** Flag to indicate that the node should be immediately executed when
-     * all predecessors are green, interesting for instance in the table view.
+
+    /**
+     * Flag to indicate that the node should be immediately executed when all
+     * predecessors are green, interesting for instance in the table view.
      */
     private boolean m_isAutoExecutable;
 
@@ -218,7 +221,7 @@ public abstract class NodeModel {
     final void registerView(final NodeView view) {
         assert view != null;
         m_views.add(view);
-        m_logger.debug("Registering view at  model (total count " 
+        m_logger.debug("Registering view at  model (total count "
                 + m_views.size() + ")");
     }
 
@@ -229,9 +232,9 @@ public abstract class NodeModel {
      */
     final void unregisterView(final NodeView view) {
         assert view != null;
-        boolean success = m_views.remove(view); 
+        boolean success = m_views.remove(view);
         if (success) {
-            m_logger.debug("Unregistering view from model (" + m_views.size() 
+            m_logger.debug("Unregistering view from model (" + m_views.size()
                     + " remaining).");
         } else {
             m_logger.debug("Can't remove view from model, not registered.");
@@ -242,7 +245,7 @@ public abstract class NodeModel {
      * Unregisters all views from the model.
      */
     final void unregisterAllViews() {
-        m_logger.debug("Removing all (" + m_views.size() 
+        m_logger.debug("Removing all (" + m_views.size()
                 + ") views from model.");
         m_views.clear();
     }
@@ -446,7 +449,12 @@ public abstract class NodeModel {
         m_executed = true;
 
         // and inform all views about the new model
-        stateChanged();
+
+        try {
+            stateChanged();
+        } catch (Exception e) {
+            setWarningMessage(e.getMessage());
+        }
 
         // return array of output DataTable
         return outData;
@@ -742,11 +750,12 @@ public abstract class NodeModel {
     }
 
     /**
-     * Is this method "autoexecutable", i.e. should this node be immediately 
-     * being executed if all predecessors are executed (without any user 
+     * Is this method "autoexecutable", i.e. should this node be immediately
+     * being executed if all predecessors are executed (without any user
      * interaction). By default this value will be <code>false</code>. Change
      * it in the set method if your node is a simple view that doesn't require
      * expensive computation in the execute method.
+     * 
      * @return The autoexecutable flag, by default <code>false</code>.
      */
     protected boolean isAutoExecutable() {
@@ -756,12 +765,14 @@ public abstract class NodeModel {
     /**
      * Set if the node should execute immediately after all predecessors are
      * executed. Some view implementations, such as a plain table view, do not
-     * require much computation during the execute, hence, can be conveniently 
-     * executed right after all predecessors are executed. Set this flag here
-     * to indicate that your derived node is of that kind. This method should
-     * be called in the constructor of the derived node model.
-     * @param isAutoExecutable <code>true</code> if the node should be 
-     * immediately executed when possible, <code>false</code> otherwise.
+     * require much computation during the execute, hence, can be conveniently
+     * executed right after all predecessors are executed. Set this flag here to
+     * indicate that your derived node is of that kind. This method should be
+     * called in the constructor of the derived node model.
+     * 
+     * @param isAutoExecutable <code>true</code> if the node should be
+     *            immediately executed when possible, <code>false</code>
+     *            otherwise.
      */
     protected final void setAutoExecutable(final boolean isAutoExecutable) {
         m_isAutoExecutable = isAutoExecutable;
