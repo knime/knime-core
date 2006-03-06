@@ -569,8 +569,8 @@ public class Node {
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
-            m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
-                    "Execute canceled: " + cee.getMessage());
+            m_nodeStatus = new NodeStatus(NodeStatus.WARNING,
+                    "Execution canceled!");
             notifyStateListeners(new NodeStatus(NodeStatus.END_EXECUTE));
             return false;
         } catch (Exception e) {
