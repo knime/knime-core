@@ -134,8 +134,8 @@ public class SettingsStatus {
     }
 
     /**
-     * prints all error messages to system.out. It will print "Error: ", the
-     * error message and a new line character.
+     * prints all error messages into the logger as error. It will print 
+     * "Error: ", the error message and a new line character.
      */
     public void printErrors() {
         for (int e = 0; e < getNumOfErrors(); e++) {
@@ -144,8 +144,8 @@ public class SettingsStatus {
     }
 
     /**
-     * prints all warning messages to system.out. It will print "Warning: ", the
-     * message and a new line character.
+     * prints all warning messages into the logger as warning. It will print
+     * "Warning: ", the message and a new line character.
      */
     public void printWarnings() {
         for (int w = 0; w < getNumOfWarnings(); w++) {
@@ -154,8 +154,8 @@ public class SettingsStatus {
     }
 
     /**
-     * prints all info messages to system.out. It will print "Info: ", the
-     * message and a new line character.
+     * prints all info messages into the logger as info. It will print 
+     * "Info: ", the message and a new line character.
      */
     public void printInfos() {
         for (int i = 0; i < getNumOfInfos(); i++) {
