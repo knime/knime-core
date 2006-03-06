@@ -31,6 +31,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -431,17 +432,16 @@ public class TableView extends JScrollPane {
             for (JMenuItem item : items) {
                 m_popup.add(item);
             }
-            addPropertyChangeListener(m_popup, this);
         }
         m_popup.show(this, p.x, p.y);
     }
     
     /**
      * Create the navigation menu.
-     * @param tView the table view to create the menu for. 
+     * @param v the table view to create the menu for. 
      * @return A new JMenu with navigation controllers.
      */
-    public static JMenu createNavigationMenu(final TableView tView) {
+    public static JMenu createNavigationMenu(final TableView v) {
         final JMenu result = new JMenu("Navigation");
         result.setMnemonic('N');
         JMenuItem item = new JMenuItem("Go to Row...");
@@ -449,21 +449,23 @@ public class TableView extends JScrollPane {
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 String rowString = JOptionPane.showInputDialog(
-                        tView, "Enter row number:", "Go to Row", 
+                        v, "Enter row number:", "Go to Row", 
                         JOptionPane.QUESTION_MESSAGE);
                 if (rowString == null) { // cancelled
                      return;
                 }
                 try { 
                     int row = Integer.parseInt(rowString);
-                    tView.goToRow(row - 1);
+                    v.goToRow(row - 1);
                 } catch (NumberFormatException nfe) {
-                    JOptionPane.showMessageDialog(tView, 
+                    JOptionPane.showMessageDialog(v, 
                             "Can't parse " + rowString, "Error", 
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
+        item.addPropertyChangeListener(new EnableListener(v, true, false));
+        item.setEnabled(v.hasData());
         result.add(item);
 //        item = new JMenuItem("Search Row Key...");
 //        item.setMnemonic('S');
@@ -482,16 +484,6 @@ public class TableView extends JScrollPane {
 //            }
 //        });
 //        result.add(item);
-        // listener when the data table changes (disable/enable the menu)
-        PropertyChangeListener dataChangeListener =
-            new PropertyChangeListener() {
-            public void propertyChange(final PropertyChangeEvent evt) {
-                result.setEnabled(tView.hasData());
-            }
-        };
-        tView.getContentModel().addPropertyChangeListener(
-                TableContentModel.PROPERTY_DATA, dataChangeListener);
-        result.setEnabled(tView.hasData());
         return result;
     } // createNavigationMenu()
     
@@ -506,79 +498,65 @@ public class TableView extends JScrollPane {
         for (JMenuItem item : items) {
             result.add(item);
         }
-        addPropertyChangeListener(result, tView);
         return result;
     } // createHighlightMenu()
     
     /**
      * Helper function to create the JMenuItems that are in the hilite menu.
-     * @param tView the table view to create the menu for. 
+     * @param v the table view to create the menu for. 
      * @return All those items in an array.
      */
-    static JMenuItem[] createHighlightMenuItems(final TableView tView) {
+    static JMenuItem[] createHighlightMenuItems(final TableView v) {
         ArrayList<JMenuItem> result = new ArrayList<JMenuItem>();
-        JMenuItem item = new JMenuItem("Highlight Selected");
-        item.setMnemonic('S');
-        item.addActionListener(new ActionListener() {
+        JMenuItem hsitem = new JMenuItem("Highlight Selected");
+        hsitem.setMnemonic('S');
+        hsitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                tView.hiliteSelected();
+                v.hiliteSelected();
             }
         });
-        result.add(item);
-        item = new JMenuItem("Unhighlight Selected");
-        item.setMnemonic('U');
-        item.addActionListener(new ActionListener() {
+        hsitem.addPropertyChangeListener(new EnableListener(v, true, true));
+        hsitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        result.add(hsitem);
+        JMenuItem usitem = new JMenuItem("Unhighlight Selected");
+        usitem.setMnemonic('U');
+        usitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                tView.unHiliteSelected();
+                v.unHiliteSelected();
             }
         });
-        result.add(item);
-        item = new JMenuItem("Clear Highlight");
-        item.setMnemonic('C');
-        item.addActionListener(new ActionListener() {
+        usitem.addPropertyChangeListener(new EnableListener(v, true, true));
+        usitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        result.add(usitem);
+        JMenuItem chitem = new JMenuItem("Clear Highlight");
+        chitem.setMnemonic('C');
+        chitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                tView.resetHilite();
+                v.resetHilite();
             }
         });
-        result.add(item);
-        item = new JCheckBoxMenuItem("Show Highlighted Only");
-        item.setMnemonic('O');
-        item.addPropertyChangeListener(
+        chitem.addPropertyChangeListener(new EnableListener(v, true, true));
+        chitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        result.add(chitem);
+        JMenuItem shoitem = new JCheckBoxMenuItem("Show Highlighted Only");
+        shoitem.setMnemonic('O');
+        shoitem.addPropertyChangeListener(
                 "ancestor", new PropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent evt) {
                 JCheckBoxMenuItem source = (JCheckBoxMenuItem)evt.getSource();
-                source.setSelected(tView.showsHighlightedOnly());
+                source.setSelected(v.showsHighlightedOnly());
             }
         });
-        item.addActionListener(new ActionListener() {
+        shoitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                boolean v = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-                tView.showHighlightedOnly(v);
+                boolean i = ((JCheckBoxMenuItem)e.getSource()).isSelected();
+                v.showHighlightedOnly(i);
             }
         });
-        result.add(item);
+        shoitem.addPropertyChangeListener(new EnableListener(v, true, true));
+        shoitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        result.add(shoitem);
         return result.toArray(new JMenuItem[0]);
-    }
-    
-    /**
-     * Adds a property change listener that will enable or disable the
-     * given component depending on if there is data and a hilite handler in
-     * the content model.
-     * @param comp The component to which to add the listener.
-     * @param tView The view to listen to.
-     */
-    private static void addPropertyChangeListener(
-            final Component comp, final TableView tView) {
-        // listener when the hilite handler changes (disable/enable the menu)
-        PropertyChangeListener hiliterChangeListener =
-            new PropertyChangeListener() {
-            public void propertyChange(final PropertyChangeEvent evt) {
-                comp.setEnabled(tView.hasData() && tView.hasHiLiteHandler());
-            }
-        };
-        tView.getContentModel().addPropertyChangeListener(
-                hiliterChangeListener);
-        comp.setEnabled(tView.hasData() && tView.hasHiLiteHandler());
     }
     
     /** Get menu with view controllers (row height, etc.).
@@ -613,6 +591,8 @@ public class TableView extends JScrollPane {
                 }
             }
         });
+        item.addPropertyChangeListener(new EnableListener(tView, true, false));
+        item.setEnabled(tView.hasData());
         result.add(item);
         
         item = new JMenuItem("Column Width...");
@@ -640,6 +620,8 @@ public class TableView extends JScrollPane {
                 }
             }
         });
+        item.addPropertyChangeListener(new EnableListener(tView, true, false));
+        item.setEnabled(tView.hasData());
         result.add(item);
         
         item = new JCheckBoxMenuItem("Show Color Information");
@@ -657,19 +639,42 @@ public class TableView extends JScrollPane {
                 tView.setShowColorInfo(v);
             }
         });
+        item.addPropertyChangeListener(new EnableListener(tView, true, false));
+        item.setEnabled(tView.hasData());
         result.add(item);
-        // listener when the data table changes (disable/enable the menu)
-        PropertyChangeListener dataChangeListener =
-            new PropertyChangeListener() {
-            public void propertyChange(final PropertyChangeEvent evt) {
-                result.setEnabled(tView.hasData());
-            }
-        };
-        tView.getContentModel().addPropertyChangeListener(
-                TableContentModel.PROPERTY_DATA, dataChangeListener);
-        result.setEnabled(tView.hasData());
         return result;
     } // createViewMenu()
+    
+    /** PropertyChangeListener that will disable/enable the menu items. */
+    private static class EnableListener implements PropertyChangeListener {
+        private final boolean m_watchData;
+        private final boolean m_watchHilite;
+        private final TableView m_view;
+        
+        /**
+         * Constructor. Will respect the hasData(), hasHiliteHandler() flag
+         * according to the arguments.
+         * @param view
+         * @param watchData
+         * @param watchHilite
+         */
+        public EnableListener(final TableView view,
+                final boolean watchData, final boolean watchHilite) {
+            m_view = view;
+            m_watchData = watchData;
+            m_watchHilite = watchHilite;
+        }
+        
+        /**
+         * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+         */
+        public void propertyChange(final PropertyChangeEvent evt) {
+            JComponent source = (JComponent)evt.getSource();
+            boolean data = !m_watchData || m_view.hasData();
+            boolean hilite = !m_watchHilite || m_view.hasHiLiteHandler();
+            source.setEnabled(data && hilite);
+        }
+    }
     
 
 }   // TableView
