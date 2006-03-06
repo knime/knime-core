@@ -430,11 +430,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         }
 
         ColValRowFilter colFilter = (ColValRowFilter)filter;
+        int colIdx = colFilter.getColumnIndex();
         if (m_colIdx != null) {
-            m_colIdx.setValue(new Integer(colFilter.getColumnIndex()));
+            m_colIdx.setValue(colIdx);
         } else {
-            m_colCombo.setSelectedIndex(colFilter.getColumnIndex());
-        }
+            if ((colIdx >= 0) && (colIdx < m_colCombo.getModel().getSize())) {
+                m_colCombo.setSelectedIndex(colFilter.getColumnIndex());
+            }        }
         if (colFilter.rangeSet()) {
             String upper = "";
             String lower = "";
