@@ -21,6 +21,8 @@ package de.unikn.knime.base.node.view.table;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -279,6 +281,12 @@ public class TableNodeView extends NodeView {
     private JMenu createWriteCSVMenu() {
         JMenu menu = new JMenu("Output");
         JMenuItem item = new JMenuItem("Write CSV");
+        item.addPropertyChangeListener(
+                "ancestor", new PropertyChangeListener() {
+           public void propertyChange(final PropertyChangeEvent evt) {
+               ((JMenuItem)evt.getSource()).setEnabled(hasData());
+           } 
+        });
         final CSVFilesHistoryPanel hist = new CSVFilesHistoryPanel();
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
