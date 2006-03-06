@@ -172,9 +172,21 @@ public class WorkflowEditor extends GraphicalEditor implements
     static {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
                 .getPreferenceStore();
-        String logLevel = pStore
+        String logLevelConsole = pStore
                 .getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
-        setLogLevel(logLevel);
+        setLogLevel(logLevelConsole);
+        String logLevelFile = pStore
+            .getString(PreferenceConstants.P_LOGLEVEL_LOG_FILE);
+        LEVEL l = LEVEL.WARN;
+        try {
+            l = LEVEL.valueOf(logLevelFile);
+        } catch (NullPointerException ne) {
+            LOGGER.warn("Null is an invalid log level, using WARN");
+        } catch (IllegalArgumentException iae) {
+            LOGGER.warn("Invalid log level " + logLevelFile
+                    + ", using WARN");
+        }
+        NodeLogger.setLevelIntern(l);
         // Level: warn
         try {
             ConsoleViewAppender.WARN_APPENDER
