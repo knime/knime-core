@@ -449,7 +449,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
         // remove all collected connections
         for (ConnectionContainer container : connections) {
-            removeConnection(container);
+            removeConnectionIfExists(container);
         }
 
     }
@@ -578,12 +578,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * 
      * @param connection to be deleted
      */
-    public synchronized void removeConnection(
+    public synchronized void removeConnectionIfExists(
             final ConnectionContainer connection) {
-        // if connection does not exist log it and return
+        // if connection does not exist simply return
         if (!(m_connectionsByID.containsKey(connection.getID()))) {
-
-            LOGGER.warn("Could not find connection to delete: " + connection);
             return;
         }
 
@@ -607,7 +605,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 + ", port:" + portOut + ")");
         fireWorkflowEvent(WorkflowEvent.CONNECTION_REMOVED, -1, connection,
                 null);
-
     }
 
     // ////////////////////////
