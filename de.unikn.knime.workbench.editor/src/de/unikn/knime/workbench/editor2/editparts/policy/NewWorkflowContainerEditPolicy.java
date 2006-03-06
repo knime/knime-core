@@ -75,7 +75,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         // seems to be a workaround for a bug in the framework
         // (should imediately deliver the correct view position and not
         // the position of the viewport)
-        WorkflowEditor.adaptZoom(zoomManager, location);
+        WorkflowEditor.adaptZoom(zoomManager, location, true);
 
         WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this
                 .getHost();

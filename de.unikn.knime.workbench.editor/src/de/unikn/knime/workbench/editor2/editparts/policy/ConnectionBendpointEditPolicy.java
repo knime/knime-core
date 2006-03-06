@@ -79,7 +79,10 @@ public class ConnectionBendpointEditPolicy extends BendpointEditPolicy {
         Point loc = request.getLocation();
         ConnectionContainer model = (ConnectionContainer)getHost().getModel();
 
-        return new NewBendpointMoveCommand(model, index, loc);
+        ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
+                .getProperty(ZoomManager.class.toString());
+
+        return new NewBendpointMoveCommand(model, index, loc, zoomManager);
     }
 
 }

@@ -1029,12 +1029,14 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param pointToAdapt the point to adapt
      */
     public static void adaptZoom(final ZoomManager zoomManager,
-            final Point pointToAdapt) {
-        
-        Point viewPortLocation = zoomManager.getViewport().getViewLocation();
-        pointToAdapt.x += viewPortLocation.x;
-        pointToAdapt.y += viewPortLocation.y;
+            final Point pointToAdapt, final boolean adaptViewPortLocation) {
 
+        if (adaptViewPortLocation) {
+            Point viewPortLocation = zoomManager.getViewport()
+                    .getViewLocation();
+            pointToAdapt.x += viewPortLocation.x;
+            pointToAdapt.y += viewPortLocation.y;
+        }
         double zoomLevel = zoomManager.getZoom();
 
         // adapt the location accordint to the zoom level

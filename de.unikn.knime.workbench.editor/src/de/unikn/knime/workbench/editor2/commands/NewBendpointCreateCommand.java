@@ -75,7 +75,7 @@ public class NewBendpointCreateCommand extends Command {
     public void execute() {
         
         Point location = m_location.getCopy();
-        WorkflowEditor.adaptZoom(m_zoomManager, location);
+        WorkflowEditor.adaptZoom(m_zoomManager, location, true);
         
         m_bendpoint = new AbsoluteBendpoint(location);
         m_bendpoint.setLocation(location);
@@ -91,7 +91,7 @@ public class NewBendpointCreateCommand extends Command {
     public void redo() {
         
         Point location = m_location.getCopy();
-        WorkflowEditor.adaptZoom(m_zoomManager, location);
+        WorkflowEditor.adaptZoom(m_zoomManager, location, true);
         
         m_extraInfo.addBendpoint(location.x, location.y, m_index);
 

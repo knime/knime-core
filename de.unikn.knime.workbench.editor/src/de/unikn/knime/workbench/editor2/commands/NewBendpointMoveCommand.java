@@ -24,8 +24,10 @@ package de.unikn.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.editparts.ZoomManager;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
+import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
@@ -42,9 +44,11 @@ public class NewBendpointMoveCommand extends Command {
 
     private ModellingConnectionExtraInfo m_extraInfo;
 
-    private AbsoluteBendpoint m_bendpoint;
+    //private AbsoluteBendpoint m_bendpoint;
 
     private ConnectionContainer m_connection;
+
+    private ZoomManager m_zoomManager;
 
     /**
      * New bendpoint move command.
@@ -54,12 +58,14 @@ public class NewBendpointMoveCommand extends Command {
      * @param newLocation the new location
      */
     public NewBendpointMoveCommand(final ConnectionContainer connection,
-            final int index, final Point newLocation) {
-        m_extraInfo = (ModellingConnectionExtraInfo) connection.getExtraInfo();
+            final int index, final Point newLocation,
+            final ZoomManager zoomManager) {
+        m_extraInfo = (ModellingConnectionExtraInfo)connection.getExtraInfo();
         m_connection = connection;
 
         m_index = index;
         m_newLocation = newLocation;
+        m_zoomManager = zoomManager;
     }
 
     /**
@@ -70,7 +76,11 @@ public class NewBendpointMoveCommand extends Command {
 
         AbsoluteBendpoint bendpoint = new AbsoluteBendpoint(p[0], p[1]);
         m_oldLocation = bendpoint.getLocation();
-        bendpoint = new AbsoluteBendpoint(m_newLocation);
+        
+        Point newLocation = m_newLocation.getCopy();
+        WorkflowEditor.adaptZoom(m_zoomManager, newLocation, true);
+        
+        bendpoint = new AbsoluteBendpoint(newLocation);
 
         m_extraInfo.removeBendpoint(m_index);
         m_extraInfo.addBendpoint(bendpoint.x, bendpoint.y, m_index);
@@ -85,7 +95,11 @@ public class NewBendpointMoveCommand extends Command {
      */
     public void redo() {
         m_extraInfo.removeBendpoint(m_index);
-        m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
+        
+        Point newLocation = m_newLocation.getCopy();
+        WorkflowEditor.adaptZoom(m_zoomManager, newLocation, true);
+        
+        m_extraInfo.addBendpoint(newLocation.x, newLocation.y, m_index);
 
         // issue notfication
         m_connection.setExtraInfo(m_extraInfo);
@@ -96,10 +110,11 @@ public class NewBendpointMoveCommand extends Command {
      * @see org.eclipse.gef.commands.Command#undo()
      */
     public void undo() {
-        m_bendpoint = new AbsoluteBendpoint(m_oldLocation);
+        Point oldLocation = m_oldLocation.getCopy();
+        //WorkflowEditor.adaptZoom(m_zoomManager, oldLocation, true);
 
         m_extraInfo.removeBendpoint(m_index);
-        m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
+        m_extraInfo.addBendpoint(oldLocation.x, oldLocation.y, m_index);
 
         // issue notfication
         m_connection.setExtraInfo(m_extraInfo);

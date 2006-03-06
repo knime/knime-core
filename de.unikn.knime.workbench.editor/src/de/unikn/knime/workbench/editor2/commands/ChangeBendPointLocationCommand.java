@@ -97,7 +97,7 @@ public class ChangeBendPointLocationCommand extends Command {
 
         Point locationShift = m_locationShift.getCopy();
 
-        WorkflowEditor.adaptZoom(m_zoomManager, locationShift);
+        WorkflowEditor.adaptZoom(m_zoomManager, locationShift, false);
 
         int length = bendpoints.length;
         int shiftX = shiftBack ? locationShift.x * -1 : locationShift.x;
