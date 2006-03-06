@@ -66,19 +66,15 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param  listener The hilite listener to append to the list.
      */
     public void addHiLiteListener(final HiLiteListener listener) {
-        assert (listener != null) : "listener is null.";
-        assert (!m_listenerList.contains(listener)) : "Listener already added.";
         m_listenerList.add(listener);
     }
 
     /**
      * Removes the given hilite listener from the list. 
-     * @param  listener The hilite listener to remove from the list.
+     * @param  l The hilite listener to remove from the list.
      */
-    public void removeHiLiteListener(final HiLiteListener listener) {
-        assert (listener != null) : "listener is null.";
-        assert (m_listenerList.contains(listener)) : "listener does not exist.";
-        m_listenerList.remove(listener);
+    public synchronized void removeHiLiteListener(final HiLiteListener l) {
+        m_listenerList.remove(l);
     }
     
     /**
@@ -92,10 +88,17 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * Returns <b>true</b> if the specified row Ids are hilit.
      * @param  ids The row IDs to check the hilite status for.
      * @return <b>true</b> if the row IDs are hilit.
+     * @throws NullPointerException If this array or one of its elements is 
+     *         null.
      */
     public boolean isHiLit(final DataCell... ids) {
+        if (ids == null) {
+            throw new NullPointerException("Array of hilit keys is null.");
+        }
         List list = Arrays.asList(ids);
-        assert (!list.contains(null)) : "null-keys not allowed.";
+        if (list.contains(null)) {
+            throw new NullPointerException("Hilit key is null.");
+        }
         return m_hiLitKeys.containsAll(list);
     } 
 
@@ -126,19 +129,22 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * It will send a hilite event to all registered listeners - only for the 
      * IDs that were not hilit before.
      * @param  ids A set of row IDs to set hilited.
+     * @throws NullPointerException If the set is null or one of its elements.
      */
     public synchronized void hiLite(final Set<DataCell> ids) {
-        assert (ids != null) : "set is null.";
+        if (ids == null) {
+            throw new NullPointerException("Set of hilit keys is null.");
+        }
         // create list of row keys from input key array
         final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
         // iterates over all keys and adds them to the changed set
         for (DataCell id : ids) {
-            assert (id != null) : "key is null.";
-            assert (!m_hiLitKeys.contains(id)) : "key " + id + " already hilit";
+            if (id == null) {
+                throw new NullPointerException("Hilit key is null.");
+            }
             // if the key is already hilit, remove it from the cleaned list
             if (m_hiLitKeys.add(id)) {
                 changedIDs.add(id);
-                assert (ids.contains(id));
             }
         }
         // if at least on key changed
@@ -153,19 +159,22 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * It will send a unhilite event to all registered listeners - only for 
      * the IDs that were hilit before.
      * @param  ids A set of row IDs to set unhilited.
+     * @throws NullPointerException If the set is null or one of its elements.
      */
     public synchronized void unHiLite(final Set<DataCell> ids) {
-        assert (ids != null) : "set is null";
+        if (ids == null) {
+            throw new NullPointerException("Set of unhilit keys is null.");
+        }
         // create list of row keys from input key array
         final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
         // iterate over all keys and removes all not hilit ones
         for (DataCell id : ids) {
-            assert (id != null) : "key is null.";
-            assert (m_hiLitKeys.contains(id)) : "key " + id + " is not hilit";
+            if (id == null) {
+                throw new NullPointerException("Unhilit key is null.");
+            }
             // if the ID has not been hilit remove from the cleaned list 
             if (m_hiLitKeys.remove(id)) {
                 changedIDs.add(id);
-                assert (ids.contains(id));
             }
         }
         // if at least on key changed
@@ -222,6 +231,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     }
 
     /**
+     * @return An unmodifiable set of hilit keys. 
      * @see HiLiteHandler#getHiLitKeys()
      */
     public Set<DataCell> getHiLitKeys() {

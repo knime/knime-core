@@ -58,6 +58,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
     
     /**
      * Init internal members.
+     * @throws Exception If setup failed.
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
@@ -78,6 +79,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
     
     /**
      * Destroy internal members.
+     * @throws Exception If setup failed.
      * @see junit.framework.TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
@@ -96,45 +98,20 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
      */
     public void test1() {
         m_hdl.addHiLiteListener(m_l1);
-        try {
-            m_hdl.addHiLiteListener(m_l1);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.addHiLiteListener(m_l1);
+
         m_hdl.addHiLiteListener(m_l2);
-        try {
-            m_hdl.addHiLiteListener(m_l2);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }        
+        m_hdl.addHiLiteListener(m_l2);
+        
         m_hdl.removeHiLiteListener(m_l1);
-        try {
-            m_hdl.removeHiLiteListener(m_l1);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.removeHiLiteListener(m_l1);
+        
         m_hdl.removeHiLiteListener(m_l2);
-        try {
-            m_hdl.removeHiLiteListener(m_l2);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }        
-        try {
-            m_hdl.addHiLiteListener(null);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
-        try {
-            m_hdl.removeHiLiteListener(null);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.removeHiLiteListener(m_l2);
+
+        m_hdl.addHiLiteListener(null);
+        m_hdl.removeHiLiteListener(null);
+
         m_hdl.addHiLiteListener(m_l1);
         m_hdl.addHiLiteListener(m_l2);
         m_hdl.removeAllHiLiteListeners();
@@ -149,32 +126,32 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         try {
             m_hdl.hiLite((DataCell) null);
             fail();
-        } catch (AssertionError e) {
+        } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
             m_hdl.hiLite((Set<DataCell>) null);
             fail();
-        } catch (AssertionError e) {
+        } catch (NullPointerException e) {
             assertTrue(true);
         }
 
         try {
             m_hdl.unHiLite((DataCell) null);
             fail();
-        } catch (AssertionError e) {
+        } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
             m_hdl.unHiLite((Set<DataCell>) null);
             fail();
-        } catch (AssertionError e) {
+        } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
             assertFalse(m_hdl.isHiLit((DataCell) null));
             fail();
-        } catch (AssertionError e) {
+        } catch (NullPointerException e) {
             assertTrue(true);
         }
         m_hdl.removeAllHiLiteListeners();
@@ -193,49 +170,29 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         // hilite c1
         m_hdl.hiLite(m_c1);
         assertTrue(m_hdl.isHiLit(m_c1));
-        try {
-            m_hdl.hiLite(m_c1);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.hiLite(m_c1);
         assertTrue(m_hdl.isHiLit(m_c1));
         
         // hilite c2
         m_hdl.hiLite(m_c2);
         assertTrue(m_hdl.isHiLit(m_c2));
-        try {
-            m_hdl.hiLite(m_c2);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.hiLite(m_c2);
         assertTrue(m_hdl.isHiLit(m_c2));
 
         // unhilite c1
         m_hdl.unHiLite(m_c1);
         assertFalse(m_hdl.isHiLit(m_c1));
-        try {
-            m_hdl.unHiLite(m_c1);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.unHiLite(m_c1);
+        assertTrue(true);
         assertFalse(m_hdl.isHiLit(m_c1));
 
         // unhilite c2
         m_hdl.resetHiLite();
         assertFalse(m_hdl.isHiLit(m_c2));
-        try {
-            m_hdl.unHiLite(m_c2);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.unHiLite(m_c2);
         assertFalse(m_hdl.isHiLit(m_c2));
         
         m_hdl.removeAllHiLiteListeners();
-        
     }
     
     /**
@@ -259,12 +216,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         // unhilite c1
         m_hdl.unHiLite(m_c1);
         assertFalse(m_hdl.isHiLit(m_c1));
-        try {
-            m_hdl.unHiLite(m_c1);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.unHiLite(m_c1);
         
         // unhilite all
         m_hdl.resetHiLite();
@@ -287,12 +239,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         m_hdl.hiLite(m_s12);
         assertTrue(m_hdl.isHiLit(m_c1));
         assertTrue(m_hdl.isHiLit(m_c2));
-        try {
-            m_hdl.hiLite(m_s12);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.hiLite(m_s12);
         
         // hilite c3
         assertFalse(m_hdl.isHiLit(m_c3));
@@ -300,12 +247,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertTrue(m_hdl.isHiLit(m_c3));
         
         // hilite s2
-        try {
-            m_hdl.hiLite(m_s23);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.hiLite(m_s23);
         assertTrue(m_hdl.isHiLit(m_c1, m_c2, m_c3));
         
         // unhilite s1
@@ -313,12 +255,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertTrue(m_hdl.isHiLit(m_c3));
-        try {
-            m_hdl.unHiLite(m_c1);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.unHiLite(m_c1);
         
         // unhilite c3
         assertTrue(m_hdl.isHiLit(m_c3));
@@ -326,12 +263,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c3));
         
         // unhilite s2
-        try {
-            m_hdl.unHiLite(m_s23);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.unHiLite(m_s23);
     }
     
     /**
@@ -349,20 +281,10 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c3));
         
         // hilite c2
-        try {
-            m_hdl.hiLite(m_c2);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.hiLite(m_c2);
         
         // hilite s2
-        try {
-            m_hdl.hiLite(m_s23);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.hiLite(m_s23);
         assertTrue(m_hdl.isHiLit(m_c1, m_c2, m_c3));
         
         // unhilite s1
@@ -370,12 +292,8 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertTrue(m_hdl.isHiLit(m_c3));
-        try {
-            m_hdl.unHiLite(m_c1);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.unHiLite(m_c1);
+
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertTrue(m_hdl.isHiLit(m_c3));
@@ -383,12 +301,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         // unhilite c3
         m_hdl.unHiLite(m_c3);
         assertFalse(m_hdl.isHiLit(m_c3));
-        try {
-            m_hdl.unHiLite(m_c2);
-            fail();
-        } catch (AssertionError e) {
-            assertTrue(true);
-        }
+        m_hdl.unHiLite(m_c2);
         assertFalse(m_hdl.isHiLit(m_c3));
         
         // unhilite s2
@@ -399,9 +312,8 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertFalse(m_hdl.isHiLit(m_c3));
-
-        
-    }    
+    }
+    
     /**
      * System entry point.
      * @param args Parameters from command line: ignored.
