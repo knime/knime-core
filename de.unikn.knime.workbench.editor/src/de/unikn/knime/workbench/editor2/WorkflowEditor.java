@@ -1040,7 +1040,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         double zoomLevel = zoomManager.getZoom();
 
         // adapt the location accordint to the zoom level
-        pointToAdapt.x = (int)Math.round(pointToAdapt.x * (1.0 / zoomLevel));
-        pointToAdapt.y = (int)Math.round(pointToAdapt.y * (1.0 / zoomLevel));
+        pointToAdapt.x = (int)(pointToAdapt.x * (1.0 / zoomLevel));
+        pointToAdapt.y = (int)(pointToAdapt.y * (1.0 / zoomLevel));
     }
 }
