@@ -8,7 +8,7 @@
  		This node reads in ARFF data from any URL. In the configuration dialog
 		specify a valid URL and set a row prefix. A row ID will be generated 
 		by the reader in the form 'prefix + rownumber'. If no prefix is 
-		specified, the row ids are just the row numbers. Sparce ARFF files are
-		currently NOT SUPPORTED!
+		specified, the row ids are just the row numbers. Sparse ARFF files are
+		currently not supported!
 	</entry>
 </properties>
