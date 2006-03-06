@@ -187,7 +187,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         //
         // 2. Create the optional files, if wanted
         //
-        final IFile defaultFile = project.getFile("default.knime");
+        final IFile defaultFile = project.getFile("Workflow.knime");
         if (addWorkflowFile) {
             InputStream is = new ByteArrayInputStream("".getBytes());
             defaultFile.create(is, true, monitor);
