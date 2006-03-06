@@ -22,6 +22,7 @@
 package de.unikn.knime.core.node;
 
 import java.io.File;
+import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
@@ -70,6 +71,12 @@ public final class KNIMEConstants {
             icon = null;
         }
         KNIME16X16 = icon;
+        // we prefer to have all gui-related locales being set to us-standard,
+        try {
+            Locale.setDefault(Locale.US);
+        } catch (Exception e) {
+            // do nothing.
+        }
     }
 
     /**
