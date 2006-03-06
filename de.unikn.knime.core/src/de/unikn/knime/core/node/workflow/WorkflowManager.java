@@ -1122,24 +1122,47 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     public boolean canAddConnection(final int sourceNode, final int outPort,
             final int targetNode, final int inPort) {
 
+        if ((sourceNode < 0) || (outPort < 0) 
+             || (targetNode < 0) || (inPort < 0)) {
+            // easy sanity check failed - return false;
+            return false;
+        }
+        
         Node src = this.getNode(sourceNode);
         Node targ = this.getNode(targetNode);
 
         boolean nodesValid = (src != null) && (targ != null);
         if (!nodesValid) {
-            // easy tests already failed - return failure
+            // Nodes don't exist (whyever) - return failure
+            LOGGER.error("WFM: checking for connection between non existing"
+                    + " nodes!");
             return false;
         }
 
         boolean portNumsValid = (src.getNrOutPorts() > outPort)
                 && (targ.getNrInPorts() > inPort) && (outPort >= 0)
                 && (inPort >= 0);
+        if (!portNumsValid) {
+            // port numbers don't exist - return failure
+            LOGGER.error("WFM: checking for connection for non existing"
+                    + " ports!");
+            return false;
+        }
+
         ConnectionContainer conn = this.getIncomingConnectionAt(
                 getNodeContainer(targ), inPort);
         boolean hasConnection = (conn != null);
-
-        if (!portNumsValid || hasConnection) {
-            // easy tests already failed - return failure
+        if (hasConnection) {
+            // input port already has a connection - return failure
+            return false;
+        }
+        
+        boolean isDataConn =    targ.isDataInPort(inPort)
+                             && src.isDataOutPort(outPort);
+        boolean isModelConn =    !targ.isDataInPort(inPort)
+                              && !src.isDataOutPort(outPort);
+        if (!isDataConn && !isModelConn) {
+            // trying to connect data to model port - return failure
             return false;
         }
 
