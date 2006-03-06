@@ -37,7 +37,6 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.EditDomain;
@@ -551,9 +550,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         WorkbenchHelpSystem.getInstance().setHelp(
                 m_graphicalViewer.getControl(),
                 "de.unikn.knime.workbench.help.flow_editor_context");
-        
-        
-        this.configureGraphicalViewer();
 
     }
 
@@ -574,9 +570,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#configureGraphicalViewer()
      */
     protected void configureGraphicalViewer() {
-        
-        // Default is "listBackground" which is an ugly gray on Linux/GTK
-        getGraphicalViewer().getControl().setBackground(ColorConstants.white);
+        super.configureGraphicalViewer();
 
     }
 
