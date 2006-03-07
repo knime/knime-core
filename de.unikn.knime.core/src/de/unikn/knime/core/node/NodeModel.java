@@ -449,12 +449,7 @@ public abstract class NodeModel {
         m_executed = true;
 
         // and inform all views about the new model
-
-        try {
-            stateChanged();
-        } catch (Exception e) {
-            setWarningMessage(e.getMessage());
-        }
+        stateChanged();
 
         // return array of output DataTable
         return outData;
@@ -541,7 +536,12 @@ public abstract class NodeModel {
      */
     private synchronized void stateChanged() {
         for (NodeView view : m_views) {
-            view.callModelChanged();
+            try {
+                view.callModelChanged();
+            } catch (Exception e) {
+                setWarningMessage("View [" + view.getViewName() 
+                        + "] could not be open, reason: " + e.getMessage());
+            }
         }
     }
 
