@@ -541,6 +541,8 @@ public abstract class NodeModel {
             } catch (Exception e) {
                 setWarningMessage("View [" + view.getViewName() 
                         + "] could not be open, reason: " + e.getMessage());
+                m_logger.debug("View [" + view.getViewName() 
+                        + "] could not be open", e);
             }
         }
     }
