@@ -70,6 +70,13 @@ public final class TableRowHeaderView extends JTable {
             public void propertyChange(final PropertyChangeEvent evt) {
                 if (evt.getPropertyName().equals("width")) {
                     int newWidth = (Integer)evt.getNewValue();
+                    // bug fix #293: on execute & open view the row header 
+                    // column is collapsed to a minimum (hardcoded to 15 in 
+                    // TableColumn.java). We set a slighthly smaller value here
+                    // and catch requests to set it to this minimum. 
+                    if (newWidth == aColumn.getMinWidth()) {
+                        return;
+                    }
                     Dimension newSize = new Dimension(newWidth, 0);
                     setPreferredScrollableViewportSize(newSize);
                 }
