@@ -67,9 +67,9 @@ public class WorkflowExecutor implements WorkflowListener {
     /* start execution of an already prepare workflow (i.e. nodes that are
      * to be executed are marked (prepared...) accordingly).
      */    
-    private void executeWorkflow() {
-        createThreads();
+    private void executeWorkflow() {        
         synchronized (m_executionInProgress) {
+            createThreads();
             try {
                 m_executionInProgress.wait();
             } catch (InterruptedException ie) {
