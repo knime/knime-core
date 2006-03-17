@@ -39,6 +39,7 @@ import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 
@@ -1284,7 +1285,7 @@ public abstract class Config extends AbstractConfigEntry implements
             ClassNotFoundException {
         byte[] bytes = new BASE64Decoder().decodeBuffer(string);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-        ObjectInputStream ois = new ObjectInputStream(bais);
+        GlobalObjectInputStream ois = new GlobalObjectInputStream(bais);
         return ois.readObject();
     }
 
