@@ -25,8 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -572,24 +572,13 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         // create value sets for all columns. If the column properties
         // say not to read them - set it null. Also, create min/max values for
         // each column
-        Vector<LinkedHashSet<DataCell>> values = 
-            new Vector<LinkedHashSet<DataCell>>();
+        Vector<Set<DataCell>> values = 
+            new Vector<Set<DataCell>>();
         values.setSize(numCols);
         DataCell[] lower = new DataCell[numCols];
         DataCell[] upper = new DataCell[numCols];
-
-        for (int c = 0; c < numCols; c++) {
-            if (cProps != null) {
-                ColProperty cProp = (ColProperty)cProps.get(c);
-                if (cProp != null) {
-                    if (cProp.getReadPossibleValuesFromFile()) {
-                        values.set(c, new LinkedHashSet<DataCell>());
-                    }
-                }
-            }
-        }
-
-        // now read the table and fill in the values
+        
+        // create the table spec now (to generate the types)
         FileTable fTable = 
             new FileTable(createDataTableSpec(false, null), this);
         RowIterator rIter = fTable.iterator();
@@ -599,7 +588,23 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                     + "').");
         }
 
-        // Always traverse through the entire table
+        // initialize the value sets. Set the comparator to get them sorted.
+        DataTableSpec tSpec = fTable.getDataTableSpec();
+        for (int c = 0; c < numCols; c++) {
+            if (cProps != null) {
+                ColProperty cProp = (ColProperty)cProps.get(c);
+                if (cProp != null) {
+                    if (cProp.getReadPossibleValuesFromFile()) {
+                        DataType colType = tSpec.getColumnSpec(c).getType();
+                        values.set(c, 
+                                new TreeSet<DataCell>(colType.getComparator()));
+                    }
+                }
+            }
+        }
+
+        // now read the table and fill in the values        
+        // Always traverse through the entire table to produce poss. errors now.
         int numOfRows = 0;
         while (rIter.hasNext()) {
             DataRow row = rIter.next();
