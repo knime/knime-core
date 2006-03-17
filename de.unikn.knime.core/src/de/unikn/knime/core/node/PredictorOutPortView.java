@@ -54,6 +54,7 @@ final class PredictorOutPortView extends NodeOutPortView {
     PredictorOutPortView(final String nodeName, final String portName) {
         super(nodeName + ", Port: " + portName);
         m_predParamsText = new JTextArea(NO_TEXT);
+        m_predParamsText.setEditable(false);
         m_predParamsText.setFont(new Font("Courier", Font.PLAIN, 12));
         Container cont = getContentPane();
         cont.setLayout(new BorderLayout());
