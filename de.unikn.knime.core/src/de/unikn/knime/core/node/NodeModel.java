@@ -43,13 +43,13 @@ public abstract class NodeModel {
      * The node logger for this class; do not make static to make sure the right
      * class name is printed in messages.
      */
-    private final NodeLogger m_logger;
+    protected final NodeLogger m_logger;
 
     /** The number of input data tables. */
-    private final int m_nrDataIns;
+    protected final int m_nrDataIns;
 
     /** The number of output data tables produced by the derived model. */
-    private final int m_nrDataOuts;
+    protected final int m_nrDataOuts;
 
     /** The number of input predictive models. */
     private final int m_nrPredParamsIns;
@@ -67,7 +67,7 @@ public abstract class NodeModel {
     private boolean m_configured;
 
     /** Flag for the isExecuted state. */
-    private boolean m_executed;
+    protected boolean m_executed;
 
     /**
      * Flag to indicate that the node should be immediately executed when all
@@ -534,7 +534,7 @@ public abstract class NodeModel {
      * called by functions of the abstract class that modify the model (like
      * <code>#executeModel()</code> and <code>#resetModel()</code> ).
      */
-    private synchronized void stateChanged() {
+    protected synchronized void stateChanged() {
         for (NodeView view : m_views) {
             try {
                 view.callModelChanged();
