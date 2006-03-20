@@ -411,7 +411,7 @@ public abstract class NodeModel {
      *             not match the number of outputs. Or if any of them is null.
      * @see #execute(DataTable[],ExecutionMonitor)
      */
-    final DataTable[] executeModel(final DataTable[] data,
+    protected DataTable[] executeModel(final DataTable[] data,
             final ExecutionMonitor exec) throws Exception {
 
         assert (data != null && data.length == m_nrDataIns);
