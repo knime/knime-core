@@ -107,13 +107,14 @@ public final class ExecutionMonitor {
         m_progress.setMessage(message);
     }
     
-    /** Creates an execution monitor with a limited progress range.
+    /** Creates an execution monitor with a partial progress range.
      * Classes that use a progress monitor and report in the range of [0,1]
      * should get such a sub-progress monitor when their job is only partially
      * contributing to the entire progress. The progress of such sub-jobs is
      * then automatically scaled to the "right" range. 
-     * @param maxProg The maximum range the sub progress should take 
-     * @return A new exeuction monitor ready to use in sub jobs.
+     * @param maxProg The fraction of the progress this sub progress
+     * contributes to the whole progress 
+     * @return A new execution monitor ready to use in sub jobs.
      * @throws IllegalArgumentException If the argument is not in (0, 1].
      */ 
     public ExecutionMonitor createSubProgress(final double maxProg) {
