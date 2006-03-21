@@ -21,8 +21,14 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
 
 
 /**
@@ -31,7 +37,8 @@ import javax.swing.ImageIcon;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public final class FuzzyNumberType extends DataType {
+public final class FuzzyNumberType extends DataType 
+    implements DataCellSerializer {
 
     /** Singleton of this type. */
     public static final FuzzyNumberType FUZZY_NUMBER_TYPE =
@@ -89,6 +96,31 @@ public final class FuzzyNumberType extends DataType {
      */
     public String toString() {
         return "Fuzzy-Number DataType";
+    }
+    
+    /**
+     * @see DataCellSerializer#serialize(DataCell, DataOutput)
+     */
+    public void serialize(final DataCell cell, 
+            final DataOutput output) throws IOException {
+        if (!isOneSuperTypeOf(cell.getType())) {
+            throw new IOException("FuzzNumberType can't save cells of type "
+                    +  cell.getType());
+        }
+        FuzzyNumberValue value = (FuzzyNumberValue)cell;
+        output.writeDouble(value.getMinSupport());
+        output.writeDouble(value.getCore());
+        output.writeDouble(value.getMaxSupport());
+    }
+    
+    /**
+     * @see DataCellSerializer#deserialize(DataInput)
+     */
+    public DataCell deserialize(final DataInput input) throws IOException {
+        double minSupp = input.readDouble();
+        double core = input.readDouble();
+        double maxSupp = input.readDouble();
+        return new DefaultFuzzyNumberCell(minSupp, core, maxSupp);
     }
 
 }

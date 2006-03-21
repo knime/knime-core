@@ -21,8 +21,14 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import de.unikn.knime.core.data.def.DefaultIntCell;
 
 
 
@@ -32,7 +38,7 @@ import javax.swing.ImageIcon;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public final class IntType extends DataType {
+public final class IntType extends DataType implements DataCellSerializer {
     
     /** Singleton for int types. */
     public static final IntType INT_TYPE = new IntType();
@@ -94,5 +100,26 @@ public final class IntType extends DataType {
      */
     public String toString() {
         return "Int DataType";
+    }
+    
+    /**
+     * @see DataCellSerializer#serialize(DataCell, DataOutput)
+     */
+    public void serialize(final DataCell cell, 
+            final DataOutput output) throws IOException {
+        if (!isOneSuperTypeOf(cell.getType())) {
+            throw new IOException("IntType can't save cells of type "
+                    +  cell.getType());
+        }
+        IntValue value = (IntValue)cell;
+        output.writeInt(value.getIntValue());
+    }
+    
+    /**
+     * @see DataCellSerializer#deserialize(DataInput)
+     */
+    public DataCell deserialize(final DataInput input) throws IOException {
+        int i = input.readInt();
+        return new DefaultIntCell(i);
     }
 }

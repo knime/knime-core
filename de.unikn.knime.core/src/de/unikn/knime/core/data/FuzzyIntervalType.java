@@ -21,8 +21,14 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
 
 
 /**
@@ -30,7 +36,8 @@ import javax.swing.ImageIcon;
  * 
  * @author mb, University of Konstanz
  */
-public final class FuzzyIntervalType extends DataType {
+public final class FuzzyIntervalType extends DataType 
+    implements DataCellSerializer {
 
     /** Singleton icon to be used to display this cell type. */
     private static final Icon ICON;
@@ -89,5 +96,32 @@ public final class FuzzyIntervalType extends DataType {
      */
     public String toString() {
         return "Fuzzy-Interval DataType";
+    }
+    
+    /**
+     * @see DataCellSerializer#serialize(DataCell, DataOutput)
+     */
+    public void serialize(final DataCell cell, 
+            final DataOutput output) throws IOException {
+        if (!isOneSuperTypeOf(cell.getType())) {
+            throw new IOException("FuzzIntervalType can't save cells of type "
+                    +  cell.getType());
+        }
+        FuzzyIntervalValue value = (FuzzyIntervalValue)cell;
+        output.writeDouble(value.getMinSupport());
+        output.writeDouble(value.getMinCore());
+        output.writeDouble(value.getMaxCore());
+        output.writeDouble(value.getMaxSupport());
+    }
+    
+    /**
+     * @see DataCellSerializer#deserialize(DataInput)
+     */
+    public DataCell deserialize(final DataInput input) throws IOException {
+        double minSupp = input.readDouble();
+        double minCore = input.readDouble();
+        double maxCore = input.readDouble();
+        double maxSupp = input.readDouble();
+        return new DefaultFuzzyIntervalCell(minSupp, minCore, maxCore, maxSupp);
     }
 }

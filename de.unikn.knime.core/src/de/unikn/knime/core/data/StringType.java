@@ -21,9 +21,14 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import de.unikn.knime.core.data.def.DefaultStringCell;
 import de.unikn.knime.core.data.renderer.DataCellRendererFamily;
 import de.unikn.knime.core.data.renderer.DefaultDataCellRendererFamily;
 import de.unikn.knime.core.data.renderer.StringCellRenderer;
@@ -33,7 +38,8 @@ import de.unikn.knime.core.data.renderer.StringCellRenderer;
  * 
  * @author mb, University of Konstanz
  */
-public final class StringType extends DataType {
+public final class StringType extends DataType 
+    implements DataCellSerializer {
 
     /** Singelton of <code>StringType</code>. */
     public static final StringType STRING_TYPE = new StringType();
@@ -103,6 +109,27 @@ public final class StringType extends DataType {
      */
     public String toString() {
         return "String DataType";
+    }
+    
+    /**
+     * @see DataCellSerializer#serialize(DataCell, DataOutput)
+     */
+    public void serialize(final DataCell cell, 
+            final DataOutput output) throws IOException {
+        if (!isOneSuperTypeOf(cell.getType())) {
+            throw new IOException("StringType can't save cells of type "
+                    +  cell.getType());
+        }
+        StringValue value = (StringValue)cell;
+        output.writeUTF(value.getStringValue());
+    }
+    
+    /**
+     * @see DataCellSerializer#deserialize(DataInput)
+     */
+    public DataCell deserialize(final DataInput input) throws IOException {
+        String s = input.readUTF();
+        return new DefaultStringCell(s);
     }
 
 }

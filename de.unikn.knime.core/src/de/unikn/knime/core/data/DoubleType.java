@@ -21,9 +21,14 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import de.unikn.knime.core.data.def.DefaultDoubleCell;
 import de.unikn.knime.core.data.renderer.DataCellRendererFamily;
 import de.unikn.knime.core.data.renderer.DefaultDataCellRendererFamily;
 import de.unikn.knime.core.data.renderer.DoubleBarRenderer;
@@ -37,7 +42,8 @@ import de.unikn.knime.core.data.renderer.DoubleGrayValueRenderer;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public final class DoubleType extends DataType {
+public final class DoubleType extends DataType 
+    implements DataCellSerializer {
     
     /** Singleton of this type. */
     public static final DoubleType DOUBLE_TYPE = new DoubleType();
@@ -114,5 +120,27 @@ public final class DoubleType extends DataType {
      */
     public String toString() {
         return "Double DataType";
+    }
+    
+    
+    /**
+     * @see DataCellSerializer#serialize(DataCell, DataOutput)
+     */
+    public void serialize(final DataCell cell, final DataOutput out) 
+        throws IOException {
+        if (!isOneSuperTypeOf(cell.getType())) {
+            throw new IOException("DoubleType can't save cells of type "
+                    +  cell.getType());
+        }
+        DoubleValue value = (DoubleValue)cell;
+        out.writeDouble(value.getDoubleValue());
+    }
+    
+    /**
+     * @see DataCellSerializer#deserialize(DataInput)
+     */
+    public DataCell deserialize(final DataInput input) throws IOException {
+        double d = input.readDouble();
+        return new DefaultDoubleCell(d);
     }
 }
