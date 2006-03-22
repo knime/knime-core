@@ -1,4 +1,4 @@
-/* @(#)$RCSfile$ 
+/* @(#)$RCSfile: XMLConfig.java,v $ 
  * $Revision$ $Date$ $Author$
  * 
  * -------------------------------------------------------------------
@@ -47,6 +47,8 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+
+import de.unikn.knime.core.node.NodeLogger;
 
 /**
  * A class used to load and save Config objects into an XML file.
@@ -136,6 +138,8 @@ final class XMLConfig {
                 public InputSource resolveEntity(final String publicId,
                         final String systemId) 
                             throws SAXException, IOException {
+                    
+                    NodeLogger.getLogger("ResolveEntity").info("resolveEntity");
 
                     /*
                      * This implementation requests the DTD specified with the
@@ -152,8 +156,7 @@ final class XMLConfig {
                     ClassLoader classLoader = getClass().getClassLoader();
                     URL dtdURL = classLoader.getResource(DTD);
                     InputStream is = dtdURL.openStream();
-                    File dtdTmpFile = File.createTempFile("~tmp_" + hashCode(),
-                            ".dtd");
+                    File dtdTmpFile = File.createTempFile("~tmp_", ".dtd");
                     dtdTmpFile.deleteOnExit();
 
                     // copy DTD to this output stream using the tmp file
