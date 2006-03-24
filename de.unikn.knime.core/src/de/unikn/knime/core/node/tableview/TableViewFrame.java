@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -103,9 +101,9 @@ public class TableViewFrame extends JFrame {
             }
         });
         
-        getJMenuBar().add(TableView.createHighlightMenu(m_scroller));
-        getJMenuBar().add(TableView.createNavigationMenu(m_scroller));
-        getJMenuBar().add(TableView.createViewMenu(m_scroller));
+        getJMenuBar().add(m_scroller.createHighlightMenu());
+        getJMenuBar().add(m_scroller.createNavigationMenu());
+        getJMenuBar().add(m_scroller.createViewMenu());
         
         getContentPane().add(m_scroller);
         updateTitle();

@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -428,7 +426,7 @@ public class TableView extends JScrollPane {
     protected void showPopup(final Point p) {
         if (m_popup == null) {
             m_popup = new JPopupMenu();
-            JMenuItem[] items = createHighlightMenuItems(this);
+            JMenuItem[] items = createHighlightMenuItems();
             for (JMenuItem item : items) {
                 m_popup.add(item);
             }
@@ -437,11 +435,10 @@ public class TableView extends JScrollPane {
     }
     
     /**
-     * Create the navigation menu.
-     * @param v the table view to create the menu for. 
+     * Create the navigation menu for this table view. 
      * @return A new JMenu with navigation controllers.
      */
-    public static JMenu createNavigationMenu(final TableView v) {
+    public JMenu createNavigationMenu() {
         final JMenu result = new JMenu("Navigation");
         result.setMnemonic('N');
         JMenuItem item = new JMenuItem("Go to Row...");
@@ -449,23 +446,23 @@ public class TableView extends JScrollPane {
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 String rowString = JOptionPane.showInputDialog(
-                        v, "Enter row number:", "Go to Row", 
+                        TableView.this, "Enter row number:", "Go to Row", 
                         JOptionPane.QUESTION_MESSAGE);
                 if (rowString == null) { // cancelled
                      return;
                 }
                 try { 
                     int row = Integer.parseInt(rowString);
-                    v.goToRow(row - 1);
+                    goToRow(row - 1);
                 } catch (NumberFormatException nfe) {
-                    JOptionPane.showMessageDialog(v, 
+                    JOptionPane.showMessageDialog(TableView.this, 
                             "Can't parse " + rowString, "Error", 
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
-        item.addPropertyChangeListener(new EnableListener(v, true, false));
-        item.setEnabled(v.hasData());
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
         result.add(item);
 //        item = new JMenuItem("Search Row Key...");
 //        item.setMnemonic('S');
@@ -487,14 +484,13 @@ public class TableView extends JScrollPane {
         return result;
     } // createNavigationMenu()
     
-    /** Get menu to control highlighting.
-     * @param tView the table view to create the menu for. 
+    /** Get a new menu to control highlighting for this view.
      * @return A new JMenu with highlighting buttons
      */
-    public static JMenu createHighlightMenu(final TableView tView) {
+    public JMenu createHighlightMenu() {
         final JMenu result = new JMenu("Highlight");
         result.setMnemonic('H');
-        JMenuItem[] items = createHighlightMenuItems(tView);
+        JMenuItem[] items = createHighlightMenuItems();
         for (JMenuItem item : items) {
             result.add(item);
         }
@@ -502,41 +498,40 @@ public class TableView extends JScrollPane {
     } // createHighlightMenu()
     
     /**
-     * Helper function to create the JMenuItems that are in the hilite menu.
-     * @param v the table view to create the menu for. 
+     * Helper function to create new JMenuItems that are in the hilite menu.
      * @return All those items in an array.
      */
-    static JMenuItem[] createHighlightMenuItems(final TableView v) {
+    JMenuItem[] createHighlightMenuItems() {
         ArrayList<JMenuItem> result = new ArrayList<JMenuItem>();
         JMenuItem hsitem = new JMenuItem("Highlight Selected");
         hsitem.setMnemonic('S');
         hsitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                v.hiliteSelected();
+                hiliteSelected();
             }
         });
-        hsitem.addPropertyChangeListener(new EnableListener(v, true, true));
-        hsitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        hsitem.addPropertyChangeListener(new EnableListener(this, true, true));
+        hsitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(hsitem);
         JMenuItem usitem = new JMenuItem("Unhighlight Selected");
         usitem.setMnemonic('U');
         usitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                v.unHiliteSelected();
+                unHiliteSelected();
             }
         });
-        usitem.addPropertyChangeListener(new EnableListener(v, true, true));
-        usitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        usitem.addPropertyChangeListener(new EnableListener(this, true, true));
+        usitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(usitem);
         JMenuItem chitem = new JMenuItem("Clear Highlight");
         chitem.setMnemonic('C');
         chitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                v.resetHilite();
+                resetHilite();
             }
         });
-        chitem.addPropertyChangeListener(new EnableListener(v, true, true));
-        chitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        chitem.addPropertyChangeListener(new EnableListener(this, true, true));
+        chitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(chitem);
         JMenuItem shoitem = new JCheckBoxMenuItem("Show Highlighted Only");
         shoitem.setMnemonic('O');
@@ -544,35 +539,34 @@ public class TableView extends JScrollPane {
                 "ancestor", new PropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent evt) {
                 JCheckBoxMenuItem source = (JCheckBoxMenuItem)evt.getSource();
-                source.setSelected(v.showsHighlightedOnly());
+                source.setSelected(showsHighlightedOnly());
             }
         });
         shoitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 boolean i = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-                v.showHighlightedOnly(i);
+                showHighlightedOnly(i);
             }
         });
-        shoitem.addPropertyChangeListener(new EnableListener(v, true, true));
-        shoitem.setEnabled(v.hasData() && v.hasHiLiteHandler());
+        shoitem.addPropertyChangeListener(new EnableListener(this, true, true));
+        shoitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(shoitem);
         return result.toArray(new JMenuItem[0]);
     }
     
-    /** Get menu with view controllers (row height, etc.).
-     * @param tView the table view to create the menu for. 
+    /** Get a new menu with view controllers (row height, etc.) for this view.
      * @return A new JMenu with control buttons.
      */
-    public static JMenu createViewMenu(final TableView tView) {
+    public JMenu createViewMenu() {
         final JMenu result = new JMenu("View");
         result.setMnemonic('V');
         JMenuItem item = new JMenuItem("Row Height...");
         item.setMnemonic('H');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                int curRowHeight = tView.getRowHeight();
+                int curRowHeight = getRowHeight();
                 String in = JOptionPane.showInputDialog(
-                        tView, "Enter new row height:", 
+                        TableView.this, "Enter new row height:", 
                         "" + curRowHeight);
                 if (in == null) { // cancelled
                      return;
@@ -582,26 +576,26 @@ public class TableView extends JScrollPane {
                     if (newHeight <= 0) { // disallow negative values.
                         throw new NumberFormatException();
                     }
-                    tView.setRowHeight(newHeight);
+                    setRowHeight(newHeight);
                 } catch (NumberFormatException nfe) {
                     JOptionPane.showMessageDialog(
-                            tView, "Can't parse "
+                            TableView.this, "Can't parse "
                             + in, "Error", JOptionPane.ERROR_MESSAGE);
                     actionPerformed(e);
                 }
             }
         });
-        item.addPropertyChangeListener(new EnableListener(tView, true, false));
-        item.setEnabled(tView.hasData());
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
         result.add(item);
         
         item = new JMenuItem("Column Width...");
         item.setMnemonic('W');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                int curWidth = tView.getColumnWidth();
+                int curWidth = getColumnWidth();
                 String in = JOptionPane.showInputDialog(
-                        tView, "Enter new column width:", 
+                        TableView.this, "Enter new column width:", 
                         "" + curWidth);
                 if (in == null) { // cancelled
                     return;
@@ -611,17 +605,17 @@ public class TableView extends JScrollPane {
                     if (newWidth <= 0) { // disallow negative values.
                         throw new NumberFormatException();
                     }
-                    tView.setColumnWidth(newWidth);
+                    setColumnWidth(newWidth);
                 } catch (NumberFormatException nfe) {
                     JOptionPane.showMessageDialog(
-                            tView, "Can't parse "
+                            TableView.this, "Can't parse "
                             + in, "Error", JOptionPane.ERROR_MESSAGE);
                     actionPerformed(e);
                 }
             }
         });
-        item.addPropertyChangeListener(new EnableListener(tView, true, false));
-        item.setEnabled(tView.hasData());
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
         result.add(item);
         
         item = new JCheckBoxMenuItem("Show Color Information");
@@ -630,17 +624,17 @@ public class TableView extends JScrollPane {
                 "ancestor", new PropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent evt) {
                 JCheckBoxMenuItem source = (JCheckBoxMenuItem)evt.getSource();
-                source.setSelected(tView.isShowColorInfo());
+                source.setSelected(isShowColorInfo());
             }
         });
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 boolean v = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-                tView.setShowColorInfo(v);
+                setShowColorInfo(v);
             }
         });
-        item.addPropertyChangeListener(new EnableListener(tView, true, false));
-        item.setEnabled(tView.hasData());
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
         result.add(item);
         return result;
     } // createViewMenu()

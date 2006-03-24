@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -89,9 +87,9 @@ public class TableNodeView extends NodeView {
                 updateTitle();
             }
         });
-        getJMenuBar().add(TableView.createHighlightMenu(m_tableView));
-        getJMenuBar().add(TableView.createNavigationMenu(m_tableView));
-        getJMenuBar().add(TableView.createViewMenu(m_tableView));
+        getJMenuBar().add(m_tableView.createHighlightMenu());
+        getJMenuBar().add(m_tableView.createNavigationMenu());
+        getJMenuBar().add(m_tableView.createViewMenu());
         getJMenuBar().add(createWriteCSVMenu());
         setHiLiteHandler(getNodeModel().getInHiLiteHandler(
                 TableNodeModel.INPORT));
