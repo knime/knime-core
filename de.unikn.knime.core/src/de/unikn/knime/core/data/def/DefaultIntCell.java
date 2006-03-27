@@ -51,17 +51,6 @@ public final class DefaultIntCell extends DataCell implements IntValue,
     }
 
     /**
-     * Creates new cell for a generic int value.
-     * 
-     * @param i The <code>Integer</code> object with the int value to store.
-     * @throws NullPointerException If the given <code>Integer</code> is
-     *             <code>null</code>.
-     */
-    public DefaultIntCell(final Integer i) {
-        m_int = i.intValue();
-    }
-
-    /**
      * @see de.unikn.knime.core.data.DataCell#getType()
      */
     public DataType getType() {

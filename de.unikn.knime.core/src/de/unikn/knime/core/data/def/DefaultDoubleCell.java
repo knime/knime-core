@@ -51,18 +51,6 @@ public final class DefaultDoubleCell extends DataCell implements DoubleValue,
     }
 
     /**
-     * Creates new cell for a generic double value. Also acting as
-     * FuzzyNumberCell and FuzzyIntervalCell.
-     * 
-     * @param d The <code>Double</code> object containing the value to store.
-     * @throws NullPointerException If the given <code>Double</code> is
-     *             <code>null</code>.
-     */
-    public DefaultDoubleCell(final Double d) {
-        m_double = d.doubleValue();
-    }
-
-    /**
      * @see de.unikn.knime.core.data.DataCell#getType()
      */
     public DataType getType() {
