@@ -14,7 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  */
-package de.unikn.knime.dev.data.container;
+package de.unikn.knime.base.data.container;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ import java.io.InputStream;
  * intended to be used on streams written with the 
  * <code>BlockableOutStream</code> class.
  * 
- * @see de.unikn.knime.dev.data.container.BlockableOutputStream
+ * @see de.unikn.knime.base.data.container.BlockableOutputStream
  * @author wiswedel, University of Konstanz
  */
 final class BlockableInputStream extends InputStream {

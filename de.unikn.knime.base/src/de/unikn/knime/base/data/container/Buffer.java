@@ -17,7 +17,7 @@
  * History
  *   Mar 16, 2006 (wiswedel): created
  */
-package de.unikn.knime.dev.data.container;
+package de.unikn.knime.base.data.container;
 
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;

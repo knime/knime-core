@@ -19,7 +19,7 @@
  * History
  *   Mar 29, 2006 (wiswedel): created
  */
-package de.unikn.knime.dev.data.container;
+package de.unikn.knime.base.data.container;
 
 import java.io.DataInputStream;
 import java.io.IOException;

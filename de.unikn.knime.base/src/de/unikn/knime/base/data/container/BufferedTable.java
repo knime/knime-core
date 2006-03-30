@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
 
  */
-package de.unikn.knime.dev.data.container;
+package de.unikn.knime.base.data.container;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;

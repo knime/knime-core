@@ -14,7 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  */
-package de.unikn.knime.dev.data.container;
+package de.unikn.knime.base.data.container;
 
 import java.util.Comparator;
 import java.util.HashSet;

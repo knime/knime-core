@@ -17,7 +17,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.dev.data.container;
+package de.unikn.knime.base.data.container;
 
 import java.awt.Color;
 import java.io.BufferedInputStream;
