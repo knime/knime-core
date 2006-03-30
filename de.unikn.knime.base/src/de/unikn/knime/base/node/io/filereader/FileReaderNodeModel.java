@@ -1,7 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -23,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
 
+import de.unikn.knime.base.data.container.DataContainer;
 import de.unikn.knime.base.node.util.StringHistory;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
@@ -129,9 +127,14 @@ public class FileReaderNodeModel extends NodeModel {
         // sure that warnings/errors/exceptions occure here, rather than 
         // somewhere later in the flow where nobody would relate them to the
         // filereader settings.
-        DataTableSpec tSpec = m_frSettings.createDataTableSpecWithValues(exec);
-
-        return new DataTable[] {new FileTable(tSpec, m_frSettings)};
+        DataTableSpec tSpec = m_frSettings.createDataTableSpec();
+        FileTable fTable = new FileTable(tSpec, m_frSettings);
+        
+        // create a DataContainer and fill it with the rows read. It is faster
+        // then reading the file everytime (for each row iterator), and it
+        // collects the domain for each column for us.
+        DataTable cacheTable = DataContainer.cache(fTable, exec);
+        return new DataTable[] {cacheTable};
     }
 
     /**
@@ -156,7 +159,7 @@ public class FileReaderNodeModel extends NodeModel {
         SettingsStatus status = m_frSettings.getStatusOfSettings();
         if (status.getNumOfErrors() == 0) {
             return new DataTableSpec[] {m_frSettings
-                    .createDataTableSpecNoValues()};
+                    .createDataTableSpec()};
         }
 
         throw new InvalidSettingsException(status.getAllErrorMessages(0));
@@ -276,4 +279,5 @@ public class FileReaderNodeModel extends NodeModel {
         return validLoc.toArray(new String[0]);
    
     }
+
 }

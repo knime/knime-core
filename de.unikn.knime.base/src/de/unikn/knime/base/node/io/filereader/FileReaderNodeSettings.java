@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,7 +33,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataCellComparator;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataRow;
@@ -43,10 +41,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultStringCell;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
@@ -302,18 +297,13 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * derives a DataTableSpec from the current settings.
-     * 
-     * @param readPossValues set true if you want a table spec with a list of
-     *            possible values in each column spec.
-     * @param execMon object to handle cancelations. Can be null.
+     * derives a DataTableSpec from the current settings. The spec will not 
+     * contain any domain information.
      * @return a DataTableSpec corresponding to the current settings or null if
      *         the current settings are invalid.
-     * @throws CanceledExecutionException if user canceled value reading.
      * 
      */
-    private DataTableSpec createDataTableSpec(final boolean readPossValues,
-            final ExecutionMonitor execMon) throws CanceledExecutionException {
+    DataTableSpec createDataTableSpec() {
 
         // first check if the settings are in a state we can create a valid
         // table spec for.
@@ -324,10 +314,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             return null;
         }
 
-        if (readPossValues) {
-            readPossibleValuesFromFile(execMon);
-        }
-
         // collect the ColumnSpecs for each column
         DataColumnSpec[] cSpec = new DataColumnSpec[getNumberOfColumns()];
         for (int c = 0; c < getNumberOfColumns(); c++) {
@@ -336,39 +322,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         }
 
         return new DataTableSpec(getTableName(), cSpec);
-
-    }
-
-    /**
-     * Creates a table spec from the current settings. Will read the possible
-     * values and ranges as specified in the column properties.
-     * 
-     * @param execMon object handling user cancelation during value reading, can
-     *            be null (file read can't be canceled then).
-     * @return a DataTableSpec corresponding to the current settings or null if
-     *         the current settings are invalid.
-     * @throws CanceledExecutionException if user pressed cancel
-     */
-    public DataTableSpec createDataTableSpecWithValues(
-            final ExecutionMonitor execMon) throws CanceledExecutionException {
-        return createDataTableSpec(true, execMon);
-    }
-
-    /**
-     * Creates a table spec from the current settings. Will not read any
-     * possible values or ranges ignoring these settings in the column
-     * properties.
-     * 
-     * @return a DataTableSpec corresponding to the current settings or null if
-     *         the current settings are invalid.
-     */
-    public DataTableSpec createDataTableSpecNoValues() {
-        try {
-            return createDataTableSpec(false, null);
-        } catch (CanceledExecutionException cee) {
-            // will not happen as we pass a null execution monitor
-            return null;
-        }
 
     }
 
@@ -545,139 +498,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         return frSettings;
     }
 
-    /**
-     * reads the possible values and/or domain bounds of each column from the
-     * file - if its supposed to. Call it only if the settings in this object
-     * are useable to read from the file - if they are not an
-     * IllegalStateException will fly. Note: this method will always run through
-     * the entire table. Even if no column wants possible values or a range.
-     * This is to ensure that weird things happen here (if something is fishy
-     * with this table).
-     * 
-     * @param execMon object to handle cancelations
-     * @throws CanceledExecutionException when user pressed cancel.
-     */
-    public void readPossibleValuesFromFile(final ExecutionMonitor execMon)
-            throws CanceledExecutionException {
-
-        SettingsStatus status = getStatusOfSettings();
-        if (status.getNumOfErrors() > 0) {
-            throw new IllegalStateException("Can't read possible values for"
-                    + " settings with errors.");
-        }
-
-        int numCols = getNumberOfColumns();
-        Vector cProps = getColumnProperties();
-
-        // create value sets for all columns. If the column properties
-        // say not to read them - set it null. Also, create min/max values for
-        // each column
-        Vector<Set<DataCell>> values = 
-            new Vector<Set<DataCell>>();
-        values.setSize(numCols);
-        DataCell[] lower = new DataCell[numCols];
-        DataCell[] upper = new DataCell[numCols];
-        
-        // create the table spec now (to generate the types)
-        FileTable fTable = 
-            new FileTable(createDataTableSpec(false, null), this);
-        RowIterator rIter = fTable.iterator();
-        if (rIter == null) {
-            throw new IllegalStateException("Couldn't read possible values "
-                    + "from the specified file ('" + getDataFileLocation()
-                    + "').");
-        }
-
-        // initialize the value sets. Set the comparator to get them sorted.
-        DataTableSpec tSpec = fTable.getDataTableSpec();
-        for (int c = 0; c < numCols; c++) {
-            if (cProps != null) {
-                ColProperty cProp = (ColProperty)cProps.get(c);
-                if (cProp != null) {
-                    if (cProp.getReadPossibleValuesFromFile()) {
-                        DataType colType = tSpec.getColumnSpec(c).getType();
-                        values.set(c, 
-                                new TreeSet<DataCell>(colType.getComparator()));
-                    }
-                }
-            }
-        }
-
-        // now read the table and fill in the values        
-        // Always traverse through the entire table to produce poss. errors now.
-        int numOfRows = 0;
-        while (rIter.hasNext()) {
-            DataRow row = rIter.next();
-            numOfRows++;
-            execMon.setMessage("Parsing row " + numOfRows + " (\""
-                    + row.getKey() + "\")");
-            for (int c = 0; c < numCols; c++) {
-                ColProperty cProp = (ColProperty)cProps.get(c);
-                if (cProp == null) {
-                    continue;
-                }
-                DataCell val = row.getCell(c);
-                if (val.isMissing()) {
-                    // what shall we do with miss. values!?? We ignore them.
-                    continue;
-                }
-                // see if we are (still) collection possible values
-                if (values.get(c) != null) {
-                    if (values.get(c).add(val)) {
-                        int maxVals = cProp.getMaxNumberOfPossibleValues();
-                        if ((maxVals >= 0) 
-                                && (values.get(c).size() > maxVals)) {
-                            // seen too many values - not a nominal column
-                            values.set(c, null);
-                        }
-                    }
-                }
-
-                // see if we should check the upper/lower bounds.
-                if (cProp.getReadBoundsFromFile()) {
-                    DataCellComparator comp = val.getType().getComparator();
-                    if (lower[c] == null) {
-                        lower[c] = val;
-                    } else {
-                        if (comp.compare(lower[c], val) > 0) {
-                            lower[c] = val;
-                        }
-                    }
-                    if (upper[c] == null) {
-                        upper[c] = val;
-                    } else {
-                        if (comp.compare(upper[c], val) < 0) {
-                            upper[c] = val;
-                        }
-                    }
-                }
-            } // for all columns
-
-            if (execMon != null) {
-                // this will thow an exception if user told us to stop.
-                execMon.checkCanceled();
-            }
-
-        } // while (rIter.hasNext())
-
-        // transfer values read into the column properties.
-        for (int c = 0; c < numCols; c++) {
-            ColProperty cProp = (ColProperty)cProps.get(c);
-            if (cProp != null) {
-                if ((cProp.getReadPossibleValuesFromFile())
-                        || (cProp.getReadBoundsFromFile())) {
-                    if (values.get(c) != null) {
-                        cProp.changeDomain(new DefaultDataColumnDomain(
-                                values.get(c), lower[c], upper[c]));
-                    } else {
-                        cProp.changeDomain(new DefaultDataColumnDomain(
-                                lower[c], upper[c]));
-                    }
-                }
-            }
-        }
-
-    } // readPossibleValuesFromFile()
 
     /**
      * reads the column headers from the file setting the column name in the

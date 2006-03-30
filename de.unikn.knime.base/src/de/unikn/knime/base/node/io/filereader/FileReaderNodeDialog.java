@@ -1086,7 +1086,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
             }
 
         }
-        DataTableSpec tSpec = m_frSettings.createDataTableSpecNoValues();
+        DataTableSpec tSpec = m_frSettings.createDataTableSpec();
         tSpec = modifyPreviewColNames(tSpec);
         m_previewTable = new FileReaderPreviewTable(tSpec, m_frSettings);
         m_previewTableView.setDataTable(m_previewTable);
