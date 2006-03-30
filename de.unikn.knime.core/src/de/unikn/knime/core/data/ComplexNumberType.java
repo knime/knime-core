@@ -21,9 +21,14 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import de.unikn.knime.core.data.def.DefaultComplexNumberCell;
 import de.unikn.knime.core.data.renderer.ComplexNumberCellRenderer;
 import de.unikn.knime.core.data.renderer.DataCellRendererFamily;
 import de.unikn.knime.core.data.renderer.DefaultDataCellRendererFamily;
@@ -31,9 +36,10 @@ import de.unikn.knime.core.data.renderer.DefaultDataCellRendererFamily;
 /**
  * The data type for datacells storing a complex number value.
  * 
- * @author Michael Berthold, University of Konstanz
+ * @author ciobaca, cebron, University of Konstanz
  */
-public final class ComplexNumberType extends DataType {
+public final class ComplexNumberType extends DataType 
+    implements DataCellSerializer {
     
     /** Singleton of this type. */
     public static final ComplexNumberType COMPLEX_NUMBER_TYPE = 
@@ -107,5 +113,28 @@ public final class ComplexNumberType extends DataType {
      */
     public String toString() {
         return "Complex number DataType";
+    }
+    
+    /**
+     * @see DataCellSerializer#serialize(DataCell, DataOutput)
+     */
+    public void serialize(final DataCell cell, 
+            final DataOutput output) throws IOException {
+        if (!isOneSuperTypeOf(cell.getType())) {
+            throw new IOException("ComplexNumberType can't save cells of type "
+                    +  cell.getType());
+        }
+        ComplexNumberValue value = (ComplexNumberValue)cell;
+        output.writeDouble(value.getRealValue());
+        output.writeDouble(value.getImaginaryValue());
+    }
+    
+    /**
+     * @see DataCellSerializer#deserialize(DataInput)
+     */
+    public DataCell deserialize(final DataInput input) throws IOException {
+        double real = input.readDouble();
+        double imag = input.readDouble();
+        return new DefaultComplexNumberCell(real, imag);
     }
 }
