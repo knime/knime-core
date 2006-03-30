@@ -38,6 +38,13 @@ import de.unikn.knime.core.data.renderer.SetOfRendererFamilies;
  * of this type. Also, it will be used to create a common super type for two
  * given cell types in case they are not compatible to each other.
  * 
+ * <p>In order to allow fast disc buffering of <code>DataCell</code> objects 
+ * (other than the slow serializable technique) consider to implement the 
+ * <code>DataCellSerializer</code> interface in your subclass of DataType. This
+ * will allow the framework to fast-write DataCell objects using the DataType
+ * as factory.
+ * 
+ * @see de.unikn.knime.core.data.DataCellSerializer
  * @author Michael Berthold, University of Konstanz
  */
 public class DataType implements Serializable {

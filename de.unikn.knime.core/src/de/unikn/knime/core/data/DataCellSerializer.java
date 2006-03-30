@@ -23,7 +23,13 @@ import java.io.IOException;
 /**
  * Interface that most <code>DataType</code> implementations will implement.
  * It allows to save and load a <code>DataCell</code> to/from a 
- * DataOutput/DataInput. 
+ * DataOutput/DataInput. <code>DataCell</code> objects whose type implements
+ * this interface are tremendously faster written and read from a stream than
+ * using the slow java serialization technique. 
+ * 
+ * <p>Implementors can safely assume that <code>DataCell</code> objects
+ * being passed to the serialize/deserialize method can be parsed as native
+ * <code>DataValue</code>. These methods are never called with missing cells.
  *   
  * @author wiswedel, University of Konstanz
  */
@@ -36,12 +42,11 @@ public interface DataCellSerializer {
      */
     void serialize(final DataCell cell, DataOutput out) throws IOException;
 
-    /** Loads an new instance of a <code>DataCell</code> from a DataInput. This
-     * includes also the deserialization of missing cells. The returned value
-     * must be a <code>DataCell</code> compatible to the DataType, which 
-     * implements this interface.
+    /** Loads a new instance of a <code>DataCell</code> from a DataInput. 
+     * The returned value must be a <code>DataCell</code> compatible to the 
+     * DataType, which implements this interface.
      * @param input The source to load from, never <code>null</code>.
-     * @return A new DataCell instance to <code>str</code>.
+     * @return A new DataCell instance.
      * @throws IOException If loading fails.
      */
     DataCell deserialize(final DataInput input) throws IOException;
