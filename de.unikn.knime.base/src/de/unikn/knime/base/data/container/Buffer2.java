@@ -396,6 +396,23 @@ final class Buffer2 implements Buffer {
         }
     }
     
+    /** Deletes the file underlying this buffer.
+     * @see Object#finalize()
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        if (m_tempFile != null) {
+            if (m_tempFile.delete()) {
+                LOGGER.debug("Deleted temp file \"" 
+                        + m_tempFile.getAbsolutePath() + "\"");
+            } else {
+                LOGGER.debug("Failed to delete temp file \"" 
+                        + m_tempFile.getAbsolutePath() + "\"");
+            }
+        }
+        super.finalize();
+    }
+    
     /**
      * Iterator that traverses the temp file on the disk and deserializes
      * the rows.
@@ -490,16 +507,16 @@ final class Buffer2 implements Buffer {
              * deleted under windows. It seems that there are open streams
              * when the VM closes.
              */
-            LOGGER.debug("Closing input stream on \""
-                    + m_tempFile.getAbsolutePath() + "\"");
+            String closeMes = "Closing input stream on \""
+                + m_tempFile.getAbsolutePath() + "\", "; 
             try {
                 m_inStream.close();
                 m_nrOpenInputStreams--;
+                LOGGER.debug(closeMes + m_nrOpenInputStreams + " remaining");
             } catch (IOException ioe) {
-                LOGGER.debug("Closing failed", ioe);
+                LOGGER.debug(closeMes + "failed!", ioe);
                 throw ioe;
             } finally {
-                LOGGER.debug(m_nrOpenInputStreams + " open streams");
                 super.finalize();
             }
         }
