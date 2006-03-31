@@ -50,7 +50,7 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * upper bound for all columns that are numeric, i.e. whose column type is
  * a sub type of <code>DoubleType.DOUBLE_TYPE</code>. For categorical columns,
  * it will keep the list of possible values if the number of different values
- * does not exceed 20. (If there are more, the values are forgotten and 
+ * does not exceed 60. (If there are more, the values are forgotten and 
  * therefore not available in the final table.) A categorical column is 
  * a column whose type is a sub type of <code>StringType.STRING_TYPE</code>, 
  * i.e. <code>StringType.STRING_TYPE.isSuperTypeOf(yourtype)</code> where 
@@ -78,7 +78,7 @@ public class DataContainer {
      * possible values in a column exceeds this values, no values will
      * be memorized.
      */
-    private static final int MAX_POSSIBLE_VALUES = 20;
+    private static final int MAX_POSSIBLE_VALUES = 60;
 
     /** The object that saves the rows. */
     private Buffer m_buffer;
@@ -452,19 +452,17 @@ public class DataContainer {
         DataContainer buf = new DataContainer();
         buf.open(table.getDataTableSpec());
         int row = 0;
-        for (RowIterator it = table.iterator(); it.hasNext(); row++) {
-            DataRow next = it.next();
-            exec.setMessage("Caching row " + row + " (\"" 
-                    + next.getKey() + "\")");
-            try {
+        try {
+            for (RowIterator it = table.iterator(); it.hasNext(); row++) {
+                DataRow next = it.next();
+                exec.setMessage("Caching row " + row + " (\"" 
+                        + next.getKey() + "\")");
                 exec.checkCanceled();
-            } catch (CanceledExecutionException cee) {
-                buf.close();
-                throw cee;
+                buf.addRowToTable(next);
             }
-            buf.addRowToTable(next);
+        } finally {
+            buf.close();
         }
-        buf.close();
         return buf.getTable();
     }
     
