@@ -31,6 +31,7 @@ import java.io.ObjectInputValidation;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataCellSerializer;
+import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 
 /**
  * Input stream that is used by the Buffer to read (java.io.-)serialized  
@@ -55,7 +56,7 @@ import de.unikn.knime.core.data.DataCellSerializer;
 final class DCObjectInputStream extends ObjectInputStream {
 
     /** The streams that is being written to. */
-    private final ObjectInputStream m_inObject;
+    private final GlobalObjectInputStream m_inObject;
     /** Wrapped stream that is passed to the DataCellSerializer,
      * this stream reads from m_in. */
     private final DataInputStream m_dataInStream;
@@ -68,7 +69,7 @@ final class DCObjectInputStream extends ObjectInputStream {
      * @throws IOException If the init of the stream reading fails.
      */
     DCObjectInputStream(final InputStream in) throws IOException {
-        m_inObject = new ObjectInputStream(in);
+        m_inObject = new GlobalObjectInputStream(in);
         m_in = new BlockableInputStream(m_inObject);
         m_dataInStream = new DataInputStream(m_in);
     }
