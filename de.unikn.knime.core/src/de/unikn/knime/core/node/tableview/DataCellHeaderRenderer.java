@@ -62,7 +62,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         ColorIcon icon = (ColorIcon)getIcon();
         if (icon != null) {
             icon.setIconHeigth(height);
-            icon.setIconWidth(Math.max(1, (int)(0.15 * width)));
+            icon.setIconWidth(Math.min(15, Math.max(1, (int)(0.15 * width))));
         }
         super.setBounds(x, y, width, height);
     }
