@@ -4,6 +4,8 @@
 package de.unikn.knime.core.node.util;
 
 import java.awt.Dimension;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemListener;
 import java.util.Arrays;
 import java.util.List;
 
@@ -104,6 +106,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
         setMinimumSize(new Dimension(100, 25));
     }
 
+    
     /**
      * Updates this filter panel by removing all current items and adding the
      * columns according to the content of the argument <code>spec</code>. If
@@ -114,9 +117,39 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * @param selColName The column name to be set as chosen.
      */
     public final void update(final DataTableSpec spec, final DataCell selColName) {
+        update(spec, selColName, false);
+    }
+    
+    /**
+     * Updates this filter panel by removing all current items and adding the
+     * columns according to the content of the argument <code>spec</code>. If
+     * a column name is provided and it is not filtered out the corresponding
+     * item in the combo box will be selected.
+     * 
+     * @param spec To get the column names, types and the current index from.
+     * @param selColName The column name to be set as chosen.
+     * @param suppressEvents <code>true</code> if events caused by adding items to the combo
+     * box should be suppressed, <code>false</code> otherwise
+     */
+    public final void update(final DataTableSpec spec, final DataCell selColName, final boolean suppressEvents) {
+        ItemListener[] itemListeners = null;
+        ActionListener[] actionListeners = null;
+        
+        if (suppressEvents) {
+            itemListeners = getListeners(ItemListener.class);
+            for (ItemListener il : itemListeners) {
+                removeItemListener(il);
+            }
+            
+            actionListeners = getListeners(ActionListener.class);
+            for (ActionListener al : actionListeners) {
+                removeActionListener(al);
+            }
+        }
+        
         removeAllItems();
+        DataColumnSpec selectMe = null;
         if (spec != null) {
-            DataColumnSpec selectMe = null;
             for (int c = 0; c < spec.getNumColumns(); c++) {
                 DataColumnSpec current = spec.getColumnSpec(c);
                 DataType type = current.getType();
@@ -130,14 +163,27 @@ public class ColumnSelectionComboxBox extends JComboBox {
                     }
                 }
             }
-            if (selectMe != null) {
-                setSelectedItem(selectMe);
-            } else {
-                // select last element
-                int size = getItemCount();
-                if (size > 0) {
-                    setSelectedIndex(size - 1);
-                }
+            setSelectedItem(null);
+        }
+
+        if (suppressEvents) {
+            for (ItemListener il : itemListeners) {
+                addItemListener(il);
+            }
+            
+            for (ActionListener al : actionListeners) {
+                addActionListener(al);
+            }
+        }
+
+    
+        if (selectMe != null) {            
+            setSelectedItem(selectMe);
+        } else {
+            // select last element
+            int size = getItemCount();
+            if (size > 0) {
+                setSelectedIndex(size - 1);
             }
         }
     }
