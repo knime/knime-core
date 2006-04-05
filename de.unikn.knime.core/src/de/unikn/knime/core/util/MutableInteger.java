@@ -93,4 +93,20 @@ public final class MutableInteger extends Number {
     public int dec() {
         return --m_i;
     }
+
+    /** 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        return ((Number) obj).intValue() == m_i;
+    }
+
+    /** 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return m_i;
+    }
 }
