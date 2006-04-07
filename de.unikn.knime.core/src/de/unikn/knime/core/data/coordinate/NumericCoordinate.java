@@ -579,4 +579,18 @@ public class NumericCoordinate extends Coordinate {
     public void setUpperDomainValue(final double value) {
         m_maxDomainValue = value;
     }
+
+    /**
+     * @return Returns the maxDomainValue.
+     */
+    public double getMaxDomainValue() {
+        return m_maxDomainValue;
+    }
+
+    /**
+     * @return Returns the minDomainValue.
+     */
+    public double getMinDomainValue() {
+        return m_minDomainValue;
+    }
 }
