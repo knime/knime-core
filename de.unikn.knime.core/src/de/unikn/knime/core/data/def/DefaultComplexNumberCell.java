@@ -25,6 +25,7 @@ import de.unikn.knime.core.data.ComplexNumberType;
 import de.unikn.knime.core.data.ComplexNumberValue;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DoubleValue;
 
 /**
  * A data cell implementation holding a complex number value by storing this 
@@ -33,7 +34,7 @@ import de.unikn.knime.core.data.DataType;
  * @author ciobaca, University of Konstanz
  */
 public final class DefaultComplexNumberCell extends DataCell 
-                        implements ComplexNumberValue {
+                        implements ComplexNumberValue, DoubleValue {
 
     /** real part of the complex number. */
     private final double m_real;
@@ -101,5 +102,13 @@ public final class DefaultComplexNumberCell extends DataCell
         } else {
             return result + " + i*" + m_imag; 
         }
+    }
+
+    /**
+     * 
+     * @return the real part of the complex number.
+     */
+    public double getDoubleValue() {
+        return m_real;
     }
 }
