@@ -443,13 +443,16 @@ public class DataContainer {
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check
      * for the cancel status.
+     * @param maxCellsInMemory The number of cells to be kept in memory before
+     * swapping to disk.
      * @return A cache table containing the data from the argument.
      * @throws NullPointerException If the argument is <code>null</code>.
      * @throws CanceledExecutionException If the process has been canceled.
      */
     public static DataTable cache(final DataTable table, 
-            final ExecutionMonitor exec) throws CanceledExecutionException {
-        DataContainer buf = new DataContainer();
+            final ExecutionMonitor exec, final int maxCellsInMemory) 
+        throws CanceledExecutionException {
+        DataContainer buf = new DataContainer(maxCellsInMemory);
         buf.open(table.getDataTableSpec());
         int row = 0;
         try {
@@ -466,4 +469,18 @@ public class DataContainer {
         return buf.getTable();
     }
     
+    /** Convenience method that will buffer the entire argument table. This is
+     * usefull if you have a wrapper table at hand and want to make sure that 
+     * all calculations are done here 
+     * @param table The table to cache.
+     * @param exec The execution monitor to report progress to and to check
+     * for the cancel status.
+     * @return A cache table containing the data from the argument.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     * @throws CanceledExecutionException If the process has been canceled.
+     */
+    public static DataTable cache(final DataTable table, 
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        return cache(table, exec, MAX_CELLS_IN_MEMORY);
+    }
 }
