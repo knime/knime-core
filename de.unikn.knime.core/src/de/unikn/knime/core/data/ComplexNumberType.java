@@ -71,6 +71,7 @@ public final class ComplexNumberType extends DataType
      * Rather use the static singleton COMPLEX_NUMBER_TYPE of this class.  
      */
     private ComplexNumberType() {
+        addCompatibleType(DoubleType.DOUBLE_TYPE);
     }
     
     /**
