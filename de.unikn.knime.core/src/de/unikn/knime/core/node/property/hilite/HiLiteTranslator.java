@@ -46,7 +46,7 @@ public class HiLiteTranslator implements HiLiteListener {
     
     /**
      * Default constructor with no hilite handler and no initial mapping to
-     * translate.
+     * translate. This instance will add itself as listener to the fromHandler.
      * @param fromHandler The handler to translate events from.
      */
     public HiLiteTranslator(final HiLiteHandler fromHandler) {
@@ -54,13 +54,14 @@ public class HiLiteTranslator implements HiLiteListener {
             throw new IllegalArgumentException("Handler must not be null.");
         }
         m_fromHandler = fromHandler;
+        m_fromHandler.addHiLiteListener(this);
         m_toHandlers = new LinkedHashSet<HiLiteHandler>();
         m_mapper = null;
     }
     
     /**
      * Default constructor with no hilite handler and no initial mapping to
-     * translate.
+     * translate. This instance will add itself as listener to the fromHandler.
      * @param fromHandler The handler to translate events from.
      * @param mapper Contains the cluster to pattern mapping.
      */
@@ -120,6 +121,14 @@ public class HiLiteTranslator implements HiLiteListener {
      */
     public Set<HiLiteHandler> getToHiLiteHandlers() {
         return Collections.unmodifiableSet(m_toHandlers);
+    }
+    
+    /** Removes all receiving hilite handlers from this translator. To be
+     * used from the node that instantiates this instance when a new 
+     * connection is made. 
+     */
+    public void removeAllToHiliteHandlers() {
+        m_toHandlers.clear();
     }
 
     /**
