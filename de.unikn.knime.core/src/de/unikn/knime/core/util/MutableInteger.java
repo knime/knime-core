@@ -98,7 +98,7 @@ public final class MutableInteger extends Number {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         return ((Number) obj).intValue() == m_i;
     }
 
