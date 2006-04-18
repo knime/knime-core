@@ -109,6 +109,6 @@ public final class DefaultComplexNumberCell extends DataCell
      * @return the magnitude of the complex number.
      */
     public double getDoubleValue() {
-        return Math.sqrt(Math.abs(m_real * m_imag));
+        return Math.sqrt(m_real * m_real + m_imag * m_imag);
     }
 }
