@@ -21,9 +21,6 @@
  */
 package de.unikn.knime.core.node.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -63,39 +60,13 @@ final class XMLConfig {
     private static final String DTD_NAME = 
         XMLConfig.class.getName().replace('.', '/') + ".dtd";
 
-    private static InputSource dtd = null;
-    
-    private static final InputSource getInputSourceDTD() throws IOException {
-        if (dtd != null) {
-            return dtd;
-        }
-        /*
-         * This implementation requests the dtd specified with the
-         * systemId resp. given dtd param using the classloader. The
-         * dtd's content is copied into a tmp file which is than
-         * used for parsing. This mechanism frees us from taking
-         * care where the dtd file is incuded which can be a dir,
-         * jar, zip, or something else, but it must be within either
-         * in the class or source path.
-         */
-
+    private static InputSource getInputSourceDTD() 
+            throws IOException {
         // gets URL for systemId which specifies the dtd file+path
         ClassLoader classLoader = XMLConfig.class.getClassLoader();
         URL dtdURL = classLoader.getResource(DTD_NAME);
         InputStream is = dtdURL.openStream();
-        File dtdTmpFile = File.createTempFile("~tmp_", ".dtd");
-        dtdTmpFile.deleteOnExit();
-        
-        // copy dtd to this output stream using the tmp file
-        OutputStream os = new FileOutputStream(dtdTmpFile);
-        int c;
-        while ((c = is.read()) != -1) {
-            os.write(c);
-        }
-        os.close();
-        is.close();
-        dtd = new InputSource(new FileInputStream(dtdTmpFile));
-        return dtd;
+        return new InputSource(is);
     }
 
     /**

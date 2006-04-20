@@ -18,12 +18,8 @@
  */
 package de.unikn.knime.core.xml;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -61,7 +57,7 @@ public class XMLProperties implements ErrorHandler {
         NodeLogger.getLogger(XMLProperties.class);
     
     /** Keeps the URL to the xml file. */
-    private final File m_xmlFile;
+    private final URL m_xmlFile;
     
     /** Keeps the parsed xml Document. */    
     private Document m_doc;
@@ -87,21 +83,22 @@ public class XMLProperties implements ErrorHandler {
             throw new IllegalArgumentException(
                 "URL of XML file must not be null!");
         }
+        m_xmlFile = xmlURL;
         
-        // write input xml file from url to new internal tmp xml        
-        InputStream isXml = xmlURL.openStream();
-        m_xmlFile = File.createTempFile("~tmp_" + hashCode(), ".xml");
-        m_xmlFile.deleteOnExit();
-            
-        // copy DTD to this output stream using the tmp file
-        OutputStream osXml = new FileOutputStream(m_xmlFile);
-        int x;
-        while ((x = isXml.read()) != -1) {
-            osXml.write(x);
-        }
-        osXml.close();
-        isXml.close();
-        
+//        // write input xml file from url to new internal tmp xml        
+//        InputStream isXml = xmlURL.openStream();
+//        m_xmlFile = File.createTempFile("~tmp_", ".xml");
+//        m_xmlFile.deleteOnExit();
+//            
+//        // copy DTD to this output stream using the tmp file
+//        OutputStream osXml = new FileOutputStream(m_xmlFile);
+//        int x;
+//        while ((x = isXml.read()) != -1) {
+//            osXml.write(x);
+//        }
+//        osXml.close();
+//        isXml.close();
+//        
         // create a DocumentBuilderFactory and configure it
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     
@@ -132,32 +129,8 @@ public class XMLProperties implements ErrorHandler {
             public InputSource resolveEntity(
                     final String publicId, final String systemId)
                     throws SAXException, IOException {
-
-                /* 
-                 * This implementation requests the DTD specified with the
-                 * systemId resp. given dtd param using the classloader. The 
-                 * DTD's content is copied into a tmp file which is than used 
-                 * for parsing. This mechanism frees us from taking care where
-                 * the DTD file is incuded which can be a dir, jar, zip, or 
-                 * something else, but it must be within either in the class or 
-                 * source path.
-                 */        
-                        
-                // gets URL for systemId which specifies the DTD file and path
                 InputStream is = dtdURL.openStream();
-                File dtdTmpFile = File.createTempFile(
-                    "~tmp_" + hashCode(), ".dtd");
-                dtdTmpFile.deleteOnExit();
-                    
-                // copy DTD to this output stream using the tmp file
-                OutputStream os = new FileOutputStream(dtdTmpFile);
-                int c;
-                while ((c = is.read()) != -1) {
-                    os.write(c);
-                }
-                os.close();
-                is.close();
-                return new InputSource(new FileInputStream(dtdTmpFile));
+                return new InputSource(is);
             }          
         });
         
@@ -184,7 +157,8 @@ public class XMLProperties implements ErrorHandler {
             systemId = "null";
         }
         return "line=" + spe.getLineNumber() + ": " + spe.getMessage()
-            + "\n" + "xml: URI=" + m_xmlFile + "\n" + "dtd: URI=" + systemId;
+            + "\n" + "xml: URI=" + m_xmlFile.getPath() 
+            + "\n" + "dtd: URI=" + systemId;
     }
     
     /**
@@ -210,7 +184,7 @@ public class XMLProperties implements ErrorHandler {
         throw new SAXException(message);
     }
     
-    /*
+    /**
      * Throws a <code>DOMException</code> with a message code and a message
      * extended by the xml file.
      * @see   DOMException
@@ -219,7 +193,8 @@ public class XMLProperties implements ErrorHandler {
      */ 
     private void throwDOMException(final short code, final String message) {
         // throw a real DOMException
-        throw new DOMException(code, message + ": " + m_xmlFile + "!");
+        throw new DOMException(code, message + ": " 
+                + m_xmlFile.getPath() + "!");
     }
     
     /* --- xml document get functions --- */
