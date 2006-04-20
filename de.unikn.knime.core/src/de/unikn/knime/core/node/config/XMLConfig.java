@@ -48,8 +48,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import de.unikn.knime.core.node.NodeLogger;
-
 /**
  * A class used to load and save Config objects into an XML file.
  * 
@@ -60,13 +58,45 @@ final class XMLConfig {
     private XMLConfig() {
 
     }
+    
+    /** dtd name from class name. */
+    private static final String DTD_NAME = 
+        XMLConfig.class.getName().replace('.', '/') + ".dtd";
 
-    /**
-     * The DTD with the specification to parse the XML file.
-     */
-    private static final String DTD = XMLConfig.class.getName().replace('.',
-            '/')
-            + ".dtd";
+    private static InputSource dtd = null;
+    
+    private static final InputSource getInputSourceDTD() throws IOException {
+        if (dtd != null) {
+            return dtd;
+        }
+        /*
+         * This implementation requests the dtd specified with the
+         * systemId resp. given dtd param using the classloader. The
+         * dtd's content is copied into a tmp file which is than
+         * used for parsing. This mechanism frees us from taking
+         * care where the dtd file is incuded which can be a dir,
+         * jar, zip, or something else, but it must be within either
+         * in the class or source path.
+         */
+
+        // gets URL for systemId which specifies the dtd file+path
+        ClassLoader classLoader = XMLConfig.class.getClassLoader();
+        URL dtdURL = classLoader.getResource(DTD_NAME);
+        InputStream is = dtdURL.openStream();
+        File dtdTmpFile = File.createTempFile("~tmp_", ".dtd");
+        dtdTmpFile.deleteOnExit();
+        
+        // copy dtd to this output stream using the tmp file
+        OutputStream os = new FileOutputStream(dtdTmpFile);
+        int c;
+        while ((c = is.read()) != -1) {
+            os.write(c);
+        }
+        os.close();
+        is.close();
+        dtd = new InputSource(new FileInputStream(dtdTmpFile));
+        return dtd;
+    }
 
     /**
      * Read config entries from an XML file. Depending on the readRoot flag, the
@@ -122,7 +152,7 @@ final class XMLConfig {
         // containing namespace information. This is necessary because the
         // default value from JAXP 1.0 was defined to be false.
         dbf.setNamespaceAware(true);
-        // sets validation with DTD file
+        // sets validation with dtd file
         dbf.setValidating(true);
         // optional: set various configuration options
         dbf.setIgnoringComments(true);
@@ -133,47 +163,18 @@ final class XMLConfig {
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
             db.setErrorHandler(new ConfigErrorHandler(in.toString()));
-            // set EntityResolver for DTD validation
+            // set EntityResolver for dtd validation
             db.setEntityResolver(new EntityResolver() {
                 public InputSource resolveEntity(final String publicId,
                         final String systemId) 
                             throws SAXException, IOException {
-                    
-                    NodeLogger.getLogger("ResolveEntity").info("resolveEntity");
-
-                    /*
-                     * This implementation requests the DTD specified with the
-                     * systemId resp. given dtd param using the classloader. The
-                     * DTD's content is copied into a tmp file which is than
-                     * used for parsing. This mechanism frees us from taking
-                     * care where the DTD file is incuded which can be a dir,
-                     * jar, zip, or something else, but it must be within either
-                     * in the class or source path.
-                     */
-
-                    // gets URL for systemId which specifies the DTD file and
-                    // path
-                    ClassLoader classLoader = getClass().getClassLoader();
-                    URL dtdURL = classLoader.getResource(DTD);
-                    InputStream is = dtdURL.openStream();
-                    File dtdTmpFile = File.createTempFile("~tmp_", ".dtd");
-                    dtdTmpFile.deleteOnExit();
-
-                    // copy DTD to this output stream using the tmp file
-                    OutputStream os = new FileOutputStream(dtdTmpFile);
-                    int c;
-                    while ((c = is.read()) != -1) {
-                        os.write(c);
-                    }
-                    os.close();
-                    is.close();
-                    return new InputSource(new FileInputStream(dtdTmpFile));
+                    return getInputSourceDTD();
                 }
             });
             // open XML stream source
             InputSource source = new InputSource(in);
-            // set DTD file, need to call EntityResolver
-            source.setSystemId(DTD);
+            // set dtd file, need to call EntityResolver
+            source.setSystemId(DTD_NAME);
             return db.parse(source);
         } catch (ParserConfigurationException x) {
             throw new Error(x);
@@ -295,19 +296,7 @@ final class XMLConfig {
         Transformer t = null;
         try {
             t = tf.newTransformer();
-            // gets URL for systemId which specifies the DTD file and path
-            ClassLoader classLoader = XMLConfig.class.getClassLoader();
-            URL dtdURL = classLoader.getResource(DTD);
-            InputStream is = dtdURL.openStream();
-            File dtdTmpFile = File.createTempFile("~tmp_" + dtdURL.hashCode(),
-                    ".dtd");
-            dtdTmpFile.deleteOnExit();
-            StringBuilder dtdString = new StringBuilder();
-            int c;
-            while ((c = is.read()) != -1) {
-                dtdString.append((char)c);
-            }
-            t.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, DTD);
+            t.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, DTD_NAME);
             t.setOutputProperty(OutputKeys.INDENT, "yes");
             t.setOutputProperty(OutputKeys.METHOD, "xml");
             t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
