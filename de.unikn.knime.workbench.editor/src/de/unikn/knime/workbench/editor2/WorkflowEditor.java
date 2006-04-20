@@ -625,7 +625,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.fatal("File not found", fnfe);
         } catch (IOException ioe) {
             if (file.length() > 0) {
-                LOGGER.error("Could not load workflow from: " + file.getName());
+                LOGGER.error("Could not load workflow from: " + file.getName(), ioe);
             } else {
                 LOGGER.debug("File length: " + file.length()
                         + " maybe a new workflow has been created.");
