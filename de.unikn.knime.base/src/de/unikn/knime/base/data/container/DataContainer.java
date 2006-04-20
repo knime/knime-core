@@ -19,6 +19,7 @@ package de.unikn.knime.base.data.container;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
@@ -211,8 +212,9 @@ public class DataContainer implements RowAppender {
             DataType colType = colSpec.getType();
             if (StringType.STRING_TYPE.isOneSuperTypeOf(colType)) {
                 if (initDomain) {
-                    m_possibleValues[i] = new LinkedHashSet(colSpec.getDomain()
-                            .getValues());
+                    Set<DataCell> values = colSpec.getDomain().getValues();
+                    m_possibleValues[i] = values != null 
+                        ? new LinkedHashSet(values) : null;
                 } else {
                     m_possibleValues[i] = new LinkedHashSet<DataCell>();
                 }
@@ -322,7 +324,7 @@ public class DataContainer implements RowAppender {
     }
 
     /** 
-     * @see de.unikn.knime.base.data.container.RowAppender#addRowToTable(de.unikn.knime.core.data.DataRow)
+     * @see RowAppender#addRowToTable(DataRow)
      */
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {

@@ -22,7 +22,8 @@ package de.unikn.knime.base.data.container;
 import de.unikn.knime.core.data.DataRow;
 
 /**
- * This is a very simple interface that allows adding DataRows to a table, container or anything else.
+ * This is a very simple interface that allows adding DataRows to a table, 
+ * container or anything else.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
