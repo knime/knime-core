@@ -61,7 +61,7 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class DataContainer {
+public class DataContainer implements RowAppender {
     
     /** Obsolete flag that allows to use an experimental buffering technique. */
     public static final boolean USE_NEW_BUFFER = true;
@@ -321,14 +321,8 @@ public class DataContainer {
         throw new IllegalStateException("Cannot get spec: container not open.");
     }
 
-    /**
-     * Appends a row to the end of this container. The row must comply with 
-     * the settings in the <code>DataTableSpec</code> that has been set when 
-     * <code>open</code> was called. 
-     * @param row DataRow ro be added.
-     * @throws NullPointerException If the argument is <code>null</code>.
-     * @throws IllegalStateException If the structure of the row forbids to
-     *         add it to the table or the row's key is already in the container.
+    /** 
+     * @see de.unikn.knime.base.data.container.RowAppender#addRowToTable(de.unikn.knime.core.data.DataRow)
      */
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {
