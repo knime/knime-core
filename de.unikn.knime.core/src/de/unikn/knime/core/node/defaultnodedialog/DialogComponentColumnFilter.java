@@ -31,7 +31,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -325,7 +324,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
-        HashSet<DataCell> excl = new HashSet<DataCell>();
+        LinkedHashSet<DataCell> excl = new LinkedHashSet<DataCell>();
         try {
             DataCell[] excludedCells = settings.getDataCellArray(m_configName);
             if (excludedCells != null) {
@@ -333,10 +332,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
                     excl.add(excludedCells[i]);
                 }
             }
-        } catch (InvalidSettingsException ise) {
-            // ignore and assume empty exclude list
+        } finally {
+            this.update(specs[0], excl, true);
         }
-        this.update(specs[0], excl, true);
     }
 
     /**

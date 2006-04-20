@@ -80,7 +80,8 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
                 comp.loadSettingsFrom(settings, specs);
             }
         } catch (InvalidSettingsException ise) {
-            assert false : ise.getMessage();
+            // ignore, should be handled in each component
+            // assert false : ise.getMessage();
         }
 //        loadAdditionalSettingsFrom(settings, specs);
     } 

@@ -85,22 +85,16 @@ public class DialogComponentComboBox extends DialogComponent {
      * Read value for this dialog component from configuration object.
      * 
      * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The items of the combobox
-     * @throws InvalidSettingsException if load fails.
+     * @param specs The items of the combobox.
+     * @throws InvalidSettingsException If the settings could not be read.
      */
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         assert (settings != null);
         String selection = null;
         selection = settings.getString(m_configName);
-
         if (selection != null) {
-            // LOGGER.debug("<loadSettingsFrom>" + m_configName
-            // + ": " + selection);
             m_combobox.setSelectedItem(selection);
-            // LOGGER.debug("<loadSettingsFrom>"
-            // + "now the selected item is: "
-            // + m_combobox.getSelectedItem().toString());
         }
     }
 

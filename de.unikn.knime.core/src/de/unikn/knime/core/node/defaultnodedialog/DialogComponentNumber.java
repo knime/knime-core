@@ -110,21 +110,19 @@ public class DialogComponentNumber extends DialogComponent {
      * 
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
-     * @throws InvalidSettingsException if load fails.
+     * @throws InvalidSettingsException If the settings could not be read.
      */
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         assert (settings != null);
-        try {
-            if (m_type.equals(Type.INT)) {
-                int newInt = settings.getInt(m_configName);
-                m_spinner.setValue(newInt);
-            } else if (m_type.equals(Type.DOUBLE)) {
-                double newDouble = settings.getDouble(m_configName);
-                m_spinner.setValue(newDouble);
-            }
-        } catch (InvalidSettingsException ise) {
-            // do nothing
+        if (m_type.equals(Type.INT)) {
+            int newInt = settings.getInt(m_configName);
+            m_spinner.setValue(newInt);
+        } else if (m_type.equals(Type.DOUBLE)) {
+            double newDouble = settings.getDouble(m_configName);
+            m_spinner.setValue(newDouble);
+        } else {
+            assert false;
         }
     }
 

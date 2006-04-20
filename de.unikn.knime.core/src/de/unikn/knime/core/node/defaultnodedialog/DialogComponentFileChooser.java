@@ -146,22 +146,20 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @see de.unikn.knime.core.node.defaultnodedialog.DialogComponent
      *      #loadSettingsFrom(NodeSettings, DataTableSpec[])
      * 
-     * @param settings the NodeSettings object to read settings from
-     * @param specs of all input tables
-     * @throws InvalidSettingsException if load fails.
+     * @param settings the NodeSettings object to read settings from.
+     * @param specs of all input tables.
+     * @throws InvalidSettingsException If the settings could not be read.
      */
     @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         assert settings != null;
-        String fileName = null;
+        String fileName = "";
         try {
             fileName = settings.getString(m_configName);
-        } catch (InvalidSettingsException ise) {
-            throw new InvalidSettingsException(ise + " Failed to read '"
-                    + m_configName + "' value.");
+        } finally {
+            m_fileURL.setText(fileName);
         }
-        m_fileURL.setText(fileName);
         /*
          * if (fileName != null) { m_fileLocator = new File(fileName); } else {
          * m_fileLocator = null; }

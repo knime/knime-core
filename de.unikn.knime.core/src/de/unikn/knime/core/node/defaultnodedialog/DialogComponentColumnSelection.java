@@ -70,7 +70,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
      * 
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
-     * @throws InvalidSettingsException if load fails
+     * @throws InvalidSettingsException If the settings could not be read.
      */
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
@@ -78,12 +78,11 @@ public class DialogComponentColumnSelection extends DialogComponent {
         DataCell classCol = null;
         try {
             classCol = settings.getDataCell(m_configName);
-        } catch (InvalidSettingsException ise) {
-            // do nothing.
+        } finally {
+            // update JComboBox with list of column names
+            DataTableSpec spec = specs[m_specIndex];
+            m_chooser.update(spec, classCol);
         }
-        // init JComboBox with list of column names
-        DataTableSpec spec = specs[m_specIndex];
-        m_chooser.update(spec, classCol);
     }
 
     /**
