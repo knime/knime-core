@@ -206,19 +206,21 @@ public class WorkflowEditor extends GraphicalEditor implements
                 } else if (event.getProperty().equals(
                         PreferenceConstants.P_LOGLEVEL_LOG_FILE)) {
                     String newName = event.getNewValue().toString();
-                    LEVEL l = LEVEL.WARN;
+                    LEVEL level = LEVEL.WARN;
                     try {
-                        l = LEVEL.valueOf(newName);
+                        level = LEVEL.valueOf(newName);
                     } catch (NullPointerException ne) {
                         LOGGER.warn("Null is an invalid log level, using WARN");
                     } catch (IllegalArgumentException iae) {
                         LOGGER.warn("Invalid log level " + newName
                                 + ", using WARN");
                     }
-                    NodeLogger.setLevelIntern(l);
+                    NodeLogger.setLevelIntern(level);
                 }
-            };
+            }
         });
+        
+        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS));
     }
 
     /**
@@ -354,6 +356,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.ui.IEditorPart #init(org.eclipse.ui.IEditorSite,
      *      org.eclipse.ui.IEditorInput)
      */
+    @Override
     public void init(final IEditorSite site, final IEditorInput input)
             throws PartInitException {
 
@@ -388,6 +391,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @see org.eclipse.ui.IWorkbenchPart#dispose()
      */
+    @Override
     public void dispose() {
 
         // remember that this editor has been closed
@@ -403,7 +407,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
         // remove appender listener from "our" NodeLogger
         for (int i = 0; i < APPENDERS.size(); i++) {
-            removeAppender((ConsoleViewAppender)APPENDERS.get(i));
+            removeAppender(APPENDERS.get(i));
         }
 
         m_manager.removeListener(this);
@@ -423,6 +427,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#createActions()
      */
+    @Override
     protected void createActions() {
         LOGGER.debug("creating editor actions...");
 
@@ -435,8 +440,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         StackAction redo = new RedoAction(this);
 
         // Editor Actions
-        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(
-                (IWorkbenchPart)this);
+        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(this);
         WorkbenchPartAction save = new SaveAction(this);
         WorkbenchPartAction print = new PrintAction(this);
 
@@ -518,6 +522,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#getActionRegistry()
      */
+    @Override
     public ActionRegistry getActionRegistry() {
         if (m_actionRegistry == null) {
             m_actionRegistry = new ActionRegistry();
@@ -532,6 +537,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #createGraphicalViewer(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     protected void createGraphicalViewer(final Composite parent) {
         IEditorSite editorSite = getEditorSite();
         GraphicalViewer viewer = null;
@@ -572,6 +578,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #initializeGraphicalViewer()
      */
+    @Override
     protected void initializeGraphicalViewer() {
         // nothing
     }
@@ -581,6 +588,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#configureGraphicalViewer()
      */
+    @Override
     protected void configureGraphicalViewer() {
         super.configureGraphicalViewer();
 
@@ -590,6 +598,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return The graphical viewer in this editor
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#getGraphicalViewer()
      */
+    @Override
     protected GraphicalViewer getGraphicalViewer() {
         return m_graphicalViewer;
     }
@@ -600,6 +609,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @see org.eclipse.ui.part.EditorPart#setInput(org.eclipse.ui.IEditorInput)
      */
+    @Override
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
 
@@ -712,6 +722,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #getAdapter(java.lang.Class)
      */
+    @Override
     public Object getAdapter(final Class adapter) {
         // we need to handle common GEF elements we created
         if (adapter == GraphicalViewer.class) {
@@ -741,6 +752,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.ui.part.EditorPart
      *      #doSave(org.eclipse.core.runtime.IProgressMonitor)
      */
+    @Override
     public void doSave(final IProgressMonitor monitor) {
 
         LOGGER.debug("Saving workflow ....");
@@ -779,6 +791,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * @see org.eclipse.ui.part.EditorPart#doSaveAs()
      */
+    @Override
     public void doSaveAs() {
         throw new UnsupportedOperationException("saveAs not implemented");
     }
@@ -786,6 +799,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * @see org.eclipse.ui.part.EditorPart#isDirty()
      */
+    @Override
     public boolean isDirty() {
         return m_isDirty;
     }
@@ -793,6 +807,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * @see org.eclipse.ui.part.EditorPart#isSaveAsAllowed()
      */
+    @Override
     public boolean isSaveAsAllowed() {
         return false;
     }
@@ -803,6 +818,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @see org.eclipse.ui.part.WorkbenchPart#firePropertyChange(int)
      */
+    @Override
     protected void firePropertyChange(final int property) {
 
         super.firePropertyChange(property);
@@ -819,6 +835,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *      (org.eclipse.ui.IWorkbenchPart,
      *      org.eclipse.jface.viewers.ISelection)
      */
+    @Override
     public void selectionChanged(final IWorkbenchPart part,
             final ISelection selection) {
 
@@ -834,6 +851,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.gef.commands.CommandStackListener
      *      #commandStackChanged(java.util.EventObject)
      */
+    @Override
     public void commandStackChanged(final EventObject event) {
 
         // update the actions (should enable undo/redo accordingly)
