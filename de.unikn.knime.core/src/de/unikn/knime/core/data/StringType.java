@@ -72,6 +72,7 @@ public final class StringType extends DataType
     /**
      * @return Compares two <code>StringValue</code> objects.
      */
+    @Override
     public DataCellComparator getNativeComparator() {
         return STRING_COMPARATOR;
     }
@@ -89,6 +90,7 @@ public final class StringType extends DataType
     /**
      * @see DataType#getNativeValue()
      */
+    @Override
     protected Class<? extends DataValue> getNativeValue() {
         return StringValue.class;
     }
@@ -96,6 +98,7 @@ public final class StringType extends DataType
     /**
      * @see de.unikn.knime.core.data.DataType#getIcon()
      */
+    @Override
     public Icon getIcon() {
         return ICON;
     }
@@ -104,6 +107,7 @@ public final class StringType extends DataType
      * Returns "String DataType".
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "String DataType";
     }

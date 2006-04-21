@@ -85,23 +85,28 @@ public class DataType implements Serializable {
      * a similar way to return this singleton in the getMissingCell) method.
      */
     private DataCell m_missing = new DataCell() {
+        @Override
         public DataType getType() {
             return DataType.this;
         }
 
+        @Override
         public boolean isMissing() {
             return true;
         }
 
+        @Override
         public String toString() {
             return "?";
         }
 
+        @Override
         public boolean equalsDataCell(final DataCell dc) {
             // guaranteed not to be called on and with a missing cell.....
             return false;
         }
 
+        @Override
         public int hashCode() {
             return toString().hashCode();
         }
@@ -113,6 +118,7 @@ public class DataType implements Serializable {
      */
     private static final DataCellComparator FALLBACK_COMP = 
         new DataCellComparator() {
+        @Override
         protected int compareDataCells(final DataCell c1, final DataCell c2) {
             return c1.toString().compareTo(c2.toString());
         }
@@ -537,6 +543,7 @@ public class DataType implements Serializable {
      * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(final Object o) {
         if (o == this) {
             return true;
@@ -571,6 +578,7 @@ public class DataType implements Serializable {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         if (isNativeType()) {
             return getNativeValue().hashCode();
@@ -588,6 +596,7 @@ public class DataType implements Serializable {
      * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "Non-native DataType";
     }

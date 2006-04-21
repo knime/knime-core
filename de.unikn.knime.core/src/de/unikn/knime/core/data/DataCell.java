@@ -58,6 +58,7 @@ public abstract class DataCell implements Serializable {
      * 
      * @return A string representation of the value of this cell.
      */
+    @Override
     public abstract String toString();
 
     /**
@@ -72,6 +73,7 @@ public abstract class DataCell implements Serializable {
      *         of the same class and of equal value (or both representing
      *         missing values).
      */
+    @Override
     public final boolean equals(final Object o) {
 
         // true of called on the same objects
@@ -119,6 +121,7 @@ public abstract class DataCell implements Serializable {
      * @see java.lang.Object#hashCode()
      * @see #equals
      */
+    @Override
     public abstract int hashCode();
 
 }

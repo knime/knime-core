@@ -41,6 +41,7 @@ public class DoubleCellComparator extends DataCellComparator {
      *      #compareDataCells(de.unikn.knime.core.data.DataCell,
      *                        de.unikn.knime.core.data.DataCell)
      */
+    @Override
     public int compareDataCells(final DataCell c1, final DataCell c2) {
         double d1 = ((DoubleValue)c1).getDoubleValue();
         double d2 = ((DoubleValue)c2).getDoubleValue();

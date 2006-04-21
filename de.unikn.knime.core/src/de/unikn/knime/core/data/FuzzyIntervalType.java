@@ -69,6 +69,7 @@ public final class FuzzyIntervalType extends DataType
      * @return Comparator which compares two <code>FuzzyIntervalValue</code>
      *         objects.
      */
+    @Override
     public DataCellComparator getNativeComparator() {
         return COMPARATOR;
     }
@@ -76,6 +77,7 @@ public final class FuzzyIntervalType extends DataType
     /**
      * @see DataType#getNativeValue()
      */
+    @Override
     protected Class<? extends DataValue> getNativeValue() {
         return FuzzyIntervalValue.class;
     }
@@ -83,6 +85,7 @@ public final class FuzzyIntervalType extends DataType
     /**
      * @see de.unikn.knime.core.data.DataType#getIcon()
      */
+    @Override
     public Icon getIcon() {
         return ICON;
     }
@@ -91,6 +94,7 @@ public final class FuzzyIntervalType extends DataType
      * Returns "Fuzzy-Interval DataType".
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "Fuzzy-Interval DataType";
     }

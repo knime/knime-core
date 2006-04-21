@@ -78,6 +78,7 @@ public final class DoubleType extends DataType
     /**
      * @see DataType#getNativeComparator()
      */
+    @Override
     public DataCellComparator getNativeComparator() {
         return COMPARATOR;
     }
@@ -86,6 +87,7 @@ public final class DoubleType extends DataType
      * Returns DoubleValue.class.
      * @see DataType#getNativeValue()
      */
+    @Override
     protected Class<? extends DataValue> getNativeValue() {
         return DoubleValue.class;
     }
@@ -107,6 +109,7 @@ public final class DoubleType extends DataType
     /**
      * @see de.unikn.knime.core.data.DataType#getIcon()
      */
+    @Override
     public Icon getIcon() {
         return ICON;
     }
@@ -115,6 +118,7 @@ public final class DoubleType extends DataType
      * Returns "Double DataType".
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "Double DataType";
     }

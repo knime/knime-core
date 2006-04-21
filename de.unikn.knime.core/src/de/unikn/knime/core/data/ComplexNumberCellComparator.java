@@ -44,6 +44,7 @@ public class ComplexNumberCellComparator extends DataCellComparator {
      *      #compareDataCells(de.unikn.knime.core.data.DataCell,
      *                        de.unikn.knime.core.data.DataCell)
      */
+    @Override
     public int compareDataCells(final DataCell c1, final DataCell c2) {
         double real1 = ((ComplexNumberValue)c1).getRealValue();
         double real2 = ((ComplexNumberValue)c2).getRealValue();

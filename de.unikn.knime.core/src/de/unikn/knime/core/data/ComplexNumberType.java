@@ -77,6 +77,7 @@ public final class ComplexNumberType extends DataType
     /**
      * @see DataType#getNativeComparator()
      */
+    @Override
     public DataCellComparator getNativeComparator() {
         return COMPARATOR;
     }
@@ -85,6 +86,7 @@ public final class ComplexNumberType extends DataType
      * Returns ComplexNumberValue.class.
      * @see DataType#getNativeValue()
      */
+    @Override
     protected Class<? extends DataValue> getNativeValue() {
         return ComplexNumberValue.class;
     }
@@ -104,6 +106,7 @@ public final class ComplexNumberType extends DataType
     /**
      * @see de.unikn.knime.core.data.DataType#getIcon()
      */
+    @Override
     public Icon getIcon() {
         return ICON;
     }
@@ -112,6 +115,7 @@ public final class ComplexNumberType extends DataType
      * Returns "Complex number DataType".
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "Complex number DataType";
     }

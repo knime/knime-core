@@ -28,6 +28,7 @@ package de.unikn.knime.core.node;
  * @author Thomas Gabriel, Konstanz University
  */
 public class CanceledExecutionException extends Exception {
+    private static final long serialVersionUID = -1321799722994980718L;
 
     /**
      * Constructs an <code>CancelExecutionException</code> with the specified

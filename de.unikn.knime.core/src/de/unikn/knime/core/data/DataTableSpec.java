@@ -403,6 +403,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @return <code>true</code> If the two specs are identical, otherwise
      *         <code>false</code>.
      */
+    @Override
     public boolean equals(final Object o) {
         if (o == this) {
             return true;
@@ -472,6 +473,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * 
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         /*
          * this hash code ignores the order of the columns. Thus, two specs
@@ -546,6 +548,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * 
      * @return A string summary of all column specs.
      */
+    @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer("[");
         for (int i = 0; i < getNumColumns(); i++) {

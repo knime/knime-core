@@ -43,6 +43,7 @@ public final class StringCellRenderer extends DefaultDataCellRenderer {
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
      */
+    @Override
     protected void setValue(final Object value) {
         Object newValue;
         if (value instanceof StringValue) {
@@ -57,6 +58,7 @@ public final class StringCellRenderer extends DefaultDataCellRenderer {
     /**
      * @see DefaultDataCellRenderer#getDescription()
      */
+    @Override
     public String getDescription() {
         return "String";
     }

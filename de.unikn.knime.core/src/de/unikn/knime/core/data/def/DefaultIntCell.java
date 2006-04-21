@@ -53,6 +53,7 @@ public final class DefaultIntCell extends DataCell implements IntValue,
     /**
      * @see de.unikn.knime.core.data.DataCell#getType()
      */
+    @Override
     public DataType getType() {
         return IntType.INT_TYPE;
     }
@@ -68,55 +69,56 @@ public final class DefaultIntCell extends DataCell implements IntValue,
      * @see de.unikn.knime.core.data.DoubleValue#getDoubleValue()
      */
     public double getDoubleValue() {
-        return (double)m_int;
+        return m_int;
     }
 
     /**
      * @see de.unikn.knime.core.data.FuzzyNumberValue#getCore()
      */
     public double getCore() {
-        return (double)m_int;
+        return m_int;
     }
 
     /**
      * @see de.unikn.knime.core.data.FuzzyIntervalValue#getMaxSupport()
      */
     public double getMaxSupport() {
-        return (double)m_int;
+        return m_int;
     }
 
     /**
      * @see de.unikn.knime.core.data.FuzzyIntervalValue#getMinSupport()
      */
     public double getMinSupport() {
-        return (double)m_int;
+        return m_int;
     }
 
     /**
      * @see de.unikn.knime.core.data.FuzzyIntervalValue#getMaxCore()
      */
     public double getMaxCore() {
-        return (double)m_int;
+        return m_int;
     }
 
     /**
      * @see de.unikn.knime.core.data.FuzzyIntervalValue#getMinCore()
      */
     public double getMinCore() {
-        return (double)m_int;
+        return m_int;
     }
 
     /**
      * @see de.unikn.knime.core.data.FuzzyIntervalValue#getCenterOfGravity()
      */
     public double getCenterOfGravity() {
-        return (double)m_int;
+        return m_int;
     }
 
     /**
      * @see de.unikn.knime.core.data.DataCell
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
+    @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return ((DefaultIntCell)dc).m_int == m_int;
     }
@@ -124,6 +126,7 @@ public final class DefaultIntCell extends DataCell implements IntValue,
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return m_int;
     }
@@ -131,6 +134,7 @@ public final class DefaultIntCell extends DataCell implements IntValue,
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "" + m_int;
     }

@@ -38,7 +38,7 @@ public class Test extends TestCase {
         // make a bunch of int and double cells
         DataCell[] cells = new DataCell[10];
         for (int i = 0; i < cells.length; i++) {
-            cells[i] = new DefaultDoubleCell((double)i);
+            cells[i] = new DefaultDoubleCell(i);
         }
         DataType superType = cells[0].getType();
         for (int i = 1; i < cells.length; i++) {
@@ -50,7 +50,7 @@ public class Test extends TestCase {
         // assertTrue(superType.canReturn(DblValue.class));
         for (int i = 0; i < cells.length; i++) {
             double d = ((DoubleValue)cells[i]).getDoubleValue();
-            assertEquals(d, (double)i, 0.0);
+            assertEquals(d, i, 0.0);
         }
     }
 
@@ -62,11 +62,11 @@ public class Test extends TestCase {
         DataCell[] cells = new DataCell[10];
         for (int i = 0; i < cells.length; i++) {
             if (Math.random() < 0.5) {
-                cells[i] = new DefaultFuzzyNumberCell((double)(i - 1),
-                        (double)i, (double)(i + 1));
+                cells[i] = new DefaultFuzzyNumberCell((i - 1),
+                        i, (i + 1));
             } else {
-                cells[i] = new DefaultFuzzyIntervalCell((double)(i - 1),
-                        (double)i, i + 0.5, (double)(i + 1));
+                cells[i] = new DefaultFuzzyIntervalCell((i - 1),
+                        i, i + 0.5, (i + 1));
             }
         }
         DataType superType = cells[0].getType();
@@ -91,11 +91,11 @@ public class Test extends TestCase {
         DataCell[] cells = new DataCell[10];
         for (int i = 0; i < cells.length; i++) {
             if (Math.random() < 0.5) {
-                cells[i] = new DefaultFuzzyNumberCell((double)(i - 1),
-                        (double)i, (double)(i + 1));
+                cells[i] = new DefaultFuzzyNumberCell((i - 1),
+                        i, (i + 1));
             } else {
-                cells[i] = new DefaultFuzzyIntervalCell((double)(i - 1),
-                        (double)i, i + 0.5, (double)(i + 1));
+                cells[i] = new DefaultFuzzyIntervalCell((i - 1),
+                        i, i + 0.5, (i + 1));
             }
         }
         DataType superType = cells[0].getType();

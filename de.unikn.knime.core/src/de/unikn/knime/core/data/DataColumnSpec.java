@@ -157,6 +157,7 @@ public final class DataColumnSpec {
      * @see #equalsWithDomain(DataColumnSpec)
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
@@ -190,6 +191,7 @@ public final class DataColumnSpec {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         int tempHash = getName().hashCode();
         tempHash ^= getType().hashCode();
@@ -202,6 +204,7 @@ public final class DataColumnSpec {
      * 
      * @return A String summary of this column spec.
      */
+    @Override
     public String toString() {
         final StringBuffer buffer = new StringBuffer();
         buffer.append("(" + getName().toString() + ", ");
