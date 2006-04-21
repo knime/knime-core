@@ -40,10 +40,18 @@ public class ThreadPoolTest extends TestCase {
         private final String m_name = "Tester " + s_count++;
         private final ThreadPool m_pool;
         
+        /**
+         * Creates a new tester.
+         * 
+         * @param pool a thread pool
+         */
         public Tester(final ThreadPool pool) {
             m_pool = pool;
         }
         
+        /** 
+         * @see java.lang.Runnable#run()
+         */
         public void run() {
             m_running.incrementAndGet();
             System.out.println("[ " + m_name + " ] starting from pool " + m_pool);
@@ -58,6 +66,7 @@ public class ThreadPoolTest extends TestCase {
             m_finished.incrementAndGet();
         }
         
+        // Guess what it does ;-)
         private int ack(final int n, final int m) {
             if (n == 0) {
                 return m + 1;
@@ -112,6 +121,42 @@ public class ThreadPoolTest extends TestCase {
         root.shutdown();
     }
 
+    
+    /**
+     * Tests if invisible threads work with the root pool.
+     * 
+     * @throws InterruptedException if the thread is interrupted
+     */
+    public void testRootInvisible() throws InterruptedException {
+        final ThreadPool root = ThreadPool.getRootPool(3);
+        final int loops = 200;
+
+        final Runnable submitter = new Runnable() {
+            public void run() {
+                for (int i = 1; i <= loops; i++) {
+                    root.submit(new Tester(root));
+                    System.out.println("Submitted task " + i + ", " + m_running.get() + " running threads");
+                    if (i % 30 == 0) {
+                        root.setMaxThreads(root.getMaxThreads() + 1);
+                    }
+                    
+                    assertTrue(root.getRunningThreads() <= root.getMaxThreads());
+                }                
+            }
+        };
+        
+        Runnable main = new Runnable() {
+            public void run() {
+                root.runInvisible(submitter);
+            }
+        };
+        
+        root.submit(main);
+        
+        root.waitForTermination();
+        assertEquals(0, m_running.get());
+        assertEquals(loops, m_finished.get());
+    }
 
     /**
      * Tests the sub pools.
@@ -141,6 +186,45 @@ public class ThreadPoolTest extends TestCase {
                 assertTrue(pools[m].getRunningThreads() <= pools[m].getMaxThreads());
             }
         }
+        
+        root.waitForTermination();
+        assertEquals(0, m_running.get());
+        assertEquals(loops, m_finished.get());
+    }
+    
+    
+    /**
+     * Tests if invisible threads work with sub pools.
+     * 
+     * @throws InterruptedException if the thread is interrupted
+     */
+    public void testSubInvisible() throws InterruptedException {
+        final ThreadPool root = ThreadPool.getRootPool(10);
+        final ThreadPool sub1 = root.createSubPool(6);
+        final ThreadPool sub2 = root.createSubPool(6);
+        final int loops = 200;
+
+        final Runnable submitter = new Runnable() {
+            public void run() {
+                for (int i = 1; i <= loops; i++) {
+                    if (Math.random() > 0.5) {
+                        sub1.submit(new Tester(sub1));
+                    } else {
+                        sub2.submit(new Tester(sub2));
+                    }
+                    System.out.println("Submitted task " + i + ", " + m_running.get() + " running threads");
+                    assertTrue(root.getRunningThreads() <= root.getMaxThreads());
+                }                
+            }
+        };
+        
+        Runnable main = new Runnable() {
+            public void run() {
+                sub2.runInvisible(submitter);
+            }
+        };
+        
+        sub1.submit(main);
         
         root.waitForTermination();
         assertEquals(0, m_running.get());

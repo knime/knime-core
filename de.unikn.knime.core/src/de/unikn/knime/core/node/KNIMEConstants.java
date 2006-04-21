@@ -26,6 +26,8 @@ import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
+import de.unikn.knime.core.util.ThreadPool;
+
 /**
  * Class that hold static values about the knime platform. So far only the knime
  * directory, which is located in <code>$HOME$/.knime</code>, the welcome
@@ -79,10 +81,13 @@ public final class KNIMEConstants {
         }
     }
 
+    /** The global thread pool from which all threads should be taken. */
+    public static final ThreadPool GLOBAL_THREAD_POOL =
+        ThreadPool.getRootPool(2 * Runtime.getRuntime().availableProcessors());
+    
     /**
      * Hides public constructor.
      */
     private KNIMEConstants() {
     }
-
 }

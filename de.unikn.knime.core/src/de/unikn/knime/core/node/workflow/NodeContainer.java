@@ -30,6 +30,7 @@ import java.util.Vector;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.Node;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeInPort;
@@ -51,7 +52,6 @@ import de.unikn.knime.core.node.NodeView;
  * @author M. Berthold, University of Konstanz
  */
 public class NodeContainer implements NodeStateListener {
-
     // The node logger for the underlying node is used here.
     private final NodeLogger m_logger;
 
@@ -115,8 +115,6 @@ public class NodeContainer implements NodeStateListener {
 
     // ... and a progress monitor as well as the thread itself.
     private NodeProgressMonitor m_progressMonitor;
-
-    private Thread m_workerThread;
 
     // store list of listeners - essentially this Container will listen
     // to events coming from it's <code>Node</code>, add the id to the
@@ -724,7 +722,7 @@ public class NodeContainer implements NodeStateListener {
         m_executionCanceled = false;
         // create the actual worker thread and remember Progress Monitor
         m_progressMonitor = pm;
-        m_workerThread = new Thread(new Runnable() {
+        Runnable r = new Runnable() {
             public void run() {
                 try {
                     // executeNode() should return as soon as possible if
@@ -747,7 +745,6 @@ public class NodeContainer implements NodeStateListener {
                 } finally {
                     // and always clean up, no matter how we got out of here
                     m_executionRunning = false;
-                    m_workerThread = null;
 
                     // Do not forgot to notify all listeners. Note that this
                     // replaces the simple forwarding of the event arriving
@@ -763,9 +760,9 @@ public class NodeContainer implements NodeStateListener {
 
             }
 
-        });
-        // and finally: GO!
-        m_workerThread.start();
+        };
+        pm.setMessage("Waiting for free thread...");
+        KNIMEConstants.GLOBAL_THREAD_POOL.submit(r);
     }
 
     /**
