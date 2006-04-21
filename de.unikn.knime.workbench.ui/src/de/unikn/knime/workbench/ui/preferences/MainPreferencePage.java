@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*  
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -28,7 +26,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -45,8 +42,7 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  */
 public class MainPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
-    private IntegerFieldEditor m_maxThreadEditor;
-    
+
     /**
      * Constructor .
      */
@@ -105,23 +101,13 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
                         {"&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR}},
                         parent));
         
-        
-        m_maxThreadEditor = new IntegerFieldEditor(PreferenceConstants.P_MAXIMUM_THREADS,
+        IntegerFieldEditor maxThreadEditor = 
+            new IntegerFieldEditor(PreferenceConstants.P_MAXIMUM_THREADS,
                 "Maximum working threads for all nodes", parent, 3);
-        m_maxThreadEditor.setValidRange(1, Math.max(100, Runtime.getRuntime().availableProcessors() * 4));
-        m_maxThreadEditor.setStringValue(Integer.toString(KNIMEConstants.GLOBAL_THREAD_POOL.getMaxThreads()));
-        m_maxThreadEditor.setTextLimit(3);
-        addField(m_maxThreadEditor);
-    }
-
-        
-    /** 
-     * @see org.eclipse.jface.preference.IPreferencePage#performOk()
-     */
-    @Override
-    public boolean performOk() {
-        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(m_maxThreadEditor.getIntValue());
-        return super.performOk();
+        maxThreadEditor.setValidRange(1, 
+                Math.max(100, Runtime.getRuntime().availableProcessors() * 4));
+        maxThreadEditor.setTextLimit(3);
+        addField(maxThreadEditor);
     }
 
     /**

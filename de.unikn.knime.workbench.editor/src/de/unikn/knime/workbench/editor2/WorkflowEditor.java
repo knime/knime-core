@@ -1,6 +1,4 @@
 /* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -167,7 +165,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS = 
+        new ArrayList<ConsoleViewAppender>();
 
     static {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
@@ -197,6 +196,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);
         }
+        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(
+                pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS));
         pStore.addPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent event) {
                 if (event.getProperty().equals(
@@ -216,11 +217,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 + ", using WARN");
                     }
                     NodeLogger.setLevelIntern(level);
+                } else if (event.getProperty().equals(
+                        PreferenceConstants.P_MAXIMUM_THREADS)) {
+                    int count;
+                    try {
+                        count = (Integer)event.getNewValue();
+                        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(count);
+                    } catch (Exception e) {
+                        LOGGER.warn("Unable to get maximum thread count " 
+                                + " from preference page.", e);
+                    }
                 }
             }
         });
         
-        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS));
     }
 
     /**

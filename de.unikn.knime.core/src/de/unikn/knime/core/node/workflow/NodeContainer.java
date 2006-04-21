@@ -761,7 +761,7 @@ public class NodeContainer implements NodeStateListener {
             }
 
         };
-        pm.setMessage("Waiting for free thread...");
+        pm.setMessage("Scheduled for execution...");
         KNIMEConstants.GLOBAL_THREAD_POOL.submit(r);
     }
 
