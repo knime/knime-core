@@ -49,6 +49,9 @@ public class PreferenceConstants {
     public static final String P_LOGLEVEL_LOG_FILE = 
         "logging.loglevel.logfile";
 
+    /** Preference constant: maximum threads to use. */
+    public static final String P_MAXIMUM_THREADS = "knime.maxThreads";
+    
     /** Choice: log >= debug events. */
     public static final String P_LOGLEVEL_DEBUG = LEVEL.DEBUG.toString();
 
