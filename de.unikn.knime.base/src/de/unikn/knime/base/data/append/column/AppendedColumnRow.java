@@ -42,7 +42,7 @@ public class AppendedColumnRow implements DataRow {
      * @param appendCell The last cells (to be appended).
      */
     public AppendedColumnRow(
-            final DataRow baseRow, final DataCell[] appendCell) {
+            final DataRow baseRow, final DataCell... appendCell) {
         m_baseRow = baseRow;
         m_appendCell = appendCell;
     }
