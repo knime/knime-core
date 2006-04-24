@@ -25,9 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class is a simple pools for object that can be reused. The pool can be divided into several sub pool, e.g.
- * if the object have different "sizes". If memory becomes scarce some of the sub pools may get garbage collected,
- * but this is transparent.
+ * This class is a simple pools for object that can be reused. The pool can be
+ * divided into several sub pool, e.g. if the object have different "sizes". If
+ * memory becomes scarce some of the sub pools may get garbage collected, but
+ * this is transparent.
  * 
  * @param <T> any class whose object are stored in the pool
  * 
@@ -60,7 +61,8 @@ public class ObjectPool<T> {
 
     
     /**
-     * Returns an object from the (sub) pool, or <code>null</code> if the pool is empty.
+     * Returns an object from the (sub) pool, or <code>null</code> if the pool
+     * is empty.
      * 
      * @param subPool the number of the sub pool, starting with 0
      * @return ann object or <code>null</code>
@@ -104,7 +106,8 @@ public class ObjectPool<T> {
         for (int i = 0; i < m_pools.length; i++) {
             if (m_hits[i] + m_misses[i] > 0) {
                 out.printf("Pool %1$3d => %2$8d accesses, %3$8d hits => %4$2.2f%%\n",
-                        i, m_hits[i] + m_misses[i], m_hits[i], 100.0 * m_hits[i] / (m_hits[i] + m_misses[i]));
+                        i, m_hits[i] + m_misses[i], m_hits[i],
+                        100.0 * m_hits[i] / (m_hits[i] + m_misses[i]));
             }
         }
     }

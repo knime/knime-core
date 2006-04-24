@@ -30,14 +30,14 @@ import junit.framework.TestCase;
  */
 public class ThreadPoolTest extends TestCase {
     /** A counter for the Testers. */
-    static int s_count = 0;
+    private static int count = 0;
     /** Counter for running threads. */
-    final AtomicInteger m_running = new AtomicInteger(0);
+    private final AtomicInteger m_running = new AtomicInteger(0);
     /** Counter for finished threads. */
-    final AtomicInteger m_finished = new AtomicInteger(0);
+    private final AtomicInteger m_finished = new AtomicInteger(0);
     
     private class Tester implements Runnable {
-        private final String m_name = "Tester " + s_count++;
+        private final String m_name = "Tester " + count++;
         private final ThreadPool m_pool;
         
         /**
@@ -54,7 +54,8 @@ public class ThreadPoolTest extends TestCase {
          */
         public void run() {
             m_running.incrementAndGet();
-            System.out.println("[ " + m_name + " ] starting from pool " + m_pool);
+            System.out.println("[ " + m_name + " ] starting from pool "
+                    + m_pool);
             try {
                 ack(3, 10);
                 Thread.sleep((int) (Math.random() * 300));
@@ -89,7 +90,8 @@ public class ThreadPoolTest extends TestCase {
         
         for (int i = 1; i <= loops; i++) {
             root.submit(new Tester(root));
-            System.out.println("Submitted task " + i + ", " + m_running.get() + " running threads");
+            System.out.println("Submitted task " + i + ", " + m_running.get()
+                    + " running threads");
             if (i % 30 == 0) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             }
@@ -107,7 +109,8 @@ public class ThreadPoolTest extends TestCase {
         root.setMaxThreads(3);
         for (int i = 1; i <= loops; i++) {
             root.submit(new Tester(root));
-            System.out.println("Submitted task " + i + ", " + m_running.get() + " running threads");
+            System.out.println("Submitted task " + i + ", " + m_running.get()
+                    + " running threads");
             if (Math.random() > 0.95) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             } else if (Math.random() > 0.98) {
@@ -135,7 +138,8 @@ public class ThreadPoolTest extends TestCase {
             public void run() {
                 for (int i = 1; i <= loops; i++) {
                     root.submit(new Tester(root));
-                    System.out.println("Submitted task " + i + ", " + m_running.get() + " running threads");
+                    System.out.println("Submitted task " + i + ", "
+                            + m_running.get() + " running threads");
                     if (i % 30 == 0) {
                         root.setMaxThreads(root.getMaxThreads() + 1);
                     }
@@ -177,7 +181,8 @@ public class ThreadPoolTest extends TestCase {
             final int k = (int) (Math.random() * pools.length);
             
             pools[k].submit(new Tester(pools[k]));
-            System.out.println("Submitted task " + i + ", " + m_running.get() + " running threads");
+            System.out.println("Submitted task " + i + ", " + m_running.get()
+                    + " running threads");
             if (i % 30 == 0) {
                 pools[k].setMaxThreads(pools[k].getMaxThreads() + 1);
             }
@@ -212,7 +217,8 @@ public class ThreadPoolTest extends TestCase {
                     } else {
                         sub2.submit(new Tester(sub2));
                     }
-                    System.out.println("Submitted task " + i + ", " + m_running.get() + " running threads");
+                    System.out.println("Submitted task " + i + ", "
+                            + m_running.get() + " running threads");
                     assertTrue(root.getRunningThreads() <= root.getMaxThreads());
                 }                
             }
