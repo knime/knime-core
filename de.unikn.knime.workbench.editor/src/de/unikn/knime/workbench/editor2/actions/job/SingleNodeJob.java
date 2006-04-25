@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,6 +19,11 @@
  */
 package de.unikn.knime.workbench.editor2.actions.job;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -37,7 +40,63 @@ import de.unikn.knime.core.node.workflow.WorkflowManager;
  * @author Florian Georg, University of Konstanz
  */
 public class SingleNodeJob extends Job implements NodeProgressListener {
+    /**
+     * This class is a checker for started KNIME nodes. It frequently checks
+     * if a cancel request has been issued by the user and either really cancels
+     * it if the job is already running or just removes it from the job queue.
+     * 
+     * @author Thorsten Meinl, University of Konstanz
+     */
+    private static class CancelChecker extends Thread {
+        private final Map<Future<?>, SingleNodeJob> m_nodeMap =
+            new ConcurrentHashMap<Future<?>, SingleNodeJob>();
+        
+        /**
+         * Creates a new CancelChecker and starts it in a separate thread.
+         */
+        public CancelChecker() {
+            super("KNIME Cancel Checker");
+            setDaemon(true);
+            start();
+        }
 
+        @Override
+        public void run() {
+            while (!isInterrupted()) {
+                try {
+                    Thread.sleep(500);
+                    
+                    Iterator<Map.Entry<Future<?>, SingleNodeJob>> it = 
+                        m_nodeMap.entrySet().iterator();
+                    
+                    while (it.hasNext()) {
+                        Map.Entry<Future<?>, SingleNodeJob> e = it.next();
+                        SingleNodeJob job = e.getValue(); 
+                        if (job.m_monitor.isCanceled()) {
+                            e.getKey().cancel(false);
+                            job.m_manager.cancelExecutionAfterNode(
+                                    job.m_container.getID());
+                            it.remove();
+                        } else if (e.getKey().isDone()) {
+                            it.remove();
+                        }
+                    }
+                } catch (InterruptedException ex) { /* empty */ }
+            }            
+        }
+        
+        /**
+         * Adds a job that the cancel checker should watch for.
+         * @param job the job
+         * @param future the future for the job
+         */
+        public void addJob(final SingleNodeJob job, final Future<?> future) {
+            m_nodeMap.put(future, job);
+        }
+    }
+    
+    private static final CancelChecker CANCEL_CHECKER = new CancelChecker();
+    
     private NodeContainer m_container;
 
     private int m_currentWorked;
@@ -71,6 +130,7 @@ public class SingleNodeJob extends Job implements NodeProgressListener {
      * @see org.eclipse.core.runtime.jobs.Job
      *      #run(org.eclipse.core.runtime.IProgressMonitor)
      */
+    @Override
     protected IStatus run(final IProgressMonitor monitor) {
         DefaultNodeProgressMonitor nodeProgress = null;
         m_monitor = monitor;
@@ -94,29 +154,17 @@ public class SingleNodeJob extends Job implements NodeProgressListener {
         m_currentProgressMessage = "";
 
         // fire it up !
-        m_container.startExecution(nodeProgress);
-
+        Future<?> future = m_container.startExecution(nodeProgress);
+        CANCEL_CHECKER.addJob(this, future);        
+        
         // dummy progress changed
         progressChanged(0.00, "running...");
-
-        // wait until this one has finished
-        while (m_container.isExecuting()) {
-
-            // user canceled?
-            if (monitor.isCanceled()) {
-                m_manager.cancelExecutionAfterNode(m_container.getID());
-                // nodeProgress.setExecuteCanceled();
-                // we can't return here, but have to wait until the node
-                // (hopefully) notifies the container about its finish.
-            }
-
-            // wait a bit...
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        try {
+            future.get();
+        } catch (Exception ex) {
+            // do nothing
         }
+
         nodeProgress.removeProgressListener(this);
 
         return Status.OK_STATUS;

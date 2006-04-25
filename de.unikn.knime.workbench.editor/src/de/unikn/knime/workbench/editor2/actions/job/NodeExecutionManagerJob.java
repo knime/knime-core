@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -109,6 +107,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
      * @see org.eclipse.core.runtime.jobs.Job
      *      #run(org.eclipse.core.runtime.IProgressMonitor)
      */
+    @Override
     protected IStatus run(final IProgressMonitor monitor) {
 
         // we must register on the manager to get lifecycle events
@@ -179,7 +178,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
 
         // We must wait for all jobs to end
         for (int i = 0; i < m_scheduledJobs.size(); i++) {
-            Job job = (Job)m_scheduledJobs.get(i);
+            Job job = m_scheduledJobs.get(i);
             LOGGER.debug("Waiting for remaining job to finish: "
                     + job.getName());
             try {
