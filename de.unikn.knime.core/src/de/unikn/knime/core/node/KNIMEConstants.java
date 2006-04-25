@@ -83,7 +83,7 @@ public final class KNIMEConstants {
 
     /** The global thread pool from which all threads should be taken. */
     public static final ThreadPool GLOBAL_THREAD_POOL =
-        ThreadPool.getRootPool(2 * Runtime.getRuntime().availableProcessors());
+        new ThreadPool(2 * Runtime.getRuntime().availableProcessors());
     
     /**
      * Hides public constructor.

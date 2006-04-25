@@ -1,5 +1,4 @@
 /* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.Future;
 
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.ExecutionMonitor;
@@ -700,8 +700,9 @@ public class NodeContainer implements NodeStateListener {
      * in executable state.
      * 
      * @param pm The progress monitor (for cancelation and progress updates)
+     * @return the future that has been created for the node
      */
-    public synchronized void startExecution(final NodeProgressMonitor pm) {
+    public synchronized Future<?> startExecution(final NodeProgressMonitor pm) {
 
         if (!m_node.isExecutable()) {
 
@@ -711,7 +712,7 @@ public class NodeContainer implements NodeStateListener {
         if (m_executionRunning) {
             m_logger.error("Node is already/still running, new execute"
                     + " is not allowed. (" + this.getID() + ")");
-            return;
+            return null;
         }
         m_executionRunning = true;
         // ok, let's start execution:
@@ -762,7 +763,7 @@ public class NodeContainer implements NodeStateListener {
 
         };
         pm.setMessage("Scheduled for execution...");
-        KNIMEConstants.GLOBAL_THREAD_POOL.submit(r);
+        return KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(r);
     }
 
     /**

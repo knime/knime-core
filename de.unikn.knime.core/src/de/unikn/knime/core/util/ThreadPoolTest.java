@@ -85,7 +85,7 @@ public class ThreadPoolTest extends TestCase {
      * @throws InterruptedException if the thread is interrupted
      */
     public void testRootPool() throws InterruptedException {
-        ThreadPool root = ThreadPool.getRootPool(3);
+        ThreadPool root = new ThreadPool(3);
         final int loops = 200;
         
         for (int i = 1; i <= loops; i++) {
@@ -131,19 +131,24 @@ public class ThreadPoolTest extends TestCase {
      * @throws InterruptedException if the thread is interrupted
      */
     public void testRootInvisible() throws InterruptedException {
-        final ThreadPool root = ThreadPool.getRootPool(3);
+        final ThreadPool root = new ThreadPool(3);
         final int loops = 200;
 
         final Runnable submitter = new Runnable() {
             public void run() {
                 for (int i = 1; i <= loops; i++) {
-                    root.submit(new Tester(root));
+                    try {
+                        root.submit(new Tester(root));
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
                     System.out.println("Submitted task " + i + ", "
                             + m_running.get() + " running threads");
                     if (i % 30 == 0) {
                         root.setMaxThreads(root.getMaxThreads() + 1);
                     }
                     
+                    assertTrue(m_running.get() <= root.getMaxThreads());
                     assertTrue(root.getRunningThreads() <= root.getMaxThreads());
                 }                
             }
@@ -167,7 +172,7 @@ public class ThreadPoolTest extends TestCase {
      * @throws InterruptedException if the thread is interrupted
      */
     public void testSubPools() throws InterruptedException {
-        ThreadPool root = ThreadPool.getRootPool(20);
+        ThreadPool root = new ThreadPool(20);
         ThreadPool[] pools = new ThreadPool[4];
         
         pools[0] = root;
@@ -204,7 +209,7 @@ public class ThreadPoolTest extends TestCase {
      * @throws InterruptedException if the thread is interrupted
      */
     public void testSubInvisible() throws InterruptedException {
-        final ThreadPool root = ThreadPool.getRootPool(10);
+        final ThreadPool root = new ThreadPool(10);
         final ThreadPool sub1 = root.createSubPool(6);
         final ThreadPool sub2 = root.createSubPool(6);
         final int loops = 200;
@@ -213,9 +218,17 @@ public class ThreadPoolTest extends TestCase {
             public void run() {
                 for (int i = 1; i <= loops; i++) {
                     if (Math.random() > 0.5) {
-                        sub1.submit(new Tester(sub1));
+                        try {
+                            sub1.submit(new Tester(sub1));
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
                     } else {
-                        sub2.submit(new Tester(sub2));
+                        try {
+                            sub2.submit(new Tester(sub2));
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
                     }
                     System.out.println("Submitted task " + i + ", "
                             + m_running.get() + " running threads");
@@ -226,7 +239,9 @@ public class ThreadPoolTest extends TestCase {
         
         Runnable main = new Runnable() {
             public void run() {
+                System.out.println("Running invisible");
                 sub2.runInvisible(submitter);
+                System.out.println("Finished invisible");
             }
         };
         
@@ -237,4 +252,102 @@ public class ThreadPoolTest extends TestCase {
         assertEquals(loops, m_finished.get());
     }
 
+    
+    /**
+     * Tests if the root pool handles submit and enqueue correctly.
+     * @throws InterruptedException if the thread is interrupted
+     */
+    public void testRootEnqueue() throws InterruptedException {
+        ThreadPool root = new ThreadPool(3);
+        final int loops = 200;
+        
+        for (int i = 1; i <= loops; i++) {
+            if (Math.random() > 0.4) {
+                root.enqueue(new Tester(root));
+            } else {
+                root.submit(new Tester(root));
+            }
+            System.out.println("Submitted task " + i + ", " + m_running.get()
+                    + " running threads, " + root.getQueueSize()
+                    + " queued jobs");
+            if (i % 30 == 0) {
+                root.setMaxThreads(root.getMaxThreads() + 1);
+            }
+            
+            assertTrue(m_running.get() <= root.getMaxThreads());
+            assertTrue(root.getRunningThreads() <= root.getMaxThreads());
+        }
+        
+        root.waitForTermination();
+        assertEquals(0, m_running.get());
+        assertEquals(loops, m_finished.get());
+        
+        
+        m_running.set(0);
+        m_finished.set(0);
+        root.setMaxThreads(3);
+        for (int i = 1; i <= loops; i++) {
+            if (Math.random() > 0.4) {
+                root.enqueue(new Tester(root));
+            } else {
+                root.submit(new Tester(root));
+            }
+
+            System.out.println("Submitted task " + i + ", " + m_running.get()
+                    + " running threads, " + root.getQueueSize()
+                    + " queued jobs");
+            if (Math.random() > 0.95) {
+                root.setMaxThreads(root.getMaxThreads() + 1);
+            } else if (Math.random() > 0.98) {
+                root.setMaxThreads(root.getMaxThreads() - 1);
+            }
+        }
+        root.waitForTermination();
+        assertEquals(0, m_running.get());
+        assertEquals(loops, m_finished.get());
+
+        root.shutdown();        
+    }
+    
+    
+    /**
+     * Tests if sub pools handle submit and enqueue correctly.
+     * @throws InterruptedException if the thread is interrupted
+     */
+    public void testSubEnqueue() throws InterruptedException {
+        ThreadPool root = new ThreadPool(20);
+        ThreadPool[] pools = new ThreadPool[4];
+        
+        pools[0] = root;
+        pools[1] = root.createSubPool(20);
+        pools[2] = root.createSubPool(5);
+        pools[3] = pools[1].createSubPool(10);
+        
+        final int loops = 200;
+        
+        for (int i = 1; i <= loops; i++) {
+            final int k = (int) (Math.random() * pools.length);
+            
+            if (Math.random() > 0.4) {
+                pools[k].enqueue(new Tester(pools[k]));
+            } else {
+                pools[k].submit(new Tester(pools[k]));
+            }
+            System.out.println("Submitted task " + i + ", " + m_running.get()
+                    + " running threads, " + root.getQueueSize()
+                    + " queued jobs");
+            if (i % 30 == 0) {
+                pools[k].setMaxThreads(pools[k].getMaxThreads() + 1);
+            }
+            
+            for (int m = 0; m < pools.length; m++) {
+                assertTrue(pools[m].getRunningThreads() <= pools[m].getMaxThreads());
+            }
+            assertTrue(m_running.get() <= root.getMaxThreads());
+        }
+        
+        root.waitForTermination();
+        assertEquals(0, m_running.get());
+        assertEquals(loops, m_finished.get());
+    }
 }

@@ -1,4 +1,4 @@
-/* Created on Apr 20, 2006 9:08:05 AM by thor
+/* Created on Apr 25, 2006 9:49:26 AM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -15,64 +15,82 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Apr 20, 2006 (thor): created
+ *   Apr 25, 2006 (thor): created
  */
 package de.unikn.knime.core.util;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * This class implements a pool for thread that can be reused. Tasks are
- * submitted to the pool by any of the three <code>submit</code> methods and are
- * then processed as soon as a free thread is available. You may also create
- * sub pools from a thread pool which means, that the sub pool and its "parent"
- * pool (and all other sub pools)
- * share the maximum number of threads. 
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public abstract class ThreadPool  {
-    /** A counter for workers for naming them. */
-    private static int workerCount = 0;
+public class ThreadPool {
+    private class MyFuture<T> extends FutureTask<T> {
+        /**
+         * @see FutureTask#FutureTask(java.util.concurrent.Callable) 
+         */
+        public MyFuture(final Callable<T> callable) {
+            super(callable);
+        }
+
+        
+        /**
+         * Creates a <tt>FutureTask</tt> that will upon running, execute the
+         * given <tt>Runnable</tt>, and arrange that <tt>get</tt> will return
+         * the given result on successful completion.
+         *
+         * @param runnable the runnable task
+         * @param result the result to return on successful completion. If
+         * you don't need a particular result, consider using
+         * constructions of the form:
+         * <tt>Future&lt;?&gt; f = new FutureTask&lt;Object&gt;(runnable,
+         * null)</tt>
+         * @throws NullPointerException if runnable is null
+         */
+        public MyFuture(final Runnable runnable, final T result) {
+            super(runnable, result);
+        }
+        
+        
+        /**
+         * Returns the pool in which this future has been created.
+         * @return a thread pool
+         */
+        public ThreadPool getPool() { return ThreadPool.this; }
+    }
     
     
-    /**
-     * A simple worker thread that waits for {@link Runnable}s and executes them.
-     * 
-     * @author Thorsten Meinl, University of Konstanz
-     */
-    protected class Worker extends Thread {
+    private static int workerCounter;
+    private class Worker extends Thread {
+        private final Object m_lock = new Object();
         private Runnable m_runnable;
-        private final Object m_myLock = new Object();
         private ThreadPool m_startedFrom;
         
         /**
          * Creates a new worker.
          */
         public Worker() {
-            super("Pool-Worker-" + workerCount++);
+            super("Pool-Worker-" + workerCounter++);
             setPriority(NORM_PRIORITY - 1);
         }
-        /** 
-         * @see java.lang.Runnable#run()
-         */
+        
         @Override
         public void run() {
             while (!isInterrupted()) {
-                synchronized (m_myLock) {
+                synchronized (m_lock) {
                     if (m_runnable == null) {
                         try {
-                            m_myLock.wait();
+                            m_lock.wait(90 * 1000);
                         } catch (InterruptedException ex) {
-                            // this essentially finishes the thread
                             return;
                         }
                     }
@@ -82,12 +100,12 @@ public abstract class ThreadPool  {
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
                     }
-                    
-                    m_startedFrom.workerDone(this);
                     m_runnable = null;
+                    m_startedFrom.workerFinished(this);
                 }
             }
         }
+    
         
         /**
          * Sets the runnable for this (sleeping) worker and awakes it. This
@@ -95,28 +113,23 @@ public abstract class ThreadPool  {
          * currently executing one.
          * 
          * @param r the Runnable to run
-         * @param startedFrom the pool from which the worker is taken from
+         * @param pool the pool from which the worker is taken from
          */
-        public void setRunnable(final Runnable r, final ThreadPool startedFrom) {
-            synchronized (m_myLock) {
+        public void wakeup(final Runnable r, final ThreadPool pool) {
+            synchronized (m_lock) {
                 m_runnable = r;
-                m_startedFrom = startedFrom;
-                m_myLock.notifyAll();
+                m_startedFrom = pool;
+                m_lock.notifyAll();
             }
         }
     }
     
     
-    /** A set of workers currently running in this pool.*/
-    protected final Set<Worker> m_runningWorkers = new HashSet<Worker>();
-    /** The maximum allowed number of running workers. */
-    protected int m_maxWorkers;
-    /** The number of invisible workers. */
-    protected volatile int m_invisibleWorkers;
-    /** A global lock to synchronize access to the running workers. */
-    protected final ReentrantLock m_lock = new ReentrantLock();
-    /** A notifier that is signalled if a worker finishes its job. */
-    protected final Condition m_workerFinished = m_lock.newCondition();
+    private final Queue<Worker> m_availableWorkers;
+    private volatile int m_maxThreads, m_invisibleThreads;
+    private final ThreadPool m_parent;
+    private final Queue<MyFuture<?>> m_queuedFutures;
+    private final Set<Worker> m_runningWorkers = new HashSet<Worker>();
     
     
     /**
@@ -125,46 +138,243 @@ public abstract class ThreadPool  {
      * @param maxThreads the maximum number of threads
      */
     public ThreadPool(final int maxThreads) {
-        m_maxWorkers = maxThreads;
+        m_maxThreads = maxThreads;
+        m_parent = null;
+        m_queuedFutures = new LinkedList<MyFuture<?>>();
+        m_availableWorkers = new ConcurrentLinkedQueue<Worker>();
     }
 
-
+    
     /**
-     * Submits a Runnable task for execution and returns a Future representing
-     * that task. The method blocks until a free thread is available.
-     *
-     * @param task the task to submit
-     * @return a Future representing pending completion of the task, and whose
-     * <tt>get()</tt> method will return <tt>null</tt> upon completion.
-     * @throws NullPointerException if <code>task</code> null
+     * Creates a new sub pool.
+     * 
+     * @param maxThreads the maximum number of threads in the pool
+     * @param parent the parent pool
      */
-    public Future<?> submit(final Runnable task) {
-        if (task == null) { throw new NullPointerException(); }
-        FutureTask<Object> ftask = new FutureTask<Object>(task, null);
-        execute(ftask);
+    protected ThreadPool(final int maxThreads, final ThreadPool parent) {
+        m_parent = parent;
+        m_maxThreads = maxThreads;
+        m_queuedFutures = m_parent.m_queuedFutures;
+        m_availableWorkers = null;
+    }
+    
+    
+    private boolean checkQueue() {
+        synchronized (m_queuedFutures) {
+            for (Iterator<MyFuture<?>> it = m_queuedFutures.iterator();
+                it.hasNext();) {
+                MyFuture<?> f = it.next();
+                if (f.isCancelled()) {
+                    it.remove();
+                } else {
+                    ThreadPool pool = f.getPool();
+                    Worker w2 = pool.freeWorker();
+                    if (w2 != null) {
+                        w2.wakeup(f, pool);
+                        it.remove();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    
+    /**
+     * Creates a sub pool that shares the threads with this (parent) pool. The
+     * maximum number of threads in this and all its sub pools does not exceed
+     * the maximum thread number for this pool, even if a sub pool is created
+     * with a higher thread count.
+     * 
+     * @param maxThreads the maximum number of threads in the sub pool
+     * @return a thread pool
+     */
+    public ThreadPool createSubPool(final int maxThreads) {
+        return new ThreadPool(maxThreads, this);
+    }
+    
+    
+    /**
+     * Submits a value-returning task for execution and returns a Future
+     * representing the pending results of the task. The method immediately
+     * returns and puts the runnable into a queue.
+     *
+     * <p>
+     * If you would like to immediately block waiting for a task, you can use
+     * constructions of the form <tt>result = exec.submit(aCallable).get();</tt>
+     *
+     * <p> Note: The {@link java.util.concurrent.Executors} class includes a set
+     * of methods that can convert some other common closure-like objects, for
+     * example, {@link java.security.PrivilegedAction} to {@link Callable} form
+     * so they can be submitted.
+     *
+     * @param t the task to submit
+     * @param <T> any result type
+     * @return a Future representing pending completion of the task
+     * @throws NullPointerException if <code>task</code> null
+     * 
+     * @see #enqueue(Callable)
+     */
+    public <T> Future<T> enqueue(final Callable<T> t) {
+        MyFuture<T> ftask = new MyFuture<T>(t);
+        
+        Worker w;
+        synchronized (m_runningWorkers) {
+            if ((w = freeWorker()) != null) {
+                w.wakeup(ftask, this);
+            } else {
+                synchronized (m_queuedFutures) {
+                    m_queuedFutures.add(ftask);
+                }
+            }
+        }
+        
         return ftask;
     }
 
     
     /**
      * Submits a Runnable task for execution and returns a Future representing
-     * that task that will upon completion return the given result. The method
-     * blocks until a free thread is available.
+     * that task. The method immediately returns and puts the runnable into a
+     * queue.
      *
-     * @param task the task to submit
-     * @param result the result to return
-     * @param <T> any result type
+     * @param r the task to submit
      * @return a Future representing pending completion of the task, and whose
-     * <tt>get()</tt> method will return the given result upon completion.
-     * @throws NullPointerException if <code>task</code> null     
+     * <tt>get()</tt> method will return <tt>null</tt> upon completion.
+     * @throws NullPointerException if <code>task</code> null
+     * @see #submit(Runnable)
      */
-    public <T> Future<T> submit(final Runnable task, final T result) {
-        if (task == null) { throw new NullPointerException(); }
-        FutureTask<T> ftask = new FutureTask<T>(task, result);
-        execute(ftask);
+    public Future<?> enqueue(final Runnable r) {
+        MyFuture<?> ftask = new MyFuture<Object>(r, null);
+        
+        Worker w;
+        synchronized (m_runningWorkers) {
+            if ((w = freeWorker()) != null) {
+                w.wakeup(ftask, this);
+            } else {
+                synchronized (m_queuedFutures) {
+                    m_queuedFutures.add(ftask);
+                }
+            }
+        }
+        
         return ftask;
     }
+    
+    
+    private Worker freeWorker() {
+        synchronized (m_runningWorkers) {
+            if (m_runningWorkers.size() - m_invisibleThreads < m_maxThreads) {
+                Worker w;
+                if (m_parent == null) {
+                    if (((w = m_availableWorkers.poll()) == null) 
+                            || !w.isAlive()) {
+                        w = new Worker();
+                        w.start();
+                    }
+                } else {
+                    w = m_parent.freeWorker();
+                }
+                
+                if (w != null) {
+                    m_runningWorkers.add(w);
+                }
+                return w;
+            } else {
+                return null;
+            }
+        }
+    }
 
+    /**
+     * Returns the maximum number of threads in the pool.
+     * 
+     * @return the maximum thread number
+     */
+    public int getMaxThreads() { return m_maxThreads; }
+
+    
+    /**
+     * Returns the number of currently running threads in this pool and its sub
+     * pools.
+     * 
+     * @return the number of running threads
+     */
+    public int getRunningThreads() {
+        return m_runningWorkers.size() - m_invisibleThreads;
+    }
+    
+    
+    /**
+     * Executes the runnable in the current thread. If the current thread is
+     * taken out of this pool or any ancestor pool the number of invisible
+     * threads is increased, so that it is not counted and one additional
+     * thread is allowed to run. This method should only be used if the Runnable
+     * does nothing more than submitting jobs.
+     *  
+     * @param r a Runnable to execute
+     * @throws IllegalThreadStateException if the current thread is not taken
+     * out of a thread pool
+     */
+    public void runInvisible(final Runnable r) {
+        if (!(Thread.currentThread() instanceof Worker)) {
+            throw new IllegalThreadStateException("The current thread is not"
+                    + "taken out of a thread pool");
+        }
+        
+        Worker thisWorker = (Worker) Thread.currentThread();        
+        if (!m_runningWorkers.contains(thisWorker)) {
+            if (!thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
+                throw new IllegalThreadStateException("The current thread is "
+                        + "not taken out of this thread pool");
+            }
+            thisWorker.m_startedFrom.runInvisible(r);
+        } else {        
+            if (!m_runningWorkers.contains(thisWorker)) {
+                throw new IllegalThreadStateException("The current thread is "
+                        + "not taken out of this thread pool");
+            }
+            m_invisibleThreads++;
+            checkQueue();
+
+            try {
+                r.run();
+            } finally {        
+                m_invisibleThreads--;
+            }
+        }
+
+    }
+
+    
+    /**
+     * Sets the maximum number of threads in the pool. If the new value is
+     * smaller than the old value running surplus threads will not be
+     * interrupted.
+     * 
+     * @param newValue the new maximum thread number
+     */
+    public void setMaxThreads(final int newValue) {
+        if (m_parent == null) {
+            if (newValue < m_maxThreads) {
+                for (int i = (m_maxThreads - newValue); i >= 0; i--) {
+                    Worker w = m_availableWorkers.poll();
+                    if (w != null) { w.interrupt(); }
+                }
+            }
+        }
+        m_maxThreads = newValue;
+    }
+
+    
+    /**
+     * Shuts the pool down, still running threads are not interrupted.
+     */
+    public void shutdown() {
+        setMaxThreads(0);
+    }
+    
     
     /**
      * Submits a value-returning task for execution and returns a Future
@@ -184,56 +394,63 @@ public abstract class ThreadPool  {
      * @param <T> any result type
      * @return a Future representing pending completion of the task
      * @throws NullPointerException if <code>task</code> null
-     */
-    public <T> Future<T> submit(final Callable<T> task) {
-        if (task == null) { throw new NullPointerException(); }
-        FutureTask<T> ftask = new FutureTask<T>(task);
-        execute(ftask);
-        return ftask;
-    }
-    
-    /**
-     * Executes the runnable in a free thread. The method blocks until a thread
-     * is available.
+     * @throws InterruptedException if the thread is interrupted
      * 
-     * @param r a runnable.
+     * @see #enqueue(Callable)
      */
-    private void execute(final Runnable r) {
-        Worker w = getWorker();
-        if (w != null) {
-            w.setRunnable(r, this);
+    public <T> Future<T> submit(final Callable<T> task)
+    throws InterruptedException {
+        if (task == null) { throw new NullPointerException(); }
+        
+        final Object lock = new Object();
+        final Callable<T> t = new Callable<T>() {
+            public T call() throws Exception {
+                synchronized (lock) {
+                    lock.notifyAll();
+                }
+                return task.call();
+            }
+        };
+        
+        synchronized (lock) {
+            Future<T> ftask = enqueue(t);
+            lock.wait();
+            return ftask;
         }
     }
-    
 
-    /**
-     * Returns the maximum number of threads in the pool.
-     * 
-     * @return the maximum thread number
-     */
-    public int getMaxThreads() { return m_maxWorkers; }
-    
     
     /**
-     * Sets the maximum number of threads in the pool. If the new value is
-     * smaller than the old value running surplus threads will not be
-     * interrupted.
-     * 
-     * @param newValue the new maximum thread number
+     * Submits a Runnable task for execution and returns a Future representing
+     * that task. The method blocks until a free thread is available.
+     *
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task, and whose
+     * <tt>get()</tt> method will return <tt>null</tt> upon completion.
+     * @throws NullPointerException if <code>task</code> null
+     * @throws InterruptedException if the thread is interrupted
+     * @see #enqueue(Runnable)
      */
-    public void setMaxThreads(final int newValue) {
-        m_maxWorkers = newValue;
+    public Future<?> submit(final Runnable task) throws InterruptedException {
+        if (task == null) { throw new NullPointerException(); }
+        
+        final Object lock = new Object();
+        final Runnable r = new Runnable() {
+            public void run() {
+                synchronized (lock) {
+                    lock.notifyAll();
+                }
+                task.run();
+            }
+        };
+        
+        synchronized (lock) {
+            Future<?> ftask = enqueue(r);
+            lock.wait();
+            return ftask;
+        }
     }
 
-    /**
-     * Returns the number of currently running threads in this pool and its sub
-     * pools.
-     * 
-     * @return the number of running threads
-     */
-    public int getRunningThreads() {
-        return m_runningWorkers.size() - m_invisibleWorkers;
-    }
     
     
     /**
@@ -242,72 +459,10 @@ public abstract class ThreadPool  {
      * @throws InterruptedException if the thread is interrupted while waiting
      */
     public void waitForTermination() throws InterruptedException {
-        ReentrantLock lock = m_lock;
-        lock.lock();
-        try {
+        synchronized (m_runningWorkers) {
             while (m_runningWorkers.size() > 0) {
-                m_workerFinished.await();
+                m_runningWorkers.wait();
             }
-        } finally {
-            lock.unlock();
-        }
-    }
-    
-    
-    /**
-     * Shuts the pool down, still running threads are not interrupted.
-     */
-    public void shutdown() {
-        setMaxThreads(0);
-    }
-
-    
-    /** 
-     * @see java.lang.Object#finalize()
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        shutdown();
-        super.finalize();
-    }
-
-
-    /**
-     * Executes the runnable in the current thread. If the current thread is
-     * taken out of this pool or any ancestor pool the number of invisible
-     * threads is increased, so that it is not counted and one additional
-     * thread is allowed to run. This method should only be used if the Runnable
-     * does nothing more than submitting jobs.
-     *  
-     * @param r a Runnable to execute
-     * @throws IllegalThreadStateException if the current thread is not taken
-     * out of a thread pool
-     */
-    public void runInvisible(final Runnable r) {
-        if (!(Thread.currentThread() instanceof Worker)) {
-            throw new IllegalThreadStateException("The current thread is not"
-                    + "taken out of a thread pool");
-        }
-        
-        Worker thisWorker = (Worker) Thread.currentThread();
-        
-        ReentrantLock lock = m_lock;
-        lock.lock();        
-        try {        
-            if (!m_runningWorkers.contains(thisWorker)) {
-                throw new IllegalThreadStateException("The current thread is "
-                        + "not taken out of this thread pool");
-            }
-            m_invisibleWorkers++;
-            m_workerFinished.signalAll();
-        } finally {
-            lock.unlock();
-        }
-
-        try {
-            r.run();
-        } finally {        
-            m_invisibleWorkers--;
         }
     }        
 
@@ -317,257 +472,39 @@ public abstract class ThreadPool  {
      * 
      * @param w the finished worker
      */
-    abstract void workerDone(final Worker w);
-    
-    
-    /**
-     * Tries to get a worker from the pool. This method blocks until a free
-     * worker is available.
-     * 
-     * @return a free worker
+    protected void workerFinished(final Worker w) {
+        synchronized (m_runningWorkers) {
+            m_runningWorkers.remove(w);
+                        
+            if (m_parent != null) {
+                m_parent.workerFinished(w);
+            } else { // this is the root pool
+                m_availableWorkers.add(w);
+                if (checkQueue()) { return; }
+            }
+            m_runningWorkers.notifyAll();
+        }
+    }
+
+
+    /** 
+     * @see java.lang.Object#finalize()
      */
-    protected abstract Worker getWorker();
-    
-    
-    /**
-     * Creates a sub pool that shares the threads with this (parent) pool. The
-     * maximum number of threads in this and all its sub pools does not exceed
-     * the maximum thread number for this pool, even if a sub pool is created
-     * with a higher thread count.
-     * 
-     * @param maxThreads the maximum number of threads in the sub pool
-     * @return a thread pool
-     */
-    public abstract ThreadPool createSubPool(final int maxThreads);
-    
-    
-    /**
-     * Returns a root pool that is the top of a hierarchy of thread pools.
-     * 
-     * @param maxThreads the maximum number of threads in the pool (and all its
-     * sub pools)
-     * @return a new thread pool
-     */
-    public static ThreadPool getRootPool(final int maxThreads) {
-        return new RootPool(maxThreads);
+    @Override
+    protected void finalize() throws Throwable {
+        while (true) {
+            Worker w = m_availableWorkers.poll();
+            if (w == null) { break; }
+            w.interrupt();
+        }
+        super.finalize();
     }
     
-    
     /**
-     * Implementation of a thread pool that has no parent pool.
-     * 
-     * @author Thorsten Meinl, University of Konstanz
+     * Returns the size of the future queue.
+     * @return the queue size
      */
-    private static class RootPool extends ThreadPool {
-        private final Queue<Worker> m_availableWorkers = new LinkedList<Worker>(); 
-       
-        /**
-         * Creates a new root pool.
-         * 
-         * @param maxThreads the maximum number of threads
-         */
-        public RootPool(final int maxThreads) {
-            super(maxThreads);
-        }
-
-        /** 
-         * @see de.unikn.knime.core.util.ThreadPool#getWorker()
-         */
-        @Override
-        protected Worker getWorker() {
-            Worker w = null;
-            ReentrantLock lock = m_lock;
-            lock.lock();            
-            
-            try {
-                do {
-                    if (m_runningWorkers.size() - m_invisibleWorkers < m_maxWorkers) {
-                        if (((w = m_availableWorkers.poll()) == null) || !w.isAlive()) {
-                            w = new Worker();
-                            w.start();
-                        }
-                    } else {
-                        try {
-                            m_workerFinished.await();
-                        } catch (InterruptedException ex) {
-                            return null;
-                        }
-                    }
-                } while (w == null);
-                
-                m_runningWorkers.add(w);
-            } finally {
-                lock.unlock();
-            }
-            
-            return w;
-        }
-
-        /** 
-         * @see de.unikn.knime.core.util.ThreadPool#setMaxThreads(int)
-         */
-        @Override
-        public void setMaxThreads(final int newValue) {
-            if (newValue < m_maxWorkers) {
-                ReentrantLock lock = m_lock;
-                lock.lock();
-                try {
-                    for (int i = (m_maxWorkers - newValue); (i >= 0)
-                        && m_availableWorkers.size() > 0; i--) {
-                        Worker w = m_availableWorkers.remove();
-                        w.interrupt();
-                    }
-                } finally {
-                    lock.unlock();
-                }
-            }
-            
-            super.setMaxThreads(newValue);
-        }
-        
-
-        /** 
-         * @see de.unikn.knime.core.util.ThreadPool
-         * #workerDone(de.unikn.knime.core.util.ThreadPool.Worker)
-         */
-        @Override
-        void workerDone(final Worker w) {
-            ReentrantLock lock = m_lock;
-            lock.lock();
-            try {
-                m_runningWorkers.remove(w);                
-
-                if (m_availableWorkers.size() + m_runningWorkers.size()
-                        - m_invisibleWorkers < m_maxWorkers) {
-                    m_availableWorkers.add(w);
-                } else {
-                    w.interrupt();
-                }
-                
-                m_workerFinished.signalAll();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        /** 
-         * @see de.unikn.knime.core.util.ThreadPool#createSubPool(int)
-         */
-        @Override
-        public ThreadPool createSubPool(final int maxThreads) {
-            return new SubPool(maxThreads, this);
-        }        
-    }
-    
-    
-    /**
-     * Implementation of a thread pool that is a sub pool of some other pool.
-     * 
-     * @author Thorsten Meinl, University of Konstanz
-     */
-    private static class SubPool extends ThreadPool {
-        private final ThreadPool m_parent;
-        
-        /**
-         * Creates a new sub pool.
-         * 
-         * @param maxThreads the maximum number of threads in the pool
-         * @param parent the parent pool
-         */
-        public SubPool(final int maxThreads, final ThreadPool parent) {
-            super(maxThreads);
-            m_parent = parent;
-        }
-
-        /** 
-         * @see de.unikn.knime.core.util.ThreadPool#getWorker()
-         */
-        @Override
-        protected Worker getWorker() {
-            Worker w = null;
-            ReentrantLock lock = m_lock;
-            lock.lock();            
-            
-            try {
-                do {
-                    if (m_runningWorkers.size() - m_invisibleWorkers
-                            < m_maxWorkers) {
-                        w = m_parent.getWorker();
-                    } else {
-                        try {
-                            m_workerFinished.await();
-                        } catch (InterruptedException ex) {
-                            return null;
-                        }
-                    }
-                } while (w == null);
-                
-                m_runningWorkers.add(w);
-            } finally {
-                lock.unlock();
-            }
-            
-            return w;
-        }
-
-
-        /** 
-         * @see de.unikn.knime.core.util.ThreadPool#createSubPool(int)
-         */
-        @Override
-        public ThreadPool createSubPool(final int maxThreads) {
-            return new SubPool(maxThreads, this);
-        }
-
-
-        /** 
-         * @see de.unikn.knime.core.util.ThreadPool
-         * #workerDone(de.unikn.knime.core.util.ThreadPool.Worker)
-         */
-        @Override
-        void workerDone(final Worker w) {
-            ReentrantLock lock = m_lock;
-            lock.lock();
-            try {
-                m_runningWorkers.remove(w);
-                m_parent.workerDone(w);
-                m_workerFinished.signalAll();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        /**
-         * @see de.unikn.knime.core.util.ThreadPool
-         * #runInvisible(java.lang.Runnable)
-         */
-        @Override
-        public void runInvisible(final Runnable r) {
-            if (!(Thread.currentThread() instanceof Worker)) {
-                throw new IllegalThreadStateException("This current thread is"
-                        + " not taken out of a thread pool");
-            }
-            
-            Worker thisWorker = (Worker) Thread.currentThread();
-            
-            if (!m_runningWorkers.contains(thisWorker)) {
-                thisWorker.m_startedFrom.runInvisible(r);                
-            } else {
-                ReentrantLock lock = m_lock;
-                lock.lock();
-                try {
-                    m_invisibleWorkers++;
-                    m_workerFinished.signalAll();
-                } finally {
-                    lock.unlock();
-                }
-                
-                try {
-                    m_parent.runInvisible(r);
-                } finally {                
-                    m_invisibleWorkers--;
-                }
-            }
-        }
+    int getQueueSize() {
+        return m_queuedFutures.size();
     }
 }
