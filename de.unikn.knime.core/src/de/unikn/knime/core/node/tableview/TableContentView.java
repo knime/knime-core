@@ -37,6 +37,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -342,8 +343,8 @@ public class TableContentView extends JTable {
         Rectangle recOfColumn = header.getHeaderRect(column);
         int horizPos = e.getX() - recOfColumn.x;
         assert (horizPos >= 0);
-        // event occured in header's icon
-        if (horizPos <= 16) {
+        // right click in header.
+        if (SwingUtilities.isRightMouseButton(e)) {
             JPopupMenu popup = getPopUpMenu(column);
             if (popup.getSubElements().length > 0) { // only if it has content
                 popup.show(header, e.getX(), e.getY());
