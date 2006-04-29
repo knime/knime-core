@@ -130,7 +130,7 @@ public class ThreadPool {
     private final ThreadPool m_parent;
     private final Queue<MyFuture<?>> m_queuedFutures;
     private final Set<Worker> m_runningWorkers = new HashSet<Worker>();
-    
+    private final Object m_globalLock;
     
     /**
      * Creates a new ThreadPool with a maximum number of threads.
@@ -142,6 +142,7 @@ public class ThreadPool {
         m_parent = null;
         m_queuedFutures = new LinkedList<MyFuture<?>>();
         m_availableWorkers = new ConcurrentLinkedQueue<Worker>();
+        m_globalLock = new Object();
     }
 
     
@@ -156,11 +157,12 @@ public class ThreadPool {
         m_maxThreads = maxThreads;
         m_queuedFutures = m_parent.m_queuedFutures;
         m_availableWorkers = null;
+        m_globalLock = parent.m_globalLock;
     }
     
     
     private boolean checkQueue() {
-        synchronized (m_queuedFutures) {
+        synchronized (m_globalLock) {
             for (Iterator<MyFuture<?>> it = m_queuedFutures.iterator();
                 it.hasNext();) {
                 MyFuture<?> f = it.next();
@@ -220,13 +222,11 @@ public class ThreadPool {
         MyFuture<T> ftask = new MyFuture<T>(t);
         
         Worker w;
-        synchronized (m_runningWorkers) {
+        synchronized (m_globalLock) {
             if ((w = freeWorker()) != null) {
                 w.wakeup(ftask, this);
             } else {
-                synchronized (m_queuedFutures) {
-                    m_queuedFutures.add(ftask);
-                }
+                m_queuedFutures.add(ftask);
             }
         }
         
@@ -249,13 +249,11 @@ public class ThreadPool {
         MyFuture<?> ftask = new MyFuture<Object>(r, null);
         
         Worker w;
-        synchronized (m_runningWorkers) {
+        synchronized (m_globalLock) {
             if ((w = freeWorker()) != null) {
                 w.wakeup(ftask, this);
             } else {
-                synchronized (m_queuedFutures) {
-                    m_queuedFutures.add(ftask);
-                }
+                m_queuedFutures.add(ftask);
             }
         }
         
@@ -264,7 +262,7 @@ public class ThreadPool {
     
     
     private Worker freeWorker() {
-        synchronized (m_runningWorkers) {
+        synchronized (m_globalLock) {
             if (m_runningWorkers.size() - m_invisibleThreads < m_maxThreads) {
                 Worker w;
                 if (m_parent == null) {
@@ -318,33 +316,34 @@ public class ThreadPool {
      * out of a thread pool
      */
     public void runInvisible(final Runnable r) {
-        if (!(Thread.currentThread() instanceof Worker)) {
-            throw new IllegalThreadStateException("The current thread is not"
-                    + "taken out of a thread pool");
-        }
-        
-        Worker thisWorker = (Worker) Thread.currentThread();        
-        if (!m_runningWorkers.contains(thisWorker)) {
-            if (!thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
-                throw new IllegalThreadStateException("The current thread is "
-                        + "not taken out of this thread pool");
+        synchronized(m_globalLock) {
+            if (!(Thread.currentThread() instanceof Worker)) {
+                throw new IllegalThreadStateException("The current thread is not"
+                        + "taken out of a thread pool");
             }
-            thisWorker.m_startedFrom.runInvisible(r);
-        } else {        
+            
+            Worker thisWorker = (Worker) Thread.currentThread();        
             if (!m_runningWorkers.contains(thisWorker)) {
-                throw new IllegalThreadStateException("The current thread is "
-                        + "not taken out of this thread pool");
-            }
-            m_invisibleThreads++;
-            checkQueue();
-
-            try {
-                r.run();
-            } finally {        
-                m_invisibleThreads--;
+                if (!thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
+                    throw new IllegalThreadStateException("The current thread is "
+                            + "not taken out of this thread pool");
+                }
+                thisWorker.m_startedFrom.runInvisible(r);
+            } else {        
+                if (!m_runningWorkers.contains(thisWorker)) {
+                    throw new IllegalThreadStateException("The current thread is "
+                            + "not taken out of this thread pool");
+                }
+                m_invisibleThreads++;
+                checkQueue();
+    
+                try {
+                    r.run();
+                } finally {        
+                    m_invisibleThreads--;
+                }
             }
         }
-
     }
 
     
@@ -459,9 +458,9 @@ public class ThreadPool {
      * @throws InterruptedException if the thread is interrupted while waiting
      */
     public void waitForTermination() throws InterruptedException {
-        synchronized (m_runningWorkers) {
+        synchronized (m_globalLock) {
             while (m_runningWorkers.size() > 0) {
-                m_runningWorkers.wait();
+                m_globalLock.wait();
             }
         }
     }        
@@ -473,7 +472,7 @@ public class ThreadPool {
      * @param w the finished worker
      */
     protected void workerFinished(final Worker w) {
-        synchronized (m_runningWorkers) {
+        synchronized (m_globalLock) {
             m_runningWorkers.remove(w);
                         
             if (m_parent != null) {
@@ -482,7 +481,7 @@ public class ThreadPool {
                 m_availableWorkers.add(w);
                 if (checkQueue()) { return; }
             }
-            m_runningWorkers.notifyAll();
+            m_globalLock.notifyAll();
         }
     }
 
