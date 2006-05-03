@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -21,12 +18,15 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.zip.GZIPInputStream;
 
 import de.unikn.knime.base.node.io.filetokenizer.Delimiter;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
@@ -46,18 +46,19 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author ohl, University of Konstanz
  */
 public class FileReaderSettings extends FileTokenizerSettings {
-    
+
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(FileReaderSettings.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(FileReaderSettings.class);
 
     /* the list of settings that are stored in here. */
 
     private URL m_dataFileLocation;
 
+    private static final String ZIP_ENDING = ".gz";
+
     /* the table name (derived from the filename if not overridden) */
     private String m_tableName;
-    
 
     /*
      * if set, the first row in the file will be considered column names - and
@@ -112,9 +113,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private static final String CFGKEY_MISSINGS = "MissingPatterns";
 
     private static final String CFGKEY_MISSING = "MissPattern";
-    
+
     private static final String CFGKEY_TABLENAME = "TableName";
-    
 
     /**
      * Creates a new object holding all settings needed to read the specified
@@ -152,8 +152,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * @throws InvalidSettingsException if the passed conf object contains
      *             invalid or insufficient settings.
      */
-    public FileReaderSettings(final NodeSettings cfg) 
-        throws InvalidSettingsException {
+    public FileReaderSettings(final NodeSettings cfg)
+            throws InvalidSettingsException {
 
         // set the tokenizer settings first. The rowDelimiter reader depends
         // on the fact that the tokenizer reads its settings first.
@@ -247,8 +247,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * Saves all settings into a <code>NodeSettings</code> object. Using the cfg
-     * object to construct a new FileReaderSettings object should lead to an
+     * Saves all settings into a <code>NodeSettings</code> object. Using the
+     * cfg object to construct a new FileReaderSettings object should lead to an
      * object identical to this.
      * 
      * @param cfg the config object the settings are stored into.
@@ -291,16 +291,16 @@ public class FileReaderSettings extends FileTokenizerSettings {
         for (String key : missPattConf.keySet()) {
             // they should all start with "MissPattern"...
             if (key.indexOf(CFGKEY_MISSING) != 0) {
-                LOGGER.warn("Illegal missing pattern "
-                        + "configuration '" + key + "'. Ignoring it!");
+                LOGGER.warn("Illegal missing pattern " + "configuration '"
+                        + key + "'. Ignoring it!");
                 continue;
             }
             try {
                 String missi = missPattConf.getString(CFGKEY_MISSING + m);
                 setMissingValueForColumn(m, missi);
             } catch (InvalidSettingsException ice) {
-                LOGGER.warn("Illegal missing pattern "
-                        + "configuration '" + key + "' (should be of type"
+                LOGGER.warn("Illegal missing pattern " + "configuration '"
+                        + key + "' (should be of type"
                         + " string). Ignoring it!");
                 continue;
             }
@@ -344,8 +344,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
             try {
                 rowDelim = rowDelims.getString(CFGKEY_ROWDELIM + rowDelIdx);
             } catch (InvalidSettingsException ice) {
-                LOGGER.warn("Invalid configuration for"
-                        + " row delimiter '" + CFGKEY_ROWDELIM + rowDelIdx
+                LOGGER.warn("Invalid configuration for" + " row delimiter '"
+                        + CFGKEY_ROWDELIM + rowDelIdx
                         + "' (must be of type string). Ignoring it!");
                 continue;
             }
@@ -399,8 +399,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
             if (delim == null) {
                 LOGGER.error("Row delimiter '" + rowDelim
                         + "' was not defined with the tokenizer.");
-                LOGGER.error(
-                        "Storing the property 'skip empty lines' "
+                LOGGER.error("Storing the property 'skip empty lines' "
                         + "with 'false'.");
                 combineMultiple = false;
             } else {
@@ -431,8 +430,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
         if (dataFileLocation == null) {
             setTableName("");
         } else {
-            /* don't override a (possibly user set) name if it's 
-             * not a new location */ 
+            /*
+             * don't override a (possibly user set) name if it's not a new
+             * location
+             */
             if (!dataFileLocation.equals(m_dataFileLocation)) {
                 setTableName(getPureFileNameWithExtension(dataFileLocation));
             }
@@ -449,17 +450,52 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
+     * @return a new reader to read from the data file location. It will create
+     *         a buffered reader, and for locations ending on ".gz" a GZIP one.
+     *         If the data location is not set an exception will fly.
+     * @throws NullPointerException if the data location is not set.
+     * @throws IOException if an IO Error occured when opening the stream
+     */
+    public BufferedReader createNewInputReader() throws IOException {
+        if (getDataFileLocation() == null) {
+            throw new NullPointerException("Can't open a stream on a null "
+                    + "location");
+        }
+
+        BufferedReader result = null;
+
+        if (getDataFileLocation().toString().endsWith(ZIP_ENDING)) {
+            // if the file ends with ".gz" try opening a zip stream on it
+            try {
+                result = new BufferedReader(
+                        new InputStreamReader(new GZIPInputStream(
+                                getDataFileLocation().openStream())));
+            } catch (IOException ioe) {
+                // the exception will fly if the specified file is not a zip
+                // file.
+                result = null;
+            }
+        }
+        if (result == null) {
+            result = new BufferedReader(new InputStreamReader(
+                    getDataFileLocation().openStream()));
+        }
+        return result;
+    }
+
+    /**
      * sets a new name for the table created by this node.
+     * 
      * @param newName the new name to set. Valid names are not null.
      */
     public void setTableName(final String newName) {
         m_tableName = newName;
     }
-    
+
     /**
-     * @return the currently set name of the table created by this node. 
-     *          Valid names are not null, but the method could return null, if
-     *          no name was set yet.
+     * @return the currently set name of the table created by this node. Valid
+     *         names are not null, but the method could return null, if no name
+     *         was set yet.
      */
     public String getTableName() {
         return m_tableName;
@@ -467,8 +503,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /**
      * @param loc the location to extract the filename from.
-     * @return the filename part of the URL without path. Or null if the URL is 
-     *          null.  
+     * @return the filename part of the URL without path. Or null if the URL is
+     *         null.
      */
     private String getPureFileNameWithExtension(final URL loc) {
         if (loc != null) {
@@ -482,7 +518,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         }
         return null;
     }
-    
+
     /**
      * Tells whether the first line in the file should be considered column
      * headers, or not.
@@ -848,7 +884,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
             }
         } else {
             for (Iterator pIter = m_missingPatterns.iterator(); 
-                pIter.hasNext();) {
+                    pIter.hasNext();) {
                 if (pIter.next() == null) {
                     status.addInfo("Not all columns have patterns for missing"
                             + " values assigned.");
@@ -867,35 +903,35 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-       StringBuffer res = new StringBuffer(super.toString());
-       res.append("\nReading from:'");
-       if (m_dataFileLocation == null) {
-           res.append("<null>");
-       } else {
-           res.append(m_dataFileLocation.toString());
-       }
-       res.append("'\n");
-       res.append("RowPrefix:");
-       res.append(m_rowHeaderPrefix + "\n");
-       res.append("RowHeaders:" + m_fileHasRowHeaders);
-       res.append(", ColHeaders:" + m_fileHasColumnHeaders);
-       res.append(", Ignore empty lines:" + m_ignoreEmptyLines + "\n");
-       res.append("Row delimiters: ");
-       for (Iterator r = m_rowDelimiters.iterator(); r.hasNext();) {
-           res.append(printableStr((String)r.next()));
-           if (r.hasNext()) {
-               res.append(", ");
-           }
-       }
-       res.append("\n");
-       res.append("MissValue patterns: ");
-       for (int p = 0; p < m_missingPatterns.size(); p++) {
-           res.append(m_missingPatterns.get(p));
-           if (p < m_missingPatterns.size() - 1) {
-               res.append(", ");
-           }
-       }
-       res.append("\n");
-       return res.toString();
+        StringBuffer res = new StringBuffer(super.toString());
+        res.append("\nReading from:'");
+        if (m_dataFileLocation == null) {
+            res.append("<null>");
+        } else {
+            res.append(m_dataFileLocation.toString());
+        }
+        res.append("'\n");
+        res.append("RowPrefix:");
+        res.append(m_rowHeaderPrefix + "\n");
+        res.append("RowHeaders:" + m_fileHasRowHeaders);
+        res.append(", ColHeaders:" + m_fileHasColumnHeaders);
+        res.append(", Ignore empty lines:" + m_ignoreEmptyLines + "\n");
+        res.append("Row delimiters: ");
+        for (Iterator r = m_rowDelimiters.iterator(); r.hasNext();) {
+            res.append(printableStr((String)r.next()));
+            if (r.hasNext()) {
+                res.append(", ");
+            }
+        }
+        res.append("\n");
+        res.append("MissValue patterns: ");
+        for (int p = 0; p < m_missingPatterns.size(); p++) {
+            res.append(m_missingPatterns.get(p));
+            if (p < m_missingPatterns.size() - 1) {
+                res.append(", ");
+            }
+        }
+        res.append("\n");
+        return res.toString();
     }
 }

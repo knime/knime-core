@@ -1,8 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -19,10 +15,7 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 
@@ -71,7 +64,7 @@ final class FileRowIterator extends RowIterator {
 
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
-    
+
     /**
      * The RowIterator for the FileTable.
      * 
@@ -84,17 +77,15 @@ final class FileRowIterator extends RowIterator {
 
         m_tableSpec = tableSpec;
         m_frSettings = frSettings;
- 
-        InputStream inStream = m_frSettings.getDataFileLocation().openStream();
-        m_tokenizer = new FileTokenizer(new BufferedReader(
-                new InputStreamReader(inStream)));
+
+        m_tokenizer = new FileTokenizer(m_frSettings.createNewInputReader());
 
         // set the tokenizer related settings in the tokenizer
         m_tokenizer.setSettings(frSettings);
 
         m_rowNumber = 1;
         m_exceptionThrown = false;
-        
+
         // set the row prefix here (so we don't have to go through this for each
         // row separately). If this prefix is set it will be used - otherwise
         // it's safe to assume the file contains row headers!
@@ -194,8 +185,10 @@ final class FileRowIterator extends RowIterator {
                 token = m_tokenizer.nextToken();
             } catch (FileTokenizerException fte) {
                 m_exceptionThrown = true;
-                throw new FileReaderException(fte.getMessage() + "' (Source: "
-                            + m_frSettings.getDataFileLocation() + ")");
+                throw createException(fte.getMessage() + " (Source: "
+                        + m_frSettings.getDataFileLocation() + ", line "
+                        + m_tokenizer.getLineNumber() + ")", m_tokenizer
+                        .getLineNumber(), rowHeader, row);
             }
             // row delims are returned as token
             if ((token == null) || m_frSettings.isRowDelimiter(token)) {
@@ -220,7 +213,7 @@ final class FileRowIterator extends RowIterator {
             DataColumnSpec cSpec = m_tableSpec.getColumnSpec(createdCols);
             // now get that new cell (it throws something at us if it couldn't)
             row[createdCols] = createNewDataCellOfType(cSpec.getType(), token,
-                    isMissingCell);
+                    isMissingCell, rowHeader, row);
 
             createdCols++;
 
@@ -230,42 +223,51 @@ final class FileRowIterator extends RowIterator {
         // puke and die
         if (createdCols < noOfCols) {
             m_exceptionThrown = true;
-            throw new FileReaderException("Too few data elements in row "
+            throw createException("Too few data elements in row "
                     + "(Source: '" + m_frSettings.getDataFileLocation()
-                    + "' near row " + m_rowNumber + ")");
+                    + "' line: " + m_tokenizer.getLineNumber() + ")",
+                    m_tokenizer.getLineNumber(), rowHeader, row);
         }
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
         token = m_tokenizer.nextToken();
         if (!m_frSettings.isRowDelimiter(token)) {
             m_exceptionThrown = true;
-            throw new FileReaderException("Too many data elements in row "
+            throw createException("Too many data elements in row "
                     + "(Source: '" + m_frSettings.getDataFileLocation()
-                    + "' near row " + m_rowNumber + ")");
+                    + "' line: " + m_tokenizer.getLineNumber() + ")",
+                    m_tokenizer.getLineNumber(), rowHeader, row);
         }
         m_rowNumber++;
 
         return new DefaultRow(rowHeader, row);
     } // next()
 
-    /*
-     * The function creates a standard <code> DataCell </code> of a type
-     * depending on the <code> type </code> passed in, and initializes the value
-     * of this data cell from the <code> data </code> string (converting the
-     * string to the corresponding type). Throws java.lang.NumberFormatException
-     * if the <code> data </code> argument couldn't be converted to the
-     * appropriate type (i.e. int or double) or a <code> IllegalStateException
-     * </code> if the <code> type </code> passed in is not supported. @param
-     * type Specifies the type of DataCell that is to be created, supported are
-     * DoubleCell, IntCell, and StringCell. @param data the string
-     * representation of the value that will be set in the DataCell created.
+    /**
+     * The method creates a default <code>DataCell</code> of the type passed
+     * in, and initializes its value from the <code>data</code> string
+     * (converting it to the corresponding type). Throws a
+     * java.lang.NumberFormatException if the <code>data</code> argument
+     * couldn't be converted to the appropriate type or a
+     * <code> IllegalStateException
+     * </code> if the <code> type </code> passed in
+     * is not supported.
+     * 
+     * @param type the type of DataCell to be created, supported are Double-,
+     *            Int-, and StringTypes.
+     * @param data the string representation of the value that will be set in
+     *            the DataCell created.
      * @param createMissingCell If set true a missing cell of the passed type
-     * will be created. The <code> data </code> parameter is ignored then.
+     *            will be created. The <code> data </code> parameter is ignored
+     *            then.
+     * @param rowHeader the rowID - for nice error messages only.
+     * @param row the cells of the row created so far. Used for messages only.
      * @return <code> DataCell </code> of the type specified in <code> type
      * </code> .
      */
     private DataCell createNewDataCellOfType(final DataType type,
-            final String data, final boolean createMissingCell) {
+            final String data, final boolean createMissingCell,
+            final DataCell rowHeader, final DataCell[] row) {
 
         if (createMissingCell) {
             return type.getMissingCell();
@@ -279,9 +281,10 @@ final class FileRowIterator extends RowIterator {
                 return new DefaultIntCell(val);
             } catch (NumberFormatException nfe) {
                 m_exceptionThrown = true;
-                throw new FileReaderException("Wrong data format. In row #"
-                        + m_rowNumber + " read '" + data
-                        + "' for an integer");
+                throw createException("Wrong data format. In line "
+                        + m_tokenizer.getLineNumber() + " read '" + data
+                        + "' for an integer", m_tokenizer.getLineNumber(),
+                        rowHeader, row);
             }
         } else if (type instanceof DoubleType) {
             try {
@@ -289,15 +292,16 @@ final class FileRowIterator extends RowIterator {
                 return new DefaultDoubleCell(val);
             } catch (NumberFormatException nfe) {
                 m_exceptionThrown = true;
-                throw new FileReaderException("Wrong data format. In row #"
-                        + m_rowNumber + " read '" + data
-                        + "' for a floating point.");
+                throw createException("Wrong data format. In line "
+                        + m_tokenizer.getLineNumber() + " read '" + data
+                        + "' for a floating point.", m_tokenizer
+                        .getLineNumber(), rowHeader, row);
             }
         } else {
             m_exceptionThrown = true;
-            throw new FileReaderException("Cannot create DataCell of type"
-                    + type.toString() 
-                    + ". Looks like an internal error. Sorry.");
+            throw createException("Cannot create DataCell of type "
+                    + type.toString() + ". Looks like an internal error. "
+                    + "Sorry.", m_tokenizer.getLineNumber(), rowHeader, row);
         }
     } // createNewDataCellOfType(Class,String,boolean)
 
@@ -348,7 +352,7 @@ final class FileRowIterator extends RowIterator {
                 newRowHeader = fileHeader;
             }
             // see if it's unique - and if not make it unique.
-            newRowHeader = uniquifyRowHeader(newRowHeader, rowNumber);
+            newRowHeader = uniquifyRowHeader(newRowHeader);
 
             return new DefaultStringCell(newRowHeader);
 
@@ -365,8 +369,7 @@ final class FileRowIterator extends RowIterator {
      * unique row header, which could be the same than the one passed in (and
      * adds any rowheader returned to the hash set).
      */
-    private String uniquifyRowHeader(final String newRowHeader,
-            final int rowNumber) {
+    private String uniquifyRowHeader(final String newRowHeader) {
 
         String unique;
 
@@ -375,7 +378,7 @@ final class FileRowIterator extends RowIterator {
         } else {
             // add the line number to the suffix - and if that didn't help, add
             // a running index until it is unique.
-            unique = newRowHeader + "(" + rowNumber + ")";
+            unique = newRowHeader;
             String prefix = unique;
             int idx = 2;
             while (m_rowIDhash.contains(unique)) {
@@ -388,6 +391,76 @@ final class FileRowIterator extends RowIterator {
         m_rowIDhash.add(unique);
 
         return unique;
+
+    }
+
+    private FileReaderException createException(final String msg,
+            final int lineNumber, final DataCell rowHeader,
+            final DataCell[] cellsRead) {
+        DataCell[] errCells = new DataCell[cellsRead.length];
+        System.arraycopy(cellsRead, 0, errCells, 0, errCells.length);
+
+        for (int c = 0; c < errCells.length; c++) {
+            if (errCells[c] == null) {
+                // create an error (missing) cell for cells not read
+                DataColumnSpec cSpec = m_tableSpec.getColumnSpec(c);
+                errCells[c] = new ErrorCell("NOT READ", cSpec.getType());
+            }
+        }
+
+        DataCell errRowHeader = new DefaultStringCell("ERROR_ROW ("
+                + rowHeader.toString() + ")");
+
+        DataRow errRow = new DefaultRow(errRowHeader, errCells);
+
+        return new FileReaderException(msg, errRow, lineNumber);
+
+    }
+
+    private class ErrorCell extends DataCell {
+
+        private final DataType m_type;
+
+        private final String m_msg;
+
+        /**
+         * Creates another instance of a missing cell for the specified type.
+         * This cell will return the specified message in the
+         * <code>toString</code> method.
+         * 
+         * @param msg
+         * @param type
+         */
+        ErrorCell(final String msg, final DataType type) {
+            m_msg = msg;
+            m_type = type;
+        }
+
+        @Override
+        protected boolean equalsDataCell(final DataCell dc) {
+            // guaranteed not to be called on and with a missing cell.....
+            return false;
+        }
+
+        @Override
+        public DataType getType() {
+            return m_type;
+        }
+
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
+
+        @Override
+        public boolean isMissing() {
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return m_msg;
+        }
 
     }
 

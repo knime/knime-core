@@ -1,8 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -51,9 +47,6 @@ import java.util.Vector;
  * inside a token or quoted string.
  * <p>
  * You can push back one (the last) token.
- * <p>
- * <b>Note </b>, consecutive delimiters that are returned as separate tokens
- * will not cause an empty token to be produced between them.
  * 
  * @author Peter Ohl, University of Konstanz
  */
@@ -134,7 +127,7 @@ public class FileTokenizer {
 
     /* the token returned by the last call to next() */
     private String m_lastToken;
-
+    
     /* flag to remember which quotes we've seen with the last token */
     private Quote m_lastQuotes;
 
@@ -243,11 +236,11 @@ public class FileTokenizer {
             m_pushedBack = false;
             return m_lastToken;
         }
-
         if (m_lastDelimiter != null) {
             // if the last delmiter we read must be returned as token, we do so.
             String tmp = m_lastDelimiter;
             m_lastDelimiter = null;
+            m_lastToken = tmp;
             return tmp;
         }
 
@@ -257,7 +250,6 @@ public class FileTokenizer {
         int lastEndQuoteIdx = -1; // the idx of the end quote last seen or added
         
         int c = getNextChar();
-
         while (c != EOF) {
 
             int ctype = m_charType[c & MAX_CHAR];
@@ -382,7 +374,6 @@ public class FileTokenizer {
             m_lastToken = m_newToken.toString();
         }
         return m_lastToken;
-
     } // nextToken()
 
     /*
@@ -755,14 +746,9 @@ public class FileTokenizer {
             assert m_lastDelimiter == null;
 
             if (delim.returnAsToken()) {
-                if (m_newToken.length() == 0) {
-                    // we can immediately return it
-                    return delim.getDelimiter();
-                } else {
-                    // we must store it for the next call to 'nextToken()'
-                    m_lastDelimiter = delim.getDelimiter();
-                    return "";
-                }
+                // store it to return it with the next call to 'nextToken()' 
+                m_lastDelimiter = delim.getDelimiter();
+                return "";
             } else {
                 if (delim.includeInToken()) {
                     return delim.getDelimiter();
@@ -816,14 +802,9 @@ public class FileTokenizer {
                     return returnDel.getDelimiter();
                 } else {
                     assert returnDel.returnAsToken();
-                    if (m_newToken.length() == 0) {
-                        // we can return it immediately
-                        return returnDel.getDelimiter();
-                    } else {
                         // we must store it for the next call to 'nextToken()'
-                        m_lastDelimiter = returnDel.getDelimiter();
-                        return "";
-                    }
+                    m_lastDelimiter = returnDel.getDelimiter();
+                    return "";
                 }
             } else {
                 return "";

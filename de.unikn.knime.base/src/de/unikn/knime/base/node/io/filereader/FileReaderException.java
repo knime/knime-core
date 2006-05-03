@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -21,6 +18,8 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
+import de.unikn.knime.core.data.DataRow;
+
 /**
  * The exception the FileReader (more specificaly the FileRowIterator) throws if
  * something goes wrong.
@@ -30,6 +29,11 @@ package de.unikn.knime.base.node.io.filereader;
  * @author ohl, University of Konstanz
  */
 public class FileReaderException extends RuntimeException {
+
+    private final DataRow m_row;
+
+    private final int m_lineNumber;
+
     /**
      * Always provide a good user message why things go wrong.
      * 
@@ -37,5 +41,38 @@ public class FileReaderException extends RuntimeException {
      */
     FileReaderException(final String msg) {
         super(msg);
+        m_row = null;
+        m_lineNumber = -1;
+    }
+
+    /**
+     * Constructor for an exception that stores the last (partial) row where
+     * things went wrong.
+     * 
+     * @param msg the message what went wrong.
+     * @param faultyRow the row as far as it got read.
+     * @param lineNumber the lineNumber the error occured
+     */
+    FileReaderException(final String msg, final DataRow faultyRow,
+            final int lineNumber) {
+        super(msg);
+        m_row = faultyRow;
+        m_lineNumber = lineNumber;
+    }
+
+    /**
+     * @return the row that was (possibly partially!) read before things went
+     *         wrong. Could be null, if not set.
+     */
+    DataRow getErrorRow() {
+        return m_row;
+    }
+
+    /**
+     * @return the line number where the error occured in the file. Could be -1
+     *         if not set.
+     */
+    int getErrorLineNumber() {
+        return m_lineNumber;
     }
 }

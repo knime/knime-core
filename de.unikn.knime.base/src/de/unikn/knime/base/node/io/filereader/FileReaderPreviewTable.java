@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -21,6 +18,11 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
+import java.util.LinkedList;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
 
@@ -38,7 +40,11 @@ import de.unikn.knime.core.data.RowIterator;
  */
 public class FileReaderPreviewTable extends FileTable {
 
-    private boolean m_errorOccured;
+    private String m_errorMsg;
+
+    private int m_errorLine;
+    
+    private final LinkedList<ChangeListener> m_listeners;
 
     /**
      * Creates a new table, its like the "normal" <code>FileTable</code>,
@@ -51,7 +57,9 @@ public class FileReaderPreviewTable extends FileTable {
     FileReaderPreviewTable(final DataTableSpec tableSpec,
             final FileReaderNodeSettings settings) {
         super(tableSpec, settings);
-        m_errorOccured = false;
+        m_listeners = new LinkedList<ChangeListener>();
+        m_errorMsg = null;
+        m_errorLine = -1;
     }
 
     /**
@@ -65,18 +73,66 @@ public class FileReaderPreviewTable extends FileTable {
     /**
      * this sets the flag indicating that the row iterator ended the table with
      * an error.
+     * 
+     * @param msg the message to store.
+     * @param lineNumber the line in which the error occured.
      */
-    void setErrorFlag() {
-        m_errorOccured = true;
+    void setError(final String msg, final int lineNumber) {
+        if (msg == null) {
+            throw new NullPointerException("Set a nice error message");
+        }
+        if (lineNumber < 0) {
+            throw new IllegalArgumentException("Line numbers must be larger "
+                    + "than zero.");
+        }
+        m_errorMsg = msg;
+        m_errorLine = lineNumber;
+        // notify all interested 
+        fireErrorOccuredEvent();
     }
 
     /**
      * @return true if an error occured in an underlying row iterator. Meaning
      *         the table contains invalid data. NOTE: if false is returned it is
      *         not guaranteed that all data in the table is valid. It could be
-     *         that no row iterator reached the invalid data yet. 
+     *         that no row iterator reached the invalid data yet.
      */
     boolean getErrorOccured() {
-        return m_errorOccured;
+        return m_errorMsg != null;
+    }
+
+    /**
+     * @return the error msg set by a row iterator that came accross an error in
+     *         the table. This is null if not set.
+     */
+    String getErrorMsg() {
+        return m_errorMsg;
+    }
+
+    /**
+     * @return the line number where the error occured - if an error occured and
+     *         an error line number was set. Otherweise -1 is returned.
+     */
+    int getErrorLine() {
+        return m_errorLine;
+    }
+
+    /**
+     * If someone wants to be notified if an error occured he should register
+     * through this method.
+     * 
+     * @param listener the object being notified when an error occurs.
+     */
+    void addChangeListener(final ChangeListener listener) {
+        if (!m_listeners.contains(listener)) {
+            m_listeners.add(listener);
+        }
+    }
+
+    private void fireErrorOccuredEvent() {
+        ChangeEvent event = new ChangeEvent(this);
+        for (ChangeListener l : m_listeners) {
+            l.stateChanged(event);
+        }
     }
 }

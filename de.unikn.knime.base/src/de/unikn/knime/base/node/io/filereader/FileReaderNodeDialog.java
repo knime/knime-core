@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -41,7 +38,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -57,6 +53,8 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
@@ -69,14 +67,9 @@ import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.DefaultStringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
@@ -152,7 +145,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
     // only one click - boom gone.
     private Vector<String> m_prevWhiteSpaces;
 
-    private JLabel m_analWarning;
+    private JLabel m_errorLabel;
+    
+    private JLabel m_analyzeWarn; 
 
     private FileReaderPreviewTable m_previewTable;
 
@@ -220,9 +215,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, 70));
         panel.setMinimumSize(new Dimension(PANEL_WIDTH, 70));
         m_urlCombo.addItemListener(new ItemListener() {
-           public void itemStateChanged(final ItemEvent e) {
-               analyzeDataFileAndUpdatePreview(false);
-           } 
+            public void itemStateChanged(final ItemEvent e) {
+                analyzeDataFileAndUpdatePreview(false);
+            }
         });
         /* install action listeners */
         // set stuff to update preview when file location changes
@@ -244,11 +239,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 public void changedUpdate(final DocumentEvent e) {
                     m_previewTableView.setDataTable(null);
                 }
-    
+
                 public void insertUpdate(final DocumentEvent e) {
                     m_previewTableView.setDataTable(null);
                 }
-    
+
                 public void removeUpdate(final DocumentEvent e) {
                     m_previewTableView.setDataTable(null);
                 }
@@ -258,9 +253,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
         browse.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 // sets the path in the file text field.
-                String newFile = popupFileChooser(
-                        m_urlCombo.getSelectedItem().toString(),
-                        false);
+                String newFile = popupFileChooser(m_urlCombo.getSelectedItem()
+                        .toString(), false);
                 if (newFile != null) {
                     m_urlCombo.setSelectedItem(newFile);
                     analyzeDataFileAndUpdatePreview(false);
@@ -289,11 +283,24 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_previewTableView = new TableView(ptcv);
 
         tableBox.add(m_previewTableView);
+        
+
+        // add the analyzer warning at the bottom
+        m_analyzeWarn = new JLabel("");
+        m_analyzeWarn.setForeground(Color.red);
+        JPanel analBox = new JPanel();
+        analBox.setLayout(new BoxLayout(analBox, BoxLayout.X_AXIS));
+        analBox.add(Box.createHorizontalGlue());
+        analBox.add(m_analyzeWarn);
+        // reserve a certain height for the (in the beginning invisible) label
+        analBox.add(Box.createVerticalStrut(25));
+        analBox.add(Box.createHorizontalGlue());
 
         panel.add(Box.createGlue());
         panel.add(hintBox);
         panel.add(Box.createVerticalStrut(10));
         panel.add(tableBox);
+        panel.add(analBox);
         panel.add(Box.createGlue());
 
         // this is the callback for the preview table header click
@@ -312,7 +319,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
     }
 
     private JPanel createSettingsPanel() {
-        // creating button first to get the preferred height
         JButton advanced = new JButton("Advanced...");
         int buttonHeight = advanced.getPreferredSize().height;
         m_hasRowHeaders = new JCheckBox("read row headers");
@@ -344,7 +350,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_ignoreWS = new JCheckBox("ignore spaces and tabs");
         m_ignoreWS.setToolTipText("If checked, whitespaces (spaces and tabs)"
                 + " will be discarded (if not quoted)");
-        // put them together in a panel
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(3, 3));
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
@@ -395,9 +400,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         panel.add(pValBox);
         panel.add(cCmtBox);
         panel.add(slcBox);
-        // and install listeners
         int componentsHeight = (2 * COMP_HEIGHT) + 30 + buttonHeight;
-        // some extra for the border and for the space bewteen the two rows.
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, componentsHeight));
         advanced.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -434,33 +437,32 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 ignoreWSChanged();
             }
         });
-        // set a filter to the single line comment.
         m_singleLineComment.getDocument().addDocumentListener(
-            new DocumentListener() {
-                public void changedUpdate(final DocumentEvent e) {
-                    commentSettingsChanged();
-                }
-                public void insertUpdate(final DocumentEvent e) {
-                    commentSettingsChanged();
-                }
-                public void removeUpdate(final DocumentEvent e) {
-                    commentSettingsChanged();
-                }
-            });
-        // add a panel for the analyzer warning:
-        m_analWarning = new JLabel("");
-        m_analWarning.setForeground(Color.red);
-        JPanel analWarn = new JPanel();
-        analWarn.setLayout(new BoxLayout(analWarn, BoxLayout.X_AXIS));
-        analWarn.add(Box.createHorizontalGlue());
-        analWarn.add(m_analWarning);
+                new DocumentListener() {
+                    public void changedUpdate(final DocumentEvent e) {
+                        commentSettingsChanged();
+                    }
+                    public void insertUpdate(final DocumentEvent e) {
+                        commentSettingsChanged();
+                    }
+                    public void removeUpdate(final DocumentEvent e) {
+                        commentSettingsChanged();
+                    }
+                });
+        // add a panel for the errors:
+        m_errorLabel = new JLabel("");
+        m_errorLabel.setForeground(Color.red);
+        JPanel errorBox = new JPanel();
+        errorBox.setLayout(new BoxLayout(errorBox, BoxLayout.X_AXIS));
+        errorBox.add(Box.createHorizontalGlue());
+        errorBox.add(m_errorLabel);
         // reserve a certain height for the (in the beginning invisible) label
-        analWarn.add(Box.createVerticalStrut(25));
-        analWarn.add(Box.createHorizontalGlue());
+        errorBox.add(Box.createVerticalStrut(25));
+        errorBox.add(Box.createHorizontalGlue());
         JPanel result = new JPanel();
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
         result.add(panel);
-        result.add(analWarn);
+        result.add(errorBox);
         return result;
     }
 
@@ -680,7 +682,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         if (m_insideLoadDelim) {
             // when we load delimiter settings the delimStettings change - of
-            // course. We are not triggering any action then, though.
+            // course. We are not triggering any action then.
             return;
         }
 
@@ -709,7 +711,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
             try {
                 m_frSettings.addDelimiterPattern(delimStr, false, false, false);
             } catch (IllegalArgumentException iae) {
-                setErrorTable(new String[]{iae.getMessage()});
+                setErrorLabelText(iae.getMessage());
                 m_insideDelimChange = false;
                 return;
             }
@@ -780,7 +782,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 try {
                     m_frSettings.addSingleLineCommentPattern(slc, false, false);
                 } catch (IllegalArgumentException iae) {
-                    setErrorTable(new String[]{iae.getMessage()});
+                    setErrorLabelText(iae.getMessage());
                     return;
                 }
             }
@@ -906,8 +908,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
         try {
             URL dataFileLocation = new URL(settings
                     .getString(FileReaderSettings.CFGKEY_DATAURL));
-            m_frSettings.setDataFileLocationAndUpdateTableName(
-                    dataFileLocation);
+            m_frSettings
+                    .setDataFileLocationAndUpdateTableName(dataFileLocation);
         } catch (MalformedURLException mfue) {
             // don't set the data location if it bombs
         } catch (InvalidSettingsException ice) {
@@ -920,9 +922,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 && (m_frSettings.getColumnProperties() != null)
                 && (m_frSettings.getColumnProperties().size() > 0)) {
             // do not analyze file if we got settings to use
-            m_urlCombo.setSelectedItem(
-                    m_frSettings.getDataFileLocation().toString());
-            
+            m_urlCombo.setSelectedItem(m_frSettings.getDataFileLocation()
+                    .toString());
+
             loadSettings(false);
         } else {
             // load settings and analyze file
@@ -940,15 +942,10 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         saveSettings();
         if (m_previewTable.getErrorOccured()) {
-            // display the last row - which contains the error message
-            if (m_previewTableView.getContentModel().getRowCount() > 0) {
-                m_previewTableView.goToRow(m_previewTableView.getContentModel()
-                        .getRowCount() - 1);
-            }
-            // and let'em know.
             throw new InvalidSettingsException("With the current settings"
-                    + " the file contains invalid data. Please check the last"
-                    + " row of the preview.");
+                    + " an error occures when reading the file (line "
+                    + m_previewTable.getErrorLine() + "): "
+                    + m_previewTable.getErrorMsg());
         }
         m_frSettings.saveToConfiguration(settings);
 
@@ -982,8 +979,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
             newURL = textToURL(m_urlCombo.getSelectedItem().toString());
         } catch (Exception e) {
             // leave settings unchanged.
-            setErrorTable(new String[]{"Malformed URL '"
-                    + m_urlCombo.getSelectedItem() + "'."});
+            setErrorLabelText("Malformed URL '"
+                    + m_urlCombo.getSelectedItem() + "'.");
             return;
         }
 
@@ -1002,8 +999,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                     m_frSettings = FileAnalyzer.analyze(newFRNS);
                     displayAnalWarning = !m_frSettings.analyzeUsedAllRows();
                 } catch (IOException ioe) {
-                    setErrorTable(new String[]{"Can't access '" 
-                            + newURL + "'"});
+                    setErrorLabelText("Can't access '" + newURL + "'");
                     return;
                 }
             } else {
@@ -1032,8 +1028,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                     displayAnalWarning = !m_frSettings.analyzeUsedAllRows();
                 } catch (IOException ioe) {
                     m_frSettings.setColumnProperties(oldColProps);
-                    setErrorTable(new String[]{"Can't access '" 
-                            + newURL + "'"});
+                    setErrorLabelText("Can't access '" + newURL + "'");
                     return;
                 }
             }
@@ -1045,7 +1040,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         // updatePreview clears the analWarning
         if (displayAnalWarning) {
-            m_analWarning.setText("WARNING: suggested settings are based on "
+            setAnalWarningText("WARNING: suggested settings are based on "
                     + "a partial file analysis only! Please verify.");
         }
     }
@@ -1056,8 +1051,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
      */
     private void updatePreview() {
         // something in the settings changed - clear warning
-        m_analWarning.setText("");
-
+        setAnalWarningText("");
+        setErrorLabelText("");
+        
         // update preview
         if ((m_frSettings.getDataFileLocation() == null)
                 || (m_frSettings.getDataFileLocation().equals(""))) {
@@ -1067,21 +1063,18 @@ class FileReaderNodeDialog extends NodeDialogPane {
         }
         SettingsStatus status = m_frSettings.getStatusOfSettings(true, null);
         if (status.getNumOfErrors() > 0) {
-            String[] msgs = new String[status.getNumOfErrors()];
-            for (int m = 0; m < status.getNumOfErrors(); m++) {
-                msgs[m] = status.getErrorMessage(m);
-            }
-            setErrorTable(msgs);
+            setErrorLabelText(status.getErrorMessage(0));
+            m_previewTableView.setDataTable(null);
             return;
         }
         if (m_frSettings.getFileHasColumnHeaders()) {
             try {
                 m_frSettings.readColumnHeadersFromFile();
             } catch (IOException ioe) {
-                setErrorTable(new String[]{"I/O Error reading column headers"
+                setErrorLabelText("I/O Error reading column headers"
                         + " from file '"
-                        + m_frSettings.getDataFileLocation().toString() 
-                        + "'."});
+                        + m_frSettings.getDataFileLocation().toString() + "'.");
+                m_previewTableView.setDataTable(null);
                 return;
             }
 
@@ -1089,6 +1082,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
         tSpec = modifyPreviewColNames(tSpec);
         m_previewTable = new FileReaderPreviewTable(tSpec, m_frSettings);
+        m_previewTable.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                setErrorLabelText(m_previewTable.getErrorMsg());
+            }
+        });
         m_previewTableView.setDataTable(m_previewTable);
     }
 
@@ -1115,10 +1113,10 @@ class FileReaderNodeDialog extends NodeDialogPane {
             } else {
                 name = new DefaultStringCell(cSpec.getName().toString());
             }
-            DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name,
-                    cSpec.getType());
+            DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name, cSpec
+                    .getType());
             dcsc.setDomain(cSpec.getDomain());
-            DataColumnSpec newSpec = dcsc.createSpec(); 
+            DataColumnSpec newSpec = dcsc.createSpec();
             colSpecs[c] = newSpec;
         }
 
@@ -1137,8 +1135,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         if (loadFileLocation) {
             if (m_frSettings.getDataFileLocation() != null) {
-                m_urlCombo.setSelectedItem(
-                        m_frSettings.getDataFileLocation().toString());
+                m_urlCombo.setSelectedItem(m_frSettings.getDataFileLocation()
+                        .toString());
             } else {
                 m_urlCombo.setSelectedItem("");
             }
@@ -1265,8 +1263,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
      * xml file.
      */
     protected void readXMLSettings() {
-        String xmlPath = popupFileChooser(
-                m_urlCombo.getSelectedItem().toString(), true);
+        String xmlPath = popupFileChooser(m_urlCombo.getSelectedItem()
+                .toString(), true);
 
         if (xmlPath == null) {
             // user canceled.
@@ -1288,8 +1286,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         m_frSettings = newFrns;
         loadSettings(false); // don't trigger file analysis
-        m_urlCombo.setSelectedItem(
-                m_frSettings.getDataFileLocation().toString());
+        m_urlCombo.setSelectedItem(m_frSettings.getDataFileLocation()
+                .toString());
         updatePreview();
     }
 
@@ -1373,112 +1371,39 @@ class FileReaderNodeDialog extends NodeDialogPane {
         return newURL;
     }
 
-    private void setErrorTable(final String[] errorMsgs) {
-        m_previewTableView.setDataTable(new ErrTable(errorMsgs));
+    private void setErrorLabelText(final String text) {
+        m_errorLabel.setText(text);
+        getPanel().invalidate();
+        getPanel().validate();
     }
-
-    /**
-     * Helper class to show error messages in preview table.
-     * 
-     * @author ohl, University of Konstanz
-     */
-    private final class ErrTable implements DataTable {
-        private DataTableSpec m_tSpec;
-
-        private String[] m_errMsgs;
-
-        /**
-         * A table containing error messages to be displayed in the preview.
-         * 
-         * @param errMessages the error messages showing each in one row.
-         */
-        private ErrTable(final String[] errMessages) {
-            m_tSpec = null;
-            m_errMsgs = errMessages;
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
-         */
-        public DataTableSpec getDataTableSpec() {
-            if (m_tSpec == null) {
-                m_tSpec = new DataTableSpec(
-                        new DataCell[]{new DefaultStringCell("ErrorMessages")},
-                        new DataType[]{StringType.STRING_TYPE});
-            }
-            return m_tSpec;
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.DataTable#iterator()
-         */
-        public RowIterator iterator() {
-            return new ErrRowIterator(m_errMsgs);
-        }
-
-    }
-
-    /**
-     * Helper class to show error messages in preview table.
-     * 
-     * @author ohl, University of Konstanz
-     */
-    private final class ErrRowIterator extends RowIterator {
-
-        private String[] m_errMsgs;
-
-        private int m_nextIdx;
-
-        /**
-         * RowIterator class for ErrTable.
-         * 
-         * @param errMsgs pass the error message the iterator should produce
-         */
-        private ErrRowIterator(final String[] errMsgs) {
-            m_errMsgs = errMsgs;
-            m_nextIdx = 0;
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.RowIterator#hasNext()
-         */
-        public boolean hasNext() {
-            return m_nextIdx < m_errMsgs.length;
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.RowIterator#next()
-         */
-        public DataRow next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException(
-                        "The row iterator proceeded beyond the last error msg");
-            }
-            // we know that we have to create one column with a string cell.
-            DataCell rowID = new DefaultStringCell("Err" + (m_nextIdx + 1));
-            return new DefaultRow(rowID, new String[]{m_errMsgs[m_nextIdx++]});
-        }
+    
+    private void setAnalWarningText(final String text) {
+        m_analyzeWarn.setText(text);
+        getPanel().invalidate();
+        getPanel().validate();
     }
     
     /** Renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
-        
+
         /**
          * @see BasicComboBoxRenderer#getListCellRendererComponent(
-         * javax.swing.JList, java.lang.Object, int, boolean, boolean)
+         *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
          */
-        public Component getListCellRendererComponent(final JList list, 
-                final Object value, final int index, final boolean isSelected, 
+        public Component getListCellRendererComponent(final JList list,
+                final Object value, final int index, final boolean isSelected,
                 final boolean cellHasFocus) {
             if (index > -1) {
                 list.setToolTipText(value.toString());
             }
-            return super.getListCellRendererComponent(
-                    list, value, index, isSelected, cellHasFocus);
+            return super.getListCellRendererComponent(list, value, index,
+                    isSelected, cellHasFocus);
         }
 
-        /** Does the clipping automatically, clips off characters from the 
-         * middle of the string.
+        /**
+         * Does the clipping automatically, clips off characters from the middle
+         * of the string.
+         * 
          * @see JLabel#getText()
          */
         @Override
@@ -1493,12 +1418,12 @@ class FileReaderNodeDialog extends NodeDialogPane {
             }
             return clipped;
         }
-        
+
         /**
-         * builds strings with the following pattern: if size is smaller than 
-         * 30, return the last 30 chars in the string; if the size is larger 
-         * than 30: return the first 12 chars + ... + chars from the end. 
-         * Size more than 55: the first 28 + ... + rest from the end.
+         * builds strings with the following pattern: if size is smaller than
+         * 30, return the last 30 chars in the string; if the size is larger
+         * than 30: return the first 12 chars + ... + chars from the end. Size
+         * more than 55: the first 28 + ... + rest from the end.
          */
         private String format(final String str, final int size) {
             String result;
@@ -1507,18 +1432,18 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 return str;
             }
             if (size <= 30) {
-                result = "..." + str.substring(str.length() - size + 3,
-                        str.length());
+                result = "..."
+                        + str.substring(str.length() - size + 3, str.length());
             } else if (size <= 55) {
                 result = str.substring(0, 12)
-                + "..."
-                + str.subSequence(str.length() - size + 15,
-                        str.length());
+                        + "..."
+                        + str.subSequence(str.length() - size + 15, str
+                                .length());
             } else {
                 result = str.substring(0, 28)
-                + "..."
-                + str.subSequence(str.length() - size + 31,
-                        str.length());
+                        + "..."
+                        + str.subSequence(str.length() - size + 31, str
+                                .length());
             }
             return result;
         }

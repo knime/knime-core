@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -23,7 +20,6 @@ package de.unikn.knime.base.node.io.filereader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Vector;
 
 import de.unikn.knime.base.node.io.filetokenizer.Comment;
@@ -216,8 +212,7 @@ public final class FileAnalyzer {
 
         BufferedReader reader;
         try {
-            reader = new BufferedReader(new InputStreamReader(result
-                    .getDataFileLocation().openStream()));
+            reader = result.createNewInputReader();
         } catch (NullPointerException npe) {
             // with Windows the openStream throws a NullPointerException if
             // we specify ' ' as a sub-dir. Bummer.
@@ -366,8 +361,7 @@ public final class FileAnalyzer {
 
         BufferedReader reader;
         try {
-            reader = new BufferedReader(new InputStreamReader(settings
-                    .getDataFileLocation().openStream()));
+            reader = settings.createNewInputReader();
         } catch (NullPointerException npe) {
             // with Windows the openStream throws a NullPointerException if
             // we specify ' ' as a sub-dir. Bummer.
@@ -615,8 +609,7 @@ public final class FileAnalyzer {
         BufferedReader reader;
 
         try {
-            reader = new BufferedReader(new InputStreamReader(result
-                    .getDataFileLocation().openStream()));
+            reader = result.createNewInputReader();
         } catch (NullPointerException npe) {
             // with Windows the openStream throws a NullPointerException if
             // we specify ' ' as a sub-dir. Bummer.
@@ -772,8 +765,7 @@ public final class FileAnalyzer {
 
         BufferedReader reader;
         try {
-            reader = new BufferedReader(new InputStreamReader(settings
-                    .getDataFileLocation().openStream()));
+            reader = settings.createNewInputReader();
         } catch (NullPointerException npe) {
             // with Windows the openStream throws a NullPointerException if
             // we specify ' ' as a sub-dir. Bummer.
@@ -853,8 +845,7 @@ public final class FileAnalyzer {
         BufferedReader reader;
         FileTokenizer tokenizer;
         try {
-            reader = new BufferedReader(new InputStreamReader(settings
-                    .getDataFileLocation().openStream()));
+            reader = settings.createNewInputReader();
         } catch (NullPointerException npe) {
             // with Windows the openStream throws a NullPointerException if
             // we specify ' ' as a sub-dir. Bummer.
@@ -1125,8 +1116,7 @@ public final class FileAnalyzer {
         FileTokenizer tokenizer;
         // first see how many columns we get with comma and whitespaces.
         try {
-            reader = new BufferedReader(new InputStreamReader(settings
-                    .getDataFileLocation().openStream()));
+            reader = settings.createNewInputReader();
         } catch (NullPointerException npe) {
             // with Windows the openStream throws a NullPointerException if
             // we specify ' ' as a sub-dir. Bummer.
@@ -1210,8 +1200,7 @@ public final class FileAnalyzer {
         FileTokenizer tokenizer;
         // first see how many columns we get with the provided settings.
         try {
-            reader = new BufferedReader(new InputStreamReader(settings
-                    .getDataFileLocation().openStream()));
+            reader = settings.createNewInputReader();
         } catch (NullPointerException npe) {
             // with Windows the openStream throws a NullPointerException if
             // we specify ' ' as a sub-dir. Bummer.
