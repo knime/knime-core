@@ -12,7 +12,7 @@
 		(after a filename was provided).
 		Check the results of these settings in the preview table. If the 
 		data showing is not correct or an error is reported, you can adjust the
-		settings manually: Check wether column and/or row headers are included
+		settings manually: Check whether column and/or row headers are included
 		in the file, enter any column delimiter (or pick a standard
 		one from the drop down list), and specify the comment characters. If the
 		type or name of a column is not correct, click on the corresponding 
