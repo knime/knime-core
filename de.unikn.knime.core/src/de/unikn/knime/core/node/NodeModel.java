@@ -43,13 +43,13 @@ public abstract class NodeModel {
      * The node logger for this class; do not make static to make sure the right
      * class name is printed in messages.
      */
-    protected final NodeLogger m_logger;
+    private final NodeLogger m_logger;
 
     /** The number of input data tables. */
-    protected final int m_nrDataIns;
+    private final int m_nrDataIns;
 
     /** The number of output data tables produced by the derived model. */
-    protected final int m_nrDataOuts;
+    private final int m_nrDataOuts;
 
     /** The number of input predictive models. */
     private final int m_nrPredParamsIns;
@@ -67,7 +67,7 @@ public abstract class NodeModel {
     private boolean m_configured;
 
     /** Flag for the isExecuted state. */
-    protected boolean m_executed;
+    private boolean m_executed;
 
     /**
      * Flag to indicate that the node should be immediately executed when all
@@ -262,7 +262,7 @@ public abstract class NodeModel {
      * 
      * @return Number of inputs.
      */
-    final int getNrDataIns() {
+    protected final int getNrDataIns() {
         return m_nrDataIns;
     }
 
@@ -271,7 +271,7 @@ public abstract class NodeModel {
      * 
      * @return Number of outputs.
      */
-    final int getNrDataOuts() {
+    protected final int getNrDataOuts() {
         return m_nrDataOuts;
     }
 
@@ -280,7 +280,7 @@ public abstract class NodeModel {
      * 
      * @return Number of inputs.
      */
-    final int getNrModelIns() {
+    protected final int getNrModelIns() {
         return m_nrPredParamsIns;
     }
 
@@ -289,7 +289,7 @@ public abstract class NodeModel {
      * 
      * @return Number of outputs.
      */
-    final int getNrModelOuts() {
+    protected final int getNrModelOuts() {
         return m_nrPredParamsOuts;
     }
 
