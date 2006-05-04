@@ -710,10 +710,9 @@ public class Node {
         try {
             m_nodeModel.resetModel();
         } catch (Exception e) {
-            m_logger.error(
-                    "Node model could not be reseted: " + e.getMessage());
+            m_logger.error("Node model could not be reset: " + e.getMessage());
             m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
-                    "Node model could not be reseted: " + e.getMessage());
+                    "Node model could not be reset: " + e.getMessage());
             this.notifyStateListeners(m_nodeStatus);
         }
         this.notifyStateListeners(new NodeStatus(NodeStatus.RESET,
@@ -811,7 +810,7 @@ public class Node {
      * Notification method, called by an input port to tell the node about a
      * disconnected outport from a predecessor. The notification is done, as the
      * node itself should be responsible to cause the required actions. The node
-     * is reseted and newly configured.
+     * is reset and newly configured.
      * 
      * @param inPortID The port id that just got disconnected.
      */
