@@ -1076,6 +1076,10 @@ class FileReaderNodeDialog extends NodeDialogPane {
                         + m_frSettings.getDataFileLocation().toString() + "'.");
                 m_previewTableView.setDataTable(null);
                 return;
+            } catch (FileReaderException fre) {
+                setErrorLabelText(fre.getMessage());
+                m_previewTableView.setDataTable(null);
+                return;                
             }
 
         }
@@ -1253,7 +1257,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
             analyzeDataFileAndUpdatePreview(false); // don't reanalyze
         } else if (advDlg.closedViaOk()) {
             advDlg.overrideSettings(m_frSettings);
-            analyzeDataFileAndUpdatePreview(false); // don't reanalyze
+            analyzeDataFileAndUpdatePreview(true); // re-analyze
         }
         advDlg.dispose();
     }

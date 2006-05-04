@@ -53,7 +53,6 @@ public final class FileAnalyzer {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(FileAnalyzer.class);
 
-
     private FileAnalyzer() {
     }
 
@@ -81,12 +80,13 @@ public final class FileAnalyzer {
 
         // create the new and empty settings
         FileReaderNodeSettings result = new FileReaderNodeSettings();
-        result.setDataFileLocationAndUpdateTableName(
-                userSettings.getDataFileLocation());
+        result.setDataFileLocationAndUpdateTableName(userSettings
+                .getDataFileLocation());
         result.setTableName(userSettings.getTableName());
-        
+        result.setDecimalSeparator(userSettings.getDecimalSeparator());
+
         result.setAnalyzeUsedAllRows(true); // default is true, to avoid warning
-        
+
         if (!userSettings.isCommentUserSet()) {
             // only guess comment patterns if user didn't provide any
             addComments(result);
@@ -125,7 +125,7 @@ public final class FileAnalyzer {
             result.addWhiteSpaceCharacter("\t");
             result.setWhiteSpaceUserSet(false);
         } else {
-            for (String ws : userSettings.getAllWhiteSpaces()) { 
+            for (String ws : userSettings.getAllWhiteSpaces()) {
                 result.addWhiteSpaceCharacter(ws);
             }
             result.setWhiteSpaceUserSet(true);
@@ -140,7 +140,13 @@ public final class FileAnalyzer {
             result.setFileHasRowHeaders(userSettings.getFileHasRowHeaders());
             result.setFileHasRowHeadersUserSet(true);
         } else {
-            boolean hasRowHeaders = checkRowHeader(result);
+            boolean hasRowHeaders;
+            if (result.getNumberOfColumns() > 1) {
+                // only if we have at least 2 cols, one of them could be headers
+                hasRowHeaders = checkRowHeader(result);
+            } else {
+                hasRowHeaders = false;
+            }
             result.setFileHasRowHeaders(hasRowHeaders);
             result.setFileHasRowHeadersUserSet(false);
         }
@@ -153,8 +159,8 @@ public final class FileAnalyzer {
         }
 
         // guesses (copies) column types and names.
-        Vector<ColProperty> columnProps = 
-            createColumnProperties(userSettings, result);
+        Vector<ColProperty> columnProps = createColumnProperties(userSettings,
+                result);
         result.setColumnProperties(columnProps);
 
         // set a default row header prefix
@@ -315,7 +321,8 @@ public final class FileAnalyzer {
             // otherwise we assume the first line doesn't contain headers.
             // pass an array with null strings and it will create headers for us
             result.setFileHasColumnHeaders(false);
-            String[] colNames = new String[columnHeaders.length]; // null array
+            String[] colNames = new String[columnHeaders.length]; // null
+                                                                    // array
             return createColProps(colNames, userColProps, columnTypes);
         } else {
             // user set fileHasColHeaders - see if it's true or false
@@ -324,7 +331,7 @@ public final class FileAnalyzer {
             result.setFileHasColumnHeadersUserSet(true);
             if (userSettings.getFileHasColumnHeaders()) {
                 // use the headers we read in
-                if ((columnHeaders.length > 0) 
+                if ((columnHeaders.length > 0)
                         && (columnHeaders[columnHeaders.length - 1] == null)) {
                     // okay, we got one too few, use row header
                     String[] colNames = new String[result.getNumberOfColumns()];
@@ -538,8 +545,8 @@ public final class FileAnalyzer {
                     name = "Col" + c;
                 }
                 // create and set the column spec
-                DataColumnSpecCreator dcsc = 
-                    new DataColumnSpecCreator(name, colTypes[c]);
+                DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name,
+                        colTypes[c]);
                 colProp.setColumnSpec(dcsc.createSpec());
                 // set the missing value pattern
                 colProp.setMissingValuePattern("?");
@@ -556,7 +563,8 @@ public final class FileAnalyzer {
 
             // make ColName unique
             boolean unique;
-            int count = 2; // used to count duplicates. Added as postfix to name
+            int count = 2; // used to count duplicates. Added as postfix to
+                            // name
             String name = colProp.getColumnSpec().getName().toString();
 
             do {
@@ -566,8 +574,8 @@ public final class FileAnalyzer {
                     // which we don't wanna change.
                     if (i < c) {
                         // look at the already existing col names
-                        if (colProps.get(i).getColumnSpec()
-                                .getName().toString().equals(name)) {
+                        if (colProps.get(i).getColumnSpec().getName()
+                                .toString().equals(name)) {
                             unique = false;
                         }
                     } else if (i > c) {
@@ -703,7 +711,17 @@ public final class FileAnalyzer {
                     // double
                     if (types[colIdx].isCompatible(DoubleValue.class)) {
                         try {
-                            Double.parseDouble(token);
+                            String dblData = token;
+                            if (result.getDecimalSeparator() != '.') {
+                                // we must reject tokens with a '.'.
+                                if (token.indexOf('.') >= 0) {
+                                    throw new NumberFormatException();
+                                }
+                                 dblData = token.replace(result
+                                        .getDecimalSeparator(), '.');
+                            }
+
+                            Double.parseDouble(dblData);
                             continue;
                         } catch (NumberFormatException nfe) {
                             // it's not a double, lets accept everything:
@@ -734,13 +752,13 @@ public final class FileAnalyzer {
             if (types[t] == null) {
                 cols += "#" + t + ", ";
                 types[t] = StringType.STRING_TYPE;
-                
+
             }
         }
         if (cols.length() > 0) {
-            LOGGER.warn("Didn't get any value for column(s) with index " 
+            LOGGER.warn("Didn't get any value for column(s) with index "
                     + cols.substring(0, cols.length() - 2) // cut off the comma
-                    + ". Please verify column type(s)."); 
+                    + ". Please verify column type(s).");
         }
 
         return types;
@@ -802,11 +820,6 @@ public final class FileAnalyzer {
                 break;
             }
 
-            if (line.charAt(0) == ';') {
-                settings.addSingleLineCommentPattern(";", false, false);
-                commentFound = true;
-                break;
-            }
             if ((line.charAt(0) == '/') && (line.charAt(1) == '/')) {
                 settings.addSingleLineCommentPattern("//", false, false);
                 settings.addBlockCommentPattern("/*", "*/", false, false);
@@ -820,7 +833,7 @@ public final class FileAnalyzer {
             // if the next char is EOF we've seen all rows.
             settings.setAnalyzeUsedAllRows(false);
         }
-        
+
         if (!commentFound) {
             // haven't seen any line comment, set C-style comment.
             settings.addSingleLineCommentPattern("//", false, false);

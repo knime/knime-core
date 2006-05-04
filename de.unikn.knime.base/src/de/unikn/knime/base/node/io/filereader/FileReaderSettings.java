@@ -61,6 +61,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private String m_tableName;
 
     /*
+     * in tokens read for a double column, this char gets replaced with a "."
+     */
+    private char m_decimalSeparator;
+
+    /*
      * if set, the first row in the file will be considered column names - and
      * discarded (we read rows, not column headers!)
      */
@@ -94,7 +99,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
     public static final String DEF_ROWPREFIX = "Row";
 
     /** key used to store data file location in a config object. */
-    static final String CFGKEY_DATAURL = "DataURL";
+    public static final String CFGKEY_DATAURL = "DataURL";
+
+    private static final String CFGKEY_DECIMALSEP = "DecimalSeparator";
 
     private static final String CFGKEY_HASCOL = "hasColHdr";
 
@@ -132,6 +139,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private void init() {
         m_dataFileLocation = null;
         m_tableName = null;
+
+        m_decimalSeparator = '.';
 
         m_fileHasColumnHeaders = false;
         m_fileHasRowHeaders = false;
@@ -239,6 +248,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
                                 + CFGKEY_ROWDELIMS + "'!");
 
             }
+            // get the decimal separator.
+            // It's optional for backward compatibility and defaults to '.'
+            m_decimalSeparator = cfg.getChar(CFGKEY_DECIMALSEP, '.');
 
             readRowDelimitersFromConfig(rowDelimConf);
 
@@ -275,14 +287,14 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
         saveRowDelimitersToConfig(cfg.addConfig(CFGKEY_ROWDELIMS));
         saveMissingPatternsToConfig(cfg.addConfig(CFGKEY_MISSINGS));
+        cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
     }
 
     /*
      * read the patterns, one for each column, that will be replaced by missing
      * cells from the configuration object.
      */
-    private void readMissingPatternsFromConfig(
-            final NodeSettings missPattConf) {
+    private void readMissingPatternsFromConfig(final NodeSettings missPattConf) {
         if (missPattConf == null) {
             throw new NullPointerException(
                     "Can't read missing patterns from null config object");
@@ -425,8 +437,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * 
      * @param dataFileLocation the URL of the data file these settings are for
      */
-    public void setDataFileLocationAndUpdateTableName(
-            final URL dataFileLocation) {
+    public void setDataFileLocationAndUpdateTableName(final URL dataFileLocation) {
         if (dataFileLocation == null) {
             setTableName("");
         } else {
@@ -469,7 +480,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
             try {
                 result = new BufferedReader(
                         new InputStreamReader(new GZIPInputStream(
-                                getDataFileLocation().openStream())));
+                                getDataFileLocation().openStream()),
+                                "ISO-8859-1"));
             } catch (IOException ioe) {
                 // the exception will fly if the specified file is not a zip
                 // file.
@@ -721,8 +733,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      *            for the specified column. Can be null to delete a previously
      *            set pattern.
      */
-    public void setMissingValueForColumn(final int colIdx, 
-            final String pattern) {
+    public void setMissingValueForColumn(final int colIdx, final String pattern) {
         if (m_missingPatterns.size() <= colIdx) {
             m_missingPatterns.setSize(colIdx + 1);
         }
@@ -744,6 +755,24 @@ public class FileReaderSettings extends FileTokenizerSettings {
             return null;
         }
         return m_missingPatterns.get(colIdx);
+    }
+
+    /**
+     * @return the character that is considered decimal separator in the data
+     *         (token) for a double type column
+     */
+    public char getDecimalSeparator() {
+        return m_decimalSeparator;
+    }
+
+    /**
+     * Sets the character that will be considered decimal separator in the data
+     * (token) read for double type columns.
+     * 
+     * @param sep the new decimal character to set for doubles
+     */
+    public void setDecimalSeparator(final char sep) {
+        m_decimalSeparator = sep;
     }
 
     /**
@@ -883,8 +912,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 }
             }
         } else {
-            for (Iterator pIter = m_missingPatterns.iterator(); 
-                    pIter.hasNext();) {
+            for (Iterator pIter = m_missingPatterns.iterator(); pIter.hasNext();) {
                 if (pIter.next() == null) {
                     status.addInfo("Not all columns have patterns for missing"
                             + " values assigned.");
@@ -911,6 +939,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
             res.append(m_dataFileLocation.toString());
         }
         res.append("'\n");
+        if (m_decimalSeparator != '.') {
+            res.append("Decimal separator char for doubles: '");
+            res.append(m_decimalSeparator);
+            res.append("'\n");
+        }
         res.append("RowPrefix:");
         res.append(m_rowHeaderPrefix + "\n");
         res.append("RowHeaders:" + m_fileHasRowHeaders);

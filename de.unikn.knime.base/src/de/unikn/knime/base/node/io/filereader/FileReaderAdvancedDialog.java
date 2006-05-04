@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -65,6 +62,8 @@ public class FileReaderAdvancedDialog extends JDialog {
     // these settings are taken over (without any validation checks).
     private FileReaderNodeSettings m_settings;
 
+    private DecSepPanel m_decSepPanel;
+
     /**
      * This is the default constructor.
      * 
@@ -100,6 +99,7 @@ public class FileReaderAdvancedDialog extends JDialog {
      */
     void overrideSettings(final FileReaderNodeSettings settings) {
         getQuotePanel().overrideSettings(settings);
+        getDecSepPanel().overrideSettings(settings);
     }
 
     /**
@@ -232,7 +232,7 @@ public class FileReaderAdvancedDialog extends JDialog {
     }
 
     /**
-     * This method initializes mainPanel.
+     * This method initializes mainPanel. the MainPanel contains all tabs.
      * 
      * @return javax.swing.JPanel
      */
@@ -257,6 +257,17 @@ public class FileReaderAdvancedDialog extends JDialog {
     }
 
     /**
+     * @return the panel for the decimal separator settings.
+     */
+    private DecSepPanel getDecSepPanel() {
+        if (m_decSepPanel == null) {
+            m_decSepPanel = new DecSepPanel(m_settings);
+        }
+        return m_decSepPanel;
+        
+    }
+    
+    /**
      * This method initializes jTabbedPane.
      * 
      * @return javax.swing.JTabbedPane
@@ -266,6 +277,8 @@ public class FileReaderAdvancedDialog extends JDialog {
             m_jTabbedPane = new JTabbedPane();
             m_jTabbedPane.addTab("Quote support", null, getQuotePanel(),
                     "Adjust settings for quote characters here");
+            m_jTabbedPane.addTab("Decimal Separator", null, getDecSepPanel(), 
+                    "Set the decimal separator here");
         }
         return m_jTabbedPane;
     }

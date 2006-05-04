@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -485,6 +482,10 @@ public class FileTokenizerSettings {
         if ((quote.getRight() == null) || (quote.getRight().length() < 1)) {
             errMsg += "Right quote pattern must be a non-empty string\n";
         }
+        if (quote.getLeft().charAt(0) > FileTokenizer.MAX_CHAR) {
+            errMsg += "The left quote must begin with a plain ASCII "
+                    + "character (ascii code < 127) \n";               
+        }
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
         }
@@ -605,6 +606,10 @@ public class FileTokenizerSettings {
             errMsg += "Cannot set 'returnAsSeparateToken' AND"
                     + " 'includeInToken'. They are mutually exclusive!\n";
         }
+        if (delimiter.getDelimiter().charAt(0) > FileTokenizer.MAX_CHAR) {
+            errMsg += "The delimiter must begin with a plain ASCII "
+                    + "character (ascii code < 127) \n";               
+        }
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
         }
@@ -646,6 +651,10 @@ public class FileTokenizerSettings {
         if (returnAsSeparateToken && includeInToken) {
             errMsg += "You cannot specify 'returnAsSeparateToken' AND"
                     + "'includeInToken'. They are mutually exclusive!\n";
+        }
+        if (delimiter.charAt(0) > FileTokenizer.MAX_CHAR) {
+            errMsg += "The delimiter must begin with a plain ASCII "
+                    + "character (ascii code < 127) \n";               
         }
         if (!errMsg.equals("")) {
             errMsg = "replaceDelimiterPattern:\n" + errMsg;
@@ -890,6 +899,11 @@ public class FileTokenizerSettings {
             errMsg += "Cannot specify 'returnAsSeparateToken' AND"
                     + "'includeInToken'. They are mutually exclusive!\n";
         }
+        if (comment.getBegin().charAt(0) > FileTokenizer.MAX_CHAR) {
+            errMsg += "The comment pattern must begin with a plain ASCII "
+                + "character (ascii code < 127) \n";            
+        }
+        
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
         }
@@ -929,6 +943,10 @@ public class FileTokenizerSettings {
         }
         if (ws.length() != 1) {
             errMsg += "Please specify a one-character string as whitespace.\n";
+        }
+        if (ws.charAt(0) > FileTokenizer.MAX_CHAR) {
+            errMsg += "The whitespace must begin with a plain ASCII "
+                + "character (ascii code < 127) \n";               
         }
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException("Add whitespace: " + errMsg);

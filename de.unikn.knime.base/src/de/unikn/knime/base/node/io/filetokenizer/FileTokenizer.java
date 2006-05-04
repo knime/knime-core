@@ -70,10 +70,11 @@ public class FileTokenizer {
     /* flag indicating combination of different consecutive delimiters */
     private boolean m_combineMultipleDelimiters;
 
-    /*
-     * Supports ASCII 0 to 255.
+    /**
+     * The maximum ASCII code for the first character of patterns (like 
+     * delimiter, comment, and quote patterns.
      */
-    private static final int MAX_CHAR = 0xFF;
+    public static final int MAX_CHAR = 0xFF;
 
     /*
      * an array for fast type lookup - different types are the following
@@ -252,7 +253,10 @@ public class FileTokenizer {
         int c = getNextChar();
         while (c != EOF) {
 
-            int ctype = m_charType[c & MAX_CHAR];
+            int ctype = 0;
+            if (ctype <= MAX_CHAR) {
+                ctype = m_charType[c & MAX_CHAR];
+            }
 
             if (ctype == 0) {
                 // it's an ordinary character - just add it to the result
@@ -365,6 +369,11 @@ public class FileTokenizer {
         } // end of while (c != EOF)
 
         if (c == EOF) {
+            try {
+                m_source.close();
+            } catch (IOException ioe) {
+                // empty.
+            }     
             // also strip off whitespaces if the last token ended through EOF
             cutOffWhiteSpaces(m_newToken, lastEndQuoteIdx);
         }
@@ -390,11 +399,7 @@ public class FileTokenizer {
             if (m_eobIdx == m_currIdx) {
                 // we need to read a new character from the stream
                 m_readBuffer[m_currIdx] = m_source.read();
-                if ((m_readBuffer[m_currIdx] > MAX_CHAR)
-                        || (m_readBuffer[m_currIdx] < 0)) {
-                    // we only support ASCII files. All others end the file.
-                    return -1;
-                } else if (m_readBuffer[m_currIdx] == CR) {
+                if (m_readBuffer[m_currIdx] == CR) {
                     // read the next char to see if we need to swallow the CR
                     m_eobIdx = (m_eobIdx + 1) % BUFFER_LENGTH;
                     if ((m_readBuffer[m_eobIdx] = m_source.read()) == LF) {

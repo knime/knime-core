@@ -64,6 +64,11 @@ final class FileRowIterator extends RowIterator {
 
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
+    
+    // if true we need to replace the char in the double tokens with a '.'
+    private boolean m_customDecimalSeparator;
+    
+    private char m_decSeparator;
 
     /**
      * The RowIterator for the FileTable.
@@ -83,6 +88,9 @@ final class FileRowIterator extends RowIterator {
         // set the tokenizer related settings in the tokenizer
         m_tokenizer.setSettings(frSettings);
 
+        m_decSeparator = frSettings.getDecimalSeparator();
+        m_customDecimalSeparator = m_decSeparator != '.';
+        
         m_rowNumber = 1;
         m_exceptionThrown = false;
 
@@ -287,8 +295,19 @@ final class FileRowIterator extends RowIterator {
                         rowHeader, row);
             }
         } else if (type instanceof DoubleType) {
+            String dblData = data;
+            if (m_customDecimalSeparator) {
+                // we must reject tokens with a '.'. 
+                if (data.indexOf('.') >= 0) {
+                    throw createException("Wrong data format. In line "
+                            + m_tokenizer.getLineNumber() + " read '" + data
+                            + "' for a floating point.", m_tokenizer
+                            .getLineNumber(), rowHeader, row);
+                }
+                dblData = data.replace(m_decSeparator, '.');
+            }
             try {
-                double val = Double.parseDouble(data);
+                double val = Double.parseDouble(dblData);
                 return new DefaultDoubleCell(val);
             } catch (NumberFormatException nfe) {
                 m_exceptionThrown = true;
