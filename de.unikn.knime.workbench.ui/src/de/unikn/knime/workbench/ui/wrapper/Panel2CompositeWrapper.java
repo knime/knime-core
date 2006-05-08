@@ -63,7 +63,7 @@ public class Panel2CompositeWrapper extends Composite {
         // use panel as root
         m_awtPanel = panel;
         m_awtFrame.add(m_awtPanel);
-
+        
         // Pack the frame
         m_awtFrame.pack();
         m_awtFrame.setVisible(true);

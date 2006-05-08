@@ -43,7 +43,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
@@ -180,6 +182,16 @@ public class WrappedNodeDialog extends Dialog {
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
+        
+        Display.getCurrent().addFilter(SWT.KeyDown, new Listener() {
+            public void handleEvent(final Event event) {
+                if (event.keyCode == SWT.CR) { // enter
+                    doOK(new SelectionEvent(event));
+                } else if (event.keyCode == SWT.ESC) { // escape
+                    buttonPressed(IDialogConstants.CANCEL_ID);
+                }
+            }
+        });
 
         return area;
     }
@@ -219,56 +231,62 @@ public class WrappedNodeDialog extends Dialog {
         // dialog is not closed on errors.
         btnOK.addSelectionListener(new SelectionAdapter() {
             public void widgetDefaultSelected(final SelectionEvent e) {
-                try {
-                    if (confirmApply()) {
-                        m_dialogPane.doApply();
-                        e.doit = true;
-                        close();
-                    } else {
-                        e.doit = false;
-                    }
-                } catch (InvalidSettingsException ise) {
-                    e.doit = false;
-                    showErrorMessage("Invalid settings: " + ise.getMessage());
-                } catch (Exception exc) {
-                    e.doit = false;
-                    showErrorMessage(exc.getClass().getSimpleName() 
-                            + ": " + exc.getMessage());
-                }
-                // TODO TG: forward to your dialog
+                doOK(e);
             }
 
             public void widgetSelected(final SelectionEvent e) {
                 this.widgetDefaultSelected(e);
             }
         });
+
+        
         btnApply.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(final SelectionEvent e) {
-                try {
-                    if (confirmApply()) {
-                        m_dialogPane.doApply();
-                        e.doit = true;
-                    } else {
-                        e.doit = false;
-                    }
-                } catch (InvalidSettingsException ise) {
-                    e.doit = false;
-                    showErrorMessage("Invalid Settings\n" + ise.getMessage());
-                } catch (Exception exc) {
-                    e.doit = false;
-                    showErrorMessage(exc.getMessage());
-                }
-                // TODO TG: forward to your dialog
-
+                doApply(e);
             }
         });
+        
         btnCancel.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(final SelectionEvent e) {
-                // TODO TG: forward to your dialog
-                // m_dialogPane.doCancel();
+             
             }
         });
-
+    }
+    
+    private void doOK(final SelectionEvent e) {
+        try {
+            if (confirmApply()) {
+                m_dialogPane.doApply();
+                e.doit = true;
+                close();
+            } else {
+                e.doit = false;
+            }
+        } catch (InvalidSettingsException ise) {
+            e.doit = false;
+            showErrorMessage("Invalid settings: " + ise.getMessage());
+        } catch (Exception exc) {
+            e.doit = false;
+            showErrorMessage(exc.getClass().getSimpleName() 
+                    + ": " + exc.getMessage());
+        }
+    }
+    
+    private void doApply(final SelectionEvent e) {
+        try {
+            if (confirmApply()) {
+                m_dialogPane.doApply();
+                e.doit = true;
+            } else {
+                e.doit = false;
+            }
+        } catch (InvalidSettingsException ise) {
+            e.doit = false;
+            showErrorMessage("Invalid Settings\n" + ise.getMessage());
+        } catch (Exception exc) {
+            e.doit = false;
+            showErrorMessage(exc.getMessage());
+        }
     }
 
     /**
