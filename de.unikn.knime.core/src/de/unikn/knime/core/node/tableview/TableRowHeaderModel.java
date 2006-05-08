@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -15,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -30,11 +30,12 @@ import de.unikn.knime.core.data.property.ColorAttr;
 
 /** 
  * Model for a Row Header view in a table view that displays a 
- * <code>DataTable</code>. This model has exactly one column that contains the
- * keys (type <code>DataCell</code>) of the <code>DataRow</code>s in the
- * underlying <code>DataTable</code>. The view to this model is a 
- * <code>TableRowHeaderView</code> which can be located, for instance, in a 
- * scroll pane's row header view. 
+ * {@link de.unikn.knime.core.data.DataTable}. This model has exactly one column
+ * that contains the keys (type {@link de.unikn.knime.core.data.DataCell}) of
+ * the {@link de.unikn.knime.core.data.DataRow}s in the
+ * underlying {@link de.unikn.knime.core.data.DataTable}. The view to this model
+ * is a {@link de.unikn.knime.core.node.tableview.TableRowHeaderView} which can
+ * be located, for instance, in a scroll pane's row header view. 
  * 
  * <p>An instance of this class always corresponds to an instance of 
  * <code>TableContentModel</code>.
@@ -43,18 +44,19 @@ import de.unikn.knime.core.data.property.ColorAttr;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableRowHeaderModel extends AbstractTableModel {
-    
+    private static final long serialVersionUID = -2200601319386867806L;
+
     /* This model is detached from a TableContentModel (where it nevertheless 
-     * has a pointer to) since it has a different column count. It was not an 
+     * has a pointer to) because it has a different column count. It was not an 
      * option to implement a smart TableRowHeaderView based on a 
      * TableContentModel because all get functions in view and model would 
      * differ then.
      */
     
-    /** Reference to underlying TableContentModel, never null. */
+    /** Reference to underlying TableContentModel, never <code>null</code>. */
     private TableContentInterface m_contentInterface;
     
-    /** Listener on m_contentInterface. */
+    /** Listener on {@link #m_contentInterface}. */
     private TableModelListener m_contentListener; 
 
     /**
@@ -66,10 +68,15 @@ public class TableRowHeaderModel extends AbstractTableModel {
     
     /** 
      * Instantiates a new <code>TableRowHeaderModel</code> based on a 
-     * <code>TableContentModel</code>. This constructor is used in 
-     * the method <code>getNewRowHeaderModel()</code> in class 
-     * <code>TableRowHeaderModel</code> and shouldn't be called from any place 
-     * else.
+     * {@link TableModel}. In case the argument is instance of 
+     * {@link TableContentInterface}, this object will delegate 
+     * to it and retrieve information (row key, hilite status, etc) from it.
+     * In case it's an ordinary table model, an adapter is created that always
+     * returns default row keys (named "default" and none of the rows will be
+     * hilited). This constructor is used in the method 
+     * {@link TableRowHeaderView#createHeaderView(javax.swing.JTable)} and
+     * shouldn't be called from anywhere else.
+     * 
      * @param content the model for the content to this row header
      * @throws NullPointerException if argument is <code>null</code> 
      */
@@ -78,7 +85,8 @@ public class TableRowHeaderModel extends AbstractTableModel {
             throw new NullPointerException("Content model must not be null!");
         }
         m_contentListener = new TableModelListener() {
-            /** Catches events from content model, and passes it to the 
+            /**
+             * Catches events from content model, and passes it to the 
              * listeners (event's source is changed, however). UPDATE events
              * are ignored
              */
@@ -105,14 +113,15 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
     /** 
      * Returns 1. A row header model only has one column ... the key.
-     * @return 1.
+     * @return 1
      */
     public int getColumnCount() {
         return 1;
     } // getColumnCount()
 
     /** 
-     * Returns row count as in <code>TableContentModel</code>.
+     * Returns row count as in {@link TableContentModel}.
+     * 
      * @return <code>getContentModel().getRowCount()</code>
      * @see TableContentModel#getRowCount()
      */
@@ -122,11 +131,13 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
     /** 
      * Returns the key of the row with index <code>rowIndex</code>.
-     * @param rowIndex The row of interest.
-     * @param columnIndex Must be 0.
-     * @return The key of the <code>DataRow</code> (type <code>DataCell</code>).
-     * @throws IndexOutOfBoundsException If <code>columnIndex</code> is not 0 or
-     *         <code>rowIndex</code> violates its range.
+     * 
+     * @param rowIndex the row of interest
+     * @param columnIndex must be 0
+     * @return The key of the {@link de.unikn.knime.core.data.DataRow}
+     *      (type {@link DataCell})
+     * @throws IndexOutOfBoundsException if <code>columnIndex</code> is not 0 or
+     *         <code>rowIndex</code> violates its range
      */
     public Object getValueAt(final int rowIndex, final int columnIndex) {
         boundColumn(columnIndex);
@@ -136,10 +147,12 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
     /** 
      * Return <code>DataCell.class</code> since the key of a 
-     * <code>DataRow</code> is a <code>DataCell</code>.
+     * {@link de.unikn.knime.core.data.DataRow} is a {@link DataCell}.
+     * 
      * @param columnIndex must be 0
      * @return <code>DataCell.class</code>
      */
+    @Override
     public Class<DataCell> getColumnClass(final int columnIndex) {
         boundColumn(columnIndex);
         return DataCell.class;
@@ -147,10 +160,12 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
     /** 
      * Returns "Key" as default row header name.
-     * @param column Must be 0.
+     * 
+     * @param column must be 0
      * @return "Key"
      * @throws IndexOutOfBoundsException if column is not 0
      */
+    @Override
     public String getColumnName(final int column) {
         boundColumn(column);
         return m_columnName;
@@ -158,7 +173,8 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
     /**
      * Sets a new name for this column.
-     * @param newName The new name or null to have no column name
+     * 
+     * @param newName the new name or <code>null</code> to have no column name
      */
     public void setColumnName(final String newName) {
         m_columnName = newName;
@@ -168,13 +184,14 @@ public class TableRowHeaderModel extends AbstractTableModel {
     /** 
      * Set the table content to which this class will listen and whose
      * content is content of this class. 
-     * 
-     * <p>Note: If the passed argument is not an instance of 
-     * <code>TableContentInterface</code>, this model will be a very dumb model:
+     * <br />
+     * Note: If the passed argument is not an instance of 
+     * {@link TableContentInterface}, this model will be a very dumb model:
      * It will not show any row keys and also no hilighting nor color 
-     * information.  
-     * @param content The new model.
-     * @throws IllegalArgumentException If argument is null.
+     * information.
+     * 
+     * @param content the new model
+     * @throws IllegalArgumentException if argument is <code>null</code>
      */
     public void setTableContent(final TableModel content) {
         if (content == null) {
@@ -205,8 +222,9 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
     
     /** 
-     * Delegating method to <code>TableContentModel</code>.
-     * @param row Row index of interest.
+     * Delegating method to {@link TableContentModel}.
+     * 
+     * @param row row index of interest
      * @return Highlight status of <code>row</code>.
      * @see TableContentModel#isHiLit(int)
      */
@@ -215,9 +233,10 @@ public class TableRowHeaderModel extends AbstractTableModel {
     } // isHiLit(int)
 
     /** 
-     * Delegating method to <code>TableContentModel</code>.
-     * @param row Row index of interest.
-     * @return Color information to that row.
+     * Delegating method to {@link TableContentModel}.
+     * 
+     * @param row row index of interest
+     * @return color information to that row.
      * @see TableContentModel#getColorAttr(int)
      */
     public ColorAttr getColorAttr(final int row) {
@@ -225,7 +244,8 @@ public class TableRowHeaderModel extends AbstractTableModel {
     } // getColorAttr(int)
 
     /** 
-     * Checks if column index is 0. If not, throws exception
+     * Checks if column index is 0. If not, throws an exception.
+     * 
      * @param columnIndex must be 0
      * @throws IndexOutOfBoundsException if index is not 0
      */
@@ -236,14 +256,15 @@ public class TableRowHeaderModel extends AbstractTableModel {
         }
     } // boundColumn(int)
     
-    private static class TableContentWrapper implements TableContentInterface {
-        
+    private static class TableContentWrapper implements TableContentInterface {        
         private static final RowKey UNKNOWN = 
             new RowKey(new DefaultStringCell("unknown"));
         private final TableModel m_model;
         
-        /** Creates wrapper based on model.
-         * @param model The model to wrap.
+        /**
+         * Creates wrapper based on the model.
+         * 
+         * @param model the model to wrap
          */
         TableContentWrapper(final TableModel model) {
             m_model = model;
@@ -251,6 +272,7 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
         /**
          * Delegates to model.
+         * 
          * @see TableContentInterface#getRowCount()
          */
         public int getRowCount() {
@@ -259,6 +281,7 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
         /**
          * Returns "unknown".
+         * 
          * @see TableContentInterface#getRowKey(int)
          */
         public RowKey getRowKey(final int row) {
@@ -267,6 +290,7 @@ public class TableRowHeaderModel extends AbstractTableModel {
         
         /**
          * Returns a default color.
+         * 
          * @see TableContentInterface#getColorAttr(int) 
          */
         public ColorAttr getColorAttr(final int row) {
@@ -275,13 +299,16 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
         /**
          * Returns false.
+         * 
          * @see TableContentInterface#isHiLit(int)
          */
         public boolean isHiLit(final int row) {
             return false;
         }
 
-        /** Delegates to model.
+        /**
+         * Delegates to model.
+         * 
          * @see TableContentInterface#addTableModelListener(TableModelListener)
          */
         public void addTableModelListener(final TableModelListener l) {
@@ -290,13 +317,12 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
         /**
          * Delegates to model.
+         * 
          * @see TableContentInterface#removeTableModelListener(
          * TableModelListener)
          */
         public void removeTableModelListener(final TableModelListener l) {
             m_model.removeTableModelListener(l);
         }
-    
     }
-    
 }

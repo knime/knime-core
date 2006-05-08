@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -15,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed 
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -54,27 +54,29 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /** 
- * Table view on a <code>DataTable</code>. This implementation uses a caching 
- * strategy as described in the <code>TableContentModel</code>.
- * <p>
- * Standard renderer are used to display the different types of 
- * <code>DataCell</code>. This will change in future.
- * <p>
- * This view typically resides in a <code>TableView</code> (wrapping it in a
+ * Table view on a {@link de.unikn.knime.core.data.DataTable}. This
+ * implementation uses a caching strategy as described in the
+ * {@link de.unikn.knime.core.node.tableview.TableContentModel}.
+ * <br />
+ * Standard renderers are used to display the different types of 
+ * {@link de.unikn.knime.core.data.DataCell}s. This will change in future.
+ * <br />
+ * This view typically resides in a
+ * {@link de.unikn.knime.core.node.tableview.TableView} (wrapping it in a
  * scroll pane and providing lots of delegating methods). If you want to use a 
  * table view somewhere else than in this package, e.g. in a different node, 
- * refer to the <code>TableView</code> implementation.
+ * refer to the {@link de.unikn.knime.core.node.tableview.TableView}
+ * implementation.
  * 
- * @see de.unikn.knime.core.node.tableview.TableContentModel
- * @see de.unikn.knime.core.data.DataTable
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableContentView extends JTable {
-    
-    /** Constructs empty content view. Consider 
-     * <code>setDataTable(DataTable)</code> to set a new data table to be 
+    private static final long serialVersionUID = -3503118869778091484L;
+
+    /**
+     * Creates empty content view. Consider 
+     * {@link #setDataTable(DataTable)} to set a new data table to be 
      * displayed.
-     * @see #setDataTable(DataTable)
      */ 
     public TableContentView() {
         this(new TableContentModel());
@@ -84,6 +86,7 @@ public class TableContentView extends JTable {
      * Creates new <code>TableContentView</code> based on a given 
      * <code>TableContentModel</code>. A standard renderer that prints the
      * <code>toString()</code> result of <code>DataCell</code> is used.
+     * 
      * @param model to be displayed
      */
     public TableContentView(final TableContentModel model) {
@@ -96,7 +99,7 @@ public class TableContentView extends JTable {
      * <code>TableContentModel</code>.
      * 
      * @param data <code>DataTable</code> to be displayed
-     * @throws NullPointerException If <code>data</code> is <code>null</code>.
+     * @throws NullPointerException if <code>data</code> is <code>null</code>.
      * @see TableContentModel#TableContentModel(DataTable)
      */
     public TableContentView(final DataTable data) {
@@ -105,18 +108,20 @@ public class TableContentView extends JTable {
     } // TableContentView(DataTable)
 
     /**
-     * Checks that the given argument is of type <code>TableContentModel</code> 
+     * Checks that the given argument is of type {@link TableContentModel} 
      * and throws exception if it is not. Otherwise it sets the new model and
      * updates the table.
+     * 
      * @param tableModel the new model, necessarily of type 
-     *        <code>TableContentModel</code> 
+     *        {@link TableContentModel} 
      * @see javax.swing.JTable#setModel(javax.swing.table.TableModel)
      * @throws ClassCastException if dataModel not of type 
-     *         <code>TableContentModel</code> 
-     * @throws IllegalArgumentException If <code>dataModel</code> is 
+     *         {@link TableContentModel} 
+     * @throws IllegalArgumentException if <code>dataModel</code> is 
      *         <code>null</code> as done by 
      *         <code>JTable.setModel(TableModel)</code>
      */
+    @Override
     public void setModel(final TableModel tableModel) {
         TableContentModel tblModel = (TableContentModel)tableModel;
         tblModel.addPropertyChangeListener(new PropertyChangeListener() {
@@ -133,15 +138,18 @@ public class TableContentView extends JTable {
     
     
     /**
-     * Return reference to the TableContentModel.
-     * @return The reference to the table model.
+     * Returns a reference to the TableContentModel.
+     * 
+     * @return the reference to the table model
      */
     public TableContentModel getContentModel() {
         return (TableContentModel)getModel();
     }
+    
     /**
      * Overridden in order to set the correct selection color (depending on
      * highlight status).
+     * 
      * @see JTable#prepareRenderer(TableCellRenderer, int, int)
      */
     @Override
@@ -156,8 +164,9 @@ public class TableContentView extends JTable {
     }
     
     /**
-     * Is the row count returned by <code>getRowCount()</code> final?
-     * @return <code>true</code> If row count won't change anymore (all rows
+     * Is the row count returned by {@link #getRowCount()} final?
+     * 
+     * @return <code>true</code> if row count won't change anymore (all rows
      *         have been seen), <code>false</code> if more rows are expected to
      *         come
      * @see TableContentModel#isRowCountFinal()
@@ -168,6 +177,7 @@ public class TableContentView extends JTable {
 
     /** 
      * Sets a new <code>DataTable</code> as content. 
+     * 
      * @param data New data to be shown. May be <code>null</code> to have an 
      * empty table.
      * @see TableContentModel#setDataTable(DataTable)
@@ -177,12 +187,11 @@ public class TableContentView extends JTable {
     } // setDataTable(DataTable)
 
     /** 
-     * Sets a new <code>HiLiteHandler</code> that this view talks to. This
-     * class is only interested in the handler's <code>HiLiteHandler</code> 
-     * since it does not display any other property (like color, shape, size ..)
-     * in the view. The argument may be <code>null</code> to disconnect the
-     * current <code>HiLiteHandler</code>.
-     * @param hiLiteHdl The new <code>HiLiteHandler</code>.
+     * Sets a new <code>HiLiteHandler</code> that this view talks to. The
+     * argument may be <code>null</code> to disconnect the current
+     * <code>HiLiteHandler</code>.
+     * 
+     * @param hiLiteHdl the new <code>HiLiteHandler</code>.
      */
     public void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
         getContentModel().setHiLiteHandler(hiLiteHdl);
@@ -190,8 +199,9 @@ public class TableContentView extends JTable {
     
     /**
      * Control behaviour to show only highlighted rows.
-     * @param showOnlyHilit <code>true</code> Filter and display only
-     *        rows whose highlight status is set.
+     * 
+     * @param showOnlyHilit <code>true</code>: filter and display only
+     *        rows whose highlight status is set
      * @see TableContentModel#showHighlightedOnly(boolean)
      */
     public final void showHighlightedOnly(final boolean showOnlyHilit) {
@@ -200,8 +210,9 @@ public class TableContentView extends JTable {
     
     /**
      * Get status of filtering for highlighted rows.
-     * @return <code>true</code> only highlighted rows are shown, 
-     *         <code>false</code> all rows are shown.
+     * 
+     * @return <code>true</code> if only highlighted rows are shown, 
+     *         <code>false</code> if all rows are shown.
      * @see TableContentModel#showsHighlightedOnly() 
      */
     public boolean showsHighlightedOnly() {
@@ -210,7 +221,8 @@ public class TableContentView extends JTable {
 
     /** 
      * Is there a HiLiteHandler connected?
-     * @return <code>true</code> if global highlighting is possible.
+     * 
+     * @return <code>true</code> if global highlighting is possible
      * @see TableContentModel#hasHiLiteHandler()
      */
     public final boolean hasHiLiteHandler() {
@@ -220,9 +232,10 @@ public class TableContentView extends JTable {
     /** 
      * This table "hasData" when there is valid input, i.e. the 
      * <code>DataTable</code> to be displayed is not <code>null</code>. The 
-     * status may changed during runtime by calling the models 
+     * status may be changed during runtime by calling the models 
      * <code>setDataTable</code> method.
-     * @return <code>true</code> When there is data to be displayed.
+     * 
+     * @return <code>true</code> if there is data to be displayed
      * @see TableContentModel#hasData()
      */
     public boolean hasData() {
@@ -231,6 +244,7 @@ public class TableContentView extends JTable {
     
     /**
      * Delegate method to cancel row counting.
+     * 
      * @see TableContentModel#cancelRowCountingInBackground()
      */
     public void cancelRowCountingInBackground() {
@@ -239,6 +253,7 @@ public class TableContentView extends JTable {
 
     /**
      * Delegate method to start row counting.
+     * 
      * @see TableContentModel#countRowsInBackground()
      */
     public void countRowsInBackground() {
@@ -279,11 +294,13 @@ public class TableContentView extends JTable {
      * the proper renderer. The mouse listener is used to display a popup menu.
      * @see javax.swing.JTable#setTableHeader(javax.swing.table.JTableHeader)
      */
+    @Override
     public void setTableHeader(final JTableHeader newTableHeader) {
         if (newTableHeader != null) {
             TableCellRenderer renderer = getNewColumnHeaderRenderer();
             newTableHeader.setDefaultRenderer(renderer);
             newTableHeader.addMouseListener(new MouseAdapter() {
+                @Override
                 public void mouseClicked(final MouseEvent e) {
                     onMouseClickInHeader(e);
                 }
@@ -296,8 +313,10 @@ public class TableContentView extends JTable {
      * Overridden to avoid event storm. The super implementation will invoke
      * a repaint if the color has changed. Since that happens frequently (and
      * also within the repaint) this causes an infinite loop.
+     * 
      * @see javax.swing.JTable#setSelectionBackground(java.awt.Color)
      */
+    @Override
     public void setSelectionBackground(final Color newColor) {
         if (newColor == null) {
             throw new NullPointerException("Color must not be null!");  
@@ -310,7 +329,8 @@ public class TableContentView extends JTable {
      * header of the column will be set to the <code>DataTable</code>'s
      * <code>DataColumnSpec</code> and for the renderer the
      * type's <code>getNewRenderer()</code> is used
-     * @param aColumn To be added
+     * 
+     * @param aColumn column to be added
      * @see javax.swing.JTable#addColumn(javax.swing.table.TableColumn)
      * @see de.unikn.knime.core.data.DataType#getRenderer(DataColumnSpec)
      * @see DataColumnSpec
@@ -334,7 +354,8 @@ public class TableContentView extends JTable {
      * column available and will also list all possible values in the column
      * where the mouse was clicked (as it is provided in the column spec).
      * The event's source is the table header
-     * @param e The mouse event in the table header.
+     * 
+     * @param e the mouse event in the table header
      */
     protected void onMouseClickInHeader(final MouseEvent e) {
         JTableHeader header = getTableHeader();
@@ -356,9 +377,10 @@ public class TableContentView extends JTable {
      * Create a custom popup menu when the mouse was clicked in a column header.
      * This popup menu will contain the possible values in that column (when
      * available) and a set of buttons which let the user change the renderer
-     * (again: when available)
-     * @param column For which to create the popup menu.
-     * @return A popup menu displaying these properties.
+     * (again: when available).
+     * 
+     * @param column column for which to create the popup menu
+     * @return a popup menu displaying these properties
      * @see #onMouseClickInHeader(MouseEvent)
      */
     protected JPopupMenu getPopUpMenu(final int column) {
@@ -391,7 +413,7 @@ public class TableContentView extends JTable {
             });
             popup.add(menuItem);
         }
-        // try to figure out the set of available renderer 
+        // try to figure out the set of available renderers 
         TableCellRenderer curRen = tableColumn.getCellRenderer();
         String renderID = null; 
         // should always be true unless someone overrides addColumn
@@ -399,9 +421,9 @@ public class TableContentView extends JTable {
             DataCellRendererFamily renFamily = (DataCellRendererFamily)curRen;
             renderID = renFamily.getDescription();
         }
-        String[] availRender = getAvailableRenderer(column);
+        String[] availRender = getAvailableRenderers(column);
         if (availRender != null && availRender.length > 1) {
-            JMenu subMenu = new JMenu("Available Renderer");
+            JMenu subMenu = new JMenu("Available Renderers");
             popup.add(subMenu);
             // actionlistener which changes the renderer according to the 
             // action command
@@ -427,16 +449,17 @@ public class TableContentView extends JTable {
     /**
      * Changes the renderer in a given column. The column's renderer is 
      * retrieved and checked if it is instance of 
-     * <code>DataCellRendererFamily</code> (which it is unless a subclass 
+     * {@link DataCellRendererFamily} (which it is unless a subclass 
      * overrides <code>addColumn</code>). In this renderer family the renderer
      * matching the description <code>rendererID</code> is set active.
-     * 
-     * <p>If the description is not valid (<code>null</code> or unknown), this
+     * <br />
+     * If the description is not valid (<code>null</code> or unknown), this
      * method does nothing.
-     * @param column The column of interest.
-     * @param rendererID The name of the renderer.
+     * 
+     * @param column the column of interest
+     * @param rendererID the name of the renderer
      * @see DataCellRendererFamily#getRendererDescriptions()
-     * @throws IndexOutOfBoundsException If <code>column</code> violates its 
+     * @throws IndexOutOfBoundsException if <code>column</code> violates its 
      *         range
      */
     public void changeRenderer(final int column, final String rendererID) {
@@ -451,18 +474,18 @@ public class TableContentView extends JTable {
     }
     
     /**
-     * Get the description of all available renderer in a column. The returned
-     * array simple contains all description in the 
+     * Get the description of all available renderers in a column. The returned
+     * array simply contains all description in the 
      * <code>DataCellRendererFamily</code> (which should be the default renderer
      * in each column.) 
      * 
-     * @param column The column of interest.
-     * @return A new array containing the description of all available renderer
-     *         or an empty array to address no available renderer.
-     * @throws IndexOutOfBoundsException If <code>column</code> violates its 
+     * @param column the column of interest.
+     * @return a new array containing the description of all available renderer
+     *         or an empty array to address no available renderer
+     * @throws IndexOutOfBoundsException if <code>column</code> violates its 
      *         range
      */
-    public String[] getAvailableRenderer(final int column) {
+    public String[] getAvailableRenderers(final int column) {
         final TableColumn tableColumn = getColumnModel().getColumn(column); 
         TableCellRenderer curRen = tableColumn.getCellRenderer();
         String[] availRenderer; 
@@ -477,8 +500,10 @@ public class TableContentView extends JTable {
     
     /**
      * Calls super, sets proper row height.
+     * 
      * @see javax.swing.JTable#initializeLocalVars()
      */
+    @Override
     protected void initializeLocalVars() {
         super.initializeLocalVars();
         TableColumnModel colModel = getColumnModel();
@@ -496,7 +521,8 @@ public class TableContentView extends JTable {
     }
     
     /**
-     * Get the renderer for the column header (never null).
+     * Get the renderer for the column header (never <code>null</code>).
+     * 
      * @return a new <code>ColumnHeaderRenderer</code>
      * @see ColumnHeaderRenderer
      * @see JTableHeader#setDefaultRenderer(javax.swing.table.TableCellRenderer)
@@ -504,5 +530,4 @@ public class TableContentView extends JTable {
     protected TableCellRenderer getNewColumnHeaderRenderer() {
         return new ColumnHeaderRenderer();
     }
-    
 }

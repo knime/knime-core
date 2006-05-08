@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   Nov 17, 2005 (wiswedel): created
+ * 2006-06-08 (tm): reviewed   
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -30,11 +29,12 @@ import javax.swing.JTable;
 import javax.swing.event.MouseInputAdapter;
 
 /**
- * A mouse listener and mouse motion listener that is registered to the
- * a JTable to change row height as the user resizes a row. 
- * This JTable represents the row header view in a scrollpane (it has one
- * column). 
- * @author wiswedel, University of Konstanz
+ * A mouse listener and mouse motion listener that is registered to
+ * a {@link javax.swing.JTable} to change row height as the user resizes a row. 
+ * This {@link javax.swing.JTable} represents the row header view in a
+ * scrollpane (it has one column).
+ *  
+ * @author Bernd Wiswedel, University of Konstanz
  */
 class RowHeaderHeightMouseListener extends MouseInputAdapter {
 
@@ -45,7 +45,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
     /** The standard cursor. */
     private static final Cursor DEFAULT_CURSOR = Cursor.getDefaultCursor();
 
-    /** Distance in pixel from the rows (horizontal) edge within which the
+    /** Distance in pixels from the rows (horizontal) edge within which the
      * "you can resize" cursor is shown.
      */
     private static final int PIXELS = 2;
@@ -69,6 +69,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
 
     /** Creates a new listener and also registers this listener to the
      * argument table.
+     * 
      * @param table The table to observe.
      * @throws NullPointerException If the argument is null.
      */
@@ -107,7 +108,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
         // check if row height of this row is adjustable
         Rectangle rect = m_table.getCellRect(rowIndex, colIndex, false);
         Cursor cursor = m_table.getCursor();
-        int distFromLowerBorder = (int)rect.height + (int)rect.y - point.y;
+        int distFromLowerBorder = rect.height + rect.y - point.y;
         // if we are close enough to border (within PIXELS), change cursor
         if (distFromLowerBorder <= PIXELS) {
             if (!cursor.equals(RESIZE_CURSOR)) {

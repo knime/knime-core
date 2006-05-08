@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -15,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed 
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -44,21 +44,22 @@ import de.unikn.knime.core.node.property.hilite.KeyEvent;
 
 /** 
  * Proprietary implementation of a model for a table view. Input of the 
- * model is a <code>DataTable</code> that is to be displayed in the
- * table view. 
+ * model is a {@link de.unikn.knime.core.data.DataTable} that is to be displayed
+ * in the table view. 
  * <p>
  * This class uses a ring buffer to cache the rows being displayed. 
- * As new rows are read from the <code>DataTable</code> (using the the table's 
- * <code>RowIterator</code>) they are added to the ring buffer (and "old" rows 
+ * As new rows are read from the {@link de.unikn.knime.core.data.DataTable}
+ * (using the the table's {@link de.unikn.knime.core.data.RowIterator}) they are
+ * added to the ring buffer (and "old" rows 
  * are deleted). Each time a row is requested that resides before the cursor
  * of the current iterator and is not in the cache (default size: 500), the 
  * cache is cleared and a new iterator is instantiated. Thus, this class will
  * have some performance problems when the user scrolls up in the table view. 
- * However, when scrolling down, the data flow is somewhat "fluent".
+ * However, when scrolling down, the data flow is somewhat "fluent".</p>
  * 
- * <p>This class also supports Highlighting of rows (even though it is a view
+ * <p>This class also supports highlighting of rows (even though it is a view
  * property). We do store the highlight status of the rows in here as it 
- * complies nicely with the caching strategy.
+ * complies nicely with the caching strategy.</p>
  * 
  * @see de.unikn.knime.core.data.DataTable
  * @see TableContentModel#setCacheSize(int)
@@ -68,8 +69,12 @@ import de.unikn.knime.core.node.property.hilite.KeyEvent;
 public class TableContentModel extends AbstractTableModel 
     implements HiLiteListener, TableContentInterface {
     
+    private static final long serialVersionUID = 8413295641103391635L;
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(TableContentModel.class);
+
+    
+    // TODO change the event names into an enum?
     /**
      * Property name of the event when the data table has changed.
      */
@@ -80,16 +85,19 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Default size of the ring buffer (500).
+     * 
      * @see #setCacheSize(int)
      */
     public static final int CACHE_SIZE = 500;
     
     /** 
      * Number of rows being read at a time (50). Once a "new" row is accessed,
-     * the system will use the <code>DataTable</code>'s iterator to get 
-     * <code>CHUNK_SIZE</code> new rows which are added to the cache. 
+     * the system will use the {@link de.unikn.knime.core.data.DataTable}'s
+     * iterator to get <code>CHUNK_SIZE</code> new rows which are added to the
+     * cache. 
      * Suppose you have a table with more than 100 rows: Those are then accessed
      * chunk-wise, i.e. 0-49, 50-99, and so on.
+     * 
      * @see #setChunkSize(int)
      */
     public static final int CHUNK_SIZE = 50;
@@ -97,53 +105,58 @@ public class TableContentModel extends AbstractTableModel
     /** underlying data; may be null to indicate invalid status. */
     private DataTable m_data;
 
-    /** Iterator in m_data to get content, newly instantiated when user
+    /** Iterator in {@link #m_data} to get content, newly instantiated when user
      * scrolls up. */
     private RowIterator m_iterator;
 
     /** 
-     * Ring buffer. Size determined by CACHE_SIZE 
+     * Ring buffer. Size determined by {@link #CACHE_SIZE}. 
      */
     private DataRow[] m_cachedRows;
     
-    /** storing for each row in the cache if it has been highlighted.
-     * using the same ring buffer strategy as m_cachedRows */
+    /** storing for each row in the cache if it has been highlighted,
+     * using the same ring buffer strategy as {@link #m_cachedRows}. */
     private BitSet m_hilitSet;
 
     /** 
      * Number of rows seen in current iterator that are of interest, i.e.
-     * highlighted rows when m_showOnlyHiLit is true, all rows otherwise.
-     * This field is set to 0 when a new iterator is instantiated. 
+     * highlighted rows when {@link #m_showOnlyHiLit} is <code>true</code>, all
+     * rows otherwise. This field is set to 0 when a new iterator is
+     * instantiated. 
      */
     private int m_rowCountOfInterestInIterator;
     
     /**
-     * Number of rows of interest that have been seen so far. If m_showOnlyHiLit
-     * is false this field is equal to m_maxRowCount.
+     * Number of rows of interest that have been seen so far. If
+     * {@link #m_showOnlyHiLit} is <code>false</code> this field is equal to
+     * {@link #m_maxRowCount}.
      */
     private int m_rowCountOfInterest;
     
     /**
-     * Is the current value of m_rowCountOfInterest final. If m_showOnlyHiLit
-     * is false this field is equal to m_isMaxRowCountFinal
+     * Is the current value of {@link #m_rowCountOfInterest} final? If
+     * {@link #m_showOnlyHiLit} is <code>false</code> this field is equal to
+     * {@linl #m_isMaxRowCountFinal}.
      */
     private boolean m_isRowCountOfInterestFinal;
     
-    /** Counter of rows in current iterator. If m_showOnlyHiLit is false,
-     * this field is equal to m_rowCountOfInterestInIterator. This field is 
-     * incremented with each m_iterator.next() and reset to 0 with 
-     * m_iterator = new ...
+    /** Counter of rows in current iterator. If {@link #m_showOnlyHiLit} is
+     * <code>false</code>, this field is equal to
+     * {@link #m_rowCountOfInterestInIterator}. This field is 
+     * incremented with each <code>m_iterator.next()</code> and reset to 0 with 
+     * <code>m_iterator = new ...</code>
      */
     private int m_rowCountInIterator;
 
-    /** lower bound for overall number of rows in m_data, updated when new rows
-     * are encountered.
+    /** lower bound for overall number of rows in {@link #m_data}, updated when
+     * new rows are encountered.
      */
     private int m_maxRowCount;
 
     /** flag if all rows in the underlying DataTable have been seen, 
-     * i.e. The iterator ran at least once to the very end of the table.
-     * This field is set to true the first time m_iterator.atEnd() returns true.
+     * i.e. the iterator ran at least once to the very end of the table.
+     * This field is set to <code>true</code> the first time
+     * <code>m_iterator.atEnd()</code> returns <code>true</code>.
      */
     private boolean m_isMaxRowCountFinal;
     
@@ -152,15 +165,16 @@ public class TableContentModel extends AbstractTableModel
      */
     private boolean m_showOnlyHiLit;
 
-    /** number of rows that are read at a time, defaulted to CHUNK_SIZE. */
+    /** number of rows that are read at a time, defaults to
+     * {@link #CHUNK_SIZE}. */
     private int m_chunkSize;
     
-    /** size of ring buffer, if m_cachedRows.length == m_cacheSize 
-     * (if m_cachedRows not null). */
+    /** size of ring buffer, if <code>m_cachedRows.length == m_cacheSize</code> 
+     * (if m_cachedRows not <code>null</code>). */
     private int m_cacheSize;
     
     /** Handler to get the highlight status of the rows from and to send 
-     * highlight requests to. is <code>null</code> when no hilite available
+     * highlight requests to. Is <code>null</code> when no hilite available.
      */
     private HiLiteHandler m_hiLiteHdl;
     
@@ -170,16 +184,16 @@ public class TableContentModel extends AbstractTableModel
     private final PropertyChangeSupport m_propertySupport;
     
     /** A thread executed in background to count the rows, is triggered by
-     * <code>countRowsInBackground()</code>.
-     * @see #countRowsInBackground()
+     * {@link #countRowsInBackground()}.
      */
     private RowCounterThread m_rowCounterThread;
     
     
     /** 
-     * Creates new <code>TableContentModel</code> with empty content. Call 
-     * <code>setDataTable(DataTable)</code> to set a valid data table. No 
+     * Creates a new TableContentModel with empty content. Call 
+     * {@link #setDataTable(DataTable)} to set a valid data table. No 
      * highlighting is available.
+     * 
      * @see #setDataTable(DataTable)
      * @see #setHiLiteHandler(HiLiteHandler)
      */
@@ -192,8 +206,9 @@ public class TableContentModel extends AbstractTableModel
     } // TableContentModel()
     
     /** 
-     * Creates new <code>TableContentModel</code> displaying <code>data</code>.
+     * Creates a new TableContentModel displaying <code>data</code>.
      * No Highlighting is available.
+     * 
      * @param data the table to be displayed. May be <code>null</code> to 
      *        indicate that there is no data available. 
      */
@@ -203,9 +218,10 @@ public class TableContentModel extends AbstractTableModel
     } // TableContentModel(DataTable)
     
     /** 
-     * Creates new <code>TableContentModel</code> displaying <code>data</code>.
+     * Creates a new TableContentModel displaying <code>data</code>.
      * If <code>prop</code> is not <code>null</code>, its 
      * <code>HiLiteHandler</code> is used to do highlight synchronization.
+     * 
      * @param data the table to be displayed. May be <code>null</code> to 
      *        indicate that there is no data available.
      * @param prop the <code>HiLiteHandler</code> However, may
@@ -219,6 +235,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * Sets new data for this table. The argument may be <code>null</code> to
      * indicate invalid data (nothing displayed).
+     * 
      * @param data the new data being displayed or <code>null</code>
      */
     public synchronized void setDataTable(final DataTable data) {
@@ -258,10 +275,10 @@ public class TableContentModel extends AbstractTableModel
      * and count the rows in it. Successive calls of this method are ignored.
      * Also if the final row count is known (either by consecutive calls of
      * this method or because the table is so small that the cache is filled 
-     * with all rows) this method has no effect.
+     * with all rows) this method has no effect.<br />
      * 
-     * <p>The row counting process can be aborted by calling 
-     * <code>cancelRowCountingInBackground()</code>.
+     * The row counting process can be aborted by calling 
+     * {@link #cancelRowCountingInBackground()}.
      */ 
     public synchronized void countRowsInBackground() {
         if (m_rowCounterThread != null || m_isMaxRowCountFinal) {
@@ -272,12 +289,12 @@ public class TableContentModel extends AbstractTableModel
     }
     
     /** Cancels the potential row counter thread invoked by 
-     * <code>countRowsInBackground()</code>. If this method has not been called
+     * {@link #countRowsInBackground()}. If this method has not been called
      * yet, this method does nothing.
      */
     public synchronized void cancelRowCountingInBackground() {
         if (m_rowCounterThread != null) {
-            m_rowCounterThread.setCanceled();
+            m_rowCounterThread.interrupt();
             m_rowCounterThread = null;
         }
     }
@@ -285,6 +302,7 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Set a new <code>HiLiteHandler</code>. If the argument is 
      * <code>null</code> highlighting is disabled.
+     * 
      * @param hiliter the new handler to use.
      */
     public synchronized void setHiLiteHandler(final HiLiteHandler hiliter) {
@@ -294,11 +312,11 @@ public class TableContentModel extends AbstractTableModel
         } 
         HiLiteHandler oldHandler = m_hiLiteHdl;
         if (m_hiLiteHdl != null) { // unregister from old handler 
-            m_hiLiteHdl.removeHiLiteListener((HiLiteListener)this);
+            m_hiLiteHdl.removeHiLiteListener(this);
         }
         m_hiLiteHdl = hiliter;
         if (hiliter != null) { // register at new one
-            hiliter.addHiLiteListener((HiLiteListener)this);
+            hiliter.addHiLiteListener(this);
         }
         
         // check for rows whose highlight status has changed
@@ -340,17 +358,19 @@ public class TableContentModel extends AbstractTableModel
     } // setHiLiteHandler(HiLiteHandler)
     
     /** 
-     * Return a reference to the hilite handler currently being used. 
-     * @return The current HiLiteHandler or Null of none is set.
+     * Return a reference to the hilite handler currently being used.
+     * 
+     * @return the current HiLiteHandler or <code>null</code> if none is set
      */
     public HiLiteHandler getHiLiteHandler() {
         return m_hiLiteHdl;
     }
     
     /** 
-     * Is there valid data to show. 
+     * Is there valid data to show?
+     * 
      * @return <code>true</code> if underlying <code>DataTable</code> is not
-     * <code>null</code>.
+     * <code>null</code>
      */
     public final boolean hasData() {
         return m_data != null;
@@ -358,7 +378,8 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Is there a HiLiteHandler connected?
-     * @return <code>true</code> if global highlighting is possible.
+     * 
+     * @return <code>true</code> if global highlighting is possible
      */
     public final boolean hasHiLiteHandler() {
         return m_hiLiteHdl != null;
@@ -394,8 +415,8 @@ public class TableContentModel extends AbstractTableModel
     /**
      * Get status of filtering for highlighted rows.
      * 
-     * @return <code>true</code> only highlighted rows are shown,
-     *         <code>false</code> all rows are shown.
+     * @return <code>true</code> if only highlighted rows are shown,
+     *         <code>false</code> if all rows are shown.
      */
     public boolean showsHighlightedOnly() {
         return m_showOnlyHiLit;
@@ -403,9 +424,9 @@ public class TableContentModel extends AbstractTableModel
 
     /**
      * Get the column count. 
+     * 
      * @return the number of columns in the underlying <code>DataTable</code>
-     *         or 0 if <code>hasData()</code> returns <code>false</code>.
-     * @see #hasData() 
+     *         or 0 if {@link #hasData()} returns <code>false</code>. 
      */
     public int getColumnCount() {
         return hasData() ? m_data.getDataTableSpec().getNumColumns() : 0;
@@ -427,7 +448,8 @@ public class TableContentModel extends AbstractTableModel
      * Keep in mind that this call may not return the same value for two 
      * successive calls as it is possible that new rows have been seen in the 
      * meantime. As new rows are seen an event is fired.
-     * @return a lower bound of the number of rows in this model
+     * 
+     * @return a lower bound for the number of rows in this model
      */
     public int getRowCount() {
         return m_rowCountOfInterest;
@@ -437,6 +459,7 @@ public class TableContentModel extends AbstractTableModel
      * Get the DataCell at a specific location. If the requested row is in the
      * cache, it will be returned. Otherwise the ring buffer is updated 
      * (iterator pushed forward or reset) until the row is in the cache.
+     * 
      * @param row the row index
      * @param column the column index
      * @return the <code>DataCell</code> in the underlying 
@@ -461,12 +484,14 @@ public class TableContentModel extends AbstractTableModel
      * Get the column header for some specific column index. The final column
      * name is generated by using the column header's <code>DataCell</code>
      * <code>toString()</code> method.
+     * 
      * @param colIndex the column's index
      * @return header of column <code>colIndex</code>
      * @see AbstractTableModel#getColumnName(int)
      * @see DataColumnSpec#getName() 
      * @throws IndexOutOfBoundsException if <code>colIndex</code> out of range
      */
+    @Override
     public String getColumnName(final int colIndex) {
         boundColumn(colIndex);
         DataColumnSpec colSpec = 
@@ -476,8 +501,10 @@ public class TableContentModel extends AbstractTableModel
 
     /** 
      * Returns DataCell.class.
+     * 
      * @see AbstractTableModel#getColumnClass(int)
      */
+    @Override
     public Class<DataCell> getColumnClass(final int column) {
         boundColumn(column);
         return DataCell.class;
@@ -486,18 +513,20 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Get reference to underlying <code>DataTable</code> as it was passed
      * in the constructor or changed by successive calls of 
-     * <code>setDataTable(DataTable)</code>.
-     * @return reference to table or <code>null</code> if <code>hasData()</code>
+     * {@link #setDataTable(DataTable)}.
+     * 
+     * @return reference to table or <code>null</code> if {@link #hasData()}
      *         returns <code>false</code>
      * @see #TableContentModel(DataTable)
-     * @see #setDataTable(DataTable)
      */
     public final DataTable getDataTable() {
         return m_data;
     } // getDataTable()
     
-    /** Get the table spec of the current DataTable. It returns null
+    /**
+     * Get the table spec of the current DataTable. It returns <code>null</code>
      * if the model is currently not having a table.
+     * 
      * @return The spec of the DataTable.
      */
     public DataTableSpec getDataTableSpec() {
@@ -510,16 +539,16 @@ public class TableContentModel extends AbstractTableModel
     /**
      * Returns <code>true</code> if the iterator has traversed the whole 
      * <code>DataTable</code> at least once. The value returned by 
-     * <code>getRowCount()</code> is therefore final. It returns 
+     * {@link #getRowCount()} is therefore final. It returns 
      * <code>false</code> if the value can still increase.
      * 
      * <p>Note: The row count may not increase even if 
-     * <code>isRowCountFinal()</code> returns <code>false</code>. This unlikely
+     * {@link #isRowCountFinal()} returns <code>false</code>. This unlikely
      * case occurs when - by chance - <code>getRowCount() + 1</code> is indeed 
-     * the final row count. See the {@link #getRowCount() getRowCount} method
-     * for further details.  
+     * the final row count. See the {@link #getRowCount()} method
+     * for further details.</p>
+     * 
      * @return if there are no more unknown rows
-     * @see #getRowCount()
      */
     public boolean isRowCountFinal() {
         if (m_showOnlyHiLit) {
@@ -538,7 +567,8 @@ public class TableContentModel extends AbstractTableModel
      * <pre><code>size < 2*getChunkSize()</code></pre>, it will be set to it.
      * So when a "new" row is requested, at least <code>getChunkSize()</code>
      * rows after (including that row) and before the new row will be also in 
-     * the cache.
+     * the cache.</p>
+     * 
      * @param size size of the new cache.
      * @return the new cache size (may differ from <code>size</code>, see above)
      * @throws IllegalArgumentException if <code>size</code> <= 0.
@@ -548,8 +578,7 @@ public class TableContentModel extends AbstractTableModel
             return size;
         }
         if (size <= 0) {
-            throw new IllegalArgumentException(
-                "Size must not <= 0: " + size);
+            throw new IllegalArgumentException("Size must not <= 0: " + size);
         }
         m_cacheSize = Math.max(2 * getChunkSize(), size);
         m_cachedRows = new DataRow[m_cacheSize];
@@ -560,6 +589,7 @@ public class TableContentModel extends AbstractTableModel
 
     /** 
      * Get the size of the cache.
+     * 
      * @return number of rows that fit in cache
      * @see #setCacheSize(int)
      * @see #CACHE_SIZE
@@ -569,13 +599,13 @@ public class TableContentModel extends AbstractTableModel
     } // getCacheSize()
     
     /** 
-     * Set a new chunk size. This value is defaulted to <code>CHUNK_SIZE</code>
+     * Set a new chunk size. This value is defaulted to {@link #CHUNK_SIZE}
      * on start-up. The new value can be at most <code>getCacheSize()/2</code>.
      * If it is bigger, it's value is reduced to <code>getCacheSize()/2</code>.
+     * 
      * @param newSize the new value
      * @return the new chunk size (may differ from passed argument, see above)
      * @throws IllegalArgumentException if <code>newSize</code> is <= 0.
-     * @see #CHUNK_SIZE
      * @see #getCacheSize()
      */
     protected final int setChunkSize(final int newSize) {
@@ -590,8 +620,9 @@ public class TableContentModel extends AbstractTableModel
 
     /** 
      * Get the chunk size.
+     * 
      * @return The current value of a chunk being read (default: 
-     *         <code>CHUNK_SIZE</code>.
+     *         {@link #CHUNK_SIZE}.
      * @see #setChunkSize(int)
      */
     public final int getChunkSize() {
@@ -610,9 +641,10 @@ public class TableContentModel extends AbstractTableModel
     } // isHiLit(int)
     
     /**
-     * Get the color information to a row. 
+     * Get the color information for a row.
+     *  
      * @param row The row of interest
-     * @return The color information to that row
+     * @return The color information for that row
      * @see de.unikn.knime.core.data.RowKey#getColorAttr()
      */
     public ColorAttr getColorAttr(final int row) {
@@ -625,7 +657,8 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Highlights all rows that are selected according to the given 
-     * selection model. This method does nothing if no Handler is connected.
+     * selection model. This method does nothing if no handler is connected.
+     * 
      * @param selModel To get selection status from
      * @throws NullPointerException 
      *         if <code>selModel</code> is <code>null</code>
@@ -636,7 +669,8 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * "Unhighlights" all rows that are selected according to the given 
-     * selection model. This method does nothing if no Handler is connected.
+     * selection model. This method does nothing if no handler is connected.
+     * 
      * @param selModel To get selection status from
      * @throws NullPointerException 
      *         if <code>selModel</code> is <code>null</code>
@@ -647,8 +681,9 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Resets the highlighting of all keys by invoking the reset method in
-     * the <code>HiLiteHandler</code>. This method does nothing if no Handler
+     * the <code>HiLiteHandler</code>. This method does nothing if no handler
      * is connected.
+     * 
      * @see HiLiteHandler#resetHiLite()
      */
     protected void requestResetHiLite() {
@@ -717,6 +752,7 @@ public class TableContentModel extends AbstractTableModel
      * Gets a row with a specified index. Either the row is in the cache (just
      * take it) or the row must be got from the DataTable (uses iterator and 
      * puts row into cache).
+     * 
      * @param row row index of interest
      * @return the row at a specific position
      * @throws IndexOutOfBoundsException if <code>row</code> violates its range
@@ -727,9 +763,9 @@ public class TableContentModel extends AbstractTableModel
         final int oldRowCount = getRowCount();
 
         // the iterator goes further when the last known row is requested
-        boolean pushIterator = !isRowCountFinal() && row == oldRowCount - 1;
+        boolean pushIterator = !isRowCountFinal() && (row == oldRowCount - 1);
         if (row >= (m_rowCountOfInterestInIterator - cacheSize) 
-                && row < m_rowCountOfInterestInIterator && !pushIterator) {
+                && (row < m_rowCountOfInterestInIterator) && !pushIterator) {
             return getRowFromCache(row);
         }
 
@@ -754,7 +790,7 @@ public class TableContentModel extends AbstractTableModel
         // is it the first time that we see the last row? (fire event)
         boolean isFinalSwap = !wasRowCountFinal && !mayHaveNext;
         // block contains rows that we haven't seen before
-        if (isFinalSwap || m_rowCountOfInterestInIterator > oldRowCount) {
+        if (isFinalSwap || (m_rowCountOfInterestInIterator > oldRowCount)) {
             if (isFinalSwap) {
                 boundRow(row); // row count is final, we have an upper bound!
             }
@@ -765,8 +801,9 @@ public class TableContentModel extends AbstractTableModel
     
 
     /**
-     * pushes iterator one step further and caches the next element at the
+     * Pushes iterator one step further and caches the next element at the
      * proper position in the ring buffer.
+     * 
      * @return <code>true</code> if that was successful, <code>false</code>
      *         if the iterator went to the end. 
      */
@@ -818,10 +855,11 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Returns a row with a given index from the cache. It is mandatory to give
      * a row index which is certainly in the cache, i.e.
-     * (row >= (m_rowCountOfInterestInIterator - cS) 
-     * && row < m_rowCountOfInterestInIterator) holds.
-     * @param  row Index of the row in the underlying <code>DataTable</code>
-     * @return The row with the given index
+     * <code>(row >= (m_rowCountOfInterestInIterator - cS) 
+     * && row < m_rowCountOfInterestInIterator)</code> must hold.
+     * 
+     * @param  row index of the row in the underlying <code>DataTable</code>
+     * @return the row with the given index
      */
     private DataRow getRowFromCache(final int row) {
         return m_cachedRows[indexForRow(row)];
@@ -829,8 +867,9 @@ public class TableContentModel extends AbstractTableModel
     
     /**
      * Get Hilight status from a particular row index. The row must be 
-     * in the cache (mandatory). 
-     * @param row Index of the row in the underlying <code>DataTable</code>
+     * in the cache (mandatory).
+     *  
+     * @param row index of the row in the underlying <code>DataTable</code>
      * @return the Hilight status of that row 
      */
     private boolean getHiLiteFromCache(final int row) {
@@ -840,7 +879,8 @@ public class TableContentModel extends AbstractTableModel
     /**
      * Get the index in the cache where row with index "row" is located.
      * The row MUST be in the cache.
-     * @param row to access
+     * 
+     * @param row row to access
      * @return internal index of the row
      */
     private int indexForRow(final int row) {
@@ -853,9 +893,10 @@ public class TableContentModel extends AbstractTableModel
     } // indexForRow(int)
     
     /** 
-     * Counterpart for <code>indexForRow(int)</code>.
-     * @param index An index in the cache.
-     * @return The row id for <code>index</code>.
+     * Counterpart for {@link #indexForRow(int)}.
+     * 
+     * @param index an index in the cache.
+     * @return the row id for <code>index</code>
      */
     private int rowForIndex(final int index) {
         final int cS = getCacheSize();
@@ -869,7 +910,8 @@ public class TableContentModel extends AbstractTableModel
 
     /**
      * Translates hilight event and sets properties accordingly.
-     * @param e The event to evaluate. 
+     * 
+     * @param e the event to evaluate. 
      * @param isHiLite <code>true</code> for highlight request, 
      *        <code>false</code> for an unhilight
      */
@@ -971,10 +1013,11 @@ public class TableContentModel extends AbstractTableModel
      * hilighting is disabled (according to the 
      * <code>hasHiLiteHandler()</code> method) or nothing is selected in 
      * <code>selModel</code>.
+     * 
      * @param selModel To get selection status from
      * @param isHiLite Flag to tell if selected rows are to highlight or
      *        unhilight
-     * @throws NullPointerException If <code>selModel</code> is null.
+     * @throws NullPointerException if <code>selModel</code> is null
      */
     private void processHiLiteRequest(
             final ListSelectionModel selModel, final boolean isHiLite) {
@@ -1019,10 +1062,11 @@ public class TableContentModel extends AbstractTableModel
     } //processHiLiteRequest(ListSelectionModel, boolean)
     
     /**
-     * Fires a new <code>TableModelEvent</code> to inform listeners that 
-     * the rows between <code>rowForIndex(i1)</code> and 
+     * Fires a new {@link javax.swing.event.TableModelEvent} to inform
+     * listeners that the rows between <code>rowForIndex(i1)</code> and 
      * <code>rowForIndex(i1)</code> have changed. This method returns 
      * immediately if <code>firstRow > lastRow</code>.
+     * 
      * @param i1 First index in cache that changed
      * @param i2 Last index, respectively.
      */
@@ -1038,13 +1082,14 @@ public class TableContentModel extends AbstractTableModel
         fireTableRowsUpdated(firstRow, lastRow);
     } // fireRowsInCacheUpdated(final int i1, final int i2)
     
-    /** Used by the row counter thread to inform about new rows. An event will
+    /**
+     * Used by the row counter thread to inform about new rows. An event will
      * be fired to inform registered listeners.
-     * @param newCount The new row count.
-     * @param isFinal If there are possibly more rows to count.
+     * 
+     * @param newCount the new row count
+     * @param isFinal if there are possibly more rows to count
      */
-    synchronized void setRowCount(
-            final int newCount, final boolean isFinal) {
+    synchronized void setRowCount(final int newCount, final boolean isFinal) {
         final int oldCount = m_maxRowCount;
         if (oldCount >= newCount) {
             return;
@@ -1059,12 +1104,14 @@ public class TableContentModel extends AbstractTableModel
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 fireTableRowsInserted(oldCount, newCount - 1);
-            };
+            }
         });
     }
     
     
-    /** Adds property change listener to this instance.
+    /**
+     * Adds property change listener to this instance.
+     * 
      * @param listener A new listener to register.
      * @see PropertyChangeSupport
      *      #addPropertyChangeListener(PropertyChangeListener)
@@ -1074,9 +1121,11 @@ public class TableContentModel extends AbstractTableModel
         m_propertySupport.addPropertyChangeListener(listener);
     }
     
-    /** Adds property change listener to this instance.
-     * @param propertyName Only events with that id are fired to the listener.
-     * @param listener A listener register here.
+    /**
+     * Adds property change listener to this instance.
+     * 
+     * @param propertyName only events with that id are fired to the listener.
+     * @param listener the listener to register here
      * @see PropertyChangeSupport
      *      #addPropertyChangeListener(String, PropertyChangeListener)
      */
@@ -1086,17 +1135,21 @@ public class TableContentModel extends AbstractTableModel
     }
     
     /**
-     * Are there listener registered to this class.
-     * @param propertyName Property name of interest
-     * @return If there are known listeners.
+     * Are there listeners registered to this class?
+     * 
+     * @param propertyName property name of interest
+     * @return <code>true</code> if there are known listeners,
+     * <code>false</code> otherwise
      * @see PropertyChangeSupport#hasListeners(java.lang.String)
      */
     public boolean hasListeners(final String propertyName) {
         return m_propertySupport.hasListeners(propertyName);
     }
     
-    /** Removes a listener from this instance.
-     * @param listener To be removed.
+    /**
+     * Removes a listener from this instance.
+     * 
+     * @param listener listener to be removed
      * @see PropertyChangeSupport
      *      #removePropertyChangeListener(PropertyChangeListener)
      */
@@ -1105,9 +1158,11 @@ public class TableContentModel extends AbstractTableModel
         m_propertySupport.removePropertyChangeListener(listener);
     }
     
-    /** Removes a listener from this instance.
-     * @param propertyName Only if it listens to this property id. 
-     * @param listener To be removed.
+    /**
+     * Removes a listener from this instance.
+     * 
+     * @param propertyName only if it listens to this property id 
+     * @param listener listener to be removed
      * @see PropertyChangeSupport
      *      #removePropertyChangeListener(String, PropertyChangeListener)
      */
@@ -1119,7 +1174,8 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Get reference to <code>PropertyChangeSupport</code> to allow subclasses
      * to fire customized events.
-     * @return Reference to change support object, never <code>null</code>.
+     * 
+     * @return reference to change support object, never <code>null</code>.
      */
     protected final PropertyChangeSupport getPropertyChangeSupport() {
         return m_propertySupport;
@@ -1127,7 +1183,8 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Checks if given argument is in range and throws an exception 
-     * if it is not. 
+     * if it is not.
+     *  
      * @param rowIndex row index to check
      * @throws IndexOutOfBoundsException if argument violates range
      */
@@ -1138,7 +1195,7 @@ public class TableContentModel extends AbstractTableModel
         }
         // reasonable check only possible when table was seen completely,
         // method is called again when m_isMaxRowCountFinal switches to true
-        if (isRowCountFinal() && rowIndex >= getRowCount()) {
+        if (isRowCountFinal() && (rowIndex >= getRowCount())) {
             throw new IndexOutOfBoundsException(
                 "Row index " + rowIndex + " invalid: " 
                 + rowIndex + " >= " +  m_maxRowCount);
@@ -1148,8 +1205,9 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Checks if given argument is in range and throws an exception 
      * if it is not.
-     * @param columnIndex Column index to check
-     * @throws IndexOutOfBoundsException If argument violates range
+     * 
+     * @param columnIndex column index to check
+     * @throws IndexOutOfBoundsException if argument violates range
      */
     protected final void boundColumn(final int columnIndex) {
         if (columnIndex < 0) {

@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -15,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -34,19 +34,25 @@ import javax.swing.table.DefaultTableCellRenderer;
  * status of the row being displayed: Highlighted rows have a different
  * background color than non-highlighted rows. This implementation also allows
  * to encode the color information for a data cell (i.e. from the 
- * <code>ColorHandler</code>) in an small icon.
+ * <code>ColorHandler</code>) in a small icon.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
-    
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -6837071446890050246L;
+
     /** 
      * Factory method to create a new instance of this class.
+     * 
      * @return a new <code>DataCellHeaderRenderer</code>
      */
     public static final DataCellHeaderRenderer newInstance() { 
         return new DataCellHeaderRenderer();
     } // newInstance()
+
     
     // user should use INSTANCE instead 
     private DataCellHeaderRenderer() {
@@ -54,27 +60,34 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         showIcon(true);
     } // DataCellHeaderRenderer()
     
+    
     /**
      * @see java.awt.Component#setBounds(int, int, int, int)
      */
+    @Override
     public void setBounds(
             final int x, final int y, final int width, final int height) {
         ColorIcon icon = (ColorIcon)getIcon();
         if (icon != null) {
-            icon.setIconHeigth(height);
+            icon.setIconHeight(height);
             icon.setIconWidth(Math.min(15, Math.max(1, (int)(0.15 * width))));
         }
         super.setBounds(x, y, width, height);
     }
+    
+    
     /** 
      * Set the color information for the next cell to be rendered. This method
      * should be called right before the 
-     * <code>getTableCellRendererComponent</code> method is called. It sets the
-     * color info of the row (or key) that is rendered. 
-     * In a table, e.g., you should override the <code>prepareRenderer</code> 
-     * method and call this method first before calling 
-     * <code>super.prepareRenderer</code>.
-     * @param color The color information.
+     * {@link DefaultTableCellRenderer#getTableCellRendererComponent(
+     * javax.swing.JTable, java.lang.Object, boolean, boolean, int, int)} 
+     * method is called. It sets the color info of the row (or key) that is
+     * rendered. In a table, e.g., you should override the
+     * {@link javax.swing.JTable#prepareRenderer(
+     * javax.swing.table.TableCellRenderer, int, int)} method and call this
+     * method first before calling <code>super.prepareRenderer</code>.
+     * 
+     * @param color the color information.
      * @see javax.swing.JTable#prepareRenderer(
      *      javax.swing.table.TableCellRenderer, int, int)
      */
@@ -85,9 +98,12 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         }
     } // setColor(Color)
     
+    
     /** 
      * Enable/Disable the color information output.
-     * @param isShowIcon true for show icon.
+     * 
+     * @param isShowIcon <code>true</code> for show icon, <code>false</code>
+     * otherwise
      */
     public void showIcon(final boolean isShowIcon) {
         if (isShowIcon() == isShowIcon) {
@@ -96,23 +112,29 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         setIcon(isShowIcon ? new ColorIcon() : null);
     } // showIcon(boolean)
     
+    
     /** 
      * Is the icon with the color info shown?
-     * @return <code>true</code> Yep, it's there.
+     * 
+     * @return <code>true</code> if it's there, <code>false</code> otherwise
      */
     public boolean isShowIcon() {
         return getIcon() != null;
     }
         
+    
     /** 
      * Catches look and feel changes and updates the layout of the renderer.
      * This renderer simulates the table header look and feel.
+     * 
      * @see javax.swing.JComponent#updateUI()
      */
+    @Override
     public void updateUI() {
         super.updateUI();
         setTableHeaderLaF();
     } // updateUI()
+    
     
     /** 
      * Called when look and feel changes. Sets border and fore- and background
@@ -125,12 +147,13 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         setBorder(UIManager.getBorder("TableHeader.cellBorder"));
     } // setTableHeaderLaF()
     
-    /** Private icon that is shown in front of the value to encode the highlight
-     * status. This icon is a simple bubble. The code is mainly copied from 
-     * javax.swing.plaf.basic.BasicIconFactory and altered accordingly.
+    
+    /**
+     * Private icon that is shown in front of the value to encode the highlight
+     * status. This icon is a simple bubble. The code is mainly copied from
+     * {@link javax.swing.plaf.basic.BasicIconFactory} and altered accordingly.
      */
     private static class ColorIcon implements Icon {
-
         private int m_height = 8;
         private int m_width = 8;
         private Color m_color = Color.WHITE;
@@ -150,21 +173,23 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         }
         
         /**
-         * @param height New height to set.
+         * @param height new height to set.
          */
-        public void setIconHeigth(final int height) {
+        public void setIconHeight(final int height) {
             m_height = height;
         }
         
         /**
-         * @param width New width to set.
+         * @param width new width to set.
          */
         public void setIconWidth(final int width) {
             m_width = width;
         }
+        
         /** 
-         * Setting a color the icon should have. Used to encode highlight 
+         * Setting a color the icon should have. Used to encode the highlight 
          * status.
+         * 
          * @param color New color for the icon.
          */
         public void setColor(final Color color) {

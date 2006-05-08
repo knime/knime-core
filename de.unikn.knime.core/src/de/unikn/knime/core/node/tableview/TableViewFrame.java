@@ -13,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed 
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -32,10 +34,11 @@ import de.unikn.knime.core.data.def.DefaultTable;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 /** 
- * Frame for a <code>TableContentView</code>. It simply puts a table view into
- * a frame, adds a menu bar (by now with one item "Close") and displays it.
- * 
- * <p><b>Note:</b>This class is obsolete as a table view pops up in an specific
+ * Frame for a {@link de.unikn.knime.core.node.tableview.TableContentView}. It
+ * simply puts a table view into a frame, adds a menu bar (by now with one item
+ * "Close") and displays it.
+ * <br />
+ * <b>Note:</b>This class is obsolete as a table view pops up in an specific
  * frame in the flow. But this view is currently used inside the port to show
  * its data table. Might be extended.
  * 
@@ -44,14 +47,15 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  * @see de.unikn.knime.core.node.tableview.TableContentModel
  */
 public class TableViewFrame extends JFrame {
-    
+    private static final long serialVersionUID = -931131149550199849L;
     /** Scroll pane to be displayed. Holds the table in its view port */
     private final TableView m_scroller;
     
     /**
      * Opens new frame and displays the <code>TableContentView</code> in a 
      * scroll pane.
-     * @param view The table content view to display.
+     * 
+     * @param view the table content view to display.
      * @throws NullPointerException if <code>view</code> is <code>null</code>.
      */
     public TableViewFrame(final TableContentView view) {
@@ -113,9 +117,10 @@ public class TableViewFrame extends JFrame {
     } // TableViewFrame(TableContentView)
     
     /** 
-     * Creates a new frame by initializing a new <code>TableContentView</code>
+     * Creates a new frame by initializing a new {@link TableContentView}
      * and displays it.
-     * @param table The table to display.
+     * 
+     * @param table the table to display
      * @see TableContentView#TableContentView(DataTable)
      * @throws NullPointerException if <code>table</code> is <code>null</code>. 
      */ 
@@ -125,34 +130,43 @@ public class TableViewFrame extends JFrame {
     
     /** 
      * Get reference to underlying <code>TableView</code>.
-     * @return The scroll pane displayed.
+     * 
+     * @return the table view displayed.
      */
     public TableView getTableView() {
         return m_scroller;
     }
     
-    /** Delegating method to internal table view.
-     * @return If data is available.
+    /**
+     * Delegating method to internal table view.
+     * 
+     * @return if data is available
      */
     public boolean hasData() {
         return m_scroller.hasData();
     }
     
-    /** Delegating method to internal table view.
-     * @return If highlight handler has been set.
+    /**
+     * Delegating method to internal table view.
+     * 
+     * @return if highlight handler has been set
      */
     public boolean hasHiLiteHandler() {
         return m_scroller.hasHiLiteHandler();
     }
     
-    /** Delegating method to internal table view.
+    /**
+     * Delegating method to internal table view.
+     * 
      * @param data New data to be displayed
      */
     public void setDataTable(final DataTable data) {
         m_scroller.setDataTable(data);
     }
 
-    /** Delegating method to internal table view.
+    /**
+     * Delegating method to internal table view.
+     * 
      * @param hiLiteHdl A new highlight handler.
      */
     public void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
@@ -168,7 +182,7 @@ public class TableViewFrame extends JFrame {
         final TableContentView view = m_scroller.getContentTable();
         int rowCount = view.getRowCount();
         boolean isFinal = view.isRowCountFinal();
-        StringBuffer title = new StringBuffer("Table View (");
+        StringBuilder title = new StringBuilder("Table View (");
         title.append(isFinal ? rowCount : rowCount - 1);
         title.append(isFinal ? " x " : "+ x ");
         title.append(view.getColumnCount() + ")");
@@ -188,5 +202,4 @@ public class TableViewFrame extends JFrame {
         DefaultTable table = new DefaultTable(os);
         new TableViewFrame(table);
     }
-    
 }   // TableViewFrame

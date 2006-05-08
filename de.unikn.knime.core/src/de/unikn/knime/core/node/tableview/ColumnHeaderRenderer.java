@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -16,6 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  * 
+ * 2006-06-08 (tm): reviewed
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -39,11 +38,16 @@ import de.unikn.knime.core.data.DataType;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
-    
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2356486759304444805L;
+
     /**
      * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(
      *      JTable, Object, boolean, boolean, int, int)
      */
+    @Override
     public Component getTableCellRendererComponent(final JTable table, 
             final Object value, final boolean isSelected, 
             final boolean hasFocus, final int row, final int column) {

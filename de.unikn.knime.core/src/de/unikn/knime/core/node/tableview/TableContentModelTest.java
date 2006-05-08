@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -15,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed 
  */
 package de.unikn.knime.core.node.tableview;
 
@@ -42,9 +42,9 @@ import de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * Test class for public methods in a <code>TableContentModel</code>.
+ * Test class for public methods in a
+ * {@link de.unikn.knime.core.node.tableview.TableContentModel}.
  * 
- * @see de.unikn.knime.core.node.tableview.TableContentModel
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableContentModelTest extends TestCase {
@@ -596,7 +596,7 @@ public class TableContentModelTest extends TestCase {
         for (int i = 0; i < data.length; i++) {
             data[i] = new DefaultRow(new RowKey(
                     new DefaultStringCell("Row_" + i)), 
-                    new double[]{(double)i});
+                    new double[]{i});
         }
         
         // these flags keep track when the iterator of the table may be 
@@ -607,6 +607,7 @@ public class TableContentModelTest extends TestCase {
 
         // override DataTable to set own iterator 
         final DataTable table = new DefaultTable(data, colnames, colclasses) {
+            @Override
             public RowIterator iterator() {
                 return new RestrictedAccessIterator(getRowsInList(), flags);
             }
@@ -687,7 +688,7 @@ public class TableContentModelTest extends TestCase {
         for (int i = 0; i < data.length; i++) {
             data[i] = new DefaultRow(new RowKey(
                     new DefaultStringCell("Row_" + i)), 
-                    new double[]{(double)i});
+                    new double[]{i});
         }
         // override DataTable to set own iterator 
         final DataTable table = new DefaultTable(data, colnames, colclasses);
@@ -770,10 +771,12 @@ public class TableContentModelTest extends TestCase {
         /**
          * Pushes iterator forward. If first flag is set to <code>true</code> or
          * throws an exception when it is set to <code>false</code>
+         * 
          * @return next row in the table
          * @see RowIterator#next()
          * @throws IllegalStateException if iterator is disabled
          */
+        @Override
         public DataRow next() {
             if (!m_flags[0]) {
                 throw new IllegalStateException(
