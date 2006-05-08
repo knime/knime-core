@@ -15,6 +15,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed
  */
 package de.unikn.knime.core.node.property.hilite;
 
@@ -29,22 +31,24 @@ import de.unikn.knime.core.data.DataCell;
 /**
  * Event object that is fired when registered listener need to update its
  * properties. An event keeps an unmodifiable set of row keys as 
- * <code>DataCell</code>.
+ * {@link DataCell}.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public class KeyEvent extends EventObject {
-
+    private static final long serialVersionUID = -5555018973664128867L;
+    
     /** Internal unmodifiable set of row IDs. */
     private final Set<DataCell> m_keys;
 
     /** 
      * Creates a new event with the underlying source and one data cell.
-     * @param  src The object on which the event initially occurred.
-     * @param  ids An array of  <code>DataCell</code> elements for which this 
+     * 
+     * @param src the object on which the event initially occurred
+     * @param ids an array of  <code>DataCell</code> elements for which this 
      *         event is created.
-     * @throws IllegalArgumentException If the source is <code>null</code> or
-     *         the ids empty.
+     * @throws IllegalArgumentException if the source is <code>null</code> or
+     *         the ids empty
      * 
      * @see java.util.EventObject#EventObject(Object)
      */
@@ -59,11 +63,12 @@ public class KeyEvent extends EventObject {
     
     /** 
      * Creates a new event with the underlying source and a set of row keys.
-     * @param  src  The object on which the event initially occurred.
-     * @param  ids A set of <code>DataCell</code> row IDs for which the 
+     * 
+     * @param src the object on which the event initially occurred
+     * @param ids a set of <code>DataCell</code> row IDs for which the 
      *         event is created.
-     * @throws IllegalArgumentException If the source is <code>null</code>, or
-     *         the ids <code>null</code> or empty.
+     * @throws IllegalArgumentException if the source is <code>null</code>, or
+     *         the ids are <code>null</code> or empty
      *
      * @see java.util.EventObject#EventObject(Object)
      */
@@ -78,10 +83,10 @@ public class KeyEvent extends EventObject {
     /** 
      * Returns the set of <code>DataCell</code> row keys on which the event 
      * initially occured.
-     * @return A set of row IDs.
+     * 
+     * @return a set of row IDs
      */
     public Set<DataCell> keys() { 
         return m_keys;
     }
-        
 }   // KeyEvent

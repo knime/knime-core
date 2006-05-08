@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -15,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed
  */
 package de.unikn.knime.core.node.property.hilite;
 
@@ -61,6 +61,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
      * @throws Exception If setup failed.
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         m_s12 = new HashSet<DataCell>();
@@ -82,6 +83,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
      * @throws Exception If setup failed.
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         m_s12.clear();

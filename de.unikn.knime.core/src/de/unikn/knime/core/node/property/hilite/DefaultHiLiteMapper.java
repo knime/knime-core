@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   21.03.2005 (gabriel): created
+ * 2006-06-08 (tm): reviewed   
  */
 package de.unikn.knime.core.node.property.hilite;
 
@@ -28,12 +27,11 @@ import de.unikn.knime.core.data.DataCell;
 
 /**
  * A default mapper for hilite translation which holds a map from 
- * <code>DataCell</code> to a <code>DataCellSet</code> as value.
+ * {@link DataCell} to a set of {@link DataCell}s as value.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DefaultHiLiteMapper implements HiLiteMapper {
-    
+public class DefaultHiLiteMapper implements HiLiteMapper {    
     /*
      * Keep the mapping.
      */
@@ -41,12 +39,14 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
     
     /**
      * Creates a new default hilite mapper.
-     * @param map Keeps the <code>DataCell</code> to <code>DataCellSet</code> 
-     *        mapping.
+     * 
+     * @param map keeps the <code>DataCell</code> to set of
+     *      <code>DataCell</code>s mapping
+     * @throws NullPointerException if <code>map</code> is <code>null</code>
      */
     public DefaultHiLiteMapper(final Map<DataCell, Set<DataCell>> map) {
         if (map == null) {
-            throw new IllegalArgumentException("Map must not be null.");
+            throw new NullPointerException("Map must not be null.");
         }
         m_map = map;
     }
@@ -57,5 +57,4 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
     public Set<DataCell> getKeys(final DataCell key) {
         return m_map.get(key);
     }
-
 }

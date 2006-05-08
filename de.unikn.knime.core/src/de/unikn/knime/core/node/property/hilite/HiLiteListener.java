@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -15,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * 2006-06-08 (tm): reviewed
  */
 package de.unikn.knime.core.node.property.hilite;
 
@@ -24,32 +24,32 @@ import java.util.EventListener;
 /** 
  * The event listener interface has to be implemented by classes that are 
  * interested in receiving hilite events.
- *  
- * <p>The listener object created from that class can then register with the
- * <code>HiLiteHandler</code> (calling 
- * <code>HiLiteHandler.addHiLiteListener(HiLiteListener)</code>) or unregister
- * (<code>HiLiteHandler.removeHiLiteListener(HiLiteListener)</code>) if it
+ * <br />
+ * The listener object created from that class can then register with the
+ * {@link HiLiteHandler} (calling
+ * {@link HiLiteHandler#addHiLiteListener(HiLiteListener)}) or unregister
+ * ({@link HiLiteHandler#removeHiLiteListener(HiLiteListener)}) if it
  * is no longer interested in hilite change events.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface HiLiteListener extends EventListener {
-
     /** 
      * Invoked when some item(s) were hilit. 
-     * @param event Contains a list of row keys that were hilit.
+     * 
+     * @param event contains a list of row keys that were hilit
      */
     void hiLite(final KeyEvent event);
 
     /** 
-     * Invoked when some item(s) were unhilit. 
-     * @param event Contains a list of row keys that were unhilit.
+     * Invoked when some item(s) were unhilit.
+     * 
+     * @param event contains a list of row keys that were unhilit
      */
     void unHiLite(final KeyEvent event);
     
     /**
-     * Global reset which reset everything (all rows) in all registered views.
+     * Global reset which resets everything (all rows) in all registered views.
      */
     void resetHiLite();
-
 }   // HiLiteListener
