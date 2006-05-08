@@ -80,7 +80,7 @@ public class ThreadPool {
          * Creates a new worker.
          */
         public Worker() {
-            super("Pool-Worker-" + workerCounter++);
+            super("KNIME-Worker-" + workerCounter++);
             setPriority(NORM_PRIORITY - 1);
             setDaemon(true);
         }
