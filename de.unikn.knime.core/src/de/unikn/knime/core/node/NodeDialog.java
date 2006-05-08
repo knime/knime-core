@@ -30,7 +30,6 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -42,7 +41,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -51,8 +53,11 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+
+import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 
 /**
  * The standard node dialog used to display the node dialog pane.
@@ -99,15 +104,6 @@ final class NodeDialog {
                 onOK(e);
             }
         });
-        // add key listener
-        m_ok.addKeyListener(new KeyAdapter() {
-            public void keyPressed(final KeyEvent e) {
-                // only if the focus on the m_ok button and enter is pressed
-                if (m_ok.hasFocus() && e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    onOK(e);
-                }
-            }
-        });
         control.add(m_ok);
 
         // create: Apply button adn actions
@@ -120,15 +116,6 @@ final class NodeDialog {
                 onApply(event);
             }
         });
-        // add key listener to the cancel button
-        apply.addKeyListener(new KeyAdapter() {
-            public void keyPressed(final KeyEvent e) {
-                // only if the focus os on this button and enter is pressed
-                if (apply.hasFocus() && e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    onApply(e);
-                }
-            }
-        });
         control.add(apply);
 
         // create: Canel button adn actions
@@ -139,15 +126,6 @@ final class NodeDialog {
         cancel.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
                 onCancel(event);
-            }
-        });
-        // add key listener to the cancel button
-        cancel.addKeyListener(new KeyAdapter() {
-            public void keyPressed(final KeyEvent e) {
-                // only if the focus os on this button and enter is pressed
-                if (cancel.hasFocus() && e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    onCancel(e);
-                }
             }
         });
         control.add(cancel);
@@ -250,12 +228,33 @@ final class NodeDialog {
                     public void run() {
                         // invoke open operation
                         onOpen(we);
-                        // set focus on OK button
-                        m_ok.requestFocus();
                     }
                 });
             }
         });
+        
+        JComponent root = dialog.getRootPane();
+
+        // key stroke on ENTER
+        KeyStroke entKey = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        final Action entAction = new AbstractAction() {
+            public void actionPerformed(final ActionEvent e) {
+                onOK(e);
+            }
+        };
+        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(entKey, "ENTER");
+        root.getActionMap().put("ENTER", entAction);
+        
+        // key stroke on ESCAPE
+        KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+        final Action escAction = new AbstractAction() {
+            public void actionPerformed(final ActionEvent e) {
+                onCancel(e);
+            }
+        };
+        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(escKey, "ESCAPE");
+        root.getActionMap().put("ESCAPE", escAction);
+        
         return dialog;
     }
 
