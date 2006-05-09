@@ -44,6 +44,10 @@ public class HiLiteTranslator implements HiLiteListener {
     /** Containing cluster to pattern mapping. */
     private HiLiteMapper m_mapper;
     
+    
+    /** Listener that sends events back in the opposite direction. */
+    private final HiLiteListener m_sendBackListener;
+    
     /**
      * Default constructor with no hilite handler and no initial mapping to
      * translate. This instance will add itself as listener to the
@@ -59,6 +63,20 @@ public class HiLiteTranslator implements HiLiteListener {
         m_fromHandler.addHiLiteListener(this);
         m_toHandlers = new LinkedHashSet<HiLiteHandler>();
         m_mapper = null;
+        
+        m_sendBackListener = new HiLiteListener() {
+            public void hiLite(final KeyEvent event) { /* do nothing */ }
+            public void unHiLite(final KeyEvent event) { /* do nothing */ }
+
+            public void unHiLiteAll() {
+                // to avoid that the event travels forth and back
+                // do a check here if there is still something to unhilite
+                if (m_fromHandler.getHiLitKeys().size() > 0) {
+                    m_fromHandler.unHiLiteAll();
+                }
+            }
+            
+        };
     }
     
     /**
@@ -94,6 +112,7 @@ public class HiLiteTranslator implements HiLiteListener {
     public void removeToHiLiteHandler(final HiLiteHandler toHandler) {
         if (toHandler != null) {
             m_toHandlers.remove(toHandler);
+            toHandler.removeHiLiteListener(m_sendBackListener);
         }
     }    
 
@@ -105,17 +124,7 @@ public class HiLiteTranslator implements HiLiteListener {
     public void addToHiLiteHandler(final HiLiteHandler toHandler) {
         if (toHandler != null) {
             m_toHandlers.add(toHandler);
-            toHandler.addHiLiteListener(new HiLiteListener() {
-                public void hiLite(final KeyEvent event) {
-                    // do nothing
-                }
-                public void unHiLite(final KeyEvent event) {
-                    // do nothing
-                }
-                public void unHiLiteAll() {
-                    m_fromHandler.unHiLiteAll();
-                }
-            });
+            toHandler.addHiLiteListener(m_sendBackListener);
         }
     }
     
@@ -134,6 +143,9 @@ public class HiLiteTranslator implements HiLiteListener {
      * connection is made. 
      */
     public void removeAllToHiliteHandlers() {
+        for (HiLiteHandler hh : m_toHandlers) {
+            hh.removeHiLiteListener(m_sendBackListener);
+        }
         m_toHandlers.clear();
     }
 
