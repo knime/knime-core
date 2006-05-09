@@ -52,6 +52,11 @@ import de.unikn.knime.core.node.NodeView;
  * @author M. Berthold, University of Konstanz
  */
 public class NodeContainer implements NodeStateListener {
+
+    // The logger for static methods
+    private final static NodeLogger staticLogger = NodeLogger
+            .getLogger(NodeContainer.class);
+
     // The node logger for the underlying node is used here.
     private final NodeLogger m_logger;
 
@@ -60,6 +65,16 @@ public class NodeContainer implements NodeStateListener {
 
     // ...it's ID
     private int m_id;
+
+    /**
+     * A userspecified name for this node.
+     */
+    private String m_userName;
+
+    /**
+     * A userspecified description for this node.
+     */
+    private String m_description;
 
     // ...for each port a list of successors...
     private final Vector<List<NodeContainer>> m_succ;
@@ -131,6 +146,8 @@ public class NodeContainer implements NodeStateListener {
         m_logger = NodeLogger.getLogger(n.getNodeName());
         m_node = n;
         m_id = id;
+        m_userName = null; // no initial name
+        m_description = null; // no initial description
         m_succ = new Vector<List<NodeContainer>>(m_node.getNrOutPorts());
         m_pred = new Vector<NodeContainer>(m_node.getNrInPorts());
         m_succ.setSize(m_node.getNrOutPorts());
@@ -230,12 +247,47 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
+     * @return user specified name of this node
+     */
+    public String getUserName() {
+        return m_userName;
+    }
+
+    /**
+     * @return user specified description of this node
+     */
+    public String getDescription() {
+        return m_description;
+    }
+
+    /**
+     * Sets a user name for this node.
+     * 
+     * @param name the user name to set for this node
+     */
+    public void setUserName(final String name) {
+        m_userName = name;
+        
+        notifyStateListeners(new NodeStatus(NodeStatus.USER_NAME));
+    }
+
+    /**
+     * Sets a user description for this node.
+     * 
+     * @param description the user name to set for this node
+     */
+    public void setDescription(final String description) {
+        m_description = description;
+        notifyStateListeners(new NodeStatus(NodeStatus.USER_DESCRIPTION));
+    }
+
+    /**
      * @return This node's name.
      */
     public String getNodeName() {
         return m_node.getNodeName();
     }
-    
+
     /**
      * @return If this node is auto executable.
      * @see Node#isAutoExecutable()
@@ -282,8 +334,7 @@ public class NodeContainer implements NodeStateListener {
     public void setExtraInfo(final NodeExtraInfo ei) {
         m_extraInfo = ei;
         // send event notification
-        stateChanged(new NodeStatus(NodeStatus.STATUS_EXTRA_INFO_CHANGED),
-                m_id);
+        stateChanged(new NodeStatus(NodeStatus.STATUS_EXTRA_INFO_CHANGED), m_id);
     }
 
     /**
@@ -296,22 +347,23 @@ public class NodeContainer implements NodeStateListener {
     /**
      * Set new state of node.
      * 
-    
+     * 
      * @param s new state of this node
-     * @throws IllegalArgumentException If the argument is out of range, 
-     * i.e. not one of STATE_CURRENTLY_EXECUTING, STATE_IDLE, 
-     * STATE_IS_EXECUTABLE, STATE_WAITING_FOR_EXECUTION, or 
-     * STATE_WAITING_TO_BE_EXECUTABLE.
+     * @throws IllegalArgumentException If the argument is out of range, i.e.
+     *             not one of STATE_CURRENTLY_EXECUTING, STATE_IDLE,
+     *             STATE_IS_EXECUTABLE, STATE_WAITING_FOR_EXECUTION, or
+     *             STATE_WAITING_TO_BE_EXECUTABLE.
      */
     void setState(final int s) {
         switch (s) {
-            case STATE_CURRENTLY_EXECUTING:
-            case STATE_IDLE:
-            case STATE_IS_EXECUTABLE:
-            case STATE_WAITING_FOR_EXECUTION:
-            case STATE_WAITING_TO_BE_EXECUTABLE: break;
-            default: throw new IllegalArgumentException(
-                    "Invalid state identifier: " + s);
+        case STATE_CURRENTLY_EXECUTING:
+        case STATE_IDLE:
+        case STATE_IS_EXECUTABLE:
+        case STATE_WAITING_FOR_EXECUTION:
+        case STATE_WAITING_TO_BE_EXECUTABLE:
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid state identifier: " + s);
         }
         m_state = s;
     }
@@ -346,12 +398,11 @@ public class NodeContainer implements NodeStateListener {
         return outPorts;
     }
 
-    
-    /** Return The dialog pane which holds all the settings' components. In
-     * addition this method loads the settings from the model into the
-     * dialog pane. The pane might be <code>null</code> if no dialog
-     * is available.
-     *
+    /**
+     * Return The dialog pane which holds all the settings' components. In
+     * addition this method loads the settings from the model into the dialog
+     * pane. The pane might be <code>null</code> if no dialog is available.
+     * 
      * @return dialog pane
      */
     public NodeDialogPane getDialogPane() {
@@ -603,6 +654,12 @@ public class NodeContainer implements NodeStateListener {
     /** Key for this node's internal ID. */
     protected static final String KEY_ID = "id";
 
+    /** Key for this node's user name. */
+    protected static final String KEY_USER_NAME = "userName";
+
+    /** Key for this node's user description. */
+    protected static final String KEY_USER_DESCRIPTION = "userDescription";
+
     /**
      * Stores all information into the given configuration.
      * 
@@ -614,6 +671,10 @@ public class NodeContainer implements NodeStateListener {
         m_node.saveConfigTo(config);
         // save id
         config.addInt(KEY_ID, m_id);
+        // save name
+        config.addString(KEY_USER_NAME, m_userName);
+        // save description
+        config.addString(KEY_USER_DESCRIPTION, m_description);
         // save type of extrainfo and also it's content - but only if it exists
         if (m_extraInfo != null) {
             config.addString(KEY_EXTRAINFOCLASS, m_extraInfo.getClass()
@@ -639,11 +700,36 @@ public class NodeContainer implements NodeStateListener {
             throws InvalidSettingsException {
         // create new Node based on configuration
         Node newNode = Node.createNode(sett);
+
         // read id
-        int newID = sett.getInt(NodeContainer.KEY_ID);
+        int newID = sett.getInt(KEY_ID);
         // create new NodeContainer and return it
         NodeContainer newNC = new NodeContainer(newNode, newID);
+
         newNC.setExtraInfo(createExtraInfo(sett));
+
+        try {
+            // read user name
+            String name = sett.getString(KEY_USER_NAME);
+            newNC.setUserName(name);
+        } catch (InvalidSettingsException ise) {
+
+            staticLogger.warn("In the settings of node <id:" + newNC.getID()
+                    + "|type:" + newNode.getNodeName()
+                    + "> is no user name specified");
+        }
+
+        try {
+            // read user description
+            String description = sett.getString(KEY_USER_DESCRIPTION);
+            newNC.setDescription(description);
+        } catch (InvalidSettingsException ise) {
+
+            staticLogger.warn("In the settings of node <id:" + newNC.getID()
+                    + "|type:" + newNode.getNodeName()
+                    + "> is no user description specified");
+        }
+
         return newNC;
     }
 
@@ -874,12 +960,12 @@ public class NodeContainer implements NodeStateListener {
 
     /**
      * This method is only intended to change the id in case a node was copied
-     * to create assign a unique id.
+     * to assign a unique id.
      * 
      * @param id the new id to assign
      */
     void changeId(final int id) {
-        
+
         m_id = id;
     }
 

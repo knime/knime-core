@@ -42,6 +42,12 @@ public final class NodeStatus {
 
     /** Node configured. */
     public static final int CONFIGURED = 1004;
+    
+    /** User name set to node */
+    public static final int USER_NAME = 1005;
+    
+    /** User description set to node */
+    public static final int USER_DESCRIPTION = 1006;
 
     /** Warning during execution. */
     public static final int WARNING = 2001;
