@@ -553,7 +553,7 @@ public class TableContentModelTest extends TestCase {
         
         // 0 should be ok, it returns the lucky row
         m.getRow(0); 
-        m.resetHiLite();
+        m.unHiLiteAll();
         assertEquals(m.getRowCount(), 0);
     }
 
@@ -711,7 +711,7 @@ public class TableContentModelTest extends TestCase {
         for (int i = 0; i < 500; i++) {
             if (i % 100 == 0) {
                 // clear all, also that should work
-                hiliter.resetHiLite();
+                hiliter.unHiLiteAll();
                 nrHiLitKeys = 0;
             } else {
                 // let at most 20% change

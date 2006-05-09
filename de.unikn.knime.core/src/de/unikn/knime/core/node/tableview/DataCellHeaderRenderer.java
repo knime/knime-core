@@ -39,9 +39,6 @@ import javax.swing.table.DefaultTableCellRenderer;
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -6837071446890050246L;
 
     /** 

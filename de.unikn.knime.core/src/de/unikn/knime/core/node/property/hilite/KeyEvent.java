@@ -77,7 +77,7 @@ public class KeyEvent extends EventObject {
         if (ids == null || ids.size() == 0) {
             throw new IllegalArgumentException("KeyEvent can not be empty.");
         }       
-        m_keys = Collections.unmodifiableSet(ids);
+        m_keys = Collections.unmodifiableSet(new LinkedHashSet<DataCell>(ids));
     }
 
     /** 

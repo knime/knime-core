@@ -29,7 +29,7 @@ import de.unikn.knime.core.data.DataCell;
 
 /**
  * Default implementation for a <code>HiLiteHandler</code> which receives
- * hilite change request, answers queries and notifies registered listeners. 
+ * hilite change requests, answers queries and notifies registered listeners. 
  * <br />
  * This implementation keeps a list of row keys only for the hilit items. 
  * Furthermore, an event is only sent for items whose status actually changed.
@@ -44,7 +44,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /** Set of registered <code>HiLiteListener</code>s to fire event to. */
     private final Set<HiLiteListener> m_listenerList;
 
-    /** Set of non-null hilit items. */
+    /** Set of non-<code>null</code> hilit items. */
     private final Set<DataCell> m_hiLitKeys;
 
     /** 
@@ -65,7 +65,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param listener the hilite listener to append to the list
      */
-    public void addHiLiteListener(final HiLiteListener listener) {
+    public synchronized void addHiLiteListener(final HiLiteListener listener) {
         m_listenerList.add(listener);
     }
 
@@ -81,7 +81,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /**
      * Removes all hilite listeners from the list. 
      */
-    public void removeAllHiLiteListeners() {
+    public synchronized void removeAllHiLiteListeners() {
         m_listenerList.clear();
     }
 
@@ -146,7 +146,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
             if (id == null) {
                 throw new NullPointerException("Hilit key is null.");
             }
-            // if the key is already hilit, remove it from the cleaned list
+            // if the key is already hilit, do not add it
             if (m_hiLitKeys.add(id)) {
                 changedIDs.add(id);
             }
@@ -156,7 +156,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
             // throw hilite event
             fireHiLiteEvent(new KeyEvent(this, changedIDs));
         }
-    } // hiLite(Set<DataCell>)
+    }
 
     /**
      * Sets the status of all specified row IDs in the set to 'unhilit'. 
@@ -178,17 +178,16 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
             if (id == null) {
                 throw new NullPointerException("Unhilit key is null.");
             }
-            // if the ID has not been hilit remove from the cleaned list 
             if (m_hiLitKeys.remove(id)) {
                 changedIDs.add(id);
             }
         }
         // if at least on key changed
         if (changedIDs.size() > 0) {
-            // throw hilite event
+            // throw unhilite event
             fireUnHiLiteEvent(new KeyEvent(this, changedIDs));
         }
-    }   // unHiLite(Set<DataCell>)
+    }
         
     /**
      * Resets the hilit status of all row IDs. Every row ID will be unhilit
@@ -196,10 +195,10 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * with all previously hilit row IDs, if at least one key was effected 
      * by this call.
      */
-    public synchronized void resetHiLite() {
+    public synchronized void unHiLiteAll() {
         if (!m_hiLitKeys.isEmpty()) {
             m_hiLitKeys.clear();
-            fireResetHiLiteEvent();
+            fireUnHiLiteAllEvent();
         }
     } 
     
@@ -232,9 +231,9 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /** 
      * Informs all registered hilite listener to reset all hilit rows.
      */
-    private synchronized void fireResetHiLiteEvent() {
+    private synchronized void fireUnHiLiteAllEvent() {
         for (HiLiteListener l : m_listenerList) {
-            l.resetHiLite();
+            l.unHiLiteAll();
         }
     }
 

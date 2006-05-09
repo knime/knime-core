@@ -38,9 +38,6 @@ import de.unikn.knime.core.data.DataType;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2356486759304444805L;
 
     /**

@@ -35,7 +35,7 @@ public interface HiLiteMapper {
      * is available.
      * 
      * @param key the key to get the mapping for
-     * @return a set of mapped <code>DataCell</code> elements.
+     * @return a set of mapped <code>DataCell</code> elements
      */
     Set<DataCell> getKeys(final DataCell key);
 }

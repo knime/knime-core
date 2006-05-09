@@ -35,7 +35,7 @@ import de.unikn.knime.core.data.DataCell;
  * 
  * <br />
  * Due to performance issues (as all views for example will query the status
- * from this object) all hilit handlers should be able to answer calls to get
+ * from this object) all hilite handlers should be able to answer calls to get
  * status methods quickly.
  * 
  * @see DefaultHiLiteHandler
@@ -112,6 +112,5 @@ public interface HiLiteHandler {
     /**
      * Unhilites all hilit items and fires an event.
      */
-    void resetHiLite();
-
-} // HiLiteHandler
+    void unHiLiteAll();
+}

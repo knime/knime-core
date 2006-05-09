@@ -49,7 +49,7 @@ public interface HiLiteListener extends EventListener {
     void unHiLite(final KeyEvent event);
     
     /**
-     * Global reset which resets everything (all rows) in all registered views.
+     * Invoked, when everything (all rows) are unhilit.
      */
-    void resetHiLite();
-}   // HiLiteListener
+    void unHiLiteAll();
+}

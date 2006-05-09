@@ -73,8 +73,6 @@ public class TableContentModel extends AbstractTableModel
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(TableContentModel.class);
 
-    
-    // TODO change the event names into an enum?
     /**
      * Property name of the event when the data table has changed.
      */
@@ -684,11 +682,11 @@ public class TableContentModel extends AbstractTableModel
      * the <code>HiLiteHandler</code>. This method does nothing if no handler
      * is connected.
      * 
-     * @see HiLiteHandler#resetHiLite()
+     * @see HiLiteHandler#unHiLiteAll()
      */
     protected void requestResetHiLite() {
         if (m_hiLiteHdl != null) {
-            m_hiLiteHdl.resetHiLite();
+            m_hiLiteHdl.unHiLiteAll();
         }
     } // clearHilite()
     
@@ -707,9 +705,9 @@ public class TableContentModel extends AbstractTableModel
     } // unHiLite(KeyEvent)
     
     /**
-     * @see HiLiteListener#resetHiLite()
+     * @see HiLiteListener#unHiLiteAll()
      */
-    public void resetHiLite() {
+    public void unHiLiteAll() {
         if (!hasData()) {
             return;
         }

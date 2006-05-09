@@ -26,7 +26,7 @@ import java.util.Set;
 import de.unikn.knime.core.data.DataCell;
 
 /**
- * A translator for hilite events between two {@link HiLiteHandler}s, the 
+ * A translator for hilite events between two {@link HiLiteHandler}s, 
  * the source hilite handler has to be set during creating of this object, 
  * whereby the target hilite handlers can be set independently, as well as the 
  * mapping which is defined between {@link DataCell} keys and {@link DataCell}
@@ -38,7 +38,7 @@ public class HiLiteTranslator implements HiLiteListener {
     /** Handlers where to fire events to. Contains the patterns. */
     private final Set<HiLiteHandler> m_toHandlers;
     
-    /** Handler where events have been fired from. Contains the patterns. */
+    /** Handler where events have been fired from. */
     private final HiLiteHandler m_fromHandler;
     
     /** Containing cluster to pattern mapping. */
@@ -82,13 +82,14 @@ public class HiLiteTranslator implements HiLiteListener {
      * @param mapper the new hilite mapper
      */
     public void setMapper(final HiLiteMapper mapper) {
-        m_fromHandler.resetHiLite();
+        m_fromHandler.unHiLiteAll();
         m_mapper = mapper;
     }
     
     /**
-     * Removes a <code>HiLiteHandler</code>.
-     * @param toHandler the to hilite handler to remove
+     * Removes a <code>HiLiteHandler</code> from "to"-set.
+     * 
+     * @param toHandler the hilite handler to remove
      */
     public void removeToHiLiteHandler(final HiLiteHandler toHandler) {
         if (toHandler != null) {
@@ -99,25 +100,21 @@ public class HiLiteTranslator implements HiLiteListener {
     /**
      * Adds a <code>HiLiteHandler</code>.
      * 
-     * @param toHandler the new to hilite handler to add
+     * @param toHandler the new to-hilite handler to add
      */
     public void addToHiLiteHandler(final HiLiteHandler toHandler) {
         if (toHandler != null) {
             m_toHandlers.add(toHandler);
             toHandler.addHiLiteListener(new HiLiteListener() {
                 public void hiLite(final KeyEvent event) {
-                    // TODO Auto-generated method stub
+                    // do nothing
                 }
                 public void unHiLite(final KeyEvent event) {
-                    // TODO Auto-generated method stub
+                    // do nothing
                 }
-                public void resetHiLite() {
-                    Set<DataCell> set = m_fromHandler.getHiLitKeys();
-                    if (set.size() > 0) {
-                        m_fromHandler.resetHiLite();
-                    }
+                public void unHiLiteAll() {
+                    m_fromHandler.unHiLiteAll();
                 }
-
             });
         }
     }
@@ -194,11 +191,11 @@ public class HiLiteTranslator implements HiLiteListener {
     }
 
     /**
-     * @see HiLiteListener#resetHiLite()
+     * @see HiLiteListener#unHiLiteAll()
      */
-    public void resetHiLite() {
+    public void unHiLiteAll() {
         for (HiLiteHandler h : m_toHandlers) {
-            h.resetHiLite();
+            h.unHiLiteAll();
         }
     }
 }

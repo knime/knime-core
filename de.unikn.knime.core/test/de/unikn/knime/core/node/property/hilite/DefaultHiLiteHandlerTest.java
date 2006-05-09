@@ -48,7 +48,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         }
         public void unHiLite(final KeyEvent event) {
         }
-        public void resetHiLite() {
+        public void unHiLiteAll() {
         }
     }
     
@@ -189,7 +189,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c1));
 
         // unhilite c2
-        m_hdl.resetHiLite();
+        m_hdl.unHiLiteAll();
         assertFalse(m_hdl.isHiLit(m_c2));
         m_hdl.unHiLite(m_c2);
         assertFalse(m_hdl.isHiLit(m_c2));
@@ -221,7 +221,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         m_hdl.unHiLite(m_c1);
         
         // unhilite all
-        m_hdl.resetHiLite();
+        m_hdl.unHiLiteAll();
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
     }
@@ -310,7 +310,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertFalse(m_hdl.isHiLit(m_c3));
-        m_hdl.resetHiLite();
+        m_hdl.unHiLiteAll();
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertFalse(m_hdl.isHiLit(m_c3));
