@@ -641,7 +641,7 @@ public abstract class NodeModel {
         if (getNrIns() == 0) {
             for (int i = 0; i < m_inHiLiteHdls.length; i++) {
                 if (m_inHiLiteHdls[i] != null) {
-                    m_inHiLiteHdls[i].resetHiLite();
+                    m_inHiLiteHdls[i].unHiLiteAll();
                 }
             }
         }
