@@ -55,7 +55,6 @@ public final class RepositoryFactory {
 
         NodeTemplate node = new NodeTemplate(id);
 
-        node.setDescription(str(element.getAttribute("description"), ""));
         node.setName(str(element.getAttribute("name"), "!name is missing!"));
         node
                 .setType(str(element.getAttribute("type"),

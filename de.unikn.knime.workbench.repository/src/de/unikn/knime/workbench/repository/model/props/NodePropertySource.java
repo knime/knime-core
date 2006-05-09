@@ -113,9 +113,6 @@ public class NodePropertySource implements IPropertySource {
         if ("id".equals(id)) {
             return m_node.getID();
         }
-        if ("description".equals(id)) {
-            return m_node.getDescription();
-        }
         if ("type".equals(id)) {
             return m_node.getType();
         }

@@ -80,8 +80,6 @@ public class NodeTemplate extends AbstractSimpleObject {
 
     private String m_name;
 
-    private String m_description;
-
     private Class m_factory;
 
     private Image m_icon;
@@ -125,20 +123,6 @@ public class NodeTemplate extends AbstractSimpleObject {
      */
     public void setName(final String name) {
         m_name = name;
-    }
-
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return m_description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription(final String description) {
-        m_description = description;
     }
 
     /**
