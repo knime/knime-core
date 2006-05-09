@@ -46,6 +46,7 @@ import de.unikn.knime.workbench.editor2.actions.OpenPortViewAction;
 import de.unikn.knime.workbench.editor2.actions.OpenViewAction;
 import de.unikn.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
+import de.unikn.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 import de.unikn.knime.workbench.ui.preferences.PreferenceConstants;
@@ -98,15 +99,15 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         action = m_actionRegistry.getAction("cut");
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
-        
+
         action = m_actionRegistry.getAction("copy");
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
-        
+
         action = m_actionRegistry.getAction("paste");
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
-        
+
         action = m_actionRegistry.getAction("undo");
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
@@ -133,9 +134,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         // execute and open first view
         action = m_actionRegistry.getAction(ExecuteAndOpenViewAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-        ((AbstractNodeAction) action).update();
+        ((AbstractNodeAction)action).update();
         // reset
         action = m_actionRegistry.getAction(ResetAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // set name and description
+        action = m_actionRegistry.getAction(SetNameAndDescriptionAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
@@ -197,7 +202,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
             }
         }
-        
+
         manager.updateAll(true);
 
     }

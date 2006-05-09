@@ -120,14 +120,14 @@ public class NodeContainerFigure extends RectangleFigure {
     private static final Font FONT_NORMAL = new Font(Display.getCurrent(),
             "Arial", 9, SWT.NORMAL);
 
+    private static final Font FONT_USER_NAME = new Font(Display.getCurrent(),
+            "Arial", 9, SWT.ITALIC);
+
     private static final Font FONT_EXECUTING = new Font(Display.getCurrent(),
             "Arial", 9, SWT.ITALIC);
 
     private static final Font FONT_EXECUTED = new Font(Display.getCurrent(),
             "Arial", 8, SWT.BOLD);
-
-    /** tooltip for displaying some info. * */
-    private NewToolTipFigure m_tooltip;
 
     /** tooltip for displaying the full heading. * */
     private NewToolTipFigure m_headingTooltip;
@@ -141,22 +141,40 @@ public class NodeContainerFigure extends RectangleFigure {
     /** contains the the warning/error sign. * */
     private InfoWarnErrorPanel m_infoWarnErrorPanel;
 
+    /**
+     * The node name. E.g File Reader
+     */
     private Label m_heading;
+
+    /**
+     * The user specified node name. E.g. Molecule Data 4
+     */
+    private Label m_name;
+
+    /**
+     * Tooltip for displaying the user description. This tooltip is displayed
+     * with the user name
+     */
+    private NewToolTipFigure m_name_tooltip;
+
+    /**
+     * An optional user description.
+     */
+    private String m_description;
 
     /**
      * Creates a new node figure.
      */
     public NodeContainerFigure() {
+
+        m_description = null;
+
         setOpaque(true);
         setFill(true);
         setOutline(false);
 
         // no border
         // setBorder(SimpleEtchedBorder.singleton);
-
-        // create the tooltip for this node
-        m_tooltip = new NewToolTipFigure("");
-        setToolTip(m_tooltip);
 
         // add sub-figures
         ToolbarLayout layout = new ToolbarLayout(false);
@@ -170,6 +188,11 @@ public class NodeContainerFigure extends RectangleFigure {
         m_headingTooltip = new NewToolTipFigure("");
         m_heading.setToolTip(m_headingTooltip);
         m_heading.setFont(FONT_NORMAL);
+
+        // Name (Label)
+        m_name = new Label();
+        m_name_tooltip = new NewToolTipFigure("");
+        m_name.setFont(FONT_USER_NAME);
 
         // Content (Ports and icon)
         m_contentFigure = new ContentFigure();
@@ -216,12 +239,68 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * Sets the description into the tooltip.
+     * Sets the user name of the figure.
      * 
-     * @param description the description
+     * @param name The name to set.
      */
-    public void setDescription(final String description) {
-        m_tooltip.setText(description);
+    public void setUserName(final String name) {
+
+        if (name == null || name.trim().equals("")) {
+
+            try {
+                remove(m_name);
+            } catch (IllegalArgumentException iae) {
+                // do nothing
+            }
+            return;
+        }
+
+        // if the name is not already set
+        // set it
+        m_name.setText(name);
+        if (!(m_name.getParent() == this)) {
+            add(m_name);
+        }
+
+        // if the tooltip (description) contains
+        // content, set it
+        if (m_name_tooltip != null) {
+
+            String toolTipText = m_name.getText();
+            if (m_description != null && !m_description.trim().equals("")) {
+                toolTipText = toolTipText + ":\n\n Description:\n"
+                        + m_description;
+            }
+
+            m_name_tooltip.setText(toolTipText);
+            m_name.setToolTip(m_name_tooltip);
+        } else {
+            // else remove the tool tip
+            m_name.setToolTip(null);
+        }
+    }
+
+    /**
+     * Sets the description for this node as the name's tooltip.
+     * 
+     * @param description the description to set as tooltip
+     */
+    public void setUserDescription(final String description) {
+
+        if (description == null || description.trim().equals("")) {
+            m_name.setToolTip(null);
+            return;
+        }
+        
+        m_description = description;
+
+        String toolTipText = m_name.getText();
+
+        toolTipText = toolTipText + ":\n\n Description:\n" + m_description;
+
+        m_name_tooltip.setText(toolTipText);
+        m_name.setToolTip(m_name_tooltip);
+
     }
 
     /**

@@ -97,6 +97,7 @@ import de.unikn.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAct
 import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
 import de.unikn.knime.workbench.editor2.actions.PasteAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
+import de.unikn.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import de.unikn.knime.workbench.repository.RepositoryManager;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 import de.unikn.knime.workbench.ui.preferences.PreferenceConstants;
@@ -165,8 +166,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = 
-        new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
 
     static {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
@@ -175,15 +175,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                 .getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
         setLogLevel(logLevelConsole);
         String logLevelFile = pStore
-            .getString(PreferenceConstants.P_LOGLEVEL_LOG_FILE);
+                .getString(PreferenceConstants.P_LOGLEVEL_LOG_FILE);
         LEVEL l = LEVEL.WARN;
         try {
             l = LEVEL.valueOf(logLevelFile);
         } catch (NullPointerException ne) {
             LOGGER.warn("Null is an invalid log level, using WARN");
         } catch (IllegalArgumentException iae) {
-            LOGGER.warn("Invalid log level " + logLevelFile
-                    + ", using WARN");
+            LOGGER.warn("Invalid log level " + logLevelFile + ", using WARN");
         }
         NodeLogger.setLevelIntern(l);
         // Level: warn
@@ -196,8 +195,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);
         }
-        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(
-                pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS));
+        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(pStore
+                .getInt(PreferenceConstants.P_MAXIMUM_THREADS));
         pStore.addPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent event) {
                 if (event.getProperty().equals(
@@ -224,13 +223,13 @@ public class WorkflowEditor extends GraphicalEditor implements
                         count = (Integer)event.getNewValue();
                         KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(count);
                     } catch (Exception e) {
-                        LOGGER.warn("Unable to get maximum thread count " 
+                        LOGGER.warn("Unable to get maximum thread count "
                                 + " from preference page.", e);
                     }
                 }
             }
         });
-        
+
     }
 
     /**
@@ -450,7 +449,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         StackAction redo = new RedoAction(this);
 
         // Editor Actions
-        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(this);
+        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(
+                this);
         WorkbenchPartAction save = new SaveAction(this);
         WorkbenchPartAction print = new PrintAction(this);
 
@@ -461,6 +461,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction execute = new ExecuteAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
+        AbstractNodeAction setNameAndDescription = new SetNameAndDescriptionAction(
+                this);
 
         // copy / cut / paste action
         CopyAction copy = new CopyAction(this);
@@ -478,6 +480,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(execute);
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
+        m_actionRegistry.registerAction(setNameAndDescription);
 
         m_actionRegistry.registerAction(copy);
         m_actionRegistry.registerAction(cut);
@@ -495,6 +498,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(execute.getId());
         m_editorActions.add(executeAndView.getId());
         m_editorActions.add(reset.getId());
+        m_editorActions.add(setNameAndDescription.getId());
 
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
@@ -645,7 +649,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.fatal("File not found", fnfe);
         } catch (IOException ioe) {
             if (file.length() > 0) {
-                LOGGER.error("Could not load workflow from: " + file.getName(), ioe);
+                LOGGER.error("Could not load workflow from: " + file.getName(),
+                        ioe);
             } else {
                 LOGGER.debug("File length: " + file.length()
                         + " maybe a new workflow has been created.");

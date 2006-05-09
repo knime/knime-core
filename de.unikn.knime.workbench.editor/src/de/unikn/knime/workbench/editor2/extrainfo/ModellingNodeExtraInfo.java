@@ -69,8 +69,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     private String m_type;
 
-    private String m_description;
-
     /**
      * @see de.unikn.knime.core.node.workflow.NodeExtraInfo
      *      #save(de.unikn.knime.core.node.NodeSettings)
@@ -81,7 +79,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         config.addString(KEY_PLUGIN, m_pluginID);
         config.addString(KEY_ICON, m_iconPath);
         config.addString(KEY_TYPE, m_type);
-        config.addString(KEY_DESCRIPTION, m_description);
     }
 
     /**
@@ -94,8 +91,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         m_pluginID = config.getString(KEY_PLUGIN);
         m_iconPath = config.getString(KEY_ICON);
         m_type = config.getString(KEY_TYPE);
-        m_description = config.getString(KEY_DESCRIPTION);
-
     }
 
     /**
@@ -204,20 +199,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void setType(final String type) {
         m_type = type;
-    }
-
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return m_description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription(final String description) {
-        m_description = description;
     }
 
     /**

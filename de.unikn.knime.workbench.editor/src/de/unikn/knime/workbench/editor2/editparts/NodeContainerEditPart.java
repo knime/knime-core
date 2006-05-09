@@ -337,6 +337,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     fig.setState(NodeContainerFigure.STATE_ERROR, state
                             .getMessage());
                     break;
+                case NodeStatus.USER_NAME:
+                    fig.setUserName(getNodeContainer().getUserName());
+                    break;
+                case NodeStatus.USER_DESCRIPTION:
+                    fig.setUserDescription(getNodeContainer().getDescription());
+                    break;
 
                 default:
 
@@ -372,8 +378,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         String plugin = ei.getPluginID();
         String iconPath = ei.getIconPath();
         String type = ei.getType();
-        String description = ei.getDescription();
         String name = getNodeContainer().getNodeName();
+        String userName = getNodeContainer().getUserName();
+        String description = getNodeContainer().getDescription();
 
         // Icon image, scaled to 16x16
         ImageDescriptor imageDescriptor = AbstractUIPlugin
@@ -390,7 +397,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         f.setType(type);
         f.setLabelText(name);
-        f.setDescription(description);
+        f.setUserName(userName);
+        f.setUserDescription(description);
 
         // TODO FIXME construct initial state here (after loading) - this should
         // be made nicer
