@@ -147,13 +147,31 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
         // check if ok was pressed
         if (result == NameDescriptionDialog.OK) {
 
+            // if the name or description have been changed
+            // the editor must be set dirty
+            String description = dialog.getDescription();
             String userName = dialog.getName();
             if (userName.trim().equals("")) {
+
+                if (container.getUserName() != null
+                        || container.getDescription() != null) {
+
+                    // mark editor as dirty
+                    getEditor().markDirty();
+                }
                 container.setUserName(null);
                 container.setDescription(null);
+
             } else {
-                container.setUserName(dialog.getName());
-                container.setDescription(dialog.getDescription());
+
+                // if name or description is different mark editor dirty
+                if (!userName.equals(container.getUserName())
+                        || !description.equals(container.getDescription())) {
+                    getEditor().markDirty();
+                }
+
+                container.setUserName(userName);
+                container.setDescription(description);
             }
         }
 

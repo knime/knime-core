@@ -890,6 +890,14 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public void workflowChanged(final WorkflowEvent event) {
         LOGGER.debug("Workflow event triggered: " + event.toString());
+
+        markDirty();
+    }
+
+    /**
+     * Marks this editor as diry and notifies the registered listeners.
+     */
+    public void markDirty() {
         if (!m_isDirty) {
             m_isDirty = true;
 
@@ -899,7 +907,6 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             });
         }
-
     }
 
     /**

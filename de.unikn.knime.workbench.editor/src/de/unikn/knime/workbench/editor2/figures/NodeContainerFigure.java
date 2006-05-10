@@ -248,6 +248,7 @@ public class NodeContainerFigure extends RectangleFigure {
         if (name == null || name.trim().equals("")) {
 
             try {
+                m_name.setText("");
                 remove(m_name);
             } catch (IllegalArgumentException iae) {
                 // do nothing
@@ -264,20 +265,15 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // if the tooltip (description) contains
         // content, set it
-        if (m_name_tooltip != null) {
 
-            String toolTipText = m_name.getText();
-            if (m_description != null && !m_description.trim().equals("")) {
-                toolTipText = toolTipText + ":\n\n Description:\n"
-                        + m_description;
-            }
-
-            m_name_tooltip.setText(toolTipText);
-            m_name.setToolTip(m_name_tooltip);
-        } else {
-            // else remove the tool tip
-            m_name.setToolTip(null);
+        String toolTipText = m_name.getText();
+        if (m_description != null && !m_description.trim().equals("")) {
+            toolTipText = toolTipText + ":\n\n Description:\n" + m_description;
         }
+
+        m_name_tooltip.setText(toolTipText);
+        m_name.setToolTip(m_name_tooltip);
+
     }
 
     /**
@@ -288,10 +284,15 @@ public class NodeContainerFigure extends RectangleFigure {
     public void setUserDescription(final String description) {
 
         if (description == null || description.trim().equals("")) {
-            m_name.setToolTip(null);
+
+            // if there is no description, reset the description
+            // and invoke the set name method once more to
+            // adjust the tooltip text
+            m_description = null;
+            setUserName(m_name.getText());
             return;
         }
-        
+
         m_description = description;
 
         String toolTipText = m_name.getText();
