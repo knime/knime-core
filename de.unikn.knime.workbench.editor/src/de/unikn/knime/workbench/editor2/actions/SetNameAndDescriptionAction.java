@@ -66,7 +66,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      * @see org.eclipse.jface.action.IAction#getText()
      */
     public String getText() {
-        return "Set user name and description";
+        return "User name and description";
     }
 
     /**
@@ -80,7 +80,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
     public String getToolTipText() {
-        return "Set a user specified name and a context dependant description.";
+        return "To set/view the user specified name and a context dependant description.";
     }
 
     /**

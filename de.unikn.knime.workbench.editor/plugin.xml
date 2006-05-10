@@ -32,7 +32,12 @@
             categoryId="knime.command.category"
             description="Execute and open first view for selected node"
             id="knime.commands.executeAndOpenView"
-            name="Execute and open view"/>  
+            name="Execute and open view"/>
+      <!--command
+            categoryId="knime.command.category"
+            description="To set/view the user specified name and a context dependant description."
+            id="knime.commands.setUserNameAndDescription"
+            name="User name and description"/-->   
             
  
    </extension>
@@ -100,16 +105,16 @@
                toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
                tooltip="Execute selected node and open first view"/>
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
-               definitionId="knime.commands.executeAndOpenView"
+               class="de.unikn.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
+               definitionId="knime.commands.setUserNameAndDescription"
                disabledIcon="icons/executeAndView_disabled.PNG"
                icon="icons/executeAndView.PNG"
                id="de.unikn.knime.workbench.editor.actions.setnameanddescription"
-               label="ExecuteAndOpenView"
+               label="SetNameAndDescription"
                menubarPath="de.unikn.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
-               tooltip="Execute selected node and open first view"/>
+               tooltip="To set/view the user specified name and a context dependant description."/>
                
          <action
                class="de.unikn.knime.workbench.editor2.actions.delegates.ResetEditorAction"
