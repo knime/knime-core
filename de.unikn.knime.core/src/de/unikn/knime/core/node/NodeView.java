@@ -23,13 +23,19 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.net.URL;
 
+import javax.imageio.ImageIO;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -37,6 +43,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
+
+import de.unikn.knime.core.node.util.SimpleMessageBox;
 
 /**
  * Node view base class which implements the basic and common window properties.
@@ -114,6 +122,11 @@ public abstract class NodeView {
     private boolean m_alwaysOnTop = false;
 
     /**
+     * The directory to export the view as image.
+     */
+    private static String s_exportDir;
+
+    /**
      * This class sends property events when the status changes. So far, the
      * very only possible listenere is the EmbeddedNodeView that is informed
      * when the view finally closes (e.g. because the node was deleted). Once
@@ -176,6 +189,16 @@ public abstract class NodeView {
         menu.add(item);
 
         // create close entry
+        item = new JMenuItem("Export as image");
+        item.setMnemonic('E');
+        item.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent event) {
+                exportAsImage();
+            }
+        });
+        menu.add(item);
+
+        // create close entry
         item = new JMenuItem("Close");
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
@@ -199,7 +222,72 @@ public abstract class NodeView {
         // after view has been created: register the view with the model
         m_nodeModel.registerView(this);
 
+        // the directory to export the view as image is initally empty
+        s_exportDir = "";
+
     } // NodeView(NodeModel,String)
+
+    /**
+     * Exports the current view to an image file.
+     */
+    private void exportAsImage() {
+
+        // get a possible previous save location
+        // get the location to export the view
+        File exportDirFile = null;
+        try {
+
+            exportDirFile = new File(new URL(s_exportDir).getFile());
+
+        } catch (Exception e) {
+
+            // do nothing here
+            // in case of an wrong / invalid path, the
+            // file chooser starts at the default location
+        }
+
+        JFileChooser chooser = new JFileChooser(exportDirFile);
+        int returnVal = chooser.showOpenDialog(m_frame);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            String path;
+            try {
+                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
+                        .toString();
+            } catch (Exception e) {
+                path = "<Error: Couldn't create URL for file>";
+            }
+            s_exportDir = path;
+        } else {
+            // do not save anything
+            return;
+        }
+
+        // create an image from the view component
+        BufferedImage image = new BufferedImage(m_comp.getWidth(), m_comp
+                .getHeight(), BufferedImage.TYPE_INT_RGB);
+
+        // create graphics object to paint in
+        Graphics2D graphics = image.createGraphics();
+
+        m_comp.paint(graphics);
+
+        // write image to file
+        try {
+            File exportFile = new File(new URL(s_exportDir).getFile());
+            exportFile.createNewFile();
+            ImageIO.write(image, "png", exportFile);
+        } catch (Exception e) {
+
+            SimpleMessageBox messageBox = new SimpleMessageBox(
+                    "View could not be exported.", m_frame);
+            messageBox.setVisible(true);
+            e.printStackTrace();
+        }
+        
+        SimpleMessageBox messageBox = new SimpleMessageBox(
+                "View was successfully exported.", m_frame);
+        messageBox.setVisible(true);
+    }
 
     /**
      * Get reference to underlying <code>NodeModel</code>. Access this if
