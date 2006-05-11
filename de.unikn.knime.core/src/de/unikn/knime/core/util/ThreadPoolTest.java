@@ -1,5 +1,4 @@
-/* Created on Apr 20, 2006 12:13:46 PM by thor
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -15,7 +14,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Apr 20, 2006 (thor): created
+ *   Apr 20, 2006 (meinl): created
  */
 package de.unikn.knime.core.util;
 
@@ -149,7 +148,8 @@ public class ThreadPoolTest extends TestCase {
                     }
                     
                     assertTrue(m_running.get() <= root.getMaxThreads());
-                    assertTrue(root.getRunningThreads() <= root.getMaxThreads());
+                    assertTrue(root.getRunningThreads() 
+                            <= root.getMaxThreads());
                 }                
             }
         };
@@ -193,7 +193,8 @@ public class ThreadPoolTest extends TestCase {
             }
             
             for (int m = 0; m < pools.length; m++) {
-                assertTrue(pools[m].getRunningThreads() <= pools[m].getMaxThreads());
+                assertTrue(pools[m].getRunningThreads() 
+                        <= pools[m].getMaxThreads());
             }
         }
         
@@ -232,7 +233,8 @@ public class ThreadPoolTest extends TestCase {
                     }
                     System.out.println("Submitted task " + i + ", "
                             + m_running.get() + " running threads");
-                    assertTrue(root.getRunningThreads() <= root.getMaxThreads());
+                    assertTrue(root.getRunningThreads() 
+                            <= root.getMaxThreads());
                 }                
             }
         };
@@ -341,7 +343,8 @@ public class ThreadPoolTest extends TestCase {
             }
             
             for (int m = 0; m < pools.length; m++) {
-                assertTrue(pools[m].getRunningThreads() <= pools[m].getMaxThreads());
+                assertTrue(pools[m].getRunningThreads() 
+                        <= pools[m].getMaxThreads());
             }
             assertTrue(m_running.get() <= root.getMaxThreads());
         }

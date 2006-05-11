@@ -1,5 +1,4 @@
-/* Created on Mar 28, 2006 9:58:21 AM by thor
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -15,13 +14,16 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Mar 28, 2006 (thor): created
+ *   Mar 28, 2006 (meinl): created
+ *   11.05.2006 (wiswedel, ohl): reviewed
  */
 package de.unikn.knime.core.util;
 
 /**
- * This class is essentially an integer whose value can be changed.
- *  
+ * This class is essentially an integer whose value can be changed. The hash
+ * code and therefore also the equals change dynamically with the value stored.
+ * Be patient not to use this object as a key in a hashtable and such.
+ * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class MutableInteger extends Number {
@@ -99,6 +101,9 @@ public final class MutableInteger extends Number {
      */
     @Override
     public boolean equals(final Object obj) {
+        if (!(obj instanceof Number)) {
+            return false;
+        }
         return ((Number) obj).intValue() == m_i;
     }
 
@@ -109,4 +114,14 @@ public final class MutableInteger extends Number {
     public int hashCode() {
         return m_i;
     }
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return Integer.toString(m_i);
+    }
 }
+
+
