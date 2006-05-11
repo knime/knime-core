@@ -73,7 +73,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/executeAndView.PNG");
+        return ImageRepository.getImageDescriptor("icons/setNameDescription.PNG");
     }
 
     /**
