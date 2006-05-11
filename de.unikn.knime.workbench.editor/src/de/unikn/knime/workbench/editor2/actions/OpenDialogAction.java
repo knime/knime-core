@@ -111,6 +111,7 @@ public class OpenDialogAction extends AbstractNodeAction {
         WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
                 .getActiveShell(), container);
         dlg.open();
+        dlg.close();
     }
 
 }
