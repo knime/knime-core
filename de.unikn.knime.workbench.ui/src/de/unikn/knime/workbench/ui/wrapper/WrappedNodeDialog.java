@@ -74,6 +74,8 @@ public class WrappedNodeDialog extends Dialog {
 
     private Menu m_menuBar;
 
+    private Listener m_listener;
+
     /**
      * Creates the (application modal) dialog for a given node.
      * 
@@ -182,18 +184,39 @@ public class WrappedNodeDialog extends Dialog {
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
-        
-        Display.getCurrent().addFilter(SWT.KeyDown, new Listener() {
+
+        // !!!!!!!!!!!!!!!!!! IMPORTANT... TODO. THINK ABOUT !!!!!!!!!!!!!!!!!!!
+        // Here a key listener is added to the display for enter and esc
+        // There are several problems with that. 
+        // 1. The key listener must be removed. Otherwise the dialog is indirect
+        // ly registered in the display and can not be garbage collected
+        // 2. The key listener was active (before it was removed with this work
+        // around) and has affected on some strage way the Enter key once the 
+        // NewPictureChooser was executed????!!!!????
+        // 3. Normally the key listener should be registered at the dialog
+        // At the moment no posibility is seen to do that.
+        // => The workaround is to de-register the listener once the ok button
+        // is pressed. (only possible and usefull, as the dialog is modal and
+        // therefore nothing else is effected by pressing enter
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        m_listener = new Listener() {
             public void handleEvent(final Event event) {
                 if (event.keyCode == SWT.CR) { // enter
                     doOK(new SelectionEvent(event));
                 } else if (event.keyCode == SWT.ESC) { // escape
-                    buttonPressed(IDialogConstants.CANCEL_ID);
+                    doCancel();
                 }
             }
-        });
+        };
+        
+        Display.getCurrent().addFilter(SWT.KeyDown, m_listener);
 
         return area;
+    }
+
+    private void doCancel() {
+        buttonPressed(IDialogConstants.CANCEL_ID);
+        shutDown();
     }
 
     /**
@@ -239,26 +262,26 @@ public class WrappedNodeDialog extends Dialog {
             }
         });
 
-        
         btnApply.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(final SelectionEvent e) {
                 doApply(e);
             }
         });
-        
+
         btnCancel.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(final SelectionEvent e) {
-             
+
             }
         });
     }
-    
+
     private void doOK(final SelectionEvent e) {
         try {
             if (confirmApply()) {
                 m_dialogPane.doApply();
                 e.doit = true;
                 close();
+                shutDown();
             } else {
                 e.doit = false;
             }
@@ -267,11 +290,15 @@ public class WrappedNodeDialog extends Dialog {
             showErrorMessage("Invalid settings: " + ise.getMessage());
         } catch (Exception exc) {
             e.doit = false;
-            showErrorMessage(exc.getClass().getSimpleName() 
-                    + ": " + exc.getMessage());
+            showErrorMessage(exc.getClass().getSimpleName() + ": "
+                    + exc.getMessage());
         }
     }
-    
+
+    private void shutDown() {
+        Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
+    }
+
     private void doApply(final SelectionEvent e) {
         try {
             if (confirmApply()) {
@@ -366,7 +393,7 @@ public class WrappedNodeDialog extends Dialog {
                 /*
                  * + this.getTitleImageLabel().computeSize(SWT.DEFAULT,
                  * SWT.DEFAULT).y
-                 */ + 100);
+                 */+ 100);
     }
 
 }
