@@ -29,13 +29,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
+import de.unikn.knime.core.node.NodeLogger;
+
 /**
  * Implements a sophisticated thread pool.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ThreadPool {
+
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(ThreadPool.class);
+
     private class MyFuture<T> extends FutureTask<T> {
+        
+        
         /**
          * @see FutureTask#FutureTask(java.util.concurrent.Callable)
          */
@@ -109,6 +117,8 @@ public class ThreadPool {
                         m_runnable.run();
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
+                        LOGGER.error("An exception occurred while executing " 
+                                + "a runnable.", ex);
                     }
                     m_runnable = null;
                     m_startedFrom.workerFinished(this);
