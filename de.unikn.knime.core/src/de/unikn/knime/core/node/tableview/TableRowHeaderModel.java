@@ -91,9 +91,6 @@ public class TableRowHeaderModel extends AbstractTableModel {
              * are ignored
              */
             public void tableChanged(final TableModelEvent e) {
-                if (e.getFirstRow() == TableModelEvent.HEADER_ROW) {
-                    return;
-                }
                 final int col = e.getColumn();
                 if (col != TableModelEvent.ALL_COLUMNS) {
                     return; // don't care about those events.
@@ -256,7 +253,12 @@ public class TableRowHeaderModel extends AbstractTableModel {
         }
     } // boundColumn(int)
     
-    private static class TableContentWrapper implements TableContentInterface {        
+    /** Utitlity class that implements TableContentInterface but returns
+     * default values for calls such as getRowKey and isHilit. Used when 
+     * the table content model is  not implementing TableContentInterface.
+     */
+    private static class TableContentWrapper 
+        implements TableContentInterface {        
         private static final RowKey UNKNOWN = 
             new RowKey(new DefaultStringCell("unknown"));
         private final TableModel m_model;
