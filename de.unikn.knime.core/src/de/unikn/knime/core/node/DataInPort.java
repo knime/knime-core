@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -16,6 +13,8 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  * 
+ * History
+ *   08.05.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
@@ -24,9 +23,10 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * A container used to transfer <code>DataTable</code>,
- * <code>DataTableSpec</code>, and <code>HiLiteHandler objects</code>
- * between nodes.
+ * Represents a data input port of a node. It is used by the node to retrieve
+ * the <code>DataTable</code>, <code>DataTableSpec</code>, and
+ * <code>HiLiteHandler objects</code> from the predecessor connected to this
+ * port.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -35,8 +35,8 @@ final class DataInPort extends NodeInPort implements NodePort.DataPort {
     /**
      * Creates new input data port.
      * 
-     * @param portId This port's unique ID usually.
-     * @param node This port's underlying node.
+     * @param portId This port's ID.
+     * @param node This port's node.
      */
     public DataInPort(final int portId, final Node node) {
         super(portId, node);
@@ -94,7 +94,7 @@ final class DataInPort extends NodeInPort implements NodePort.DataPort {
 
     /**
      * Returns the <code>HiLiteHandler</code> for this port retrieving it from
-     * its connected port. Throws an exception if the port is unconnected.
+     * its connected port. Returns null if the port is not connected.
      * 
      * @return The HiLiteHandler from the connected output port or null.
      */

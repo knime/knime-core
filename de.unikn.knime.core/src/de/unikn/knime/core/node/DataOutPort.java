@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -18,6 +15,7 @@
  * 
  * History
  *   24.10.2005 (gabriel): created
+ *   08.05.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
@@ -26,9 +24,13 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * A output port used transfere <code>DataTable</code>, 
- * <code>DataTableSpec</code>, and <code>HiLiteHandler</code> objects between 
- * nodes.
+ * Represents a data ouput port of a node. It is used by the node to store
+ * the output <code>DataTable</code>, <code>DataTableSpec</code>, and
+ * <code>HiLiteHandler</code> objects. It provides methods for the connected
+ * successor ports to retrieve these objects and it also notifies connected
+ * ports if new objects are available. <br>
+ * It's also possible to open a port view, which displays the objects currently
+ * stored in the port.
  *  
  * @author Peter Ohl, University of Konstanz
  */
@@ -50,8 +52,8 @@ final class DataOutPort extends NodeOutPort implements NodePort.DataPort {
     private HiLiteHandler m_hiliteHdl;
 
     /**
-     * Creates a new output data port. All tranfer objects are set to null.
-     * @param portId An unique ID.
+     * Creates a new output data port. 
+     * @param portId The port's ID.
      */
     public DataOutPort(final int portId) {
         super(portId);

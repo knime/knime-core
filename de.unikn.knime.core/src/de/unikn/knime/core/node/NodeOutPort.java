@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -14,6 +12,9 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * History
+ *   04.05.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
@@ -23,10 +24,7 @@ import java.util.Set;
 
 /**
  * Class implements a node's output port. A variable number of input ports can
- * be connected to it (which are part of the next nodes in the workflow). In
- * additon, this port holds a reference to its <code>Node</code> to retrieve
- * the <code>DataTable</code>, <code>DataTableSpec</code>, and
- * <code>HiLiteHandler</code> objects from.
+ * be connected to it (which are part of the next nodes in the workflow).
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -43,7 +41,7 @@ public abstract class NodeOutPort extends NodePort {
     private NodeOutPortView m_portView;
 
     /**
-     * Creates a new output port with a fixed and unique ID (unique to all other
+     * Creates a new output port with a fixed and ID (should unique to all other
      * output ports of this node) for the given node.
      * 
      * @param portID This port ID.
@@ -56,8 +54,7 @@ public abstract class NodeOutPort extends NodePort {
     }
 
     /**
-     * Sets a port view for this port. The port view can only be set once to a
-     * non-null;
+     * Sets a port view for this port. The port view can only be set once.
      * 
      * @param portView The port view to set.
      * @throws NullPointerException If the port view is null.
@@ -66,11 +63,10 @@ public abstract class NodeOutPort extends NodePort {
      */
     protected final void setPortView(final NodeOutPortView portView) {
         if (portView == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Can't set port view to null");
         }
         if (m_portView != null) {
-            throw new IllegalStateException(
-                    "Port View can only set once to non-null!");
+            throw new IllegalStateException("Port View can only set once.");
         }
         m_portView = portView;
     }
@@ -87,9 +83,10 @@ public abstract class NodeOutPort extends NodePort {
 
     /**
      * Return an unmodifiable set of connected <code>NodeInPort</code>
-     * objects.
+     * objects. These inports belong to successor nodes this port is connected
+     * to.
      * 
-     * @return Set of input ports.
+     * @return Set of connected input ports.
      */
     final Set<NodeInPort> getConnectedInPorts() {
         return Collections.unmodifiableSet(m_connInPorts);
@@ -106,26 +103,27 @@ public abstract class NodeOutPort extends NodePort {
     }
 
     /**
-     * Adds the given input port to the set of connected counter ports. Do not
-     * use this to connect nodes. Rather call the NodeInPort.connect method.
+     * Adds the given input port to the set of connected ports. Do not
+     * use this to connect nodes. Rather call the NodeInPort.connectPort method.
      * 
      * @param connInPort A new input port to add.
      * 
      * @throws NullPointerException If the connected input port is null.
      * @throws IllegalArgumentException If this given port is not of the same
      *             type as this port.
+     * @see NodeInPort#connectPort(NodeOutPort)
      */
     final void addInPort(final NodeInPort connInPort) {
         if (connInPort == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Can't add null to inports.");
         }
         if (this instanceof NodePort.DataPort
                 && !(connInPort instanceof NodePort.DataPort)) {
-            throw new IllegalArgumentException("Port types does not match.");
+            throw new IllegalArgumentException("Port types don't match.");
         }
         if (this instanceof NodePort.PredictorParamsPort
                 && !(connInPort instanceof NodePort.PredictorParamsPort)) {
-            throw new IllegalArgumentException("Port types does not match.");
+            throw new IllegalArgumentException("Port types don't match.");
         }
         m_connInPorts.add(connInPort);
     }
@@ -141,21 +139,21 @@ public abstract class NodeOutPort extends NodePort {
      */
     final void removePort(final NodeInPort connInPort) {
         if (connInPort == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Can't remove null from inports.");
         }
         if (this instanceof NodePort.DataPort
                 && !(connInPort instanceof NodePort.DataPort)) {
-            throw new IllegalArgumentException("Port types does not match.");
+            throw new IllegalArgumentException("Port types don't match.");
         }
         if (this instanceof NodePort.PredictorParamsPort
                 && !(connInPort instanceof NodePort.PredictorParamsPort)) {
-            throw new IllegalArgumentException("Port types does not match.");
+            throw new IllegalArgumentException("Port types don't match.");
         }
         m_connInPorts.remove(connInPort);
     }
 
     /**
-     * Removes the all connected input port from the set of connected ports.
+     * Removes all connected input ports from the set of connected ports.
      */
     final void removeAllPorts() {
         // avoid concurrent modification exception
@@ -191,11 +189,12 @@ public abstract class NodeOutPort extends NodePort {
         if (m_portView != null) {
             m_portView.setVisible(false);
             m_portView.dispose();
+            m_portView = null;
         }
     }
 
     /**
-     * TODO (tg) This method is not garantied to be called!
+     * TODO (tg) This method is not guaranteed to be called!
      * 
      * @see java.lang.Object#finalize()
      */

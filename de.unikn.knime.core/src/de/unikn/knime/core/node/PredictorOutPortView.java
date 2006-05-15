@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -18,6 +15,7 @@
  * 
  * History
  *   26.10.2005 (gabriel): created
+ *   15.05.1006 (sieb&ohl): reviewed
  */
 package de.unikn.knime.core.node;
 
@@ -42,13 +40,13 @@ final class PredictorOutPortView extends NodeOutPortView {
     private static final String NO_TEXT = "<No Predictor Parameters>";
 
     /**
-     * A view showing the stuff stored in the specified PredictorParams ouput
-     * port.
+     * A view showing the data model stored in the specified PredictorParams
+     * ouput port.
      * 
      * @param nodeName Name of the node the inspected port belongs to. Will
-     *            appear in the title of the frame.
+     *            be part of the frame's title.
      * @param portName Name of the port to view the PredictorParams from. Will
-     *            appear in the title of the frame.
+     *            be part of the frame's title.
      * 
      */
     PredictorOutPortView(final String nodeName, final String portName) {

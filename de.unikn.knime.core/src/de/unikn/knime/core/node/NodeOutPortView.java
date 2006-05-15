@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -15,7 +13,8 @@
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
  * History
- *   03.08.2005 (ohl): created on his birthday
+ *   03.08.2005 (ohl): created
+ *   08.05.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
@@ -23,8 +22,6 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -33,8 +30,7 @@ import javax.swing.JMenuItem;
 import javax.swing.WindowConstants;
 
 /**
- * Implements a view to inspect the data, tablespec and other stuff currently
- * stored in an output port.
+ * Implements a view to inspect the data stored in an output port.
  * 
  * @author ohl, University of Konstanz
  */
@@ -50,7 +46,7 @@ abstract class NodeOutPortView extends JFrame {
     static final int INIT_HEIGHT = 400;
 
     /**
-     * A view showing the stuff stored in the specified ouput port.
+     * A view showing the data stored in the specified ouput port.
      * 
      * @param name The name of the node the inspected port belongs to.
      */
@@ -64,11 +60,6 @@ abstract class NodeOutPortView extends JFrame {
         super.setBackground(NodeView.COLOR_BACKGROUND);
         super.setSize(INIT_WIDTH, INIT_HEIGHT);
         setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosed(final WindowEvent e) {
-                // called when Window is x-ed out
-            }
-        });
 
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("File");
@@ -92,9 +83,6 @@ abstract class NodeOutPortView extends JFrame {
         if (!m_wasOpened) { // if the view was already visible
             m_wasOpened = true;
             updatePortView();
-            // TODO (tg) m_tabs.invalidate();
-            // TODO (tg) m_tabs.repaint();
-            // TODO (tg) pack();
             setLocation();
         }
         setVisible(true);

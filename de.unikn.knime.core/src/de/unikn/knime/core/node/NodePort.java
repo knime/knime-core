@@ -1,7 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -15,6 +12,9 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * History
+ *   02.05.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
@@ -34,18 +34,18 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  */
 public abstract class NodePort {
 
-    /** This ports unique ID assigned from the underlying node. */
+    /** This ports ID assigned from the underlying node. */
     private final int m_portID;
 
     /** The port name which can be used for displaying purposes. */
     private String m_portName;
 
     /**
-     * Creates a new node port with a unique ID assigned from the underlying
-     * node. The default port name is "Port [portID]" and can be changed via
+     * Creates a new node port with an ID assigned from the underlying node. The
+     * default port name is "Port [portID]" and can be changed via
      * <code>#setPortName(String)</code>.
      * 
-     * @param portID The port's unique id, greater or equal zero.
+     * @param portID The port's id, greater or equal zero.
      * 
      * @see #setPortName(String)
      */
@@ -63,9 +63,11 @@ public abstract class NodePort {
     }
 
     /**
-     * Sets a new name for this port.
+     * Sets a new name for this port. If null or an empty string is passed, the
+     * default name will be generated: "Port [" + portID + "]".
      * 
-     * @param portName The new name for this port.
+     * @param portName The new name for this port. If null is passed, the
+     *            default name will be generated.
      */
     final void setPortName(final String portName) {
         if (portName == null || portName.trim().length() == 0) {

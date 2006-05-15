@@ -1,7 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -15,14 +12,16 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * History
+ *   17.01.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
 /**
- * This class implements a node's input port which is either connected or not.
- * Internally it keeps a reference to its assigned <code>NodeOutPort</code> if
- * available which is asked for data input (<code>DataTable</code>),
- * <code>DataTableSpec</code>, and <code>HiLiteHandler</code>.
+ * Implements a node's input port. Internally it keeps a reference to its
+ * connected <code>NodeOutPort</code> if available and to its node. The node
+ * gets notified, whenever the connection changes.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
@@ -43,16 +42,16 @@ public abstract class NodeInPort extends NodePort {
     private NodeOutPort m_connOutPort;
 
     /**
-     * Creates a new input port with the unique ID assigned from the node.
+     * Creates a new input port with the ID assigned from the node.
      * 
-     * @param portId Unique ID.
+     * @param portId the ID of this port.
      * @param node The port's node.
      * @throws NullPointerException If the node is null.
      */
     NodeInPort(final int portId, final Node node) {
         super(portId);
         if (node == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Ports can't belong to null nodes.");
         }
         m_node = node;
         m_connOutPort = null;
@@ -63,25 +62,26 @@ public abstract class NodeInPort extends NodePort {
      * connected port, (which could be <code>null</code> if no connection
      * existed before).
      * 
-     * @param connPort The new connected output port.
-     * @return The last outport connected with this one which can be
+     * @param connPort The new output port to connect.
+     * @return The last outport connected to this one which can be
      *         <code>null</code> if this port was not connected before.
      * 
-     * @throws IllegalArgumentException If this given port is not of the same
+     * @throws IllegalArgumentException If the given port is not of the same
      *             type as this port.
      * @throws NullPointerException If the port to connect to is null.
      */
     public final NodeOutPort connectPort(final NodeOutPort connPort) {
         if (connPort == null) {
-            throw new NullPointerException();
+            throw new NullPointerException(
+                    "The port to connect can't be null.");
         }
         if (this instanceof NodePort.DataPort
                 && !(connPort instanceof NodePort.DataPort)) {
-            throw new IllegalArgumentException("Port types does not match.");
+            throw new IllegalArgumentException("Port types don't match.");
         }
         if (this instanceof NodePort.PredictorParamsPort
                 && !(connPort instanceof NodePort.PredictorParamsPort)) {
-            throw new IllegalArgumentException("Port types does not match.");
+            throw new IllegalArgumentException("Port types don't match.");
         }
         NodeOutPort tmp = m_connOutPort;
         m_connOutPort = connPort;
@@ -91,20 +91,18 @@ public abstract class NodeInPort extends NodePort {
     }
 
     /**
-     * This port's underlying <code>Node</code>.
-     * 
-     * @return The node this port is input for.
+     * @return The node this port belongs to.
      */
     final Node getNode() {
         return m_node;
     }
 
     /**
-     * Diconnects this port. It will return the last connected port or null,
-     * if not connected.
+     * Diconnects this port. It will return the currently connected port, or
+     * null, if not connected.
      * 
-     * @return The last outport connected to this port which can be
-     *         <code>null</code> if this port was not connected before.
+     * @return The currently connected port which can be <code>null</code> if
+     *         this port is not connected.
      */
     public final NodeOutPort disconnectPort() {
         // see if we are connected
@@ -115,13 +113,13 @@ public abstract class NodeInPort extends NodePort {
             m_connOutPort = null;
             return tmp;
         } else {
-            // nothing to do - we were not connected before
+            // nothing to do - we are not connected
             return null;
         }
     }
 
     /**
-     * Returns <code>true</code> if this port is connected with an output
+     * Returns <code>true</code> if this port is connected to an output
      * port, otherwise <code>false</code>.
      * 
      * @return <code>true</code> if connected, otherwise <code>false</code>.
@@ -131,7 +129,7 @@ public abstract class NodeInPort extends NodePort {
     }
 
     /**
-     * Returns the output port connected with this port.
+     * Returns the output port connected to this port.
      * 
      * @return NodeOutPort or <code>null</code> if not connected.
      */

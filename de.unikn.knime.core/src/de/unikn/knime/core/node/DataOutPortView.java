@@ -1,7 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -16,18 +13,17 @@
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
  * History
- *   03.08.2005 (ohl): created on his birthday
+ *   03.08.2005 (ohl): created
+ *   08.05.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.swing.JTabbedPane;
@@ -37,13 +33,10 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.StringType;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.DefaultStringCell;
 import de.unikn.knime.core.data.def.DefaultTable;
-import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.tableview.TableView;
 
@@ -56,14 +49,10 @@ import de.unikn.knime.core.node.tableview.TableView;
 final class DataOutPortView extends NodeOutPortView {
 
     private final JTabbedPane m_tabs;
-
-    private DataTable m_data;
     
     private final TableView m_specView;
 
-    private final TableView m_propView;
-
-    private final TableView m_attrView;
+    private final TableView m_hiliteView;
 
     private final TableView m_dataView;
 
@@ -74,7 +63,7 @@ final class DataOutPortView extends NodeOutPortView {
     private String m_portName;
 
     /**
-     * A view showing the stuff stored in the specified ouput port.
+     * A view showing the data stored in the specified ouput port.
      * 
      * @param nodeName The name of the node the inspected port belongs to
      * @param portName The name of the port to view data from. Will appear in
@@ -93,20 +82,17 @@ final class DataOutPortView extends NodeOutPortView {
 
         m_tabs = new JTabbedPane();
         m_specView = new TableView();
-        m_propView = new TableView();
-        m_attrView = new TableView();
+        m_hiliteView = new TableView();
         m_dataView = new TableView();
         m_propsView = new TableView();
         m_dataView.getHeaderTable().setShowColorInfo(false);
         m_specView.getHeaderTable().setShowColorInfo(false);
-        m_propView.getHeaderTable().setShowColorInfo(false);
-        m_attrView.getHeaderTable().setShowColorInfo(false);
+        m_hiliteView.getHeaderTable().setShowColorInfo(false);
         m_propsView.getHeaderTable().setShowColorInfo(false);
         m_tabs.addTab("Data", m_dataView);
         m_tabs.addTab("DataTableSpec", m_specView);
         m_tabs.addTab("Annotated Props", m_propsView);
-        m_tabs.addTab("HighLightHdlr", m_propView);
-        m_tabs.addTab("RowColorAttrs", m_attrView);
+        m_tabs.addTab("HighLightHdlr", m_hiliteView);
 
         m_tabs.setBackground(NodeView.COLOR_BACKGROUND);
         cont.add(m_tabs, BorderLayout.CENTER);
@@ -118,9 +104,7 @@ final class DataOutPortView extends NodeOutPortView {
      * @param newDataTable The new data table (or null) to display in the view.
      */
     void updateDataTable(final DataTable newDataTable) {
-        m_data = newDataTable;
         m_dataView.setDataTable(newDataTable);
-        m_attrView.setDataTable(createRowAttrTable(newDataTable));
     }
 
     /**
@@ -154,12 +138,12 @@ final class DataOutPortView extends NodeOutPortView {
      * @param newHilitHdlr The new hilite handler to display in the view.
      */
     void updateHiliteHandler(final HiLiteHandler newHilitHdlr) {
-        m_propView.setDataTable(createHiLiteTable(newHilitHdlr));
+        m_hiliteView.setDataTable(createHiLiteTable(newHilitHdlr));
     }
 
     private DataTable createHiLiteTable(final HiLiteHandler hiLiteHdl) {
-        // for now we just display if null or if set.
-        // otherwise we would have to register as listener and recreate
+        // for now we just display the pointer value.
+        // Otherwise we would have to register as listener and recreate
         // the datatables completely each time something changes in the handlers
         DataCell[] names = {new DefaultStringCell("ClassName"),
                 new DefaultStringCell("MemAddress"),
@@ -373,176 +357,4 @@ final class DataOutPortView extends NodeOutPortView {
             new DefaultStringCell(""), new DataCell[]{new DefaultStringCell(
                     "<null>")})};
 
-    private DataTable createRowAttrTable(final DataTable dTable) {
-        if (dTable == null) {
-            return new DefaultTable(new String[][]{new String[]{"No data"}});
-        } else {
-            return new RowAttrTable(dTable);
-        }
-    }
-
-    /**
-     * 
-     * @author Peter Ohl, University of Konstanz
-     */
-    private final class RowAttrTable implements DataTable {
-
-        private DataTable m_table;
-
-        private DataTableSpec m_spec;
-
-        /**
-         * Creates a new Debugger table which contains rows showing the
-         * attributes of the row key contained in the corresponding rows of the
-         * table passed in.
-         * 
-         * @param debugTable the table to show attributes from.
-         */
-        private RowAttrTable(final DataTable debugTable) {
-            m_table = debugTable;
-            m_spec = null;
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
-         */
-        public DataTableSpec getDataTableSpec() {
-            if (m_spec == null) {
-                if (m_table == null) {
-                    m_spec = new DataTableSpec(
-                            new DataCell[]{new DefaultStringCell("no table")},
-                            new DataType[]{StringType.STRING_TYPE});
-                } else {
-                    m_spec = new DataTableSpec(new DataCell[]{
-                            new DefaultStringCell("Color"),
-                            new DefaultStringCell("Hilit"),
-                            new DefaultStringCell("Select"),
-                            new DefaultStringCell("HilitSlct"),
-                            new DefaultStringCell("BordrCol"),
-                            new DefaultStringCell("BordrHilit"),
-                            new DefaultStringCell("BordrSel"),
-                            new DefaultStringCell("BordrHilSel")},
-                            new DataType[]{StringType.STRING_TYPE,
-                                    StringType.STRING_TYPE,
-                                    StringType.STRING_TYPE,
-                                    StringType.STRING_TYPE,
-                                    StringType.STRING_TYPE,
-                                    StringType.STRING_TYPE,
-                                    StringType.STRING_TYPE,
-                                    StringType.STRING_TYPE});
-                }
-            }
-            return m_spec;
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.DataTable#iterator()
-         */
-        public RowIterator iterator() {
-            RowIterator iter = null;
-
-            if (m_table != null) {
-                iter = m_table.iterator();
-            }
-
-            return new RowAttrRowIterator(iter);
-        }
-
-    }
-
-    /**
-     * 
-     * @author ohl, University of Konstanz
-     */
-    private final class RowAttrRowIterator extends RowIterator {
-
-        private RowIterator m_iter;
-
-        private boolean m_atEnd;
-
-        /**
-         * constructs a new iterator that will produce rows containing string
-         * cells with information about the atrributes of the row keys produced
-         * by the iterator passed in.
-         * 
-         * @param iter the iterator producing the rows to debug
-         */
-        private RowAttrRowIterator(final RowIterator iter) {
-            m_iter = iter;
-            m_atEnd = false;
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.RowIterator#hasNext()
-         */
-        public boolean hasNext() {
-            if (m_iter == null) {
-                return !m_atEnd;
-            } else {
-                return m_iter.hasNext();
-            }
-        }
-
-        /**
-         * @see de.unikn.knime.core.data.RowIterator#next()
-         */
-        public DataRow next() {
-
-            if (m_iter == null) {
-                if (m_atEnd) {
-                    throw new NoSuchElementException(
-                            "Row iterator proceeded beyond"
-                                    + " the last element");
-                }
-                m_atEnd = true;
-                return new DefaultRow(new RowKey(new DefaultStringCell(
-                        "nullIter")), new DataCell[]{new DefaultStringCell(
-                        "got no Iterator")});
-            }
-
-            DataRow thisRow = m_iter.next();
-            // get Color for this row
-            ColorAttr attr = m_data.getDataTableSpec().getRowColor(thisRow);
-            RowKey key = thisRow.getKey();
-
-            return new DefaultRow(key,
-                    new DataCell[]{
-                            new DefaultStringCell(cAttrToString(attr, false,
-                                    false, false)),
-                            new DefaultStringCell(cAttrToString(attr, false,
-                                    true, false)),
-                            new DefaultStringCell(cAttrToString(attr, false,
-                                    false, true)),
-                            new DefaultStringCell(cAttrToString(attr, false,
-                                    true, true)),
-
-                            new DefaultStringCell(cAttrToString(attr, true,
-                                    false, false)),
-                            new DefaultStringCell(cAttrToString(attr, true,
-                                    true, false)),
-                            new DefaultStringCell(cAttrToString(attr, true,
-                                    false, true)),
-                            new DefaultStringCell(cAttrToString(attr, true,
-                                    true, true))});
-        }
-
-        private String cAttrToString(final ColorAttr cAttr,
-                final boolean border, final boolean hilit, final boolean sel) {
-
-            Color c = null;
-            if (cAttr != null) {
-                if (border) {
-                    c = cAttr.getBorderColor(sel, hilit);
-                } else {
-                    c = cAttr.getColor(sel, hilit);
-                }
-            }
-            if (c == null) {
-                return "<null>";
-            } else {
-                return "r" + c.getRed() + "g" + c.getGreen() + "b"
-                        + c.getBlue();
-            }
-        }
-    }
 }
