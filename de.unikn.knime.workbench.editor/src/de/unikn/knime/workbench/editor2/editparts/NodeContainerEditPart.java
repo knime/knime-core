@@ -31,6 +31,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
+import org.eclipse.gef.RequestConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -44,6 +45,9 @@ import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 import de.unikn.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
+import de.unikn.knime.workbench.editor2.directnodeedit.NodeEditManager;
+import de.unikn.knime.workbench.editor2.directnodeedit.UserNodeNameCellEditorLocator;
+import de.unikn.knime.workbench.editor2.directnodeedit.UserNodeNameDirectEditPolicy;
 import de.unikn.knime.workbench.editor2.editparts.policy.NodeContainerComponentEditPolicy;
 import de.unikn.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
@@ -93,6 +97,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * To implement manually the double click event.
      */
     private long m_lastClick;
+
+    /**
+     * The manager for the direct editing of the node name.
+     */
+    private NodeEditManager m_directEditManager;
 
     /**
      * @return The <code>NodeContainer</code>(= model)
@@ -160,7 +169,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // create the visuals for the node container
         NodeContainerFigure nodeFigure = new NodeContainerFigure();
 
+        // register a listener to open a nodes dialog when double clicked
         nodeFigure.addMouseListener(this);
+        
+        // init the user specified node name
+        nodeFigure.setUserName(getNodeContainer().getUserName());
 
         return nodeFigure;
     }
@@ -175,12 +188,35 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     }
 
+    private void performDirectEdit() {
+
+        if (m_directEditManager == null) {
+            m_directEditManager = new NodeEditManager(this,
+                    new UserNodeNameCellEditorLocator(
+                            (NodeContainerFigure)getFigure()));
+        }
+
+        m_directEditManager.show();
+    }
+
+    /**
+     * @see org.eclipse.gef.EditPart#performRequest(org.eclipse.gef.Request)
+     */
+    public void performRequest(final Request request) {
+        
+        if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
+         
+            performDirectEdit();
+        }
+    }
+
     /**
      * Installs the COMPONENT_ROLE for this edit part.
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
      */
     protected void createEditPolicies() {
+
         // Handles the creation of DeleteCommands for nodes in a workflow
         this.installEditPolicy(EditPolicy.COMPONENT_ROLE,
                 new NodeContainerComponentEditPolicy());
@@ -190,6 +226,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         this.installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE,
                 new PortGraphicalRoleEditPolicy());
 
+        // Installs the edit policy to directly edit the user node name
+        // inside the node figture (by a CellEditor)
+        installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE,
+                new UserNodeNameDirectEditPolicy());
     }
 
     /**
@@ -447,7 +487,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * moment every 4th pressed event is not submitted to this listener. Find
      * out why. Seems to be a draw2D problme.
      * 
-     * @see org.eclipse.draw2d.MouseListener#mousePressed(org.eclipse.draw2d.MouseEvent)
+     * @see org.eclipse.draw2d.MouseListener#
+     * mousePressed(org.eclipse.draw2d.MouseEvent)
      */
     public void mousePressed(final MouseEvent me) {
 
@@ -481,17 +522,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * Does nothing.
      * 
-     * @see org.eclipse.draw2d.MouseListener#mouseReleased(org.eclipse.draw2d.MouseEvent)
+     * @see org.eclipse.draw2d.MouseListener#
+     * mouseReleased(org.eclipse.draw2d.MouseEvent)
      */
     public void mouseReleased(final MouseEvent me) {
         // do nothing yet
-
     }
 
     /**
      * Does nothing.
      * 
-     * @see org.eclipse.draw2d.MouseListener#mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
+     * @see org.eclipse.draw2d.MouseListener#
+     * mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
      */
     public void mouseDoubleClicked(final MouseEvent me) {
 
@@ -512,7 +554,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     // fix in later release
     // /**
     // * @see
-    // org.eclipse.draw2d.MouseListener#mousePressed(org.eclipse.draw2d.MouseEvent)
+    // org.eclipse.draw2d.MouseListener#
+    // mousePressed(org.eclipse.draw2d.MouseEvent)
     // */
     // public synchronized void mousePressed(final MouseEvent me) {
     //
@@ -533,7 +576,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     //
     // /**
     // * @see
-    // org.eclipse.draw2d.MouseListener#mouseReleased(org.eclipse.draw2d.MouseEvent)
+    // org.eclipse.draw2d.MouseListener#
+    // mouseReleased(org.eclipse.draw2d.MouseEvent)
     // */
     // public void mouseReleased(final MouseEvent me) {
     // // do nothing
@@ -549,7 +593,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     // * method.
     // *
     // * @see
-    // org.eclipse.draw2d.MouseListener#mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
+    // org.eclipse.draw2d.MouseListener#
+    // mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
     // */
     // public void doubleClicked(final MouseEvent me) {
     // // open this nodes dialog

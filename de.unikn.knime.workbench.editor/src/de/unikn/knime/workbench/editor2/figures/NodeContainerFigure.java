@@ -34,6 +34,7 @@ import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.internal.ui.palette.editparts.RaisedBorder;
 import org.eclipse.jface.resource.CompositeImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -155,7 +156,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * Tooltip for displaying the user description. This tooltip is displayed
      * with the user name
      */
-    private NewToolTipFigure m_name_tooltip;
+    private NewToolTipFigure m_nameTooltip;
 
     /**
      * An optional user description.
@@ -191,8 +192,15 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // Name (Label)
         m_name = new Label();
-        m_name_tooltip = new NewToolTipFigure("");
+        m_nameTooltip = new NewToolTipFigure("");
         m_name.setFont(FONT_USER_NAME);
+
+        // register the figure as listener for click events
+        // in this case a text field enable the user to change the specific
+        // node name
+        // m_name.addMouseListener(this);
+        //        
+        // m_nameTextField = new Text();
 
         // Content (Ports and icon)
         m_contentFigure = new ContentFigure();
@@ -271,8 +279,8 @@ public class NodeContainerFigure extends RectangleFigure {
             toolTipText = toolTipText + ":\n\n Description:\n" + m_description;
         }
 
-        m_name_tooltip.setText(toolTipText);
-        m_name.setToolTip(m_name_tooltip);
+        m_nameTooltip.setText(toolTipText);
+        m_name.setToolTip(m_nameTooltip);
 
     }
 
@@ -299,8 +307,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
         toolTipText = toolTipText + ":\n\n Description:\n" + m_description;
 
-        m_name_tooltip.setText(toolTipText);
-        m_name.setToolTip(m_name_tooltip);
+        m_nameTooltip.setText(toolTipText);
+        m_name.setToolTip(m_nameTooltip);
 
     }
 
@@ -860,5 +868,20 @@ public class NodeContainerFigure extends RectangleFigure {
             return new Point(18, 18);
         }
 
+    }
+
+    /**
+     * @return the rectangle of the name label.
+     */
+    public Rectangle getNameLabelRectangle() {
+        return m_name.getClientArea().getCopy();
+    }
+
+    /**
+     * @return the user node name of this figure
+     */
+    public String getUserName() {
+
+        return m_name.getText();
     }
 }
