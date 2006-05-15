@@ -184,8 +184,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      *             valid
      */
     public int[] createSubWorkflow(final NodeSettings settings,
-            final int positionChangeMultiplier) 
-            throws InvalidSettingsException {
+            final int positionChangeMultiplier) throws InvalidSettingsException {
 
         NodeSettings nodes = settings.getConfig(KEY_NODES); // Node-Subconfig
 
@@ -231,6 +230,11 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
                 // change the id, as this id is already in use (it was copied)
                 // first remeber the old id "map(oldId, newId)"
+
+                // remember temporarily the old id
+                int oldId = newNode.getID();
+
+                // create new id
                 int newId = ++m_runningNodeID;
                 idMap.put(new Integer(newNode.getID()), new Integer(newId));
                 newNode.changeId(newId);
@@ -241,6 +245,19 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 // located differently
                 newNode.getExtraInfo().changePosition(
                         40 * positionChangeMultiplier);
+
+                // set the user name to the new id if the init name
+                // was set before e.g. "Node_44"
+
+                // get set username
+                String currentUserNodeName = newNode.getUserName();
+
+                // create temprarily the init user name of the copied node
+                // to check wether the current name was changed
+                String oldInitName = "Node " + oldId;
+                if (oldInitName.equals(currentUserNodeName)) {
+                    newNode.setUserName("Node " + newId);
+                }
 
                 // and add it to workflow
                 this.addNodeWithID(newNode);
@@ -1119,12 +1136,12 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     public boolean canAddConnection(final int sourceNode, final int outPort,
             final int targetNode, final int inPort) {
 
-        if ((sourceNode < 0) || (outPort < 0) 
-             || (targetNode < 0) || (inPort < 0)) {
+        if ((sourceNode < 0) || (outPort < 0) || (targetNode < 0)
+                || (inPort < 0)) {
             // easy sanity check failed - return false;
             return false;
         }
-        
+
         Node src = this.getNode(sourceNode);
         Node targ = this.getNode(targetNode);
 
@@ -1153,11 +1170,11 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             // input port already has a connection - return failure
             return false;
         }
-        
-        boolean isDataConn =    targ.isDataInPort(inPort)
-                             && src.isDataOutPort(outPort);
-        boolean isModelConn =    !targ.isDataInPort(inPort)
-                              && !src.isDataOutPort(outPort);
+
+        boolean isDataConn = targ.isDataInPort(inPort)
+                && src.isDataOutPort(outPort);
+        boolean isModelConn = !targ.isDataInPort(inPort)
+                && !src.isDataOutPort(outPort);
         if (!isDataConn && !isModelConn) {
             // trying to connect data to model port - return failure
             return false;

@@ -146,7 +146,7 @@ public class NodeContainer implements NodeStateListener {
         m_logger = NodeLogger.getLogger(n.getNodeName());
         m_node = n;
         m_id = id;
-        m_userName = null; // no initial name
+        m_userName = "Node " + id; // initial name is the node id
         m_description = null; // no initial description
         m_succ = new Vector<List<NodeContainer>>(m_node.getNrOutPorts());
         m_pred = new Vector<NodeContainer>(m_node.getNrInPorts());
@@ -267,7 +267,7 @@ public class NodeContainer implements NodeStateListener {
      */
     public void setUserName(final String name) {
         m_userName = name;
-        
+
         notifyStateListeners(new NodeStatus(NodeStatus.USER_NAME));
     }
 
@@ -711,7 +711,11 @@ public class NodeContainer implements NodeStateListener {
         try {
             // read user name
             String name = sett.getString(KEY_USER_NAME);
-            newNC.setUserName(name);
+
+            // if there was no user node name defined than keep the default name
+            if (name != null) {
+                newNC.setUserName(name);
+            }
         } catch (InvalidSettingsException ise) {
 
             staticLogger.warn("In the settings of node <id:" + newNC.getID()
