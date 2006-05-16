@@ -31,31 +31,28 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * Implementation of a node as basic processing unit within the workflow. A
- * <code>Node</code> object is the place where the data flow starts, ends, or
- * intersects. Thus a <code>Node</code> can be connected with predecessor and
- * successors through its input and output ports, <code>NodeInPort</code>
- * resp. <code>NodeOutPort</code>. There are data ports for exchanging data
- * tables, and prediction model ports for transfering computed data models.
- * <p>
- * A node contains a <code>NodeModel</code>, <code>NodeView</code>, and
- * <code>NodeDialogPane</code> implementing the Model-View-Controller
+ * {@link Node} object is the place where the data flow starts, ends, or
+ * intersects. Thus a {@link Node} can be connected with predecessors and
+ * successors through its input and output ports,
+ * {@link de.unikn.knime.core.node.NodeInPort} and 
+ * {@link de.unikn.knime.core.node.NodeOutPort}, respectively. There are data
+ * ports for exchanging data tables, and prediction model ports for
+ * transfering computed data models.
+ * <br />
+ * A node must contain a {@link NodeModel} and may contain {@link NodeView}s and
+ * a {@link NodeDialogPane} implementing the Model-View-Controller
  * paradigm. The node manages the interactions between these components and
  * handles all internal and external data flows. Incoming data is passed to the
- * <code>NodeModel</code> and forwarded from there to the node's ports.
- * <p>
- * The Node is the part within a workflow holding and managing the user specific
- * NodeModel, NodeDialogPane, and possibly NodeView, thus, it is not intended to
- * extend this class. A <code>NodeFactory</code> is used to bundle nodemodel,
- * view and dialogpane. This factory is passed to the node constructor to create
- * a node of that specific type.
- * <p>
+ * {@link NodeModel} and forwarded from there to the node's ports.
+ * <br />
+ * The <code>Node</code> is the part within a workflow holding and managing the
+ * user specific {@link NodeModel}, {@link NodeDialogPane}, and possibly
+ * {@link NodeView}, thus, it is not intended to extend this class. A
+ * {@link NodeFactory} is used to bundle model, view and dialog. This factory
+ * is passed to the node constructor to create a node of that specific type.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
- * @see NodeFactory
- * @see NodeModel
- * @see NodeView
- * @see NodeDialogPane
  */
 public class Node {
 
@@ -105,13 +102,13 @@ public class Node {
 
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
-     * specified nodefactory. Also inits the input and output ports for the
-     * given number of data and model port. This node is configured after
-     * initialization.
+     * specified <code>NodeFactory</code>. Also inits the input and output
+     * ports for the given number of data and model port. This node is
+     * configured after initialization.
      * 
-     * @param nodeFactory The node's factory for the creation of model, view,
-     *            and dialog.
-     * @throws NullPointerException If the node factory is <code>null</code>.
+     * @param nodeFactory the node's factory for the creation of model, view,
+     *            and dialog
+     * @throws NullPointerException if the node factory is <code>null</code>
      */
     public Node(final NodeFactory nodeFactory) {
 
@@ -126,7 +123,7 @@ public class Node {
         m_nodeName = m_nodeFactory.getNodeName().intern();
 
         // keep node model
-        m_nodeModel = m_nodeFactory.createNodeModel();
+        m_nodeModel = m_nodeFactory.callCreateNodeModel();
 
         // register logger
         m_logger = NodeLogger.getLogger(m_nodeName);

@@ -1,12 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<entry key="shortdescription">
-	    translates outputs from the inner workflow to the outports of the
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="">
+	<name>Meta Output Node</name>
+	
+	<shortDescription>
+		Translates outputs from the inner workflow to the outports of the
 	    MetaNode.
-	</entry>
-	<entry key="fulldescription">
-		The MetaOutputNode translates outputs from the inner workflow to the 
-		outports of the MetaNode. DO NOT USE THIS NODE!
-	</entry>
-</properties>
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			The MetaOutputNode translates outputs from the inner workflow to the 
+			outports of the MetaNode. DO NOT USE THIS NODE!
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0">Datatable coming out of the subflow</dataIn>
+	</ports>	
+</knimeNode>

@@ -1,11 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<entry key="shortdescription">
-	    translates inputs from the MetaNode to the inner workflow.
-	</entry>
-	<entry key="fulldescription">
-		The MetaInputNode translates inputs from the MetaNode to the inner
-		workflow. DO NOT USE THIS NODE!
-	</entry>
-</properties>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="">
+	<name>Meta Input Node</name>
+	
+	<shortDescription>
+		translates inputs from the MetaNode to the inner workflow.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>The MetaInputNode translates inputs from the MetaNode to the inner
+			workflow. DO NOT USE THIS NODE!
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataOut index="0">Datatable from the connected successor outside</dataOut>
+	</ports>	
+</knimeNode>

@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -75,13 +72,6 @@ public class MetaInputNodeFactory extends NodeFactory {
     public NodeView createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
         return null;
-    }
-
-    /**
-     * @see NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "Meta Input Node";
     }
 
     /**

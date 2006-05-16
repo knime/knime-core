@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT knimeNode ( name, shortDescription, fullDescription, ports, views? ) >
+<!ATTLIST knimeNode icon CDATA #IMPLIED>
+
+<!ELEMENT name (#PCDATA) >
+<!ELEMENT shortDescription (#PCDATA) >
+
+<!ELEMENT fullDescription (intro, option*) >
+<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a)* >
+<!ELEMENT option (#PCDATA | p | h | br | b | i | u | a)* >
+<!ATTLIST option name CDATA #REQUIRED>
+
+<!ELEMENT p (#PCDATA | br | b | i | u | a)* >
+<!ELEMENT h (#PCDATA) >
+<!ELEMENT b (#PCDATA) >
+<!ELEMENT i (#PCDATA) >
+<!ELEMENT u (#PCDATA) >
+<!ELEMENT a (#PCDATA) >
+<!ATTLIST a href CDATA #REQUIRED>
+
+<!ELEMENT ports (dataIn*, dataOut*, predParamIn*, predParamOut*) >
+<!ELEMENT dataIn (#PCDATA) >
+<!ATTLIST dataIn index CDATA #REQUIRED>
+<!ELEMENT dataOut (#PCDATA) >
+<!ATTLIST dataOut index CDATA #REQUIRED>
+<!ELEMENT predParamIn (#PCDATA) >
+<!ATTLIST predParamIn index CDATA #REQUIRED>
+<!ELEMENT predParamOut (#PCDATA) >
+<!ATTLIST predParamOut index CDATA #REQUIRED>
+
+<!ELEMENT views (view+) >
+<!ELEMENT view (#PCDATA) >
+<!ATTLIST view index CDATA #REQUIRED>
+<!ATTLIST view name CDATA #REQUIRED>
