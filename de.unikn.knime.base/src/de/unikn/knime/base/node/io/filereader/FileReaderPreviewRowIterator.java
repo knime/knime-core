@@ -21,6 +21,8 @@ package de.unikn.knime.base.node.io.filereader;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.RowIterator;
 
+
+
 /**
  * The iterator for the <code>FileReaderPreviewTable</code>. Wraps the
  * iterator of the underlying file table. Catches exceptions thrown by the

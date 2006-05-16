@@ -32,7 +32,7 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
+import de.unikn.knime.core.data.StringValue;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 
@@ -136,7 +136,8 @@ public class DefaultRowContainer implements RowContainer {
         m_possVals = new Vector<ArrayList<DataCell>>();
         m_possVals.setSize(numOfColumns);
         for (int c = 0; c < numOfColumns; c++) {
-            if (m_tSpec.getColumnSpec(c).getType() instanceof StringType) {
+            if (m_tSpec.getColumnSpec(c).getType().isCompatible(
+                    StringValue.class)) {
                 m_possVals.set(c, new ArrayList<DataCell>());
             }
         }
@@ -276,7 +277,7 @@ public class DefaultRowContainer implements RowContainer {
         if (newMaxValue == null) {
             throw new NullPointerException("The minValue must not be null");
         }
-        if (!m_tSpec.getColumnSpec(colIdx).getType().isOneSuperTypeOf(
+        if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
                 newMaxValue.getType())) {
             throw new IllegalArgumentException(
                     "new max value is of wrong type");
@@ -296,7 +297,7 @@ public class DefaultRowContainer implements RowContainer {
         if (newMinValue == null) {
             throw new NullPointerException("The maxValue must not be null");
         }
-        if (!m_tSpec.getColumnSpec(colIdx).getType().isOneSuperTypeOf(
+        if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
                 newMinValue.getType())) {
             throw new IllegalArgumentException(
                     "new min value is of wrong type");

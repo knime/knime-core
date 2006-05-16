@@ -28,11 +28,10 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -243,25 +242,23 @@ public class FileTable implements DataTable {
 
         // Create a column header
         //      Cell (0,0)
-        result.append(sprintDataCell(new DefaultStringCell(" "), colLength));
+        result.append(sprintDataCell(new StringCell(" "), colLength));
         //      "<ColName>[Type]"
         for (int i = 0; i < m_tableSpec.getNumColumns(); i++) {
-            if (m_tableSpec.getColumnSpec(i).getType() instanceof StringType) {
-                result.append(sprintDataCell(new DefaultStringCell(m_tableSpec
+            if (m_tableSpec.getColumnSpec(i).getType().equals(StringCell.TYPE)) {
+                result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Str]"), colLength));
-            } else if (m_tableSpec.getColumnSpec(i).getType() 
-                    instanceof IntType) {
-                result.append(sprintDataCell(new DefaultStringCell(m_tableSpec
+            } else if (m_tableSpec.getColumnSpec(i).getType().equals(IntCell.TYPE)) { 
+                result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Int]"), colLength));
-            } else if (m_tableSpec.getColumnSpec(i).getType() 
-                    instanceof DoubleType) {
-                result.append(sprintDataCell(new DefaultStringCell(m_tableSpec
+            } else if (m_tableSpec.getColumnSpec(i).getType().equals(DoubleCell.TYPE)) {
+                result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Dbl]"), colLength));
             } else {
-                result.append(sprintDataCell(new DefaultStringCell(m_tableSpec
+                result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[UNKNOWN!!]"), colLength));
             }

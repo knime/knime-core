@@ -29,9 +29,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import de.unikn.knime.base.node.io.filetokenizer.Quote;
-
 import junit.framework.TestCase;
+import de.unikn.knime.base.node.io.filetokenizer.Quote;
 
 /**
  * 

@@ -19,6 +19,7 @@
 package de.unikn.knime.base.node.io.filereader;
 
 import java.io.File;
+
 import javax.swing.filechooser.FileFilter;
 
 /**

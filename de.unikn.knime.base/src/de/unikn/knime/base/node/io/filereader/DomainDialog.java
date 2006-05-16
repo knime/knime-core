@@ -61,13 +61,12 @@ import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.IntValue;
 import de.unikn.knime.core.data.StringValue;
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * 
@@ -605,7 +604,7 @@ public class DomainDialog extends JDialog {
             return;
         }
 
-        DefaultIntCell newIntCell = new DefaultIntCell(newInt);
+        IntCell newIntCell = new IntCell(newInt);
 
         boolean added = addDataCellPossValue(newIntCell);
 
@@ -613,13 +612,13 @@ public class DomainDialog extends JDialog {
 
         // check the range and adjust it to include the new value.
         if (added) {
-            DefaultIntCell min = null; // current range
-            DefaultIntCell max = null;
+            IntCell min = null; // current range
+            IntCell max = null;
             // get the currently set min/max values
             try {
-                min = new DefaultIntCell(readIntSpinner(m_minIntValue));
-                max = new DefaultIntCell(readIntSpinner(m_maxIntValue));
-                DataCellComparator intComp = IntType.INT_TYPE.getComparator();
+                min = new IntCell(readIntSpinner(m_minIntValue));
+                max = new IntCell(readIntSpinner(m_maxIntValue));
+                DataCellComparator intComp = IntCell.TYPE.getComparator();
 
                 // adjust the range (if we have any) to include the new value
                 if (intComp.compare(min, newIntCell) > 0) {
@@ -644,7 +643,7 @@ public class DomainDialog extends JDialog {
     protected void addStringPosValue() {
         if (m_editField.getText().length() > 0) {
 
-            addDataCellPossValue(new DefaultStringCell(m_editField.getText()));
+            addDataCellPossValue(new StringCell(m_editField.getText()));
 
             m_editField.setText("");
         }
@@ -862,9 +861,9 @@ public class DomainDialog extends JDialog {
             if (!result.getReadBoundsFromFile()) {
                 if ((m_minDblValue != null) && (m_maxDblValue != null)) {
                     try {
-                        min = new DefaultDoubleCell(
+                        min = new DoubleCell(
                                 readDblSpinner(m_minDblValue));
-                        max = new DefaultDoubleCell(
+                        max = new DoubleCell(
                                 readDblSpinner(m_maxDblValue));
                     } catch (ParseException pe) {
                         JOptionPane.showMessageDialog(
@@ -878,8 +877,8 @@ public class DomainDialog extends JDialog {
                 }
                 if ((m_minIntValue != null) && (m_maxIntValue != null)) {
                     try {
-                        min = new DefaultIntCell(readIntSpinner(m_minIntValue));
-                        max = new DefaultIntCell(readIntSpinner(m_maxIntValue));
+                        min = new IntCell(readIntSpinner(m_minIntValue));
+                        max = new IntCell(readIntSpinner(m_maxIntValue));
                     } catch (ParseException pe) {
                         JOptionPane.showMessageDialog(
                                 this,

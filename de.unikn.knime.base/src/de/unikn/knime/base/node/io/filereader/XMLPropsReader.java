@@ -34,10 +34,9 @@ import org.xml.sax.SAXException;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.xml.XMLProperties;
 
 /**
@@ -201,7 +200,7 @@ public class XMLPropsReader extends XMLProperties {
                         + index + " <> " + nodeList.getLength() + ".");
             }
             // finally return DataCell with value of attribute "name"
-            return new DefaultStringCell(getAttributeValue(indexNode, "name"));
+            return new StringCell(getAttributeValue(indexNode, "name"));
         }
 
 
@@ -238,15 +237,15 @@ public class XMLPropsReader extends XMLProperties {
             String attNodeValue = getAttributeValue(indexNode, "type");
             // if "String"
             if (attNodeValue.equals("String")) {
-                return StringType.STRING_TYPE;
+                return StringCell.TYPE;
             }
             // if "Integer"
             if (attNodeValue.equals("Integer")) {
-                return IntType.INT_TYPE;
+                return IntCell.TYPE;
             }
             // if "Double"
             if (attNodeValue.equals("Double")) {
-                return DoubleType.DOUBLE_TYPE;
+                return DoubleCell.TYPE;
             }
             // otherwise throw exception
             throw new IllegalCharsetNameException("Illegal column type at "

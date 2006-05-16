@@ -40,8 +40,7 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
@@ -474,7 +473,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                 name = xmlReader.getColumnName(c);
                 cProp.setMissingValuePattern(missVal);
 
-                if (type instanceof StringType) {
+                if (type.equals(StringCell.TYPE)) {
                     cProp.setReadPossibleValuesFromFile(true);
                     cProp.setMaxNumberOfPossibleValues(2000);
                     cProp.setReadBoundsFromFile(false);
@@ -533,7 +532,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         DataColumnSpec[] colSpec = new DataColumnSpec[numOfCols];
         for (int i = 0; i < numOfCols; i++) {
             DataColumnSpecCreator dcsc = new DataColumnSpecCreator("col" + i,
-                    StringType.STRING_TYPE);
+                    StringCell.TYPE);
             colSpec[i] = dcsc.createSpec();
         }
         DataTableSpec dts = new DataTableSpec(colSpec);
@@ -572,7 +571,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             if (!cProp.getUserSettings()) {
                 String uniqueName = uniquifyColName(col, row.getCell(cell)
                         .toString());
-                cProp.changeColumnName(new DefaultStringCell(uniqueName));
+                cProp.changeColumnName(new StringCell(uniqueName));
             }
             col++;
         }
@@ -582,7 +581,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             ColProperty cProp = (ColProperty)getColumnProperties().get(col);
             if (!cProp.getUserSettings()) {
                 String uniqueName = uniquifyColName(col, "Col" + col);
-                cProp.changeColumnName(new DefaultStringCell(uniqueName));
+                cProp.changeColumnName(new StringCell(uniqueName));
             }
             col++;
         }
@@ -901,7 +900,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                                 + " no." + (c + 1) + "(<null>).");
                     } else {
                         if (cType != null) {
-                            if (!cType.isOneSuperTypeOf(val.getType())) {
+                            if (!cType.isASuperTypeOf(val.getType())) {
                                 status.addError("Incompatible possible "
                                         + "value specified for column no. "
                                         + (c + 1));

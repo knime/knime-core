@@ -44,10 +44,9 @@ import javax.swing.WindowConstants;
 
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * 
@@ -202,7 +201,7 @@ public final class ColPropertyDialog extends JDialog {
             (ColProperty)m_allColProps.get(m_colIdx).clone();
 
         // set the new name and type - regardless of their correctness
-        domainProperty.changeColumnName(new DefaultStringCell(m_colNameField.
+        domainProperty.changeColumnName(new StringCell(m_colNameField.
                 getText()));
         domainProperty.changeColumnType(getTypeFromComboIndex(m_typeChooser.
                 getSelectedIndex()));
@@ -384,7 +383,7 @@ public final class ColPropertyDialog extends JDialog {
                     return null;
                 }
             }
-            newColProp.changeColumnName(new DefaultStringCell(newName));
+            newColProp.changeColumnName(new StringCell(newName));
         }
 
         if (newType != m_oldType) {
@@ -407,7 +406,7 @@ public final class ColPropertyDialog extends JDialog {
              * and change domain/poss.value settings as they are of the old type
              */
             newColProp.changeDomain(null);
-            if (type instanceof StringType) {
+            if (type.equals(StringCell.TYPE)) {
                 // for String cols we read all possible values from file
                 newColProp.setReadPossibleValuesFromFile(true);
                 newColProp.setMaxNumberOfPossibleValues(2000);
@@ -450,23 +449,23 @@ public final class ColPropertyDialog extends JDialog {
         // extract new type
         switch (comboBoxIndex) {
         case TYPE_STRING:
-            return StringType.STRING_TYPE;
+            return StringCell.TYPE;
         case TYPE_INT:
-            return IntType.INT_TYPE;
+            return IntCell.TYPE;
         case TYPE_DOUBLE:
-            return DoubleType.DOUBLE_TYPE;
+            return DoubleCell.TYPE;
         default:
             return null;
         }
     }
 
     private int getComboIndexFromType(final DataType type) {
-        if (type instanceof IntType) {
+        if (type.equals(IntCell.TYPE)) {
             return TYPE_INT;
-        } else if (type instanceof DoubleType) {
+        } else if (type.equals(DoubleCell.TYPE)) {
             return TYPE_DOUBLE;
         } else {
-            assert (type instanceof StringType);
+            assert (type.equals(StringCell.TYPE));
             return TYPE_STRING;
         }
 

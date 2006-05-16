@@ -37,12 +37,11 @@ import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -164,26 +163,26 @@ public class ARFFTable implements DataTable {
                                     + " in ARFF file '" + fileLoc + "'.");
                 }
 
-                name = new DefaultStringCell(colName);
+                name = new StringCell(colName);
 
                 // make sure 'colType' is the last token we read before we
                 // start the 'if' thing here.
                 if (colType.equalsIgnoreCase("NUMERIC")
                         || colType.equalsIgnoreCase("REAL")) {
-                    type = DoubleType.DOUBLE_TYPE;
+                    type = DoubleCell.TYPE;
                     // ignore whatever still comes in that line, warn though
                     readUntilEOL(tokenizer, fileLoc.toString());
                 } else if (colType.equalsIgnoreCase("INTEGER")) {
-                    type = IntType.INT_TYPE;
+                    type = IntCell.TYPE;
                     // ignore whatever still comes in that line, warn though
                     readUntilEOL(tokenizer, fileLoc.toString());
                 } else if (colType.equalsIgnoreCase("STRING")) {
-                    type = StringType.STRING_TYPE;
+                    type = StringCell.TYPE;
                     // ignore whatever still comes in that line, warn though
                     readUntilEOL(tokenizer, fileLoc.toString());
                 } else if (colType.equalsIgnoreCase("DATE")) {
                     // we use string cell for date ...
-                    type = StringType.STRING_TYPE;
+                    type = StringCell.TYPE;
                     // ignore whatever date format is specified
                     readUntilEOL(tokenizer, null);
                 } else if (tokenizer.lastTokenWasQuoted()
@@ -192,7 +191,7 @@ public class ARFFTable implements DataTable {
                     possVals = extractNominalVals(colType, fileLoc.toString(),
                             tokenizer.getLineNumber());
                     // KNIME uses string cells for nominal values.
-                    type = StringType.STRING_TYPE;
+                    type = StringCell.TYPE;
                     readUntilEOL(tokenizer, fileLoc.toString());
                 } else {
                     throw new InvalidSettingsException("Invalid column type"
@@ -318,7 +317,7 @@ public class ARFFTable implements DataTable {
             }
 
             // make sure we don't add the same value twice.
-            DefaultStringCell newValCell = new DefaultStringCell(newval);
+            StringCell newValCell = new StringCell(newval);
             if (!vals.contains(newValCell)) {
                 vals.add(newValCell);
             } else {

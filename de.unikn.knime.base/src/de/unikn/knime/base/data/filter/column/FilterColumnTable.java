@@ -286,7 +286,7 @@ public final class FilterColumnTable implements DataTable {
         LinkedHashSet<Integer> columnList = new LinkedHashSet<Integer>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataType c = m_data.getDataTableSpec().getColumnSpec(i).getType();
-            if (type.isOneSuperTypeOf(c)) {
+            if (type.isASuperTypeOf(c)) {
                 columnList.add(i);
             }
         }

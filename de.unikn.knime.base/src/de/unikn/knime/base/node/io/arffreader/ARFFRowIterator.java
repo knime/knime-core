@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,14 +32,11 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -159,7 +154,7 @@ public class ARFFRowIterator extends RowIterator {
         }
 
         // create a row ID cell
-        DataCell rowID = new DefaultStringCell(m_rowPrefix + m_rowNo);
+        DataCell rowID = new StringCell(m_rowPrefix + m_rowNo);
 
         // Now, read the columns until we have enough or see a row delimiter
         DataCell[] rowCells = new DataCell[m_tSpec.getNumColumns()];
@@ -309,19 +304,19 @@ public class ARFFRowIterator extends RowIterator {
     private DataCell createNewDataCellOfType(final DataType type,
             final String data, final boolean createMissingCell) {
 
-        if (type instanceof StringType) {
+        if (type.equals(StringCell.TYPE)) {
             if (createMissingCell) {
-                return type.getMissingCell();
+                return DataType.getMissingCell();
             } else {
-                return new DefaultStringCell(data);
+                return new StringCell(data);
             }
-        } else if (type instanceof IntType) {
+        } else if (type.equals(IntCell.TYPE)) {
             if (createMissingCell) {
-                return type.getMissingCell();
+                return DataType.getMissingCell();
             } else {
                 try {
                     int val = Integer.parseInt(data.trim());
-                    return new DefaultIntCell(val);
+                    return new IntCell(val);
                 } catch (NumberFormatException nfe) {
                     if (m_numMsgWrongFormat < MAX_ERR_MSG) {
                         LOGGER.warn(
@@ -338,16 +333,16 @@ public class ARFFRowIterator extends RowIterator {
                                     + "this kind.)");
                         }
                     }
-                    return type.getMissingCell();
+                    return DataType.getMissingCell();
                 }
             }
-        } else if (type instanceof DoubleType) {
+        } else if (type.equals(DoubleCell.TYPE)) {
             if (createMissingCell) {
-                return type.getMissingCell();
+                return DataType.getMissingCell();
             } else {
                 try {
                     double val = Double.parseDouble(data.trim());
-                    return new DefaultDoubleCell(val);
+                    return new DoubleCell(val);
                 } catch (NumberFormatException nfe) {
                     if (m_numMsgWrongFormat < MAX_ERR_MSG) {
                         LOGGER.warn(
@@ -363,7 +358,7 @@ public class ARFFRowIterator extends RowIterator {
                                     "    (last message of this kind.)");
                         }
                     }
-                    return type.getMissingCell();
+                    return DataType.getMissingCell();
                 }
             }
         } else {

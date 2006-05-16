@@ -152,8 +152,8 @@ public class AppendedRowsTable implements DataTable {
                     // the base type they share
                     DataType type = DataType.getCommonSuperType(oldType,
                             colType);
-                    assert type.isOneSuperTypeOf(oldType);
-                    assert type.isOneSuperTypeOf(colType);
+                    assert type.isASuperTypeOf(oldType);
+                    assert type.isASuperTypeOf(colType);
                     // that shouldn't happen though, eh: shit happens.
                     if (!oldType.equals(type)) {
                         LOGGER.info("Confusing data types for column \""

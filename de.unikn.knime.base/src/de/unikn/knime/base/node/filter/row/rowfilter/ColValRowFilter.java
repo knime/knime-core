@@ -26,10 +26,10 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataCellComparator;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DataCellComparator;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
 
@@ -423,7 +423,7 @@ public class ColValRowFilter extends RowFilter {
         }
         DataType colType = inSpec.getColumnSpec(m_colIndex).getType();
         if (m_lowerBound != null) {
-            if (!colType.isOneSuperTypeOf(m_lowerBound.getType())) {
+            if (!colType.isASuperTypeOf(m_lowerBound.getType())) {
                 throw new InvalidSettingsException("Column value filter: "
                         + "Specified lower bound of range doesn't fit "
                         + "column type. (Col#:"
@@ -439,7 +439,7 @@ public class ColValRowFilter extends RowFilter {
             }
         }
         if (m_upperBound != null) {
-            if (!colType.isOneSuperTypeOf(m_upperBound.getType())) {
+            if (!colType.isASuperTypeOf(m_upperBound.getType())) {
                 throw new InvalidSettingsException("Column value filter: "
                         + "Specified upper bound of range doesn't fit "
                         + "column type. (Col#:"

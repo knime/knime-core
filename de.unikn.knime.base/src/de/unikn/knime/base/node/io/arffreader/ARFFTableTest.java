@@ -30,10 +30,10 @@ import java.io.Writer;
 import junit.framework.TestCase;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.InvalidSettingsException;
 
@@ -115,20 +115,20 @@ public class ARFFTableTest extends TestCase {
             assertEquals(tSpec.getColumnSpec(6).getName().toString(), "col5");
             assertEquals(tSpec.getColumnSpec(7).getName().toString(), "col6");
             assertEquals(tSpec.getColumnSpec(0).getType(),
-                    DoubleType.DOUBLE_TYPE);
+                    DoubleCell.TYPE);
             assertEquals(tSpec.getColumnSpec(1).getType(),
-                    DoubleType.DOUBLE_TYPE);
+                    DoubleCell.TYPE);
             assertEquals(tSpec.getColumnSpec(2).getType(),
-                    DoubleType.DOUBLE_TYPE);
+                    DoubleCell.TYPE);
             assertEquals(tSpec.getColumnSpec(3).getType(),
-                    DoubleType.DOUBLE_TYPE);
-            assertEquals(tSpec.getColumnSpec(4).getType(), IntType.INT_TYPE);
+                    DoubleCell.TYPE);
+            assertEquals(tSpec.getColumnSpec(4).getType(), IntCell.TYPE);
             assertEquals(tSpec.getColumnSpec(5).getType(),
-                    StringType.STRING_TYPE);
+                    StringCell.TYPE);
             assertEquals(tSpec.getColumnSpec(6).getType(),
-                    StringType.STRING_TYPE);
+                    StringCell.TYPE);
             assertEquals(tSpec.getColumnSpec(7).getType(),
-                    StringType.STRING_TYPE);
+                    StringCell.TYPE);
             assertNull(tSpec.getColumnSpec(0).getDomain().getValues());
             assertNull(tSpec.getColumnSpec(1).getDomain().getValues());
             assertNull(tSpec.getColumnSpec(2).getDomain().getValues());
@@ -181,11 +181,11 @@ public class ARFFTableTest extends TestCase {
                 "petalwidth");
         assertEquals(tSpec.getColumnSpec(4).getName().toString(), 
                 "class");
-        assertEquals(tSpec.getColumnSpec(0).getType(), DoubleType.DOUBLE_TYPE);
-        assertEquals(tSpec.getColumnSpec(1).getType(), DoubleType.DOUBLE_TYPE);
-        assertEquals(tSpec.getColumnSpec(2).getType(), DoubleType.DOUBLE_TYPE);
-        assertEquals(tSpec.getColumnSpec(3).getType(), DoubleType.DOUBLE_TYPE);
-        assertEquals(tSpec.getColumnSpec(4).getType(), StringType.STRING_TYPE);
+        assertEquals(tSpec.getColumnSpec(0).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(1).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(2).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(3).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(4).getType(), StringCell.TYPE);
         assertNull(tSpec.getColumnSpec(0).getDomain().getValues());
         assertNull(tSpec.getColumnSpec(1).getDomain().getValues());
         assertNull(tSpec.getColumnSpec(2).getDomain().getValues());
@@ -230,9 +230,9 @@ public class ARFFTableTest extends TestCase {
 
         assertEquals(table.getDataTableSpec().getNumColumns(), 2);
         assertEquals(table.getDataTableSpec().getColumnSpec(0).getType(),
-                StringType.STRING_TYPE);
+                StringCell.TYPE);
         assertEquals(table.getDataTableSpec().getColumnSpec(1).getType(),
-                StringType.STRING_TYPE);
+                StringCell.TYPE);
         assertNull(table.getDataTableSpec().getColumnSpec(0).getDomain().
                 getValues());
         assertNull(table.getDataTableSpec().getColumnSpec(1).getDomain().

@@ -73,14 +73,15 @@ final class Buffer2 implements Buffer {
     /** Separator for different rows, new line. */
     private static final char ROW_SEPARATOR = '\n';
     
+    /** The char for cell whose type needs serialization. */
+    private static final byte BYTE_TYPE_MISSING = Byte.MIN_VALUE;
+
+    /** The char for cell whose type needs serialization. */
+    private static final byte BYTE_TYPE_SERIALIZATION = BYTE_TYPE_MISSING + 1;
+    
     /** The first used char for the map char --> type. */
-    static final char CHAR_TYPE_START = 'A';
+    private static final byte BYTE_TYPE_START = BYTE_TYPE_MISSING + 2;
 
-    /** The char for cell whose type needs serialization. */
-    static final char CHAR_TYPE_SERIALIZATION = CHAR_TYPE_START  - 1; // '@'
-
-    /** The char for cell whose type needs serialization. */
-    static final char CHAR_TYPE_MISSING = CHAR_TYPE_START  - 2; // '?'
 
     /** Contains weak references to file iterators that have ever been created
      * but not (yet) garbage collected. We will add a shutdown hook 
@@ -116,13 +117,13 @@ final class Buffer2 implements Buffer {
     /** Map for all DataCells' type, which have been added to this buffer,
      * they will be separately written to the zip file (if any).
      */
-    private HashMap<DataType, Character> m_typeShortCuts;
+    private HashMap<Class<? extends DataCell>, Byte> m_typeShortCuts;
     
     /** Inverse map of m_typeShortCuts - it stores to each shortcut 
      * (like 'A', 'B', ...) the corresponding DataType.
      * This object is null unles close() has been called.  
      */
-    private DataType[] m_shortCutsLookup;
+    private Class<? extends DataCell>[] m_shortCutsLookup;
 
     /** Adds a shutdown hook to the runtime that closes all open input streams
      * @see #OPENSTREAMS
@@ -161,7 +162,7 @@ final class Buffer2 implements Buffer {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new LinkedList<DataRow>();
-        m_typeShortCuts = new HashMap<DataType, Character>();
+        m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
         m_list = new LinkedList<DataRow>();
         m_size = 0;
     }
@@ -225,13 +226,14 @@ final class Buffer2 implements Buffer {
     } // close()
     
     /** Create the shortcut table. */
+    @SuppressWarnings("unchecked") // no generics in array definiton
     private void createShortCutArray() {
-        m_shortCutsLookup = new DataType[m_typeShortCuts.size()];
-        for (Map.Entry<DataType, Character> e 
+        m_shortCutsLookup = new Class[m_typeShortCuts.size()];
+        for (Map.Entry<Class<? extends DataCell>, Byte> e 
                 : m_typeShortCuts.entrySet()) {
-            char shortCut = e.getValue();
-            DataType type = e.getKey();
-            m_shortCutsLookup[shortCut - CHAR_TYPE_START] = type;
+            byte shortCut = e.getValue();
+            Class<? extends DataCell> type = e.getKey();
+            m_shortCutsLookup[shortCut - BYTE_TYPE_START] = type;
         }
         m_typeShortCuts = null;
     }
@@ -293,50 +295,41 @@ final class Buffer2 implements Buffer {
     
     /** Writes a data cell to the m_outWriter. */
     private void writeDataCell(final DataCell cell) throws IOException {
-        DataType type = cell.getType();
-        boolean isMissing = cell.isMissing();
-        if (isMissing) {
-            m_outWriter.writeByte(CHAR_TYPE_MISSING);
+        if (cell.isMissing()) {
+            m_outWriter.writeByte(BYTE_TYPE_MISSING);
+            return;
         }
-        Character identifier = m_typeShortCuts.get(type); 
-        if (identifier == null) {
-            identifier = (char)(CHAR_TYPE_START + m_typeShortCuts.size());
-            m_typeShortCuts.put((DataType)type, identifier);
-        } 
-        if (type instanceof DataCellSerializer) {
+        DataCellSerializer serializer = 
+            DataType.getCellSerializer(cell.getClass());
+        // DataCell is datacell-serializable
+        if (serializer != null) {
+            Byte identifier = m_typeShortCuts.get(cell.getClass()); 
+            if (identifier == null) {
+                int size = m_typeShortCuts.size();
+                if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
+                    throw new IOException(
+                            "Too many different cell implemenations");
+                }
+                identifier = (byte)(size + BYTE_TYPE_START);
+                m_typeShortCuts.put(cell.getClass(), identifier);
+            }
             // memorize type if it does not exist
-            m_outWriter.writeByte((char)identifier);
-            if (!isMissing) {
-                m_outWriter.writeDataCell(((DataCellSerializer)type), cell);
-            }
+            m_outWriter.writeByte((byte)identifier);
+            m_outWriter.writeDataCell(serializer, cell);
         } else {
-            m_outWriter.writeByte(CHAR_TYPE_SERIALIZATION);
-            m_outWriter.writeByte((char)identifier);
-            if (!isMissing) {
-                m_outWriter.writeObject(cell);
-            }
+            m_outWriter.writeByte(BYTE_TYPE_SERIALIZATION);
+            m_outWriter.writeObject(cell);
         }
     }
 
     /** Reads a datacell from a string. */
     private DataCell readDataCell(final DCObjectInputStream inStream) 
         throws IOException {
-        char identifier = (char)inStream.readByte();
-        boolean isMissing = false;
-        boolean isJavaSerialized = false;
-        if (identifier == CHAR_TYPE_MISSING) {
-            identifier = (char)inStream.readByte();
-            isMissing = true;
+        byte identifier = inStream.readByte();
+        if (identifier == BYTE_TYPE_MISSING) {
+            return DataType.getMissingCell();
         }
-        if (identifier == CHAR_TYPE_SERIALIZATION) {
-            identifier = (char)inStream.readByte();
-            isJavaSerialized = true;
-        }
-        DataType type = getTypeForChar(identifier);
-        if (isMissing) {
-            return type.getMissingCell();
-        }
-        if (isJavaSerialized) {
+        if (identifier == BYTE_TYPE_SERIALIZATION) {
             try {
                 return (DataCell)inStream.readObject();
             } catch (ClassNotFoundException cnfe) {
@@ -345,20 +338,23 @@ final class Buffer2 implements Buffer {
                 throw ioe;
             }
         } else {
+            Class<? extends DataCell> type = getTypeForChar(identifier);
+            DataCellSerializer serializer = DataType.getCellSerializer(type);
+            assert serializer != null;
             try {
-                return inStream.readDataCell((DataCellSerializer)type);
+                return inStream.readDataCell(serializer);
             } catch (IOException ioe) {
                 LOGGER.debug("Unable to read cell from file.", ioe);
-                return type.getMissingCell();
+                return DataType.getMissingCell();
             }
         }
     }
     
-    private DataType getTypeForChar(final char identifier) 
+    private Class<? extends DataCell> getTypeForChar(final byte identifier) 
         throws IOException {
-        int shortCutIndex = identifier - CHAR_TYPE_START;
+        int shortCutIndex = (byte)((int)identifier - BYTE_TYPE_START);
         if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
-            throw new IOException("Unknown shortcut '" + identifier + "'");
+            throw new IOException("Unknown shortcut byte '" + identifier + "'");
         }
         return m_shortCutsLookup[shortCutIndex];
     }

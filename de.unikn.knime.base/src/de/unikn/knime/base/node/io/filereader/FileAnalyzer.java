@@ -29,12 +29,11 @@ import de.unikn.knime.base.node.io.filetokenizer.Quote;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
 import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -281,7 +280,7 @@ public final class FileAnalyzer {
                 if (columnHeaders[c].equals("?")) {
                     continue;
                 }
-                if (columnTypes[c] instanceof IntType) {
+                if (columnTypes[c].equals(IntCell.TYPE)) {
                     try {
                         Integer.parseInt(columnHeaders[c]);
                         // that column header has data format - may be it IS
@@ -290,7 +289,7 @@ public final class FileAnalyzer {
                     } catch (NumberFormatException nfe) {
                         // fall through
                     }
-                } else if (columnTypes[c] instanceof DoubleType) {
+                } else if (columnTypes[c].equals(DoubleCell.TYPE)) {
                     try {
                         Double.parseDouble(columnHeaders[c]);
                         // that column header has data format - may be it IS
@@ -299,7 +298,7 @@ public final class FileAnalyzer {
                     } catch (NumberFormatException nfe) {
                         // fall through
                     }
-                } else if (columnTypes[c] instanceof StringType) {
+                } else if (columnTypes[c].equals(StringCell.TYPE)) {
                     // we can always convert to string...
                     continue;
                 } else {
@@ -551,7 +550,7 @@ public final class FileAnalyzer {
                 // set the missing value pattern
                 colProp.setMissingValuePattern("?");
                 // read values if this is a string cell
-                if (colTypes[c] instanceof StringType) {
+                if (colTypes[c].equals(StringCell.TYPE)) {
                     colProp.setReadPossibleValuesFromFile(true);
                     colProp.setMaxNumberOfPossibleValues(2000);
                     colProp.setReadBoundsFromFile(false);
@@ -597,7 +596,7 @@ public final class FileAnalyzer {
 
             // set the new name - if we had to change it
             if (!name.equals(colProp.getColumnSpec().getName().toString())) {
-                colProp.changeColumnName(new DefaultStringCell(name));
+                colProp.changeColumnName(new StringCell(name));
             }
 
             // added to the result vector
@@ -695,7 +694,7 @@ public final class FileAnalyzer {
                     if (types[colIdx] == null) {
                         // we come accross this columns for the first time:
                         // start with INT type
-                        types[colIdx] = IntType.INT_TYPE;
+                        types[colIdx] = IntCell.TYPE;
                     }
                     // no user preset type - figure out the right type
                     if (types[colIdx].isCompatible(IntValue.class)) {
@@ -705,7 +704,7 @@ public final class FileAnalyzer {
                             continue;
                         } catch (NumberFormatException nfe) {
                             // it's not an integer - could be a double
-                            types[colIdx] = DoubleType.DOUBLE_TYPE;
+                            types[colIdx] = DoubleCell.TYPE;
                         }
                     } // no else here, we immediately want to check if it's a
                     // double
@@ -726,7 +725,7 @@ public final class FileAnalyzer {
                         } catch (NumberFormatException nfe) {
                             // it's not a double, lets accept everything:
                             // StringCell
-                            types[colIdx] = StringType.STRING_TYPE;
+                            types[colIdx] = StringCell.TYPE;
                         }
                     }
                 }
@@ -751,7 +750,7 @@ public final class FileAnalyzer {
         for (int t = 0; t < types.length; t++) {
             if (types[t] == null) {
                 cols += "#" + t + ", ";
-                types[t] = StringType.STRING_TYPE;
+                types[t] = StringCell.TYPE;
 
             }
         }

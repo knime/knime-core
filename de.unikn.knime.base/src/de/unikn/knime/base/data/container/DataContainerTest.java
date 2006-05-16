@@ -29,14 +29,11 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.util.ObjectToDataCellConverter;
 
 /**
@@ -77,7 +74,7 @@ public class DataContainerTest extends TestCase {
         DataContainer c = new DataContainer();
         assertFalse(c.isOpen());
         c.open(EMPTY_SPEC);
-        c.addRowToTable(new DefaultRow(new DefaultStringCell(
+        c.addRowToTable(new DefaultRow(new StringCell(
                 "no one is going to read me"), new DataCell[] {}));
         assertTrue(c.isOpen());
         // "reopen" it: drops the data, continues from scratch. Hopefully.
@@ -145,17 +142,17 @@ public class DataContainerTest extends TestCase {
      */
     public final void testAddRowToTable() {
         DataContainer c = new DataContainer();
-        DataCell r1Key = new DefaultStringCell("row 1");
-        DataCell r1Cell1 = new DefaultStringCell("Row 1, Cell 1");
-        DataCell r1Cell2 = new DefaultIntCell(12);
+        DataCell r1Key = new StringCell("row 1");
+        DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
+        DataCell r1Cell2 = new IntCell(12);
         DataRow r1 = new DefaultRow(r1Key, new DataCell[] {r1Cell1, r1Cell2});
-        DataCell r2Key = new DefaultStringCell("row 2");
-        DataCell r2Cell1 = new DefaultStringCell("Row 2, Cell 1");
-        DataCell r2Cell2 = new DefaultIntCell(22);
+        DataCell r2Key = new StringCell("row 2");
+        DataCell r2Cell1 = new StringCell("Row 2, Cell 1");
+        DataCell r2Cell2 = new IntCell(22);
         DataRow r2 = new DefaultRow(r2Key, new DataCell[] {r2Cell1, r2Cell2});
-        DataCell r3Key = new DefaultStringCell("row 3");
-        DataCell r3Cell1 = new DefaultStringCell("Row 3, Cell 1");
-        DataCell r3Cell2 = new DefaultIntCell(32);
+        DataCell r3Key = new StringCell("row 3");
+        DataCell r3Cell1 = new StringCell("Row 3, Cell 1");
+        DataCell r3Cell2 = new IntCell(32);
         DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
 
         // add row to non open table
@@ -166,12 +163,12 @@ public class DataContainerTest extends TestCase {
             System.out.println(e.getMessage());
         }
         DataCell[] colNames = new DataCell[]{
-                new DefaultStringCell("Column 1"),
-                new DefaultStringCell("Column 2")
+                new StringCell("Column 1"),
+                new StringCell("Column 2")
         };
         DataType[] colTypes = new DataType[] {
-                StringType.STRING_TYPE,
-                IntType.INT_TYPE
+                StringCell.TYPE,
+                IntCell.TYPE
         };
         DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
         c.open(spec1);
@@ -189,9 +186,9 @@ public class DataContainerTest extends TestCase {
         c.addRowToTable(r3);
         
         // add incompatible types
-        DataCell r4Key = new DefaultStringCell("row 4");
-        DataCell r4Cell1 = new DefaultStringCell("Row 4, Cell 1");
-        DataCell r4Cell2 = new DefaultDoubleCell(42.0); // not allowed
+        DataCell r4Key = new StringCell("row 4");
+        DataCell r4Cell1 = new StringCell("Row 4, Cell 1");
+        DataCell r4Cell2 = new DoubleCell(42.0); // not allowed
         DataRow r4 = new DefaultRow(r4Key, new DataCell[] {r4Cell1, r4Cell2});
         try {
             c.addRowToTable(r4);
@@ -201,10 +198,10 @@ public class DataContainerTest extends TestCase {
         }
         
         // add wrong sized row
-        DataCell r5Key = new DefaultStringCell("row 5");
-        DataCell r5Cell1 = new DefaultStringCell("Row 5, Cell 1");
-        DataCell r5Cell2 = new DefaultIntCell(52); 
-        DataCell r5Cell3 = new DefaultDoubleCell(53.0);
+        DataCell r5Key = new StringCell("row 5");
+        DataCell r5Cell1 = new StringCell("Row 5, Cell 1");
+        DataCell r5Cell2 = new IntCell(52); 
+        DataCell r5Cell3 = new DoubleCell(53.0);
         DataRow r5 = new DefaultRow(
                 r5Key, new DataCell[] {r5Cell1, r5Cell2, r5Cell3});
         try {
@@ -229,7 +226,7 @@ public class DataContainerTest extends TestCase {
         for (int i = 0; i < 500; i++) {
             // fill it - this should be easy to preserve (as the int value
             // is also the hash code) 
-            order.add(new DefaultIntCell(i));
+            order.add(new IntCell(i));
         }
         // shuffle it - that should screw it up
         Collections.shuffle(order);
@@ -260,11 +257,11 @@ public class DataContainerTest extends TestCase {
         DataCell[] names = new DataCell[colCount];
         DataType[] types = new DataType[colCount];
         for (int c = 0; c < colCount; c++) {
-            names[c] = new DefaultStringCell("Column " + c);
+            names[c] = new StringCell("Column " + c);
             switch (c % 3) {
-                case 0: types[c] = DoubleType.DOUBLE_TYPE; break;
-                case 1: types[c] = StringType.STRING_TYPE; break;
-                case 2: types[c] = IntType.INT_TYPE; break;
+                case 0: types[c] = DoubleCell.TYPE; break;
+                case 1: types[c] = StringCell.TYPE; break;
+                case 2: types[c] = IntCell.TYPE; break;
                 default: throw new InternalError();
             }
         }
@@ -277,7 +274,7 @@ public class DataContainerTest extends TestCase {
         final long seed = System.currentTimeMillis();
         Random rand = new Random(seed);
         for (int i = 0; i < rowCount; i++) {
-            DataCell key = new DefaultStringCell("Row " + i);
+            DataCell key = new StringCell("Row " + i);
             DataCell[] cells = new DataCell[colCount];
             for (int c = 0; c < colCount; c++) {
                 DataCell cell = null;
@@ -318,7 +315,7 @@ public class DataContainerTest extends TestCase {
                 Random rand1 = new Random(seed);
                 for (RowIterator it = table.iterator(); 
                     it.hasNext(); i++) {
-                    DataCell key = new DefaultStringCell("Row " + i);
+                    DataCell key = new StringCell("Row " + i);
                     DataCell[] cells = new DataCell[colCount];
                     for (int c = 0; c < colCount; c++) {
                         DataCell cell = null;
@@ -373,26 +370,26 @@ public class DataContainerTest extends TestCase {
     /** Test if the domain is retained. */
     public void testTableDomain() {
         DataContainer c = new DataContainer();
-        DataCell r1Key = new DefaultStringCell("row 1");
-        DataCell r1Cell1 = new DefaultStringCell("Row 1, Cell 1");
-        DataCell r1Cell2 = new DefaultIntCell(12);
+        DataCell r1Key = new StringCell("row 1");
+        DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
+        DataCell r1Cell2 = new IntCell(12);
         DataRow r1 = new DefaultRow(r1Key, new DataCell[] {r1Cell1, r1Cell2});
-        DataCell r2Key = new DefaultStringCell("row 2");
-        DataCell r2Cell1 = new DefaultStringCell("Row 2, Cell 1");
-        DataCell r2Cell2 = new DefaultIntCell(22);
+        DataCell r2Key = new StringCell("row 2");
+        DataCell r2Cell1 = new StringCell("Row 2, Cell 1");
+        DataCell r2Cell2 = new IntCell(22);
         DataRow r2 = new DefaultRow(r2Key, new DataCell[] {r2Cell1, r2Cell2});
-        DataCell r3Key = new DefaultStringCell("row 3");
-        DataCell r3Cell1 = new DefaultStringCell("Row 3, Cell 1");
-        DataCell r3Cell2 = new DefaultIntCell(32);
+        DataCell r3Key = new StringCell("row 3");
+        DataCell r3Cell1 = new StringCell("Row 3, Cell 1");
+        DataCell r3Cell2 = new IntCell(32);
         DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
 
         DataCell[] colNames = new DataCell[]{
-                new DefaultStringCell("Column 1"),
-                new DefaultStringCell("Column 2")
+                new StringCell("Column 1"),
+                new StringCell("Column 2")
         };
         DataType[] colTypes = new DataType[] {
-                StringType.STRING_TYPE,
-                IntType.INT_TYPE
+                StringCell.TYPE,
+                IntCell.TYPE
         };
         DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
         c.open(spec1);

@@ -2,7 +2,6 @@ package de.unikn.knime.base.node.filter.row;
 
 import java.util.NoSuchElementException;
 
-
 import de.unikn.knime.base.node.filter.row.rowfilter.EndOfTableException;
 import de.unikn.knime.base.node.filter.row.rowfilter.IncludeFromNowOn;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;

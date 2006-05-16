@@ -69,8 +69,7 @@ import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
@@ -484,7 +483,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
             // we must create a new colProperty for it - if not already created
             if (m_firstColProp == null) {
                 DataColumnSpec firstColSpec = new DataColumnSpecCreator("Col0",
-                        StringType.STRING_TYPE).createSpec();
+                        StringCell.TYPE).createSpec();
                 m_firstColProp = new ColProperty();
                 m_firstColProp.setColumnSpec(firstColSpec);
                 m_firstColProp.setMissingValuePattern("?");
@@ -550,7 +549,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
             ColProperty cProp = (ColProperty)m_frSettings.getColumnProperties()
                     .get(c);
 
-            if (cProp.getColumnSpec().getType() instanceof StringType) {
+            if (cProp.getColumnSpec().getType().equals(StringCell.TYPE)) {
                 // read nominal values for string columns
                 cProp.setReadPossibleValuesFromFile(readPosVals);
                 cProp.setMaxNumberOfPossibleValues(2000);
@@ -1113,9 +1112,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
             boolean userSet = m_frSettings.getColumnProperties().get(c)
                     .getUserSettings();
             if (userSet) {
-                name = new DefaultStringCell(cSpec.getName().toString() + "*");
+                name = new StringCell(cSpec.getName().toString() + "*");
             } else {
-                name = new DefaultStringCell(cSpec.getName().toString());
+                name = new StringCell(cSpec.getName().toString());
             }
             DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name, cSpec
                     .getType());
@@ -1224,7 +1223,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                     }
                 }
             }
-            cProp.changeColumnName(new DefaultStringCell(name));
+            cProp.changeColumnName(new StringCell(name));
         }
         // We've changed the names in the colProperty objects - no need to
         // write back the vector

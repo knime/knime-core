@@ -68,7 +68,7 @@ public class AppendedColumnRowIterator extends RowIterator {
         }
         for (int i = 0; i < append.length; i++) {
             DataType resultType = append[i].getType();
-            if (!m_colType[i].isOneSuperTypeOf(resultType)) {
+            if (!m_colType[i].isASuperTypeOf(resultType)) {
                 throw new IllegalStateException("Given cell is not subtype of "
                         + m_colType[i].getClass().getName() + ": "
                         + append.getClass());

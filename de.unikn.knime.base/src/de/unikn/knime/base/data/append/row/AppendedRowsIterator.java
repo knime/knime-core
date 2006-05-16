@@ -28,10 +28,11 @@ import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -152,7 +153,7 @@ class AppendedRowsIterator extends RowIterator {
                     keyHasChanged = true;
                     DataCell cell = key.getId();
                     String newId = cell.toString() + m_suffix;
-                    DataCell newCell = new DefaultStringCell(newId);
+                    DataCell newCell = new StringCell(newId);
                     key = new RowKey(newCell, key.getColorAttr());
                 } while (!m_duplicateHash.add(key));
                 LOGGER.debug("Found duplicate rowkey \"" + oldId 
@@ -194,8 +195,7 @@ class AppendedRowsIterator extends RowIterator {
             if (targetCol < 0) { // that is one of the "missing" columns
                 targetCol = spec.getNumColumns() + missingCounter;
                 // create the missing cell
-                m_curMissingCells[missingCounter] = 
-                    colSpec.getType().getMissingCell();
+                m_curMissingCells[missingCounter] = DataType.getMissingCell();
                 missingCounter++;
             }
             m_curMapping[c] = targetCol;

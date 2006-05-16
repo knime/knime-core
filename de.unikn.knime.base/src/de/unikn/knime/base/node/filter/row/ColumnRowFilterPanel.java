@@ -51,9 +51,9 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
@@ -375,9 +375,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             }
         }
 
-        if (((lowBound != null) && (lowBound instanceof DefaultStringCell))
+        if (((lowBound != null) && (lowBound instanceof StringCell))
                 || ((hiBound != null) 
-                        && (hiBound instanceof DefaultStringCell))) {
+                        && (hiBound instanceof StringCell))) {
             m_errText.setText("Warning: String comparison is used for "
                     + "range checking. May not work as expected!");
             validate();
@@ -571,7 +571,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                 // first try making of an IntCell
                 try {
                     int lb = Integer.parseInt(editField.getText());
-                    return new DefaultIntCell(lb);
+                    return new IntCell(lb);
                 } catch (NumberFormatException nfe) {
                     throw new InvalidSettingsException(
                             "Number format error in " + name
@@ -580,18 +580,18 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             } else if (cType.isCompatible(DoubleValue.class)) {
                 try {
                     double lb = Double.parseDouble(editField.getText());
-                    return new DefaultDoubleCell(lb);
+                    return new DoubleCell(lb);
                 } catch (NumberFormatException nfe) {
                     throw new InvalidSettingsException("Number format error in "
                             + name
                             + " bound number: enter a valid float number");
                 }
             } else {
-                return new DefaultStringCell(editField.getText());
+                return new StringCell(editField.getText());
             }
         } else {
             // if we got no column type
-            return new DefaultStringCell(editField.getText());
+            return new StringCell(editField.getText());
         }
 
     }

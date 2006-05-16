@@ -28,11 +28,11 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.StringType;
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 
@@ -49,16 +49,14 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * <p>Note regarding the column domain: This implementation updates the column
  * domain while new rows are added to the table. It will keep the lower and 
  * upper bound for all columns that are numeric, i.e. whose column type is
- * a sub type of <code>DoubleType.DOUBLE_TYPE</code>. For categorical columns,
+ * a sub type of <code>DoubleCell.TYPE</code>. For categorical columns,
  * it will keep the list of possible values if the number of different values
  * does not exceed 60. (If there are more, the values are forgotten and 
  * therefore not available in the final table.) A categorical column is 
- * a column whose type is a sub type of <code>StringType.STRING_TYPE</code>, 
- * i.e. <code>StringType.STRING_TYPE.isSuperTypeOf(yourtype)</code> where 
+ * a column whose type is a sub type of <code>StringCell.TYPE</code>, 
+ * i.e. <code>StringCell.TYPE.isSuperTypeOf(yourtype)</code> where 
  * yourtype is the given column type.
  * 
- * @see de.unikn.knime.core.data.DoubleType#DOUBLE_TYPE
- * @see de.unikn.knime.core.data.StringType#STRING_TYPE
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -210,7 +208,7 @@ public class DataContainer implements RowAppender {
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = m_spec.getColumnSpec(i);
             DataType colType = colSpec.getType();
-            if (StringType.STRING_TYPE.isOneSuperTypeOf(colType)) {
+            if (StringCell.TYPE.isASuperTypeOf(colType)) {
                 if (initDomain) {
                     Set<DataCell> values = colSpec.getDomain().getValues();
                     m_possibleValues[i] = values != null 
@@ -219,13 +217,13 @@ public class DataContainer implements RowAppender {
                     m_possibleValues[i] = new LinkedHashSet<DataCell>();
                 }
             }
-            if (DoubleType.DOUBLE_TYPE.isOneSuperTypeOf(colType)) {
+            if (DoubleCell.TYPE.isASuperTypeOf(colType)) {
                 if (initDomain) {
                     m_minCells[i] = colSpec.getDomain().getLowerBound();
                     m_maxCells[i] = colSpec.getDomain().getUpperBound();
                 } else {
-                    m_minCells[i] = colType.getMissingCell();
-                    m_maxCells[i] = colType.getMissingCell();
+                    m_minCells[i] = DataType.getMissingCell();
+                    m_maxCells[i] = DataType.getMissingCell();
                 }
             }
             
@@ -343,7 +341,7 @@ public class DataContainer implements RowAppender {
             DataType columnClass = m_spec.getColumnSpec(c).getType();
             DataCell value = row.getCell(c);
             DataType runtimeClass = value.getType();
-            if (!columnClass.isOneSuperTypeOf(runtimeClass)) {
+            if (!columnClass.isASuperTypeOf(runtimeClass)) {
                 throw new IllegalArgumentException("Runtime class of object \""
                         + value.toString() + "\" (index " + c
                         + ") in " + "row \"" + key + "\" is "

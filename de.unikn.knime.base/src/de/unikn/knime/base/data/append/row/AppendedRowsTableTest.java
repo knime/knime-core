@@ -24,14 +24,11 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.def.DefaultTable;
 
 /**
@@ -42,76 +39,76 @@ import de.unikn.knime.core.data.def.DefaultTable;
 public class AppendedRowsTableTest extends TestCase {
 
     private static final DataType[] DATA_TYPES = new DataType[] {
-            DoubleType.DOUBLE_TYPE, IntType.INT_TYPE, StringType.STRING_TYPE};
+            DoubleCell.TYPE, IntCell.TYPE, StringCell.TYPE};
 
-    private static final DataCell[] DATA_H = new DefaultStringCell[] {
-            new DefaultStringCell("double_col"),
-            new DefaultStringCell("int_col"),
-            new DefaultStringCell("string_col")};
+    private static final DataCell[] DATA_H = new StringCell[] {
+            new StringCell("double_col"),
+            new StringCell("int_col"),
+            new StringCell("string_col")};
 
     private static final DataRow[] DATA = new DataRow[] {
-            new DefaultRow(new DefaultStringCell("row_1"), new DataCell[] {
-                    new DefaultDoubleCell(1.0), new DefaultIntCell(2),
-                    new DefaultStringCell("three")}),
-            new DefaultRow(new DefaultStringCell("row_2"), new DataCell[] {
-                    new DefaultDoubleCell(4.0), new DefaultIntCell(5),
-                    new DefaultStringCell("six")}),
-            new DefaultRow(new DefaultStringCell("row_3"), new DataCell[] {
-                    new DefaultDoubleCell(7.0), new DefaultIntCell(8),
-                    new DefaultStringCell("nine")}),
-            new DefaultRow(new DefaultStringCell("row_4"), new DataCell[] {
-                    new DefaultDoubleCell(10.0), new DefaultIntCell(11),
-                    new DefaultStringCell("twelve")})};
+            new DefaultRow(new StringCell("row_1"), new DataCell[] {
+                    new DoubleCell(1.0), new IntCell(2),
+                    new StringCell("three")}),
+            new DefaultRow(new StringCell("row_2"), new DataCell[] {
+                    new DoubleCell(4.0), new IntCell(5),
+                    new StringCell("six")}),
+            new DefaultRow(new StringCell("row_3"), new DataCell[] {
+                    new DoubleCell(7.0), new IntCell(8),
+                    new StringCell("nine")}),
+            new DefaultRow(new StringCell("row_4"), new DataCell[] {
+                    new DoubleCell(10.0), new IntCell(11),
+                    new StringCell("twelve")})};
 
     private static final DataType[] DATA_MISS_LAST_TYPES = new DataType[] {
-            DoubleType.DOUBLE_TYPE, IntType.INT_TYPE};
+            DoubleCell.TYPE, IntCell.TYPE};
 
-    private static final DataCell[] DATA_MISS_LAST_H = new DefaultStringCell[] {
-            new DefaultStringCell("double_col"),
-            new DefaultStringCell("int_col")};
+    private static final DataCell[] DATA_MISS_LAST_H = new StringCell[] {
+            new StringCell("double_col"),
+            new StringCell("int_col")};
 
     private static final DataRow[] DATA_MISS_LAST = new DataRow[] {
-            new DefaultRow(new DefaultStringCell("row_1"), new DataCell[] {
-                    new DefaultDoubleCell(1.0), new DefaultIntCell(2)}),
-            new DefaultRow(new DefaultStringCell("row_2"), new DataCell[] {
-                    new DefaultDoubleCell(4.0), new DefaultIntCell(5)}),
-            new DefaultRow(new DefaultStringCell("row_3"), new DataCell[] {
-                    new DefaultDoubleCell(7.0), new DefaultIntCell(8)}),
-            new DefaultRow(new DefaultStringCell("row_4"), new DataCell[] {
-                    new DefaultDoubleCell(10.0), new DefaultIntCell(11)})};
+            new DefaultRow(new StringCell("row_1"), new DataCell[] {
+                    new DoubleCell(1.0), new IntCell(2)}),
+            new DefaultRow(new StringCell("row_2"), new DataCell[] {
+                    new DoubleCell(4.0), new IntCell(5)}),
+            new DefaultRow(new StringCell("row_3"), new DataCell[] {
+                    new DoubleCell(7.0), new IntCell(8)}),
+            new DefaultRow(new StringCell("row_4"), new DataCell[] {
+                    new DoubleCell(10.0), new IntCell(11)})};
 
     private static final DataRow[] DATA_2 = new DataRow[] {
-            new DefaultRow(new DefaultStringCell("row_13"), new DataCell[] {
-                    new DefaultDoubleCell(13.0), new DefaultIntCell(14),
-                    new DefaultStringCell("fifteen")}),
-            new DefaultRow(new DefaultStringCell("row_16"), new DataCell[] {
-                    new DefaultDoubleCell(16.0), new DefaultIntCell(17),
-                    new DefaultStringCell("eighteen")}),
-            new DefaultRow(new DefaultStringCell("row_19"), new DataCell[] {
-                    new DefaultDoubleCell(19.0), new DefaultIntCell(20),
-                    new DefaultStringCell("twentyone")})};
+            new DefaultRow(new StringCell("row_13"), new DataCell[] {
+                    new DoubleCell(13.0), new IntCell(14),
+                    new StringCell("fifteen")}),
+            new DefaultRow(new StringCell("row_16"), new DataCell[] {
+                    new DoubleCell(16.0), new IntCell(17),
+                    new StringCell("eighteen")}),
+            new DefaultRow(new StringCell("row_19"), new DataCell[] {
+                    new DoubleCell(19.0), new IntCell(20),
+                    new StringCell("twentyone")})};
 
     private static final DataType[] DATA_SHUFFLE_TYPES = new DataType[] {
-            IntType.INT_TYPE, DoubleType.DOUBLE_TYPE, StringType.STRING_TYPE};
+            IntCell.TYPE, DoubleCell.TYPE, StringCell.TYPE};
 
-    private static final DataCell[] DATA_SHUFFLE_H = new DefaultStringCell[] {
-            new DefaultStringCell("int_col"),
-            new DefaultStringCell("double_col"),
-            new DefaultStringCell("string_col")};
+    private static final DataCell[] DATA_SHUFFLE_H = new StringCell[] {
+            new StringCell("int_col"),
+            new StringCell("double_col"),
+            new StringCell("string_col")};
 
     private static final DataRow[] DATA_SHUFFLE = new DataRow[] {
-            new DefaultRow(new DefaultStringCell("row_5"), new DataCell[] {
-                    new DefaultIntCell(2), new DefaultDoubleCell(1.0),
-                    new DefaultStringCell("three")}),
-            new DefaultRow(new DefaultStringCell("row_6"), new DataCell[] {
-                    new DefaultIntCell(5), new DefaultDoubleCell(4.0),
-                    new DefaultStringCell("six")}),
-            new DefaultRow(new DefaultStringCell("row_7"), new DataCell[] {
-                    new DefaultIntCell(8), new DefaultDoubleCell(7.0),
-                    new DefaultStringCell("nine")}),
-            new DefaultRow(new DefaultStringCell("row_8"), new DataCell[] {
-                    new DefaultIntCell(11), new DefaultDoubleCell(10.0),
-                    new DefaultStringCell("twelve")})};
+            new DefaultRow(new StringCell("row_5"), new DataCell[] {
+                    new IntCell(2), new DoubleCell(1.0),
+                    new StringCell("three")}),
+            new DefaultRow(new StringCell("row_6"), new DataCell[] {
+                    new IntCell(5), new DoubleCell(4.0),
+                    new StringCell("six")}),
+            new DefaultRow(new StringCell("row_7"), new DataCell[] {
+                    new IntCell(8), new DoubleCell(7.0),
+                    new StringCell("nine")}),
+            new DefaultRow(new StringCell("row_8"), new DataCell[] {
+                    new IntCell(11), new DoubleCell(10.0),
+                    new StringCell("twelve")})};
 
     /**
      * Class under test for void AppendedRowsTable(DataTable[]).
