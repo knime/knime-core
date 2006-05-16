@@ -26,14 +26,11 @@ import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * 
@@ -278,15 +275,15 @@ final class FileRowIterator extends RowIterator {
             final DataCell rowHeader, final DataCell[] row) {
 
         if (createMissingCell) {
-            return type.getMissingCell();
+            return DataType.getMissingCell();
         }
-        if (type instanceof StringType) {
-            return new DefaultStringCell(data);
+        if (type.equals(StringCell.TYPE)) {
+            return new StringCell(data);
             // also timming strings now. As per TG.
-        } else if (type instanceof IntType) {
+        } else if (type.equals(IntCell.TYPE)) {
             try {
                 int val = Integer.parseInt(data);
-                return new DefaultIntCell(val);
+                return new IntCell(val);
             } catch (NumberFormatException nfe) {
                 m_exceptionThrown = true;
                 throw createException("Wrong data format. In line "
@@ -294,7 +291,7 @@ final class FileRowIterator extends RowIterator {
                         + "' for an integer", m_tokenizer.getLineNumber(),
                         rowHeader, row);
             }
-        } else if (type instanceof DoubleType) {
+        } else if (type.equals(DoubleCell.TYPE)) {
             String dblData = data;
             if (m_customDecimalSeparator) {
                 // we must reject tokens with a '.'. 
@@ -308,7 +305,7 @@ final class FileRowIterator extends RowIterator {
             }
             try {
                 double val = Double.parseDouble(dblData);
-                return new DefaultDoubleCell(val);
+                return new DoubleCell(val);
             } catch (NumberFormatException nfe) {
                 m_exceptionThrown = true;
                 throw createException("Wrong data format. In line "
@@ -325,7 +322,7 @@ final class FileRowIterator extends RowIterator {
     } // createNewDataCellOfType(Class,String,boolean)
 
     /*
-     * Creates a DefaultStringCell containing the row header. If the filereader
+     * Creates a StringCell containing the row header. If the filereader
      * settings tell us that there is one in the file - it will be read. The
      * header actually created depends on the member 'rowHeaderPrefix'. If it's
      * set (not null) it will be used to create the row header (plus the row
@@ -335,7 +332,7 @@ final class FileRowIterator extends RowIterator {
      * <missing>+RowNo". Returns null if EOF was reached before a row header (or
      * a delimiter) was read.
      */
-    private DefaultStringCell createRowHeader(final int rowNumber) {
+    private StringCell createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
         assert (m_frSettings.getFileHasRowHeaders() 
@@ -364,8 +361,7 @@ final class FileRowIterator extends RowIterator {
             String newRowHeader;
             if (fileHeader.equals("") && !m_tokenizer.lastTokenWasQuoted()) {
                 // seems we got a missing row delimiter. Let's build one.
-                newRowHeader = StringType.STRING_TYPE.getMissingCell()
-                        .toString()
+                newRowHeader = DataType.getMissingCell().toString()
                         + rowNumber;
             } else {
                 newRowHeader = fileHeader;
@@ -373,11 +369,11 @@ final class FileRowIterator extends RowIterator {
             // see if it's unique - and if not make it unique.
             newRowHeader = uniquifyRowHeader(newRowHeader);
 
-            return new DefaultStringCell(newRowHeader);
+            return new StringCell(newRowHeader);
 
         } else {
 
-            return new DefaultStringCell(m_rowHeaderPrefix + rowNumber);
+            return new StringCell(m_rowHeaderPrefix + rowNumber);
 
         }
     }
@@ -421,65 +417,16 @@ final class FileRowIterator extends RowIterator {
 
         for (int c = 0; c < errCells.length; c++) {
             if (errCells[c] == null) {
-                // create an error (missing) cell for cells not read
-                DataColumnSpec cSpec = m_tableSpec.getColumnSpec(c);
-                errCells[c] = new ErrorCell("NOT READ", cSpec.getType());
+                errCells[c] = DataType.getMissingCell();
             }
         }
 
-        DataCell errRowHeader = new DefaultStringCell("ERROR_ROW ("
+        DataCell errRowHeader = new StringCell("ERROR_ROW ("
                 + rowHeader.toString() + ")");
 
         DataRow errRow = new DefaultRow(errRowHeader, errCells);
 
         return new FileReaderException(msg, errRow, lineNumber);
-
-    }
-
-    private class ErrorCell extends DataCell {
-
-        private final DataType m_type;
-
-        private final String m_msg;
-
-        /**
-         * Creates another instance of a missing cell for the specified type.
-         * This cell will return the specified message in the
-         * <code>toString</code> method.
-         * 
-         * @param msg
-         * @param type
-         */
-        ErrorCell(final String msg, final DataType type) {
-            m_msg = msg;
-            m_type = type;
-        }
-
-        @Override
-        protected boolean equalsDataCell(final DataCell dc) {
-            // guaranteed not to be called on and with a missing cell.....
-            return false;
-        }
-
-        @Override
-        public DataType getType() {
-            return m_type;
-        }
-
-        @Override
-        public int hashCode() {
-            return toString().hashCode();
-        }
-
-        @Override
-        public boolean isMissing() {
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return m_msg;
-        }
 
     }
 
