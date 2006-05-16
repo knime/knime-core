@@ -31,23 +31,80 @@ import java.io.Serializable;
  * derived from <code>DataValue</code>. The instantiated derived object must
  * be read-only, no setter methods must be implemented.
  * 
+ * <p>This class implements Serializable. However, if you define a custom
+ * <code>DataCell</code> implementation, consider to implement a factory that 
+ * takes care of reading/writing a cell to a <code>DataInput</code> or 
+ * <code>DataOutput</code> source. Ordinary Java serialization is considerably
+ * slower than using such a factory. To register such a factory, define a 
+ * static method having the following signature:
+ * <pre>
+ *  public static final DataCellSerializer&lt;YourCellClass&gt; 
+ *      getCellSerializer() {
+ *    ...
+ *  }
+ * </pre>
+ * where <i>YourCellClass</i> is the name of your customized 
+ * <code>DataCell</code>.
+ * This method will be called whenever the cell at hand needs to be written 
+ * using reflection. This method is only called once, i.e. the first time
+ * that it is used.
+ * 
+ * <p>Since <code>DataCell</code> may implement different <code>DataValue</code>
+ * interfaces but onlye one is the <i>native</i> value class, consider to 
+ * implement a static method in your derived class with the following signature:
+ * <pre>
+ *   public static final Class<? extends DataValue> getPreferredValueClass() {
+ *       ...
+ *   }
+ * </pre>
+ * This method is called when the runtime <code>DataType</code> of the cell is 
+ * created using reflection. The associated <code>DataType</code> will set the 
+ * renderer, icon, and comparator of this native value class as default. 
+ * If you don't specify such method, the order on the value interfaces 
+ * is undefined.
+ * 
+ * <p>For further details on data types, see also the 
+ * {@link de.unikn.knime.core.data package description} and the 
+ * <a href="doc-files/newtypes.html">manual on defining new KNIME cell 
+ * types</a>.
+ * @see DataType
+ * @see de.unikn.knime.core.data.DataCellSerializer
  * @author M. Berthold, University of Konstanz
  */
-public abstract class DataCell implements Serializable {
+public abstract class DataCell implements DataValue, Serializable {
 
     /**
      * Returns this cell's <code>DataType</code>.
-     * 
      * @return The <code>DataType</code>.
+     * @see DataType#getType(Class)
      */
-    public abstract DataType getType();
-
+    public final DataType getType() {
+        return DataType.getType(getClass());
+    }
+    
     /**
-     * Only derived classes representing missing value cells will override this.
-     * 
-     * @return <code>false</code> always.
+     * Does this cell represent a missing cell? The default implementation 
+     * returns <code>false</code>. If you need to represent a missing cell
+     * use the static method DataType.getMissingCell().
+     * @return If the cell represents a missing value.
      */
-    public boolean isMissing() {
+    public final boolean isMissing() {
+        /* 
+         * Instead of testing of this != DataType.getMissing() we use here 
+         * this slightly more complicated approach using the method 
+         * isMissingInternal() with package scope in order to avoid class 
+         * loading  problems. Especially in eclipse it is know that there are 
+         * many different class loaders, each of which can potentially create 
+         * its own DataType.MissingCell instance.  
+         */
+        return isMissingInternal();
+    }
+    
+    /** Internal implemenation of getMissing(). It will return false and is
+     * only overridden in the missing cell implementation.
+     * @return <code>false</code>.
+     */
+    boolean isMissingInternal() {
         return false;
     }
 

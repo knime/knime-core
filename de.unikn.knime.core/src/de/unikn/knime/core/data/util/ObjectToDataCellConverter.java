@@ -21,10 +21,10 @@ package de.unikn.knime.core.data.util;
 
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.StringType;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * Factory to get <code>DataCell</code> representation for various 
@@ -80,22 +80,22 @@ public class ObjectToDataCellConverter {
      * </tr>
      * <tr>
      *   <td><code>null</code></td> 
-     *   <td><code>DefaultStringCell.INSTANCE</code></td>
+     *   <td><code>StringCell.INSTANCE</code></td>
      * </tr>
      * <tr>
-     *   <td><code>String</code></td> <td><code>DefaultStringCell</code></td>
+     *   <td><code>String</code></td> <td><code>StringCell</code></td>
      * </tr>
      * <tr>
-     *   <td><code>Integer</code></td> <td><code>DefaultIntCell</code></td>
+     *   <td><code>Integer</code></td> <td><code>IntCell</code></td>
      * </tr>
      * <tr>
-     *   <td><code>Byte</code></td> <td><code>DefaultIntCell</code></td>
+     *   <td><code>Byte</code></td> <td><code>IntCell</code></td>
      * </tr>
      * <tr>
-     *   <td><code>Double</code></td> <td><code>DefaultDoubleCell</code></td>
+     *   <td><code>Double</code></td> <td><code>DoubleCell</code></td>
      * </tr>
      * <tr>
-     *   <td><code>Float</code></td> <td><code>DefaultDoubleCell</code></td>
+     *   <td><code>Float</code></td> <td><code>DoubleCell</code></td>
      * </tr>
      * </table>
      *   
@@ -108,74 +108,74 @@ public class ObjectToDataCellConverter {
      */
     public DataCell createDataCell(final Object o) {
         if (o == null) {
-            return StringType.STRING_TYPE.getMissingCell();
+            return DataType.getMissingCell();
         }
         if (o instanceof String) {
-            return new DefaultStringCell((String)o);
+            return new StringCell((String)o);
         }
         if (o instanceof Integer) {
-            return new DefaultIntCell(((Integer)o).intValue());
+            return new IntCell(((Integer)o).intValue());
         }
         if (o instanceof Byte) {
-            return new DefaultIntCell(((Byte)o).intValue());
+            return new IntCell(((Byte)o).intValue());
         }
         if (o instanceof Double) {
-            return new DefaultDoubleCell(((Double)o).doubleValue());
+            return new DoubleCell(((Double)o).doubleValue());
         }
         if (o instanceof Float) {
-            return new DefaultDoubleCell(((Float)o).doubleValue());
+            return new DoubleCell(((Float)o).doubleValue());
         }
         throw new IllegalArgumentException("Cannot create DataCell from "
                 + "objects of type \"" + o.getClass().getName() + "\".");
     } // createDataCell(Object)
     
     /** 
-     * Creates new <code>DefaultDoubleCell</code> for a double. 
+     * Creates new <code>DoubleCell</code> for a double. 
      * @param d Double to be wrapped in a <code>DataCell</code>
-     * @return <code>new DefaultDoubleCell(d);</code>
-     * @see DefaultDoubleCell
+     * @return <code>new DoubleCell(d);</code>
+     * @see DoubleCell
      */
     public DataCell createDataCell(final double d) {
-        return new DefaultDoubleCell(d);
+        return new DoubleCell(d);
     }
 
     /** 
-     * Creates new <code>DefaultDoubleCell</code> for a float. 
+     * Creates new <code>DoubleCell</code> for a float. 
      * @param f Float to be wrapped in a <code>DataCell</code>
-     * @return <code>new DefaultDoubleCell((double)f);</code>
-     * @see DefaultDoubleCell
+     * @return <code>new DoubleCell((double)f);</code>
+     * @see DoubleCell
      */
     public DataCell createDataCell(final float f) {
         return createDataCell((double)f);
     }
 
     /** 
-     * Creates new <code>DefaultIntCell</code> for an int. 
+     * Creates new <code>IntCell</code> for an int. 
      * @param i Int to be wrapped in a <code>DataCell</code>
-     * @return <code>new DefaultIntCell(i);</code>
-     * @see DefaultIntCell
+     * @return <code>new IntCell(i);</code>
+     * @see IntCell
      */
     public DataCell createDataCell(final int i) {
-        return new DefaultIntCell(i); 
+        return new IntCell(i); 
     }
 
     /** 
-     * Creates new <code>DefaultIntCell</code> for a byte. 
+     * Creates new <code>IntCell</code> for a byte. 
      * @param b Byte to be wrapped in a <code>DataCell</code>
-     * @return <code>new DefaultIntCell((int)b);</code>
-     * @see DefaultIntCell
+     * @return <code>new IntCell((int)b);</code>
+     * @see IntCell
      */
     public DataCell createDataCell(final byte b) {
-        return new DefaultIntCell((int)b);
+        return new IntCell((int)b);
     }
 
     /** 
-     * Creates new <code>DefaultIntCell</code> for a boolean having value
+     * Creates new <code>IntCell</code> for a boolean having value
      * 1 if <code>b==true</code> or 0 if <code>b==false</code>. 
      * @param b Boolean to be wrapped in a <code>DataCell</code>
-     * @return A new <code>DefaultIntCell</code> having either value 1 or 0 
+     * @return A new <code>IntCell</code> having either value 1 or 0 
      *         depending on <code>b</code>
-     * @see DefaultIntCell
+     * @see IntCell
      */
     public DataCell createDataCell(final boolean b) {
         final int i = b ? 1 : 0;

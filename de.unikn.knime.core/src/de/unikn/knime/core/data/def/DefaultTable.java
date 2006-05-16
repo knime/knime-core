@@ -30,7 +30,6 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
 import de.unikn.knime.core.data.util.ObjectToDataCellConverter;
 
 /**
@@ -96,7 +95,7 @@ public class DefaultTable implements DataTable {
             for (int c = 0; c < numCells; c++) {
                 DataType columnType = spec.getColumnSpec(c).getType();
                 DataType cellType = row.getCell(c).getType();
-                if (!columnType.isOneSuperTypeOf(cellType)) {
+                if (!columnType.isASuperTypeOf(cellType)) {
                     throw new IllegalArgumentException(
                             "Runtime class of object \""
                                     + row.getCell(c).toString()
@@ -180,10 +179,10 @@ public class DefaultTable implements DataTable {
         }
 
         // create column header and types
-        DataCell[] myHeaders = new DefaultStringCell[colCount];
+        DataCell[] myHeaders = new StringCell[colCount];
         for (int c = 0; c < colCount; c++) {
             String head = (colHeader != null) ? colHeader[c] : "Column_" + c;
-            myHeaders[c] = new DefaultStringCell(head);
+            myHeaders[c] = new StringCell(head);
         } // for-loop: all columns
 
         // try to find meaningful column types
@@ -199,7 +198,7 @@ public class DefaultTable implements DataTable {
             }
             // name of the row ... if provided
             String rowHead = (rowHeader != null ? rowHeader[r] : "Row_" + r);
-            DataCell rowHeaderCell = new DefaultStringCell(rowHead);
+            DataCell rowHeaderCell = new StringCell(rowHead);
             DataCell[] rowContent = new DataCell[colCount];
             // traverse columns in row
             for (int c = 0; c < colCount; c++) {
@@ -220,7 +219,7 @@ public class DefaultTable implements DataTable {
 
         // if no rows available: assume StringType as column type
         if (rowCount == 0) {
-            Arrays.fill(myTypes, StringType.STRING_TYPE);
+            Arrays.fill(myTypes, StringCell.TYPE);
         }
         m_tableSpec = new DataTableSpec(myHeaders, myTypes);
     } // DefaultTable(ObjectSupplier, String[], String[], ...)
@@ -317,7 +316,7 @@ public class DefaultTable implements DataTable {
     /**
      * Generates a new instance from an <code>int[][]</code> using the default
      * <code>DataCell</code> factory. All entries in this parameter array are
-     * wrapped by an <code>DefaultIntCell</code> by calling
+     * wrapped by an <code>IntCell</code> by calling
      * <code>ObjectToDataCellConverter.createDataCell(new Integer(data[i][j])
      * </code>
      * 
@@ -363,7 +362,7 @@ public class DefaultTable implements DataTable {
     /**
      * Generates a new instance from an <code>double[][]</code> using the
      * default <code>DataCell</code> factory. All entries in this parameter
-     * array are wrapped by an <code>DefaultDoubleCell</code> by calling
+     * array are wrapped by an <code>DoubleCell</code> by calling
      * <code>ObjectToDataCellConverter.createDataCell(new Double(data[i][j])
      * </code>
      * 

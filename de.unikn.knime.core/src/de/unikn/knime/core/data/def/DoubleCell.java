@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,9 +19,14 @@
  */
 package de.unikn.knime.core.data.def;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataCellSerializer;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
+import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.FuzzyIntervalValue;
 import de.unikn.knime.core.data.FuzzyNumberValue;
@@ -35,9 +38,38 @@ import de.unikn.knime.core.data.FuzzyNumberValue;
  * 
  * @author mb, University of Konstanz
  */
-public final class DefaultDoubleCell extends DataCell implements DoubleValue,
+public final class DoubleCell extends DataCell implements DoubleValue,
         FuzzyNumberValue, FuzzyIntervalValue {
+    
+    /** Convenience access member for 
+     * <code>DataType.getType(DoubleCell.class)</code>. 
+     * @see DataType#getType(Class)
+     */
+    public static final DataType TYPE = 
+        DataType.getType(DoubleCell.class);
 
+    /** Returns the preferred value class of this cell implementation. 
+     * This method is called per reflection to determine which is the 
+     * preferred renderer, comparator, etc.
+     * @return DoubleValue.class
+     */
+    public static final Class<? extends DataValue> getPreferredValueClass() {
+        return DoubleValue.class;
+    }
+    
+    private static final DataCellSerializer<DoubleCell> SERIALIZER = 
+        new DoubleSerializer();
+    
+    /** Returns the factory to read/write DataCells of this class from/to
+     * a DataInput/DataOutput. This method is called via reflection.
+     * @return A serializer for reading/writing cells of this kind.
+     * @see DataCell
+     */
+    public static final DataCellSerializer<DoubleCell> 
+        getCellSerializer() {
+        return SERIALIZER;
+    }
+    
     private final double m_double;
 
     /**
@@ -46,15 +78,8 @@ public final class DefaultDoubleCell extends DataCell implements DoubleValue,
      * 
      * @param d The double value.
      */
-    public DefaultDoubleCell(final double d) {
+    public DoubleCell(final double d) {
         m_double = d;
-    }
-
-    /**
-     * @see de.unikn.knime.core.data.DataCell#getType()
-     */
-    public DataType getType() {
-        return DoubleType.DOUBLE_TYPE;
     }
 
     /**
@@ -111,7 +136,7 @@ public final class DefaultDoubleCell extends DataCell implements DoubleValue,
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((DefaultDoubleCell)dc).m_double == m_double;
+        return ((DoubleCell)dc).m_double == m_double;
     }
 
     /**
@@ -128,5 +153,27 @@ public final class DefaultDoubleCell extends DataCell implements DoubleValue,
     public String toString() {
         return "" + m_double;
     }
+    
+    /** Factory for (de-)serializing a DoubleCell. */
+    private static class DoubleSerializer 
+        implements DataCellSerializer<DoubleCell> {
 
+        /**
+         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         */
+        public void serialize(
+                final DoubleCell cell, final DataOutput out) 
+            throws IOException {
+            out.writeDouble(cell.getDoubleValue());
+        }
+        
+        /**
+         * @see DataCellSerializer#deserialize(DataInput)
+         */
+        public DoubleCell deserialize(final DataInput input) 
+            throws IOException {
+            double d = input.readDouble();
+            return new DoubleCell(d);
+        }
+    }
 }

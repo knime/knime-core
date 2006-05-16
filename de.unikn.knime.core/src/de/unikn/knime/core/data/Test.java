@@ -21,7 +21,7 @@ package de.unikn.knime.core.data;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
+import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
 import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
 
@@ -38,7 +38,7 @@ public class Test extends TestCase {
         // make a bunch of int and double cells
         DataCell[] cells = new DataCell[10];
         for (int i = 0; i < cells.length; i++) {
-            cells[i] = new DefaultDoubleCell(i);
+            cells[i] = new DoubleCell(i);
         }
         DataType superType = cells[0].getType();
         for (int i = 1; i < cells.length; i++) {
@@ -74,7 +74,7 @@ public class Test extends TestCase {
             superType = DataType.getCommonSuperType(superType, c.getType());
         }
         assertTrue(superType.isCompatible(FuzzyIntervalValue.class));
-        assertTrue(superType == FuzzyIntervalType.FUZZY_INTERVAL_TYPE);
+        assertTrue(superType == DefaultFuzzyIntervalCell.TYPE);
         // that would be desirable:
         // assertTrue(superType.canReturn(DblValue.class));
         for (int i = 0; i < cells.length; i++) {

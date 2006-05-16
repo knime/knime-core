@@ -18,6 +18,9 @@
  */
 package de.unikn.knime.core.data;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
 /**
  * Interface supporting fuzzy interval cells holding support and core min and
  * max values.
@@ -26,6 +29,12 @@ package de.unikn.knime.core.data;
  */
 public interface FuzzyIntervalValue extends DataValue {
     
+    /** Meta information to this value type.
+     * @see DataValue#UTILITY
+     */
+    public static final UtilityFactory UTILITY = 
+        new FuzzyIntervalUtilityFactory();
+
     /**
      * @return Minimum support value.
      */
@@ -51,5 +60,49 @@ public interface FuzzyIntervalValue extends DataValue {
      */
     public double getCenterOfGravity();
     
+    /** Implementations of the meta information of this value class. */
+    public static class FuzzyIntervalUtilityFactory extends UtilityFactory {
+        /** Singleton icon to be used to display this cell type. */
+        private static final Icon ICON;
+
+        /** Load icon, use <code>null</code> if not available. */
+        static {
+            ImageIcon icon;
+            try {
+                ClassLoader loader = FuzzyIntervalValue.class.getClassLoader();
+                String path = FuzzyIntervalValue.class.getPackage().
+                    getName().replace('.', '/');
+                icon = new ImageIcon(loader.getResource(
+                        path + "/icon/fuzzyintervalicon.png"));
+            } catch (Exception e) {
+                icon = null;
+            }
+            ICON = icon;
+        }
+
+        private static final FuzzyIntervalCellComparator COMPARATOR =
+            new FuzzyIntervalCellComparator();
+        
+        /** Only subclasses are allowed to instantiate this class. */
+        protected FuzzyIntervalUtilityFactory() {
+        }
+
+        /**
+         * @see DataValue.UtilityFactory#getIcon()
+         */
+        @Override
+        public Icon getIcon() {
+            return ICON;
+        }
+
+        /**
+         * @see UtilityFactory#getComparator()
+         */
+        @Override
+        protected DataCellComparator getComparator() {
+            return COMPARATOR;
+        }
+
+    }
 
 }

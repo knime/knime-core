@@ -19,204 +19,424 @@
 package de.unikn.knime.core.data;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
-import de.unikn.knime.core.data.renderer.DataCellRendererFamily;
-import de.unikn.knime.core.data.renderer.DefaultDataCellRendererFamily;
+import de.unikn.knime.core.data.DataValue.UtilityFactory;
+import de.unikn.knime.core.data.renderer.DataValueRendererFamily;
+import de.unikn.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import de.unikn.knime.core.data.renderer.SetOfRendererFamilies;
+import de.unikn.knime.core.node.NodeLogger;
 
 /**
- * The base class for each type associated with a certain type of data cell. It
- * is in charge of keeping the list of compatible (i.e. castable) data cell
- * types, the list of renderers for this type, and a comparator for data cells
- * of this type. Also, it will be used to create a common super type for two
- * given cell types in case they are not compatible to each other.
+ * The class for each type associated with a certain implementation of a data
+ * cell. It essentially keeps the list of compatible (i.e. castable) data cell
+ * types, the list of renderers for this type, and (potentially more than one)
+ * comparator for data cells of this type. Also, it will be used to create a
+ * common super type for two given cell types in case they are not compatible
+ * to each other (this new "type" will be represented by the intersection of
+ * the DataValues the two types contain).
  * 
- * <p>In order to allow fast disc buffering of <code>DataCell</code> objects 
- * (other than the slow serializable technique) consider to implement the 
- * <code>DataCellSerializer</code> interface in your subclass of DataType. This
- * will allow the framework to fast-write DataCell objects using the DataType
- * as factory.
- * 
- * @see de.unikn.knime.core.data.DataCellSerializer
- * @author Michael Berthold, University of Konstanz
+ * <p>On details of data types in KNIME see the 
+ * {@link de.unikn.knime.core.data package description} and the 
+ * <a href="doc-files/newtypes.html">manual on how to define customized 
+ * data types</a>.
+ *
+ * @see de.unikn.knime.core.data.DataCell
+ * @see de.unikn.knime.core.data.DataValue
+ * @author B. Wiswedel, University of Konstanz
  */
-public class DataType implements Serializable {
+public final class DataType implements Serializable {
 
-    /**
-     * Singleton of a generic data type. This type is compatible to nothing! It
-     * will always(!) return the fallback comparator (which uses the toString
-     * result to compare datacells).
-     */
-    public static final DataType DATA_TYPE = new DataType();
+    /** Logger for DataType class. */
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(DataType.class);
 
-    /*
-     * Icon which is used as "fallback" representative when no specialized icon
-     * is found in derivates of this class
+    /** 
+     * Map containing all DataCell.class-DataType tuples (essentially this
+     * stores for each DataCell implementation which DataValue interfaces
+     * it implements). Whenever getType(DataCell)
+     * is called and this map does not contain the corresponding DataType,
+     * the type will be created (using one of the DataType constructors) and
+     * added to this map. This map makes sure that the getType() method
+     * is fast and that there will be no duplicate DataType instances for 
+     * different instances of the DataCell implementation.
      */
-    private static final Icon ICON;
+    private static final Map<Class<? extends DataCell>, DataType> 
+        CLASS_TO_TYPE_MAP = 
+            new HashMap<Class<? extends DataCell>, DataType>();
+    
+    /** 
+     * Returns the runtime <code>DataType</code> for a <code>DataCell</code> 
+     * implementation. If no such <code>DataType</code> has been created 
+     * before (i.e. this method is called the first time with the current
+     * argument), the return value is created and hashed. The returned 
+     * <code>DataType</code> will claim to be compatible to all 
+     * <code>DataValue</code> classes the cell is implementing (i.e. what 
+     * <code>DataValue</code> interfaces does the <code>DataCell</code> at 
+     * hand implement) and will bundle meta information of the cell such as 
+     * renderer, icon, and comparators.
+     *  
+     * <p>This method is the only way to determine the <code>DataType</code>
+     * of a <code>DataCell</code>; however, most standard cell implementations
+     * have a static member for convenience access, e.g. 
+     * {@link de.unikn.knime.core.data.def.DoubleCell#TYPE 
+     * DoubleCell.TYPE}.
+     * 
+     * @see DataCell
+     * @see DataValue
+     * @see DataCell#getType()
+     * 
+     * @param cl The runtime class of DataCell for which the DataType 
+     * @return The corresponding type <code>cl</code>, never <code>null</code>.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     */
+    public static DataType getType(final Class<? extends DataCell> cl) {
+        DataType result = CLASS_TO_TYPE_MAP.get(cl);
+        if (result == null) {
+            result = new DataType(cl);
+            CLASS_TO_TYPE_MAP.put(cl, result);
+        }
+        return result;
+    }
 
-    /*
-     * try loading this icon, if it fails we use null in the probably silly
-     * assumtion everyone can deal with that
+    /** 
+     * Hashmap to retrieve the UtilityFactory for each DataValue interface. 
+     * Only used internally.
      */
-    static {
-        ImageIcon icon;
+    private static final Map<Class<? extends DataValue>, UtilityFactory> 
+        VALUE_CLASS_TO_UTILITY = 
+            new HashMap<Class<? extends DataValue>, UtilityFactory>();
+    
+    /** Internal access method to determine the preferred DataValue class to
+     * a given DataCell implemenation. This method tries to invoke a static 
+     * method on the argument with the following signature
+     * <pre>
+     *   public static Class<? extends DataValue> getPreferredValueClass()
+     * </pre>
+     * If no such method exists, this method silently returns null. If it 
+     * exists but has the wrong scope or return value, a warning message is 
+     * logged and null is returned. 
+     * @param cl The runtime class of the DataCell.
+     * @return Its preferred value interface or null.
+     */
+    private static Class<? extends DataValue> getPreferredValueClassFor(
+            final Class<? extends DataCell> cl) {
+        Exception exception = null;
         try {
-            ClassLoader loader = DataCell.class.getClassLoader();
-            String path = DataCell.class.getPackage().getName().replace('.',
-                    '/');
-            icon = new ImageIcon(loader.getResource(path
-                    + "/icon/defaulticon.png"));
-        } catch (Exception e) {
-            icon = null;
+            Method method = cl.getMethod("getPreferredValueClass");
+            Class<? extends DataValue> result = 
+                (Class<? extends DataValue>)method.invoke(null);
+            LOGGER.debug(result.getSimpleName() + " is the preferred value "
+                    + "class of cell implementation " + cl.getSimpleName() 
+                    + ", making sanity check");
+            if (getUtilityFor(result) != null) {
+                return result;
+            } else {
+                LOGGER.coding("Invalid preferred value class for DataCell \""
+                        + cl.getSimpleName() + "\": no valid meta information "
+                        + "for \"" + result.getSimpleName() + "\" available.");
+                return null;
+            }
+        } catch (NoSuchMethodException nsme) {
+            // no such method - perfectly ok, ignore it.
+            LOGGER.debug("Class \"" + cl.getSimpleName() + "\" doesn't " 
+                    + "have a default value class (it does not implement "
+                    + "a static method \"getPreferredValueClass()\").");
+            return null;
+        } catch (InvocationTargetException ite) {
+            exception = ite;
+        } catch (NullPointerException npe) {
+            exception = npe;
+        } catch (IllegalAccessException iae) {
+            exception = iae;
+        } catch (ClassCastException cce) {
+            exception = cce;
         }
-        ICON = icon;
-    }
-
-    /*
-     * The missing cell for this type. All derived types should implement it in
-     * a similar way to return this singleton in the getMissingCell) method.
-     */
-    private DataCell m_missing = new DataCell() {
-        @Override
-        public DataType getType() {
-            return DataType.this;
+        if (exception != null) {
+            LOGGER.coding("Class \"" + cl.getSimpleName() + " has a problem " 
+                    + "with the static method \"getPreferredValueClass\", " 
+                    + "Caught an " + exception.getClass().getSimpleName(), 
+                    exception);
         }
-
-        @Override
-        public boolean isMissing() {
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return "?";
-        }
-
-        @Override
-        public boolean equalsDataCell(final DataCell dc) {
-            // guaranteed not to be called on and with a missing cell.....
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return toString().hashCode();
-        }
-    };
-
-    /*
-     * the String representation comparator we fall back to if no other is
-     * available.
-     */
-    private static final DataCellComparator FALLBACK_COMP = 
-        new DataCellComparator() {
-        @Override
-        protected int compareDataCells(final DataCell c1, final DataCell c2) {
-            return c1.toString().compareTo(c2.toString());
-        }
-    };
-
-    // the list of compatible DataType objects.
-    private final ArrayList<DataType> m_typeList;
-
-    /**
-     * Creates a new type with an empty list of compatible types.
-     */
-    protected DataType() {
-        m_typeList = new ArrayList<DataType>();
-    }
-
-    /**
-     * Creates a new type with given list of compatible types. Only used to
-     * create super types with no native type.
-     * 
-     * @param typeList The list of compatible types.
-     * @throws ClassCastException If one of objects in the list is not of type
-     *             <code>DataType</code>.
-     * 
-     * @see #addCompatibleType(DataType)
-     */
-    private DataType(final List<DataType> typeList) {
-        m_typeList = new ArrayList<DataType>();
-        for (DataType t : typeList) {
-            addCompatibleType(t);
-        }
-    }
-
-    /*
-     * checks if this type has a native value. If not it's a constructed super
-     * type
-     */
-    private boolean isNativeType() {
-        return !isNonNativeType();
-    }
-
-    /* checks if this type is a constructed super type */
-    private boolean isNonNativeType() {
-        return this.getClass() == DataType.class;
-    }
-
-    /**
-     * Adds a compatible type to this type. Use this in the constructor of any
-     * derived DataType to add the types associated with the value interfaces
-     * the data cell of this type implements.
-     * 
-     * @param type The <code>DataType</code> to add.
-     * @throws NullPointerException If the given type is <code>null</code>.
-     * @throws IllegalArgumentException if this native type is the same as the
-     *             given native type.
-     */
-    protected final void addCompatibleType(final DataType type) {
-
-        // do not add a non-native type to your list!
-        if (type.isNonNativeType()) {
-            throw new IllegalArgumentException("Don't add a non-native type"
-                    + " to the list of compatible types");
-        }
-        // do not add your own type to the list of compatible types
-        if (type.getNativeValue().equals(this.getNativeValue())) {
-            throw new IllegalArgumentException("Don't add own native type to "
-                    + "the list of compatible types");
-        }
-        // don't create cycles in the compatibility graph
-        if (type.isCompatible(this.getNativeValue())) {
-            throw new IllegalArgumentException("Can't make '" + type
-                    + "' compatible to '" + this + "'. It would create a cycle"
-                    + " in the compatibility graph.");
-        }
-        m_typeList.add(type);
-    }
-
-    /**
-     * Derived classes must override this and return their native value
-     * interface, i.e. the value interface class for which this type has been
-     * introduced. Please overwrite and never return <code>null</code>!
-     * 
-     * @return native value interface class
-     */
-    protected Class<? extends DataValue> getNativeValue() {
-        assert false; // override this in derived classes!
         return null;
     }
 
-    /**
-     * Derived classes should override this and provide a comparator that
-     * compares datacells of their native type. If null is returned a comparator
-     * of any compatible type will be used instead.
-     * 
-     * @return a comparator to compare data cells of the native type, or null if
-     *         a comparator of a compatible type is as good.
+    /** Determines the UtilityFactory to a given DataValue implementation. 
+     * This method tries to access a static field in the DataValue class: 
+     * <pre>
+     *   public static final UtilityFactory UTILITY;
+     * </pre>
+     * If no such field exists, this method returns the factory of one of the 
+     * super interfaces (if everything fails, DataValue will have a correct 
+     * implemenation). If it exists but has the wrong scope or modifiers, 
+     * a warning message is logged and the member of one of the super interface
+     * is returned.
+     * @param cl The runtime class of the DataCell.
+     * @return The utility factory given in the cell implementation.
      */
-    protected DataCellComparator getNativeComparator() {
-        return null;
+    public static UtilityFactory getUtilityFor(
+        final Class<? extends DataValue> cl) {
+        UtilityFactory result = VALUE_CLASS_TO_UTILITY.get(cl);
+        if (result == null) {
+            Exception exception = null;
+            try {
+                // TODO: use super interface if the current field has
+                // wrong modifiers or has wrong class.
+                Field typeField = cl.getField("UTILITY");
+                Object typeObject = typeField.get(null);
+                result = (DataValue.UtilityFactory)typeObject;
+            } catch (NoSuchFieldException nsfe) {
+                exception = nsfe;
+            } catch (NullPointerException npe) {
+                exception = npe;
+            } catch (IllegalAccessException iae) {
+                exception = iae;
+            } catch (ClassCastException cce) {
+                exception = cce;
+            }
+            if (exception != null) {
+                LOGGER.coding("Class \"" + cl.getSimpleName()
+                        + "\" implements DataValue interface \""
+                        + cl.getSimpleName() + "\" but seems to have a problem "
+                        + "with the static field \"UTILITY\"",  exception);
+            }
+            VALUE_CLASS_TO_UTILITY.put(cl, result);
+        }
+        return result;
+    }
+    
+    private static final Map<Class<? extends DataCell>, DataCellSerializer>
+        CLASS_TO_SERIALIZER_MAP =
+            new HashMap<Class<? extends DataCell>, DataCellSerializer>();
+
+    /**
+     * Get a DataCellSerializer for the runtime class of a DataCell or 
+     * <code>null</code> if not supported. The DataCellSerializer is defined
+     * through a static access method in DataCell. If no such method exists or
+     * the method can't be invoked (using reflection), this method returns 
+     * <code>null</code> and ordinary java serialization needs to be used for
+     * storing/loading the cell. See also the class documentation of 
+     * {@link DataCell} for more information on the static access method. 
+     * @param <T> The runtime class of the the DataCell.
+     * @param cl The datacell's class
+     * @return The DataCellSerializer defined in the DataCell implementation
+     * or <code>null</code> if no such serializer is available.
+     */
+    @SuppressWarnings("unchecked")
+    public static final <T extends DataCell> 
+        DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
+        if (CLASS_TO_SERIALIZER_MAP.containsKey(cl)) {
+            return CLASS_TO_SERIALIZER_MAP.get(cl);
+        }
+        DataCellSerializer<T> result = null;
+        Exception exception = null;
+        try {
+            Method method = cl.getMethod("getCellSerializer");
+            Class rType = method.getReturnType();
+            /* The following test realizes
+             * DataCellSerializer<T>.class.isAssignableFrom(rType).
+             * Unfortunately one can't check the generic(!) return type as
+             * above since the type information is lost at compile time.
+             * We have to make sure here that the runtime class of the return
+             * value matches the class information of the DataCell class as
+             * DataCells may potentially be overwritten and we do not accept
+             * the implementation of the superclass as we lose information
+             * of the more specialized class. 
+             */ 
+            boolean isAssignable =
+                DataCellSerializer.class.isAssignableFrom(rType);
+            Type genType = method.getGenericReturnType();
+            boolean hasRType = isAssignable && isCellSerializer(rType, cl);
+            hasRType |= isAssignable && isCellSerializer(genType, cl);
+            if (isAssignable && !hasRType) {
+                Type[] ins = rType.getGenericInterfaces();
+                for (int i = 0; i < ins.length && !hasRType; i++) {
+                    hasRType = isCellSerializer(ins[i], cl);
+                }
+            }
+            if (!hasRType) {
+                LOGGER.coding("Class \"" + cl.getSimpleName() + "\" defines " 
+                        + "method \"getCellSerializer\" but the method has " 
+                        + "the wrong return type (\"" 
+                        + method.getGenericReturnType() + "\", expected \"" 
+                        + DataCellSerializer.class.getName() + "<" 
+                        + cl.getName() + ">\"); using serialization instead.");
+            } else {
+                Object typeObject = method.invoke(null);
+                result = (DataCellSerializer<T>)typeObject;
+            }
+        } catch (NoSuchMethodException nsme) {
+            exception = nsme;
+        } catch (InvocationTargetException ite) {
+            exception = ite;
+        } catch (NullPointerException npe) {
+            exception = npe;
+        } catch (IllegalAccessException iae) {
+            exception = iae;
+        } catch (ClassCastException cce) {
+            exception = cce;
+        }
+        if (exception != null) {
+            LOGGER.coding("Class \"" + cl.getSimpleName()
+                    + "\" implements DataValue interface \""
+                    + cl.getSimpleName() + "\" but seems to have a "
+                    + "problem with the static field \"UTILITY\"", exception);
+            result = null;
+        }
+        CLASS_TO_SERIALIZER_MAP.put(cl, result);
+        return result;
+    }
+    
+    /** Helper method that checks if the passed Type is a parameterized
+     * type (like DataCellSerializer&lt;someType&gt; and that is assignable
+     * from the given cell class. This method is used to check if the return
+     * class of getCellSerializer in a DataCell has the correct signature.
+     */
+    private static boolean isCellSerializer(
+            final Type c, final Class<? extends DataCell> cellClass) {
+        boolean b = c instanceof ParameterizedType;
+        if (b) {
+            ParameterizedType parType = (ParameterizedType)c;
+            Type[] args = parType.getActualTypeArguments();
+            b = b && args.length >= 1;
+            b = b && args[0] instanceof Class;
+            b = b && cellClass.isAssignableFrom((Class)args[0]);
+        }
+        return b;
+    }
+    
+    /** Clones a given DataType but changes its preferred value class. The
+     * returned DataType will be compatible to all value classes the given 
+     * argument is compatible to but will have a different ordering in 
+     * comparators, renderer and so on. The returned value may or may not be 
+     * equal to the <code>from</code> DataType depending on the preferred value
+     * class of <code>from</code> and will be created newly 
+     * (no caching of DataTypes is done).
+     * 
+     * <p>This method is being used in nodes which change the column types in
+     * order to get different renderers etc.
+     * @param from The DataType to clone.
+     * @param preferred The new preferred value class.
+     * @return A cloned new DataType with the given preferred value class.
+     * @throws IllegalArgumentException 
+     *  If <code>from.isCompatible(preferred)</code> returns <code>false</code>.
+     * @throws NullPointerException If any argument is <code>null</code>.
+     */
+    public static DataType cloneChangePreferredValue(final DataType from,
+            final Class<? extends DataValue> preferred) {
+        return new DataType(from, preferred);
+    }
+    
+    /**
+     * A cell representing a missing data cell with no value. The type
+     * of the returned data cell will be compatible to any DataValue interface
+     * (altough you can't cast the returned cell to the value) and will have
+     * default icons, renderers and comparators.
+     * @return Singleton of a missing cell.
+     * 
+     */
+    public static DataCell getMissingCell() {
+        return MissingCell.INSTANCE;
+    }
+    
+    /** List of all implemented DataValue interfaces. */
+    private final List<Class<? extends DataValue>> m_valueClasses;
+    /** Flag if the first element in m_valueClasses contains the 
+     * preferred type. */
+    private final boolean m_hasPreferredValueClass;
+    /** Cell class, used, e.g. for toString() method. */
+    private final Class<? extends DataCell> m_cellClass;
+
+    /**
+     * Creates a new type for the DataCell being passed. This implementation
+     * determines all DataValue interfaces that the cell is implementing and
+     * also retrieves their meta information. This constructor is used by
+     * the static getType() method.
+     */
+    private DataType(final Class<? extends DataCell> cl) {
+        // all interfaces that cl implements
+        Class[] interfaces = cl.getInterfaces();
+        // filter for classes that extend DataValue
+        LinkedHashSet<Class<? extends DataValue>> valueClasses = 
+            new LinkedHashSet<Class<? extends DataValue>>();
+        for (Class c : interfaces) {
+            if (DataValue.class.isAssignableFrom(c)) {
+                Class<? extends DataValue> cv = (Class<? extends DataValue>)c;
+                UtilityFactory utitlity = getUtilityFor(cv);
+                if (utitlity != null) {
+                    valueClasses.add(cv);
+                }
+            }
+        }
+        Class<? extends DataValue> preferred = getPreferredValueClassFor(cl);
+        if (preferred != null && !valueClasses.contains(preferred)) {
+            LOGGER.coding("Class \"" + cl.getSimpleName() + "\" declares \"" 
+                    + preferred + "\" as its preferred value class but does " 
+                    + "not implement the interface!");
+        }
+        m_valueClasses = new ArrayList<Class<? extends DataValue>>();
+        m_hasPreferredValueClass = preferred != null;
+        if (m_hasPreferredValueClass) {
+            m_valueClasses.add(preferred);
+            valueClasses.remove(preferred);
+        }
+        m_valueClasses.addAll(valueClasses);
+        m_cellClass = cl;
+    }
+    
+    /** Determines the list of compatible value interfaces as intersection of
+     * the two arguments. This constructor is used by the 
+     * getCommonSuperTypeOf method.
+     */
+    private DataType(final DataType type1, final DataType type2) {
+        // preferred class must match, if any
+        m_hasPreferredValueClass =  
+            type1.m_hasPreferredValueClass && type2.m_hasPreferredValueClass
+            && type1.m_valueClasses.get(0).equals(type2.m_valueClasses);
+        LinkedHashSet<Class<? extends DataValue>> hash = 
+            new LinkedHashSet<Class<? extends DataValue>>();
+        hash.addAll(type1.m_valueClasses);
+        hash.addAll(type2.m_valueClasses);
+        m_valueClasses = new ArrayList<Class<? extends DataValue>>(hash);
+        m_cellClass = null;
+    }
+    
+    /** Constructor that is used when the preferred value class shall change
+     * in the given DataType. This DataType is typically never assigned
+     * to one particular DataCell class (otherwise the constroctur
+     * DataType(Class) would have been used) and therefore this type is not
+     * cached.
+     * @param type The type to clone.
+     * @param preferred The new preferred value class.
+     */
+    private DataType(final DataType type, 
+            final Class<? extends DataValue> preferred) {
+        if (!type.m_valueClasses.contains(preferred)) {
+            throw new IllegalArgumentException("Invalid preferred " 
+                    + "value class: " + preferred.getSimpleName());
+        }
+        m_cellClass = type.m_cellClass;
+        m_valueClasses = new ArrayList<Class<? extends DataValue>>();
+        m_valueClasses.add(preferred);
+        for (Class<? extends DataValue> c : type.m_valueClasses) {
+            if (!c.equals(preferred)) {
+                m_valueClasses.add(c);
+            }
+        }
+        m_hasPreferredValueClass = true;
     }
 
     /**
@@ -230,43 +450,39 @@ public class DataType implements Serializable {
      * @return An icon for this type.
      */
     public Icon getIcon() {
-        return ICON;
+        for (Class<? extends DataValue> cl : m_valueClasses) {
+            UtilityFactory fac = getUtilityFor(cl);
+            Icon icon = fac.getIcon();
+            if (icon != null) {
+                return icon;
+            }
+        }
+        assert false : "Couldn't find proper icon.";
+        return DataValue.UTILITY.getIcon(); 
     }
-
-    /**
-     * Get all renderers this type natively supports. Derived classes should
-     * override this method to provide their own renderer family for the native
-     * value class of this type.
-     * 
-     * <p>
-     * Views that rely on renderer implementations will get a list of all
-     * available renderer by invoking <code>getRenderer(DataColumnSpec)</code>
-     * which makes sure that all renderer implementations of compatible types
-     * and this native type are returned.
-     * 
-     * @param spec The column spec to the column for which the renderer will be
-     *            used. Most of the renderer implementations won't need column
-     *            domain information but some do. For instance a class that
-     *            renders the double value in the column according to the
-     *            min/max values in the column domain.
-     * @return <code>null</code>
-     */
-    protected DataCellRendererFamily getNativeRenderer(
-            final DataColumnSpec spec) {
-        // avoid compiler warnings as spec is never read locally
-        assert spec == spec;
+    
+    /** Get the preferred value class of the current DataType or 
+     * <code>null</code> if not available. The preferred value class is
+     * defined through the DataCell implementation. This method returns
+     * <code>null</code> if either the cell implementation lacks the 
+     * information or this DataType has been created as an intersection of
+     * two types whose preferred value classes do not match.
+     * @return The preferred value class or <code>null</code>.  
+     */ 
+    public Class<? extends DataValue> getPreferredValueClass() {
+        if (m_hasPreferredValueClass) {
+            return m_valueClasses.get(0);
+        }
         return null;
     }
 
     /**
      * Returns the set of all renderers that are available for this DataType.
-     * The returned DataCellRendererFamily will contain all renderers that are
-     * either natively supported or available through the compatible types. If
-     * no renderer was declared by the compatible types nor the implementation
-     * of this type ( <code>getNativeRenderer(DataColumnSpec)</code> has not
-     * been overridden), this method will make sure that at least a default
-     * renderer (using the <code>DataCell</code>'s<code>toString()</code>
-     * method) is returned.
+     * The returned DataValueRendererFamily will contain all renderers that are
+     * supported or available through the compatible DataValue interfaces. If
+     * no renderer was declared by the DataValue interfaces, this method will 
+     * make sure that at least a default renderer (using the 
+     * <code>DataCell</code>'s<code>toString()</code> method) is returned.
      * 
      * @param spec The column spec to the column for which the renderer will be
      *            used. Most of the renderer implementations won't need column
@@ -275,34 +491,21 @@ public class DataType implements Serializable {
      *            min/max values in the column domain.
      * @return All renderers that are available for this DataType.
      */
-    public final DataCellRendererFamily getRenderer(final DataColumnSpec spec) {
-        ArrayList<DataCellRendererFamily> list = 
-            new ArrayList<DataCellRendererFamily>();
-        fillNativeRenderer(list, this, spec);
+    public final DataValueRendererFamily getRenderer(final DataColumnSpec spec) {
+        ArrayList<DataValueRendererFamily> list = 
+            new ArrayList<DataValueRendererFamily>();
+        // first add the preferred value class, if any
+        for (Class<? extends DataValue> cl : m_valueClasses) {
+            UtilityFactory fac = getUtilityFor(cl);
+            DataValueRendererFamily fam = fac.getRendererFamily(spec);
+            if (fam != null) {
+                list.add(fam);
+            }
+        }
         if (list.isEmpty()) {
-            list.add(new DefaultDataCellRendererFamily());
+            list.add(new DefaultDataValueRendererFamily());
         }
         return new SetOfRendererFamilies(list);
-    }
-
-    /**
-     * Helper function that iterates in a depth first search manner over all
-     * compatible types and add their respective native renderer to the argument
-     * list.
-     * 
-     * @param list The list containing all renderer
-     * @param type The type to start from.
-     */
-    private static void fillNativeRenderer(
-            final ArrayList<DataCellRendererFamily> list, final DataType type,
-            final DataColumnSpec spec) {
-        DataCellRendererFamily f = type.getNativeRenderer(spec);
-        if (f != null) {
-            list.add(f);
-        }
-        for (DataType t : type.m_typeList) {
-            fillNativeRenderer(list, t, spec);
-        }
     }
 
     /**
@@ -316,20 +519,16 @@ public class DataType implements Serializable {
      */
     public final boolean isCompatible(
             final Class<? extends DataValue> valueClass) {
-        boolean result = false;
-        if (valueClass == null) {
-            return false;
+        // The DataType for the MissingCell is compatible to everything.
+        if (m_cellClass != null && m_cellClass.equals(MissingCell.class)) {
+            return true;
         }
-        if (isNativeType()) {
-            // check compatibility against this if this is a native type
-            result = valueClass.isAssignableFrom(getNativeValue());
+        for (Class<? extends DataValue> cl : m_valueClasses) {
+            if (valueClass.isAssignableFrom(cl)) {
+                return true;
+            }
         }
-
-        for (Iterator it = m_typeList.iterator(); !result && it.hasNext();) {
-            DataType next = (DataType)it.next();
-            result = next.isCompatible(valueClass);
-        }
-        return result;
+        return false;
     }
 
     /**
@@ -349,54 +548,34 @@ public class DataType implements Serializable {
      * @return true if this type is a (one of many possible) supertype of the
      *         argument type.
      */
-    public final boolean isOneSuperTypeOf(final DataType type) {
+    public final boolean isASuperTypeOf(final DataType type) {
         if (type == this) {
-            // see if we get off easy
+            // we get out of here easy
             return true;
         }
-
         boolean result = true;
-
-        if (this.isNativeType()) {
-            // argument must contain us
-            if (!type.containsType(this)) {
-                return false;
+        for (Class<? extends DataValue> cl : m_valueClasses) {
+            if (!type.isCompatible(cl)) {
+                result = false;
+                break;
             }
         }
-
-        // and all other types must be in the argument type as well
-        for (Iterator it = m_typeList.iterator(); result && it.hasNext();) {
-            if (!type.containsType((DataType)it.next())) {
-                return false;
-            }
-        }
-        return true;
-
+        return result;
     }
-
-    /*
-     * returns true if the argument is in our compatibility list or if it
-     * matches our native value.
-     */
-    private boolean containsType(final DataType t) {
-        if (this.isNativeType()
-                && (this.getNativeValue().equals(t.getNativeValue()))) {
-            return true;
-        }
-        return this.m_typeList.contains(t);
-    }
-
+    
     /**
-     * @return A cell representing a missing data cell with no value. The type
-     *         of the returned data cell is unknown (inner class).
-     * 
-     * Note: If you override this - and you should - it would be preferable to
-     * create only one missing cell instance per type.
+     * the String representation comparator we fall back to if no other is
+     * available.
      */
-    public DataCell getMissingCell() {
-        return m_missing;
-    }
-
+    private static final DataCellComparator FALLBACK_COMP = 
+        new DataCellComparator() {
+        @Override
+        protected int compareDataCells(
+                final DataCell c1, final DataCell c2) {
+            return c1.toString().compareTo(c2.toString());
+        }
+    };
+    
     /**
      * @return a comparator for data cell objects of this type. Will return the
      *         native comparator (if provided), or any of the compatible types.
@@ -404,51 +583,27 @@ public class DataType implements Serializable {
      *         representations will be used
      */
     public final DataCellComparator getComparator() {
-
-        DataCellComparator comp = getAnyNativeComparator();
-        if (comp != null) {
-            return comp;
-        }
-        // no comparator...use the default string representation comparator.
-        return FALLBACK_COMP;
-    }
-    
-    /** 
-     * Get a copy of all <code>DataType</code>s to which this type is 
-     * compatible to. The returned List is non-modifiable, subsequent changes 
-     * to the list will fail with an exception. This list does not contain a 
-     * reference to this type (altough it is self-compatible) and does not 
-     * contain duplicates. 
-     * @return A non-modifiable list of compatible types.
-     * @see #addCompatibleType(DataType)
-     * @see Collections#unmodifiableList(java.util.List)
-     */
-    public final List<DataType> getCompatibleTypes() {
-        return Collections.unmodifiableList(m_typeList);
-    }
-
-    /*
-     * this returns either the own native comparator or any native comparator of
-     * any compatible type. It will return null if no native comparator is
-     * avaliable. It will not fall back to the default string comparator.
-     */
-    private final DataCellComparator getAnyNativeComparator() {
-
-        DataCellComparator comp = getNativeComparator();
-
-        if (comp != null) {
-            return comp;
-        }
-
-        // if we didn't get our native ask all compatibles type for one
-        for (DataType t : m_typeList) {
-            comp = t.getAnyNativeComparator();
-            if (comp != null) {
-                return comp;
+        for (Class<? extends DataValue> cl : m_valueClasses) {
+            UtilityFactory fac = getUtilityFor(cl);
+            DataCellComparator comparator = fac.getComparator();
+            if (comparator != null) {
+                return comparator;
             }
         }
+        return FALLBACK_COMP; 
+    }
 
-        return null;
+    /**
+     * Get a copy of all <code>DataType</code>s to which this type is
+     * compatible to. The returned List is non-modifiable, subsequent changes to
+     * the list will fail with an exception. This list does not contain a
+     * reference to this type (altough it is self-compatible) and does not
+     * contain duplicates.
+     * 
+     * @return A non-modifiable list of compatible types.
+     */
+    public final List<Class<? extends DataValue>> getValueClasses() {
+        return Collections.unmodifiableList(m_valueClasses);
     }
 
     /**
@@ -476,101 +631,52 @@ public class DataType implements Serializable {
             throw new IllegalArgumentException("Cannot build super type of"
                     + " a null type");
         }
-        // if identical?
         if (type1.equals(type2)) {
             return type1;
         }
-
-        // is one the super type over the other?
-
-        boolean type2isSuper = true;
-        // let's see if type1 has everything of type2
-        if (type2.isNativeType() && !type1.containsType(type2)) {
-            type2isSuper = false;
-        }
-        if (type2isSuper) {
-            for (DataType t2 : type2.m_typeList) {
-                if (!type1.containsType(t2)) {
-                    type2isSuper = false;
-                    break;
-                }
-            }
-        }
-        if (type2isSuper) {
-            return type2;
-        }
-
-        boolean type1isSuper = true;
-        // for type1 to be supertype type2 must contain everything type1 has
-        if (type1.isNativeType() && !type2.containsType(type1)) {
-            type1isSuper = false;
-        }
-        if (type1isSuper) {
-            for (DataType t1 : type1.m_typeList) {
-                if (!type2.containsType(t1)) {
-                    type1isSuper = false;
-                    break;
-                }
-            }
-        }
-        if (type1isSuper) {
+        if (type1.isASuperTypeOf(type2)) {
             return type1;
         }
+        if (type2.isASuperTypeOf(type1)) {
+            return type2;
+        }
+        return new DataType(type1, type2);
 
-        // now construct the super type containing all types of the intersection
-        ArrayList<DataType> commonTypes = new ArrayList<DataType>();
-        if (type2.m_typeList.contains(type1)) {
-            assert type1.isNativeType(); // should only have added native
-                                            // types
-            commonTypes.add(type1);
-        }
-        if (type1.m_typeList.contains(type2)) {
-            assert type2.isNativeType(); // should only have added native
-                                            // types
-            commonTypes.add(type2);
-        }
-        for (DataType currType : type1.m_typeList) {
-            if (type2.m_typeList.contains(currType)) {
-                commonTypes.add(currType);
-            }
-        }
-        return new DataType(commonTypes);
     }
 
     /**
-     * Types are equal, if their native type match (if they are native types)
-     * AND if they are compatible to exactly the same types.
+     * Types are equal if the set of compatible value classes matches (ordering
+     * does not matter) and both types have an preferred value class and the 
+     * class is the same or both do not have a preferred value class. 
      * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(final Object o) {
-        if (o == this) {
+    public boolean equals(final Object other) {
+        if (other == this) {
             return true;
         }
-        if (!(o instanceof DataType)) {
+        if (!(other instanceof DataType)) {
             return false;
         }
-        DataType otherType = (DataType)o;
-        if ((otherType.isNativeType() && this.isNonNativeType())
-                || (otherType.isNonNativeType() && this.isNativeType())) {
+        DataType o = (DataType)other;
+        // both have a preferred value or both do not. 
+        if (m_hasPreferredValueClass != o.m_hasPreferredValueClass) {
             return false;
         }
-        // now both are either native or non-native
-        if (isNativeType()
-                && !this.getNativeValue().equals(otherType.getNativeValue())) {
-            // if they are native, native type must match.
-            return false;
-        }
-        if (this.m_typeList.size() != otherType.m_typeList.size()) {
-            return false;
-        }
-        // assuming a list doesn't contain double entries a simple (one-sided)
-        // contains should do (as they are of same size)
-        for (DataType t : m_typeList) {
-            if (!otherType.m_typeList.contains(t)) {
+        // if they do, both preferred value classes must match
+        if (m_hasPreferredValueClass) {
+            Class<? extends DataValue> myPreferred = m_valueClasses.get(0);
+            Class<? extends DataValue> oPreferred = o.m_valueClasses.get(0);
+            if (!myPreferred.equals(oPreferred)) {
                 return false;
             }
+        }
+        if (!m_valueClasses.containsAll(o.m_valueClasses)) {
+            return false;
+        }
+        if (!o.m_valueClasses.containsAll(m_valueClasses)) {
+            return false;
         }
         return true;
     }
@@ -580,24 +686,69 @@ public class DataType implements Serializable {
      */
     @Override
     public int hashCode() {
-        if (isNativeType()) {
-            return getNativeValue().hashCode();
-        } else {
-            int result = 0;
-            for (DataType t : m_typeList) {
-                result ^= t.getNativeValue().hashCode();
-            }
-            return result;
+        int result = Boolean.valueOf(m_hasPreferredValueClass).hashCode();
+        for (Class<? extends DataValue> cl : m_valueClasses) {
+            result ^= cl.hashCode();
         }
+        return result;
     }
 
     /**
-     * Returns "Non-native DataType".
+     * Returns the simple name of the cell class (if any) or "Non-native" +
+     * the abbreviations of all comptabible values classes.
      * 
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return "Non-native DataType";
+        if (m_cellClass != null) {
+            return m_cellClass.getSimpleName(); 
+        }
+        String valuesToString = Arrays.toString(m_valueClasses.toArray());
+        return "Non-Native " + valuesToString;
+    }
+    
+    /**
+     * Implemenation of the missing cell. This datacell does not implement
+     * any DataValue interfaces but is compatible to any one that its type
+     * is ask for. This class is the very only implementation whose 
+     * isMissing() method returns true. 
+     */
+    private static final class MissingCell extends DataCell {
+        
+        /** Singleton to be used. */
+        static final MissingCell INSTANCE = new MissingCell();
+
+        /** No class available.
+         * @return DataValue.class
+         */
+        public static Class<? extends DataValue> getPreferredValueClass() {
+            return DataValue.class;
+        }
+        
+        /** Don't let anyone instantiate this class. */
+        private MissingCell() {
+        }
+        
+        @Override
+        boolean isMissingInternal() {
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "?";
+        }
+
+        @Override
+        public boolean equalsDataCell(final DataCell dc) {
+            // guaranteed not to be called on and with a missing cell.....
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
     }
 }

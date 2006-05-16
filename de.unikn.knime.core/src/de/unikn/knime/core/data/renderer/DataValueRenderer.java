@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*  
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -26,17 +24,18 @@ import javax.swing.table.TableCellRenderer;
 
 /**
  * General interface for classes that are able to render special derivates of
- * <code>DataCell</code>. 
+ * <code>DataValue</code>. 
  * 
  * <p>This interface extends <code>TableCellRenderer</code> and
  * <code>ListCellRenderer</code>. Thus, it can be easily used in lists and 
  * tables. The preferred way of instantiating an object of a renderer is to use
- * a <code>DataCellRendererFamily</code>.
+ * a <code>DataValueRendererFamily</code>.
  * 
- * @see de.unikn.knime.core.data.renderer.DataCellRendererFamily
+ * @see de.unikn.knime.core.data.DataValue
+ * @see de.unikn.knime.core.data.renderer.DataValueRendererFamily
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface DataCellRenderer extends TableCellRenderer, ListCellRenderer {
+public interface DataValueRenderer extends TableCellRenderer, ListCellRenderer {
     
     /** Get a description for this renderer implementation. It will serve 
      * to identify this renderer when the user has the choice of different

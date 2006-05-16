@@ -21,9 +21,14 @@
  */
 package de.unikn.knime.core.data.def;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataCellSerializer;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.FuzzyIntervalType;
+import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.data.FuzzyIntervalValue;
 
 /**
@@ -37,6 +42,34 @@ import de.unikn.knime.core.data.FuzzyIntervalValue;
 public final class DefaultFuzzyIntervalCell extends DataCell implements
         FuzzyIntervalValue {
 
+    /** Convenience access member for 
+     * <code>DataType.getType(DefaultFuzzyIntervalCell.class)</code>. 
+     * @see DataType#getType(Class)
+     */
+    public static final DataType TYPE = 
+        DataType.getType(DefaultFuzzyIntervalCell.class);
+
+    /** Returns the preferred value class of this cell implementation. 
+     * This method is called per reflection to determine which is the 
+     * preferred renderer, comparator, etc.
+     * @return FuzzyIntervalValue.class
+     */
+    public static final Class<? extends DataValue> getPreferredValueClass() {
+        return FuzzyIntervalValue.class;
+    }
+    
+    private static final FuzzyIntervalSerializer SERIALIZER = 
+        new FuzzyIntervalSerializer();
+    
+    /** Returns the factory to read/write DataCells of this class from/to
+     * a DataInput/DataOutput. This method is called via reflection.
+     * @return A serializer for reading/writing cells of this kind.
+     * @see DataCell
+     */
+    public static final FuzzyIntervalSerializer getCellSerializer() {
+        return SERIALIZER;
+    }
+    
     /** Minimum support value. */
     private final double m_a;
 
@@ -72,13 +105,6 @@ public final class DefaultFuzzyIntervalCell extends DataCell implements
         m_b = b;
         m_c = c;
         m_d = d;
-    }
-
-    /**
-     * @see DataCell#getType()
-     */
-    public DataType getType() {
-        return FuzzyIntervalType.FUZZY_INTERVAL_TYPE;
     }
 
     /**
@@ -166,6 +192,35 @@ public final class DefaultFuzzyIntervalCell extends DataCell implements
      */
     public String toString() {
         return "<" + m_a + "," + m_b + "," + m_c + "," + m_d + ">";
+    }
+
+    /** Factory for (de-)serializing a DefaultFuzzyIntervalCell. */
+    private static class FuzzyIntervalSerializer 
+        implements DataCellSerializer<DefaultFuzzyIntervalCell> {
+        
+        /**
+         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         */
+        public void serialize(final DefaultFuzzyIntervalCell cell, 
+                final DataOutput output) throws IOException {
+            output.writeDouble(cell.getMinSupport());
+            output.writeDouble(cell.getMinCore());
+            output.writeDouble(cell.getMaxCore());
+            output.writeDouble(cell.getMaxSupport());
+        }
+        
+        /**
+         * @see DataCellSerializer#deserialize(DataInput)
+         */
+        public DefaultFuzzyIntervalCell deserialize(
+                final DataInput input) throws IOException {
+            double minSupp = input.readDouble();
+            double minCore = input.readDouble();
+            double maxCore = input.readDouble();
+            double maxSupp = input.readDouble();
+            return new DefaultFuzzyIntervalCell(
+                    minSupp, minCore, maxCore, maxSupp);
+        }
     }
 
 }

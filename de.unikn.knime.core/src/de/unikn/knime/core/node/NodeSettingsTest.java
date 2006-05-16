@@ -31,12 +31,11 @@ import java.util.Set;
 import junit.framework.TestCase;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.FuzzyIntervalType;
-import de.unikn.knime.core.data.IntType;
-import de.unikn.knime.core.data.StringType;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
 import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.config.Config;
 
 /**
@@ -275,7 +274,7 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testDataCell() throws Exception {
         try {
-            SETT.addDataCell(null, new DefaultStringCell("null"));
+            SETT.addDataCell(null, new StringCell("null"));
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
@@ -284,26 +283,26 @@ public final class NodeSettingsTest extends TestCase {
         SETT.addDataCell(key, null);
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDataCell(key) == null);
-        DataCell nullCell = new DefaultStringCell("null");
+        DataCell nullCell = new StringCell("null");
         assertTrue(SETT.getDataCell(key, nullCell) == null);
         key = "kDataCell";
-        SETT.addDataCell(key, new DefaultStringCell("B"));
+        SETT.addDataCell(key, new StringCell("B"));
         assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataCell(key).equals(new DefaultStringCell("B")));
+        assertTrue(SETT.getDataCell(key).equals(new StringCell("B")));
         assertTrue(SETT.getDataCell(key, null).equals(
-                new DefaultStringCell("B")));
+                new StringCell("B")));
         key += "array";
-        SETT.addDataCellArray(key, new DataCell[]{new DefaultStringCell("T"),
-                new DefaultStringCell("P"), new DefaultStringCell("M")});
+        SETT.addDataCellArray(key, new DataCell[]{new StringCell("T"),
+                new StringCell("P"), new StringCell("M")});
         assertTrue(SETT.containsKey(key));
         DataCell[] a = SETT.getDataCellArray(key);
-        assertTrue(a[0].equals(new DefaultStringCell("T")));
-        assertTrue(a[1].equals(new DefaultStringCell("P")));
-        assertTrue(a[2].equals(new DefaultStringCell("M")));
+        assertTrue(a[0].equals(new StringCell("T")));
+        assertTrue(a[1].equals(new StringCell("P")));
+        assertTrue(a[2].equals(new StringCell("M")));
         a = SETT.getDataCellArray(key, new DataCell[0]);
-        assertTrue(a[0].equals(new DefaultStringCell("T")));
-        assertTrue(a[1].equals(new DefaultStringCell("P")));
-        assertTrue(a[2].equals(new DefaultStringCell("M")));
+        assertTrue(a[0].equals(new StringCell("T")));
+        assertTrue(a[1].equals(new StringCell("P")));
+        assertTrue(a[2].equals(new StringCell("M")));
         key = "kDataCell_array_0";
         SETT.addDataCellArray(key, new DataCell[0]);
         assertTrue(SETT.containsKey(key));
@@ -327,7 +326,7 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testDataType() throws Exception {
         try {
-            SETT.addDataType(null, StringType.STRING_TYPE);
+            SETT.addDataType(null, StringCell.TYPE);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
@@ -336,24 +335,24 @@ public final class NodeSettingsTest extends TestCase {
         SETT.addDataType(key, null);
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDataType(key) == null);
-        assertTrue(SETT.getDataType(key, StringType.STRING_TYPE) == null);
+        assertTrue(SETT.getDataType(key, StringCell.TYPE) == null);
         key = "kDataType";
-        SETT.addDataType(key, DoubleType.DOUBLE_TYPE);
+        SETT.addDataType(key, DoubleCell.TYPE);
         assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataType(key).equals(DoubleType.DOUBLE_TYPE));
-        assertTrue(SETT.getDataType(key, null).equals(DoubleType.DOUBLE_TYPE));
+        assertTrue(SETT.getDataType(key).equals(DoubleCell.TYPE));
+        assertTrue(SETT.getDataType(key, null).equals(DoubleCell.TYPE));
         key += "array";
-        SETT.addDataTypeArray(key, new DataType[]{DoubleType.DOUBLE_TYPE,
-                StringType.STRING_TYPE, IntType.INT_TYPE});
+        SETT.addDataTypeArray(key, new DataType[]{DoubleCell.TYPE,
+                StringCell.TYPE, IntCell.TYPE});
         assertTrue(SETT.containsKey(key));
         DataType[] a = SETT.getDataTypeArray(key);
-        assertTrue(a[0].equals(DoubleType.DOUBLE_TYPE));
-        assertTrue(a[1].equals(StringType.STRING_TYPE));
-        assertTrue(a[2].equals(IntType.INT_TYPE));
+        assertTrue(a[0].equals(DoubleCell.TYPE));
+        assertTrue(a[1].equals(StringCell.TYPE));
+        assertTrue(a[2].equals(IntCell.TYPE));
         a = SETT.getDataTypeArray(key, new DataType[0]);
-        assertTrue(a[0].equals(DoubleType.DOUBLE_TYPE));
-        assertTrue(a[1].equals(StringType.STRING_TYPE));
-        assertTrue(a[2].equals(IntType.INT_TYPE));
+        assertTrue(a[0].equals(DoubleCell.TYPE));
+        assertTrue(a[1].equals(StringCell.TYPE));
+        assertTrue(a[2].equals(IntCell.TYPE));
         key = "kDataType_array_0";
         SETT.addDataTypeArray(key, new DataType[0]);
         assertTrue(SETT.containsKey(key));
@@ -364,10 +363,10 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDataTypeArray(key) == null);
         key = "unknownDataType";
-        SETT.addDataType(key, FuzzyIntervalType.FUZZY_INTERVAL_TYPE);
+        SETT.addDataType(key, DefaultFuzzyIntervalCell.TYPE);
         assertTrue(SETT.containsKey(key));
         DataType unknownType = SETT.getDataType(key);
-        assertTrue(FuzzyIntervalType.FUZZY_INTERVAL_TYPE.equals(unknownType));
+        assertTrue(DefaultFuzzyIntervalCell.TYPE.equals(unknownType));
     }
 
     /**

@@ -21,35 +21,32 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Interface that most <code>DataType</code> implementations will implement.
- * It allows to save and load a <code>DataCell</code> to/from a 
- * DataOutput/DataInput. <code>DataCell</code> objects whose type implements
- * this interface are tremendously faster written and read from a stream than
- * using the slow java serialization technique. 
+ * Interface for proxies that can read/write specific <code>DataCell</code>
+ * implementations. Using DataCellSerializer is considerably faster than using 
+ * ordinary Java serialization. Objects of this class are returned in a static 
+ * method in a <code>DataCell</code> implementation. For furter details see the
+ * {@link de.unikn.knime.core.data.DataCell DataCell description} and the 
+ * <a href="doc-files/newtypes.html#newtypes">manual</a> on how to define 
+ * new types in KNIME.  
  * 
- * <p>Implementors can safely assume that <code>DataCell</code> objects
- * being passed to the serialize/deserialize method can be parsed as native
- * <code>DataValue</code>. These methods are never called with missing cells.
- *   
+ * @param <T> A DataCell implementation being read/written.
  * @author wiswedel, University of Konstanz
  */
-public interface DataCellSerializer {
+public interface DataCellSerializer<T extends DataCell> {
 
     /** Saves <code>cell</code> to the stream.
      * @param cell The cell to save.
      * @param out The place to write to.
-     * @throws IOException If writing fails for an unknown reason.
+     * @throws IOException If writing fails for an unknown (or known) reason.
      */
-    void serialize(final DataCell cell, DataOutput out) throws IOException;
+    void serialize(final T cell, DataOutput out) throws IOException;
 
     /** Loads a new instance of a <code>DataCell</code> from a DataInput. 
-     * The returned value must be a <code>DataCell</code> compatible to the 
-     * DataType, which implements this interface.
      * @param input The source to load from, never <code>null</code>.
      * @return A new DataCell instance.
      * @throws IOException If loading fails.
      */
-    DataCell deserialize(final DataInput input) throws IOException;
+    T deserialize(final DataInput input) throws IOException;
     
     
 }

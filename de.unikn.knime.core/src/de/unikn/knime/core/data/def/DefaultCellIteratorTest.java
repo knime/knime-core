@@ -37,7 +37,7 @@ public class DefaultCellIteratorTest extends TestCase {
     /** Test all methods in iterator. */
     public void testIterator() {
         double[] d = new double[]{1.0, 2.0, 3.0};
-        DataRow row = new DefaultRow(new DefaultStringCell("Key"), d);
+        DataRow row = new DefaultRow(new StringCell("Key"), d);
         Iterator<DataCell> it = row.iterator();
         int i = 0;
         while (it.hasNext()) {

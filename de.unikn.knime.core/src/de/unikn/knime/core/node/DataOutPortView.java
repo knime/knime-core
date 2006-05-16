@@ -33,9 +33,8 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.StringType;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.def.DefaultTable;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.tableview.TableView;
@@ -47,6 +46,7 @@ import de.unikn.knime.core.node.tableview.TableView;
  * @author Peter Ohl, University of Konstanz
  */
 final class DataOutPortView extends NodeOutPortView {
+    private static final long serialVersionUID = 2253483422757100346L;
 
     private final JTabbedPane m_tabs;
     
@@ -145,13 +145,13 @@ final class DataOutPortView extends NodeOutPortView {
         // for now we just display the pointer value.
         // Otherwise we would have to register as listener and recreate
         // the datatables completely each time something changes in the handlers
-        DataCell[] names = {new DefaultStringCell("ClassName"),
-                new DefaultStringCell("MemAddress"),
-                new DefaultStringCell("fullString")};
-        DataType[] types = {StringType.STRING_TYPE, StringType.STRING_TYPE,
-                StringType.STRING_TYPE};
+        DataCell[] names = {new StringCell("ClassName"),
+                new StringCell("MemAddress"),
+                new StringCell("fullString")};
+        DataType[] types = {StringCell.TYPE, StringCell.TYPE,
+                StringCell.TYPE};
         DataRow[] rows = new DataRow[1];
-        DataCell rowID = new DefaultStringCell("HiLiteHdlr");
+        DataCell rowID = new StringCell("HiLiteHdlr");
 
         if (hiLiteHdl != null) {
             String fullname = hiLiteHdl.toString();
@@ -160,14 +160,14 @@ final class DataOutPortView extends NodeOutPortView {
             String memAddress = hiLiteHdl.toString().substring(
                     hiLiteHdl.toString().indexOf('@'));
             rows[0] = new DefaultRow(rowID, new DataCell[]{
-                    new DefaultStringCell(classname),
-                    new DefaultStringCell(memAddress),
-                    new DefaultStringCell(fullname)});
+                    new StringCell(classname),
+                    new StringCell(memAddress),
+                    new StringCell(fullname)});
         } else {
             rows[0] = new DefaultRow(rowID, new DataCell[]{
-                    new DefaultStringCell("<null>"),
-                    new DefaultStringCell("<null>"),
-                    new DefaultStringCell("<null>")});
+                    new StringCell("<null>"),
+                    new StringCell("<null>"),
+                    new StringCell("<null>")});
         }
 
         return new DefaultTable(rows, names, types);
@@ -182,7 +182,7 @@ final class DataOutPortView extends NodeOutPortView {
             // colnames are the same than incoming, types are all StringTypes
             for (int c = 0; c < numOfCols; c++) {
                 colNames[c] = tSpec.getColumnSpec(c).getName();
-                colTypes[c] = StringType.STRING_TYPE;
+                colTypes[c] = StringCell.TYPE;
             }
             // get keys for ALL props in the table. Each will show in one row.
             HashSet<String> allKeys = new HashSet<String>();
@@ -198,7 +198,7 @@ final class DataOutPortView extends NodeOutPortView {
             DataRow[] rows = new DefaultRow[allKeys.size()];
             int rowIdx = 0;
             for (String key : allKeys) {
-                DataCell rowID = new DefaultStringCell(key);
+                DataCell rowID = new StringCell(key);
                 DataCell[] cells = new DataCell[numOfCols];
                 for (int c = 0; c < numOfCols; c++) {
                     String cellValue = "";
@@ -207,7 +207,7 @@ final class DataOutPortView extends NodeOutPortView {
                         cellValue = tSpec.getColumnSpec(c).getProperties()
                                 .getProperty(key);
                     }
-                    cells[c] = new DefaultStringCell(cellValue);
+                    cells[c] = new StringCell(cellValue);
                 }
                 rows[rowIdx++] = new DefaultRow(rowID, cells);
             }
@@ -216,9 +216,9 @@ final class DataOutPortView extends NodeOutPortView {
 
         } else {
             return new DefaultTable(EMPTY_ROW,
-                    new DataCell[]{new DefaultStringCell(
+                    new DataCell[]{new StringCell(
                             "No incoming table spec")},
-                    new DataType[]{StringType.STRING_TYPE});
+                    new DataType[]{StringCell.TYPE});
         }
 
     }
@@ -233,12 +233,12 @@ final class DataOutPortView extends NodeOutPortView {
             names = new DataCell[numCols];
             types = new DataType[numCols];
             for (int c = 0; c < numCols; c++) {
-                names[c] = new DefaultStringCell("Col_" + c);
-                types[c] = StringType.STRING_TYPE;
+                names[c] = new StringCell("Col_" + c);
+                types[c] = StringCell.TYPE;
             }
         } else {
-            names = new DataCell[]{new DefaultStringCell("nothing")};
-            types = new DataType[]{StringType.STRING_TYPE};
+            names = new DataCell[]{new StringCell("nothing")};
+            types = new DataType[]{StringCell.TYPE};
         }
 
         // now put the data we want to show in rows: name + type + each value
@@ -264,10 +264,10 @@ final class DataOutPortView extends NodeOutPortView {
             // Row[0]: first row displays the name of each column
             DataCell[] cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
-                cols[c] = new DefaultStringCell("<html><b>"
+                cols[c] = new StringCell("<html><b>"
                         + spec.getColumnSpec(c).getName().toString());
             }
-            rows[0] = new DefaultRow(new DefaultStringCell("<html><b>Name"),
+            rows[0] = new DefaultRow(new StringCell("<html><b>Name"),
                     cols);
 
             // Row[1]: second row displays type of column
@@ -275,10 +275,10 @@ final class DataOutPortView extends NodeOutPortView {
             for (int c = 0; c < numCols; c++) {
                 String typename = spec.getColumnSpec(c).getType().getClass()
                         .getName();
-                cols[c] = new DefaultStringCell("<html><b>"
+                cols[c] = new StringCell("<html><b>"
                         + typename.substring(typename.lastIndexOf('.') + 1));
             }
-            rows[1] = new DefaultRow(new DefaultStringCell("<html><b>Type"),
+            rows[1] = new DefaultRow(new StringCell("<html><b>Type"),
                     cols);
             // Row[2]: displays the lower bound of the domain
             cols = new DataCell[numCols];
@@ -288,9 +288,9 @@ final class DataOutPortView extends NodeOutPortView {
                     boundText = spec.getColumnSpec(c).getDomain()
                             .getLowerBound().toString();
                 }
-                cols[c] = new DefaultStringCell(boundText);
+                cols[c] = new StringCell(boundText);
             }
-            rows[2] = new DefaultRow(new DefaultStringCell(
+            rows[2] = new DefaultRow(new StringCell(
                     "<html><b>lower bound"), cols);
             // Row[3]: shows the upper bound value of the domain
             cols = new DataCell[numCols];
@@ -300,9 +300,9 @@ final class DataOutPortView extends NodeOutPortView {
                     boundText = spec.getColumnSpec(c).getDomain()
                             .getUpperBound().toString();
                 }
-                cols[c] = new DefaultStringCell(boundText);
+                cols[c] = new StringCell(boundText);
             }
-            rows[3] = new DefaultRow(new DefaultStringCell(
+            rows[3] = new DefaultRow(new StringCell(
                     "<html><b>upper bound"), cols);
 
             // from row 4: show the nominal values of that column. If any.
@@ -318,7 +318,7 @@ final class DataOutPortView extends NodeOutPortView {
                     valueIter[c] = emptyIter;
                 }
             }
-            DataCell emptyStringCell = new DefaultStringCell("");
+            DataCell emptyStringCell = new StringCell("");
 
             for (int r = 4; r < numRows; r++) {
                 cols = new DataCell[numCols];
@@ -327,12 +327,12 @@ final class DataOutPortView extends NodeOutPortView {
                         cols[c] = emptyStringCell;
                     } else {
                         // transform it into a string cell
-                        cols[c] = new DefaultStringCell(valueIter[c].next()
+                        cols[c] = new StringCell(valueIter[c].next()
                                 .toString());
                     }
                 }
                 rows[r] = new DefaultRow(
-                        new DefaultStringCell("Val_" + (r - 3)), cols);
+                        new StringCell("Val_" + (r - 3)), cols);
             }
 
         } else {
@@ -354,7 +354,6 @@ final class DataOutPortView extends NodeOutPortView {
     }
 
     private static final DataRow[] EMPTY_ROW = new DataRow[]{new DefaultRow(
-            new DefaultStringCell(""), new DataCell[]{new DefaultStringCell(
+            new StringCell(""), new DataCell[]{new StringCell(
                     "<null>")})};
-
 }

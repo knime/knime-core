@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -16,53 +14,53 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  * 
- * History
- *   23.03.2006 (cebron): created
  */
 package de.unikn.knime.core.data.renderer;
 
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import de.unikn.knime.core.data.ComplexNumberValue;
+import de.unikn.knime.core.data.DoubleValue;
 
 /**
- * Render to display a complex number value using a given
- * <code>NumberFormat</code>.
+ * Render to display a double value using a given <code>NumberFormat</code>.
  * 
  * @see java.text.NumberFormat
- * @author ciobaca, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public class ComplexNumberCellRenderer extends DefaultDataCellRenderer {
-
+public class DoubleValueRenderer extends DefaultDataValueRenderer {
+    
+    /**
+     * Singleton for percentage.
+     */
+    public static final DataValueRenderer PERCENT_RENDERER = 
+        new DoubleValueRenderer(
+                NumberFormat.getPercentInstance(Locale.US), "Percentage");
+    
     /**
      * Singleton for ordinary representation.
      */
-    public static final DataCellRenderer STANDARD_RENDERER = 
-            new ComplexNumberCellRenderer(
-                    NumberFormat.getNumberInstance(Locale.US), 
-                    "Standard Complex Number");
+    public static final DataValueRenderer STANDARD_RENDERER = 
+        new DoubleValueRenderer(
+                NumberFormat.getNumberInstance(Locale.US), "Standard Double");
 
     /** disable grouping in renderer */
     static {
         NumberFormat.getNumberInstance(Locale.US).setGroupingUsed(false);
     }
-
-    /** Used to get a string representation of the complex number value. */
+    
+    /** Used to get a string representation of the double value. */
     private final NumberFormat m_format;
-
     /** Description to the renderer. */
     private final String m_desc;
-
-    /**
+    
+    /** 
      * Instantiates a new object using a given format.
-     * 
      * @param format To be used to render this object.
      * @param desc The description to the renderer
      * @throws NullPointerException If argument is <code>null</code>.
      */
-    public ComplexNumberCellRenderer(final NumberFormat format,
-            final String desc) {
+    public DoubleValueRenderer(final NumberFormat format, final String desc) {
         if (format == null || desc == null) {
             throw new NullPointerException(
                     "Format/Description must not be null.");
@@ -70,31 +68,24 @@ public class ComplexNumberCellRenderer extends DefaultDataCellRenderer {
         m_format = format;
         m_desc = desc;
     }
-
+    
     /**
-     * Formats the object. If <code>value</code> is instance of
-     * <code>ComplexNumberValue</code>, the renderer's formatter is used to get
-     * a string from the complex number value of the cell. Otherwise the
-     * <code>value</code>'s <code>toString()</code> method is used.
-     * 
+     * Formats the object. If <code>value</code> is instance of 
+     * <code>DoubleValue</code>, the renderer's formatter is used to get a 
+     * string from the double value of the cell. Otherwise the 
+     * <code>value</code>'s <code>toString()</code> method is used. 
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
      */
     protected void setValue(final Object value) {
         Object newValue;
-        if (value instanceof ComplexNumberValue) {
-            ComplexNumberValue cell = (ComplexNumberValue)value;
-            double real = cell.getRealValue();
-            double imag = cell.getImaginaryValue();
-            if (Double.isNaN(real) || Double.isNaN(imag)) {
+        if (value instanceof DoubleValue) {
+            DoubleValue cell = (DoubleValue)value;
+            double d = cell.getDoubleValue();
+            if (Double.isNaN(d)) {
                 newValue = "NaN";
             } else {
-                newValue = m_format.format(real);
-                if (imag < 0) {
-                    newValue = newValue + " - i*" + Math.abs(imag);
-                } else {
-                    newValue = newValue + " + i*" + imag;
-                }
+                newValue = m_format.format(d);
             }
         } else {
             // missing data cells will also end up here
@@ -102,11 +93,12 @@ public class ComplexNumberCellRenderer extends DefaultDataCellRenderer {
         }
         super.setValue(newValue);
     }
-
+    
     /**
-     * @see DefaultDataCellRenderer#getDescription()
+     * @see DefaultDataValueRenderer#getDescription()
      */
     public String getDescription() {
         return m_desc;
     }
+    
 }

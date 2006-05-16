@@ -21,10 +21,15 @@
  */
 package de.unikn.knime.core.data.def;
 
-import de.unikn.knime.core.data.ComplexNumberType;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.ComplexNumberValue;
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataCellSerializer;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.data.DoubleValue;
 
 /**
@@ -33,8 +38,35 @@ import de.unikn.knime.core.data.DoubleValue;
  * 
  * @author ciobaca, University of Konstanz
  */
-public final class DefaultComplexNumberCell extends DataCell 
+public final class ComplexNumberCell extends DataCell 
                         implements ComplexNumberValue, DoubleValue {
+    
+    /** Convenience access method for DataType.getType(ComplexNumberCell.class).
+     */
+    public static final DataType TYPE = 
+        DataType.getType(ComplexNumberCell.class);
+
+
+    /** Returns the preferred value class of this cell implementation. 
+     * This method is called per reflection to determine which is the 
+     * preferred renderer, comparator, etc.
+     * @return ComplexNumberValue.class
+     */
+    public static final Class<? extends DataValue> getPreferredValueClass() {
+        return ComplexNumberValue.class;
+    }
+    
+    private static final ComplexNumberSerializer SERIALIZER = 
+        new ComplexNumberSerializer();
+    
+    /** Returns the factory to read/write DataCells of this class from/to
+     * a DataInput/DataOutput. This method is called via reflection.
+     * @return A serializer for reading/writing cells of this kind.
+     * @see DataCell
+     */
+    public static final ComplexNumberSerializer getCellSerializer() {
+        return SERIALIZER;
+    }
 
     /** real part of the complex number. */
     private final double m_real;
@@ -48,16 +80,9 @@ public final class DefaultComplexNumberCell extends DataCell
      * @param real The double value.
      * @param imag The imaginary value.
      */
-    public DefaultComplexNumberCell(final double real, final double imag) {
+    public ComplexNumberCell(final double real, final double imag) {
         m_real = real;
         m_imag = imag;
-    }
-
-    /**
-     * @see de.unikn.knime.core.data.DataCell#getType()
-     */
-    public DataType getType() {
-        return ComplexNumberType.COMPLEX_NUMBER_TYPE;
     }
 
     /**
@@ -79,8 +104,8 @@ public final class DefaultComplexNumberCell extends DataCell
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((DefaultComplexNumberCell)dc).m_real == m_real 
-               && ((DefaultComplexNumberCell)dc).m_imag == m_imag;
+        return ((ComplexNumberCell)dc).m_real == m_real 
+               && ((ComplexNumberCell)dc).m_imag == m_imag;
     }
 
     /**
@@ -110,5 +135,29 @@ public final class DefaultComplexNumberCell extends DataCell
      */
     public double getDoubleValue() {
         return Math.sqrt(m_real * m_real + m_imag * m_imag);
+    }
+
+    /** Factory for (de-)serializing a StringCell. */
+    private static class ComplexNumberSerializer 
+        implements DataCellSerializer<ComplexNumberCell> {
+
+        /**
+         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         */
+        public void serialize(final ComplexNumberCell cell, 
+                final DataOutput output) throws IOException {
+            output.writeDouble(cell.getRealValue());
+            output.writeDouble(cell.getImaginaryValue());
+        }
+        
+        /**
+         * @see DataCellSerializer#deserialize(DataInput)
+         */
+        public ComplexNumberCell deserialize(
+                final DataInput input) throws IOException {
+            double real = input.readDouble();
+            double imag = input.readDouble();
+            return new ComplexNumberCell(real, imag);
+        }
     }
 }

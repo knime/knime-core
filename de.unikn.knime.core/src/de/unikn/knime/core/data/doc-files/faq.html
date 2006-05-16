@@ -1,265 +1,106 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<!--
-====================================================================
-This source code, its documentation and all appendant files are
-protected by copyright law. All rights reserved.
-
-Copyright, 2003 - 2005 Universitaet Konstanz, Germany.  Lehrstuhl fuer
-Angewandte Informatik Prof. Dr. Michael R. Berthold
-
-You may not modify, publish, transmit, transfer or sell, reproduce,
-create derivative works from, distribute, perform, display, or in any
-way exploit any of the content, in whole or in part, except as
-otherwise expressly permitted in writing by the copyright owner.
-====================================================================
--->
-</head>
-<body>
-  <p>
-    <ol>
-      <li>
-        <strong>
-          Why didn't you use the Java type hierarchy (through
-          inheritance) to reflect the type dependencies (what you call
-          compatibility)?
-        </strong>
-        <br>
-        The first implementation of DataCells actually used this.
-        There are different reasons why we change it. Too name a few:
-        <ul>
-          <li>
-          <li>
-            Inheritance in Java has the concept that you have some
-            general class (most general is java.lang.Object) and all
-            derivatives add functionality, i.e. make a class more
-            specific. We required .... ja, what did we require? 
-          </li>
-          <li>
-            Relating to the one above, if you use the Java type
-            hierarchy it is impossible to insert a new type somewhere
-            in the middle of the hierarchy without changing a lot of
-            code. We got problems when we added a type FuzzyNumber
-            (which has a core value and two boundary values). We
-            required that each Double can represent itself as a
-            FuzzyNumber (all three values are the same) - so we were
-            required to add functionality to double cell class and all
-            its derivatives. 
-          </li>
-          <li>
-            Secondly, and that was the show stopper, there are
-            situations where we need to find the common ancestor of
-            two DataCells (or their types). For example, if you have
-            two DataCells and want to compare them. We knew that we
-            don't like code similar to
-            <pre>
-  public void compareTo(Object o) {
-    if (!(o instanceof MyClass)) {
-      return super.compareTo(o);
-    }
-    ...
-  }
-            </pre>
-            This requires new data cell implementation to have all
-            this code in common. In order to avoid this, we had to use
-            reflection to climb up the inheritance tree and find the
-            most common ancestor of two data cells - which made it
-            very slow.
-          </li>
-          <li>
-            If you don't buy all the arguments above: We need multiple
-            inheritance. Think of a double cell, a string cell, and
-            some new cell type that can represent itself perfectly as
-            both double and string. We don't want a dependency between
-            double and string (double can't extend string because any
-            double column would then be acceptable as class
-            attribute.) How do you do this?
-          </li>
-        </ul>
-      </li>
-      
-      <li>
-        <strong> Why do the DataValue interfaces not inherit from each
-        other. </strong>
-        <br>
-        If they would, the type hierarchy would appear twice, first in
-        the Java type hierarchy of the DataValue interfaces and second
-        in the DataTypes explicitly in the list of compatible values. We
-        want people to list explicitly all values they can express there
-        data in. This list of implemented DataValue interfaces appears
-        at the class definition and the same list should appear in the
-        corresponding DataType constructor (except for the native
-        value). <br>
-        <strong>Peter</strong>: Hm, we do have this list twice. The
-        compatible list in the type and the "implements" list in the
-        cell implementation. The one above is not really an argument,
-        I think.
-      </li>
-      
-      <li>
-        <strong> Why is this compatibility list not static?</strong>
-        <br>
-        Ask Bernd. Where? In the DataType? Because it makes all
-        DataTypes to share the same compatibility list - which is sort
-        of boring?
-      </li>
-
-      <li>
-        <strong> I have two DataCells how do I compare them? I have1
-          two DataCells, how do I know they are equal?</strong>
-        <br>
-        First note, the datacell comparators impose orders that are
-        inconsistent with equals. That means, if a comparator returns
-        zero it doesn't imply that the equals method will return true.
-        Now, for the equals part: two datacells are equal if they are
-        of the same java class and store the same number. Call
-        DataCell::equals and it will return true in this case.  If you
-        need to order the cells, use a datacell comparator: If you
-        know that both cells are from the same table column, ask the
-        type of the column for a comparator
-        (DataTableSpec.getColumnSpec.getType.getComparator). If you
-        have no information about the origin of the cells, you can
-        always ask them for their type, and get the comparator from
-        the common supertype of both (like
-        cell1.getType.getOneCommonSuperType(cell2.getType).getComparator).
-        NOTE: there is still a unresolved problem to this: if you
-        compare many cells to each other you may end up using
-        different comparators, which is not what you want,
-        normally. TODO: Bernd, do we need a method getCommonSuperType
-        that takes a set of DataTypes and creates a super type for all
-        of them?!? ANSWER: Peter: I don't think we should discuss that
-        here - I've never had the problem to compare data cells where
-        the comparator from the column was not available. 
-      </li>
-      
-      <li>
-        <strong> I'm building a DataTable. How can I make sure the
-        DataCell I want to add to a column is of correct
-        type. </strong>
-        <br>
-        If the type of the column is one supertype of the DataType of
-        the cell, you can safely add it to the column. The method
-        DataType::isOneSuperType ensures that the cell is implementing
-        all value interfaces the column type is compatible to. And
-        that is what you want to make sure. Because if some time
-        later, the code that is reading the column will "ask" the
-        column type if it's compatible to a certain value and gets the
-        answer "yes" (isCompatible returning true), it will typecast
-        the cell to that value interface.
-      </li>
-      
-      <li>
-        <strong> I have a DataCell, how do I find out which type it
-        is?  </strong>
-        <br>
-        DataCell::getType(). Each DataCell carries a reference to its
-        DataType corresponding to its native value interface. (See
-        also next question.)
-      </li>
-      
-      <li>
-        <strong> I want to get the value from a DataCell and I don't
-        want to get a typecast exception.</strong>
-        <br>
-        There are two ways: simply test the datacell instance if it is
-        instanceof the corresponding DataValue interface. (For
-        example, if (dataCell instanceof DoubleValue) evaluates to
-        true you can safely do
-        ((DoubleValue)dataCell).getDoubleValue().) If you don't have
-        the DataCell instance at hand, but you only know the column
-        spec or the DataType of it, you would have to ask the DataType
-        (which you could get from the column spec) if it
-        isCompatibleTo the corresponding data value interface. If it
-        is, you can typecast all datacells from this column to the
-        data value interface just tested.
-      </li>
-      
-      <li>
-        <strong> I want an integer DataCell, how do I find out if
-          the one I have is okay?  
-        </strong>
-        <br>
-        Read the answer above. Just use instanceOf(IntValue), if true
-        typecast the cell, and get the int value: if (dataCell
-        instanceOf IntValue) then ((IntValue)dataCell).getIntValue().
-       </li>
-
-      <li>
-        <strong> Are all cells in a data table column of the same
-        type?</strong>
-        <br>
-        No. They are not necessarily of the same java class type and
-        they are not necessarily referencing the same KNIME
-        DataType. The only thing that can be assumed is, they are all
-        implementing all the data value interfaces the DataType of the
-        column is compatible to. For example, if the native type of
-        the DataType in the column is the DoubleValue interface, the
-        cell can be safely typecasted to DoubleValue. Or, if the
-        DataType isCompatible to the IntValue.class, the DataCell can
-        be typecasted to IntValue.  </li>
-
-      <li>
-        <strong> How do I implement support for a completely new kind
-        of data type?</strong>
-        <br>
-        Like, for example, complex numbers? You need to provide three
-        Java classes: derived from DataValue, from DataCell and from
-        DataType. Let's play the example ComplexNumbers: ComplexValue,
-        ComplexCell, and ComplexType.  The ComplexValue is an
-        interface extending DataValue providing methods for retrieving
-        the value, for example getComplexValue(), getRealValue(). The
-        class ComplexCell will extend DataCell and implement
-        ComplexValue. It has members for the actual value stored in
-        the cell. And it will implement the methods for retrieving the
-        value defined by the value interface. You should make sure
-        each datacell instance is read-only: create a constructor that
-        takes the value stored in the cell and don't implement
-        set-methods.  Lastly, the datatype ComplexType: It derives
-        from DataType. Its native value interface is the
-        ComplexValue. It should have a public static final member
-        storing a singleton instance of itself. This will be the only
-        instance of this datatype, all cells will be referencing this
-        instance. Therefore, make the constructor private. In this
-        constructor, call "addCompatibleType" for each DataType your
-        new type is compatible to. You are compatible to another type,
-        if you can represent your value losslessly through another
-        value interface. Unfortunately complex numbers are not
-        compatible to any other type, but for example int numbers are
-        compatible to double values, as an integer can always be
-        expressed as a double number. Finally, you should provide a
-        comparator for your data cells. It is yet another class,
-        returned by your datatype. The comparator extends
-        DataCellComparator and just needs to compare two data cells of
-        your new type. With that, you are pretty much done. There are
-        still things like renderer and icons to support, but that is
-        not required to get it running. A good example to look at and
-        to see how things are done, would be our classes handling
-        Double values (de.unikn.knime.
-        core.data.DoubleValue/Type/CellComparator and
-        core.data.def.DefaultDoubleCell.  </li>
-      <li>
-        <strong>Isn't it overkill to implement three different classes
-        (DataType, DataCell, DataValue) just to add one single new
-        type?</strong>
-        <br>
-        We don't think so. They all have their justification. The
-        DataType serves as meta information of the new type, it knows
-        about compatibilities, comparators, renderer, etc. The type is
-        contained as a property of a column and is therefore available
-        to configure-time, that is the data itself is not yet
-        available. The Value class is just an interface that defines
-        what you can actually do with a cell, like for instance what
-        sort of generic java classes you can get from it. The cell
-        implementation is the object that is being carried around by a
-        DataTable and is passed from one node to another. It
-        implements the newly defined DataValue <strong>and</strong>
-        all the value interface that the type is compatible to. The
-        data cell implementation extends the knime class DataCell
-        which contains basic functionality, for instance the equals
-        implementation.
-      </li>
-    </ol>
-  </p>
-  </body>
-</html>
+<HTML>
+<BODY>
+<OL>
+	<LI><P><STRONG>What's a DataCell?</STRONG><BR>
+	A <A HREF="../DataCell.html">DataCell</A> is
+	a container for a single entity. There are many different
+	implementations of DataCell, for instance <A HREF="../def/StringCell.html">StringCell</A>,
+	<A HREF="../def/DoubleCell.html">DoubleCell</A>,
+	<A HREF="../def/IntCell.html">IntCell</A>.
+	DataCells are contained in a <A HREF="../DataTable.html">DataTable</A>.
+	They implement different DataValue interfaces and are associated to
+	a DataType (see both descriptions below). 
+	</P>
+	
+	<LI><P><STRONG>What's a DataValue?</STRONG><BR>
+	A <A HREF="../DataValue.html">DataValue</A>
+	is an interface describing the content of a DataCell. (For example,
+	how to access the generic java-double from it.) It also brings along
+	meta information such as renderers and a comparator which is
+	accessed statically using reflection through a singleton called
+	<A HREF="../DataValue.UtilityFactory.html">UTILITY</A>.
+	</P>
+	
+	<LI><P><STRONG>What's a DataType?</STRONG><BR>
+	A <A HREF="../DataType.html">DataType</A>
+	comprises the meta-information to a DataCell implementation such as
+	a compatibility list (what DataValues can I cast the cells to),
+	available renderers, comparators and so on. The DataType is a
+	property of a <A HREF="../DataColumnSpec.html">DataColumnSpec</A>
+	and is therefore available to configure() time (i.e. when you set
+	the properties in the dialog but no data is available from the
+	predecessing nodes).</P>
+	
+	<LI><P><STRONG>How do I determine the DataType of a DataCell implementation?</STRONG><BR>
+	Use <A HREF="../DataCell.html#getType()">DataCell#getType()</A>
+	– it is shortcut for <A HREF="../DataType.html#getType(java.lang.Class)">DataType.getType(SomeDataCell.class)</A>.
+	Note that a DataCell instance does not carry a reference to its
+	DataType but rather it determines the type through its runtime class
+	(realized by a HashMap in DataType which maps DataCell classes to
+	DataType).</P>
+	
+	<LI><P><STRONG>I want to create a new column for a DataTable and need to set the column's DataType. How do
+	I do this?</STRONG><BR>
+	You	need to know what DataCell instances you add to the column. For
+	instance, if you only add DoubleCell objects, set the type as
+	DataType.getType(DoubleCell.class). (Note all default cell
+	implementations provide a singleton for exactly this purpose, e.g.
+	<A HREF="../def/DoubleCell.html#TYPE">DoubleCell.TYPE</A>).
+	You can mess up with KNIME if you set the wrong DataType in the
+	column spec – be patient!</P>
+	
+	<LI><P><STRONG>I don't know what cells I'm going to add to the new column. How do I set the DataType of the
+	column?</STRONG><BR>
+	This should be a really really rare case! One example may be when you
+	transpose a table and need to determine the most general type for
+	all cells in a table's row. Anyway:<BR>
+	You need to scan all cells you will add and compute the most general
+	DataType. This type may not be associated with any real DataCell
+	implementation but it will be valid for all DataCells that are
+	contained in the column. Use the static method
+	DataType#getCommonSuperType(DataType, DataType) in the class
+	DataType. You need to call this method iteratively, for instance:
+	</P>
+	<PRE>                DataCell[] allCells = ...;
+                DataType type = allCells[0].getType()
+                for (int i = 1; i &lt; allCells.length; i++) {
+                  type = DataType.getCommonSuperType(type, allCells[i].getType());
+                }
+                // &quot;type&quot; will be the most specific super type of all.</PRE>
+                
+	<LI><P><STRONG>How about missing cells?</STRONG><BR>
+	The term “missing cell” does not really mean that there is
+	no cell but simply that the cell at hand represents an unknown
+	value. As a missing cell does not have any content, there is a
+	singleton to use in case you want to represent such a missing
+	entity. It is available through <A HREF="../DataType.html#getMissingCell()">DataType.getMissingCell()</A>.
+	This singleton's type is a special type, which is compatible to all
+	DataValue interfaces you can think of. If you invoke
+	<A HREF="../DataType.html#isCompatible(java.lang.Class)">isCompatible(...)</A>
+	on this type, it will always return true. However trying to cast
+	this missing cell to any DataValue will fail. Be advised to always
+	check a cell's isMissing() value before typecasting it.</P>
+	
+	<LI><P><STRONG>When can I safely typecast a DataCell to a specific DataValue.</STRONG><BR>
+	There are two constraints: (1) The cell must not represent a missing
+	value, i.e. <A HREF="../DataCell.html#isMissing()">cell.isMissing()
+	</A>evaluates to false and (2) the cell's type allows you to do so,
+	i.e. <A HREF="../DataType.html#isCompatible(java.lang.Class)">type.isCompatible(SomeDataValue.class)</A>
+	returns true. The second constraint also holds for the column type
+	in which the cell is contained in. Thus, you need to check once if
+	the DataType as given by the DataColumnSpec is compatible to the
+	DataValue interface of interest and if so, you can safely cast any
+	DataCell from that column to the given DataValue – unless they represent a 
+	missing value.
+	
+	<LI><P><STRONG>Are all cells in a data table column of the same type?</STRONG> <BR>
+	Not necessarily. All you can assume is that each DataValue interface for which the column's
+	type returns true on isCompatible(SomeDataValue.class), is
+	implemented by all of the cells in the column unless they represent
+	a missing value.</P>
+	
+	<LI><P><STRONG>How do I implement support for a completely new kind of data type?</STRONG><BR>
+	See our <A HREF="newtypes.html#newtypes">manual</A> for that.</P>
+</OL>
+</BODY>
+</HTML>

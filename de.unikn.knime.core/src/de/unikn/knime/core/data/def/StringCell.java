@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,9 +19,14 @@
  */
 package de.unikn.knime.core.data.def;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataCellSerializer;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.StringType;
+import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.data.StringValue;
 
 /**
@@ -32,7 +35,35 @@ import de.unikn.knime.core.data.StringValue;
  * 
  * @author mb, University of Konstanz
  */
-public final class DefaultStringCell extends DataCell implements StringValue {
+public final class StringCell extends DataCell implements StringValue {
+
+    /** Convenience access member for 
+     * <code>DataType.getType(StringCell.class)</code>. 
+     * @see DataType#getType(Class)
+     */
+    public static final DataType TYPE = 
+        DataType.getType(StringCell.class);
+    
+    /** Returns the preferred value class of this cell implementation. 
+     * This method is called per reflection to determine which is the 
+     * preferred renderer, comparator, etc.
+     * @return StringValue.class;
+     */
+    public static final Class<? extends DataValue> getPreferredValueClass() {
+        return StringValue.class;
+    }
+    
+    private static final StringSerializer SERIALIZER = 
+        new StringSerializer();
+    
+    /** Returns the factory to read/write DataCells of this class from/to
+     * a DataInput/DataOutput. This method is called via reflection.
+     * @return A serializer for reading/writing cells of this kind.
+     * @see DataCell
+     */
+    public static final StringSerializer getCellSerializer() {
+        return SERIALIZER; 
+    }
 
     private final String m_string;
 
@@ -43,7 +74,7 @@ public final class DefaultStringCell extends DataCell implements StringValue {
      * @throws NullPointerException If the given String value is
      *             <code>null</code>.
      */
-    public DefaultStringCell(final String str) {
+    public StringCell(final String str) {
         if (str == null) {
             throw new NullPointerException("String value can't be null.");
         }
@@ -69,7 +100,7 @@ public final class DefaultStringCell extends DataCell implements StringValue {
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
     protected boolean equalsDataCell(final DataCell dc) {
-        return m_string.equals(((DefaultStringCell)dc).m_string);
+        return m_string.equals(((StringCell)dc).m_string);
     }
 
     /**
@@ -79,11 +110,27 @@ public final class DefaultStringCell extends DataCell implements StringValue {
         return m_string.hashCode();
     }
 
-    /**
-     * @see de.unikn.knime.core.data.DataCell#getType()
-     */
-    public DataType getType() {
-        return StringType.STRING_TYPE;
+    /** Factory for (de-)serializing a StringCell. */
+    private static class StringSerializer implements 
+        DataCellSerializer<StringCell> {
+        /**
+         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         */
+        public void serialize(final StringCell cell, 
+                final DataOutput output) throws IOException {
+            output.writeUTF(cell.getStringValue());
+        }
+        
+        /**
+         * @see DataCellSerializer#deserialize(DataInput)
+         */
+        public StringCell deserialize(final DataInput input) 
+            throws IOException {
+            String s = input.readUTF();
+            return new StringCell(s);
+        }
+
+
     }
 
 }

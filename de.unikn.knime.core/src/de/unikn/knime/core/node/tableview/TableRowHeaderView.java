@@ -32,7 +32,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 import de.unikn.knime.core.data.property.ColorAttr;
-import de.unikn.knime.core.data.renderer.DataCellRenderer;
+import de.unikn.knime.core.data.renderer.DataValueRenderer;
 
 /** 
  * Row Header for a table view on a {@link de.unikn.knime.core.data.DataTable}.
@@ -257,7 +257,7 @@ public final class TableRowHeaderView extends JTable {
      * 
      * @param renderer the new renderer
      */
-    public void setRenderer(final DataCellRenderer renderer) {
+    public void setRenderer(final DataValueRenderer renderer) {
         getColumnModel().getColumn(0).setCellRenderer(renderer);
     }
     

@@ -25,7 +25,7 @@ import javax.swing.table.TableModel;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.property.ColorAttr;
 
 /** 
@@ -260,7 +260,7 @@ public class TableRowHeaderModel extends AbstractTableModel {
     private static class TableContentWrapper 
         implements TableContentInterface {        
         private static final RowKey UNKNOWN = 
-            new RowKey(new DefaultStringCell("unknown"));
+            new RowKey(new StringCell("unknown"));
         private final TableModel m_model;
         
         /**

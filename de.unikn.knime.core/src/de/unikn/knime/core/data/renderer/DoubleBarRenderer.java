@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,8 +30,8 @@ import javax.swing.Icon;
 
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DoubleType;
 import de.unikn.knime.core.data.DoubleValue;
+import de.unikn.knime.core.data.def.DoubleCell;
 
 /**
  * Renderer for double cells that paints the whole range in a bar according
@@ -43,7 +41,7 @@ import de.unikn.knime.core.data.DoubleValue;
  * @author Bernd Wiswedel, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
-public class DoubleBarRenderer extends DefaultDataCellRenderer {
+public class DoubleBarRenderer extends DefaultDataValueRenderer {
     
     /** Creates new instance given a column spec. This object will get the
      * information about min/max from the spec and do the normalization 
@@ -89,7 +87,7 @@ public class DoubleBarRenderer extends DefaultDataCellRenderer {
             boolean takeValuesFrom = spec != null;
             takeValuesFrom &= spec.getDomain().hasLowerBound();
             takeValuesFrom &= spec.getDomain().hasUpperBound();
-            takeValuesFrom &= DoubleType.DOUBLE_TYPE.isOneSuperTypeOf(spec
+            takeValuesFrom &= DoubleCell.TYPE.isASuperTypeOf(spec
                     .getType());
             double min;
             double max;
@@ -111,7 +109,7 @@ public class DoubleBarRenderer extends DefaultDataCellRenderer {
     }
     
     /** Returns "Gray Scale".
-     * @see de.unikn.knime.core.data.renderer.DataCellRenderer#getDescription()
+     * @see de.unikn.knime.core.data.renderer.DataValueRenderer#getDescription()
      */
     @Override
     public String getDescription() {

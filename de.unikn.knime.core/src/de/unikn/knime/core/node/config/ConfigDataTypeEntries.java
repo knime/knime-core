@@ -20,9 +20,9 @@
 package de.unikn.knime.core.node.config;
 
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
-import de.unikn.knime.core.data.IntType;
-import de.unikn.knime.core.data.StringType;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * Register all known DataType elements here. By conventation the enumeration
@@ -37,10 +37,10 @@ enum ConfigDataTypeEntries {
      */
     StringType {
         /**
-         * @return StringType.STRING_TYPE
+         * @return StringCell.TYPE
          */
-        StringType createDataType() {
-            return de.unikn.knime.core.data.StringType.STRING_TYPE;
+        DataType createDataType() {
+            return StringCell.TYPE;
         }
     },
     
@@ -49,10 +49,10 @@ enum ConfigDataTypeEntries {
      */
     DoubleType {
         /**
-         * @return DoubleType.DOUBLE_TYPE
+         * @return DoubleCell.TYPE
          */
-        DoubleType createDataType() {
-            return de.unikn.knime.core.data.DoubleType.DOUBLE_TYPE;
+        DataType createDataType() {
+            return DoubleCell.TYPE;
         }
     },
     
@@ -61,10 +61,10 @@ enum ConfigDataTypeEntries {
      */
     IntType {
         /**
-         * @return IntType.INT_TYPE
+         * @return IntCell.TYPE
          */
-        IntType createDataType() {
-            return de.unikn.knime.core.data.IntType.INT_TYPE;
+        DataType createDataType() {
+            return IntCell.TYPE;
         }
     };
     

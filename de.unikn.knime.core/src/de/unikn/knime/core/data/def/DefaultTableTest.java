@@ -23,18 +23,14 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import junit.framework.TestCase;
-
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleType;
 import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntType;
 import de.unikn.knime.core.data.IntValue;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringType;
 import de.unikn.knime.core.data.StringValue;
 
 /**
@@ -118,18 +114,18 @@ public class DefaultTableTest extends TestCase {
 
         // should work fine
         new DefaultTable(new DataRow[0], // empty row elements do not matter
-                new DataCell[] {new DefaultStringCell("bla"),
-                        new DefaultIntCell(42), new DefaultDoubleCell(99.9)},
-                new DataType[] {DoubleType.DOUBLE_TYPE, IntType.INT_TYPE,
-                        DoubleType.DOUBLE_TYPE});
+                new DataCell[] {new StringCell("bla"),
+                        new IntCell(42), new DoubleCell(99.9)},
+                new DataType[] {DoubleCell.TYPE, IntCell.TYPE,
+                        DoubleCell.TYPE});
 
         // fails: data row array is null
         try {
             new DefaultTable(null, new DataCell[] {
-                    new DefaultStringCell("bla"), new DefaultIntCell(42),
-                    new DefaultDoubleCell(99.9)}, new DataType[] {
-                    DoubleType.DOUBLE_TYPE, IntType.INT_TYPE,
-                    DoubleType.DOUBLE_TYPE});
+                    new StringCell("bla"), new IntCell(42),
+                    new DoubleCell(99.9)}, new DataType[] {
+                    DoubleCell.TYPE, IntCell.TYPE,
+                    DoubleCell.TYPE});
             fail();
         } catch (NullPointerException npe) {
             System.out.println(npe.getMessage());
@@ -138,8 +134,8 @@ public class DefaultTableTest extends TestCase {
         // fails: column name array is null
         try {
             new DefaultTable(new DataRow[0], null, new DataType[] {
-                    DoubleType.DOUBLE_TYPE, IntType.INT_TYPE,
-                    DoubleType.DOUBLE_TYPE});
+                    DoubleCell.TYPE, IntCell.TYPE,
+                    DoubleCell.TYPE});
             fail();
         } catch (NullPointerException npe) {
             System.out.println(npe.getMessage());
@@ -148,8 +144,8 @@ public class DefaultTableTest extends TestCase {
         // fails: column type array is null
         try {
             new DefaultTable(new DataRow[0], new DataCell[] {
-                    new DefaultStringCell("bla"), new DefaultIntCell(42),
-                    new DefaultDoubleCell(99.9)}, null);
+                    new StringCell("bla"), new IntCell(42),
+                    new DoubleCell(99.9)}, null);
             fail();
         } catch (NullPointerException npe) {
             System.out.println(npe.getMessage());
@@ -159,10 +155,10 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(new DataRow[0], // empty row elements does not
                     // matter
-                    new DataCell[] {new DefaultStringCell("bla"),
-                            new DefaultDoubleCell(99.9)}, new DataType[] {
-                            DoubleType.DOUBLE_TYPE, IntType.INT_TYPE,
-                            DoubleType.DOUBLE_TYPE});
+                    new DataCell[] {new StringCell("bla"),
+                            new DoubleCell(99.9)}, new DataType[] {
+                            DoubleCell.TYPE, IntCell.TYPE,
+                            DoubleCell.TYPE});
             fail();
         } catch (IllegalArgumentException iae) {
             System.out.println(iae.getMessage());
@@ -172,10 +168,10 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(new DataRow[0], // empty row elements does not
                     // matter
-                    new DataCell[] {new DefaultStringCell("bla"), null,
-                            new DefaultDoubleCell(99.9)}, new DataType[] {
-                            DoubleType.DOUBLE_TYPE, IntType.INT_TYPE,
-                            StringType.STRING_TYPE});
+                    new DataCell[] {new StringCell("bla"), null,
+                            new DoubleCell(99.9)}, new DataType[] {
+                            DoubleCell.TYPE, IntCell.TYPE,
+                            StringCell.TYPE});
             fail();
         } catch (NullPointerException npe) {
             System.out.println(npe.getMessage());
@@ -184,11 +180,11 @@ public class DefaultTableTest extends TestCase {
         // fails: column name array contains redundant objects
         try {
             new DefaultTable(new DataRow[0], // empty row elements do not matter
-                    new DataCell[] {new DefaultStringCell("bla"),
-                            new DefaultDoubleCell(42.0),
-                            new DefaultDoubleCell(42.0)}, new DataType[] {
-                            DoubleType.DOUBLE_TYPE, IntType.INT_TYPE,
-                            StringType.STRING_TYPE});
+                    new DataCell[] {new StringCell("bla"),
+                            new DoubleCell(42.0),
+                            new DoubleCell(42.0)}, new DataType[] {
+                            DoubleCell.TYPE, IntCell.TYPE,
+                            StringCell.TYPE});
             fail();
         } catch (IllegalArgumentException iae) {
             System.out.println(iae.getMessage());
@@ -198,11 +194,11 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(
                     new DataRow[0], // empty row elements do not matter
-                    new DataCell[] {new DefaultStringCell("bla"),
-                            new DefaultIntCell(42), 
-                            new DefaultDoubleCell(99.9)},
-                    new DataType[] {null, StringType.STRING_TYPE,
-                            DoubleType.DOUBLE_TYPE});
+                    new DataCell[] {new StringCell("bla"),
+                            new IntCell(42), 
+                            new DoubleCell(99.9)},
+                    new DataType[] {null, StringCell.TYPE,
+                            DoubleCell.TYPE});
             fail();
         } catch (NullPointerException npe) {
             System.out.println(npe.getMessage());

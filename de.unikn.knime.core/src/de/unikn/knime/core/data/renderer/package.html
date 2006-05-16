@@ -21,31 +21,37 @@ otherwise expressly permitted in writing by the copyright owner.
   <title>Renderer Package</title>
 </head>
 <body>
-	Interfaces and default implementations for renderer of <code>DataCell</code>
+	Interfaces and default implementations for renderer of <code>DataValue</code>
 	objects.
 	
 	<p>This package describes the general structure for renderer and renderer
-		families of <code>DataCell</code>. Generally, each <code>DataType</code>
+		families of <code>DataValue</code>. Generally, each 
+		{@link de.unikn.knime.core.data.DataValue <code>DataValue</code>}
 		implementation can define its own set of renderer. These renderer
-		are accumulated in a <code>DataCellRendererFamily</code>.
+		are accumulated in a <code>DataValueRendererFamily</code>.
 	</p>
 	<p>
 		Here is what you should do if you implement your own 
-		<code>DataType</code> and make one or more renderer available for it:
+		<code>DataValue</code> and make one or more renderer available for it:
 		<ul>
 			<li>Create your own renderer implementing the 
-				<code>DataCellRenderer</code> interface. (You might consider to 
-				derive from <code>DefaultDataCellRenderer</code>).
+				<code>DataValueRenderer</code> interface. (You might consider to 
+				derive from <code>DefaultDataValueRenderer</code>).
 			</li>
 			<li>
-				Implement a <code>DataCellRendererFamily</code> that either
+				Implement a <code>DataValueRendererFamily</code> that either
 				uses singletons of the renderers above or creates them on 
 				request. As before: it is probably useful to extend the default
-				implementation, i.e. <code>DefaultDataCellRendererFamily</code>.
+				implementation, i.e. <code>DefaultDataValueRendererFamily</code>.
+				Such a family is responsible to handle multiple different
+				renderers.
 			</li>
-			<li>Override in your <code>DataType</code> implementation the 
+			<li>Make a {@link de.unikn.knime.core.data.DataValue.UtilityFactory 
+                UtilityFactory} in your <code>DataValue</code> implementation 
+                available as described in the 
+                <a href="../doc-files/newtypes.html#newtypes>manual</a>
 				methode <code>getNativeRenderer()</code> and return your newly
-				created renderer family.
+				created renderer family therein.
 			</li>
 		</ul>
 	</p>

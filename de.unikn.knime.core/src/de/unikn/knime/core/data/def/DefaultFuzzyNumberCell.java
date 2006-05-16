@@ -21,10 +21,15 @@
  */
 package de.unikn.knime.core.data.def;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataCellSerializer;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.data.FuzzyIntervalValue;
-import de.unikn.knime.core.data.FuzzyNumberType;
 import de.unikn.knime.core.data.FuzzyNumberValue;
 
 /**
@@ -37,6 +42,34 @@ import de.unikn.knime.core.data.FuzzyNumberValue;
  */
 public final class DefaultFuzzyNumberCell extends DataCell implements
         FuzzyNumberValue, FuzzyIntervalValue {
+
+    /** Convenience access member for 
+     * <code>DataType.getType(DefaultFuzzyNumberCell.class)</code>. 
+     * @see DataType#getType(Class)
+     */
+    public static final DataType TYPE = 
+        DataType.getType(DefaultFuzzyNumberCell.class);
+    
+    private static final FuzzyNumberSerializer SERIALIZER = 
+        new FuzzyNumberSerializer();
+    
+    /** Returns the factory to read/write DataCells of this class from/to
+     * a DataInput/DataOutput. This method is called via reflection.
+     * @return A serializer for reading/writing cells of this kind.
+     * @see DataCell
+     */
+    public static final FuzzyNumberSerializer getCellSerializer() {
+        return SERIALIZER;
+    }
+
+    /** Returns the preferred value class of this cell implementation. 
+     * This method is called per reflection to determine which is the 
+     * preferred renderer, comparator, etc.
+     * @return FuzzyNumberValue.class;
+     */
+    public static final Class<? extends DataValue> getPreferredValueClass() {
+        return FuzzyNumberValue.class;
+    }
 
     /** Minimum support value. */
     private final double m_a;
@@ -65,13 +98,6 @@ public final class DefaultFuzzyNumberCell extends DataCell implements
         m_a = a;
         m_b = b;
         m_c = c;
-    }
-
-    /**
-     * @see DataCell#getType()
-     */
-    public DataType getType() {
-        return FuzzyNumberType.FUZZY_NUMBER_TYPE;
     }
 
     /**
@@ -158,6 +184,31 @@ public final class DefaultFuzzyNumberCell extends DataCell implements
      */
     public String toString() {
         return "<" + m_a + "," + m_b + "," + m_c + ">";
+    }
+    
+    /** Factory for (de-)serializing a DefaultFuzzyNumberCell. */
+    private static class FuzzyNumberSerializer 
+        implements DataCellSerializer<DefaultFuzzyNumberCell> {
+        /**
+         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         */
+        public void serialize(final DefaultFuzzyNumberCell cell, 
+                final DataOutput output) throws IOException {
+            output.writeDouble(cell.getMinSupport());
+            output.writeDouble(cell.getCore());
+            output.writeDouble(cell.getMaxSupport());
+        }
+        
+        /**
+         * @see DataCellSerializer#deserialize(DataInput)
+         */
+        public DefaultFuzzyNumberCell deserialize(
+                final DataInput input) throws IOException {
+            double minSupp = input.readDouble();
+            double core = input.readDouble();
+            double maxSupp = input.readDouble();
+            return new DefaultFuzzyNumberCell(minSupp, core, maxSupp);
+        }
     }
 
 }

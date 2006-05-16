@@ -20,7 +20,7 @@ package de.unikn.knime.core.data;
 
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultDataColumnProperties;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 
@@ -80,7 +80,7 @@ public class DataColumnSpecCreator {
      * @param type the new type
      */
     public DataColumnSpecCreator(final String name, final DataType type) {
-        this(new DefaultStringCell(name), type);
+        this(new StringCell(name), type);
     }
 
     /**

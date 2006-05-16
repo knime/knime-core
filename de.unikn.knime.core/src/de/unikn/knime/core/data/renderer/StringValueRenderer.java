@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -28,12 +26,13 @@ import de.unikn.knime.core.data.StringValue;
  * <code>StringValue</code> classes.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class StringCellRenderer extends DefaultDataCellRenderer {
+public final class StringValueRenderer extends DefaultDataValueRenderer {
     
     /** Singleton to be used. */
-    public static final StringCellRenderer INSTANCE = new StringCellRenderer(); 
+    public static final StringValueRenderer INSTANCE = 
+        new StringValueRenderer(); 
 
-    private StringCellRenderer() {
+    private StringValueRenderer() {
     }
     
     /**
@@ -56,7 +55,7 @@ public final class StringCellRenderer extends DefaultDataCellRenderer {
         super.setValue(newValue);
     }    
     /**
-     * @see DefaultDataCellRenderer#getDescription()
+     * @see DefaultDataValueRenderer#getDescription()
      */
     @Override
     public String getDescription() {

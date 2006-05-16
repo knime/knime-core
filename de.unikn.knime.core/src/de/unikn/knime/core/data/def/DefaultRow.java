@@ -130,7 +130,7 @@ public class DefaultRow implements DataRow {
         m_row = new DataCell[row.length];
         // of all values in row array
         for (int i = 0; i < m_row.length; i++) {
-            m_row[i] = new DefaultDoubleCell(row[i]);
+            m_row[i] = new DoubleCell(row[i]);
         }
     }
 
@@ -177,7 +177,7 @@ public class DefaultRow implements DataRow {
         m_row = new DataCell[row.length];
         // of all values in the row array
         for (int i = 0; i < m_row.length; i++) {
-            m_row[i] = new DefaultIntCell(row[i]);
+            m_row[i] = new IntCell(row[i]);
         }
     }
 
@@ -211,7 +211,7 @@ public class DefaultRow implements DataRow {
                 throw new NullPointerException("String at index " + i
                         + " must not be null!");
             }
-            m_row[i] = new DefaultStringCell(row[i]);
+            m_row[i] = new StringCell(row[i]);
         }
 
         // create new RowKey where all properties are set to default values.

@@ -20,9 +20,9 @@
 package de.unikn.knime.core.node.config;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.def.DefaultDoubleCell;
-import de.unikn.knime.core.data.def.DefaultIntCell;
-import de.unikn.knime.core.data.def.DefaultStringCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * Register all known DataCell elements here. By conventation the enumeration
@@ -38,16 +38,16 @@ enum ConfigDataCellEntries {
     DefaultStringCell {
         /**
          * @param value The String value.
-         * @return StringType.STRING_TYPE
+         * @return StringCell.TYPE
          */
-        DefaultStringCell createDataCell(final String value) {
-            return new DefaultStringCell(value);
+        StringCell createDataCell(final String value) {
+            return new StringCell(value);
         }
         /**
          * @see ConfigDataCellEntries#toStringValue(DataCell)
          */
         String toStringValue(final DataCell cell) {
-            return ((DefaultStringCell) cell).getStringValue();
+            return ((StringCell) cell).getStringValue();
         }
     },
     
@@ -57,16 +57,16 @@ enum ConfigDataCellEntries {
     DefaultDoubleCell {
         /**
          * @param value The double value as String.
-         * @return DoubleType.DOUBLE_TYPE
+         * @return DoubleCell.TYPE
          */
-        DefaultDoubleCell createDataCell(final String value) {
-            return new DefaultDoubleCell(Double.parseDouble(value));
+        DoubleCell createDataCell(final String value) {
+            return new DoubleCell(Double.parseDouble(value));
         }
         /**
          * @see ConfigDataCellEntries#toStringValue(DataCell)
          */
         String toStringValue(final DataCell cell) {
-            return Double.toString(((DefaultDoubleCell) cell).getDoubleValue());
+            return Double.toString(((DoubleCell) cell).getDoubleValue());
         }
     },
     
@@ -76,16 +76,16 @@ enum ConfigDataCellEntries {
     DefaultIntCell {
         /**
          * @param value The int value as String.
-         * @return IntType.INT_TYPE
+         * @return IntCell.TYPE
          */
-        DefaultIntCell createDataCell(final String value) {
-            return new DefaultIntCell(Integer.parseInt(value));
+        IntCell createDataCell(final String value) {
+            return new IntCell(Integer.parseInt(value));
         }
         /**
          * @see ConfigDataCellEntries#toStringValue(DataCell)
          */
         String toStringValue(final DataCell cell) {
-            return Integer.toString(((DefaultIntCell) cell).getIntValue());
+            return Integer.toString(((IntCell) cell).getIntValue());
         }
     };
     

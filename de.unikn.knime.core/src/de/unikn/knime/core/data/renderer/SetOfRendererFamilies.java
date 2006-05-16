@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -29,33 +27,33 @@ import javax.swing.JList;
 import javax.swing.JTable;
 
 /**
- * Container for <code>DataCellRendererFamily</code> that is by itself a 
+ * Container for <code>DataValueRendererFamily</code> that is by itself a 
  * renderer family (yes, now it becomes complicated). This class is used in 
  * <code>DataType</code> when all available native renderer are gathered
- * and returned as DataCellRendererFamily. 
+ * and returned as DataValueRendererFamily. 
  * 
  * <p><strong>Note:</strong>This is a helper class that shouldn't be 
  * any useful for you.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class SetOfRendererFamilies implements DataCellRendererFamily {
+public class SetOfRendererFamilies implements DataValueRendererFamily {
     
-    private final List<DataCellRendererFamily> m_list;
-    private DataCellRenderer m_active;
+    private final List<DataValueRendererFamily> m_list;
+    private DataValueRenderer m_active;
     
     /**
      * Constructs a new set from a list of renderer families given in a list.
      * The active renderer will be the first one that is available.
-     * @param fams All renderer in a list (type DataCellRendererFamily)
+     * @param fams All renderer in a list (type DataValueRendererFamily)
      * @throws IllegalArgumentException If list is empty
      * @throws NullPointerException If argument is null
      * @throws ClassCastException If list contains unexpected classes.
      */
-    public SetOfRendererFamilies(final List<DataCellRendererFamily> fams) {
+    public SetOfRendererFamilies(final List<DataValueRendererFamily> fams) {
         if (fams.isEmpty()) {
             throw new IllegalArgumentException("No renderer available");
         }
-        for (DataCellRendererFamily e : fams) {
+        for (DataValueRendererFamily e : fams) {
             if (m_active == null) {
                 m_active = e;
             }
@@ -64,21 +62,21 @@ public class SetOfRendererFamilies implements DataCellRendererFamily {
     }
 
     /**
-     * @see DataCellRendererFamily#getRendererDescriptions()
+     * @see DataValueRendererFamily#getRendererDescriptions()
      */
     public String[] getRendererDescriptions() {
         LinkedHashSet<String> set = new LinkedHashSet<String>();
-        for (DataCellRendererFamily e : m_list) {
+        for (DataValueRendererFamily e : m_list) {
             set.addAll(Arrays.asList(e.getRendererDescriptions()));
         }
         return set.toArray(new String[0]);
     }
 
     /**
-     * @see DataCellRendererFamily#setActiveRenderer(java.lang.String)
+     * @see DataValueRendererFamily#setActiveRenderer(java.lang.String)
      */
     public void setActiveRenderer(final String desc) {
-        for (DataCellRendererFamily e : m_list) {
+        for (DataValueRendererFamily e : m_list) {
             if (Arrays.asList(e.getRendererDescriptions()).contains(desc)) {
                 e.setActiveRenderer(desc);
                 m_active = e;
@@ -88,14 +86,14 @@ public class SetOfRendererFamilies implements DataCellRendererFamily {
     }
 
     /**
-     * @see DataCellRenderer#getDescription()
+     * @see DataValueRenderer#getDescription()
      */
     public String getDescription() {
         return m_active.getDescription();
     }
 
     /**
-     * @see DataCellRenderer#getPreferredSize()
+     * @see DataValueRenderer#getPreferredSize()
      */
     public Dimension getPreferredSize() {
         return m_active.getPreferredSize();

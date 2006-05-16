@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,15 +17,16 @@
 package de.unikn.knime.core.data.renderer;
 
 /**
- * Container for different <code>DataCellRenderer</code> which can be used
- * to render one particular kind of <code>DataCell</code>. This interface
- * itself extends <code>DataCellRenderer</code>, thus it can be used in lists,
+ * Container for different <code>DataValueRenderer</code> which can be used
+ * to render one particular kind of <code>DataValue</code>. This interface
+ * itself extends <code>DataValueRenderer</code>, thus it can be used in lists,
  * tables and such. Among the renderer in this container there is always one 
  * active one which will be used to delegate request to.
  * 
  * <p>Classes implementing this interface can instantiate different kind
- * of <code>DataCellRenderer</code>. The number of different renderers is
- * defined by <code>getNrAvailableRenderer()</code>. Which renderer is actually
+ * of <code>DataValueRenderer</code>. The number of different renderers is
+ * defined by the number of different descriptions returned by the 
+ * <code>getRendererDescriptions()</code> method. Which renderer is actually
  * used (i.e. active) is defined by the <code>setActiveRenderer(int)</code>
  * method.
  * 
@@ -36,13 +35,14 @@ package de.unikn.knime.core.data.renderer;
  * renderer available.
  * 
  * <p>Refer to the {@link de.unikn.knime.core.data.renderer package description}
- * to see how to couple a <code>DataCellRendererFamily</code> with a 
- * <code>DataCell</code> implementation.
+ * to see how to couple a <code>DataValueRendererFamily</code> with a 
+ * <code>DataValue</code> implementation.
  * 
- * @see de.unikn.knime.core.data.renderer.DataCellRenderer
+ * @see de.unikn.knime.core.data.DataValue
+ * @see de.unikn.knime.core.data.renderer.DataValueRenderer
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface DataCellRendererFamily extends DataCellRenderer {
+public interface DataValueRendererFamily extends DataValueRenderer {
     
     /**
      * Get a "unique" description for all renderer that are available in this

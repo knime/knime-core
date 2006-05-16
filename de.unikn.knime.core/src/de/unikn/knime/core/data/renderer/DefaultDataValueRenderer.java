@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,14 +32,14 @@ import de.unikn.knime.core.data.DataColumnSpec;
  *  
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class DefaultDataCellRenderer 
-    extends DefaultTableCellRenderer implements DataCellRenderer {
+public class DefaultDataValueRenderer 
+    extends DefaultTableCellRenderer implements DataValueRenderer {
     
     /** The spec to the column for which this renderer is being used. */
     private final DataColumnSpec m_colSpec;
     
     /** Creates new instance given a null column spec. */
-    public DefaultDataCellRenderer() {
+    public DefaultDataValueRenderer() {
         this(null);
     }
     
@@ -51,12 +49,12 @@ public class DefaultDataCellRenderer
      * @param spec The column spec of the column for which this renderer is 
      * used. 
      */
-    public DefaultDataCellRenderer(final DataColumnSpec spec) {
+    public DefaultDataValueRenderer(final DataColumnSpec spec) {
         m_colSpec = spec;
     }
     
     /**
-     * @see DataCellRenderer#getDescription()
+     * @see DataValueRenderer#getDescription()
      */
     public String getDescription() {
         return "Default";

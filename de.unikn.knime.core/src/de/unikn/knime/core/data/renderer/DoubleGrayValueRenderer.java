@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -29,8 +27,8 @@ import javax.swing.Icon;
 
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DoubleType;
 import de.unikn.knime.core.data.DoubleValue;
+import de.unikn.knime.core.data.def.DoubleCell;
 
 /**
  * Renderer for double cells that paints the whole range in gray color according
@@ -39,7 +37,7 @@ import de.unikn.knime.core.data.DoubleValue;
  * domain information is available, 0.0 and 1.0 are assumed to define the range.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class DoubleGrayValueRenderer extends DefaultDataCellRenderer {
+public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     
     /** The color to be used when the cell represents a missing cell. */
     private static final Color MISSING_COLOR = Color.RED;
@@ -89,7 +87,7 @@ public class DoubleGrayValueRenderer extends DefaultDataCellRenderer {
             boolean takeValuesFrom = spec != null;
             takeValuesFrom &= spec.getDomain().hasLowerBound();
             takeValuesFrom &= spec.getDomain().hasUpperBound();
-            takeValuesFrom &= DoubleType.DOUBLE_TYPE.isOneSuperTypeOf(
+            takeValuesFrom &= DoubleCell.TYPE.isASuperTypeOf(
                     spec.getType());
             double min;
             double max;
@@ -117,7 +115,7 @@ public class DoubleGrayValueRenderer extends DefaultDataCellRenderer {
     }
     
     /** Returns "Gray Scale".
-     * @see de.unikn.knime.core.data.renderer.DataCellRenderer#getDescription()
+     * @see de.unikn.knime.core.data.renderer.DataValueRenderer#getDescription()
      */
     @Override
     public String getDescription() {

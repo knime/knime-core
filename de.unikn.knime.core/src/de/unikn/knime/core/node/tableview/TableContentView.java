@@ -48,8 +48,8 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.property.ColorAttr;
-import de.unikn.knime.core.data.renderer.DataCellRenderer;
-import de.unikn.knime.core.data.renderer.DataCellRendererFamily;
+import de.unikn.knime.core.data.renderer.DataValueRenderer;
+import de.unikn.knime.core.data.renderer.DataValueRendererFamily;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 
@@ -342,7 +342,7 @@ public class TableContentView extends JTable {
         DataTable data = getContentModel().getDataTable();
         DataColumnSpec headerValue = data.getDataTableSpec().getColumnSpec(i);
         aColumn.setHeaderValue(headerValue);
-        DataCellRendererFamily renderer = 
+        DataValueRendererFamily renderer = 
             headerValue.getType().getRenderer(headerValue);
         aColumn.setCellRenderer(renderer);
         super.addColumn(aColumn);
@@ -417,8 +417,8 @@ public class TableContentView extends JTable {
         TableCellRenderer curRen = tableColumn.getCellRenderer();
         String renderID = null; 
         // should always be true unless someone overrides addColumn
-        if (curRen instanceof DataCellRendererFamily) { 
-            DataCellRendererFamily renFamily = (DataCellRendererFamily)curRen;
+        if (curRen instanceof DataValueRendererFamily) { 
+            DataValueRendererFamily renFamily = (DataValueRendererFamily)curRen;
             renderID = renFamily.getDescription();
         }
         String[] availRender = getAvailableRenderers(column);
@@ -449,7 +449,7 @@ public class TableContentView extends JTable {
     /**
      * Changes the renderer in a given column. The column's renderer is 
      * retrieved and checked if it is instance of 
-     * {@link DataCellRendererFamily} (which it is unless a subclass 
+     * {@link DataValueRendererFamily} (which it is unless a subclass 
      * overrides <code>addColumn</code>). In this renderer family the renderer
      * matching the description <code>rendererID</code> is set active.
      * <br />
@@ -458,17 +458,17 @@ public class TableContentView extends JTable {
      * 
      * @param column the column of interest
      * @param rendererID the name of the renderer
-     * @see DataCellRendererFamily#getRendererDescriptions()
+     * @see DataValueRendererFamily#getRendererDescriptions()
      * @throws IndexOutOfBoundsException if <code>column</code> violates its 
      *         range
      */
     public void changeRenderer(final int column, final String rendererID) {
         final TableColumn aColumn = getColumnModel().getColumn(column);
         TableCellRenderer curRen = aColumn.getCellRenderer();
-        if (!(curRen instanceof DataCellRendererFamily)) {
+        if (!(curRen instanceof DataValueRendererFamily)) {
             return;
         }
-        DataCellRendererFamily renFamily = (DataCellRendererFamily)curRen;
+        DataValueRendererFamily renFamily = (DataValueRendererFamily)curRen;
         renFamily.setActiveRenderer(rendererID);
         repaint();
     }
@@ -476,8 +476,8 @@ public class TableContentView extends JTable {
     /**
      * Get the description of all available renderers in a column. The returned
      * array simply contains all description in the 
-     * <code>DataCellRendererFamily</code> (which should be the default renderer
-     * in each column.) 
+     * <code>DataValueRendererFamily</code> (which should be the default 
+     * renderer in each column.) 
      * 
      * @param column the column of interest.
      * @return a new array containing the description of all available renderer
@@ -489,8 +489,8 @@ public class TableContentView extends JTable {
         final TableColumn tableColumn = getColumnModel().getColumn(column); 
         TableCellRenderer curRen = tableColumn.getCellRenderer();
         String[] availRenderer; 
-        if (curRen instanceof DataCellRendererFamily) {
-            DataCellRendererFamily renFamily = (DataCellRendererFamily)curRen;
+        if (curRen instanceof DataValueRendererFamily) {
+            DataValueRendererFamily renFamily = (DataValueRendererFamily)curRen;
             availRenderer = renFamily.getRendererDescriptions();
         } else {
             availRenderer = new String[0];
@@ -511,9 +511,9 @@ public class TableContentView extends JTable {
         for (Enumeration enu = colModel.getColumns(); enu.hasMoreElements();) {
             TableColumn col = (TableColumn)enu.nextElement();
             TableCellRenderer renderer = col.getCellRenderer();
-            if (renderer instanceof DataCellRenderer) {
-                int prefHeight = (int)
-                    ((DataCellRenderer)renderer).getPreferredSize().getHeight();
+            if (renderer instanceof DataValueRenderer) {
+                int prefHeight = (int)((DataValueRenderer)renderer).
+                    getPreferredSize().getHeight();
                 bestRowHeight = Math.max(bestRowHeight, prefHeight);
             }
         }
