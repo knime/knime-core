@@ -31,13 +31,6 @@ import de.unikn.knime.core.node.NodeView;
 public class AppendedRowsNodeFactory extends NodeFactory {
 
     /**
-     * @see NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "Concatenate Tables"; 
-    }
-
-    /**
      * @see NodeFactory#createNodeModel()
      */
     public NodeModel createNodeModel() {

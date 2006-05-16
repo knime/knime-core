@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -73,12 +70,7 @@ public class ARFFReaderNodeFactory extends NodeFactory {
         assert false;
         return null;
     }
-    /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "ARFF Reader";
-    }
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */

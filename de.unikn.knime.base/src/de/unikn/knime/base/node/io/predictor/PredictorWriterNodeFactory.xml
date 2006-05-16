@@ -1,14 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<entry key="shortdescription">
-	    Writes models as XML to file.
-	</entry>
-	<entry key="fulldescription">
-	 	This node saves any prediction model into a file. Connect the input port
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./pmmlWriter.gif">
+	<name>Model File Writer</name>
+	
+	<shortDescription>
+		Writes models as XML to file.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>This node saves any prediction model into a file. Connect the input port
 	 	to a model output port of any prediction model generating node. Enter
 	 	the destination location in the configuration dialog of the node. When
 	 	executed, the node saves the incoming model as XML description in the
 	 	specified file.
-	</entry>
-</properties>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<predParamIn index="0">The prediction model to write out.</predParamIn>
+	</ports>	
+</knimeNode>

@@ -1,14 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<entry key="shortdescription">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./arffreader.ico">
+	<name>ARFF Reader</name>
+	<shortDescription>
 		reads ARFF files.
-	</entry>
-    <entry key="fulldescription">
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+		This node searches for frequent molecular fragments in a set of molecules. 
  		This node reads in ARFF data from any URL. In the configuration dialog
 		specify a valid URL and set a row prefix. A row ID will be generated 
 		by the reader in the form 'prefix + rownumber'. If no prefix is 
 		specified, the row ids are just the row numbers. Sparse ARFF files are
 		currently not supported!
-	</entry>
-</properties>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataOut index="0">The data read from the file</dataOut>
+	</ports>
+</knimeNode>

@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -72,12 +69,7 @@ public class ARFFWriterNodeFactory extends NodeFactory {
             final NodeModel nodeModel) {
         return null;
     }
-    /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "ARFF Writer";
-    }
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */

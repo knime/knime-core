@@ -1,29 +1,68 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<entry key="shortdescription">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./filereader.ico">
+	<name>File Reader</name>
+	
+	<shortDescription>
 	    flexible reader for ASCII files.
-	</entry>
-	<entry key="fulldescription">
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
 		This node can be used to read data from an ASCII file or URL location.
-		It can be configured to read in various formats. When you open the 
-		node's configuration dialog and provide a filename, it will try to guess
+		It can be configured to read in various formats.<br />
+		When you open the node's configuration dialog and provide a filename, 
+		it will try to guess
 		the reader's settings by analyzing the beginning of the file 
 		(after a filename was provided).
 		Check the results of these settings in the preview table. If the 
 		data showing is not correct or an error is reported, you can adjust the
-		settings manually: Check whether column and/or row headers are included
-		in the file, enter any column delimiter (or pick a standard
-		one from the drop down list), and specify the comment characters. If the
-		type or name of a column is not correct, click on the corresponding 
-		header in the preview table. In the following dialog you can enter
-		a new name and select a new column type. This is also the place to enter
-		a pattern that should be interpreted as missing value. In that dialog
-		you can also open another dialog to enter the domain (i.e. possible
-		values or range) of this column. There you have the choice between
-		manually entering the range or possible values, tell the filereader
-		to read the values during execution (which is the default anyway), and
-		to not set any domain information for this column.
-	</entry>
+		settings manually (see below).<br />
+		When the node is executed it reads in the entire file and caches it in a
+		temporary file for faster access by the connected successor nodes. It 
+		also stores all possibles values it came accross for each column (if not
+		manually set in the node's dialog).
+		</intro>
+		
+		<option name="ASCII file location">Enter a valid file name or URL. When
+			you press ENTER, the file gets analyzed and the settings pre-set.
+			You can also choose previously read file from the drop-down list,
+			or select a file from the "Browse..." dialog.
+			</option>		
+		<option name="read row headers">if checked, the first column in the file
+			will be used as row IDs. If not checked, default row headers will be
+			created.</option>
+		<option name="read column headers">if checked, the items in the first 
+			line of the file will be used as column names. Otherwise default 
+			column names will be created.</option>
+	    <option name="Column delimiter">Enter the character(s) that separate
+	    	the data tokens in the file, or select a delimiter from the list.
+			</option>
+	    <option name="ignore spaces and tabs">If checked, spaces and the TAB
+		    characters are ignored (not in quoted strings though). Not useful 
+		    when space or TAB is a delimiter.
+		    </option>
+	    <option name="Java style comment">Everything between '/*' and '*/' is
+	    	ignored. Also everything after '//' until the end of the line.
+			</option>
+	    <option name="single line comment">Enter one or more characters that
+	    	will indicate the start of a comment (ended by a new line).
+			</option>
+	    <option name="Advanced...">Opens a new dialog with advanced settings.
+	    	Right now, there is more advanced support for quotes and for the
+	    	decimal separator in floating point numbers.	    
+			</option>
+	    <option name="Click on the table header">If the column header in the
+	        preview table is clicked, a new dialog opens where some column
+	        properties can be set: The name and type can be changed (and will
+	        be fix then). A pattern can be entered that will cause a "missing
+	        cell" to be created when it's read for this column. Also, the
+	        domain for this column can be entered, that is, possible values or
+	        the range of the values.
+		    </option>	      	
+	</fullDescription>
 	
-</properties>
+	<ports>
+		<dataOut index="0">Datatable just read from the file</dataOut>
+	</ports>	
+</knimeNode>

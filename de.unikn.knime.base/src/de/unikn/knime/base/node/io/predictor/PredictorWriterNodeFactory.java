@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -32,14 +29,6 @@ import de.unikn.knime.core.node.NodeView;
  * @author M. Berthold, University of Konstanz
  */
 public class PredictorWriterNodeFactory extends NodeFactory {
-
-    /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNodeName()
-     */
-    @Override
-    public String getNodeName() {
-        return "Model File Writer";
-    }
 
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()

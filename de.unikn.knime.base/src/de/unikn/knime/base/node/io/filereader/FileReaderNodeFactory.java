@@ -1,7 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -44,13 +41,6 @@ public class FileReaderNodeFactory extends NodeFactory {
      */
     public FileReaderNodeFactory() {
         m_defaultXMLFile = null;
-    }
-
-    /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "File Reader";
     }
 
     /**

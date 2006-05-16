@@ -1,25 +1,31 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<entry key="shortdescription">
-		Includes (or excludes) the selected columns from input data.
-    </entry>
-	<entry key="fulldescription">
-		Allows to filter certain columns from the input table that
-		are	then hidden in the output table. Use the buttons to move columns 
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./columnFilter.gif">
+	<name>Column Filter</name>
+	
+	<shortDescription>
+		Filters by including (or excluding) selected columns from the table.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Allows to filter certain columns from the input table that
+		are	then excluded from the output table. Use the buttons to move columns 
 		from one list (Include or Exclude) to the other. To briefly 
 		describe the dialog settings:
-    </entry>
-    <entry key="1. Include: ">
-    		This list contains the column names that are contained in the output
-    		table. The search field allows to find column names in this list.
-    </entry>
-    <entry key="2. Search: ">
-            The search field allows to find column names in either the 
-            include or exclude list.
-    </entry>
-    <entry key="3. Exclude: ">
-        Contains the names of columns in the input table that are hidden
-        in the output table.
-    </entry>
-</properties>
+		</intro>
+		
+		<option name="Include">This list contains the column names that are 
+		contained in the output	table.</option>
+		
+		<option name="Search">The search field allows for finding column names 
+			in either the include or exclude list.</option>
+		
+	    <option name="Exclude">Contains the names of columns of the input table 
+	    	that are excluded from the output table.</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0">Datatable to filter columns out</dataIn>
+		<dataOut index="0">Datatable with only the specified columns</dataOut>
+	</ports>	
+</knimeNode>

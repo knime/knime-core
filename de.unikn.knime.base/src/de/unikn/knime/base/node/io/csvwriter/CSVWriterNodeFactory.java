@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -37,14 +34,6 @@ public class CSVWriterNodeFactory extends NodeFactory {
     public CSVWriterNodeFactory() {
     }
     
-    /**
-     * @return "CSV Writer"
-     * @see de.unikn.knime.core.node.NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "CSV Writer"; 
-    }
-
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */

@@ -1,7 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -31,13 +28,6 @@ import de.unikn.knime.core.node.NodeView;
  * @author Christoph Sieb, University of Konstanz
  */
 public class FilterColumnNodeFactory extends NodeFactory {
-
-    /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "Column Filter";
-    }
 
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()

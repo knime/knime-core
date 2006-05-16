@@ -1,12 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<entry key="shortdescription">writes data into a file, in ARFF format.
-	</entry>
-    <entry key="fulldescription">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./arffwriter.ico">
+	<name>ARFF Writer</name>
+	
+	<shortDescription>
+		Writes data into a file, in ARFF format.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
  		This node saves data in ARFF format to a file. In the configuration dialog
 		specify a valid destination file. When executed the node writes the 
 		data coming through its input port into the specified location.
 		It writes not-sparse ARFF files only at this time.
-	</entry>
-</properties>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0">The datatable to write to the file</dataIn>
+	</ports>	
+</knimeNode>

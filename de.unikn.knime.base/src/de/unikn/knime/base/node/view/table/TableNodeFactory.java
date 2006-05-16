@@ -67,13 +67,6 @@ public class TableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNodeName()
-     */
-    public String getNodeName() {
-        return "Interactive Table";
-    }
-
-    /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
     public int getNrNodeViews() {
