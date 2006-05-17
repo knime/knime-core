@@ -30,6 +30,9 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -183,6 +186,9 @@ public final class RepositoryManager {
         //
         // Second, process the contributed nodes
         //
+
+        // holds error string for possibly not instantiable nodes
+        StringBuffer errorString = new StringBuffer();
         for (int i = 0; i < nodeExtensions.length; i++) {
 
             IExtension ext = nodeExtensions[i];
@@ -223,14 +229,27 @@ public final class RepositoryManager {
                     }
 
                 } catch (Exception ex) {
-                    WorkbenchErrorLogger.error(
-                            "Could not load contributed node "
-                                    + "extension, skipped: '"
-                                    + e.getAttribute("id") + "' from plugin '"
-                                    + ext.getNamespace() + "'", ex);
+
+                    errorString.append(e.getAttribute("id") + "' from plugin '"
+                            + ext.getNamespace() + "'\n");
+
                 }
 
             } // for
+
+        }
+
+        // if errors occured show an information box
+        if (errorString.length() > 0) {
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            mb.setText("Node(s) could not be loaded!");
+            mb.setMessage("Could not load all contributed node "
+                    + "extensions, skipped: '\n\n" + errorString.toString());
+            mb.open();
+
+            WorkbenchErrorLogger
+                    .warning("Could not load all contributed nodes ");
         }
 
     }
