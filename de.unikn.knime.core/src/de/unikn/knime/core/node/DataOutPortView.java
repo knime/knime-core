@@ -273,10 +273,8 @@ final class DataOutPortView extends NodeOutPortView {
             // Row[1]: second row displays type of column
             cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
-                String typename = spec.getColumnSpec(c).getType().getClass()
-                        .getName();
-                cols[c] = new StringCell("<html><b>"
-                        + typename.substring(typename.lastIndexOf('.') + 1));
+                String typename = spec.getColumnSpec(c).getType().toString();
+                cols[c] = new StringCell("<html><b>" + typename);
             }
             rows[1] = new DefaultRow(new StringCell("<html><b>Type"),
                     cols);
