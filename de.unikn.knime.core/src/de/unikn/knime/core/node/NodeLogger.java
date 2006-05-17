@@ -1,7 +1,4 @@
-/*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * --------------------------------------------------------------------- *
+/* --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -15,6 +12,9 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * 
+ * History
+ *   15.05.2006(sieb, ohl): reviewed 
  */
 package de.unikn.knime.core.node;
 
@@ -38,8 +38,9 @@ import org.apache.log4j.varia.NullAppender;
 /**
  * The general logger used to write info, warnings, errors, debugging,
  * and assert messages and exceptions into the Log4J logger. By default, the
- * <code>System.out</code> stream and <i>knime.log</i> (created in the
- * system's temp directory) are appended to the logger.
+ * logged output goes to the <code>System.out</code> stream and to the
+ * <i>knime.log</i> (created in the <i>.knime</i> directory, located by default
+ * in the user's home dir).
  * 
  * @author Thomas Gabriel, Konstanz University
  */
