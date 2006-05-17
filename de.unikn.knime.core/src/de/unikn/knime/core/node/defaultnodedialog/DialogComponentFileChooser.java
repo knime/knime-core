@@ -58,7 +58,20 @@ public class DialogComponentFileChooser extends DialogComponent {
             final String... validExtensions) {
        this(configName, JFileChooser.OPEN_DIALOG, validExtensions); 
     }
-
+    
+    /**
+     * Constructor, no valid extensions set.
+     * 
+     * @param configName key for filename in config object
+     * @param dialogType JFileChooser.OPEN_DIALOG, SAVE_DIALOG, CUSTOM_DIALOG.
+     * @param directoryOnly If directories are only selectable, otherwise
+     *        only files can be selected.
+     */
+    public DialogComponentFileChooser(final String configName,
+            final int dialogType, final boolean directoryOnly) {
+        this(configName, dialogType, directoryOnly, new String[0]);
+    }
+    
     /**
      * Constructor.
      * 
@@ -68,6 +81,21 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     public DialogComponentFileChooser(final String configName,
             final int dialogType, final String... validExtensions) {
+        this(configName, dialogType, false, validExtensions);
+    }
+
+    /**
+     * Constructor.
+     * 
+     * @param configName key for filename in config object
+     * @param dialogType JFileChooser.OPEN_DIALOG, SAVE_DIALOG, CUSTOM_DIALOG.
+     * @param directoryOnly If directories are only selectable, otherwise
+     *        only files can be selected.
+     * @param validExtensions prefer files with those extensions
+     */
+    public DialogComponentFileChooser(final String configName,
+            final int dialogType, final boolean directoryOnly,
+            final String... validExtensions) {
         m_configName = configName;
         m_fileURL = new JTextField("n/a");
         m_fileURL.setBorder(BorderFactory.createTitledBorder(
@@ -80,7 +108,12 @@ public class DialogComponentFileChooser extends DialogComponent {
                 // sets the path in the file text field.
                 JFileChooser chooser = new JFileChooser(m_fileURL.getText());
                 chooser.setDialogType(dialogType);
-                chooser.setFileFilter(new SimpleFileFilter(validExtensions));
+                if (directoryOnly) {
+                    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                } else {
+                    chooser.setFileFilter(
+                            new SimpleFileFilter(validExtensions));
+                }
                 int returnVal = chooser.showDialog(getParent(), null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String newFile;
