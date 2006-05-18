@@ -47,6 +47,8 @@ import org.apache.log4j.varia.NullAppender;
  * logging level of the default loggers. All other writers' levels have to be
  * set before hand. 
  * 
+ * TODO put default logging levels into file and list of excluded packages.
+ * 
  * @author Thomas Gabriel, Konstanz University
  */
 public final class NodeLogger {
