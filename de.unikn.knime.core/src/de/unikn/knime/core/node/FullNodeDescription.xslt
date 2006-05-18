@@ -12,13 +12,15 @@
 			<xsl:apply-templates select="fullDescription/intro/node()" mode="copy" />
 		</p>
 		
-		<h3>Dialog options</h3>
-		<xsl:for-each select="fullDescription/option">
-			<div style="font-weight: bold;"><xsl:value-of select="@name" /></div>
-			<div style="margin-left: 5mm; margin-top: 1mm; margin-bottom: 3mm;">
-				<xsl:apply-templates select="node()" mode="copy" />
-			</div>
-		</xsl:for-each>
+		<xsl:if test="fullDescription/option">
+			<h3>Dialog options</h3>
+			<xsl:for-each select="fullDescription/option">
+				<div style="font-weight: bold;"><xsl:value-of select="@name" /></div>
+				<div style="margin-left: 5mm; margin-top: 1mm; margin-bottom: 3mm;">
+					<xsl:apply-templates select="node()" mode="copy" />
+				</div>
+			</xsl:for-each>
+		</xsl:if>
 
 		<xsl:apply-templates select="ports" />
 		<xsl:apply-templates select="views" />
@@ -32,8 +34,10 @@
 	<h3>Views</h3>
 	<xsl:for-each select="view">
 		<xsl:sort select="@index" />
-		<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@name" /></span>
-		<xsl:apply-templates />
+		<div>
+			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@name" /></span>
+			<xsl:apply-templates />
+		</div>
 	</xsl:for-each>
 </xsl:template>
 	
@@ -45,32 +49,40 @@
 		<h4>Input ports</h4>
 		<xsl:for-each select="dataIn">
 			<xsl:sort select="@index" />
-			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
-			<xsl:apply-templates />
+			<div>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+				<xsl:apply-templates />
+			</div>
 		</xsl:for-each>
 	</xsl:if>					
 	<xsl:if test="dataOut">
 		<h4>Output ports</h4>
 		<xsl:for-each select="dataOut">
 			<xsl:sort select="@index" />
-			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
-			<xsl:apply-templates />
+			<div>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+				<xsl:apply-templates />
+			</div>
 		</xsl:for-each>
 	</xsl:if>					
 	<xsl:if test="predParamIn">
 		<h4>Model input ports</h4>
 		<xsl:for-each select="predParamIn">
 			<xsl:sort select="@index" />
-			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
-			<xsl:apply-templates />
+			<div>			
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+				<xsl:apply-templates />
+			</div>
 		</xsl:for-each>
 	</xsl:if>					
 	<xsl:if test="predParamOut">
 		<h4>Model output ports</h4>
 		<xsl:for-each select="predParamOut">
 			<xsl:sort select="@index" />
-			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
-			<xsl:apply-templates />
+			<div>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+				<xsl:apply-templates />
+			</div>
 		</xsl:for-each>
 	</xsl:if>					
 </xsl:template>
