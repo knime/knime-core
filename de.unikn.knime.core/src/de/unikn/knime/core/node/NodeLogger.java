@@ -36,17 +36,22 @@ import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 
 /**
- * The general logger used to write info, warnings, errors, debugging,
- * and assert messages and exceptions into the Log4J logger. By default, the
- * logged output goes to the <code>System.out</code> stream and to the
- * <i>knime.log</i> (created in the <i>.knime</i> directory, located by default
- * in the user's home dir).
+ * The general logger used to write info, warnings, errors , debugging,
+ * assert messages, exceptions, and coding problems into the internal Log4J 
+ * logger. By default, the messages are logged to <code>System.out</code> 
+ * and <code>System.err</code>, respectively. In addtion, all messages are
+ * written into the <i>knime.log</i> file created in the <i>.knime</i> 
+ * directory, located by default in the user's home directory. Furthermore, it 
+ * is possible to add and remove additional writers to this logger. Note,
+ * calling <code>#setLevelIntern(LEVEL)</code> does only effect the minimum 
+ * logging level of the default loggers. All other writers' levels have to be
+ * set before hand. 
  * 
  * @author Thomas Gabriel, Konstanz University
  */
 public final class NodeLogger {
 
-    /** The message levels. */
+    /** The logging levels. */
     public static enum LEVEL {
         /** includes debug and more critical messages. */
         DEBUG,
@@ -62,7 +67,7 @@ public final class NodeLogger {
         ALL
     }
 
-    /** The KNIME log file name. */
+    /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
 
     /** Assertions are on or off. */
@@ -86,13 +91,16 @@ public final class NodeLogger {
     private static final HashMap<Writer, WriterAppender> WRITER = 
         new HashMap<Writer, WriterAppender>();
     
+    /** <code>System.err</code> log appender. */
     private static final ConsoleAppender SERR_APPENDER;
+    /** <code>System.out</code> log appender. */
     private static final ConsoleAppender SOUT_APPENDER;
+    /** Default log file appender. */
     private static final Appender FILE_APPENDER;
 
     /**
-     * Init Log4J logger and append <code>System.out</code> stream and
-     * <i>knime.log</i> file.
+     * Inits Log4J logger and appends <code>System.out</code>, 
+     * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
         // init root logger
@@ -160,7 +168,7 @@ public final class NodeLogger {
         }
     }
 
-    /** Write start logging message. */  
+    /** Write start logging message to info logger of this class. */  
     private static void startMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
@@ -188,15 +196,18 @@ public final class NodeLogger {
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("# Copyright, 2003 - 2006                                    #");
-        l.info("# Konstanz University, Germany.                             #");
+        l.info("# University of Konstanz, Germany.                          #");
         l.info("# Chair for Bioinformatics and Information Mining           #");
         l.info("# Prof. Dr. Michael R. Berthold                             #");
     }
 
-    /** The Log4J logger assigned to this NodeLogger. */
+    /** The Log4J logger to which all messages are logged. */
     private final Logger m_logger;
 
-    /** Don't log the following types. */
+    /** 
+     * Don't log the following packages. 
+     * TODO create external file. 
+     */
     private static final String[] DONT_LOG = new String[]{"joelib",
             "org.openscience"};
     static {
@@ -207,18 +218,19 @@ public final class NodeLogger {
     }
 
     /**
-     * Hidden default constructor; logs the given Class.
+     * Hidden default constructor, logger created by 
+     * <code>java.lang.Class</code>.
      * 
-     * @param c The Class to log.
+     * @param c The logger created by Class name.
      */
     private NodeLogger(final Class c) {
         m_logger = Logger.getLogger(c);
     }
 
     /**
-     * Hidden default constructor; logs the given class by name.
+     * Hidden default constructor, logger created by just a name.
      * 
-     * @param s The String to log.
+     * @param s The name of the logger.
      */
     private NodeLogger(final String s) {
         m_logger = Logger.getLogger(s);
@@ -242,10 +254,10 @@ public final class NodeLogger {
     }
 
     /**
-     * Creates a new <code>NodeLogger</code> for the given Class.
+     * Creates a new <code>NodeLogger</code> for the given name.
      * 
      * @param s The logger's String.
-     * @return A new logger of this type.
+     * @return A new logger for the given name.
      */
     public static NodeLogger getLogger(final String s) {
         if (LOGGERS.containsKey(s)) {
@@ -477,6 +489,11 @@ public final class NodeLogger {
         SOUT_APPENDER.addFilter(filter);
     }
 
+    /**
+     * Translates this loging levels into Log4J logging levels.
+     * @param level The level to translate.
+     * @return The Log4J logging level.
+     */
     private static Level getLevel(final LEVEL level) {
         switch (level) {
         case DEBUG:
