@@ -27,13 +27,14 @@ import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import de.unikn.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
 
 /**
- * 
+ * Dialog for the node to write arbitrary tables to a file. It only shows
+ * a file chooser dialog.
  * @author wiswedel, University of Konstanz
  */
 public class WriteTableNodeDialogPane extends DefaultNodeDialogPane {
 
     /**
-     * @param title
+     * Creates new dialog.
      */
     public WriteTableNodeDialogPane() {
         super("Write Table");

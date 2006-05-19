@@ -27,7 +27,8 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * 
+ * Factory for the node to write arbitrary tables to a file. It only shows
+ * a file chooser dialog.
  * @author wiswedel, University of Konstanz
  */
 public class WriteTableNodeFactory extends NodeFactory {
@@ -49,15 +50,16 @@ public class WriteTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int, de.unikn.knime.core.node.NodeModel)
+     * @see NodeFactory#createNodeView(int, NodeModel)
      */
     @Override
-    public NodeView createNodeView(int viewIndex, NodeModel nodeModel) {
-        return null;
+    public NodeView createNodeView(
+            final int viewIndex, final NodeModel nodeModel) {
+        throw new IndexOutOfBoundsException("no view");
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
+     * @see NodeFactory#hasDialog()
      */
     @Override
     protected boolean hasDialog() {
@@ -65,7 +67,7 @@ public class WriteTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
+     * @see NodeFactory#createNodeDialogPane()
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {

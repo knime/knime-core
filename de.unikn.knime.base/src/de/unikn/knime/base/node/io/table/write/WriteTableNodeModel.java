@@ -32,60 +32,63 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
 
 /**
- * 
+ * NodeModel for the node to write arbitrary tables to a file. It only shows
+ * a file chooser dialog.
  * @author wiswedel, University of Konstanz
  */
 public class WriteTableNodeModel extends NodeModel {
     
+    /** Config identifier for the settings object. */
     static final String CFG_FILENAME = "filename";
     
     private String m_fileName;
     
+    /** Creates new NodeModel with one input, no output ports. */
     public WriteTableNodeModel() {
         super(1, 0);
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettings)
      */
     @Override
-    protected void saveSettingsTo(NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettings settings) {
         if (m_fileName != null) {
             settings.addString(CFG_FILENAME, m_fileName);
         }
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#validateSettings(de.unikn.knime.core.node.NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettings)
      */
     @Override
-    protected void validateSettings(NodeSettings settings)
+    protected void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         settings.getString(CFG_FILENAME);
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
      */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettings settings)
             throws InvalidSettingsException {
         m_fileName = settings.getString(CFG_FILENAME);
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#execute(de.unikn.knime.core.data.DataTable[], de.unikn.knime.core.node.ExecutionMonitor)
+     * @see NodeModel#execute(DataTable[], ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(DataTable[] inData, ExecutionMonitor exec)
-            throws Exception {
+    protected DataTable[] execute(final DataTable[] inData, 
+            final ExecutionMonitor exec) throws Exception {
         DataTable in = inData[0];
         DataContainer.writeToZip(in, new File(m_fileName), exec);
         return new DataTable[0];
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#reset()
+     * @see NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -93,11 +96,14 @@ public class WriteTableNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#configure(de.unikn.knime.core.data.DataTableSpec[])
+     * @see NodeModel#configure(DataTableSpec[])
      */
     @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_fileName == null) {
+            throw new InvalidSettingsException("No file given.");
+        }
         return new DataTableSpec[0];
     }
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./tablewrite.png">
+	<name>Table Writer</name>
+	
+	<shortDescription>
+		Writes a data table to a zip file.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			This node writes a data table in an internal format to a zip file, ready to be
+			read with a Table Read node.
+		</intro>
+		<option name="File Chooser">
+			Choose the file to write to.
+		</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0">The table to write.</dataIn>
+	</ports>	
+</knimeNode>
