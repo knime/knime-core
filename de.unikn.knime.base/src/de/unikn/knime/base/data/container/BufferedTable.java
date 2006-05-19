@@ -34,7 +34,7 @@ import de.unikn.knime.core.data.RowIterator;
 class BufferedTable implements DataTable {
     
     /** To read the data from. */
-    private final Buffer2 m_buffer;
+    private final Buffer m_buffer;
     
     /**
      * Create new Table based on a Buffer. This constructor is called from
@@ -42,7 +42,7 @@ class BufferedTable implements DataTable {
      * @param buffer To read data from.
      * @see DataContainer#getTable()
      */
-    BufferedTable(final Buffer2 buffer) {
+    BufferedTable(final Buffer buffer) {
         assert (buffer != null);
         m_buffer = buffer;
     }
@@ -64,7 +64,7 @@ class BufferedTable implements DataTable {
     /** Get reference to buffer.
      * @return The buffer backing this object.
      */
-    Buffer2 getBuffer() {
+    Buffer getBuffer() {
         return m_buffer;
     }
 

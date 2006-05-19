@@ -60,11 +60,11 @@ import de.unikn.knime.core.node.NodeLogger;
  * "centralizes" the IO operations.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class Buffer2 {
+final class Buffer {
     
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(Buffer2.class);
+        NodeLogger.getLogger(Buffer.class);
     
     /** the temp file will have a time stamp in its name. */
     private static final SimpleDateFormat DATE_FORMAT = 
@@ -158,7 +158,7 @@ final class Buffer2 {
      *        until they will be subsequent written to the temp file. (0 to 
      *        write immediately to a file)
      */
-    Buffer2(final int maxRowsInMemory) {
+    Buffer(final int maxRowsInMemory) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new LinkedList<DataRow>();
@@ -451,7 +451,7 @@ final class Buffer2 {
          * @see de.unikn.knime.core.data.RowIterator#hasNext()
          */
         public boolean hasNext() {
-            boolean hasNext = m_pointer < Buffer2.this.m_size;
+            boolean hasNext = m_pointer < Buffer.this.m_size;
             if (!hasNext) {
                 try {
                     m_inStream.close();

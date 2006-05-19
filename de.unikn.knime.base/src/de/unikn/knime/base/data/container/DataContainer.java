@@ -77,7 +77,7 @@ public class DataContainer implements RowAppender {
     private static final int MAX_POSSIBLE_VALUES = 60;
 
     /** The object that saves the rows. */
-    private Buffer2 m_buffer;
+    private Buffer m_buffer;
     
     private final int m_maxCellsInMemory; 
     
@@ -228,7 +228,7 @@ public class DataContainer implements RowAppender {
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         int rowsInMemory = m_maxCellsInMemory / ((colCount > 0) ? colCount : 1);
-        m_buffer = new Buffer2(rowsInMemory);
+        m_buffer = new Buffer(rowsInMemory);
     }
 
     /**
