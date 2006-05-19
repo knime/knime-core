@@ -54,6 +54,8 @@ import de.unikn.knime.core.data.DataCellSerializer;
  */
 class DCObjectOutputStream extends ObjectOutputStream {
     
+    /** The stream as passed in the constructor, m_objectOut writes to it.*/
+    private final OutputStream m_underylingOut;
     /** Underlying stream to write to. */
     private final ObjectOutputStream m_objectOut;
     /** Used to mark the end of a DataCell when written using the 
@@ -69,9 +71,18 @@ class DCObjectOutputStream extends ObjectOutputStream {
      * @throws IOException If the stream can't be written.
      */
     public DCObjectOutputStream(final OutputStream out) throws IOException {
-        m_objectOut = new ObjectOutputStream(out);
+        m_underylingOut = out;
+        m_objectOut = new ObjectOutputStream(m_underylingOut);
         m_out = new BlockableOutputStream(m_objectOut);
         m_dataOut = new DataOutputStream(m_out);
+    }
+
+    /** Get reference to underlying output stream. Remember to flush this
+     * stream before you do nasty things with the underlying stream!
+     * @return The underyling stream as passed in the constructor.
+     */
+    OutputStream getUnderylingStream() {
+        return m_underylingOut;
     }
     
     /** Writes a data cell using the serializer. It will write one block.

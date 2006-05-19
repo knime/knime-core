@@ -16,6 +16,8 @@
  */
 package de.unikn.knime.base.data.container;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -469,5 +471,31 @@ public class DataContainer implements RowAppender {
     public static DataTable cache(final DataTable table, 
             final ExecutionMonitor exec) throws CanceledExecutionException {
         return cache(table, exec, MAX_CELLS_IN_MEMORY);
+    }
+    
+    /** Writes a given DataTable permanently to a zip file.
+     * 
+     */
+    public static void writeToZip(final DataTable table, final File outFile,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        Buffer buf = new Buffer(outFile);
+        int rowCount = 0;
+        try {
+            for (DataRow row : table) {
+                rowCount++;
+                exec.setMessage("Writing row " + rowCount + " (\"" +
+                        row.getKey() + "\")");
+                exec.checkCanceled();
+                buf.addRow(row);
+            }
+        } finally {
+            buf.close(table.getDataTableSpec());
+        }
+    }
+    
+    public static DataTable readFromZip(final File zipFile) throws IOException {
+        Buffer buffer = new Buffer(zipFile, /*ignore*/false);
+        return new BufferedTable(buffer);
     }
 }

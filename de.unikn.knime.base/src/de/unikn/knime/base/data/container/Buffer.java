@@ -23,9 +23,11 @@ import java.awt.Color;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -38,23 +40,29 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataCellSerializer;
+import de.unikn.knime.core.data.DataColumnDomain;
+import de.unikn.knime.core.data.DataColumnProperties;
+import de.unikn.knime.core.data.DataColumnSpec;
+import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
+import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
- * A buffer writes the rows from a <code>DataContainer</code> to a temp file. 
+ * A buffer writes the rows from a <code>DataContainer</code> to a file. 
  * This class serves as connector between the <code>DataContainer</code> and 
  * the <code>DataTable</code> that is returned by the container. It 
  * "centralizes" the IO operations.
@@ -82,6 +90,11 @@ final class Buffer {
     /** The first used char for the map char --> type. */
     private static final byte BYTE_TYPE_START = BYTE_TYPE_MISSING + 2;
 
+    /** Name of the zip entry containing the data. */
+    private static final String ZIP_ENTRY_DATA = "data.bin";
+    
+    /** Name of the zip entry containing the spec. */
+    private static final String ZIP_ENTRY_SPEC = "spec.bin";
 
     /** Contains weak references to file iterators that have ever been created
      * but not (yet) garbage collected. We will add a shutdown hook 
@@ -93,14 +106,19 @@ final class Buffer {
     private static final HashSet<WeakReference<FromFileIterator>> 
         OPENSTREAMS = new HashSet<WeakReference<FromFileIterator>>();
 
-    /** the temp file to write to. */
-    private File m_tempFile;
+    /** the file to write to. */
+    private File m_outFile;
     
-    /** Number of open file input streams on m_tempFile. */
+    /** true when we created a temp file, false when either no IO has
+     * happened or the file was explicitely given.
+     */
+    private boolean m_hasCreatedTempFile;
+    
+    /** Number of open file input streams on m_outFile. */
     private int m_nrOpenInputStreams;
     
-    /** the stream that writes to the temp file, used for plain cells. */
-    private DCObjectOutputStream m_outWriter;
+    /** the stream that writes to the file, used for plain cells. */
+    private DCObjectOutputStream m_outStream;
     
     /** maximum number of rows that are in memory. */
     private final int m_maxRowsInMem;
@@ -139,7 +157,7 @@ final class Buffer {
                                 it.m_inStream.close();
                             } catch (IOException ioe) {
                                 LOGGER.warn("Unable to close input stream on " 
-                                        + "file " + it.getTempFileName(), ioe);
+                                        + "file " + it.getOutFileName(), ioe);
                             }
                         }
                     }
@@ -167,6 +185,34 @@ final class Buffer {
         m_size = 0;
     }
     
+    Buffer(final File outFile) throws IOException {
+        this(0);
+        if (outFile == null) {
+            throw new NullPointerException("Can't set null file!");
+        }
+        initOutFile(outFile);
+    }
+    
+    Buffer(final File inFile, boolean ignored) throws IOException {
+        m_maxRowsInMem = 0;
+        ZipFile zipFile = new ZipFile(inFile);
+        InputStream specInput = zipFile.getInputStream(
+                new ZipEntry(ZIP_ENTRY_SPEC));
+        ObjectInputStream inStream = new ObjectInputStream(
+                new BufferedInputStream(specInput));
+        try {
+            readSpecFromFile(inStream);
+        } catch (ClassNotFoundException cnfe) {
+            IOException ioe = new IOException(
+                    "Unable to read spec from zip file \""
+                    + inFile.getAbsolutePath() + "\"");
+            ioe.initCause(cnfe);
+            throw ioe;
+        }
+        inStream.close();
+        m_outFile = inFile;
+    }
+    
     /** 
      * Adds a row to the buffer. The rows structure is not validated against
      * the table spec that was given in the constructor. This should have been
@@ -178,15 +224,15 @@ final class Buffer {
         m_size++;
         if (m_list.size() > m_maxRowsInMem) { // if size is violated
             try {
-                if (m_outWriter == null) {
-                    initTempFile();
+                if (m_outStream == null) {
+                    initOutFile(/*File=*/null);
                 }
                 writeEldestRow();             // write it to the file
             } catch (IOException ioe) {
-                String fileName = (m_tempFile != null 
-                        ? "\"" + m_tempFile.getName() + "\"" : "");
+                String fileName = (m_outFile != null 
+                        ? "\"" + m_outFile.getName() + "\"" : "");
                 throw new RuntimeException(
-                        "Unable to write to temp file " + fileName , ioe);
+                        "Unable to write to file " + fileName , ioe);
             }
         }
         assert (m_list.size() <= m_maxRowsInMem);
@@ -202,7 +248,7 @@ final class Buffer {
         assert (spec != null);
         m_spec = spec;
         // everything is in the list, i.e. in memory
-        if (!usesTempFile()) {
+        if (!usesOutFile()) {
             // disallow modification
             List<DataRow> newList = Collections.unmodifiableList(m_list);
             m_list = newList;
@@ -214,16 +260,75 @@ final class Buffer {
                 writeEldestRow();
             }
             createShortCutArray();
-            m_outWriter.close();
-            double sizeInMB = m_tempFile.length() / (double)(1 << 20);
+            // if we write to a customized cell, we also need to 
+            // add the table spec information (storing permanently)
+            m_outStream.flush();
+            if (!m_hasCreatedTempFile) {
+                // we push the underlying stream forward; need to make
+                // sure that m_outStream is done with everything.
+                ZipOutputStream zipOut = (ZipOutputStream)m_outStream.getUnderylingStream();
+                zipOut.closeEntry();
+                zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
+                ObjectOutputStream outStream = new ObjectOutputStream(zipOut);
+                writeSpecToFile(outStream);
+                outStream.flush();
+                zipOut.closeEntry();
+            }
+            m_outStream.close();
+            double sizeInMB = m_outFile.length() / (double)(1 << 20);
             String size = NumberFormat.getInstance().format(sizeInMB);
-            LOGGER.info("Buffer2 file (" + m_tempFile.getAbsolutePath() 
+            LOGGER.info("Buffer file (" + m_outFile.getAbsolutePath() 
                     + ") is " + size + "MB in size");
         } catch (IOException ioe) {
-            throw new RuntimeException("Cannot close stream of temp file \"" 
-                    + m_tempFile.getName() + "\"", ioe); 
+            throw new RuntimeException("Cannot close stream of file \"" 
+                    + m_outFile.getName() + "\"", ioe); 
         }
     } // close()
+    
+    private void writeSpecToFile(ObjectOutputStream outStream) throws IOException {
+        outStream.writeInt(m_size);
+        // first write the short cut array
+        outStream.writeObject(m_shortCutsLookup);
+        DataTableSpec spec = m_spec;
+        int colCount = spec.getNumColumns();
+        outStream.writeInt(colCount);
+        for (int i = 0; i < colCount; i++) {
+            DataColumnSpec cSpec = spec.getColumnSpec(i);
+            outStream.writeObject(cSpec.getName());
+            outStream.writeObject(cSpec.getType());
+            DataColumnDomain domain = cSpec.getDomain();
+            outStream.writeObject(domain.getValues());
+            outStream.writeObject(domain.getLowerBound());
+            outStream.writeObject(domain.getUpperBound());
+            outStream.writeObject(cSpec.getProperties());
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void readSpecFromFile(final ObjectInputStream inStream) 
+        throws IOException, ClassNotFoundException {
+        m_size = inStream.readInt();
+        m_shortCutsLookup = (Class<? extends DataCell>[])inStream.readObject();
+        int colCount = inStream.readInt();
+        DataColumnSpec[] colSpecs = new DataColumnSpec[colCount];
+        for (int i = 0; i < colCount; i++) {
+            DataCell name = (DataCell)inStream.readObject();
+            DataType type = (DataType)inStream.readObject();
+            Set<DataCell> values = (Set<DataCell>)inStream.readObject();
+            DataCell lowerBound = (DataCell)inStream.readObject();
+            DataCell upperBound = (DataCell)inStream.readObject();
+            DataColumnDomain domain = 
+                new DefaultDataColumnDomain(values, lowerBound, upperBound);
+            DataColumnProperties props =
+                (DataColumnProperties)inStream.readObject();
+            DataColumnSpecCreator creator = 
+                new DataColumnSpecCreator(name, type);
+            creator.setDomain(domain);
+            creator.setProperties(props);
+            colSpecs[i] = creator.createSpec();
+        }
+        m_spec = new DataTableSpec(colSpecs);
+    }
     
     /** Create the shortcut table. */
     @SuppressWarnings("unchecked") // no generics in array definiton
@@ -238,11 +343,11 @@ final class Buffer {
         m_typeShortCuts = null;
     }
     
-    /** Does the buffer use a temp file?
+    /** Does the buffer use a file?
      * @return true If it does.
      */
-    boolean usesTempFile() {
-        return m_tempFile != null;
+    boolean usesOutFile() {
+        return m_outFile != null;
     }
     
     /** Get the table spec that was set in the constructor.
@@ -260,7 +365,7 @@ final class Buffer {
     }
     
     /**
-     * Serializes the first element in the list to the temp file. This method
+     * Serializes the first element in the list to the out file. This method
      * is called from <code>addRow(DataRow)</code> and <code>close()</code>.
      * @throws IOException If an IO error occurs while writing to the file.
      */
@@ -272,8 +377,8 @@ final class Buffer {
             DataCell cell = firstRow.getCell(i);
             writeDataCell(cell);
         }
-        m_outWriter.writeChar(ROW_SEPARATOR);
-        m_outWriter.reset();
+        m_outStream.writeChar(ROW_SEPARATOR);
+        m_outStream.reset();
     } // writeEldestRow()
     
     /** Writes the row key to the out stream. */
@@ -282,7 +387,7 @@ final class Buffer {
         writeDataCell(id);
         ColorAttr c = key.getColorAttr();
         Color color = c.getColor();
-        m_outWriter.writeInt(color.getRGB());
+        m_outStream.writeInt(color.getRGB());
     }
     
     /** Reads a row key from a string. */
@@ -293,10 +398,10 @@ final class Buffer {
         return new RowKey(id, ColorAttr.getInstance(new Color(color)));
     }
     
-    /** Writes a data cell to the m_outWriter. */
+    /** Writes a data cell to the m_outStream. */
     private void writeDataCell(final DataCell cell) throws IOException {
         if (cell.isMissing()) {
-            m_outWriter.writeByte(BYTE_TYPE_MISSING);
+            m_outStream.writeByte(BYTE_TYPE_MISSING);
             return;
         }
         DataCellSerializer serializer = 
@@ -314,11 +419,11 @@ final class Buffer {
                 m_typeShortCuts.put(cell.getClass(), identifier);
             }
             // memorize type if it does not exist
-            m_outWriter.writeByte((byte)identifier);
-            m_outWriter.writeDataCell(serializer, cell);
+            m_outStream.writeByte((byte)identifier);
+            m_outStream.writeDataCell(serializer, cell);
         } else {
-            m_outWriter.writeByte(BYTE_TYPE_SERIALIZATION);
-            m_outWriter.writeObject(cell);
+            m_outStream.writeByte(BYTE_TYPE_SERIALIZATION);
+            m_outStream.writeObject(cell);
         }
     }
 
@@ -359,23 +464,31 @@ final class Buffer {
         return m_shortCutsLookup[shortCutIndex];
     }
     
-    /** Creates the temp file and the stream that writes to it.
+    /** Creates the out file and the stream that writes to it.
+     * @param outFile The file to write to. If <code>null</code>, a 
+     * temp file is created and deleted on exit.
      * @throws IOException If the file or stream cannot be instantiated.
      */
-    private void initTempFile() throws IOException {
-        assert (m_outWriter == null);
-        String date = DATE_FORMAT.format(new Date());
-        String fileName = "knime_container_" + date + "_";
-        String suffix = ".ser.zip";
-        // TODO: Do we need to set our own tempory directory 
-        // as knime preferences?
-        m_tempFile = File.createTempFile(fileName, suffix);
-        m_tempFile.deleteOnExit();
+    private void initOutFile(final File outFile) throws IOException {
+        assert (m_outStream == null);
+        if (outFile == null) {
+            String date = DATE_FORMAT.format(new Date());
+            String fileName = "knime_container_" + date + "_";
+            String suffix = ".ser.zip";
+            // TODO: Do we need to set our own tempory directory 
+            // as knime preferences?
+            m_outFile = File.createTempFile(fileName, suffix);
+            m_outFile.deleteOnExit();
+            m_hasCreatedTempFile = true;
+        } else {
+            m_outFile = outFile;
+            m_hasCreatedTempFile = false;
+        }
         ZipOutputStream zipOut = new ZipOutputStream(
-                new BufferedOutputStream(new FileOutputStream(m_tempFile)));
-        zipOut.putNextEntry(new ZipEntry(fileName + ".ser"));
-        m_outWriter = new DCObjectOutputStream(zipOut);
-    } // initTempFile()
+                new BufferedOutputStream(new FileOutputStream(m_outFile)));
+        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
+        m_outStream = new DCObjectOutputStream(zipOut);
+    } // initOutFile()
     
     /**
      * Get a new <code>RowIterator</code>, traversing all rows that have been
@@ -385,7 +498,7 @@ final class Buffer {
      * @return a new Iterator over all rows.
      */
     public RowIterator iterator() {
-        if (usesTempFile()) {
+        if (usesOutFile()) {
             return new FromFileIterator();
         } else {
             return new FromListIterator();
@@ -397,20 +510,20 @@ final class Buffer {
      */
     @Override
     protected void finalize() throws Throwable {
-        if (m_tempFile != null) {
-            if (m_tempFile.delete()) {
+        if (m_outFile != null && m_hasCreatedTempFile) {
+            if (m_outFile.delete()) {
                 LOGGER.debug("Deleted temp file \"" 
-                        + m_tempFile.getAbsolutePath() + "\"");
+                        + m_outFile.getAbsolutePath() + "\"");
             } else {
                 LOGGER.debug("Failed to delete temp file \"" 
-                        + m_tempFile.getAbsolutePath() + "\"");
+                        + m_outFile.getAbsolutePath() + "\"");
             }
         }
         super.finalize();
     }
     
     /**
-     * Iterator that traverses the temp file on the disk and deserializes
+     * Iterator that traverses the out file on the disk and deserializes
      * the rows.
      */
     private class FromFileIterator extends RowIterator {
@@ -424,27 +537,26 @@ final class Buffer {
         FromFileIterator() {
             m_pointer = 0;
             try {
-                ZipInputStream zipIn = new ZipInputStream(
-                        new BufferedInputStream(
-                                new FileInputStream(m_tempFile)));
-                zipIn.getNextEntry();
+                ZipFile zipFile = new ZipFile(m_outFile, ZipFile.OPEN_READ);
+                BufferedInputStream zipIn = new BufferedInputStream(
+                        zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_DATA)));
                 m_inStream = new DCObjectInputStream(zipIn);
                 m_nrOpenInputStreams++;
-                LOGGER.debug("Opening input stream on temp file \"" 
-                        + m_tempFile.getAbsolutePath() + "\", " 
+                LOGGER.debug("Opening input stream on file \"" 
+                        + m_outFile.getAbsolutePath() + "\", " 
                         + m_nrOpenInputStreams + " open streams");
             } catch (IOException ioe) {
-                throw new RuntimeException("Cannot read temp file \"" 
-                        + m_tempFile.getName() + "\"", ioe);
+                throw new RuntimeException("Cannot read file \"" 
+                        + m_outFile.getName() + "\"", ioe);
             }
             OPENSTREAMS.add(new WeakReference<FromFileIterator>(this));
         }
         
-        /** Get the name of the temp file that this iterator works on. 
-         * @return The name of the temp file
+        /** Get the name of the out file that this iterator works on. 
+         * @return The name of the out file
          */
-        public String getTempFileName() {
-            return m_tempFile.getAbsolutePath();
+        public String getOutFileName() {
+            return m_outFile.getAbsolutePath();
         }
 
         /**
@@ -488,8 +600,8 @@ final class Buffer {
                 return new DefaultRow(key, cells);
             } catch (Exception ioe) {
                 throw new RuntimeException("Cannot read line "  
-                    + (m_pointer + 1) + " from temp file \"" 
-                        + m_tempFile.getName() + "\"", ioe);
+                    + (m_pointer + 1) + " from file \"" 
+                        + m_outFile.getName() + "\"", ioe);
             } finally {
                 m_pointer++;
             }
@@ -504,7 +616,7 @@ final class Buffer {
              * when the VM closes.
              */
             String closeMes = "Closing input stream on \""
-                + m_tempFile.getAbsolutePath() + "\", "; 
+                + m_outFile.getAbsolutePath() + "\", "; 
             try {
                 m_inStream.close();
                 m_nrOpenInputStreams--;
@@ -520,7 +632,7 @@ final class Buffer {
     
     /**
      * Class wrapping the iterator of a java.util.List to a RowIterator.
-     * This object is used when all rows fit in memory (no temp file).
+     * This object is used when all rows fit in memory (no file).
      */
     private class FromListIterator extends RowIterator {
         
