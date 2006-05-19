@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import de.unikn.knime.core.data.property.ColorAttr;
+import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.NodeLogger;
 
@@ -52,16 +53,16 @@ import de.unikn.knime.core.node.NodeLogger;
  * 
  */
 public final class DataTableSpec implements Iterable<DataColumnSpec> {
-    
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(DataTableSpec.class);
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(DataTableSpec.class);
 
     /** Keep an array of column specs. */
     private final DataColumnSpec[] m_columnSpecs;
 
     /** A name of this spec. */
     private final String m_name;
-    
+
     /** The index of the column holding the SizeHandler or -1 if not set. */
     private final int m_sizeHandlerColIndex;
 
@@ -105,7 +106,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * Creates a new <code>DataTableSpec</code>, which is built from an array
      * of <code>DataColumnSpec</code> elements.
      * 
-     * @param colSpecs An array containing information about all columns. 
+     * @param colSpecs An array containing information about all columns.
      * @param name This spec's name, if <code>null</code> a default name is
      *            assigned.
      * @throws NullPointerException If the given column spec or one of its
@@ -147,13 +148,13 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Creates a new <code>DataTableSpec</code> based on a list of names and
-     * types. The constructor uses the <code>DefaultDataColumnSpec</code> 
-     * but does  not create additional information (values, ...).
+     * types. The constructor uses the <code>DefaultDataColumnSpec</code> but
+     * does not create additional information (values, ...).
      * 
      * @param names An array of names.
      * @param types An array of types.
-     * @throws NullPointerException If names or types, or one of its elements 
-     *          is <code>null</code>.
+     * @throws NullPointerException If names or types, or one of its elements is
+     *             <code>null</code>.
      * @throws IllegalArgumentException If the <code>names</code> and
      *             <code>types</code> arrays don't have the same length or if
      *             the parameter array <code>names</code> contains duplicates.
@@ -164,8 +165,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Creates a new <code>DataTableSpec</code> based on a list of names and
-     * types. The constructor uses the <code>DefaultDataColumnSpec</code>
-     * but does not create additional information (values, ...).
+     * types. The constructor uses the <code>DefaultDataColumnSpec</code> but
+     * does not create additional information (values, ...).
      * 
      * @param name This spec's identifier, if null a default name will be used.
      * @param names An array of names.
@@ -180,14 +181,15 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
             final DataType[] types) {
         this(name, createColumnSpecs(names, types));
     }
-    
+
     /**
      * Creates based an array of names and types and array of column specs.
+     * 
      * @param names An array of column names.
      * @param types An array of column types.
      * @throws NullPointerException If one of the arrays is <code>null</code>.
-     * @throws IllegalArgumentException If the arrays do not have the same 
-     *         length. 
+     * @throws IllegalArgumentException If the arrays do not have the same
+     *             length.
      * @return An array of <code>DataColumnSpec</code> elements.
      */
     public static final DataColumnSpec[] createColumnSpecs(
@@ -214,16 +216,16 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                     }
                 }
             }
-            columnSpecs[i] = 
-                new DataColumnSpecCreator(names[i], types[i]).createSpec();
+            columnSpecs[i] = new DataColumnSpecCreator(names[i], types[i])
+                    .createSpec();
         }
         return columnSpecs;
     }
 
     /**
      * Constructor for a new <code>DataTableSpec</code> based on two existing
-     * specifications that are to be concatenated. The new spec name is
-     * combined by both specs' names.
+     * specifications that are to be concatenated. The new spec name is combined
+     * by both specs' names.
      * 
      * @param spec1 The first spec.
      * @param spec2 The second spec.
@@ -252,9 +254,9 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
             final DataTableSpec spec2) {
         this(name, appendTableSpecs(spec1, spec2));
     }
-    
-    private static DataColumnSpec[] appendTableSpecs(
-            final DataTableSpec spec1, final DataTableSpec spec2) {
+
+    private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1,
+            final DataTableSpec spec2) {
         final int l1 = spec1.getNumColumns();
         final int l2 = spec2.getNumColumns();
         // combine two column specs by copying them into one array of specs
@@ -288,7 +290,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         return columnSpecs;
     }
-    
+
     private int searchSizeHandler() {
         int idx = -1;
         for (int i = 0; i < m_columnSpecs.length; i++) {
@@ -296,14 +298,14 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                 if (idx == -1) {
                     idx = i;
                 } else {
-                    LOGGER.coding("Found more SizeHandlers for columns: " 
-                            + idx + " and " + i + ".");
+                    LOGGER.coding("Found more SizeHandlers for columns: " + idx
+                            + " and " + i + ".");
                 }
             }
         }
         return idx;
     }
-    
+
     private int searchColorHandler() {
         int idx = -1;
         for (int i = 0; i < m_columnSpecs.length; i++) {
@@ -311,7 +313,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                 if (idx == -1) {
                     idx = i;
                 } else {
-                    LOGGER.coding("Found more ColorHandlers for columns: " 
+                    LOGGER.coding("Found more ColorHandlers for columns: "
                             + idx + " and " + i + ".");
                 }
             }
@@ -343,7 +345,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     public DataColumnSpec getColumnSpec(final int index) {
         return m_columnSpecs[index];
     }
-    
+
     /**
      * Return the size (in percent) that an object should have when displaying
      * information concerning this row (for instance in a scatterplot).
@@ -355,13 +357,13 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         if (m_sizeHandlerColIndex == -1) {
             return SizeHandler.DEFAULT_SIZE;
         }
-        return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler()
-                             .getSize(row.getCell(m_sizeHandlerColIndex));
+        return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler().getSize(
+                row.getCell(m_sizeHandlerColIndex));
     }
-    
+
     /**
-     * Return the color that an object should have when displaying
-     * information concerning this row (for instance in a scatterplot).
+     * Return the color that an object should have when displaying information
+     * concerning this row (for instance in a scatterplot).
      * 
      * @param row the row for which the color is requested
      * @return color
@@ -371,12 +373,32 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
             return ColorAttr.DEFAULT;
         }
         return m_columnSpecs[m_colorHandlerColIndex].getColorHandler()
-                             .getColorAttr(row.getCell(m_colorHandlerColIndex));
+                .getColorAttr(row.getCell(m_colorHandlerColIndex));
+    }
+
+    /**
+     * @return the index of the column whose attribute values are used to color
+     *         rows. That is the rows that holds the ColorHandler.
+     * @see #getColorHandler()
+     */
+    public int getColumnIndexOfColorAttribute() {
+        return m_colorHandlerColIndex;
+    }
+
+    /**
+     * @return the ColorHandler used to display rows. Values from the column
+     *         with the index returned by the
+     *         <code>getColumnIndexOfColorAttribute</code> method can be used
+     *         to retrieve the associated color.
+     * @see #getColumnIndexOfColorAttribute()
+     */
+    public ColorHandler getColorHandler() {
+        return m_columnSpecs[m_colorHandlerColIndex].getColorHandler();
     }
 
     /**
      * Returns column information of the column for the provided column name.
-     * This method returns <code>null</code> if the argument is 
+     * This method returns <code>null</code> if the argument is
      * <code>null</code>.
      * 
      * @param column The column to find spec for.
@@ -489,9 +511,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
 
     /**
-     * Checks if the given column name occurs in this spec.
-     * This method returns <code>false</code> if the argument is 
-     * <code>null</code>.
+     * Checks if the given column name occurs in this spec. This method returns
+     * <code>false</code> if the argument is <code>null</code>.
      * 
      * @param columnName The column name to check.
      * @return <code>true</code> if this spec contains the column name.
@@ -523,8 +544,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Checks if this spec contains a column with a type compatible to the given
-     * <code>DataValue</code> class. This method returns <code>false</code> if 
-     * the argument is <code>null</code>.
+     * <code>DataValue</code> class. This method returns <code>false</code>
+     * if the argument is <code>null</code>.
      * 
      * @param valueClass the class of the data value interface to check for.
      * @return true if at least one column type in the spec is compatible to the
@@ -567,8 +588,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @see java.lang.Iterable#iterator()
      */
     public Iterator<DataColumnSpec> iterator() {
-        return (Collections.unmodifiableList(
-                Arrays.asList(m_columnSpecs))).iterator();
+        return (Collections.unmodifiableList(Arrays.asList(m_columnSpecs)))
+                .iterator();
     }
 
 } // DataTableSpec
