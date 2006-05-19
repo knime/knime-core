@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,10 +32,14 @@ public abstract class ColorHandler implements PropertyHandler {
     
     /**
      * Return a <code>ColorAttr</code> as specified by the content
-     * of the given <code>DataCell</code>.
+     * of the given <code>DataCell</code>. If no <code>ColorAttr</code>
+     * is assigned to <code>dc</code>, this method shall return a default
+     * color, never <code>null</code>.
      * 
-     * @param dc value to be used to generate color
-     * @return A <code>ColorAttr</code> object
+     * @param dc Value to be used to generate color.
+     * @return A <code>ColorAttr</code> object to be used.
+     * @see ColorAttr#DEFAULT
+     * @throws NullPointerException If the argument is <code>null</code>.
      */
     public abstract ColorAttr getColorAttr(final DataCell dc);
     
