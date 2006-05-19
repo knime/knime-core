@@ -59,6 +59,7 @@ import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.property.ColorAttr;
+import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -198,7 +199,7 @@ final class Buffer {
         ZipFile zipFile = new ZipFile(inFile);
         InputStream specInput = zipFile.getInputStream(
                 new ZipEntry(ZIP_ENTRY_SPEC));
-        ObjectInputStream inStream = new ObjectInputStream(
+        ObjectInputStream inStream = new GlobalObjectInputStream(
                 new BufferedInputStream(specInput));
         try {
             readSpecFromFile(inStream);
