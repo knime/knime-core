@@ -62,9 +62,6 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  */
 public class DataContainer implements RowAppender {
     
-    /** Obsolete flag that allows to use an experimental buffering technique. */
-    public static final boolean USE_NEW_BUFFER = true;
-    
     /** 
      * Number of cells that are cached without being written to the 
      * temp file (see Buffer implementation).
@@ -80,7 +77,7 @@ public class DataContainer implements RowAppender {
     private static final int MAX_POSSIBLE_VALUES = 60;
 
     /** The object that saves the rows. */
-    private Buffer m_buffer;
+    private Buffer2 m_buffer;
     
     private final int m_maxCellsInMemory; 
     
@@ -231,11 +228,7 @@ public class DataContainer implements RowAppender {
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         int rowsInMemory = m_maxCellsInMemory / ((colCount > 0) ? colCount : 1);
-        if (USE_NEW_BUFFER) {
-            m_buffer = new Buffer2(rowsInMemory);
-        } else {
-            m_buffer = new Buffer1(rowsInMemory);
-        }
+        m_buffer = new Buffer2(rowsInMemory);
     }
 
     /**

@@ -60,7 +60,7 @@ import de.unikn.knime.core.node.NodeLogger;
  * "centralizes" the IO operations.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class Buffer2 implements Buffer {
+final class Buffer2 {
     
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = 
