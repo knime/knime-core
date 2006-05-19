@@ -18,6 +18,7 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -31,7 +32,7 @@ import java.util.Hashtable;
  * @see de.unikn.knime.core.data.DataColumnSpec#getProperties()
  * @author wiswedel, University of Konstanz
  */
-public interface DataColumnProperties {
+public interface DataColumnProperties extends Serializable {
 
     /**
      * Tests if this properties object contains a given key.
