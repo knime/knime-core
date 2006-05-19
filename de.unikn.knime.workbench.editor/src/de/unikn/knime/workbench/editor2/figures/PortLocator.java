@@ -75,7 +75,12 @@ public class PortLocator implements Locator {
             int portHeight = parentBounds.height / m_maxPorts;
             int portWidth = parentBounds.width / 2;
             int x = parentBounds.getLeft().x;
-            int y = parentBounds.getTopLeft().y + (m_portIndex * portHeight);
+
+            // for inports use m_maxPorts - 1 - m_portIndex to revert the
+            // order this results in modelInPorts arranged at the top of a node
+            // and modelOutPorts at the bottom of a figure
+            int y = parentBounds.getTopLeft().y
+                    + ((m_maxPorts - 1 - m_portIndex) * portHeight);
 
             Rectangle portBounds = new Rectangle(new Point(x, y),
                     new Dimension(portWidth, portHeight));
