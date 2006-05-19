@@ -27,7 +27,7 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * Factory for table that reads the zip file as written from the
+ * Factory for table that reads the file as written from the
  * Write table node.
  * @author wiswedel, University of Konstanz
  */

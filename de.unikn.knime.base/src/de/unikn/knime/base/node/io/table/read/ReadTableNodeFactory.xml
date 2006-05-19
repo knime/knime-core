@@ -9,8 +9,9 @@
 	
 	<fullDescription>
 		<intro>
-			This node reads files that have been written using the Write Table node. It 
-			will retain all meta information such as domain, properties, colors, size.
+			This node reads files that have been written using the Write Table node 
+			(which uses an internal format). It will retain all meta information such as 
+			domain, properties, colors, size.
 		</intro>
 		<option name="File Chooser">
 			Choose the file to read.
@@ -18,6 +19,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0">The table as contained in the zip file.</dataOut>
+		<dataOut index="0">The table as contained in the selected file.</dataOut>
 	</ports>	
 </knimeNode>

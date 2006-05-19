@@ -40,7 +40,7 @@ public class WriteTableNodeDialogPane extends DefaultNodeDialogPane {
         super("Write Table");
         addDialogComponent(new DialogComponentFileChooser(
                 WriteTableNodeModel.CFG_FILENAME, JFileChooser.SAVE_DIALOG, 
-                ".zip"));
+                ".knime"));
     }
 
 }
