@@ -27,13 +27,14 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * 
+ * Factory for table that reads the zip file as written from the
+ * Write table node.
  * @author wiswedel, University of Konstanz
  */
 public class ReadTableNodeFactory extends NodeFactory {
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
+     * @see NodeFactory#createNodeModel()
      */
     @Override
     protected NodeModel createNodeModel() {
@@ -41,7 +42,7 @@ public class ReadTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
+     * @see NodeFactory#getNrNodeViews()
      */
     @Override
     protected int getNrNodeViews() {
@@ -49,15 +50,16 @@ public class ReadTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int, de.unikn.knime.core.node.NodeModel)
+     * @see NodeFactory#createNodeView(int, NodeModel)
      */
     @Override
-    public NodeView createNodeView(int viewIndex, NodeModel nodeModel) {
-        return null;
+    public NodeView createNodeView(
+            final int viewIndex, final NodeModel nodeModel) {
+        throw new IndexOutOfBoundsException("No view.");
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
+     * @see NodeFactory#hasDialog()
      */
     @Override
     protected boolean hasDialog() {
@@ -65,7 +67,7 @@ public class ReadTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
+     * @see NodeFactory#createNodeDialogPane()
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {

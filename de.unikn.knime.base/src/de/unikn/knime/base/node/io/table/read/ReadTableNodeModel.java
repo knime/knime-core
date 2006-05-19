@@ -33,27 +33,29 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
 
 /**
- * 
+ * NodeMode for table that reads the zip file as written from the
+ * Write table node.
  * @author wiswedel, University of Konstanz
  */
 public class ReadTableNodeModel extends NodeModel {
     
+    /** Identifier for the node settings object. */
     static final String CFG_FILENAME = "filename";
     
     private String m_fileName;
 
-
     /**
+     * Creates new model with no inputs, one output.
      */
     public ReadTableNodeModel() {
         super(0, 1);
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettings)
      */
     @Override
-    protected void saveSettingsTo(NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettings settings) {
         if (m_fileName != null) {
             settings.addString(CFG_FILENAME, m_fileName);
         }
@@ -64,7 +66,7 @@ public class ReadTableNodeModel extends NodeModel {
      * @see NodeModel#validateSettings(NodeSettings)
      */
     @Override
-    protected void validateSettings(NodeSettings settings)
+    protected void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         settings.getString(CFG_FILENAME);
     }
@@ -73,7 +75,7 @@ public class ReadTableNodeModel extends NodeModel {
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
      */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettings settings)
             throws InvalidSettingsException {
         m_fileName = settings.getString(CFG_FILENAME);
     }
@@ -82,8 +84,8 @@ public class ReadTableNodeModel extends NodeModel {
      * @see NodeModel#execute(DataTable[], ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(DataTable[] inData, ExecutionMonitor exec)
-            throws Exception {
+    protected DataTable[] execute(final DataTable[] inData,
+            final ExecutionMonitor exec) throws Exception {
         File f = new File(m_fileName);
         DataTable outTable = DataContainer.readFromZip(f);
         return new DataTable[]{outTable};
@@ -97,16 +99,18 @@ public class ReadTableNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#configure(de.unikn.knime.core.data.DataTableSpec[])
+     * @see NodeModel#configure(DataTableSpec[])
      */
     @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_fileName == null) {
             throw new InvalidSettingsException("No file set.");
         }
         try {
             File f = new File(m_fileName);
+            // doesn't hurt to read the table here. It will only parse
+            // the spec, not the data content.
             DataTable outTable = DataContainer.readFromZip(f);
             return new DataTableSpec[]{outTable.getDataTableSpec()};
         } catch (IOException ioe) {

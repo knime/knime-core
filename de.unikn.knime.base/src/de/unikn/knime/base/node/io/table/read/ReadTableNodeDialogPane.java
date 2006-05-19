@@ -27,7 +27,7 @@ import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import de.unikn.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
 
 /**
- * 
+ * Simple dialog with just a file browser.
  * @author wiswedel, University of Konstanz
  */
 public class ReadTableNodeDialogPane extends DefaultNodeDialogPane {
