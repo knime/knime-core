@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./tableread.png">
+	<name>Table Reader</name>
+	
+	<shortDescription>
+		Reads table as written by the Write Table Node.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			This node reads files that have been written using the Write Table node. It 
+			will retain all meta information such as domain, properties, colors, size.
+		</intro>
+		<option name="File Chooser">
+			Choose the file to read.
+		</option>
+	</fullDescription>
+	
+	<ports>
+		<dataOut index="0">The table as contained in the zip file.</dataOut>
+	</ports>	
+</knimeNode>
