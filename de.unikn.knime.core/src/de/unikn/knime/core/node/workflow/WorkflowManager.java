@@ -254,9 +254,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
                 // create temprarily the init user name of the copied node
                 // to check wether the current name was changed
-                String oldInitName = "Node " + oldId;
+                String oldInitName = "Node " + (oldId + 1);
                 if (oldInitName.equals(currentUserNodeName)) {
-                    newNode.setUserName("Node " + newId);
+                    newNode.setUserName("Node " + (newId + 1));
                 }
 
                 // and add it to workflow
