@@ -4,12 +4,12 @@
 	<name>Table Writer</name>
 	
 	<shortDescription>
-		Writes a data table to a zip file.
+		Writes a data table to a file using an internal format.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
-			This node writes a data table in an internal format to a zip file, ready to be
+			This node writes a data table in an internal format to a file, ready to be
 			read with a Table Read node.
 		</intro>
 		<option name="File Chooser">
