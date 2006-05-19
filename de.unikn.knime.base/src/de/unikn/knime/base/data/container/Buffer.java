@@ -186,6 +186,11 @@ final class Buffer {
         m_size = 0;
     }
     
+    /** Creates new buffer that will immediately write to the given file.
+     * @param outFile The file to write to, will be created (or overwritten).
+     * @throws IOException If opening file fails.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     */
     Buffer(final File outFile) throws IOException {
         this(0);
         if (outFile == null) {
@@ -194,8 +199,17 @@ final class Buffer {
         initOutFile(outFile);
     }
     
-    Buffer(final File inFile, boolean ignored) throws IOException {
+    /** Creates new buffer for <strong>reading</strong>. The file is
+     * assumed to be a zip file as written by this class.
+     * @param inFile The file to read from.
+     * @param ignored This argument is ignored. It serves to distinguish
+     * from the other constructor.
+     * @throws IOException If the header (the spec information) can't be read.
+     */
+    Buffer(final File inFile, final boolean ignored) throws IOException {
         m_maxRowsInMem = 0;
+        // please checkstyle
+        assert ignored == ignored;
         ZipFile zipFile = new ZipFile(inFile);
         InputStream specInput = zipFile.getInputStream(
                 new ZipEntry(ZIP_ENTRY_SPEC));
@@ -267,7 +281,8 @@ final class Buffer {
                 // we push the underlying stream forward; need to make
                 // sure that m_outStream is done with everything.
                 m_outStream.flush();
-                ZipOutputStream zipOut = (ZipOutputStream)m_outStream.getUnderylingStream();
+                ZipOutputStream zipOut = 
+                    (ZipOutputStream)m_outStream.getUnderylingStream();
                 zipOut.closeEntry();
                 zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
                 ObjectOutputStream outStream = new ObjectOutputStream(zipOut);
@@ -288,7 +303,14 @@ final class Buffer {
         }
     } // close()
     
-    private void writeSpecToFile(ObjectOutputStream outStream) throws IOException {
+    /** Called when buffer is closed and we are writing to a customized
+     * file. This method will add a zip entry containing the (serialized)
+     * spec.
+     * @param outStream The stream to write to.
+     * @throws IOException If that fails.
+     */
+    private void writeSpecToFile(final ObjectOutputStream outStream)
+            throws IOException {
         outStream.writeInt(m_size);
         // first write the short cut array
         outStream.writeObject(m_shortCutsLookup);
@@ -307,7 +329,10 @@ final class Buffer {
         }
     }
     
-    @SuppressWarnings("unchecked")
+    /**
+     * Reads the zip entry containing the spec.
+     */
+    @SuppressWarnings("unchecked") // cast with generics
     private void readSpecFromFile(final ObjectInputStream inStream) 
         throws IOException, ClassNotFoundException {
         m_size = inStream.readInt();
@@ -407,8 +432,10 @@ final class Buffer {
             m_outStream.writeByte(BYTE_TYPE_MISSING);
             return;
         }
-        DataCellSerializer serializer = 
-            DataType.getCellSerializer(cell.getClass());
+        @SuppressWarnings("unchecked")
+        DataCellSerializer<DataCell> serializer = 
+            (DataCellSerializer<DataCell>)DataType.getCellSerializer(
+                    cell.getClass());
         // DataCell is datacell-serializable
         if (serializer != null) {
             Byte identifier = m_typeShortCuts.get(cell.getClass()); 

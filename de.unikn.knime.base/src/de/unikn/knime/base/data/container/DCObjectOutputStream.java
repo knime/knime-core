@@ -90,7 +90,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
      * @param cell The cell to be written.
      * @throws IOException If that fails.
      */
-    public void writeDataCell(final DataCellSerializer serializer, 
+    public void writeDataCell(final DataCellSerializer<DataCell> serializer, 
             final DataCell cell) throws IOException {
         try {
             serializer.serialize(cell, m_dataOut);

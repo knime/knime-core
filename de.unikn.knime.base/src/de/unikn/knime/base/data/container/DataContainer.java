@@ -473,8 +473,12 @@ public class DataContainer implements RowAppender {
         return cache(table, exec, MAX_CELLS_IN_MEMORY);
     }
     
-    /** Writes a given DataTable permanently to a zip file.
-     * 
+    /** Writes a given DataTable permanently to a zip file. 
+     * @param table The table to write.
+     * @param outFile The file to write to. Will be created or overwritten.
+     * @param exec For progress info.
+     * @throws IOException If writing fails.
+     * @throws CanceledExecutionException If canceled.
      */
     public static void writeToZip(final DataTable table, final File outFile,
             final ExecutionMonitor exec) throws IOException,
@@ -484,8 +488,8 @@ public class DataContainer implements RowAppender {
         try {
             for (DataRow row : table) {
                 rowCount++;
-                exec.setMessage("Writing row " + rowCount + " (\"" +
-                        row.getKey() + "\")");
+                exec.setMessage("Writing row " + rowCount + " (\"" 
+                        + row.getKey() + "\")");
                 exec.checkCanceled();
                 buf.addRow(row);
             }
@@ -494,6 +498,13 @@ public class DataContainer implements RowAppender {
         }
     }
     
+    /** 
+     * Reads a table from a zip file that has been written using the 
+     * <code>writeToZip</code> method.
+     * @param zipFile To read from.
+     * @return The table contained in the zip file.
+     * @throws IOException If that fails.
+     */
     public static DataTable readFromZip(final File zipFile) throws IOException {
         Buffer buffer = new Buffer(zipFile, /*ignore*/false);
         return new BufferedTable(buffer);
