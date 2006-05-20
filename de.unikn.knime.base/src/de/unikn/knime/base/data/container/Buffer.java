@@ -59,6 +59,8 @@ import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.property.ColorAttr;
+import de.unikn.knime.core.data.property.ColorHandler;
+import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 import de.unikn.knime.core.node.NodeLogger;
 
@@ -326,6 +328,8 @@ final class Buffer {
             outStream.writeObject(domain.getLowerBound());
             outStream.writeObject(domain.getUpperBound());
             outStream.writeObject(cSpec.getProperties());
+            outStream.writeObject(cSpec.getColorHandler());
+            outStream.writeObject(cSpec.getSizeHandler());
         }
     }
     
@@ -349,10 +353,14 @@ final class Buffer {
                 new DefaultDataColumnDomain(values, lowerBound, upperBound);
             DataColumnProperties props =
                 (DataColumnProperties)inStream.readObject();
+            ColorHandler clrHdl = (ColorHandler)inStream.readObject();
+            SizeHandler sizeHdl = (SizeHandler)inStream.readObject();
             DataColumnSpecCreator creator = 
                 new DataColumnSpecCreator(name, type);
             creator.setDomain(domain);
             creator.setProperties(props);
+            creator.setColorHandler(clrHdl);
+            creator.setSizeHandler(sizeHdl);
             colSpecs[i] = creator.createSpec();
         }
         m_spec = new DataTableSpec(colSpecs);
