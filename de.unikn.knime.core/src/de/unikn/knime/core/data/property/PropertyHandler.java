@@ -21,11 +21,13 @@
  */
 package de.unikn.knime.core.data.property;
 
+import java.io.Serializable;
+
 /**
  * Parent of all PropertyHandlers (color, size, ...).
  * 
  * @author M. Berthold, University of Konstanz
  */
-public interface PropertyHandler {
+public interface PropertyHandler extends Serializable {
 
 }
