@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Icon;
 
@@ -208,10 +209,11 @@ public final class DataType implements Serializable {
                 exception = cce;
             }
             if (exception != null) {
-                LOGGER.coding("Class \"" + cl.getSimpleName()
-                        + "\" implements DataValue interface \""
-                        + cl.getSimpleName() + "\" but seems to have a problem "
-                        + "with the static field \"UTILITY\"",  exception);
+                LOGGER.coding("DataValue interface \"" + cl.getSimpleName() 
+                        + "\" seems to have a problem with the static field " 
+                        + "\"UTILITY\"", exception);
+                // fallback - no meta information available
+                result = DataValue.UTILITY;
             }
             VALUE_CLASS_TO_UTILITY.put(cl, result);
         }
@@ -279,7 +281,10 @@ public final class DataType implements Serializable {
                 result = (DataCellSerializer<T>)typeObject;
             }
         } catch (NoSuchMethodException nsme) {
-            exception = nsme;
+            LOGGER.debug("Class \"" + cl.getSimpleName()
+                    + "\" does not define method \"getCellSerializer\", using " 
+                    + "ordinary (but slow) java serialization.");
+            result = null;
         } catch (InvocationTargetException ite) {
             exception = ite;
         } catch (NullPointerException npe) {
@@ -291,9 +296,8 @@ public final class DataType implements Serializable {
         }
         if (exception != null) {
             LOGGER.coding("Class \"" + cl.getSimpleName()
-                    + "\" implements DataValue interface \""
-                    + cl.getSimpleName() + "\" but seems to have a "
-                    + "problem with the static field \"UTILITY\"", exception);
+                    + "\" defines method \"getCellSerializer\" but there was a "
+                    + "problem invoking it", exception);
             result = null;
         }
         CLASS_TO_SERIALIZER_MAP.put(cl, result);
@@ -352,6 +356,33 @@ public final class DataType implements Serializable {
         return MissingCell.INSTANCE;
     }
     
+    /**
+     * Recursive method that walks up the inheritence tree of a given class and 
+     * determines all DataValue interfaces being implemented. Any such detected 
+     * interface will be added to a set. Used from the constructor to determine
+     * implemented interfaces of a DataCell class. 
+     */
+    private static void addDataValueInterfaces(
+            final Set<Class<? extends DataValue>> set, final Class current) {
+        // all interfaces that cl implements
+        Class[] interfaces = current.getInterfaces();
+        for (Class c : interfaces) {
+            if (DataValue.class.isAssignableFrom(c)) {
+                Class<? extends DataValue> cv = (Class<? extends DataValue>)c;
+                UtilityFactory utitlity = getUtilityFor(cv);
+                if (utitlity != null) {
+                    set.add(cv);
+                }
+            }
+            // interfaces may extend other interface, handle them here!
+            addDataValueInterfaces(set, c);
+        }
+        Class superClass = current.getSuperclass();
+        if (superClass != null) {
+            addDataValueInterfaces(set, superClass);
+        }
+    }
+    
     /** List of all implemented DataValue interfaces. */
     private final List<Class<? extends DataValue>> m_valueClasses;
     /** Flag if the first element in m_valueClasses contains the 
@@ -367,20 +398,10 @@ public final class DataType implements Serializable {
      * the static getType() method.
      */
     private DataType(final Class<? extends DataCell> cl) {
-        // all interfaces that cl implements
-        Class[] interfaces = cl.getInterfaces();
         // filter for classes that extend DataValue
         LinkedHashSet<Class<? extends DataValue>> valueClasses = 
             new LinkedHashSet<Class<? extends DataValue>>();
-        for (Class c : interfaces) {
-            if (DataValue.class.isAssignableFrom(c)) {
-                Class<? extends DataValue> cv = (Class<? extends DataValue>)c;
-                UtilityFactory utitlity = getUtilityFor(cv);
-                if (utitlity != null) {
-                    valueClasses.add(cv);
-                }
-            }
-        }
+        addDataValueInterfaces(valueClasses, cl);
         Class<? extends DataValue> preferred = getPreferredValueClassFor(cl);
         if (preferred != null && !valueClasses.contains(preferred)) {
             LOGGER.coding("Class \"" + cl.getSimpleName() + "\" declares \"" 
@@ -491,7 +512,8 @@ public final class DataType implements Serializable {
      *            min/max values in the column domain.
      * @return All renderers that are available for this DataType.
      */
-    public final DataValueRendererFamily getRenderer(final DataColumnSpec spec) {
+    public final DataValueRendererFamily getRenderer(
+            final DataColumnSpec spec) {
         ArrayList<DataValueRendererFamily> list = 
             new ArrayList<DataValueRendererFamily>();
         // first add the preferred value class, if any
