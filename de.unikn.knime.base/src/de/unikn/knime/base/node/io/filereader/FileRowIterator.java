@@ -316,8 +316,8 @@ final class FileRowIterator extends RowIterator {
         } else {
             m_exceptionThrown = true;
             throw createException("Cannot create DataCell of type "
-                    + type.toString() + ". Looks like an internal error. "
-                    + "Sorry.", m_tokenizer.getLineNumber(), rowHeader, row);
+                    + type.toString() + ". Looks like an internal error.", 
+                    m_tokenizer.getLineNumber(), rowHeader, row);
         }
     } // createNewDataCellOfType(Class,String,boolean)
 
