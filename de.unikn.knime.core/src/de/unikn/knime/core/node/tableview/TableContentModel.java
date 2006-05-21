@@ -1092,8 +1092,9 @@ public class TableContentModel extends AbstractTableModel
         if (oldCount >= newCount) {
             return;
         }
-        LOGGER.debug("New row count in table: " + newCount + ", (isFinal: "
-                + isFinal + ")");
+        if (isFinal) {
+            LOGGER.debug("Table has " + newCount + "rows.");
+        }
         m_isMaxRowCountFinal = isFinal;
         m_maxRowCount = newCount;
         if (!showsHighlightedOnly()) {
