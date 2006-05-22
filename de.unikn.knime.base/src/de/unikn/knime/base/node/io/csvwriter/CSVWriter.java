@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -100,12 +98,11 @@ public class CSVWriter extends BufferedWriter {
             }
             // 
             for (int i = 0; i < colCount; i++) {
-                DataCell colName = inSpec.getColumnSpec(i).getName();
+                String cName = inSpec.getColumnSpec(i).getName();
                 if (!first) {
                     write(m_sepChar);
                 }
                 first = false;
-                String cName = colName.toString();
                 if (m_removeSepCharInStrings) {
                     cName.replace("" + m_sepChar, "");
                 }
