@@ -44,7 +44,7 @@ import de.unikn.knime.core.data.util.ObjectToDataCellConverter;
 public class DataContainerTest extends TestCase {
 
     private static final DataTableSpec EMPTY_SPEC = new DataTableSpec(
-            new DataCell[] {}, new DataType[] {});
+            new String[] {}, new DataType[] {});
 
     /**
      * Main method. Ignores argument.
@@ -162,10 +162,7 @@ public class DataContainerTest extends TestCase {
         } catch (IllegalStateException e) {
             System.out.println(e.getMessage());
         }
-        DataCell[] colNames = new DataCell[]{
-                new StringCell("Column 1"),
-                new StringCell("Column 2")
-        };
+        String[] colNames = new String[]{"Column 1", "Column 2"};
         DataType[] colTypes = new DataType[] {
                 StringCell.TYPE,
                 IntCell.TYPE
@@ -254,10 +251,10 @@ public class DataContainerTest extends TestCase {
         // (the latest data this value was checked: 22. November 2005...)
         final int colCount = 1000;
         final int rowCount = 5000;
-        DataCell[] names = new DataCell[colCount];
+        String[] names = new String[colCount];
         DataType[] types = new DataType[colCount];
         for (int c = 0; c < colCount; c++) {
-            names[c] = new StringCell("Column " + c);
+            names[c] = "Column " + c;
             switch (c % 3) {
                 case 0: types[c] = DoubleCell.TYPE; break;
                 case 1: types[c] = StringCell.TYPE; break;
@@ -383,10 +380,7 @@ public class DataContainerTest extends TestCase {
         DataCell r3Cell2 = new IntCell(32);
         DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
 
-        DataCell[] colNames = new DataCell[]{
-                new StringCell("Column 1"),
-                new StringCell("Column 2")
-        };
+        String[] colNames = new String[]{"Column 1", "Column 2"};
         DataType[] colTypes = new DataType[] {
                 StringCell.TYPE,
                 IntCell.TYPE

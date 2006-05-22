@@ -321,7 +321,7 @@ final class Buffer {
         outStream.writeInt(colCount);
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec cSpec = spec.getColumnSpec(i);
-            outStream.writeObject(cSpec.getName());
+            outStream.writeUTF(cSpec.getName());
             outStream.writeObject(cSpec.getType());
             DataColumnDomain domain = cSpec.getDomain();
             outStream.writeObject(domain.getValues());
@@ -344,7 +344,7 @@ final class Buffer {
         int colCount = inStream.readInt();
         DataColumnSpec[] colSpecs = new DataColumnSpec[colCount];
         for (int i = 0; i < colCount; i++) {
-            DataCell name = (DataCell)inStream.readObject();
+            String name = inStream.readUTF();
             DataType type = (DataType)inStream.readObject();
             Set<DataCell> values = (Set<DataCell>)inStream.readObject();
             DataCell lowerBound = (DataCell)inStream.readObject();
