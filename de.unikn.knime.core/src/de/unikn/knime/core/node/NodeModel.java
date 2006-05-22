@@ -79,7 +79,7 @@ public abstract class NodeModel {
      * Optional warning message to be set during / after execution. Enables
      * hiher levels to display the given message.
      */
-    private String m_warningMessage;
+    private String m_warningMessage = "";
 
     /**
      * Creates a new model with the given number of data, and predictor in- and
@@ -730,7 +730,7 @@ public abstract class NodeModel {
     /**
      * @return the warning message set during execution, null if none.
      */
-    public String getWarningMessage() {
+    protected final String getWarningMessage() {
         return m_warningMessage;
     }
 
@@ -739,8 +739,8 @@ public abstract class NodeModel {
      * 
      * @param warningMessage the warning message to set
      */
-    protected void setWarningMessage(final String warningMessage) {
+    protected final void setWarningMessage(final String warningMessage) {
         m_warningMessage = warningMessage;
     }
 
-} // NodeModel
+}   // NodeModel
