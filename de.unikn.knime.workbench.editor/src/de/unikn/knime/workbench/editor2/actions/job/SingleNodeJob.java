@@ -167,6 +167,7 @@ public class SingleNodeJob extends Job implements NodeProgressListener {
 
         nodeProgress.removeProgressListener(this);
 
+        monitor.done();
         return Status.OK_STATUS;
         // we handle this, always be happy
         // m_container.executionSucceeded()
