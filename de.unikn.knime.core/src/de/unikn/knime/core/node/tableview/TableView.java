@@ -652,7 +652,8 @@ public class TableView extends JScrollPane {
                         int newWidth = Integer.parseInt(in);
                         if (newWidth <= 0) { // disallow negative values.
                             JOptionPane.showMessageDialog(
-                                    TableView.this, "No negative values allowed",
+                                    TableView.this, 
+                                    "No negative values allowed",
                                     "Error", JOptionPane.ERROR_MESSAGE);
                         } else {
                             setColumnWidth(newWidth);
@@ -700,6 +701,9 @@ public class TableView extends JScrollPane {
         /**
          * Constructor. Will respect the hasData(), hasHiliteHandler() flag
          * according to the arguments.
+         * @param view The view to get status from
+         * @param watchData Shall this listener respect data change events.
+         * @param watchHilite Shall this listener respect hilite change events.
          * 
          */
         public EnableListener(final TableView view,
