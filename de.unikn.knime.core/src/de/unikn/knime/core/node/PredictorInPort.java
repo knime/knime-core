@@ -25,7 +25,7 @@ package de.unikn.knime.core.node;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class PredictorInPort extends NodeInPort implements
+public final class PredictorInPort extends NodeInPort implements
         NodePort.PredictorParamsPort {
 
     /**

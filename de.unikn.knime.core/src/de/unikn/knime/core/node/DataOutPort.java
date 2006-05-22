@@ -34,7 +34,8 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  *  
  * @author Peter Ohl, University of Konstanz
  */
-final class DataOutPort extends NodeOutPort implements NodePort.DataPort {
+public final class DataOutPort extends NodeOutPort 
+        implements NodePort.DataPort {
     
     /**
      * The data table for this port - if any.
@@ -166,4 +167,4 @@ final class DataOutPort extends NodeOutPort implements NodePort.DataPort {
         getPortView().openView();
     }
     
-}   // DataOutPort
+}

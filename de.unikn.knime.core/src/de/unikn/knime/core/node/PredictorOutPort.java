@@ -24,7 +24,7 @@ package de.unikn.knime.core.node;
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-final class PredictorOutPort extends NodeOutPort implements
+public final class PredictorOutPort extends NodeOutPort implements
         NodePort.PredictorParamsPort {
 
     /**

@@ -30,7 +30,7 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DataInPort extends NodeInPort implements NodePort.DataPort {
+public final class DataInPort extends NodeInPort implements NodePort.DataPort {
 
     /**
      * Creates new input data port.
