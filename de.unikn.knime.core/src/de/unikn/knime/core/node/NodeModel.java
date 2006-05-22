@@ -75,18 +75,6 @@ public abstract class NodeModel {
      */
     private boolean m_isAutoExecutable;
 
-    /** Input port description for data. */
-    private final String[] m_inDataPortDescription;
-
-    /** Output port description for data. */
-    private final String[] m_outDataPortDescription;
-
-    /** Input port description for model. */
-    private final String[] m_inPredParamsPortDescription;
-
-    /** Output port description for model. */
-    private final String[] m_outPredParamsPortDescription;
-
     /**
      * Optional warning message to be set during / after execution. Enables
      * hiher levels to display the given message.
@@ -136,32 +124,7 @@ public abstract class NodeModel {
 
         // keeps set of registered views in the order they are added
         m_views = Collections.synchronizedSet(new LinkedHashSet<NodeView>());
-
-        // set default input desciptions for data
-        m_inDataPortDescription = new String[getNrDataIns()];
-        for (int i = 0; i < m_inDataPortDescription.length; i++) {
-            m_inDataPortDescription[i] = "Data Inport " + i;
-        }
-
-        // set default output desciptions for data
-        m_outDataPortDescription = new String[getNrDataOuts()];
-        for (int i = 0; i < m_outDataPortDescription.length; i++) {
-            m_outDataPortDescription[i] = "Data Outport " + i;
-        }
-
-        // set default input desciptions for model
-        m_inPredParamsPortDescription = new String[getNrModelIns()];
-        for (int i = 0; i < m_inPredParamsPortDescription.length; i++) {
-            m_inPredParamsPortDescription[i] = "Model Inport " + i;
-        }
-
-        // set default output desciptions for model
-        m_outPredParamsPortDescription = new String[getNrModelOuts()];
-        for (int i = 0; i < m_outPredParamsPortDescription.length; i++) {
-            m_outPredParamsPortDescription[i] = "Model Outport " + i;
-        }
-
-    } // NodeModel(int,int,int,int)
+    }
 
     /**
      * Creates a new model with the given number of in- and outputs.
@@ -641,110 +604,6 @@ public abstract class NodeModel {
                     m_inHiLiteHdls[i].unHiLiteAll();
                 }
             }
-        }
-    }
-
-    /**
-     * Set a desription for a data output. You certainly want to use this method
-     * in your derived class's constructor if you have more than one output
-     * port. Make sure your description is reasonably sized as it will likely be
-     * shown in a tooltip of the corresponding port. You should call this method
-     * right after initialization and - if you want to be very kind to the user,
-     * after the out table has changed such that you are able to summarize the
-     * content (e.g. like column and row count).
-     * 
-     * @param port The port id of interest.
-     * @param desc A description for that port. Null is allowed.
-     * @see #setDataInputDescription(int, String)
-     */
-    protected final void setDataOutputDescription(final int port,
-            final String desc) {
-        m_outDataPortDescription[port] = desc;
-    }
-
-    /**
-     * Set a desription for a <code>PredictorParams</code> output. You
-     * certainly want to use this method in your derived class's constructor if
-     * you have more than one output port. Make sure your description is
-     * reasonably sized as it will likely be shown in a tooltip of the
-     * corresponding port. You should call this method right after
-     * initialisation.
-     * 
-     * @param port The port id of interest.
-     * @param desc A description for that port. Null is allowed.
-     * @see #setPredictorParamsInputDescription(int, String)
-     */
-    protected final void setPredictorParamsOutputDescription(final int port,
-            final String desc) {
-        m_outPredParamsPortDescription[port] = desc;
-    }
-
-    /**
-     * Get a description for an outport. This description can be used as tooltip
-     * of the port, e.g. if you derive a <code>NodeModel</code>, this method
-     * is likely not of interest to you.
-     * <p>
-     * Get a description that was set via the corresponding set method. If that
-     * hasn't been invoked, this method returns a default description. This
-     * method may return <code>null</code> if that was done so in the set
-     * method.
-     * 
-     * @param port The port number of interest.
-     * @return The description to that port.
-     */
-    final String getOutputDescription(final int port) {
-        if (port < m_outDataPortDescription.length) {
-            return m_outDataPortDescription[port];
-        } else {
-            return m_outPredParamsPortDescription[port - getNrDataOuts()];
-        }
-    }
-
-    /**
-     * Set a desription for a data inport. You certainly want to use this method
-     * in your derived class's constructor if you have more than one input port.
-     * 
-     * @param port The port id of interest.
-     * @param desc A description to that port. Null is allowed.
-     * @see #setDataOutputDescription(int, String)
-     */
-    protected final void setDataInputDescription(final int port,
-            final String desc) {
-        m_inDataPortDescription[port] = desc;
-    }
-
-    /**
-     * Set a desription for a PredictorParams inport. You certainly want to use
-     * this method in your derived class's constructor if you have more than one
-     * input port.
-     * 
-     * @param port The port id of interest.
-     * @param desc A description to that port. Null is allowed.
-     * @see #setPredictorParamsOutputDescription(int, String)
-     */
-    protected final void setPredictorParamsInputDescription(final int port,
-            final String desc) {
-        m_inPredParamsPortDescription[port] = desc;
-    }
-
-    /**
-     * Get a description for an inport. This description can be used as tooltip
-     * of the port, e.g. If you derive a <code>NodeModel</code>, this method
-     * is likely not of interest to you.
-     * <p>
-     * Get a description that was set via the corresponding set method. If that
-     * hasn't been invoked, this method returns a default description. This
-     * method may return <code>null</code> if that was done so in the set
-     * method.
-     * 
-     * @param port The port number of interest.
-     * @return The description to that port.
-     */
-    final String getInputDescription(final int port) {
-        if (port < m_inDataPortDescription.length) {
-            return m_inDataPortDescription[port];
-        } else {
-            return m_inPredParamsPortDescription[port - getNrDataIns()];
         }
     }
 

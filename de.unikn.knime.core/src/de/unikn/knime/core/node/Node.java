@@ -346,31 +346,29 @@ public class Node {
     }
 
     /**
-     * Delegation method to the model's <code>getInputDescription()</code>
-     * method.
+     * Delegation method to the factory's
+     * {@link NodeFactory#getInportDescription(int)} method.
      * 
      * @param portID The port id of interest
      * @return The description to that port
      * @throws IndexOutOfBoundsException If argument is out of range.
-     * @see NodeModel#getInputDescription(int)
      */
     public String getInputPortDescription(final int portID) {
         boundInPort(portID);
-        return m_nodeModel.getInputDescription(portID);
+        return m_nodeFactory.getInportDescription(portID);
     }
 
     /**
-     * Delegation method to model's <code>getOutputDescription()</code>
-     * method.
+     * Delegation method to the factory's
+     * {@link NodeFactory#getOutportDescription(int)} method.
      * 
      * @param portID The port id of interest.
      * @return The description to that port.
      * @throws IndexOutOfBoundsException If argument is out of range.
-     * @see NodeModel#getOutputDescription(int)
      */
     public String getOutputPortDescription(final int portID) {
         boundOutPort(portID);
-        return m_nodeModel.getOutputDescription(portID);
+        return m_nodeFactory.getOutportDescription(portID);
     }
 
     /**
@@ -1459,7 +1457,7 @@ public class Node {
     /**
      * Checks range for given input port ID.
      * 
-     * @param The input port ID to check.
+     * @param inPortID The input port ID to check.
      * @return Given input port ID if in range.
      * @throws IndexOutOfBoundsException if the specified ID is not a pred
      *             params input port ID.
@@ -1522,6 +1520,7 @@ public class Node {
      * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "Node @" + hashCode() + " [" + m_nodeName + ";in="
                 + m_inDataPorts.length + ";out=" + m_outDataPorts.length

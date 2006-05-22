@@ -76,6 +76,34 @@ public class MetaNodeModel extends NodeModel implements WorkflowListener {
      */
     private final ArrayList<NodeStateListener> m_stateListeners;
 
+    
+    
+    
+    
+    MetaNodeModel(final int nrDataIns, final int nrDataOuts,
+            final int nrPredParamsIns, final int nrPredParamsOuts) {
+        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
+        m_workflowmanager = new WorkflowManager();
+        m_workflowmanager.addListener(this);
+        // create MetaInput nodes, add them to the workflow
+        m_metaInContainer = new MetaInputNodeContainer[nrDataIns];
+        for (int i = 0; i < nrDataIns; i++) {
+            m_metaInContainer[i] = (MetaInputNodeContainer)m_workflowmanager
+                    .createNode(new MetaInputNodeFactory());
+        }
+
+        // create MetaOutput nodes, add them to the workflow
+        m_metaOutContainer = new MetaOutputNodeContainer[nrDataOuts];
+        for (int i = 0; i < nrDataOuts; i++) {
+            m_metaOutContainer[i] = (MetaOutputNodeContainer)m_workflowmanager
+                    .createNode(new MetaOutputNodeFactory());
+        }
+
+        m_stateListeners = new ArrayList<NodeStateListener>();
+
+    }
+    
+
     /**
      * The number of inputs and outputs must be provided, the corresponding
      * <code>MetaInputNode</code>s and <code>MetaOutputNode</code>s are created 
@@ -84,24 +112,7 @@ public class MetaNodeModel extends NodeModel implements WorkflowListener {
      * @param nrOuts number of output nodes.
      */
     MetaNodeModel(final int nrIns, final int nrOuts) {
-        super(nrIns, nrOuts);
-        m_workflowmanager = new WorkflowManager();
-        m_workflowmanager.addListener(this);
-        // create MetaInput nodes, add them to the workflow
-        m_metaInContainer = new MetaInputNodeContainer[nrIns];
-        for (int i = 0; i < nrIns; i++) {
-            m_metaInContainer[i] = (MetaInputNodeContainer)m_workflowmanager
-                    .createNode(new MetaInputNodeFactory());
-        }
-
-        // create MetaOutput nodes, add them to the workflow
-        m_metaOutContainer = new MetaOutputNodeContainer[nrOuts];
-        for (int i = 0; i < nrOuts; i++) {
-            m_metaOutContainer[i] = (MetaOutputNodeContainer)m_workflowmanager
-                    .createNode(new MetaOutputNodeFactory());
-        }
-
-        m_stateListeners = new ArrayList<NodeStateListener>();
+        this(nrIns, nrOuts, 0, 0);
     }
 
     /**
