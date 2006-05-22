@@ -1,7 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -21,7 +18,6 @@ package de.unikn.knime.base.data.filter.column;
 
 import java.util.LinkedHashSet;
 
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
@@ -120,7 +116,7 @@ public final class FilterColumnTable implements DataTable {
      *             values.
      */
     public static final DataTableSpec createFilterTableSpec(
-            final DataTableSpec spec, final DataCell... columns) {
+            final DataTableSpec spec, final String... columns) {
         int[] cols = new int[columns.length];
         for (int i = 0; i < cols.length; i++) {
             cols[i] = spec.findColumnIndex(columns[i]);
@@ -227,7 +223,7 @@ public final class FilterColumnTable implements DataTable {
      * @throws IllegalArgumentException if one of the column name is already is
      *             use or the column name does not exist in the table.
      */
-    public FilterColumnTable(final DataTable data, final DataCell... columns) {
+    public FilterColumnTable(final DataTable data, final String... columns) {
         this(data, findColumnIndices(data.getDataTableSpec(), columns));
     }
 
@@ -239,7 +235,7 @@ public final class FilterColumnTable implements DataTable {
      * @return A sorted array of indices.
      */
     private static int[] findColumnIndices(final DataTableSpec spec,
-            final DataCell... columns) {
+            final String... columns) {
         int[] ret = new int[columns.length];
         for (int i = 0; i < columns.length; i++) {
             if (columns[i] == null) {

@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -46,7 +44,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
@@ -106,7 +103,7 @@ public final class FilterColumnPanel extends JPanel {
      * filter.
      * 
      * @see #update(DataTableSpec, boolean, Set)
-     * @see #update(DataTableSpec, boolean, DataCell...)
+     * @see #update(DataTableSpec, boolean, String...)
      */
     public FilterColumnPanel() {
         this(DataValue.class);
@@ -136,7 +133,7 @@ public final class FilterColumnPanel extends JPanel {
      *        only allowed for selection. Will be check during update.
      * 
      * @see #update(DataTableSpec, boolean, Set)
-     * @see #update(DataTableSpec, boolean, DataCell...)
+     * @see #update(DataTableSpec, boolean, String...)
      */
     public FilterColumnPanel(
             final Class<? extends DataValue>... filterValueClasses) {
@@ -373,7 +370,7 @@ public final class FilterColumnPanel extends JPanel {
      * @param cells An array of data cell to either in- or exclude.
      */
     public void update(final DataTableSpec spec, final boolean exclude,
-            final DataCell... cells) {
+            final String... cells) {
         this.update(spec, exclude, Arrays.asList(cells));
     }
     
@@ -400,8 +397,8 @@ public final class FilterColumnPanel extends JPanel {
      * @param excl The list of columns to exclude or include.
      */
     public void update(final DataTableSpec spec, final boolean exclude,
-            final Set<DataCell> excl) {
-        this.update(spec, exclude, (Collection<DataCell>) excl);
+            final Set<String> excl) {
+        this.update(spec, exclude, (Collection<String>) excl);
     }
 
     /**
@@ -415,7 +412,7 @@ public final class FilterColumnPanel extends JPanel {
      * @param excl The list of columns to exclude or include.
      */
     private void update(final DataTableSpec spec, final boolean exclude,
-            final Collection<DataCell> excl) {
+            final Collection<String> excl) {
         assert (spec != null && excl != null);
         m_order.clear();
         m_inclMdl.removeAllElements();
@@ -426,7 +423,7 @@ public final class FilterColumnPanel extends JPanel {
             if (!typeAllowed(cSpec.getType())) {
                 continue;
             }
-            final DataCell c = cSpec.getName();
+            final String c = cSpec.getName();
             m_order.add(cSpec);
             if (exclude) {
                 if (excl.contains(c)) {
@@ -450,7 +447,7 @@ public final class FilterColumnPanel extends JPanel {
      * 
      * @return A set of all columns from the exclude list.
      */
-    public Set<DataCell> getExcludedColumnList() {
+    public Set<String> getExcludedColumnList() {
         return getColumnList(m_exclMdl);
     }
 
@@ -459,7 +456,7 @@ public final class FilterColumnPanel extends JPanel {
      * 
      * @return A list of all columns from the include list.
      */
-    public Set<DataCell> getIncludedColumnList() {
+    public Set<String> getIncludedColumnList() {
         return getColumnList(m_inclMdl);
     }
 
@@ -468,11 +465,11 @@ public final class FilterColumnPanel extends JPanel {
      * 
      * @param list The list from which to retrieve the elements
      */
-    private static Set<DataCell> getColumnList(final ListModel model) {
-        final Set<DataCell> list = new LinkedHashSet<DataCell>();
+    private static Set<String> getColumnList(final ListModel model) {
+        final Set<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < model.getSize(); i++) {
             Object o = model.getElementAt(i);
-            DataCell cell = ((DataColumnSpec)o).getName();
+            String cell = ((DataColumnSpec)o).getName();
             list.add(cell);
         }
         return list;
@@ -481,10 +478,10 @@ public final class FilterColumnPanel extends JPanel {
     /**
      * Returns the DataType for the given cell retrieving it from the
      * initial DataTableSpec. If this name could not found, return null.
-     * @param name The DataCell name to get the DataType for.
+     * @param name The column name to get the DataType for.
      * @return The DataType or null.
      */
-    public DataType getType(final DataCell name) {
+    public DataType getType(final String name) {
         for (DataColumnSpec spec : m_order) {
             if (spec.getName().equals(name)) {
                 return spec.getType();
@@ -517,9 +514,8 @@ public final class FilterColumnPanel extends JPanel {
 
             if (o != null) {
                 String string;
-
-                if (o instanceof DataCell) {
-                    string = ((DataCell)o).toString().toUpperCase();
+                if (o instanceof String) {
+                    string = ((String) o).toUpperCase();
                 } else if (o instanceof DataColumnSpec) {
                     string = ((DataColumnSpec)o).getName().toString()
                             .toUpperCase();

@@ -1,7 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -20,15 +17,14 @@
 package de.unikn.knime.base.data.filter.column;
 
 import junit.framework.TestCase;
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.StringCell;
 
 /**
@@ -45,10 +41,8 @@ public final class FilterColumnTableTest extends TestCase {
      * Test table class used for column filtering.
      */
     private final class MyTestTable implements DataTable {
-        private final DataTableSpec m_spec = new DataTableSpec(new DataCell[] {
-                new StringCell("Col_A"), new StringCell("Col_B"),
-                new StringCell("Col_C"), new StringCell("Col_D"),
-                new StringCell("Col_E")}, new DataType[] {
+        private final DataTableSpec m_spec = new DataTableSpec(new String[] {
+                "Col_A", "Col_B", "Col_C", "Col_D", "Col_E"}, new DataType[] {
                 DoubleCell.TYPE, StringCell.TYPE,
                 IntCell.TYPE, DoubleCell.TYPE,
                 StringCell.TYPE});
@@ -168,25 +162,16 @@ public final class FilterColumnTableTest extends TestCase {
                 1, 2, 3, 4});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 5);
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_A")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(1).getName().equals(
-                new StringCell("Col_B")));
-        assertTrue(fSpec.getColumnSpec(1).getType().equals(
-                StringCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(2).getName().equals(
-                new StringCell("Col_C")));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_A"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(1).getName().equals("Col_B"));
+        assertTrue(fSpec.getColumnSpec(1).getType().equals(StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(2).getName().equals("Col_C"));
         assertTrue(fSpec.getColumnSpec(2).getType().equals(IntCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(3).getName().equals(
-                new StringCell("Col_D")));
-        assertTrue(fSpec.getColumnSpec(3).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(4).getName().equals(
-                new StringCell("Col_E")));
-        assertTrue(fSpec.getColumnSpec(4).getType().equals(
-                StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(3).getName().equals("Col_D"));
+        assertTrue(fSpec.getColumnSpec(3).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(4).getName().equals("Col_E"));
+        assertTrue(fSpec.getColumnSpec(4).getType().equals(StringCell.TYPE));
         // test the filter table
         tableTest(filter);
     }
@@ -199,25 +184,16 @@ public final class FilterColumnTableTest extends TestCase {
                 3, 2, 1, 0});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 5);
-        assertTrue(fSpec.getColumnSpec(4).getName().equals(
-                new StringCell("Col_A")));
-        assertTrue(fSpec.getColumnSpec(4).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(3).getName().equals(
-                new StringCell("Col_B")));
-        assertTrue(fSpec.getColumnSpec(3).getType().equals(
-                StringCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(2).getName().equals(
-                new StringCell("Col_C")));
+        assertTrue(fSpec.getColumnSpec(4).getName().equals("Col_A"));
+        assertTrue(fSpec.getColumnSpec(4).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(3).getName().equals("Col_B"));
+        assertTrue(fSpec.getColumnSpec(3).getType().equals(StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(2).getName().equals("Col_C"));
         assertTrue(fSpec.getColumnSpec(2).getType().equals(IntCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(1).getName().equals(
-                new StringCell("Col_D")));
-        assertTrue(fSpec.getColumnSpec(1).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_E")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(1).getName().equals("Col_D"));
+        assertTrue(fSpec.getColumnSpec(1).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_E"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(StringCell.TYPE));
         // test the filter table
         tableTest(filter);
     }
@@ -230,10 +206,8 @@ public final class FilterColumnTableTest extends TestCase {
             new FilterColumnTable(m_table, new int[] {3});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 1);
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_D")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_D"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(DoubleCell.TYPE));
         // test the filter table
         tableTest(filter);
     }
@@ -247,18 +221,12 @@ public final class FilterColumnTableTest extends TestCase {
                 DoubleCell.TYPE);
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 3);
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_A")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(1).getName().equals(
-                new StringCell("Col_C")));
-        assertTrue(fSpec.getColumnSpec(1).getType().equals(
-                IntCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(2).getName().equals(
-                new StringCell("Col_D")));
-        assertTrue(fSpec.getColumnSpec(2).getType().equals(
-                DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_A"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(1).getName().equals("Col_C"));
+        assertTrue(fSpec.getColumnSpec(1).getType().equals(IntCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(2).getName().equals("Col_D"));
+        assertTrue(fSpec.getColumnSpec(2).getType().equals(DoubleCell.TYPE));
         // test the filter table
         tableTest(filter);
     }
@@ -271,14 +239,10 @@ public final class FilterColumnTableTest extends TestCase {
                 StringCell.TYPE);
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 2);
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_B")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                StringCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(1).getName().equals(
-                new StringCell("Col_E")));
-        assertTrue(fSpec.getColumnSpec(1).getType().equals(
-                StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_B"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(1).getName().equals("Col_E"));
+        assertTrue(fSpec.getColumnSpec(1).getType().equals(StringCell.TYPE));
         // test the filter table
         tableTest(filter);
     }
@@ -291,8 +255,7 @@ public final class FilterColumnTableTest extends TestCase {
                 IntCell.TYPE);
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 1);
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_C")));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_C"));
         assertTrue(fSpec.getColumnSpec(0).getType().equals(IntCell.TYPE));
         // test the filter table
         tableTest(filter);
@@ -303,33 +266,19 @@ public final class FilterColumnTableTest extends TestCase {
      */
     public void testInConstructorColumnNames1() {
         FilterColumnTable filter = new FilterColumnTable(m_table,
-                new DataCell[] {new StringCell("Col_A"),
-                        new StringCell("Col_B"),
-                        new StringCell("Col_C"),
-                        new StringCell("Col_D"),
-                        new StringCell("Col_E")});
+                new String[] {"Col_A", "Col_B", "Col_C", "Col_D", "Col_E"});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 5);
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_A")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(1).getName().equals(
-                new StringCell("Col_B")));
-        assertTrue(fSpec.getColumnSpec(1).getType().equals(
-                StringCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(2).getName().equals(
-                new StringCell("Col_C")));
-        assertTrue(fSpec.getColumnSpec(2).getType().equals(
-                IntCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(3).getName().equals(
-                new StringCell("Col_D")));
-        assertTrue(fSpec.getColumnSpec(3).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(4).getName().equals(
-                new StringCell("Col_E")));
-        assertTrue(fSpec.getColumnSpec(4).getType().equals(
-                StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_A"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(1).getName().equals("Col_B"));
+        assertTrue(fSpec.getColumnSpec(1).getType().equals(StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(2).getName().equals("Col_C"));
+        assertTrue(fSpec.getColumnSpec(2).getType().equals(IntCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(3).getName().equals("Col_D"));
+        assertTrue(fSpec.getColumnSpec(3).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(4).getName().equals("Col_E"));
+        assertTrue(fSpec.getColumnSpec(4).getType().equals(StringCell.TYPE));
         // test the filter table
         tableTest(filter);
     }
@@ -339,28 +288,17 @@ public final class FilterColumnTableTest extends TestCase {
      */
     public void testInConstructorColumnNames2() {
         FilterColumnTable filter = new FilterColumnTable(m_table,
-                new DataCell[] {new StringCell("Col_E"),
-                        new StringCell("Col_C"),
-                        new StringCell("Col_D"),
-                        new StringCell("Col_A")});
+                new String[] {"Col_E", "Col_C", "Col_D", "Col_A"});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 4);
-        assertTrue(fSpec.getColumnSpec(3).getName().equals(
-                new StringCell("Col_A")));
-        assertTrue(fSpec.getColumnSpec(3).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(1).getName().equals(
-                new StringCell("Col_C")));
-        assertTrue(fSpec.getColumnSpec(1).getType().equals(
-                IntCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(2).getName().equals(
-                new StringCell("Col_D")));
-        assertTrue(fSpec.getColumnSpec(2).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_E")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(3).getName().equals("Col_A"));
+        assertTrue(fSpec.getColumnSpec(3).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(1).getName().equals("Col_C"));
+        assertTrue(fSpec.getColumnSpec(1).getType().equals(IntCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(2).getName().equals("Col_D"));
+        assertTrue(fSpec.getColumnSpec(2).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_E"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(StringCell.TYPE));
         // test the filter table
         tableTest(filter);
     }
@@ -450,7 +388,7 @@ public final class FilterColumnTableTest extends TestCase {
      */
     public void testInConstructorException10() {
         try {
-            new FilterColumnTable(m_table, (DataCell[])null);
+            new FilterColumnTable(m_table, (String[]) null);
             fail("Exception expected: Array of column names is null.");
         } catch (Exception e) {
             assertTrue(true);
@@ -461,7 +399,7 @@ public final class FilterColumnTableTest extends TestCase {
      * Array of column indices is empty.
      */
     public void testInConstructorException11() {
-        new FilterColumnTable(m_table, new DataCell[] {});
+        new FilterColumnTable(m_table, new String[] {});
         assertTrue(true);
     }
 
@@ -470,8 +408,7 @@ public final class FilterColumnTableTest extends TestCase {
      */
     public void testInConstructorException12() {
         try {
-            new FilterColumnTable(m_table,
-                    new DataCell[] {new StringCell("Bla")});
+            new FilterColumnTable(m_table, "Bla");
             fail("Exception expected: Column name \"Bla\" not in data.");
         } catch (Exception e) {
             assertTrue(true);
@@ -483,9 +420,7 @@ public final class FilterColumnTableTest extends TestCase {
      */
     public void testInConstructorException13() {
         try {
-            new FilterColumnTable(m_table, new DataCell[] {
-                    new StringCell("Col_A"),
-                    new StringCell("Col_A")});
+            new FilterColumnTable(m_table, new String[] {"Col_A", "Col_A"});
             fail("Exception expected: Column name \"Col_A\" found twice.");
         } catch (Exception e) {
             assertTrue(true);
@@ -523,22 +458,14 @@ public final class FilterColumnTableTest extends TestCase {
         FilterColumnTable filter = new FilterColumnTable(m_table, false, 3);
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 4);
-        assertTrue(fSpec.getColumnSpec(0).getName().equals(
-                new StringCell("Col_A")));
-        assertTrue(fSpec.getColumnSpec(0).getType().equals(
-                DoubleCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(1).getName().equals(
-                new StringCell("Col_B")));
-        assertTrue(fSpec.getColumnSpec(1).getType().equals(
-                StringCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(2).getName().equals(
-                new StringCell("Col_C")));
-        assertTrue(fSpec.getColumnSpec(2).getType().equals(
-                IntCell.TYPE));
-        assertTrue(fSpec.getColumnSpec(3).getName().equals(
-                new StringCell("Col_E")));
-        assertTrue(fSpec.getColumnSpec(3).getType().equals(
-                StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(0).getName().equals("Col_A"));
+        assertTrue(fSpec.getColumnSpec(0).getType().equals(DoubleCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(1).getName().equals("Col_B"));
+        assertTrue(fSpec.getColumnSpec(1).getType().equals(StringCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(2).getName().equals("Col_C"));
+        assertTrue(fSpec.getColumnSpec(2).getType().equals(IntCell.TYPE));
+        assertTrue(fSpec.getColumnSpec(3).getName().equals("Col_E"));
+        assertTrue(fSpec.getColumnSpec(3).getType().equals(StringCell.TYPE));
         // test the filter table
         tableTest(filter);
     }

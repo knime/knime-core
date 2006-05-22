@@ -18,7 +18,6 @@ package de.unikn.knime.base.node.filter.column;
 import java.util.ArrayList;
 
 import de.unikn.knime.base.data.filter.column.FilterColumnTable;
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.ExecutionMonitor;
@@ -53,7 +52,7 @@ final class FilterColumnNodeModel extends NodeModel {
     /*
      * List contains the data cells to exclude.
      */
-    private final ArrayList<DataCell> m_list;
+    private final ArrayList<String> m_list;
 
     /**
      * Creates a new filter model with one and in- and output.
@@ -62,7 +61,7 @@ final class FilterColumnNodeModel extends NodeModel {
      */
     FilterColumnNodeModel() {
         super(1, 1);
-        m_list = new ArrayList<DataCell>();
+        m_list = new ArrayList<String>();
     }
 
     /**
@@ -89,7 +88,7 @@ final class FilterColumnNodeModel extends NodeModel {
 
         final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
         final DataTableSpec outSpec = createOutDataTableSpec(inSpec);
-        final DataCell[] cols = new DataCell[outSpec.getNumColumns()];
+        final String[] cols = new String[outSpec.getNumColumns()];
         for (int c = 0; c < cols.length; c++) {
             cols[c] = outSpec.getColumnSpec(c).getName();
         }
@@ -127,7 +126,7 @@ final class FilterColumnNodeModel extends NodeModel {
             return inSpec;
         }
         // check if all specified columns exist in the input spec
-        for (DataCell name : m_list) {
+        for (String name : m_list) {
             if (!inSpec.containsName(name)) {
                 throw new InvalidSettingsException("Column '" + name
                         + "' not found.");
@@ -158,7 +157,7 @@ final class FilterColumnNodeModel extends NodeModel {
      * @param settings The object to save the settings into.
      */
     protected void saveSettingsTo(final NodeSettings settings) {
-        settings.addDataCellArray(KEY, m_list.toArray(new DataCell[0]));
+        settings.addStringArray(KEY, m_list.toArray(new String[0]));
     }
 
     /**
@@ -173,8 +172,8 @@ final class FilterColumnNodeModel extends NodeModel {
         // clear exclude column list
         m_list.clear();
         // get list of excluded columns
-        DataCell[] columns = settings.getDataCellArray(KEY, 
-                m_list.toArray(new DataCell[0]));
+        String[] columns = settings.getStringArray(KEY, 
+                m_list.toArray(new String[0]));
         for (int i = 0; i < columns.length; i++) {
             m_list.add(columns[i]);
         }

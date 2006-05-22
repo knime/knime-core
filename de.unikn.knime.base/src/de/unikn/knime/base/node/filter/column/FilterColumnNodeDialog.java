@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import de.unikn.knime.base.node.util.FilterColumnPanel;
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
@@ -61,17 +60,16 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
             // settings can't be evaluated against the spec
             return;
         }
-        DataCell[] columns = settings.getDataCellArray(
-                FilterColumnNodeModel.KEY, new DataCell[0]); 
-        HashSet<DataCell> list = new HashSet<DataCell>();
+        String[] columns = settings.getStringArray(
+                FilterColumnNodeModel.KEY, new String[0]); 
+        HashSet<String> list = new HashSet<String>();
         for (int i = 0; i < columns.length; i++) {
             if (specs[FilterColumnNodeModel.INPORT].containsName(columns[i])) {
                 list.add(columns[i]);
             }
         }
         // set exclusion list on the panel
-        FilterColumnPanel p = 
-            (FilterColumnPanel) getTab(TAB);
+        FilterColumnPanel p = (FilterColumnPanel) getTab(TAB);
         p.update(specs[FilterColumnNodeModel.INPORT], true, list);
     } 
     
@@ -85,9 +83,9 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettings settings) {
         FilterColumnPanel p = 
             (FilterColumnPanel) getTab(TAB);
-        Set<DataCell> list = p.getExcludedColumnList();
-        settings.addDataCellArray(FilterColumnNodeModel.KEY, 
-                list.toArray(new DataCell[0]));
+        Set<String> list = p.getExcludedColumnList();
+        settings.addStringArray(FilterColumnNodeModel.KEY, 
+                list.toArray(new String[0]));
     }
     
 }   // FilterColumnNodeDialog
