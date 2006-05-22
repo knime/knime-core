@@ -152,7 +152,7 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(new DataRow[0], // empty row elements does not
                     // matter
-                    new String[] {"bla", "42", "99.9"}, new DataType[] {
+                    new String[] {"bla", "42"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             DoubleCell.TYPE});
             fail();
@@ -164,7 +164,7 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(new DataRow[0], // empty row elements does not
                     // matter
-                    new String[] {"bla", "42", "99.9"}, new DataType[] {
+                    new String[] {"bla", null, "99.9"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             StringCell.TYPE});
             fail();
@@ -175,7 +175,7 @@ public class DefaultTableTest extends TestCase {
         // fails: column name array contains redundant objects
         try {
             new DefaultTable(new DataRow[0], // empty row elements do not matter
-                    new String[] {"bla", "42", "99.9"}, new DataType[] {
+                    new String[] {"bla", "42", "42"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             StringCell.TYPE});
             fail();
