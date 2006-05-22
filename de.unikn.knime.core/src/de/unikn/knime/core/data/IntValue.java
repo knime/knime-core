@@ -91,7 +91,8 @@ public interface IntValue extends DataValue {
         @Override
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(IntValueRenderer.INSTANCE);
+            return new DefaultDataValueRendererFamily(
+                    IntValueRenderer.INSTANCE);
         }
 
     }
