@@ -131,17 +131,17 @@ public class AppendedRowsTable implements DataTable {
      */
     public static final DataTableSpec generateDataTableSpec(
             final DataTableSpec... tableSpecs) {
-        LinkedHashMap<DataCell, DataType> columnSet = 
-            new LinkedHashMap<DataCell, DataType>();
-        LinkedHashMap<DataCell, DataColumnDomain> domainSet = 
-            new LinkedHashMap<DataCell, DataColumnDomain>();
+        LinkedHashMap<String, DataType> columnSet = 
+            new LinkedHashMap<String, DataType>();
+        LinkedHashMap<String, DataColumnDomain> domainSet = 
+            new LinkedHashMap<String, DataColumnDomain>();
 
         // create final data table spec
         for (int i = 0; i < tableSpecs.length; i++) {
             DataTableSpec cur = tableSpecs[i];
             for (int c = 0; c < cur.getNumColumns(); c++) {
                 DataColumnSpec colSpec = cur.getColumnSpec(c);
-                DataCell colName = colSpec.getName();
+                String colName = colSpec.getName();
                 DataType colType = colSpec.getType();
                 DataColumnDomain colDomain = colSpec.getDomain();
 
@@ -175,8 +175,8 @@ public class AppendedRowsTable implements DataTable {
 
         DataColumnSpec[] colSpecs = new DataColumnSpec[columnSet.size()];
         int i = 0;
-        for (Map.Entry<DataCell, DataType> entry : columnSet.entrySet()) {
-            DataCell name = entry.getKey();
+        for (Map.Entry<String, DataType> entry : columnSet.entrySet()) {
+            String   name = entry.getKey();
             DataType type = entry.getValue();
             // domain is null, if we did not remember it (e.g. "keepDomain" was
             // false)

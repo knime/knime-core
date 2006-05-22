@@ -41,10 +41,8 @@ public class AppendedRowsTableTest extends TestCase {
     private static final DataType[] DATA_TYPES = new DataType[] {
             DoubleCell.TYPE, IntCell.TYPE, StringCell.TYPE};
 
-    private static final DataCell[] DATA_H = new StringCell[] {
-            new StringCell("double_col"),
-            new StringCell("int_col"),
-            new StringCell("string_col")};
+    private static final String[] DATA_H = new String[] {
+            "double_col", "int_col", "string_col"};
 
     private static final DataRow[] DATA = new DataRow[] {
             new DefaultRow(new StringCell("row_1"), new DataCell[] {
@@ -63,9 +61,8 @@ public class AppendedRowsTableTest extends TestCase {
     private static final DataType[] DATA_MISS_LAST_TYPES = new DataType[] {
             DoubleCell.TYPE, IntCell.TYPE};
 
-    private static final DataCell[] DATA_MISS_LAST_H = new StringCell[] {
-            new StringCell("double_col"),
-            new StringCell("int_col")};
+    private static final String[] DATA_MISS_LAST_H = new String[] {
+            "double_col", "int_col"};
 
     private static final DataRow[] DATA_MISS_LAST = new DataRow[] {
             new DefaultRow(new StringCell("row_1"), new DataCell[] {
@@ -91,10 +88,8 @@ public class AppendedRowsTableTest extends TestCase {
     private static final DataType[] DATA_SHUFFLE_TYPES = new DataType[] {
             IntCell.TYPE, DoubleCell.TYPE, StringCell.TYPE};
 
-    private static final DataCell[] DATA_SHUFFLE_H = new StringCell[] {
-            new StringCell("int_col"),
-            new StringCell("double_col"),
-            new StringCell("string_col")};
+    private static final String[] DATA_SHUFFLE_H = new String[] {
+            "int_col", "double_col", "string_col"};
 
     private static final DataRow[] DATA_SHUFFLE = new DataRow[] {
             new DefaultRow(new StringCell("row_5"), new DataCell[] {
