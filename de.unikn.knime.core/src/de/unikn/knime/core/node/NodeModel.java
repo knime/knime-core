@@ -79,7 +79,7 @@ public abstract class NodeModel {
      * Optional warning message to be set during / after execution. Enables
      * hiher levels to display the given message.
      */
-    private String m_warningMessage = "";
+    private String m_warningMessage = null;
 
     /**
      * Creates a new model with the given number of data, and predictor in- and
