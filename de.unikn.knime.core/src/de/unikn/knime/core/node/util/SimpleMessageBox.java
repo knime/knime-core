@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -40,7 +38,8 @@ import javax.swing.JPanel;
  */
 public class SimpleMessageBox extends JDialog implements ActionListener,
         Runnable {
-    
+    private static final long serialVersionUID = 1031094847050677606L;
+
     private String m_message;
 
     private JButton m_pbClose;
@@ -56,8 +55,8 @@ public class SimpleMessageBox extends JDialog implements ActionListener,
     public SimpleMessageBox(final String message, final Frame parent) {
         super(parent, true);
         
-        int xLocation = (int)(parent.getX() + parent.getWidth() / 2); 
-        int yLocation = (int)(parent.getY() + parent.getHeight() / 2);
+        int xLocation = parent.getX() + parent.getWidth() / 2; 
+        int yLocation = parent.getY() + parent.getHeight() / 2;
         setLocation(xLocation, yLocation);
         m_message = message;
         initialize();

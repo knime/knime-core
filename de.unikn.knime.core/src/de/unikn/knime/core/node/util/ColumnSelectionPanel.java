@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -43,6 +41,7 @@ import de.unikn.knime.core.data.DataValue;
  *  
  */
 public class ColumnSelectionPanel extends JPanel {
+    private static final long serialVersionUID = 9095144868702823700L;
 
     /** Contains all column names for the given given filter class. */
     private final JComboBox m_chooser;

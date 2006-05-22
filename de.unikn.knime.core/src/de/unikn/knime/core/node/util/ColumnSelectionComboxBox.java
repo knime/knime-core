@@ -116,7 +116,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
      */
-    public final void update(final DataTableSpec spec, final DataCell selColName) {
+    public final void update(final DataTableSpec spec, final String selColName) {
         update(spec, selColName, false);
     }
     
@@ -133,7 +133,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
      *        otherwise.
      */
     public final void update(final DataTableSpec spec, 
-            final DataCell selColName, final boolean suppressEvents) {
+            final String selColName, final boolean suppressEvents) {
         ItemListener[] itemListeners = null;
         ActionListener[] actionListeners = null;
         

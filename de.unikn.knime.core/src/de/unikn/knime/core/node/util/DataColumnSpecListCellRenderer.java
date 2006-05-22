@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -36,11 +34,13 @@ import de.unikn.knime.core.data.DataColumnSpec;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
-    
+    private static final long serialVersionUID = 1156595670217009312L;
+
     /**
      * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
      * JList, Object, int, boolean, boolean)
      */
+    @Override
     public Component getListCellRendererComponent(
             final JList list, final Object value, final int index, 
             final boolean isSelected, final boolean cellHasFocus) {
