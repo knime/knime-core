@@ -13,7 +13,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.border.Border;
 
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
@@ -43,7 +42,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
      *            will allow to select only columns compatible with one of these
      *            classes. All other columns will be ignored.
      * 
-     * @see #update(DataTableSpec,DataCell)
+     * @see #update(DataTableSpec, String)
      */
     public ColumnSelectionComboxBox(
             final Class<? extends DataValue>... filterValueClasses) {
@@ -69,7 +68,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
      *            classes. All other columns will be ignored.
      * @param borderTitle The title of the border
      * 
-     * @see #update(DataTableSpec,DataCell)
+     * @see #update(DataTableSpec, String)
      */
     public ColumnSelectionComboxBox(final String borderTitle,
             final Class<? extends DataValue>... filterValueClasses) {
@@ -85,7 +84,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
      *            theses classes. All other columns will be ignored.
      * @param border Border for the panel or null to have no border.
      * 
-     * @see #update(DataTableSpec,DataCell)
+     * @see #update(DataTableSpec, String)
      */
     public ColumnSelectionComboxBox(final Border border,
             final Class<? extends DataValue>... filterValueClasses) {
