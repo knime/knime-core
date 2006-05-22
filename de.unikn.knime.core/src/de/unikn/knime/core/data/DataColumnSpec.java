@@ -42,7 +42,7 @@ import de.unikn.knime.core.data.property.SizeHandler;
 public final class DataColumnSpec {
 
     /** Keeps the column name. */
-    private final DataCell m_name;
+    private final String m_name;
 
     /** Keeps the column type. */
     private final DataType m_type;
@@ -71,7 +71,7 @@ public final class DataColumnSpec {
      * @param sizeHdl the SizeHandler or null
      * @param colorHdl the ColorHandler or null
      */
-    DataColumnSpec(final DataCell name, final DataType type,
+    DataColumnSpec(final String name, final DataType type,
             final DataColumnDomain domain, final DataColumnProperties props,
             final SizeHandler sizeHdl, final ColorHandler colorHdl) {
         assert name != null;
@@ -91,7 +91,7 @@ public final class DataColumnSpec {
      * 
      * @return The column name.
      */
-    public DataCell getName() {
+    public String getName() {
         return m_name;
     }
 

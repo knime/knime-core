@@ -120,17 +120,17 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         m_name = (name == null ? "default" : name);
         final int colCount = colSpecs.length;
         m_columnSpecs = new DataColumnSpec[colCount];
-        HashSet<DataCell> hash = new HashSet<DataCell>();
+        HashSet<String> hash = new HashSet<String>();
         for (int i = 0; i < colCount; i++) {
             // disallow duplicates
-            DataCell currentName = colSpecs[i].getName();
+            String currentName = colSpecs[i].getName();
             if (currentName == null) {
                 throw new NullPointerException("Column name must not be null");
             }
             if (!hash.add(currentName)) {
                 // find duplicate indices for a nice error message.
                 for (int j = 0; j < i; j++) {
-                    DataCell otherName = colSpecs[j].getName();
+                    String otherName = colSpecs[j].getName();
                     if (currentName.equals(otherName)) {
                         throw new IllegalArgumentException(
                                 "Duplicate column name \""
@@ -159,7 +159,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      *             <code>types</code> arrays don't have the same length or if
      *             the parameter array <code>names</code> contains duplicates.
      */
-    public DataTableSpec(final DataCell[] names, final DataType[] types) {
+    public DataTableSpec(final String[] names, final DataType[] types) {
         this("default", names, types);
     }
 
@@ -177,7 +177,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      *             <code>types</code> arrays don't have the same length or if
      *             the parameter array <code>names</code> contains duplicates.
      */
-    public DataTableSpec(final String name, final DataCell[] names,
+    public DataTableSpec(final String name, final String[] names,
             final DataType[] types) {
         this(name, createColumnSpecs(names, types));
     }
@@ -193,14 +193,14 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @return An array of <code>DataColumnSpec</code> elements.
      */
     public static final DataColumnSpec[] createColumnSpecs(
-            final DataCell[] names, final DataType[] types) {
+            final String[] names, final DataType[] types) {
         if (names.length != types.length) {
             throw new IllegalArgumentException("Parameter arrays names and "
                     + "types must have the same length (names: " + names.length
                     + ", types: " + types.length + ").");
         }
         final int colCount = names.length;
-        HashSet<DataCell> hash = new HashSet<DataCell>();
+        HashSet<String> hash = new HashSet<String>();
         // encapsulate info from arguments into internal array of specs
         DataColumnSpec[] columnSpecs = new DataColumnSpec[colCount];
         for (int i = 0; i < colCount; i++) {
@@ -265,7 +265,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         // copy spec1
         for (; idx < l1; idx++) {
             DataColumnSpec currentColumn = spec1.getColumnSpec(idx);
-            DataCell currentName = currentColumn.getName();
+            String currentName = currentColumn.getName();
             // check for duplicates
             if (spec2.containsName(currentName)) {
                 // find the index in spec2 where the duplicate is located
@@ -404,7 +404,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @param column The column to find spec for.
      * @return The column specification or null if not available.
      */
-    public DataColumnSpec getColumnSpec(final DataCell column) {
+    public DataColumnSpec getColumnSpec(final String column) {
         int columnIndex = findColumnIndex(column);
         if (columnIndex == -1) {
             return null;
@@ -517,7 +517,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @param columnName The column name to check.
      * @return <code>true</code> if this spec contains the column name.
      */
-    public boolean containsName(final DataCell columnName) {
+    public boolean containsName(final String columnName) {
         return findColumnIndex(columnName) >= 0;
     }
 
@@ -530,7 +530,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @return the index of the column with the specified name, or -1 if not
      *         found.
      */
-    public int findColumnIndex(final DataCell columnName) {
+    public int findColumnIndex(final String columnName) {
         if (columnName == null) {
             return -1;
         }
