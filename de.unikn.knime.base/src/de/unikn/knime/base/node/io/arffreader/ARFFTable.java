@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -140,7 +138,6 @@ public class ARFFTable implements DataTable {
             }
             
             DataCell[] possVals = null;
-            DataCell name;
             DataType type;
             token = tokenizer.nextToken();
             if (token == null) {
@@ -162,8 +159,6 @@ public class ARFFTable implements DataTable {
                                     + tokenizer.getLineNumber()
                                     + " in ARFF file '" + fileLoc + "'.");
                 }
-
-                name = new StringCell(colName);
 
                 // make sure 'colType' is the last token we read before we
                 // start the 'if' thing here.
@@ -201,7 +196,7 @@ public class ARFFTable implements DataTable {
                 }
 
                 DataColumnSpecCreator dcsc = 
-                    new DataColumnSpecCreator(name, type);
+                    new DataColumnSpecCreator(colName, type);
                 if (possVals != null) {
                     dcsc.setDomain(new DefaultDataColumnDomain(possVals));
                 }
