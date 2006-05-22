@@ -355,7 +355,12 @@ public class Node {
      */
     public String getInputPortDescription(final int portID) {
         boundInPort(portID);
-        return m_nodeFactory.getInportDescription(portID);
+        if (isDataInPort(portID)) {
+            return m_nodeFactory.getInportDescription(portID);
+        } else {
+            return m_nodeFactory.getPredParamInDescription(portID
+                    - getNrDataInPorts());
+        }
     }
 
     /**
@@ -368,7 +373,12 @@ public class Node {
      */
     public String getOutputPortDescription(final int portID) {
         boundOutPort(portID);
-        return m_nodeFactory.getOutportDescription(portID);
+        if (isDataOutPort(portID)) {
+            return m_nodeFactory.getOutportDescription(portID);
+        } else {
+            return m_nodeFactory.getPredParamOutDescription(portID
+                    - getNrDataOutPorts());
+        }
     }
 
     /**
