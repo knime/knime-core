@@ -145,9 +145,7 @@ final class DataOutPortView extends NodeOutPortView {
         // for now we just display the pointer value.
         // Otherwise we would have to register as listener and recreate
         // the datatables completely each time something changes in the handlers
-        DataCell[] names = {new StringCell("ClassName"),
-                new StringCell("MemAddress"),
-                new StringCell("fullString")};
+        String[] names = {"ClassName", "MemAddress", "fullString"};
         DataType[] types = {StringCell.TYPE, StringCell.TYPE,
                 StringCell.TYPE};
         DataRow[] rows = new DataRow[1];
@@ -177,7 +175,7 @@ final class DataOutPortView extends NodeOutPortView {
     private DataTable createPropsTable(final DataTableSpec tSpec) {
         if (tSpec != null) {
             int numOfCols = tSpec.getNumColumns(); // output has as many cols
-            DataCell[] colNames = new DataCell[numOfCols];
+            String[]   colNames = new String[numOfCols];
             DataType[] colTypes = new DataType[numOfCols];
             // colnames are the same than incoming, types are all StringTypes
             for (int c = 0; c < numOfCols; c++) {
@@ -216,8 +214,7 @@ final class DataOutPortView extends NodeOutPortView {
 
         } else {
             return new DefaultTable(EMPTY_ROW,
-                    new DataCell[]{new StringCell(
-                            "No incoming table spec")},
+                    new String[]{"No incoming table spec"},
                     new DataType[]{StringCell.TYPE});
         }
 
@@ -226,18 +223,18 @@ final class DataOutPortView extends NodeOutPortView {
     private DataTable createTableSpecTable(final DataTableSpec spec) {
 
         // first create a table header: names and types
-        DataCell[] names = null;
+        String[] names = null;
         DataType[] types = null;
         if (spec != null) {
             int numCols = spec.getNumColumns();
-            names = new DataCell[numCols];
+            names = new String[numCols];
             types = new DataType[numCols];
             for (int c = 0; c < numCols; c++) {
-                names[c] = new StringCell("Col_" + c);
+                names[c] = "Col_" + c;
                 types[c] = StringCell.TYPE;
             }
         } else {
-            names = new DataCell[]{new StringCell("nothing")};
+            names = new String[]{"nothing"};
             types = new DataType[]{StringCell.TYPE};
         }
 
