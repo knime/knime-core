@@ -108,22 +108,20 @@ public class DefaultTableTest extends TestCase {
     /**
      * Tester for constructor.
      * 
-     * @see DefaultTable#DefaultTable(DataRow[],DataCell[],DataType[])
+     * @see DefaultTable#DefaultTable(DataRow[], String[], DataType[])
      */
     public final void testOriginalDefaultTable() {
 
         // should work fine
         new DefaultTable(new DataRow[0], // empty row elements do not matter
-                new DataCell[] {new StringCell("bla"),
-                        new IntCell(42), new DoubleCell(99.9)},
+                new String[] {"bla", "42", "99.9"},
                 new DataType[] {DoubleCell.TYPE, IntCell.TYPE,
                         DoubleCell.TYPE});
 
         // fails: data row array is null
         try {
-            new DefaultTable(null, new DataCell[] {
-                    new StringCell("bla"), new IntCell(42),
-                    new DoubleCell(99.9)}, new DataType[] {
+            new DefaultTable(null, new String[] {
+                    "bla", "42", "99.9"}, new DataType[] {
                     DoubleCell.TYPE, IntCell.TYPE,
                     DoubleCell.TYPE});
             fail();
@@ -143,9 +141,8 @@ public class DefaultTableTest extends TestCase {
 
         // fails: column type array is null
         try {
-            new DefaultTable(new DataRow[0], new DataCell[] {
-                    new StringCell("bla"), new IntCell(42),
-                    new DoubleCell(99.9)}, null);
+            new DefaultTable(new DataRow[0], new String[] {
+                    "bla", "42", "99.9"}, null);
             fail();
         } catch (NullPointerException npe) {
             System.out.println(npe.getMessage());
@@ -155,8 +152,7 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(new DataRow[0], // empty row elements does not
                     // matter
-                    new DataCell[] {new StringCell("bla"),
-                            new DoubleCell(99.9)}, new DataType[] {
+                    new String[] {"bla", "42", "99.9"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             DoubleCell.TYPE});
             fail();
@@ -168,8 +164,7 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(new DataRow[0], // empty row elements does not
                     // matter
-                    new DataCell[] {new StringCell("bla"), null,
-                            new DoubleCell(99.9)}, new DataType[] {
+                    new String[] {"bla", "42", "99.9"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             StringCell.TYPE});
             fail();
@@ -180,9 +175,7 @@ public class DefaultTableTest extends TestCase {
         // fails: column name array contains redundant objects
         try {
             new DefaultTable(new DataRow[0], // empty row elements do not matter
-                    new DataCell[] {new StringCell("bla"),
-                            new DoubleCell(42.0),
-                            new DoubleCell(42.0)}, new DataType[] {
+                    new String[] {"bla", "42", "99.9"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             StringCell.TYPE});
             fail();
@@ -194,9 +187,7 @@ public class DefaultTableTest extends TestCase {
         try {
             new DefaultTable(
                     new DataRow[0], // empty row elements do not matter
-                    new DataCell[] {new StringCell("bla"),
-                            new IntCell(42), 
-                            new DoubleCell(99.9)},
+                    new String[] {"bla", "42", "99.9"},
                     new DataType[] {null, StringCell.TYPE,
                             DoubleCell.TYPE});
             fail();

@@ -128,7 +128,7 @@ public class DefaultTable implements DataTable {
      *             element of the corresponding cells in <code>rows</code> is
      *             a supertype of its <code>columnTypes</code> counterpart.
      */
-    public DefaultTable(final DataRow[] rows, final DataCell[] columnNames,
+    public DefaultTable(final DataRow[] rows, final String[] columnNames,
             final DataType[] columnTypes) {
         this(rows, new DataTableSpec(columnNames, columnTypes));
     } // DefaultTable(DataRow[],DataCell[],java.lang.Class[])
@@ -179,10 +179,10 @@ public class DefaultTable implements DataTable {
         }
 
         // create column header and types
-        DataCell[] myHeaders = new StringCell[colCount];
+        String[] myHeaders = new String[colCount];
         for (int c = 0; c < colCount; c++) {
             String head = (colHeader != null) ? colHeader[c] : "Column_" + c;
-            myHeaders[c] = new StringCell(head);
+            myHeaders[c] = head;
         } // for-loop: all columns
 
         // try to find meaningful column types
