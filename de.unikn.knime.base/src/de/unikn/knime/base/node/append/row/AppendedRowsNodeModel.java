@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -45,21 +43,20 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     private boolean m_appendSuffix = false;
 
-    private String m_suffix = null;;
+    private String m_suffix = null;
 
     /**
      * Creates new node model with two inputs and one output.
      */
     public AppendedRowsNodeModel() {
         super(2, 1);
-        setDataInputDescription(0, "Top table");
-        setDataInputDescription(1, "Bottom table");
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel#execute( DataTable[],
      *      ExecutionMonitor)
      */
+    @Override
     protected DataTable[] execute(final DataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
         DataTable out = new AppendedRowsTable(
@@ -70,6 +67,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec[] outSpecs = new DataTableSpec[1];
@@ -80,6 +78,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     /**
      * @see NodeModel#saveSettingsTo(NodeSettings)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettings settings) {
         settings.addBoolean(CFG_APPEND_SUFFIX, m_appendSuffix);
         if (m_suffix != null) {
@@ -90,6 +89,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettings)
      */
+    @Override
     protected void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         boolean appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
@@ -104,6 +104,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
             throws InvalidSettingsException {
         m_appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
@@ -118,6 +119,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     /**
      * @see NodeModel#reset()
      */
+    @Override
     protected void reset() {
     }
 

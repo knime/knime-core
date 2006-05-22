@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -51,12 +49,12 @@ public class PredictorReaderNodeModel extends NodeModel {
      */
     public PredictorReaderNodeModel() {
         super(0, 0, 0, /* #model ports out= */1);
-        super.setPredictorParamsOutputDescription(0, "Predictor Parameters");
     }
 
     /**
      * @see NodeModel#saveSettingsTo(NodeSettings)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettings settings) {
         // if (m_fileName != null) {
         settings.addString(FILENAME, m_fileName);
@@ -66,6 +64,7 @@ public class PredictorReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettings)
      */
+    @Override
     protected void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         checkFileAccess(settings.getString(FILENAME));
@@ -74,6 +73,7 @@ public class PredictorReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
             throws InvalidSettingsException {
         m_fileName = checkFileAccess(settings.getString(FILENAME));
@@ -105,6 +105,7 @@ public class PredictorReaderNodeModel extends NodeModel {
      * 
      * @see NodeModel#execute(DataTable[],ExecutionMonitor)
      */
+    @Override
     protected DataTable[] execute(final DataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
@@ -117,12 +118,14 @@ public class PredictorReaderNodeModel extends NodeModel {
      * 
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
     }
 
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         checkFileAccess(m_fileName);
@@ -161,5 +164,4 @@ public class PredictorReaderNodeModel extends NodeModel {
         }
         return newFileName;
     }
-
 }

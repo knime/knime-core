@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -53,12 +51,12 @@ public class PredictorWriterNodeModel extends NodeModel {
      */
     public PredictorWriterNodeModel() {
         super(0, 0, /* #model ports in= */1, 0);
-        super.setPredictorParamsInputDescription(0, "Predictor Parameters");
     }
 
     /**
      * @see NodeModel#saveSettingsTo(NodeSettings)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettings settings) {
         // if (m_fileName != null) {
         settings.addString(FILENAME, m_fileName);
@@ -68,6 +66,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettings)
      */
+    @Override
     protected void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         checkFileAccess(settings.getString(FILENAME));
@@ -76,6 +75,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
             throws InvalidSettingsException {
         m_fileName = checkFileAccess(settings.getString(FILENAME));
@@ -88,6 +88,7 @@ public class PredictorWriterNodeModel extends NodeModel {
      * @see de.unikn.knime.core.node.NodeModel#loadPredictorParams(int,
      *      PredictorParams)
      */
+    @Override
     protected void loadPredictorParams(final int index,
             final PredictorParams pConf) {
         assert index == 0 : index;
@@ -99,6 +100,7 @@ public class PredictorWriterNodeModel extends NodeModel {
      * 
      * @see NodeModel#execute(DataTable[],ExecutionMonitor)
      */
+    @Override
     protected DataTable[] execute(final DataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
@@ -134,12 +136,14 @@ public class PredictorWriterNodeModel extends NodeModel {
      * 
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
     }
 
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         checkFileAccess(m_fileName);
