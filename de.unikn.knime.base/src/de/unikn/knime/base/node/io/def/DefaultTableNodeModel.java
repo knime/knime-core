@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision: 178 $ $Date: 2006-02-15 09:52:11 +0100 (Mi, 15 Feb 2006) $ $Author: ohl $
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -18,7 +16,6 @@
  */
 package de.unikn.knime.base.node.io.def;
 
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
@@ -46,7 +43,7 @@ public class DefaultTableNodeModel extends NodeModel {
      * @param columnTypes see DefaultTable constructor
      */
     public DefaultTableNodeModel(final DataRow[] rows,
-            final DataCell[] columnNames, final DataType[] columnTypes) {
+            final String[] columnNames, final DataType[] columnTypes) {
         this(rows, new DataTableSpec(columnNames, columnTypes));
     }
 
