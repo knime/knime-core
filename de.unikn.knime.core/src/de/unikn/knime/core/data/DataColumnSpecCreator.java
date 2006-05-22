@@ -20,7 +20,6 @@ package de.unikn.knime.core.data;
 
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultDataColumnProperties;
-import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 
@@ -35,7 +34,7 @@ import de.unikn.knime.core.data.property.SizeHandler;
 public class DataColumnSpecCreator {
 
     /** Keeps the column name. */
-    private DataCell m_name;
+    private String m_name;
 
     /** Keeps the column type. */
     private DataType m_type;
@@ -54,12 +53,12 @@ public class DataColumnSpecCreator {
     
     /**
      * Constructor - start creation of new DataColumnSpec only based on name (in
-     * a DataCell) and type.
+     * a String) and type.
      * 
      * @param name the new name
      * @param type the new type
      */
-    public DataColumnSpecCreator(final DataCell name, final DataType type) {
+    public DataColumnSpecCreator(final String name, final DataType type) {
         if (name == null) {
             throw new NullPointerException("Name of column can't be null.");
         }
@@ -70,17 +69,6 @@ public class DataColumnSpecCreator {
         m_type = type;
         m_domain = new DefaultDataColumnDomain();
         m_properties = new DefaultDataColumnProperties();
-    }
-
-    /**
-     * Constructor - start creation of new DataColumnSpec only based on name and
-     * type.
-     * 
-     * @param name the new name
-     * @param type the new type
-     */
-    public DataColumnSpecCreator(final String name, final DataType type) {
-        this(new StringCell(name), type);
     }
 
     /**
@@ -109,7 +97,7 @@ public class DataColumnSpecCreator {
      * 
      * @param name the new name
      */
-    public void setName(final DataCell name) {
+    public void setName(final String name) {
         if (name == null) {
             throw new NullPointerException("Name of DataColumnSpec can not"
                     + " be null!");
