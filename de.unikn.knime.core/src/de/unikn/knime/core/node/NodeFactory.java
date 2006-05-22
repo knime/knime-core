@@ -54,11 +54,11 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public abstract class NodeFactory {
     private final String m_nodeName, m_shortDescription;
-    private final List<String> m_inPorts = new ArrayList<String>(4);
-    private final List<String> m_outPorts = new ArrayList<String>(4);
-    private final List<String> m_predParamIns = new ArrayList<String>(4);
-    private final List<String> m_predParamOuts = new ArrayList<String>(4);
-    private final List<Element> m_views = new ArrayList<Element>(4);
+    private List<String> m_inPorts;
+    private List<String> m_outPorts;
+    private List<String> m_predParamIns;
+    private List<String> m_predParamOuts;
+    private List<Element> m_views;
     private final ImageIcon m_icon;
     private final Element m_knimeNode;
     private final String m_fullAsHTML;
@@ -293,34 +293,60 @@ public abstract class NodeFactory {
                 continue;
             }
             if (port.getNodeName().equals("dataIn")) {
+                if (m_inPorts == null) {
+                    m_inPorts = new ArrayList<String>(4);
+                }
                 addToPortDescription(m_inPorts, port);
             } else if (port.getNodeName().equals("dataOut")) {
+                if (m_outPorts == null) {
+                    m_outPorts = new ArrayList<String>(4);
+                }
                 addToPortDescription(m_outPorts, port);
             } else if (port.getNodeName().equals("predParamIn")) {
+                if (m_predParamIns == null) {
+                    m_predParamIns = new ArrayList<String>(4);
+                }                
                 addToPortDescription(m_predParamIns, port);
             } else if (port.getNodeName().equals("predParamOut")) {
+                if (m_predParamOuts == null) {
+                    m_predParamOuts = new ArrayList<String>(4);
+                }
                 addToPortDescription(m_predParamOuts, port);
             }
         }
-        // look for null descriptions and print error if found
-        int nullIndex = m_inPorts.indexOf(null);
-        if (nullIndex >= 0) {
-            m_logger.coding("No description for input port " + nullIndex + ".");
+        
+        int nullIndex;
+        if (m_inPorts != null) {
+            // look for null descriptions and print error if found
+            nullIndex = m_inPorts.indexOf(null);
+            if (nullIndex >= 0) {
+                m_logger.coding("No description for input port "
+                        + nullIndex + ".");
+            }
         }
-        nullIndex = m_outPorts.indexOf(null);
-        if (nullIndex >= 0) {
-            m_logger.coding(
-                    "No description for output port " + nullIndex + ".");
+        
+        if (m_outPorts != null) {
+            nullIndex = m_outPorts.indexOf(null);
+            if (nullIndex >= 0) {
+                m_logger.coding(
+                        "No description for output port " + nullIndex + ".");
+            }
         }
-        nullIndex = m_predParamIns.indexOf(null);
-        if (nullIndex >= 0) {
-            m_logger.coding("No description for prediction input port " 
-                    + nullIndex + ".");
+         
+        if (m_predParamIns != null) {
+            nullIndex = m_predParamIns.indexOf(null);
+            if (nullIndex >= 0) {
+                m_logger.coding("No description for prediction input port " 
+                        + nullIndex + ".");
+            }
         }
-        nullIndex = m_predParamOuts.indexOf(null);
-        if (nullIndex >= 0) {
-            m_logger.coding("No description for prediction output port " 
-                    + nullIndex + ".");
+        
+        if (m_predParamOuts != null) {
+            nullIndex = m_predParamOuts.indexOf(null);
+            if (nullIndex >= 0) {
+                m_logger.coding("No description for prediction output port " 
+                        + nullIndex + ".");
+            }
         }
     }
 
@@ -329,6 +355,7 @@ public abstract class NodeFactory {
      * problem is reported to the node logger.
      */
     private void readViewsFromXML() {
+        m_views = new ArrayList<Element>(4);
         Node w3cNode = m_knimeNode.getElementsByTagName("views").item(0);
         if (w3cNode == null) {
             return;
@@ -405,7 +432,11 @@ public abstract class NodeFactory {
      * @return an input port description
      */
     protected final String getInportDescription(final int index) {
-        return m_inPorts.get(index);
+        if (m_inPorts == null) {
+            return "No description available";
+        } else {
+            return m_inPorts.get(index);
+        }
     }
     
 
@@ -416,7 +447,11 @@ public abstract class NodeFactory {
      * @return an output port description
      */
     protected final String getOutportDescription(final int index) {
-        return m_outPorts.get(index);
+        if (m_outPorts == null) {
+            return "No description available";
+        } else {
+            return m_outPorts.get(index);
+        }
     }
 
 
@@ -428,7 +463,11 @@ public abstract class NodeFactory {
      * @return an predictor parameter input port description
      */
     protected final String getPredParamInDescription(final int index) {
-        return m_predParamIns.get(index);
+        if (m_predParamIns == null) {
+            return "No description available";
+        } else {
+            return m_predParamIns.get(index);
+        }
     }
     
 
@@ -439,7 +478,11 @@ public abstract class NodeFactory {
      * @return an predictor parameter output port description
      */
     protected final String getPredParamOutDescription(final int index) {
-        return m_predParamOuts.get(index);
+        if (m_predParamOuts == null) {
+            return "No description available";
+        } else {
+            return m_predParamOuts.get(index);
+        }
     }
 
     
@@ -450,8 +493,8 @@ public abstract class NodeFactory {
      * @return a view description
      */
     protected final String getViewDescription(final int index) {
-        Element e = m_views.get(index);
-        if (e == null) {
+        Element e;
+        if ((m_views == null) || ((e = m_views.get(index)) == null)) {
             return "No description available";
         } else {
             return e.getFirstChild().getNodeValue();
@@ -504,8 +547,8 @@ public abstract class NodeFactory {
      * @return A node view name.
      */
     protected final String getNodeViewName(final int index) {
-        Element e = m_views.get(index);
-        if (e == null) {
+        Element e;
+        if ((m_views == null) || ((e = m_views.get(index)) == null)) {
             return "NoName";
         } else {
             return e.getAttribute("name");
@@ -583,53 +626,72 @@ public abstract class NodeFactory {
      * @param m The NodeModel to check against.
      */
     private void checkConsistency(final NodeModel m) {
-        if (m.getNrDataIns() != m_inPorts.size()) {
+        if ((m.getNrDataIns() > 0) && ((m_inPorts == null)
+                || (m.getNrDataIns() != m_inPorts.size()))) {        
             m_logger.coding("Missing or surplus input port description");
         }
-        if (m.getNrDataOuts() != m_outPorts.size()) {
+        if ((m.getNrDataOuts() > 0) && ((m_outPorts == null)
+                || (m.getNrDataOuts() != m_outPorts.size()))) {
             m_logger.coding("Missing or surplus output port description");
         }
-        if (m.getNrModelIns() != m_predParamIns.size()) {
+        if ((m.getNrModelIns() > 0) && ((m_predParamIns == null)
+                || (m.getNrModelIns() != m_predParamIns.size()))) {
             m_logger.coding(
                     "Missing or surplus predictor input port description");
         }
-        if (m.getNrModelOuts() != m_predParamOuts.size()) {
+        if ((m.getNrModelOuts() > 0) && ((m_predParamOuts == null)
+                || m.getNrModelOuts() != m_predParamOuts.size())) {
             m_logger.coding(
                     "Missing or surplus predictor output port description");
         }
-        if (getNrNodeViews() != m_views.size()) {
+        if ((getNrNodeViews() > 0) && ((m_views == null)
+                || getNrNodeViews() != m_views.size())) {
             m_logger.coding("Missing or surplus view description");
         }
         
-        for (int i = 0; i < m_inPorts.size(); i++) {
-            if (m_inPorts.get(i) == null) {
-                m_logger.coding("Missing description for input port " + i);
+        if (m_inPorts != null) {
+            for (int i = 0; i < m_inPorts.size(); i++) {
+                if (m_inPorts.get(i) == null) {
+                    m_logger.coding("Missing description for input port " + i);
+                }
             }
         }
 
-        for (int i = 0; i < m_outPorts.size(); i++) {
-            if (m_outPorts.get(i) == null) {
-                m_logger.coding("Missing description for output port " + i);
+        
+        if (m_outPorts != null) {
+            for (int i = 0; i < m_outPorts.size(); i++) {
+                if (m_outPorts.get(i) == null) {
+                    m_logger.coding("Missing description for output port " + i);
+                }
             }
         }
 
-        for (int i = 0; i < m_predParamIns.size(); i++) {
-            if (m_predParamIns.get(i) == null) {
-                m_logger.coding(
-                        "Missing description for predictor input port " + i);
+        
+        if (m_predParamIns != null) {
+            for (int i = 0; i < m_predParamIns.size(); i++) {
+                if (m_predParamIns.get(i) == null) {
+                    m_logger.coding(
+                           "Missing description for predictor input port " + i);
+                }
             }
         }
 
-        for (int i = 0; i < m_predParamOuts.size(); i++) {
-            if (m_predParamOuts.get(i) == null) {
-               m_logger.coding(
-                       "Missing description for predictor output port " + i);
+        
+        if (m_predParamOuts != null) {
+            for (int i = 0; i < m_predParamOuts.size(); i++) {
+                if (m_predParamOuts.get(i) == null) {
+                   m_logger.coding(
+                          "Missing description for predictor output port " + i);
+                }
             }
         }
         
-        for (int i = 0; i < m_views.size(); i++) {
-            if (m_views.get(i) == null) {
-                m_logger.coding("Missing description for view " + i);
+        
+        if (m_views != null) {
+            for (int i = 0; i < m_views.size(); i++) {
+                if (m_views.get(i) == null) {
+                    m_logger.coding("Missing description for view " + i);
+                }
             }
         }
     }
