@@ -590,7 +590,7 @@ public class TableContentModelTest extends TestCase {
      * at an inappropriate time.  
      */
     public final void testCachingStrategy() {
-        final DataCell[] colnames = new DataCell[]{new StringCell("C1")};
+        final String[] colnames = new String[]{"C1"};
         final DataType[] colclasses = new DataType[]{DoubleCell.TYPE};
         final DataRow[] data = new DefaultRow[500];
         for (int i = 0; i < data.length; i++) {
@@ -682,7 +682,7 @@ public class TableContentModelTest extends TestCase {
      * Tests the correctness of the model when only highlighted are shown.
      */
     public final void testShowOnlyHighlighted() {
-        final DataCell[] colnames = new DataCell[]{new StringCell("C1")};
+        final String[] colnames = new String[]{"C1"};
         final DataType[] colclasses = new DataType[]{DoubleCell.TYPE};
         final DataRow[] data = new DefaultRow[500];
         for (int i = 0; i < data.length; i++) {
