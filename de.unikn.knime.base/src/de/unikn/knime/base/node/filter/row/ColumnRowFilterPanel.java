@@ -208,7 +208,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
         /* instantiate the col idx selector, depending on the table spec */
         if ((tSpec != null) && (tSpec.getNumColumns() > 0)) {
-            Vector<DataCell> colNames = new Vector<DataCell>();
+            Vector<String> colNames = new Vector<String>();
             for (int c = 0; c < tSpec.getNumColumns(); c++) {
                 colNames.add(tSpec.getColumnSpec(c).getName());
             }
