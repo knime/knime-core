@@ -64,7 +64,6 @@ import javax.swing.text.JTextComponent;
 import de.unikn.knime.base.node.io.filetokenizer.Comment;
 import de.unikn.knime.base.node.io.filetokenizer.Delimiter;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataTableSpec;
@@ -1108,16 +1107,16 @@ class FileReaderNodeDialog extends NodeDialogPane {
         DataColumnSpec[] colSpecs = new DataColumnSpec[numCols];
         for (int c = 0; c < numCols; c++) {
             DataColumnSpec cSpec = tSpec.getColumnSpec(c);
-            DataCell name;
+            String name;
             boolean userSet = m_frSettings.getColumnProperties().get(c)
                     .getUserSettings();
             if (userSet) {
-                name = new StringCell(cSpec.getName().toString() + "*");
+                name = cSpec.getName().toString() + "*";
             } else {
-                name = new StringCell(cSpec.getName().toString());
+                name = cSpec.getName().toString();
             }
-            DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name, cSpec
-                    .getType());
+            DataColumnSpecCreator dcsc = 
+                new DataColumnSpecCreator(name, cSpec.getType());
             dcsc.setDomain(cSpec.getDomain());
             DataColumnSpec newSpec = dcsc.createSpec();
             colSpecs[c] = newSpec;
@@ -1193,7 +1192,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
             if ((c == 0) && uniquifyFirstColName) {
                 // if we uniquify even the first col - we at least start with
                 // its current name as default
-                name = cProp.getColumnSpec().getName().toString();
+                name = cProp.getColumnSpec().getName();
             } else {
                 name = "Col" + c;
             }
@@ -1214,8 +1213,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
                         // don't compare to generated headers - gonna change.
                         continue;
                     }
-                    DataCell compName = compProp.getColumnSpec().getName();
-                    if (compName.toString().equals(name)) {
+                    String compName = compProp.getColumnSpec().getName();
+                    if (compName.equals(name)) {
                         unique = false;
                         count++;
                         name = "Col" + c + "(" + count + ")";
@@ -1223,7 +1222,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                     }
                 }
             }
-            cProp.changeColumnName(new StringCell(name));
+            cProp.changeColumnName(name);
         }
         // We've changed the names in the colProperty objects - no need to
         // write back the vector

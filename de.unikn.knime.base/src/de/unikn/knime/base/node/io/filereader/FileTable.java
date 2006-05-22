@@ -1,7 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -178,7 +175,7 @@ public class FileTable implements DataTable {
                 }
 
                 // check col name
-                DataCell cName = cSpec.getName();
+                String cName = cSpec.getName();
                 if (cName == null) {
                     status.addError("Column name for column with index '" + c
                             + "' is not set.");
@@ -193,8 +190,7 @@ public class FileTable implements DataTable {
                                 .equals(cName)) {
                             status.addError("Column with index '" + c
                                     + "' has the same name assigned as "
-                                    + "column '" + n + "' ('"
-                                    + cName.toString() + "').");
+                                    + "column '" + n + "' ('" + cName + "').");
                         }
                     }
                 }
@@ -245,15 +241,18 @@ public class FileTable implements DataTable {
         result.append(sprintDataCell(new StringCell(" "), colLength));
         //      "<ColName>[Type]"
         for (int i = 0; i < m_tableSpec.getNumColumns(); i++) {
-            if (m_tableSpec.getColumnSpec(i).getType().equals(StringCell.TYPE)) {
+            if (m_tableSpec.getColumnSpec(i).getType().equals(
+                    StringCell.TYPE)) {
                 result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Str]"), colLength));
-            } else if (m_tableSpec.getColumnSpec(i).getType().equals(IntCell.TYPE)) { 
+            } else if (m_tableSpec.getColumnSpec(i).getType().equals(
+                    IntCell.TYPE)) {
                 result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Int]"), colLength));
-            } else if (m_tableSpec.getColumnSpec(i).getType().equals(DoubleCell.TYPE)) {
+            } else if (m_tableSpec.getColumnSpec(i).getType().equals(
+                    DoubleCell.TYPE)) {
                 result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Dbl]"), colLength));

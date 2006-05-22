@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -201,8 +199,7 @@ public final class ColPropertyDialog extends JDialog {
             (ColProperty)m_allColProps.get(m_colIdx).clone();
 
         // set the new name and type - regardless of their correctness
-        domainProperty.changeColumnName(new StringCell(m_colNameField.
-                getText()));
+        domainProperty.changeColumnName(m_colNameField.getText());
         domainProperty.changeColumnType(getTypeFromComboIndex(m_typeChooser.
                 getSelectedIndex()));
 
@@ -383,7 +380,7 @@ public final class ColPropertyDialog extends JDialog {
                     return null;
                 }
             }
-            newColProp.changeColumnName(new StringCell(newName));
+            newColProp.changeColumnName(newName);
         }
 
         if (newType != m_oldType) {

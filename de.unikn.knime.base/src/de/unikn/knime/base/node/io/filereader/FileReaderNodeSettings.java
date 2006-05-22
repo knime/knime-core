@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -465,7 +463,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             for (int c = 0; c < numOfCols; c++) {
                 String missVal = xmlReader.getColumnMissing(c);
                 DataType type = xmlReader.getColumnType(c);
-                DataCell name = null;
+                String name = null;
                 // create the ColProperty object
                 ColProperty cProp = new ColProperty();
 
@@ -481,8 +479,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                     cProp.setReadPossibleValuesFromFile(false);
                     cProp.setReadBoundsFromFile(true);
                 }
-                DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name,
-                        type);
+                DataColumnSpecCreator dcsc = 
+                    new DataColumnSpecCreator(name, type);
                 cProp.setColumnSpec(dcsc.createSpec());
                 cProps.add(cProp);
             }
@@ -557,7 +555,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             LOGGER.warn("Using the \"corner value\" as" + " column name.");
             ColProperty cProp = (ColProperty)getColumnProperties().get(0);
             if (!cProp.getUserSettings()) {
-                cProp.changeColumnName(row.getKey().getId());
+                cProp.changeColumnName(row.getKey().getId().toString());
             }
             col = 1; // col header '0' is done.
         }
@@ -571,7 +569,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             if (!cProp.getUserSettings()) {
                 String uniqueName = uniquifyColName(col, row.getCell(cell)
                         .toString());
-                cProp.changeColumnName(new StringCell(uniqueName));
+                cProp.changeColumnName(uniqueName);
             }
             col++;
         }
@@ -581,7 +579,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             ColProperty cProp = (ColProperty)getColumnProperties().get(col);
             if (!cProp.getUserSettings()) {
                 String uniqueName = uniquifyColName(col, "Col" + col);
-                cProp.changeColumnName(new StringCell(uniqueName));
+                cProp.changeColumnName(uniqueName);
             }
             col++;
         }
@@ -618,8 +616,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                     c++) {
                 ColProperty colProp = m_columnProperties.get(c);
                 if ((colProp != null) && (colProp.getColumnSpec() != null)) {
-                    DataCell colName = colProp.getColumnSpec().getName();
-                    if (colName.toString().equals(uniqueName)) {
+                    String colName = colProp.getColumnSpec().getName();
+                    if (colName.equals(uniqueName)) {
                         unique = false;
                         uniqueName = prelimName + "(" + cnt + ")";
                         cnt++;
@@ -854,7 +852,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                 continue;
             }
             // check the name
-            DataCell cName = cProp.getColumnSpec().getName();
+            String cName = cProp.getColumnSpec().getName();
             if (cName == null) {
                 status.addError("No column name specified for column no. "
                         + (c + 1));
@@ -882,7 +880,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                                 status.addError("Column no. " + (c + 1)
                                         + " and no. " + (compC + 1)
                                         + " have the same name ('"
-                                        + cName.toString() + "')");
+                                        + cName + "')");
                             }
                         }
                     }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -118,7 +116,7 @@ class ColProperty {
         m_readBoundsFromFile = cfg.getBoolean(CFGKEY_READBOUNDS);
 
         // read the stuff for the ColumnSpec
-        DataCell colName = cfg.getDataCell(CFGKEY_COLNAME);
+        String colName = cfg.getString(CFGKEY_COLNAME);
         DataType colType = cfg.getDataType(CFGKEY_COLTYPE);
         // try reading the possible values - if there are any
         HashSet<DataCell> posValues = null;
@@ -185,7 +183,7 @@ class ColProperty {
         cfg.addBoolean(CFGKEY_READBOUNDS, m_readBoundsFromFile);
 
         // add the stuff from the ColumnSpec
-        cfg.addDataCell(CFGKEY_COLNAME, m_colSpec.getName());
+        cfg.addString(CFGKEY_COLNAME, m_colSpec.getName());
         cfg.addDataType(CFGKEY_COLTYPE, m_colSpec.getType());
         Set<DataCell> posValues = m_colSpec.getDomain().getValues();
         if ((posValues != null) && (posValues.size() > 0)) {
@@ -315,7 +313,7 @@ class ColProperty {
      * 
      * @param colName the new name
      */
-    void changeColumnName(final DataCell colName) {
+    void changeColumnName(final String colName) {
         // must replace the column spec
         DataColumnSpecCreator dcsc = new DataColumnSpecCreator(m_colSpec);
         dcsc.setName(colName);

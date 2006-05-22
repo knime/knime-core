@@ -596,7 +596,7 @@ public final class FileAnalyzer {
 
             // set the new name - if we had to change it
             if (!name.equals(colProp.getColumnSpec().getName().toString())) {
-                colProp.changeColumnName(new StringCell(name));
+                colProp.changeColumnName(name);
             }
 
             // added to the result vector

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,7 +30,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
@@ -180,7 +177,7 @@ public class XMLPropsReader extends XMLProperties {
          * @throws IndexOutOfBoundsException if index out of range or number of
          *             columns not specified in xml file.
          */
-        public DataCell getColumnName(final int index) {
+        public String getColumnName(final int index) {
             // reads it from the tree the XML parser built.
             
             // check index
@@ -200,7 +197,7 @@ public class XMLPropsReader extends XMLProperties {
                         + index + " <> " + nodeList.getLength() + ".");
             }
             // finally return DataCell with value of attribute "name"
-            return new StringCell(getAttributeValue(indexNode, "name"));
+            return getAttributeValue(indexNode, "name");
         }
 
 
