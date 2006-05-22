@@ -30,7 +30,6 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
@@ -60,7 +59,7 @@ public class ColumnSelectionPanel extends JPanel {
      *            will allow to select only columns compatible with one of 
      *            these classes. All other columns will be ignored.
      * 
-     * @see #update(DataTableSpec,DataCell)
+     * @see #update(DataTableSpec,String)
      */
     public ColumnSelectionPanel(
             final Class<? extends DataValue>... filterValueClasses) {
@@ -85,7 +84,7 @@ public class ColumnSelectionPanel extends JPanel {
      *            these classes. All other columns will be ignored.
      * @param borderTitle The title of the border
      * 
-     * @see #update(DataTableSpec,DataCell)
+     * @see #update(DataTableSpec,String)
      */
     public ColumnSelectionPanel(final String borderTitle,
             final Class<? extends DataValue>... filterValueClasses) {
@@ -101,7 +100,7 @@ public class ColumnSelectionPanel extends JPanel {
      *            theses classes. All other columns will be ignored.
      * @param border Border for the panel or null to have no border.
      * 
-     * @see #update(DataTableSpec,DataCell)
+     * @see #update(DataTableSpec,String)
      */
     public ColumnSelectionPanel(final Border border,
             final Class<? extends DataValue>... filterValueClasses) {
@@ -137,7 +136,7 @@ public class ColumnSelectionPanel extends JPanel {
      * @param selColName The column name to be set as chosen.
      */
     public final void update(final DataTableSpec spec, 
-            final DataCell selColName) {
+            final String selColName) {
         m_chooser.removeAllItems();
         if (spec != null) {
             DataColumnSpec selectMe = null;
@@ -171,7 +170,7 @@ public class ColumnSelectionPanel extends JPanel {
      * 
      * @return The cell that is currently being selected.
      */
-    public final DataCell getSelectedColumn() {
+    public final String getSelectedColumn() {
         DataColumnSpec selected = (DataColumnSpec)m_chooser.getSelectedItem();
         if (selected != null) {
             return selected.getName();

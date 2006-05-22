@@ -128,10 +128,12 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * 
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
-     * @param suppressEvents <code>true</code> if events caused by adding items to the combo
-     * box should be suppressed, <code>false</code> otherwise
+     * @param suppressEvents <code>true</code> if events caused by adding items 
+     *        to the combo box should be suppressed, <code>false</code> 
+     *        otherwise.
      */
-    public final void update(final DataTableSpec spec, final DataCell selColName, final boolean suppressEvents) {
+    public final void update(final DataTableSpec spec, 
+            final DataCell selColName, final boolean suppressEvents) {
         ItemListener[] itemListeners = null;
         ActionListener[] actionListeners = null;
         
@@ -193,7 +195,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * 
      * @return The cell that is currently being selected.
      */
-    public final DataCell getSelectedColumn() {
+    public final String getSelectedColumn() {
         DataColumnSpec selected = (DataColumnSpec)getSelectedItem();
         if (selected != null) {
             return selected.getName();

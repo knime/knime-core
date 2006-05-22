@@ -24,7 +24,6 @@ package de.unikn.knime.core.node.defaultnodedialog;
 import javax.swing.JLabel;
 import javax.swing.border.Border;
 
-import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -43,9 +42,9 @@ public class DialogComponentColumnSelection extends DialogComponent {
     /** Contains all column names for the given given filter class. */
     private final ColumnSelectionPanel m_chooser;
 
-    private String m_configName;
+    private final String m_configName;
 
-    private int m_specIndex;
+    private final int m_specIndex;
 
     /**
      * Constructor put label and checkbox into panel.
@@ -75,9 +74,9 @@ public class DialogComponentColumnSelection extends DialogComponent {
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         assert (settings != null);
-        DataCell classCol = null;
+        String classCol = null;
         try {
-            classCol = settings.getDataCell(m_configName);
+            classCol = settings.getString(m_configName);
         } finally {
             // update JComboBox with list of column names
             DataTableSpec spec = specs[m_specIndex];
@@ -91,8 +90,8 @@ public class DialogComponentColumnSelection extends DialogComponent {
      * @param settings The <code>NodeSettings</code> to write into.
      */
     public void saveSettingsTo(final NodeSettings settings) {
-        DataCell classCol = m_chooser.getSelectedColumn();
-        settings.addDataCell(m_configName, classCol);
+        String classCol = m_chooser.getSelectedColumn();
+        settings.addString(m_configName, classCol);
     }
 
     /**

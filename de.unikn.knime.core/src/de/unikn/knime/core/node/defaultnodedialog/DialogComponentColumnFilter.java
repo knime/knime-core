@@ -66,7 +66,7 @@ import de.unikn.knime.core.node.NodeSettings;
 public class DialogComponentColumnFilter extends DialogComponent {
 
     /* name for XML config entry holing list of included columns */
-    private String m_configName;
+    private final String m_configName;
 
     /* Include list. */
     private final JList m_inclList;
@@ -324,9 +324,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
     @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
-        LinkedHashSet<DataCell> excl = new LinkedHashSet<DataCell>();
+        LinkedHashSet<String> excl = new LinkedHashSet<String>();
         try {
-            DataCell[] excludedCells = settings.getDataCellArray(m_configName);
+            String[] excludedCells = settings.getStringArray(m_configName);
             if (excludedCells != null) {
                 for (int i = 0; i < excludedCells.length; i++) {
                     excl.add(excludedCells[i]);
@@ -347,14 +347,14 @@ public class DialogComponentColumnFilter extends DialogComponent {
      */
     @Override
     public void saveSettingsTo(final NodeSettings settings) {
-        List<DataCell> exclList = this.getExcludedColumnList();
-        DataCell[] exclCells = new DataCell[exclList.size()];
+        List<String> exclList = this.getExcludedColumnList();
+        String[] exclCells = new String[exclList.size()];
         int i = 0;
-        for (DataCell cell : exclList) {
+        for (String cell : exclList) {
             exclCells[i] = cell;
             i++;
         }
-        settings.addDataCellArray(m_configName, exclCells);
+        settings.addStringArray(m_configName, exclCells);
     }
 
     /**
@@ -367,7 +367,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param exclude The flag if <code>excl</code> contains the columns to
      *            exclude otherwise include.
      */
-    public void update(final DataTableSpec spec, final Set<DataCell> excl,
+    public void update(final DataTableSpec spec, final Set<String> excl,
             final boolean exclude) {
         assert (spec != null && excl != null);
         m_order.clear();
@@ -375,7 +375,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
         m_exclMdl.removeAllElements();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             final DataColumnSpec cSpec = spec.getColumnSpec(i);
-            final DataCell c = cSpec.getName();
+            final String c = cSpec.getName();
             m_order.add(cSpec);
             if (exclude) {
                 if (excl.contains(c)) {
@@ -399,7 +399,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * 
      * @return A list of all columns from the exclude list.
      */
-    public List<DataCell> getExcludedColumnList() {
+    public List<String> getExcludedColumnList() {
         return getColumnList(m_exclMdl);
     }
 
@@ -408,7 +408,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * 
      * @return A list of all columns from the include list.
      */
-    public List<DataCell> getIncludedColumnList() {
+    public List<String> getIncludedColumnList() {
         return getColumnList(m_inclMdl);
     }
 
@@ -417,18 +417,18 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * 
      * @param list The list from which to retrieve the elements
      */
-    private static List<DataCell> getColumnList(final ListModel model) {
-        final ArrayList<DataCell> list = new ArrayList<DataCell>();
+    private static List<String> getColumnList(final ListModel model) {
+        final ArrayList<String> list = new ArrayList<String>();
         // this is kind of quick & dirty here: We don't know which update
         // method was used and hence we don't know if the elements in the
         // lists are of type DataCell or DataColumnSpec
         for (int i = 0; i < model.getSize(); i++) {
             Object o = model.getElementAt(i);
-            DataCell cell;
+            String cell;
             if (o instanceof DataColumnSpec) {
                 cell = ((DataColumnSpec)o).getName();
             } else {
-                cell = (DataCell)o;
+                cell = (String) o;
             }
             list.add(cell);
         }
