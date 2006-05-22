@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -34,14 +31,20 @@ import de.unikn.knime.core.data.DataCell;
  * @author mb, University of Konstanz
  */
 public class DataCellStringMapper {
-    
+
     private HashMap<DataCell, String> m_cellToString = 
         new HashMap<DataCell, String>();
+
+    private HashMap<String, String> m_origstringToString =
+        new HashMap<String, String>();
+
     private HashMap<String, DataCell> m_stringToCell = 
         new HashMap<String, DataCell>();
-    
-    private int m_uniqueIndex = 0;
 
+    private HashMap<String, String> m_stringToOrigstring = 
+        new HashMap<String, String>();
+
+    private int m_uniqueIndex = 0;
 
     /**
      * @param cell DataCell to be replaced
@@ -55,21 +58,8 @@ public class DataCellStringMapper {
             assert m_stringToCell.containsKey(name);
             return name;
         }
-        // no, create a new name, make sure it's unique and return it.
-        // Before creating something completely unrecognizable, try
-        // to convert existing DataCell content to something string-like:
-        String orgName = cell.toString();
-        StringBuffer newNameBuffer = new StringBuffer("");
-        for (int i = 0; i < orgName.length(); i++) {
-            char c =  orgName.charAt(i);
-            if ((('a' <= c) && (c <= 'z'))
-             || (('A' <= c) && (c <= 'Z'))
-             || (('0' <= c) && (c <= '9'))
-             || (c == '-') || (c == '_')) {
-                newNameBuffer.append(c);
-            }
-        }
-        String newName = newNameBuffer.toString();
+        // no, create new unique string.
+        String newName = uniqueString(cell.toString());
         if ((newName.length() == 0) || (m_stringToCell.containsKey(newName))) {
             m_uniqueIndex++;
             newName = "val" + m_uniqueIndex;
@@ -84,13 +74,66 @@ public class DataCellStringMapper {
     }
 
     /**
+     * @param origString the original 'ugly' string.
+     * @return unique String representation
+     */
+    public String origStringToString(final String origString) {
+        // check if this cell already has a mapping:
+        if (m_origstringToString.containsKey(origString)) {
+            // yes, return existing string
+            String name = m_origstringToString.get(origString);
+            assert m_stringToOrigstring.containsKey(name);
+            return name;
+        }
+        // no, create new unique string.
+        String newName = uniqueString(origString);
+        if ((newName.length() == 0)
+                || (m_stringToOrigstring.containsKey(newName))) {
+            m_uniqueIndex++;
+            newName = "val" + m_uniqueIndex;
+            while (m_stringToOrigstring.containsKey(newName)) {
+                m_uniqueIndex++;
+                newName = "val" + m_uniqueIndex;
+            }
+        }
+        m_origstringToString.put(origString, newName);
+        m_stringToOrigstring.put(newName, origString);
+        return newName;
+    }
+
+    /**
      * @param str string representation
      * @return DataCell represented by the string
      */
     public DataCell stringToDataCell(final String str) {
         DataCell c = m_stringToCell.get(str);
-        assert (c != null);            // String must exist!
+        assert (c != null); // String must exist!
         return c;
+    }
+
+    /**
+     * @param str string representation.
+     * @return string original string.
+     */
+    public String stringToOrigString(final String str) {
+        String s = m_stringToOrigstring.get(str);
+        assert (s != null); // String must exist!
+        return s;
+    }
+
+    // create a new name, make sure it's unique and return it.
+    // Before creating something completely unrecognizable, try
+    // to convert existing DataCell content to something string-like:
+    private String uniqueString(final String uglyString) {
+        StringBuffer newNameBuffer = new StringBuffer("");
+        for (int i = 0; i < uglyString.length(); i++) {
+            char c = uglyString.charAt(i);
+            if ((('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z'))
+                    || (('0' <= c) && (c <= '9')) || (c == '-') || (c == '_')) {
+                newNameBuffer.append(c);
+            }
+        }
+        return newNameBuffer.toString();
     }
 
 }
