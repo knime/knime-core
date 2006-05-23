@@ -21,8 +21,6 @@ package de.unikn.knime.core.data;
 
 import java.io.Serializable;
 
-import de.unikn.knime.core.data.property.ColorAttr;
-
 /**
  * Unique key for a specific row. It holds an identifier (of type
  * <code>DataCell</code>) and also properties such as color and later also 
@@ -35,11 +33,6 @@ public final class RowKey implements Serializable {
     // private members holding id and properties
     private final DataCell m_id;
 
-    private final ColorAttr m_color;
-
-    // private ShapeAttr m_shape;
-    // private SizeAttr m_size;
-
     /**
      * Constructor, initializes properties to default settings.
      * 
@@ -47,26 +40,7 @@ public final class RowKey implements Serializable {
      * @throws NullPointerException If argument is null.
      */
     public RowKey(final DataCell id) {
-        this(id, null);
-    }
-
-    /**
-     * Initializes properties as specified.
-     * 
-     * @param id unique identifier
-     * @param col color of this row, if null, a default color is used.
-     * @throws NullPointerException If id is null.
-     */
-    public RowKey(final DataCell id, final ColorAttr col) {
-        if (id == null) {
-            throw new NullPointerException("Id must not be null.");
-        }
         m_id = id;
-        if (col == null) {
-            m_color = ColorAttr.DEFAULT;
-        } else {
-            m_color = col;
-        }
     }
 
     /**
@@ -74,10 +48,9 @@ public final class RowKey implements Serializable {
      * the argument.
      * 
      * @param key unique Rowkey
-     * @param col color of this row
      */
-    public RowKey(final RowKey key, final ColorAttr col) {
-        this(key.getId(), col);
+    public RowKey(final RowKey key) {
+        this(key.getId());
     }
 
     /**
@@ -87,21 +60,6 @@ public final class RowKey implements Serializable {
         assert m_id != null;
         return m_id;
     }
-
-    /**
-     * Get the color attribute of this row key. This method returns never
-     * <code>null</code>.
-     * 
-     * @return color of this row
-     */
-    public ColorAttr getColorAttr() {
-        assert m_color != null;
-        return m_color;
-    }
-
-    // public ShapeAttr getShape() { return m_shape; }
-
-    // public SizeAttr getSize() { return m_size; }
 
     /**
      * Returns the string representation of the RowID <code>DataCell</code>.
