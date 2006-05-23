@@ -187,6 +187,17 @@ public abstract class NodeDialogPane {
         commitJSpinners(getPanel());
         m_node.loadModelSettingsFromDialog();
     }
+    
+    /**
+     * Determines wether the settings in the dialog are the same as 
+     * in the model.
+     * 
+     * @return true if the settings are equal
+     */
+    public boolean isModelAndDialogSettingsEqual() {
+
+        return m_node.isModelAndDialogSettingsEqual();
+    }
 
     /**
      * @return <code>true</code> if this node has been executed.

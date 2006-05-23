@@ -34,22 +34,20 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  * {@link Node} object is the place where the data flow starts, ends, or
  * intersects. Thus a {@link Node} can be connected with predecessors and
  * successors through its input and output ports,
- * {@link de.unikn.knime.core.node.NodeInPort} and 
+ * {@link de.unikn.knime.core.node.NodeInPort} and
  * {@link de.unikn.knime.core.node.NodeOutPort}, respectively. There are data
- * ports for exchanging data tables, and prediction model ports for
- * transfering computed data models.
- * <br />
- * A node must contain a {@link NodeModel} and may contain {@link NodeView}s and
- * a {@link NodeDialogPane} implementing the Model-View-Controller
- * paradigm. The node manages the interactions between these components and
- * handles all internal and external data flows. Incoming data is passed to the
- * {@link NodeModel} and forwarded from there to the node's ports.
- * <br />
- * The <code>Node</code> is the part within a workflow holding and managing the
- * user specific {@link NodeModel}, {@link NodeDialogPane}, and possibly
+ * ports for exchanging data tables, and prediction model ports for transfering
+ * computed data models. <br />
+ * A node must contain a {@link NodeModel} and may contain {@link NodeView}s
+ * and a {@link NodeDialogPane} implementing the Model-View-Controller paradigm.
+ * The node manages the interactions between these components and handles all
+ * internal and external data flows. Incoming data is passed to the
+ * {@link NodeModel} and forwarded from there to the node's ports. <br />
+ * The <code>Node</code> is the part within a workflow holding and managing
+ * the user specific {@link NodeModel}, {@link NodeDialogPane}, and possibly
  * {@link NodeView}, thus, it is not intended to extend this class. A
- * {@link NodeFactory} is used to bundle model, view and dialog. This factory
- * is passed to the node constructor to create a node of that specific type.
+ * {@link NodeFactory} is used to bundle model, view and dialog. This factory is
+ * passed to the node constructor to create a node of that specific type.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
@@ -853,9 +851,9 @@ public class Node {
 
             m_logger.warn("Configure failed. Invalid settings: "
                     + ise.getMessage());
-//            m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
-//                  "Configure failed. Invalid settings: " + ise.getMessage());
-//            this.notifyStateListeners(m_nodeStatus);
+            // m_nodeStatus = new NodeStatus(NodeStatus.ERROR,
+            // "Configure failed. Invalid settings: " + ise.getMessage());
+            // this.notifyStateListeners(m_nodeStatus);
         }
     }
 
@@ -1357,6 +1355,31 @@ public class Node {
         m_nodeModel.loadSettingsFrom(newSettings);
         // update the output data table specs
         configureNode();
+    }
+
+    /**
+     * Compares the current settings from the dialog with the settings from the
+     * model.
+     * 
+     * @return true if the settings are equal
+     */
+    boolean isModelAndDialogSettingsEqual() {
+
+        try {
+            // save new dialog's config into new object
+            NodeSettings dialogSettings = new NodeSettings("Compare");
+            NodeSettings modelSettings = new NodeSettings("Compare");
+            m_nodeDialogPane.saveSettingsTo(dialogSettings);
+            m_nodeModel.saveSettingsTo(modelSettings);
+           
+            // check for equality
+            return dialogSettings.isIdentical(modelSettings);
+            
+        } catch (InvalidSettingsException ise) {
+            // if there are invalid settings it is assumed that the settings
+            // are not equal
+            return false;
+        }
     }
 
     /**
