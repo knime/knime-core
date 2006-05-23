@@ -19,7 +19,6 @@
  */
 package de.unikn.knime.base.data.container;
 
-import java.awt.Color;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -58,7 +57,6 @@ import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
@@ -421,17 +419,13 @@ final class Buffer {
     private void writeRowKey(final RowKey key) throws IOException {
         DataCell id = key.getId();
         writeDataCell(id);
-        ColorAttr c = key.getColorAttr();
-        Color color = c.getColor();
-        m_outStream.writeInt(color.getRGB());
     }
     
     /** Reads a row key from a string. */
     private RowKey readRowKey(final DCObjectInputStream inStream) 
         throws IOException {
         DataCell id = readDataCell(inStream);
-        int color = inStream.readInt();
-        return new RowKey(id, ColorAttr.getInstance(new Color(color)));
+        return new RowKey(id);
     }
     
     /** Writes a data cell to the m_outStream. */
