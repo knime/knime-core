@@ -41,6 +41,9 @@ public final class RowKey implements Serializable {
      * @throws NullPointerException If argument is null.
      */
     public RowKey(final DataCell id) {
+        if (id == null) {
+            throw new NullPointerException("Can't create RowKey with null id.");
+        }
         m_id = id;
     }
 
