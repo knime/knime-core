@@ -385,7 +385,7 @@ public class WrappedNodeDialog extends Dialog {
                 SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Settings were not changed.");
         mb.setMessage("The settings were not changed. "
-                + "The node will not be reseted.");
+                + "The node will not be reset.");
         mb.open();
     }
 
