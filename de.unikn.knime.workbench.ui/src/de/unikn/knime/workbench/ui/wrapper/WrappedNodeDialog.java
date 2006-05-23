@@ -187,11 +187,11 @@ public class WrappedNodeDialog extends Dialog {
 
         // !!!!!!!!!!!!!!!!!! IMPORTANT... TODO. THINK ABOUT !!!!!!!!!!!!!!!!!!!
         // Here a key listener is added to the display for enter and esc
-        // There are several problems with that. 
+        // There are several problems with that.
         // 1. The key listener must be removed. Otherwise the dialog is indirect
         // ly registered in the display and can not be garbage collected
         // 2. The key listener was active (before it was removed with this work
-        // around) and has affected on some strage way the Enter key once the 
+        // around) and has affected on some strage way the Enter key once the
         // NewPictureChooser was executed????!!!!????
         // 3. Normally the key listener should be registered at the dialog
         // At the moment no posibility is seen to do that.
@@ -208,7 +208,7 @@ public class WrappedNodeDialog extends Dialog {
                 }
             }
         };
-        
+
         Display.getCurrent().addFilter(SWT.KeyDown, m_listener);
 
         return area;
@@ -277,7 +277,13 @@ public class WrappedNodeDialog extends Dialog {
 
     private void doOK(final SelectionEvent e) {
         try {
-            if (confirmApply()) {
+            // if the settings are equal to the previous settings
+            // inform the user but do nothing (no reset)
+            if (m_dialogPane.isModelAndDialogSettingsEqual()) {
+                informNothingChanged();
+                close();
+                shutDown();
+            } else if (confirmApply()) {
                 m_dialogPane.doApply();
                 e.doit = true;
                 close();
@@ -301,7 +307,9 @@ public class WrappedNodeDialog extends Dialog {
 
     private void doApply(final SelectionEvent e) {
         try {
-            if (confirmApply()) {
+            if (m_dialogPane.isModelAndDialogSettingsEqual()) {
+                informNothingChanged();
+            } else if (confirmApply()) {
                 m_dialogPane.doApply();
                 e.doit = true;
             } else {
@@ -353,6 +361,32 @@ public class WrappedNodeDialog extends Dialog {
                 + "New settings will be applied to this\n"
                 + "and all connected nodes. Continue?");
         return (mb.open() == SWT.YES);
+    }
+
+    /**
+     * Show a information dialog that the settings were not changed and
+     * therefore the settings are not reset (node stays executed)
+     * 
+     */
+    protected void informNothingChanged() {
+
+        // no dialog neccessary, if the node was not executed before
+        if (!m_nodeContainer.isExecuted()) {
+            return;
+        }
+        // If the settings are invalid, we don't want to show our dialog here.
+        try {
+            m_dialogPane.validateSettings();
+        } catch (InvalidSettingsException e) {
+            return;
+        }
+
+        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
+                SWT.ICON_INFORMATION | SWT.OK);
+        mb.setText("Settings were not changed.");
+        mb.setMessage("The settings were not changed. "
+                + "The node will not be reseted.");
+        mb.open();
     }
 
     /**
