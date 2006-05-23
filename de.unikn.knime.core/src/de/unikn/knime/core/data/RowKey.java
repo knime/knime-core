@@ -14,8 +14,9 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   01.03.2005 (M. Berthold): created
- *   09.01.2006(all): reviewed
+ *   01.03.2005 (mb): created
+ *   09.01.2006 (all): reviewed
+ *   23.05.2006 (mb): eliminated member holding ColorAttr
  */
 package de.unikn.knime.core.data;
 
