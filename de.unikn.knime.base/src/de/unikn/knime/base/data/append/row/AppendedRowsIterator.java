@@ -152,7 +152,7 @@ class AppendedRowsIterator extends RowIterator {
                     DataCell cell = key.getId();
                     String newId = cell.toString() + m_suffix;
                     DataCell newCell = new StringCell(newId);
-                    key = new RowKey(newCell, key.getColorAttr());
+                    key = new RowKey(newCell);
                 } while (!m_duplicateHash.add(key));
                 LOGGER.debug("Found duplicate rowkey \"" + oldId 
                         + "\", replacing by \"" + key.toString() + "\".");
