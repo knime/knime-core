@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import de.unikn.knime.core.data.property.ColorAttr;
-import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.NodeLogger;
 
@@ -374,26 +373,6 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         return m_columnSpecs[m_colorHandlerColIndex].getColorHandler()
                 .getColorAttr(row.getCell(m_colorHandlerColIndex));
-    }
-
-    /**
-     * @return the index of the column whose attribute values are used to color
-     *         rows. That is the rows that holds the ColorHandler.
-     * @see #getColorHandler()
-     */
-    public int getColumnIndexOfColorAttribute() {
-        return m_colorHandlerColIndex;
-    }
-
-    /**
-     * @return the ColorHandler used to display rows. Values from the column
-     *         with the index returned by the
-     *         <code>getColumnIndexOfColorAttribute</code> method can be used
-     *         to retrieve the associated color.
-     * @see #getColumnIndexOfColorAttribute()
-     */
-    public ColorHandler getColorHandler() {
-        return m_columnSpecs[m_colorHandlerColIndex].getColorHandler();
     }
 
     /**
