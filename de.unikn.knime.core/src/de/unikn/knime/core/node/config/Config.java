@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -1135,6 +1133,7 @@ public abstract class Config extends AbstractConfigEntry implements
      * 
      * @return String representation.
      */
+    @Override
     public final String toString() {
         return toString(0, new StringBuffer());
     }
@@ -1260,6 +1259,7 @@ public abstract class Config extends AbstractConfigEntry implements
      * 
      * @param o Object to serialize.
      * @return The serialized String.
+     * @throws IOException if an I/O error occurs during serializing the object
      */
     private static String writeObject(final Object o) throws IOException {
         // print unsupported Object message
@@ -1280,13 +1280,24 @@ public abstract class Config extends AbstractConfigEntry implements
      * 
      * @param string The serialized object's stream.
      * @return A new instance of this object.
+     * @throws IOException if an I/O error occurs during reading the object
+     * @throws ClassNotFoundException if the class of the serialized object
+     *  cannot be found. 
      */
     private static Object readObject(final String string) throws IOException,
-            ClassNotFoundException {
+        ClassNotFoundException {
         byte[] bytes = new BASE64Decoder().decodeBuffer(string);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         GlobalObjectInputStream ois = new GlobalObjectInputStream(bais);
         return ois.readObject();
     }
 
+    /**
+     * Copies all contents of this config object to the given config object.
+     * 
+     * @param dest the destination config object
+     */
+    public void copyTo(final Config dest) {
+        dest.m_map.putAll(this.m_map);
+    }
 } // Config
