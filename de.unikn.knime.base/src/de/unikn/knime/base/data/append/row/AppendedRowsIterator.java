@@ -30,7 +30,6 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -151,8 +150,7 @@ class AppendedRowsIterator extends RowIterator {
                     keyHasChanged = true;
                     DataCell cell = key.getId();
                     String newId = cell.toString() + m_suffix;
-                    DataCell newCell = new StringCell(newId);
-                    key = new RowKey(newCell);
+                    key = new RowKey(newId);
                 } while (!m_duplicateHash.add(key));
                 LOGGER.debug("Found duplicate rowkey \"" + oldId 
                         + "\", replacing by \"" + key.toString() + "\".");
