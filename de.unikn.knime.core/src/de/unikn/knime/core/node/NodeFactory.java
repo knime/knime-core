@@ -392,7 +392,7 @@ public abstract class NodeFactory {
             final List<String> destList, final Element port) {
         int index = Integer.parseInt(port.getAttribute("index"));
         for (int k = destList.size(); k <= index; k++) {
-            destList.add(null);
+            destList.add("No description available");
         }
         Node w3cNode = port.getFirstChild();
         if (w3cNode == null) {
