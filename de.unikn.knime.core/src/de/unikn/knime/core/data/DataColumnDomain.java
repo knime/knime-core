@@ -15,12 +15,14 @@
  */
 package de.unikn.knime.core.data;
 
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.Set;
 
 /**
- * A column domain object holds information about one column, that is the
- * possible values, and an upper and lower bound.
- * 
+ * A column domain object holds information about one column's domain, that are,
+ * possible values, and an upper and lower bound - if available.
+ * <p>
  * Note: It is crutial that the creator of a column domain ensures that the data
  * filled in is correct. In the sense that no value in the data table will be
  * outside the provided bounds and that no other value appears in that column
@@ -30,7 +32,37 @@ import java.util.Set;
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-public interface DataColumnDomain {
+public final class DataColumnDomain implements Serializable {
+    
+    /**
+     * Lower bound value or <code>null</code>.
+     */
+    private final DataCell m_lowerBound;
+    
+    /**
+     * Upper bound value or <code>null</code>.
+     */
+    private final DataCell m_upperBound;
+    
+    /**
+     * Set of possible values or <code>null</code>.
+     */
+    private final Set<DataCell> m_values;
+    
+    /**
+     * Create new column name with lower and upper bounds, and set of
+     * possible values. All arguments can be <code>null</code> in case non of
+     * these properties are avaiable.
+     * @param lower The lower bound value.
+     * @param upper The upper bound value.
+     * @param values A set of nominal values.
+     */
+    DataColumnDomain(final DataCell lower, final DataCell upper, 
+            final Set<DataCell> values) {
+        m_lowerBound = lower;
+        m_upperBound = upper;
+        m_values = values;
+    }
 
     /**
      * Return all possible values in this column. Note that this array can be
@@ -46,7 +78,14 @@ public interface DataColumnDomain {
      * 
      * @see #hasValues()
      */
-    Set<DataCell> getValues();
+    public Set<DataCell> getValues() {
+        // in order to keep the domain read-only, return a copy of the set
+        if (m_values != null) {
+            return Collections.unmodifiableSet(m_values);
+        } else {
+            return null;
+        }
+    }
 
     /**
      * @return true, if this column spec has nominal values defined (i.e. the
@@ -54,7 +93,9 @@ public interface DataColumnDomain {
      * 
      * @see #getValues()
      */
-    boolean hasValues();
+    public boolean hasValues() {
+        return m_values != null;
+    }
 
     /**
      * Return the lower bound of the domain of this column, if available. Note
@@ -66,14 +107,18 @@ public interface DataColumnDomain {
      * 
      * @see #hasLowerBound()
      */
-    DataCell getLowerBound();
+    public DataCell getLowerBound() {
+        return m_lowerBound;
+    }
 
     /**
-     * @return true ,if the lower bound value has been defined.
+     * @return true, if the lower bound value has been defined.
      * 
      * @see #getLowerBound()
      */
-    boolean hasLowerBound();
+    public boolean hasLowerBound() {
+        return m_lowerBound != null;
+    }
 
     /**
      * Return the upper bound of the domain of this column, if available. Note
@@ -85,18 +130,83 @@ public interface DataColumnDomain {
      * 
      * @see #hasUpperBound()
      */
-    DataCell getUpperBound();
+    public DataCell getUpperBound() {
+        return m_upperBound;
+    }
 
     /**
      * @return true, if the upper bound value has been defined.
      * 
      * @see #getUpperBound()
      */
-    boolean hasUpperBound();
+    public boolean hasUpperBound() {
+        return m_upperBound != null;
+    }
     
     /**
      * @return true, if lower and upper bound are defined. 
      */
-    boolean hasBounds();
+    public boolean hasBounds() {
+        return this.hasLowerBound() && this.hasUpperBound();
+    }
+    
+    /**
+     * Compares this domain with the other one by the possible values and lower
+     * and upper bound.
+     * 
+     * @param obj The other domain to compare with.
+     * @return true if possible values, and lower and upper bounds are equal.
+     */
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof DataColumnDomain)) {
+            return false;
+        }
+        DataColumnDomain domain = (DataColumnDomain)obj;
+        if (hasValues() ^ domain.hasValues()) {
+            return false;
+        }
+        if (hasLowerBound() ^ domain.hasLowerBound()) {
+            return false;
+        }
+        if (hasUpperBound() ^ domain.hasUpperBound()) {
+            return false;
+        }
+        boolean ret = true;
+        if (hasValues() && domain.hasValues()) {
+            ret &= getValues().equals(domain.getValues());
+        }
+        if (hasLowerBound() && domain.hasLowerBound()) {
+            ret &= getLowerBound().equals(domain.getLowerBound());
+        }
+        if (hasUpperBound() && domain.hasUpperBound()) {
+            ret &= getUpperBound().equals(domain.getUpperBound());
+        }
+        return ret;
+    }
+    
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        int tempHash = 0;
+        if (hasLowerBound()) {
+            tempHash ^= m_lowerBound.hashCode();
+        }
+        if (hasUpperBound()) {
+            tempHash ^= m_upperBound.hashCode();
+        }
+        if (hasValues()) {
+            for (DataCell cell : m_values) {
+                tempHash ^= cell.hashCode();
+            }
+        }
+        return tempHash;
+    }
 
 } // DataColumnDomain
