@@ -23,7 +23,8 @@ package de.unikn.knime.base.node.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import de.unikn.knime.core.data.DataCell;
@@ -52,7 +53,7 @@ public class DefaultRowContainer implements RowContainer {
     private ArrayList<DataRow> m_rows;
 
     /* all occuring values for each string column */
-    private Vector<ArrayList<DataCell>> m_possVals;
+    private Vector<LinkedHashSet<DataCell>> m_possVals;
 
     /* the max value for each column */
     private DataCell[] m_maxVal;
@@ -133,12 +134,12 @@ public class DefaultRowContainer implements RowContainer {
         m_minVal = new DataCell[numOfColumns];
 
         // create a new list for the values - but only for native string columns
-        m_possVals = new Vector<ArrayList<DataCell>>();
+        m_possVals = new Vector<LinkedHashSet<DataCell>>();
         m_possVals.setSize(numOfColumns);
         for (int c = 0; c < numOfColumns; c++) {
             if (m_tSpec.getColumnSpec(c).getType().isCompatible(
                     StringValue.class)) {
-                m_possVals.set(c, new ArrayList<DataCell>());
+                m_possVals.set(c, new LinkedHashSet<DataCell>());
             }
         }
 
@@ -186,7 +187,7 @@ public class DefaultRowContainer implements RowContainer {
                     }
                 }
                 // add it to the possible values if we record them for this col
-                ArrayList<DataCell> possVals = m_possVals.get(c);
+                LinkedHashSet<DataCell> possVals = m_possVals.get(c);
                 if (possVals != null) {
                     // non-string cols have a null list and will be skipped here
                     possVals.add(cell);
@@ -238,7 +239,7 @@ public class DefaultRowContainer implements RowContainer {
      *         in the rows stored in the container. Returns null for non-string
      *         columns.
      */
-    public List<DataCell> getValues(final int colIdx) {
+    public Set<DataCell> getValues(final int colIdx) {
         return m_possVals.get(colIdx);
     }
 

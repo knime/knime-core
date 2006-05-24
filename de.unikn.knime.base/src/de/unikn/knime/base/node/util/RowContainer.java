@@ -22,7 +22,7 @@
 package de.unikn.knime.base.node.util;
 
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
@@ -54,7 +54,7 @@ public interface RowContainer extends Iterable {
     DataRow getRow(final int idx);
 
     /**
-     * returns a list of all different values seen in the specified column. Will
+     * returns a set of all different values seen in the specified column. Will
      * always return null if the idx doesn't specifiy a column of type
      * <code>StringCell</code> (or derived from that). The list will be in the
      * order the values appeared in the rows read in. It contains only the
@@ -67,7 +67,7 @@ public interface RowContainer extends Iterable {
      *         in the rows stored in the container. Returns null for non-string
      *         columns.
      */
-    List<DataCell> getValues(final int colIdx);
+    Set<DataCell> getValues(final int colIdx);
 
     /**
      * @param colIdx the index of the column to return the min value for
