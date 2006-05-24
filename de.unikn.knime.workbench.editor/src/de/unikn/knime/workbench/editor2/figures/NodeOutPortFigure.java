@@ -41,13 +41,16 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
      * 
      * @param id The id of the port, needed to determine the position inside the
      *            surrounding node visual
-     * @param numPorts max number of out ports for this node
+     * @param numModelPorts number of model ports of this figure
+     * @param numDataPorts number of data ports of this figure
      * @param tooltip The tooltip text for this port
      * @param isModelPort indicates a model inPort, displayed with a diff. shape
      */
-    public NodeOutPortFigure(final int id, final int numPorts,
-            final String tooltip, final boolean isModelPort) {
-        super(numPorts);
+    public NodeOutPortFigure(final int id, final int numModelPorts,
+            final int numDataPorts, final String tooltip,
+            final boolean isModelPort) {
+
+        super(numModelPorts, numDataPorts);
         m_id = id;
         m_isModelPort = isModelPort;
         setOpaque(false);
@@ -116,7 +119,8 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
      */
     public Locator getLocator() {
         return new PortLocator((NodeContainerFigure)getParent().getParent(),
-                PortLocator.TYPE_OUTPORT, getNumPorts(), m_id);
+                PortLocator.TYPE_OUTPORT, getNumModelPorts(),
+                getNumDataPorts(), m_id, m_isModelPort);
     }
 
 }

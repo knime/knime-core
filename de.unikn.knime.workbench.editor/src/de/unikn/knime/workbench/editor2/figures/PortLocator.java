@@ -45,7 +45,11 @@ public class PortLocator implements Locator {
 
     private int m_type;
 
-    private int m_maxPorts;
+    private boolean m_modelPort;
+
+    private int m_maxModelPorts;
+
+    private int m_maxDataPorts;
 
     private int m_portIndex;
 
@@ -54,15 +58,20 @@ public class PortLocator implements Locator {
      * 
      * @param parent The parent figure (NodeContainerFigure)
      * @param type The type
-     * @param maxPorts max Ports
+     * @param maxModelPorts max number of model ports to locate
+     * @param maxDataPorts max number of data ports to locate
      * @param portIndex The port index
+     * @param modelPort whether this is a model port locator
      */
     public PortLocator(final NodeContainerFigure parent, final int type,
-            final int maxPorts, final int portIndex) {
+            final int maxModelPorts, final int maxDataPorts,
+            final int portIndex, final boolean modelPort) {
         m_parent = parent;
         m_type = type;
-        m_maxPorts = maxPorts;
+        m_maxModelPorts = maxModelPorts;
+        m_maxDataPorts = maxDataPorts;
         m_portIndex = portIndex;
+        m_modelPort = modelPort;
     }
 
     /**
@@ -71,32 +80,37 @@ public class PortLocator implements Locator {
     public void relocate(final IFigure fig) {
         Rectangle parentBounds = m_parent.getContentFigure().getBounds()
                 .getCopy();
+
+        int portHeight = parentBounds.height
+                / (m_maxDataPorts + m_maxModelPorts);
+        int portWidth = parentBounds.width / 2;
+
+        int x = 0;
+        int y = 0;
         if (m_type == TYPE_INPORT) {
-            int portHeight = parentBounds.height / m_maxPorts;
-            int portWidth = parentBounds.width / 2;
-            int x = parentBounds.getLeft().x;
 
-            // for inports use m_maxPorts - 1 - m_portIndex to revert the
-            // order this results in modelInPorts arranged at the top of a node
-            // and modelOutPorts at the bottom of a figure
-            int y = parentBounds.getTopLeft().y
-                    + ((m_maxPorts - 1 - m_portIndex) * portHeight);
+            x = parentBounds.getLeft().x;
 
-            Rectangle portBounds = new Rectangle(new Point(x, y),
-                    new Dimension(portWidth, portHeight));
+            int position = 0;
+            if (m_modelPort) {
+                position = m_portIndex - (m_maxModelPorts);
+            } else {
+                // data port
+                position = m_portIndex + (m_maxModelPorts);
+            }
 
-            fig.setBounds(portBounds);
+            y = parentBounds.getTopLeft().y + (position * portHeight);
+
         } else {
-            int portHeight = parentBounds.height / m_maxPorts;
-            int portWidth = parentBounds.width / 2;
-            int x = parentBounds.getCenter().x;
-            int y = parentBounds.getTopRight().y + (m_portIndex * portHeight);
 
-            Rectangle portBounds = new Rectangle(new Point(x, y),
-                    new Dimension(portWidth, portHeight));
+            x = parentBounds.getCenter().x;
 
-            fig.setBounds(portBounds);
-
+            y = parentBounds.getTopRight().y + (m_portIndex * portHeight);
         }
+
+        Rectangle portBounds = new Rectangle(new Point(x, y), new Dimension(
+                portWidth, portHeight));
+
+        fig.setBounds(portBounds);
     }
 }

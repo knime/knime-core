@@ -48,15 +48,21 @@ public abstract class AbstractNodePortFigure extends Shape {
 
     private boolean m_hasData;
 
-    private int m_numPorts;
+    private int m_numModelPorts;
+
+    private int m_numDataPorts;
 
     /**
      * Abstract consturctor, must be called.
      * 
-     * @param numPorts Number of ports
+     * @param numModelPorts Number of model ports
+     * @param numDataPorts Number of data ports
      */
-    public AbstractNodePortFigure(final int numPorts) {
-        m_numPorts = numPorts;
+    public AbstractNodePortFigure(final int numModelPorts,
+            final int numDataPorts) {
+
+        m_numModelPorts = numModelPorts;
+        m_numDataPorts = numDataPorts;
     }
 
     /**
@@ -132,6 +138,7 @@ public abstract class AbstractNodePortFigure extends Shape {
 
     /**
      * NOT USED AT THE MOMENT.
+     * 
      * @see org.eclipse.draw2d.Shape#outlineShape(org.eclipse.draw2d.Graphics)
      */
     protected void outlineShape(final Graphics graphics) {
@@ -145,14 +152,14 @@ public abstract class AbstractNodePortFigure extends Shape {
         }
 
         // graphics.setForegroundColor(getForegroundColor());
-        //Rectangle r = getBounds().getCopy().shrink(2, 2);
+        // Rectangle r = getBounds().getCopy().shrink(2, 2);
         // TODO debug border
         // graphics.drawRectangle(r);
 
         // get polygon from implementation...
-        //PointList points = createShapePoints(r);
+        // PointList points = createShapePoints(r);
 
-        //graphics.drawPolygon(points);
+        // graphics.drawPolygon(points);
 
     }
 
@@ -180,9 +187,23 @@ public abstract class AbstractNodePortFigure extends Shape {
     public abstract Locator getLocator();
 
     /**
-     * @return Returns the numPorts.
+     * @return Returns the allover number of ports.
      */
     public int getNumPorts() {
-        return m_numPorts;
+        return m_numDataPorts + m_numModelPorts;
+    }
+
+    /**
+     * @return the number of data ports.
+     */
+    int getNumDataPorts() {
+        return m_numDataPorts;
+    }
+
+    /**
+     * @return the number of model ports.
+     */
+    int getNumModelPorts() {
+        return m_numModelPorts;
     }
 }

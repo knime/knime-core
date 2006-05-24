@@ -512,7 +512,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * Sets the icon for the node (provided in plugin.xml).
+         * Sets the icon for the node (now provided from the factory class).
          * 
          * @param icon Image to display as icon
          */
