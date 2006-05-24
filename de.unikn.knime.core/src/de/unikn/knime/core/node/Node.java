@@ -1335,7 +1335,7 @@ public class Node {
     void validateModelSettingsFromDialog() throws InvalidSettingsException {
         // save new dialog's config into new object
         NodeSettings newSettings = new NodeSettings(this.getNodeName());
-        m_nodeDialogPane.saveSettingsTo(newSettings);
+        m_nodeDialogPane.finishEditingAndSaveSettingsTo(newSettings);
         // validate settings
         m_nodeModel.validateSettings(newSettings);
     }
@@ -1350,7 +1350,7 @@ public class Node {
     void loadModelSettingsFromDialog() throws InvalidSettingsException {
         // save new dialog's config into new object
         NodeSettings newSettings = new NodeSettings(this.getNodeName());
-        m_nodeDialogPane.saveSettingsTo(newSettings);
+        m_nodeDialogPane.finishEditingAndSaveSettingsTo(newSettings);
         // and apply it to the model
         m_nodeModel.loadSettingsFrom(newSettings);
         // update the output data table specs
@@ -1369,7 +1369,7 @@ public class Node {
             // save new dialog's config into new object
             NodeSettings dialogSettings = new NodeSettings("Compare");
             NodeSettings modelSettings = new NodeSettings("Compare");
-            m_nodeDialogPane.saveSettingsTo(dialogSettings);
+            m_nodeDialogPane.finishEditingAndSaveSettingsTo(dialogSettings);
             m_nodeModel.saveSettingsTo(modelSettings);
            
             // check for equality

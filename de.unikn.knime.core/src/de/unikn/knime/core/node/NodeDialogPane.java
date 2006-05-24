@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -175,6 +173,21 @@ public abstract class NodeDialogPane {
      */
     protected abstract void saveSettingsTo(final NodeSettings settings)
             throws InvalidSettingsException;
+    
+    /** Commit spinners and save settings. It will first call the 
+     * commitJSpinners method (which traverses all components and commits 
+     * them if they are instance of JSpinner) and finally call 
+     * <code>saveSettingsTo(settings)</code>.
+     * @param settings The settings object to write into.
+     * @throws InvalidSettingsException If the settings are not applicable to
+     *             the model.
+     * @see NodeModel#saveSettingsTo(NodeSettings)
+     */
+    void finishEditingAndSaveSettingsTo(final NodeSettings settings) 
+        throws InvalidSettingsException {
+        commitJSpinners(getPanel());
+        saveSettingsTo(settings);
+    }
 
     /**
      * Invoked when the derived dialog needs to apply its settings to the
@@ -184,7 +197,6 @@ public abstract class NodeDialogPane {
      *             <code>Node</code>.
      */
     public final void doApply() throws InvalidSettingsException {
-        commitJSpinners(getPanel());
         m_node.loadModelSettingsFromDialog();
     }
     
