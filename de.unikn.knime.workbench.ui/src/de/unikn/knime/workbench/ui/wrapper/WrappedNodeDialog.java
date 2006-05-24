@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -216,7 +214,6 @@ public class WrappedNodeDialog extends Dialog {
 
     private void doCancel() {
         buttonPressed(IDialogConstants.CANCEL_ID);
-        shutDown();
     }
 
     /**
@@ -276,42 +273,24 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     private void doOK(final SelectionEvent e) {
+        // simulate doApply
+        if (doApply(e)) {
+            buttonPressed(IDialogConstants.OK_ID);
+        }
+    }
+
+    private boolean doApply(final SelectionEvent e) {
+        boolean result = false;
         try {
             // if the settings are equal to the previous settings
             // inform the user but do nothing (no reset)
             if (m_dialogPane.isModelAndDialogSettingsEqual()) {
                 informNothingChanged();
-                close();
-                shutDown();
+                result = true;
             } else if (confirmApply()) {
                 m_dialogPane.doApply();
                 e.doit = true;
-                close();
-                shutDown();
-            } else {
-                e.doit = false;
-            }
-        } catch (InvalidSettingsException ise) {
-            e.doit = false;
-            showErrorMessage("Invalid settings: " + ise.getMessage());
-        } catch (Exception exc) {
-            e.doit = false;
-            showErrorMessage(exc.getClass().getSimpleName() + ": "
-                    + exc.getMessage());
-        }
-    }
-
-    private void shutDown() {
-        Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
-    }
-
-    private void doApply(final SelectionEvent e) {
-        try {
-            if (m_dialogPane.isModelAndDialogSettingsEqual()) {
-                informNothingChanged();
-            } else if (confirmApply()) {
-                m_dialogPane.doApply();
-                e.doit = true;
+                result = true;
             } else {
                 e.doit = false;
             }
@@ -320,8 +299,10 @@ public class WrappedNodeDialog extends Dialog {
             showErrorMessage("Invalid Settings\n" + ise.getMessage());
         } catch (Exception exc) {
             e.doit = false;
-            showErrorMessage(exc.getMessage());
+            showErrorMessage(exc.getClass().getSimpleName() + ": "
+                    + exc.getMessage());
         }
+        return result;
     }
 
     /**
@@ -387,6 +368,12 @@ public class WrappedNodeDialog extends Dialog {
         mb.setMessage("The settings were not changed. "
                 + "The node will not be reset.");
         mb.open();
+    }
+    
+    @Override
+    public boolean close() {
+        Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
+        return super.close();
     }
 
     /**
