@@ -33,11 +33,10 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.DefaultRowIterator;
-import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.def.DefaultTable;
+import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -594,9 +593,7 @@ public class TableContentModelTest extends TestCase {
         final DataType[] colclasses = new DataType[]{DoubleCell.TYPE};
         final DataRow[] data = new DefaultRow[500];
         for (int i = 0; i < data.length; i++) {
-            data[i] = new DefaultRow(new RowKey(
-                    new StringCell("Row_" + i)), 
-                    new double[]{i});
+            data[i] = new DefaultRow(new RowKey("Row_" + i), new double[]{i});
         }
         
         // these flags keep track when the iterator of the table may be 
@@ -686,9 +683,7 @@ public class TableContentModelTest extends TestCase {
         final DataType[] colclasses = new DataType[]{DoubleCell.TYPE};
         final DataRow[] data = new DefaultRow[500];
         for (int i = 0; i < data.length; i++) {
-            data[i] = new DefaultRow(new RowKey(
-                    new StringCell("Row_" + i)), 
-                    new double[]{i});
+            data[i] = new DefaultRow(new RowKey("Row_" + i), new double[]{i});
         }
         // override DataTable to set own iterator 
         final DataTable table = new DefaultTable(data, colnames, colclasses);
