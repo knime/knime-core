@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -118,7 +116,7 @@ public final class ExecutionMonitor {
      * @throws IllegalArgumentException If the argument is not in (0, 1].
      */ 
     public ExecutionMonitor createSubProgress(final double maxProg) {
-        if (maxProg > 1.0 || maxProg <= 0.0) {
+        if (maxProg > 1.0 || maxProg < 0.0) {
             throw new IllegalArgumentException(
                     "Invalid sub progress size: " + maxProg);
         }
