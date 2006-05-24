@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataRow;
@@ -32,7 +33,6 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.CanceledExecutionException;
@@ -416,11 +416,11 @@ public class DataContainer implements RowAppender {
                 ? m_minCells[i] : null;
             DataCell max = m_maxCells[i] != null && !m_maxCells[i].isMissing()
                 ? m_maxCells[i] : null;
-            DefaultDataColumnDomain domain = 
-                new DefaultDataColumnDomain(possVal, min, max);
+            DataColumnDomainCreator domainCreator = 
+                new DataColumnDomainCreator(possVal, min, max);
             DataColumnSpecCreator specCreator = 
                 new DataColumnSpecCreator(original);
-            specCreator.setDomain(domain);
+            specCreator.setDomain(domainCreator.createDomain());
             colSpec[i] = specCreator.createSpec();
         }
         return new DataTableSpec(colSpec);

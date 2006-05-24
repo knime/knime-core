@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -58,12 +56,12 @@ import javax.swing.event.ChangeListener;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataCellComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
+import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.IntValue;
 import de.unikn.knime.core.data.StringValue;
-import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
@@ -946,9 +944,9 @@ public class DomainDialog extends JDialog {
                     || ((pVals != null) && (pVals.size() > 0))) {
 
                 // all or some of these values could be null, which is okay.
-                DefaultDataColumnDomain domain = 
-                    new DefaultDataColumnDomain(pVals, min, max);
-                dcsc.setDomain(domain);
+                DataColumnDomainCreator domainCreator = 
+                    new DataColumnDomainCreator(pVals, min, max);
+                dcsc.setDomain(domainCreator.createDomain());
             }
             
             result.setColumnSpec(dcsc.createSpec());

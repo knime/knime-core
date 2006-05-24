@@ -47,6 +47,7 @@ import java.util.zip.ZipOutputStream;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataCellSerializer;
 import de.unikn.knime.core.data.DataColumnDomain;
+import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnProperties;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
@@ -55,7 +56,6 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
@@ -347,8 +347,8 @@ final class Buffer {
             Set<DataCell> values = (Set<DataCell>)inStream.readObject();
             DataCell lowerBound = (DataCell)inStream.readObject();
             DataCell upperBound = (DataCell)inStream.readObject();
-            DataColumnDomain domain = 
-                new DefaultDataColumnDomain(values, lowerBound, upperBound);
+            DataColumnDomain domain = new DataColumnDomainCreator(
+                    values, lowerBound, upperBound).createDomain();
             DataColumnProperties props =
                 (DataColumnProperties)inStream.readObject();
             ColorHandler clrHdl = (ColorHandler)inStream.readObject();

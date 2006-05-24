@@ -30,13 +30,13 @@ import java.util.Vector;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizer;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
@@ -198,7 +198,8 @@ public class ARFFTable implements DataTable {
                 DataColumnSpecCreator dcsc = 
                     new DataColumnSpecCreator(colName, type);
                 if (possVals != null) {
-                    dcsc.setDomain(new DefaultDataColumnDomain(possVals));
+                    dcsc.setDomain(new DataColumnDomainCreator(
+                            possVals).createDomain());
                 }
                 colSpecs.add(dcsc.createSpec());
 

@@ -25,13 +25,13 @@ import java.util.Set;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataCellComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
+import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -231,7 +231,8 @@ public class AppendedRowsTable implements DataTable {
             newPoss = new LinkedHashSet<DataCell>(d1Poss);
             newPoss.addAll(d2Poss);
         }
-        return new DefaultDataColumnDomain(newPoss, newMin, newMax);
+        return 
+            new DataColumnDomainCreator(newPoss, newMin, newMax).createDomain();
     }
 
 }

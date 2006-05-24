@@ -24,10 +24,10 @@ import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnDomain;
+import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.def.DefaultDataColumnDomain;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
 
@@ -149,15 +149,16 @@ class ColProperty {
 
         // this is just to make sure null arguments are okay with the
         // constructor. In case somebody changes it in the future.
-        assert (new DefaultDataColumnDomain(null, null) != null);
+        assert (new DataColumnDomainCreator(null, null) != null);
 
         DataColumnSpecCreator dcsc = 
             new DataColumnSpecCreator(colName, colType);
         if ((posValues != null) && (posValues.size() > 0)) {
-            dcsc.setDomain(new DefaultDataColumnDomain(posValues, lowerBound, 
-                    upperBound));
+            dcsc.setDomain(new DataColumnDomainCreator(
+                    posValues, lowerBound, upperBound).createDomain());
         } else {
-            dcsc.setDomain(new DefaultDataColumnDomain(lowerBound, upperBound));
+            dcsc.setDomain(new DataColumnDomainCreator(
+                    lowerBound, upperBound).createDomain());
         }
         m_colSpec = dcsc.createSpec();
 
