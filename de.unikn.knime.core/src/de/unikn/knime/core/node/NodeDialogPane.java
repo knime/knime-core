@@ -28,6 +28,7 @@ import java.text.ParseException;
 import java.util.LinkedHashMap;
 
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSpinner;
@@ -240,6 +241,12 @@ public abstract class NodeDialogPane {
         if (c instanceof JSpinner) {
             try {
                 ((JSpinner)c).commitEdit();
+            } catch (ParseException e) {
+                // ignore
+            }
+        } else if (c instanceof JFormattedTextField) {
+            try {
+                ((JFormattedTextField)c).commitEdit();
             } catch (ParseException e) {
                 // ignore
             }
