@@ -228,14 +228,14 @@ public class Node {
     /**
      * @return The number of input ports for data.
      */
-    private int getNrDataInPorts() {
+    public int getNrDataInPorts() {
         return m_inDataPorts.length;
     }
 
     /**
      * @return The number of input ports for <code>PredictorParams</code>.
      */
-    private int getNrPredictorInPorts() {
+    public int getNrPredictorInPorts() {
         return m_inModelPorts.length;
     }
 
@@ -258,14 +258,14 @@ public class Node {
     /**
      * @return The number of data output ports.
      */
-    private int getNrDataOutPorts() {
+    public int getNrDataOutPorts() {
         return m_outDataPorts.length;
     }
 
     /**
      * @return The number of <code>PredictorParams</code> output ports.
      */
-    private int getNrPredictorOutPorts() {
+    public int getNrPredictorOutPorts() {
         return m_outModelPorts.length;
     }
 

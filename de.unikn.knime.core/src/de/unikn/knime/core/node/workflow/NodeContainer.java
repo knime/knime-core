@@ -438,6 +438,34 @@ public class NodeContainer implements NodeStateListener {
     public int getNrInPorts() {
         return m_node.getNrInPorts();
     }
+    
+    /**
+     * @return The number of data output ports.
+     */
+    public int getNrDataOutPorts() {
+        return m_node.getNrDataOutPorts();
+    }
+
+    /**
+     * @return The number of <code>PredictorParams</code> output ports.
+     */
+    public int getNrPredictorInPorts() {
+        return m_node.getNrPredictorInPorts();
+    }
+    
+    /**
+     * @return The number of data output ports.
+     */
+    public int getNrDataInPorts() {
+        return m_node.getNrDataInPorts();
+    }
+
+    /**
+     * @return The number of <code>PredictorParams</code> output ports.
+     */
+    public int getNrPredictorOutPorts() {
+        return m_node.getNrPredictorOutPorts();
+    }
 
     /**
      * Delegation method to nodes's <code>getOutputDescription</code> method.
