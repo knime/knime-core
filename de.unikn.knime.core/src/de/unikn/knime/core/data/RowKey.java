@@ -22,10 +22,11 @@ package de.unikn.knime.core.data;
 
 import java.io.Serializable;
 
+import de.unikn.knime.core.data.def.StringCell;
+
 /**
- * Unique key for a specific row. It holds an identifier (of type
- * <code>DataCell</code>) and also properties such as color and later also 
- * size, and shape of this particular row.
+ * Unique key for a specific row which holds an identifier (of type
+ * <code>DataCell</code>).
  * 
  * @author M. Berthold, University of Konstanz
  */
@@ -35,9 +36,9 @@ public final class RowKey implements Serializable {
     private final DataCell m_id;
 
     /**
-     * Constructor, initializes properties to default settings.
+     * Creates a row key based on a <code>DataCell</code> as id.
      * 
-     * @param id unique identifier
+     * @param id unique identifier for a <code>DataTable</code>.
      * @throws NullPointerException If argument is null.
      */
     public RowKey(final DataCell id) {
@@ -46,19 +47,22 @@ public final class RowKey implements Serializable {
         }
         m_id = id;
     }
-
+    
     /**
-     * Initializes properties as specified, copies remaining properties from
-     * the argument.
+     * Creates a row key based on a String as id. 
      * 
-     * @param key unique Rowkey
+     * @param id unique identifier for a <code>DataTable</code>.
+     * @throws NullPointerException If argument is null.
      */
-    public RowKey(final RowKey key) {
-        this(key.getId());
+    public RowKey(final String id) {
+        if (id == null) {
+            throw new NullPointerException("Can't create RowKey with null id.");
+        }
+        m_id = new StringCell(id);
     }
 
     /**
-     * @return A (non-null) unique ID of this row
+     * @return An non-null, unique ID for a row.
      */
     public DataCell getId() {
         assert m_id != null;
@@ -66,7 +70,7 @@ public final class RowKey implements Serializable {
     }
 
     /**
-     * Returns the string representation of the RowID <code>DataCell</code>.
+     * Returns the string representation of this row id <code>DataCell</code>.
      * 
      * @see Object#toString()
      */
@@ -75,7 +79,7 @@ public final class RowKey implements Serializable {
     }
 
     /**
-     * Compares only ids, not properties.
+     * Compares two row keys.
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(final Object obj) {
@@ -94,4 +98,5 @@ public final class RowKey implements Serializable {
     public int hashCode() {
         return m_id.hashCode();
     }
+    
 }
