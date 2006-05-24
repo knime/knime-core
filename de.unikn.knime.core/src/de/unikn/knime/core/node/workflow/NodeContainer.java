@@ -54,7 +54,7 @@ import de.unikn.knime.core.node.NodeView;
 public class NodeContainer implements NodeStateListener {
 
     // The logger for static methods
-    private final static NodeLogger staticLogger = NodeLogger
+    private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainer.class);
 
     // The node logger for the underlying node is used here.
@@ -334,7 +334,8 @@ public class NodeContainer implements NodeStateListener {
     public void setExtraInfo(final NodeExtraInfo ei) {
         m_extraInfo = ei;
         // send event notification
-        stateChanged(new NodeStatus(NodeStatus.STATUS_EXTRA_INFO_CHANGED), m_id);
+        stateChanged(new NodeStatus(NodeStatus.STATUS_EXTRA_INFO_CHANGED), 
+                m_id);
     }
 
     /**
@@ -363,7 +364,8 @@ public class NodeContainer implements NodeStateListener {
         case STATE_WAITING_TO_BE_EXECUTABLE:
             break;
         default:
-            throw new IllegalArgumentException("Invalid state identifier: " + s);
+            throw new IllegalArgumentException("Invalid state identifier: " 
+                    + s);
         }
         m_state = s;
     }
@@ -718,7 +720,7 @@ public class NodeContainer implements NodeStateListener {
             }
         } catch (InvalidSettingsException ise) {
 
-            staticLogger.warn("In the settings of node <id:" + newNC.getID()
+            LOGGER.warn("In the settings of node <id:" + newNC.getID()
                     + "|type:" + newNode.getNodeName()
                     + "> is no user name specified");
         }
@@ -729,7 +731,7 @@ public class NodeContainer implements NodeStateListener {
             newNC.setDescription(description);
         } catch (InvalidSettingsException ise) {
 
-            staticLogger.warn("In the settings of node <id:" + newNC.getID()
+            LOGGER.warn("In the settings of node <id:" + newNC.getID()
                     + "|type:" + newNode.getNodeName()
                     + "> is no user description specified");
         }
@@ -933,8 +935,8 @@ public class NodeContainer implements NodeStateListener {
      * @param id identifier from <code>Node</code>: will be overwritten with
      *            NodeContainer ID
      */
-    public synchronized void stateChanged(final NodeStatus state, final int id) {
-
+    public synchronized void stateChanged(
+            final NodeStatus state, final int id) {
         if (state.getStatusId() == NodeStatus.END_EXECUTE) {
             // do not immediately forward this event. We will generate a
             // new event after we have actually set all internal flags

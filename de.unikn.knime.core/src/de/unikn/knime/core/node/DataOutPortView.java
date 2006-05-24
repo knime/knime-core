@@ -342,9 +342,9 @@ final class DataOutPortView extends NodeOutPortView {
     private static String createWindowTitle(final String nodeName, 
             final String portName, final String tableName) {
         if (tableName != null) {
-            return nodeName + ", Port: " + portName + ", Table: " + tableName;
+            return nodeName + ", " + portName + ", Table: " + tableName;
         } else {
-            return nodeName + ", Port: " + portName;
+            return nodeName + ", " + portName;
         }
     }
 
