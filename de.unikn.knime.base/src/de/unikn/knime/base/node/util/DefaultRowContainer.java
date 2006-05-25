@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -29,9 +27,15 @@ import java.util.Vector;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataCellComparator;
+import de.unikn.knime.core.data.DataColumnDomain;
+import de.unikn.knime.core.data.DataColumnDomainCreator;
+import de.unikn.knime.core.data.DataColumnSpec;
+import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.StringValue;
 import de.unikn.knime.core.node.CanceledExecutionException;
@@ -124,9 +128,9 @@ public class DefaultRowContainer implements RowContainer {
                     + " greater than or equal zero");
         }
 
-        m_tSpec = dTable.getDataTableSpec();
+        DataTableSpec tSpec = dTable.getDataTableSpec();
 
-        int numOfColumns = m_tSpec.getNumColumns();
+        int numOfColumns = tSpec.getNumColumns();
 
         m_firstRow = firstRow;
         m_rows = new ArrayList<DataRow>(numOfColumns);
@@ -137,7 +141,7 @@ public class DefaultRowContainer implements RowContainer {
         m_possVals = new Vector<LinkedHashSet<DataCell>>();
         m_possVals.setSize(numOfColumns);
         for (int c = 0; c < numOfColumns; c++) {
-            if (m_tSpec.getColumnSpec(c).getType().isCompatible(
+            if (tSpec.getColumnSpec(c).getType().isCompatible(
                     StringValue.class)) {
                 m_possVals.set(c, new LinkedHashSet<DataCell>());
             }
@@ -205,6 +209,47 @@ public class DefaultRowContainer implements RowContainer {
 
         } // while ((!rIter.atEnd()) && (numOfRowsRead < numOfRows))
 
+        // make sure that the table spec's domain is set properly. 
+        // Use as is when there is information available, otherwise set it.
+        DataColumnSpec[] colSpecs = new DataColumnSpec[numOfColumns];
+        boolean changed = false; // do we need to set our own table spec
+        for (int i = 0; i < numOfColumns; i++) {
+            boolean colChanged = false;
+            DataColumnSpec origColSpec = tSpec.getColumnSpec(i);
+            DataType type = origColSpec.getType();
+            DataColumnSpecCreator creator = 
+                new DataColumnSpecCreator(origColSpec);
+            DataColumnDomain origColDomain = origColSpec.getDomain();
+            DataColumnDomainCreator domainCreator = 
+                new DataColumnDomainCreator(origColDomain);
+            if (type.isCompatible(StringValue.class) 
+                    && !origColDomain.hasValues()) {
+                domainCreator.setValues(m_possVals.get(i));
+                colChanged = true;
+            }
+            if (type.isCompatible(DoubleValue.class)) {
+                if (!origColDomain.hasLowerBound()) {
+                    domainCreator.setLowerBound(m_minVal[i]);
+                    colChanged = true;
+                }
+                if (!origColDomain.hasUpperBound()) {
+                    domainCreator.setUpperBound(m_maxVal[i]);
+                    colChanged = true;
+                }
+            }
+            if (colChanged) {
+                changed = true;
+                creator.setDomain(domainCreator.createDomain());
+                colSpecs[i] = creator.createSpec();
+            } else {
+                colSpecs[i] = origColSpec;
+            }
+        } // for all columns
+        if (changed) {
+            m_tSpec = new DataTableSpec(colSpecs);
+        } else {
+            m_tSpec = tSpec;
+        }
     }
 
     /**
@@ -335,7 +380,7 @@ public class DefaultRowContainer implements RowContainer {
     }
 
     /**
-     * @return the table spec belonging to the rows stored.
+     * @see RowContainer#getTableSpec()
      */
     public DataTableSpec getTableSpec() {
         return m_tSpec;

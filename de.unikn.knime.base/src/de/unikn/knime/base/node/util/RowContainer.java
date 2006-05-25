@@ -112,7 +112,11 @@ public interface RowContainer extends Iterable {
     Iterator<DataRow> iterator();
 
     /**
-     * @return the table spec belonging to the rows stored.
+     * Get the table spec corresponding the the rows. The domain information is
+     * ensured to be included, i.e. for all string compatible columns it 
+     * contains the possible values and for all double compatible columns it
+     * contains lower and upper bounds.
+     * @return the table spec belonging to the rows stored. 
      */
     DataTableSpec getTableSpec();
 }
