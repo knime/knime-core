@@ -168,10 +168,17 @@ public class DataContainer implements RowAppender {
     }
 
     /**
-     * Opens the container so that rows can be added by 
-     * <code>addRowToTable(DataRow)</code>. 
+     * Opens the container so that rows can be added by
+     * <code>addRowToTable(DataRow)</code>. The table spec of the resulting
+     * table (the one being returned by <code>getTable()</code>) will have a
+     * valid column domain. That means, while rows are added to the container,
+     * the domain of each column is adjusted.
+     * <p>
+     * If you prefer to stick with the domain as passed in the argument, use the
+     * method <code>open(DataTableSpec, true)</code> instead.
+     * 
      * @param spec Table spec of the final table. Rows that are added to the
-     *        container must comply with this spec.
+     *            container must comply with this spec.
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     public void open(final DataTableSpec spec) {
