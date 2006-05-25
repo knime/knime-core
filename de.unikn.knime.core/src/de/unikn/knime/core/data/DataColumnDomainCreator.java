@@ -37,6 +37,14 @@ public class DataColumnDomainCreator {
 
     /** Keeps the upper bound or null if not available. */
     private DataCell m_upperBound;
+    
+    /** Creates new domain object, copying the information from the argument.
+     * @param copyFrom The object to copy from.
+     */
+    public DataColumnDomainCreator(final DataColumnDomain copyFrom) {
+        this(copyFrom.getValues(), 
+                copyFrom.getLowerBound(), copyFrom.getUpperBound());
+    }
 
     /**
      * Creates a new domain object with no meta-info defined.
