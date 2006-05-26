@@ -39,26 +39,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataCellSerializer;
-import de.unikn.knime.core.data.DataColumnDomain;
-import de.unikn.knime.core.data.DataColumnDomainCreator;
-import de.unikn.knime.core.data.DataColumnProperties;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.property.ColorHandler;
-import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 import de.unikn.knime.core.node.NodeLogger;
 
@@ -314,21 +306,7 @@ final class Buffer {
         outStream.writeInt(m_size);
         // first write the short cut array
         outStream.writeObject(m_shortCutsLookup);
-        DataTableSpec spec = m_spec;
-        int colCount = spec.getNumColumns();
-        outStream.writeInt(colCount);
-        for (int i = 0; i < colCount; i++) {
-            DataColumnSpec cSpec = spec.getColumnSpec(i);
-            outStream.writeUTF(cSpec.getName());
-            outStream.writeObject(cSpec.getType());
-            DataColumnDomain domain = cSpec.getDomain();
-            outStream.writeObject(domain.getValues());
-            outStream.writeObject(domain.getLowerBound());
-            outStream.writeObject(domain.getUpperBound());
-            outStream.writeObject(cSpec.getProperties());
-            outStream.writeObject(cSpec.getColorHandler());
-            outStream.writeObject(cSpec.getSizeHandler());
-        }
+        outStream.writeObject(m_spec);
     }
     
     /**
@@ -339,29 +317,7 @@ final class Buffer {
         throws IOException, ClassNotFoundException {
         m_size = inStream.readInt();
         m_shortCutsLookup = (Class<? extends DataCell>[])inStream.readObject();
-        int colCount = inStream.readInt();
-        DataColumnSpec[] colSpecs = new DataColumnSpec[colCount];
-        for (int i = 0; i < colCount; i++) {
-            String name = inStream.readUTF();
-            DataType type = (DataType)inStream.readObject();
-            Set<DataCell> values = (Set<DataCell>)inStream.readObject();
-            DataCell lowerBound = (DataCell)inStream.readObject();
-            DataCell upperBound = (DataCell)inStream.readObject();
-            DataColumnDomain domain = new DataColumnDomainCreator(
-                    values, lowerBound, upperBound).createDomain();
-            DataColumnProperties props =
-                (DataColumnProperties)inStream.readObject();
-            ColorHandler clrHdl = (ColorHandler)inStream.readObject();
-            SizeHandler sizeHdl = (SizeHandler)inStream.readObject();
-            DataColumnSpecCreator creator = 
-                new DataColumnSpecCreator(name, type);
-            creator.setDomain(domain);
-            creator.setProperties(props);
-            creator.setColorHandler(clrHdl);
-            creator.setSizeHandler(sizeHdl);
-            colSpecs[i] = creator.createSpec();
-        }
-        m_spec = new DataTableSpec(colSpecs);
+        m_spec = (DataTableSpec)inStream.readObject();
     }
     
     /** Create the shortcut table. */
