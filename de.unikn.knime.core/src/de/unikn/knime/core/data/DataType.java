@@ -730,6 +730,25 @@ public final class DataType implements Serializable {
         return "Non-Native " + valuesToString;
     }
     
+    /** This method is called by the serialization mechanism and returns a 
+     * singleton object from the CLASS_TO_TYPE_MAP if this type is a
+     * native type (i.e. m_cellClass != null). The runtime object (the one on 
+     * which this method is being invoked) is instantiated via serialization 
+     * and in order to make sure that there is just one single DataType for 
+     * a particular class implementation, this method will return the unique
+     * object assigned to the cell class. This method returns the runtime 
+     * object if the DataType is a supertype of different types (as those do
+     * not get cached anyway.) 
+     * @return A possible unique DataType for m_cellClass.
+     * @see Serializable
+     */
+    private Object readResolve() {
+        if (m_cellClass != null) {
+            return DataType.getType(m_cellClass);
+        }
+        return this;
+    }
+    
     /**
      * Implemenation of the missing cell. This datacell does not implement
      * any DataValue interfaces but is compatible to any one that its type
