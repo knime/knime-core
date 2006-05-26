@@ -786,13 +786,14 @@ public class NodeContainer implements NodeStateListener {
                 // use global Class Creator utility for Eclipse "compatibility"
                 extraInfo = (NodeExtraInfo)(GlobalClassCreator
                         .createClass(extraInfoClassName).newInstance());
+                // and load content of extrainfo
+                extraInfo.load(sett);
             } catch (Exception e) {
-                throw new InvalidSettingsException("ExtraInfoClass could not "
+                LOGGER.warn("ExtraInfoClass could not "
                         + "be loaded " + extraInfoClassName + " reason: "
                         + e.getMessage());
             }
-            // and load content of extrainfo
-            extraInfo.load(sett);
+           
         }
         return extraInfo;
     }

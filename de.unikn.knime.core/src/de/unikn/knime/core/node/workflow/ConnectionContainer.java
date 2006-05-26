@@ -26,6 +26,7 @@ import java.util.ArrayList;
 
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
 
 /**
@@ -43,6 +44,10 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author M. Berthold, University of Konstanz
  */
 public class ConnectionContainer {
+
+    // The logger for static methods
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(NodeContainer.class);
 
     // unique id
     private final int m_id;
@@ -276,7 +281,7 @@ public class ConnectionContainer {
             final NodeSettings config, final WorkflowManager workflowMgr,
             final int sourceId, final int targetId)
             throws InvalidSettingsException {
-        
+
         // read ids and port indices
         int newSourceID = sourceId;
         int newSourcePort = config.getInt(KEY_SOURCE_PORT);
@@ -293,13 +298,13 @@ public class ConnectionContainer {
                 // .newInstance());
                 extraInfo = (ConnectionExtraInfo)GlobalClassCreator
                         .createClass(extraInfoClassName).newInstance();
+                // and load content of extrainfo
+                extraInfo.load(config);
             } catch (Exception e) {
-                throw new InvalidSettingsException("ExtraInfoClass could not "
-                        + "be loaded " + extraInfoClassName + " reason: "
-                        + e.getMessage());
+                LOGGER.warn("ExtraInfoClass could not " + "be loaded "
+                        + extraInfoClassName + " reason: " + e.getMessage());
             }
-            // and load content of extrainfo
-            extraInfo.load(config);
+
         }
         // create new connection in workflow (which will generate the
         // corresponding ConnectionContainer)
@@ -307,9 +312,9 @@ public class ConnectionContainer {
             ConnectionContainer newCC = workflowMgr.addConnection(newSourceID,
                     newSourcePort, newTargetID, newTargetPort);
             newCC.setExtraInfo(extraInfo);
-            
+
             return newCC.getID();
-            
+
         } catch (Exception e) {
             throw new InvalidSettingsException(e.getMessage());
         }
@@ -325,10 +330,10 @@ public class ConnectionContainer {
      */
     static int getSourceIdFromConfig(final NodeSettings settings)
             throws InvalidSettingsException {
-        
+
         return settings.getInt(KEY_SOURCE_ID);
     }
-    
+
     /**
      * Retrieves the target id from a given <code>NodeSettings</code> object.
      * 
@@ -339,7 +344,7 @@ public class ConnectionContainer {
      */
     static int getTargetIdFromConfig(final NodeSettings settings)
             throws InvalidSettingsException {
-        
+
         return settings.getInt(KEY_TARGET_ID);
     }
 

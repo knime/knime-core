@@ -242,9 +242,11 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 newIds.add(new Integer(newId));
 
                 // finaly change the extra info so that the copies are
-                // located differently
-                newNode.getExtraInfo().changePosition(
-                        40 * positionChangeMultiplier);
+                // located differently (if not null)
+                NodeExtraInfo extraInfo = newNode.getExtraInfo();
+                if (extraInfo != null) {
+                    extraInfo.changePosition(40 * positionChangeMultiplier);
+                }
 
                 // set the user name to the new id if the init name
                 // was set before e.g. "Node_44"
