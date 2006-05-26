@@ -208,8 +208,8 @@ public final class DataColumnSpec implements Serializable {
     @Override
     public String toString() {
         final StringBuffer buffer = new StringBuffer();
-        buffer.append("(" + getName().toString() + ", ");
-        buffer.append(getType().getClass() + ", ");
+        buffer.append("(" + getName() + ", ");
+        buffer.append(getType().toString() + ", ");
         if (!m_domain.hasValues()) {
             buffer.append("{" + m_domain + "}");
         } else {
