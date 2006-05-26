@@ -282,9 +282,11 @@ public class WrappedNodeDialog extends Dialog {
     private boolean doApply(final SelectionEvent e) {
         boolean result = false;
         try {
-            // if the settings are equal to the previous settings
-            // inform the user but do nothing (no reset)
-            if (m_dialogPane.isModelAndDialogSettingsEqual()) {
+            // if the settings are equal and the node is executed
+            // to the previous settings inform the user but do nothing
+            // (no reset)
+            if (m_dialogPane.isModelAndDialogSettingsEqual()
+                    && m_nodeContainer.isExecuted()) {
                 informNothingChanged();
                 result = true;
             } else if (confirmApply()) {
@@ -369,7 +371,7 @@ public class WrappedNodeDialog extends Dialog {
                 + "The node will not be reset.");
         mb.open();
     }
-    
+
     @Override
     public boolean close() {
         Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
