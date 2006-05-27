@@ -93,7 +93,7 @@ public class PortLocator implements Locator {
 
             int position = 0;
             if (m_modelPort) {
-                position = m_portIndex - (m_maxModelPorts);
+                position = m_portIndex - (m_maxDataPorts);
             } else {
                 // data port
                 position = m_portIndex + (m_maxModelPorts);
