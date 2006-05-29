@@ -1,3 +1,4 @@
+
 /* @(#)$RCSfile$ 
  * $Revision$ $Date$ $Author$
  * 
@@ -32,11 +33,10 @@ import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodePort;
 import de.unikn.knime.core.node.NodeStateListener;
@@ -72,8 +72,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             .getLogger(NodeContainerEditPart.class);
 
     private static final long DOUBLE_CLICK_TIME = 500;
-
-    private static final String DEFAULT_IMAGE = "icons/16x16/default.png";
 
     /**
      * Remembers the time of the last <code>MousePressed</code> event. This is
@@ -171,7 +169,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // register a listener to open a nodes dialog when double clicked
         nodeFigure.addMouseListener(this);
-        
+
         // init the user specified node name
         nodeFigure.setUserName(getNodeContainer().getUserName());
 
@@ -203,9 +201,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * @see org.eclipse.gef.EditPart#performRequest(org.eclipse.gef.Request)
      */
     public void performRequest(final Request request) {
-        
+
         if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-         
+
             performDirectEdit();
         }
     }
@@ -415,23 +413,35 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         int[] b = ei.getBounds();
         f.setBounds(new Rectangle(b[0], b[1], b[2], b[3]));
 
-        String plugin = ei.getPluginID();
-        String iconPath = ei.getIconPath();
+        //String plugin = ei.getPluginID();
+        // String iconPath = ei.getIconPath();
         String type = ei.getType();
         String name = getNodeContainer().getNodeName();
         String userName = getNodeContainer().getUserName();
         String description = getNodeContainer().getDescription();
 
-        // Icon image, scaled to 16x16
-        ImageDescriptor imageDescriptor = AbstractUIPlugin
-                .imageDescriptorFromPlugin(plugin, iconPath);
-        // if image descriptor is null try to get the default image
-        if (imageDescriptor == null) {
-            imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(
-                    plugin, DEFAULT_IMAGE);
+        // get the icon
+        Image icon = null;
+        // URL iconURL = getNodeContainer().getIcon();
+        // try {
+        // icon = new Image(Workbench.getInstance().getDisplay(),
+        // iconURL.openStream());
+        // } catch (Exception e) {
+        // try {
+        // icon = new Image(Workbench.getInstance().getDisplay(),
+        // NodeFactory.getDefaultIcon().openStream());
+        // } catch (Exception innerE) {
+        // // in this case the icon is null
+        // icon = null;
+        // }
+        // }
+        icon = ImageRepository.getScaledImage(getNodeContainer().getIcon(), 16,
+                16);
+        // get default image if null
+        if (icon == null) {
+            icon = ImageRepository.getScaledImage(NodeFactory.getDefaultIcon(),
+                    16, 16);
         }
-
-        Image icon = ImageRepository.getScaledImage(imageDescriptor, 16, 16);
         if (icon != null) {
             f.setIcon(icon);
         }
@@ -488,11 +498,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * out why. Seems to be a draw2D problme.
      * 
      * @see org.eclipse.draw2d.MouseListener#
-     * mousePressed(org.eclipse.draw2d.MouseEvent)
+     *      mousePressed(org.eclipse.draw2d.MouseEvent)
      */
     public void mousePressed(final MouseEvent me) {
 
+        // consume this event so that no other listeners act on this click
+        // double actions are not wanted on a double click
+        me.consume();
         if (System.currentTimeMillis() - m_lastClick < DOUBLE_CLICK_TIME) {
+            
 
             NodeContainer container = (NodeContainer)getModel();
 
@@ -523,7 +537,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * Does nothing.
      * 
      * @see org.eclipse.draw2d.MouseListener#
-     * mouseReleased(org.eclipse.draw2d.MouseEvent)
+     *      mouseReleased(org.eclipse.draw2d.MouseEvent)
      */
     public void mouseReleased(final MouseEvent me) {
         // do nothing yet
@@ -533,7 +547,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * Does nothing.
      * 
      * @see org.eclipse.draw2d.MouseListener#
-     * mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
+     *      mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
      */
     public void mouseDoubleClicked(final MouseEvent me) {
 
