@@ -94,10 +94,8 @@ public class CreateNodeCommand extends Command {
         
         
 
-        info.setFactoryName(template.getFactory().getName());
         info.setType(template.getType());
         info.setPluginID(template.getPluginID());
-        info.setIconPath(template.getIconPath());
 
         m_container.setExtraInfo(info);
 

@@ -172,8 +172,6 @@ public class MetaWorkflowEditor extends WorkflowEditor {
 
         ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
         info.setNodeLocation(xPos, yPos, 40, 40);
-        info.setFactoryName(template.getFactory().getName());
-        info.setIconPath(template.getIconPath());
         info.setType(template.getType());
         info.setPluginID(template.getPluginID());
         container.setExtraInfo(info);

@@ -63,10 +63,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     private String m_pluginID;
 
-    private String m_factoryName;
-
-    private String m_iconPath;
-
     private String m_type;
 
     /**
@@ -75,9 +71,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void save(final NodeSettings config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
-        config.addString(KEY_FACTORY, m_factoryName);
         config.addString(KEY_PLUGIN, m_pluginID);
-        config.addString(KEY_ICON, m_iconPath);
         config.addString(KEY_TYPE, m_type);
     }
 
@@ -87,9 +81,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void load(final NodeSettings config) throws InvalidSettingsException {
         m_bounds = config.getIntArray(KEY_BOUNDS);
-        m_factoryName = config.getString(KEY_FACTORY);
         m_pluginID = config.getString(KEY_PLUGIN);
-        m_iconPath = config.getString(KEY_ICON);
         m_type = config.getString(KEY_TYPE);
     }
 
@@ -102,12 +94,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
             return false;
         }
         if (m_pluginID == null || m_pluginID.trim().equals("")) {
-            return false;
-        }
-        if (m_factoryName == null || m_factoryName.trim().equals("")) {
-            return false;
-        }
-        if (m_iconPath == null || m_iconPath.trim().equals("")) {
             return false;
         }
 
@@ -143,34 +129,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void setBounds(final int[] bounds) {
         m_bounds = bounds;
-    }
-
-    /**
-     * @return Returns the factoryName.
-     */
-    public String getFactoryName() {
-        return m_factoryName;
-    }
-
-    /**
-     * @param factoryName The factoryName to set.
-     */
-    public void setFactoryName(final String factoryName) {
-        m_factoryName = factoryName;
-    }
-
-    /**
-     * @return Returns the iconPath.
-     */
-    public String getIconPath() {
-        return m_iconPath;
-    }
-
-    /**
-     * @param iconPath The iconPath to set.
-     */
-    public void setIconPath(final String iconPath) {
-        m_iconPath = iconPath;
     }
 
     /**
