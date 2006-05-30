@@ -834,7 +834,7 @@ public class Node {
             int realId = inPortID - getNrDataInPorts();
             try {
                 m_nodeModel.loadPredictorParams(realId, null);
-            } catch (InvalidSettingsException ise) {
+            } catch (Exception e) {
                 /*
                  * if the nodemodel implementation of the loadPredictorParams is
                  * correct we will not end up here.
