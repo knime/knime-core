@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,13 +30,33 @@ package de.unikn.knime.core.node;
 public abstract class NoSettingsNodeModel extends NodeModel {
 
     /**
+     * Creates a <code>NodeModel</code> based on data in- and outports.
      * @param nrInputs number of in ports
      * @param nrOutputs number of out ports
      */
     protected NoSettingsNodeModel(final int nrInputs,
             final int nrOutputs) {
         super(nrInputs, nrOutputs);
-
+    }
+    
+    /**
+     * Creates a new model with the given number of data, and predictor in- and
+     * outputs.
+     * 
+     * @param nrDataIns The number of <code>DataTable</code> elements expected
+     *            as inputs.
+     * @param nrDataOuts The number of <code>DataTable</code> objects expected
+     *            at the output.
+     * @param nrPredParamsIns The number of <code>PredictorParams</code>
+     *            elements available as inputs.
+     * @param nrPredParamsOuts The number of <code>PredictorParams</code>
+     *            objects available at the output.
+     * @throws NegativeArraySizeException If the number of in- or outputs is
+     *             smaller than zero.
+     */
+    protected NoSettingsNodeModel(final int nrDataIns, final int nrDataOuts,
+            final int nrPredParamsIns, final int nrPredParamsOuts) {
+        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
     }
 
     /**
