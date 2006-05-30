@@ -45,6 +45,11 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeExecutionManagerJob.class);
 
+    /**
+     * Wait dummy object for synchronization method "waitUntilFinished".
+     */
+    private final Integer m_waitDummy = new Integer(0);
+
     private WorkflowManager m_manager;
 
     private NodeContainerEditPart[] m_parts;
@@ -104,6 +109,24 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
     }
 
     /**
+     * Waits until this job has been finished.
+     */
+    public void waitUntilFinished() {
+
+        // if not finished yet
+        if (!m_finished) {
+
+            synchronized (m_waitDummy) {
+                try {
+                    m_waitDummy.wait();
+                } catch (Exception e) {
+                    // do nothing
+                }
+            }
+        }
+    }
+
+    /**
      * @see org.eclipse.core.runtime.jobs.Job
      *      #run(org.eclipse.core.runtime.IProgressMonitor)
      */
@@ -147,7 +170,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
             // explicit synchronization to avoid deadlock
             synchronized (m_manager) {
                 createJobsForAvailableNodes(m_monitor);
-            
+
             }
         }
 
@@ -193,6 +216,12 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
 
         LOGGER.info("Execution finished (" + m_counter + " node(s))");
         m_manager.removeListener(this);
+
+        // notify potential waiting threads
+        synchronized (m_waitDummy) {
+            m_waitDummy.notifyAll();
+        }
+
         return state;
     }
 

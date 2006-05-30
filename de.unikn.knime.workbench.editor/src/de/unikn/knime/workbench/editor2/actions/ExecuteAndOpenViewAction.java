@@ -150,21 +150,11 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         job.setPriority(Job.LONG);
         job.schedule();
 
-        // seems to be a workaround to avoid runtime problems
-        job.getResult();
-
         // open the view now in another thread
         new Thread(new Runnable() {
             public void run() {
-                // first wait for the execution of the node
-
-                // try {
-                // job.join();
-                // } catch (Exception e) {
-                // // LOGGER.error("Join of node execution thread failed. "
-                // // + "View will not be opened" + e.getMessage());
-                // // return;
-                // }
+                // wait until the job has finished execution
+                job.waitUntilFinished();
 
                 nodeParts[0].getNodeContainer().showView(0);
             }
