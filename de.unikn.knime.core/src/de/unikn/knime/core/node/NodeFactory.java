@@ -391,12 +391,12 @@ public abstract class NodeFactory {
      * occurs (no such element in the xml, parsing exception ...), a coding
      * problem is reported to the node logger.
      */
-    private void readViewsFromXML() {
-        m_views = new ArrayList<Element>(4);
+    private void readViewsFromXML() {        
         Node w3cNode = m_knimeNode.getElementsByTagName("views").item(0);
         if (w3cNode == null) {
             return;
         }
+        m_views = new ArrayList<Element>(4);
         NodeList allViews = ((Element)w3cNode).getElementsByTagName("view");
         for (int i = 0; i < allViews.getLength(); i++) {
             Element view = (Element)allViews.item(i);
