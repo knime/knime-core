@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,10 @@ import de.unikn.knime.core.data.DataValue.UtilityFactory;
 import de.unikn.knime.core.data.renderer.DataValueRendererFamily;
 import de.unikn.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import de.unikn.knime.core.data.renderer.SetOfRendererFamilies;
+import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
+import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.config.Config;
 
 /**
  * The class for each type associated with a certain implementation of a data
@@ -459,6 +463,37 @@ public final class DataType implements Serializable {
         }
         m_hasPreferredValueClass = true;
     }
+    
+    /**
+     * Creates a new <code>DataType</code> given the cell class, 
+     * if the preferred value is set, and a list of value classes.
+     * @param cellClass <code>null</code> or the cell class for this type.
+     * @param hasPreferredValue If preferred value is set.
+     * @param valueClasses All implemented <code>DataValue</code> interfaces.
+     * @throws IllegalArgumentException If the cell class does not implement
+     *         all given value class interfaces.
+     */
+    private DataType(
+            final Class<? extends DataCell> cellClass, 
+            final boolean hasPreferredValue, 
+            final List<Class<? extends DataValue>> valueClasses) {
+        if (cellClass != null) {
+            LinkedHashSet<Class<? extends DataValue>> sanity = 
+                new LinkedHashSet<Class<? extends DataValue>>();
+            addDataValueInterfaces(sanity, cellClass);
+            HashSet<Class<? extends DataValue>> clone =
+                new HashSet<Class<? extends DataValue>>(valueClasses);
+            clone.removeAll(sanity);
+            if (!clone.isEmpty()) {
+                throw new IllegalArgumentException("Cell class \"" + cellClass 
+                        + "\" does not implement interface(s) \"" 
+                        + Arrays.toString(clone.toArray()) + "\"");
+            }
+        }
+        m_cellClass = cellClass;
+        m_hasPreferredValueClass = hasPreferredValue;
+        m_valueClasses = valueClasses;
+    }
 
     /**
      * Get an icon representing this type. This is used in table headers and
@@ -728,6 +763,84 @@ public final class DataType implements Serializable {
         }
         String valuesToString = Arrays.toString(m_valueClasses.toArray());
         return "Non-Native " + valuesToString;
+    }
+    
+    /**
+     * Loads <code>DataType</code> from a given <code>Config</code>.
+     * @param config Load <code>DataType</code> from.
+     * @return A <code>DataType</code> which fits the given <code>Config</code>.
+     * @throws InvalidSettingsException If the <code>DataType</code> could not
+     *         be loaded from the given <code>Config</code>.
+     */
+    public static final DataType load(final Config config) 
+            throws InvalidSettingsException {
+        String cellClassName = config.getString("cell_class");
+        Class<? extends DataCell> cellClass = null;
+        if (cellClassName != null) {
+            try {
+                cellClass = (Class<? extends DataCell>) 
+                    GlobalClassCreator.createClass(cellClassName);
+            } catch (ClassCastException cce) {
+                throw new InvalidSettingsException(cellClassName 
+                    + " Class not derived from DataCell: " + cce.getMessage());
+            } catch (ClassNotFoundException cnfe) {
+                throw new InvalidSettingsException(cellClassName 
+                    + " Class not found: " + cnfe.getMessage());
+            }
+        }
+        boolean hasPrefValueClass = config.getBoolean("has_pref_value_class");
+        String[] valueClassNames = config.getStringArray("value_classes");
+        List<Class<? extends DataValue>> valueClasses = 
+            new ArrayList<Class<? extends DataValue>>();
+        for (int i = 0; i < valueClassNames.length; i++) {
+            try {
+                valueClasses.add((Class<? extends DataValue>) 
+                        GlobalClassCreator.createClass(valueClassNames[i]));
+            } catch (ClassCastException cce) {
+                throw new InvalidSettingsException(valueClassNames[i] 
+                    + " Class not derived from DataValue: " + cce.getMessage());
+            } catch (ClassNotFoundException cnfe) {
+                throw new InvalidSettingsException(valueClassNames[i] 
+                    + " Class not found: " + cnfe.getMessage());
+            }
+        }
+        DataType prototype = null;
+        try { 
+            prototype = new DataType((Class<? extends DataCell>) cellClass, 
+                    hasPrefValueClass, valueClasses);
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException(iae.getMessage());
+        }
+        // make sure there is only one DataType object for a given cell class 
+        if (cellClass != null) {
+            DataType reference = getType(cellClass);
+            // may not be equal if the preferred value class has changed
+            // (as done by the rename node)
+            if (reference.equals(prototype)) {
+                return reference;
+            }
+        }
+        return prototype;
+    }
+    
+    /**
+     * Save this <code>DataType</code> to the given <code>Config</code>. Writes
+     * all interval members, cell class, if preferred value, and a list of 
+     * cell classes.
+     * @param config Write to this <code>Config</code>.
+     */
+    public final void save(final Config config) {
+        if (m_cellClass == null) {
+            config.addString("cell_class", null);
+        } else {
+            config.addString("cell_class", m_cellClass.getName());
+        }
+        config.addBoolean("has_pref_value_class", m_hasPreferredValueClass);
+        String[] valueClasses = new String[m_valueClasses.size()];
+        for (int i = 0; i < valueClasses.length; i++) {
+            valueClasses[i] = m_valueClasses.get(i).getName();
+        }
+        config.addStringArray("value_classes", valueClasses);
     }
     
     /** This method is called by the serialization mechanism and returns a 

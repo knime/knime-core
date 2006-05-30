@@ -28,6 +28,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -37,9 +38,21 @@ import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.def.ComplexNumberCell;
+import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
+import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
+import de.unikn.knime.core.data.def.DoubleCell;
+import de.unikn.knime.core.data.def.IntCell;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.DefaultFuzzyIntervalCellEntry;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.DefaultFuzzyNumberCellEntry;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.DoubleCellEntry;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.IntCellEntry;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.MissingCellEntry;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.StringCellEntry;
 
 /**
  * Supports a mechanism to save settings by their type and a key. Furthermore,
@@ -56,13 +69,243 @@ import de.unikn.knime.core.node.NodeLogger;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class Config extends AbstractConfigEntry implements
-        Serializable, Iterable<String> {
+public abstract class Config extends AbstractConfigEntry 
+        implements Serializable, Iterable<String> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
 
     private final LinkedHashMap<String, ConfigurableEntry> m_map;
 
+    /**
+     * Interface for all registered <code>DataCell</code> objects.
+     */
+    interface DataCellEntry {
+        /**
+         * Save this <code>DataCell</code> to the given <code>Config</code>.
+         * @param cell The <code>DataCell</code> to save.
+         * @param config To this <code>Config</code>.
+         */
+        void saveToConfig(DataCell cell, Config config);
+        /**
+         * Create <code>DataCell</code> on given <code>Config</code>.
+         * @param config Used to read <code>DataCell</code> from.
+         * @return A new <code>DataCell</code> object.
+         * @throws InvalidSettingsException If the cell could not be loaded.
+         */
+        DataCell createCell(Config config) throws InvalidSettingsException;
+        
+        /**
+         * <code>StringCell</code> entry.
+         */
+        public static final class StringCellEntry implements DataCellEntry {
+            /**
+             * <code>StringCell.class</code>.
+             */
+            public static final Class CLASS = StringCell.class;
+            /**
+             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                config.addString(CLASS.getSimpleName(), 
+                        ((StringCell) cell).getStringValue());
+            }
+            /**
+             * @see Config.DataCellEntry#createCell(Config)
+             */
+            public DataCell createCell(final Config config) 
+                    throws InvalidSettingsException {
+                return new StringCell(config.getString(CLASS.getSimpleName()));
+            }
+        };
+        
+        /**
+         * <code>DoubleCell</code> entry.
+         */
+        public static final class DoubleCellEntry implements DataCellEntry {
+            /**
+             * <code>DoubleCell.class</code>.
+             */
+            public static final Class CLASS = DoubleCell.class;
+            /**
+             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                config.addDouble(CLASS.getName(), 
+                        ((DoubleCell) cell).getDoubleValue());
+            }
+            /**
+             * @see Config.DataCellEntry#createCell(Config)
+             */
+            public DataCell createCell(final Config config) 
+                    throws InvalidSettingsException {
+                return new DoubleCell(config.getDouble(CLASS.getSimpleName()));
+            }
+        };
+        
+        /**
+         * <code>IntCell</code> entry.
+         */
+        public static final class IntCellEntry implements DataCellEntry {
+            /**
+             * <code>IntCell.class</code>.
+             */
+            public static final Class CLASS = IntCell.class;
+            /**
+             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                config.addInt("int", ((IntCell) cell).getIntValue());
+            }
+            /**
+             * @see Config.DataCellEntry#createCell(Config)
+             */
+            public DataCell createCell(final Config config) 
+                    throws InvalidSettingsException {
+                return new IntCell(config.getInt("int"));
+            }
+        };
+        
+        /**
+         * Entry for missing <code>DataCell</code>.
+         */
+        public static final class MissingCellEntry implements DataCellEntry {
+            /**
+             * <code>DataType.getMissingCell().getClass()</code>.
+             */
+            public static final Class CLASS = 
+                DataType.getMissingCell().getClass();
+            /**
+             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                // nothing to save here
+            }
+            /**
+             * @see Config.DataCellEntry#createCell(Config)
+             */
+            public DataCell createCell(final Config config) 
+                    throws InvalidSettingsException {
+                return DataType.getMissingCell();
+            }
+        };
+        
+        /**
+         * <code>ComplexNumberCell</code> entry.
+         * 
+         * @author gabriel, University of Konstanz
+         */
+        public static final class ComplexNumberCellEntry 
+                implements DataCellEntry {
+            /**
+             * <code>ComplexNumberCell.class</code>.
+             */
+            public static final Class CLASS = ComplexNumberCell.class;
+            /**
+             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                ComplexNumberCell ocell = (ComplexNumberCell) cell;
+                config.addDouble("real", ocell.getRealValue());
+                config.addDouble("imaginary", ocell.getImaginaryValue());
+            }
+            /**
+             * @see Config.DataCellEntry#createCell(Config)
+             */
+            public DataCell createCell(final Config config) 
+                    throws InvalidSettingsException {
+                double r = config.getDouble("real");
+                double i = config.getDouble("imaginary");
+                return new ComplexNumberCell(r, i);
+            }
+        };
+        
+        /**
+         * <code>DefaultFuzzyIntervalCell</code> entry.
+         */
+        public static final class DefaultFuzzyIntervalCellEntry 
+                implements DataCellEntry {
+            /**
+             * <code>DefaultFuzzyIntervalCell.class</code>.
+             */
+            public static final Class CLASS = DefaultFuzzyIntervalCell.class;
+            /**
+             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                DefaultFuzzyIntervalCell ocell = 
+                    (DefaultFuzzyIntervalCell) cell;
+                config.addDouble("min_supp", ocell.getMinSupport());
+                config.addDouble("min_core", ocell.getMinCore());
+                config.addDouble("max_core", ocell.getMaxCore());
+                config.addDouble("max_supp", ocell.getMaxSupport());
+            }
+            /**
+             * @see Config.DataCellEntry#createCell(Config)
+             */
+            public DataCell createCell(final Config config) 
+                    throws InvalidSettingsException {
+                double minSupp = config.getDouble("min_supp");
+                double minCore = config.getDouble("min_core");
+                double maxCore = config.getDouble("max_core");
+                double maxSupp = config.getDouble("max_supp");
+                return new DefaultFuzzyIntervalCell(
+                        minSupp, minCore, maxCore, maxSupp);
+            }
+        };
+        
+        /**
+         * <code>DefaultFuzzyNumberCell</code> entry.
+         */
+        public static final class DefaultFuzzyNumberCellEntry 
+                implements DataCellEntry {
+            /**
+             * <code>DefaultFuzzyNumberCell.class</code>.
+             */
+            public static final Class CLASS = DefaultFuzzyNumberCell.class;
+            /**
+             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                DefaultFuzzyNumberCell ocell = (DefaultFuzzyNumberCell) cell;
+                config.addDouble("left",  ocell.getMinSupport());
+                config.addDouble("core",  ocell.getMinCore());
+                assert ocell.getMinCore() == ocell.getMaxCore();
+                config.addDouble("right", ocell.getMaxSupport());
+            }
+            /**
+             * @see Config.DataCellEntry#createCell(Config)
+             */
+            public DataCell createCell(final Config config) 
+                    throws InvalidSettingsException {
+                double left  = config.getDouble("left");
+                double core  = config.getDouble("core");
+                double right = config.getDouble("right");
+                return new DefaultFuzzyNumberCell(left, core, right);
+            }
+        };
+    }
+    
+    /**
+     * Keeps all registered <code>DataCell</code> objects which are mapped
+     * to <code>DataCellEntry</code> values in order to save and load them.
+     */
+    private static final HashMap<String, DataCellEntry> DATACELL_MAP
+        = new HashMap<String, DataCellEntry>();
+
+    static {
+        DATACELL_MAP.put(StringCellEntry.CLASS.getName(), 
+                new StringCellEntry());
+        DATACELL_MAP.put(DoubleCellEntry.CLASS.getName(),
+                new DoubleCellEntry());
+        DATACELL_MAP.put(IntCellEntry.CLASS.getName(), new IntCellEntry());
+        DATACELL_MAP.put(MissingCellEntry.CLASS.getName(), 
+                new MissingCellEntry());
+        DATACELL_MAP.put(DefaultFuzzyIntervalCellEntry.CLASS.getName(), 
+                new DefaultFuzzyIntervalCellEntry());
+        DATACELL_MAP.put(DefaultFuzzyNumberCellEntry.CLASS.getName(), 
+                new DefaultFuzzyNumberCellEntry());
+    }
+    
     /**
      * Creates a new, empty config object with the given key.
      * 
@@ -272,23 +515,21 @@ public abstract class Config extends AbstractConfigEntry implements
         if (cell == null) {
             config.addString("datacell", null);
         } else {
-            String simpleClass = cell.getClass().getSimpleName();
-            ConfigDataCellEntries[] values = ConfigDataCellEntries.values();
-            for (int i = 0; i < values.length; i++) {
-                if (values[i].name().equals(simpleClass)) {
-                    config.addString("datacell", simpleClass);
-                    config
-                            .addString(simpleClass, values[i]
-                                    .toStringValue(cell));
-                    return;
+            String className = cell.getClass().getName();
+            Object o = DATACELL_MAP.get(className);
+            if (o != null) {
+               config.addString("datacell", className);
+               DataCellEntry e = (DataCellEntry) o;
+               Config cellConfig = config.addConfig(className);
+               e.saveToConfig(cell, cellConfig);
+            } else { 
+                try {
+                    // serialize DataCell
+                    config.addString("datacell", Config.writeObject(cell));
+                } catch (IOException ioe) {
+                    LOGGER.warn("Could not write DataCell: " + cell);
+                    LOGGER.debug("", ioe);
                 }
-            }
-            try {
-                // if no enum entry found, serialize DataCell
-                config.addString("datacell", Config.writeObject(cell));
-            } catch (IOException ioe) {
-                LOGGER.warn("Could not write DataCell: " + cell);
-                LOGGER.debug("", ioe);
             }
         }
     }
@@ -303,23 +544,10 @@ public abstract class Config extends AbstractConfigEntry implements
     public void addDataType(final String key, final DataType type) {
         Config config = addConfig(key);
         if (type == null) {
-            config.addString("datatype", null);
+            config.addBoolean("is_null", true);
         } else {
-            String simpleClass = type.getClass().getSimpleName();
-            ConfigDataTypeEntries[] values = ConfigDataTypeEntries.values();
-            for (int i = 0; i < values.length; i++) {
-                if (values[i].name().equals(simpleClass)) {
-                    config.addString("datatype", simpleClass);
-                    return;
-                }
-            }
-            // if no enum entry found, serialize DataType
-            try {
-                config.addString("datatype", Config.writeObject(type));
-            } catch (IOException ioe) {
-                LOGGER.warn("Could not write DataType: " + type);
-                LOGGER.debug("", ioe);
-            }
+            config.addBoolean("is_null", false);
+            type.save(config);
         }
     }
 
@@ -333,28 +561,28 @@ public abstract class Config extends AbstractConfigEntry implements
     public DataCell getDataCell(final String key)
             throws InvalidSettingsException {
         Config config = getConfig(key);
-        String cell = config.getString("datacell");
-        if (cell == null) {
+        String className = config.getString("datacell");
+        if (className == null) {
             return null;
         }
-        ConfigDataCellEntries[] values = ConfigDataCellEntries.values();
-        for (int i = 0; i < values.length; i++) {
-            if (values[i].name().equals(cell)) {
-                String val = config.getString(values[i].name());
-                return ConfigDataCellEntries.valueOf(cell).createDataCell(val);
+        Object o = DATACELL_MAP.get(className);
+        if (o != null) {
+            Config cellConfig = config.getConfig(className);
+            DataCellEntry e = (DataCellEntry) o;
+            return e.createCell(cellConfig);
+        } else {
+            // deserialize DataCell
+            try {
+                return (DataCell)Config.readObject(className);
+            } catch (IOException ioe) {
+                LOGGER.warn("Could not read DataCell: " + className);
+                LOGGER.debug("", ioe);
+                return null;
+            } catch (ClassNotFoundException cnfe) {
+                LOGGER.warn("Could not read DataCell: " + className);
+                LOGGER.debug("", cnfe);
+                return null;
             }
-        }
-        // if no enum entry found, deserialize DataCell
-        try {
-            return (DataCell)Config.readObject(cell);
-        } catch (IOException ioe) {
-            LOGGER.warn("Could not read DataCell: " + cell);
-            LOGGER.debug("", ioe);
-            return null;
-        } catch (ClassNotFoundException cnfe) {
-            LOGGER.warn("Could not read DataCell: " + cell);
-            LOGGER.debug("", cnfe);
-            return null;
         }
     }
 
@@ -368,28 +596,11 @@ public abstract class Config extends AbstractConfigEntry implements
     public DataType getDataType(final String key)
             throws InvalidSettingsException {
         Config config = getConfig(key);
-        String type = config.getString("datatype");
-        if (type == null) {
+        boolean isNull = config.getBoolean("is_null");
+        if (isNull) {
             return null;
         }
-        ConfigDataTypeEntries[] values = ConfigDataTypeEntries.values();
-        for (int i = 0; i < values.length; i++) {
-            if (values[i].name().equals(type)) {
-                return ConfigDataTypeEntries.valueOf(type).createDataType();
-            }
-        }
-        // if no enum entry found, deserialize DataType
-        try {
-            return (DataType)Config.readObject(type);
-        } catch (IOException ioe) {
-            LOGGER.warn("Could not read DataType: " + type);
-            LOGGER.debug("", ioe);
-            return null;
-        } catch (ClassNotFoundException cnfe) {
-            LOGGER.warn("Could not read DataType: " + type);
-            LOGGER.debug("", cnfe);
-            return null;
-        }
+        return DataType.load(config);
     }
 
     /**
@@ -1265,7 +1476,8 @@ public abstract class Config extends AbstractConfigEntry implements
         // print unsupported Object message
         if (o != null && !UNSUPPORTED.contains(o.getClass())) {
             UNSUPPORTED.add(o.getClass());
-            LOGGER.warn(o.getClass() + " not yet supported in Config.");
+            LOGGER.warn("Class " + o.getClass() 
+                    + " not yet supported in Config, serializing it.");
         }
         // serialize object
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
