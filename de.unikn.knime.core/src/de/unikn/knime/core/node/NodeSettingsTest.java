@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -231,6 +229,41 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getShortArray(key) == null);
     }
+    
+    /**
+     * Test write/read of longs.
+     * 
+     * @throws Exception Should not happen.
+     */
+    public void testLong() throws Exception {
+        try {
+            SETT.addLong(null, 42L);
+            fail();
+        } catch (IllegalArgumentException iae) {
+            assertTrue(true);
+        }
+        String key = "klong";
+        SETT.addLong(key, 42L);
+        assertTrue(SETT.containsKey(key));
+        assertTrue(SETT.getLong(key) == 42L);
+        assertTrue(SETT.getLong(key, 5L) == 42L);
+        key += "array";
+        SETT.addLongArray(key, 11L, 66L);
+        assertTrue(SETT.containsKey(key));
+        long[] a = SETT.getLongArray(key);
+        assertTrue(a[0] == 11L && a[1] == 66L);
+        a = SETT.getLongArray(key, new long[0]);
+        assertTrue(a[0] == 11L && a[1] == 66L);
+        key = "klong_array_0";
+        SETT.addLongArray(key, new long[0]);
+        assertTrue(SETT.containsKey(key));
+        assertTrue(SETT.getLongArray(key).length == 0);
+        assertTrue(SETT.getLongArray(key, new long[1]).length == 0);
+        key = "klong-";
+        SETT.addLongArray(key, null);
+        assertTrue(SETT.containsKey(key));
+        assertTrue(SETT.getLongArray(key) == null);
+    }
 
     /**
      * Test write/read of bytes.
@@ -309,7 +342,7 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.getDataCellArray(key).length == 0);
         assertTrue(SETT.getDataCellArray(key, new DataCell[1]).length == 0);
         key = "kDataCell-";
-        SETT.addDataCellArray(key, null);
+        SETT.addDataCellArray(key, (DataCell[]) null);
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDataCellArray(key) == null);
         key = "unknownDataCell";
@@ -359,7 +392,7 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.getDataTypeArray(key).length == 0);
         assertTrue(SETT.getDataTypeArray(key, new DataType[1]).length == 0);
         key = "kDataType-";
-        SETT.addDataTypeArray(key, null);
+        SETT.addDataTypeArray(key, (DataType[]) null);
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDataTypeArray(key) == null);
         key = "unknownDataType";
@@ -408,7 +441,7 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.getStringArray(key).length == 0);
         assertTrue(SETT.getStringArray(key, new String[1]).length == 0);
         key = "kString-";
-        SETT.addStringArray(key, null);
+        SETT.addStringArray(key, (String[]) null);
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getStringArray(key) == null);
     }

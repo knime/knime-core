@@ -451,6 +451,32 @@ public abstract class Config extends AbstractConfigEntry
         }
         return ((ConfigShortEntry)o).getShort();
     }
+    
+    /** 
+     * Adds this long value to the Config by the given key.
+     * 
+     * @param key The key.
+     * @param value The long to add.
+     */
+    public void addLong(final String key, final long value) {
+        m_map.put(key, new ConfigLongEntry(key, value));
+    }
+
+    /**
+     * Return long for key.
+     * 
+     * @param key The key.
+     * @return A generic long.
+     * @throws InvalidSettingsException If the key is not available.
+     */
+    public long getLong(final String key) throws InvalidSettingsException {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigLongEntry)) {
+            throw new InvalidSettingsException(key + " for long not found.");
+        }
+        return ((ConfigLongEntry)o).getLong();
+    }
+    
 
     /**
      * Adds this byte value to the Config by the given key.
@@ -726,7 +752,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default array returned if the key is not available.
      * @return An int array.
      */
-    public int[] getIntArray(final String key, final int[] def) {
+    public int[] getIntArray(final String key, final int... def) {
         try {
             return getIntArray(key);
         } catch (InvalidSettingsException ise) {
@@ -740,7 +766,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The int array to add.
      */
-    public void addIntArray(final String key, final int[] values) {
+    public void addIntArray(final String key, final int... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -794,7 +820,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default array returned if the key is not available.
      * @return A double array.
      */
-    public double[] getDoubleArray(final String key, final double[] def) {
+    public double[] getDoubleArray(final String key, final double... def) {
         try {
             return getDoubleArray(key);
         } catch (InvalidSettingsException ise) {
@@ -809,7 +835,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The double array to add.
      */
-    public void addDoubleArray(final String key, final double[] values) {
+    public void addDoubleArray(final String key, final double... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -863,7 +889,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def Returned if no value available for the given key.
      * @return A byte array.
      */
-    public byte[] getByteArray(final String key, final byte[] def) {
+    public byte[] getByteArray(final String key, final byte... def) {
         try {
             return getByteArray(key);
         } catch (InvalidSettingsException ise) {
@@ -899,7 +925,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The byte array to add.
      */
-    public void addByteArray(final String key, final byte[] values) {
+    public void addByteArray(final String key, final byte... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -954,9 +980,47 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default array returned if the key is not available.
      * @return A short array.
      */
-    public short[] getShortArray(final String key, final short[] def) {
+    public short[] getShortArray(final String key, final short... def) {
         try {
             return getShortArray(key);
+        } catch (InvalidSettingsException ise) {
+            return def;
+        }
+    }
+    
+    /**
+     * Return a long array which can be null for key, or the default value if
+     * not available.
+     * 
+     * @param key The key.
+     * @return A long array.
+     * @throws InvalidSettingsException If the key is not available.
+     */
+    public long[] getLongArray(final String key)
+            throws InvalidSettingsException {
+        Config config = this.getConfig(key);
+        int size = config.getInt("array-size", -1);
+        if (size == -1) {
+            return null;
+        }
+        long[] ret = new long[size];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = config.getLong("" + i);
+        }
+        return ret;
+    }
+
+    /**
+     * Return long array which can be null for key, or the default array if the
+     * key is not available.
+     * 
+     * @param key The key.
+     * @param def The default array returned if the key is not available.
+     * @return A long array.
+     */
+    public long[] getLongArray(final String key, final long... def) {
+        try {
+            return getLongArray(key);
         } catch (InvalidSettingsException ise) {
             return def;
         }
@@ -968,7 +1032,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The short to add.
      */
-    public void addShortArray(final String key, final short[] values) {
+    public void addShortArray(final String key, final short... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -992,6 +1056,37 @@ public abstract class Config extends AbstractConfigEntry
             return def;
         }
     }
+    
+    /**
+     * Adds this long array to the Config by the given key.
+     * 
+     * @param key The key.
+     * @param values The long arry to add.
+     */
+    public void addLongArray(final String key, final long... values) {
+        Config config = this.addConfig(key);
+        if (values != null) {
+            config.addInt("array-size", values.length);
+            for (int i = 0; i < values.length; i++) {
+                config.addLong("" + i, values[i]);
+            }
+        }
+    }
+
+    /**
+     * Return long value for key or the default if the key is not available.
+     * 
+     * @param key The key.
+     * @param def The default values returned if the key is not available.
+     * @return A long value.
+     */
+    public long getLong(final String key, final long def) {
+        try {
+            return getLong(key);
+        } catch (InvalidSettingsException ise) {
+            return def;
+        }
+    }
 
     /**
      * Return char array which can be null for key, or the default array if the
@@ -1001,7 +1096,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default array returned if the key is not available.
      * @return A char array.
      */
-    public char[] getCharArray(final String key, final char[] def) {
+    public char[] getCharArray(final String key, final char... def) {
         try {
             return getCharArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1015,7 +1110,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The char array to add.
      */
-    public void addCharArray(final String key, final char[] values) {
+    public void addCharArray(final String key, final char... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -1069,7 +1164,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def Returned if no value available for the given key.
      * @return A boolean array.
      */
-    public boolean[] getBooleanArray(final String key, final boolean[] def) {
+    public boolean[] getBooleanArray(final String key, final boolean... def) {
         try {
             return getBooleanArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1084,7 +1179,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The boolean array to add.
      */
-    public void addBooleanArray(final String key, final boolean[] values) {
+    public void addBooleanArray(final String key, final boolean... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -1139,7 +1234,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default array returned if the key is not available.
      * @return A String array.
      */
-    public String[] getStringArray(final String key, final String[] def) {
+    public String[] getStringArray(final String key, final String... def) {
         try {
             return getStringArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1154,7 +1249,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The String array to add.
      */
-    public void addStringArray(final String key, final String[] values) {
+    public void addStringArray(final String key, final String... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -1225,7 +1320,8 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default array returned if the key is not available.
      * @return A char array.
      */
-    public DataCell[] getDataCellArray(final String key, final DataCell[] def) {
+    public DataCell[] getDataCellArray(final String key, 
+            final DataCell... def) {
         try {
             return getDataCellArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1263,7 +1359,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param v The default array, returned if no entry available for the key.
      * @return An array of DataType objects.
      */
-    public DataType[] getDataTypeArray(final String key, final DataType[] v) {
+    public DataType[] getDataTypeArray(final String key, final DataType... v) {
         try {
             return getDataTypeArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1278,7 +1374,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The data cells, elements can be null.
      */
-    public void addDataCellArray(final String key, final DataCell[] values) {
+    public void addDataCellArray(final String key, final DataCell... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);
@@ -1295,7 +1391,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The data types, elements can be null.
      */
-    public void addDataTypeArray(final String key, final DataType[] values) {
+    public void addDataTypeArray(final String key, final DataType... values) {
         Config config = this.addConfig(key);
         if (values != null) {
             config.addInt("array-size", values.length);

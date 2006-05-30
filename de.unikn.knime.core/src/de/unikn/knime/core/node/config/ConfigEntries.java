@@ -69,6 +69,21 @@ enum ConfigEntries {
             return new ConfigDoubleEntry(key, value);
         }
     },
+    
+    /**
+     * Entry of type long.
+     */
+    xlong {
+        /**
+         * Returns a new entry for long objects. 
+         * @param key The key for the entry.
+         * @param value The String value as long.
+         * @return A new Config entry.
+         */
+        ConfigLongEntry createEntry(final String key, final String value) {
+            return new ConfigLongEntry(key, value);
+        }
+    },
 
     /**
      * Entry of type short.
