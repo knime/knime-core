@@ -502,9 +502,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public void mousePressed(final MouseEvent me) {
 
-        // consume this event so that no other listeners act on this click
-        // double actions are not wanted on a double click
-        me.consume();
         if (System.currentTimeMillis() - m_lastClick < DOUBLE_CLICK_TIME) {
             
 
