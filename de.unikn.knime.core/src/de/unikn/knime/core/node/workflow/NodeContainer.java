@@ -21,6 +21,7 @@
  */
 package de.unikn.knime.core.node.workflow;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -155,6 +156,13 @@ public class NodeContainer implements NodeStateListener {
         m_extraInfo = null;
         m_eventListeners = new ArrayList<NodeStateListener>();
         m_node.addStateListener(this);
+    }
+
+    /**
+     * @return the icon associated with this node
+     */
+    public URL getIcon() {
+        return m_node.getNodeFactory().getIcon();
     }
 
     /**
@@ -334,8 +342,7 @@ public class NodeContainer implements NodeStateListener {
     public void setExtraInfo(final NodeExtraInfo ei) {
         m_extraInfo = ei;
         // send event notification
-        stateChanged(new NodeStatus(NodeStatus.STATUS_EXTRA_INFO_CHANGED), 
-                m_id);
+        stateChanged(new NodeStatus(NodeStatus.STATUS_EXTRA_INFO_CHANGED), m_id);
     }
 
     /**
@@ -364,8 +371,7 @@ public class NodeContainer implements NodeStateListener {
         case STATE_WAITING_TO_BE_EXECUTABLE:
             break;
         default:
-            throw new IllegalArgumentException("Invalid state identifier: " 
-                    + s);
+            throw new IllegalArgumentException("Invalid state identifier: " + s);
         }
         m_state = s;
     }
@@ -438,7 +444,7 @@ public class NodeContainer implements NodeStateListener {
     public int getNrInPorts() {
         return m_node.getNrInPorts();
     }
-    
+
     /**
      * @return The number of data output ports.
      */
@@ -452,7 +458,7 @@ public class NodeContainer implements NodeStateListener {
     public int getNrPredictorInPorts() {
         return m_node.getNrPredictorInPorts();
     }
-    
+
     /**
      * @return The number of data output ports.
      */
@@ -789,11 +795,10 @@ public class NodeContainer implements NodeStateListener {
                 // and load content of extrainfo
                 extraInfo.load(sett);
             } catch (Exception e) {
-                LOGGER.warn("ExtraInfoClass could not "
-                        + "be loaded " + extraInfoClassName + " reason: "
-                        + e.getMessage());
+                LOGGER.warn("ExtraInfoClass could not " + "be loaded "
+                        + extraInfoClassName + " reason: " + e.getMessage());
             }
-           
+
         }
         return extraInfo;
     }
@@ -964,8 +969,7 @@ public class NodeContainer implements NodeStateListener {
      * @param id identifier from <code>Node</code>: will be overwritten with
      *            NodeContainer ID
      */
-    public synchronized void stateChanged(
-            final NodeStatus state, final int id) {
+    public synchronized void stateChanged(final NodeStatus state, final int id) {
         if (state.getStatusId() == NodeStatus.END_EXECUTE) {
             // do not immediately forward this event. We will generate a
             // new event after we have actually set all internal flags
