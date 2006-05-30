@@ -21,6 +21,8 @@
  */
 package de.unikn.knime.workbench.editor2;
 
+import java.net.URL;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
@@ -108,24 +110,14 @@ public final class ImageRepository {
     }
 
     /**
-     * Adds an image(-descriptor) to the registry.
+     * Adds an image to the registry.
      * 
-     * @param descriptor The ImageDescriptor
+     * @param iconURL the url of the icon
      */
-    public static void addImage(final ImageDescriptor descriptor) {
-        registry.put(descriptor.toString(), descriptor);
-    }
-
-    /**
-     * Registeres an image for a specific node factory.
-     * 
-     * @param nodeFactory The node factory that should get the image assigned
-     * @param relPath The plugin-relative path to the image
-     */
-    public static void addNodeImage(final Class nodeFactory,
-            final String relPath) {
-        registry.put(nodeFactory.getName(), AbstractUIPlugin
-                .imageDescriptorFromPlugin(PLUGIN_ID, relPath));
+    public static void addImage(final URL iconURL) {
+        
+        registry.remove(iconURL.toString());
+        registry.put(iconURL.toString(), createImageFromURL(iconURL));
     }
 
     /**
@@ -147,23 +139,23 @@ public final class ImageRepository {
      * Returns an scaled Image. If the cache doesn't contain this image, it is
      * added first.
      * 
-     * @param descriptor The descriptor
+     * @param iconURL the url of the icon
      * @param width width to which the image should be scaled to
      * @param height height to which the image should be scaled to
      * @return The cached image, should never return <code>null</code>
      */
-    public static Image getScaledImage(final ImageDescriptor descriptor,
-            final int width, final int height) {
+    public static Image getScaledImage(final URL iconURL, final int width,
+            final int height) {
 
-        if (descriptor == null) {
+        if (iconURL == null) {
             return null;
         }
-        
-        String key = descriptor.toString();
-        String finalKey = key + "_" + width + "x" + height;
+
+        String key = iconURL.toString();
+        String finalKey = key + "_y" + width + "_x" + height;
 
         if (registry.get(finalKey) == null) {
-            Image unscaledImg = getImage(descriptor);
+            Image unscaledImg = getImage(iconURL);
             if (unscaledImg != null) {
                 Image scaledImage = new Image(Display.getDefault(), unscaledImg
                         .getImageData().scaledTo(width, height));
@@ -178,15 +170,23 @@ public final class ImageRepository {
     /**
      * Returns an Image.
      * 
-     * @param descriptor The image descriptor
+     * @param iconURL the url of the icon
      * @return The cached image, or <code>null</code>
      */
-    public static Image getImage(final ImageDescriptor descriptor) {
-        if (registry.get(descriptor.toString()) == null) {
-            addImage(descriptor);
+    public static Image getImage(final URL iconURL) {
+        if (registry.get(iconURL.toString()) == null) {
+            addImage(iconURL);
         }
 
-        return registry.get(descriptor.toString());
+        return registry.get(iconURL.toString());
+    }
+
+    private static Image createImageFromURL(final URL iconURL) {
+        try {
+            return new Image(Display.getDefault(), iconURL.openStream());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
