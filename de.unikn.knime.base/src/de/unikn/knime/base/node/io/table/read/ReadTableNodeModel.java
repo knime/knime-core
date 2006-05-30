@@ -114,7 +114,13 @@ public class ReadTableNodeModel extends NodeModel {
             DataTable outTable = DataContainer.readFromZip(f);
             return new DataTableSpec[]{outTable.getDataTableSpec()};
         } catch (IOException ioe) {
-            throw new InvalidSettingsException(ioe.getMessage());
+            String message = ioe.getMessage();
+            if (message == null) {
+                message = "Unable to read spec from file, "
+                    + "no detailed message available.";
+            }
+            throw new InvalidSettingsException(message);
+            
         }
     }
 

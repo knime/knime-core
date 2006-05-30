@@ -205,6 +205,9 @@ final class Buffer {
         ZipFile zipFile = new ZipFile(inFile);
         InputStream specInput = zipFile.getInputStream(
                 new ZipEntry(ZIP_ENTRY_SPEC));
+        if (specInput == null) {
+            throw new IOException("Invalid file: No spec information");
+        }
         ObjectInputStream inStream = new GlobalObjectInputStream(
                 new BufferedInputStream(specInput));
         try {
@@ -215,6 +218,11 @@ final class Buffer {
                     + inFile.getAbsolutePath() + "\"");
             ioe.initCause(cnfe);
             throw ioe;
+        } 
+        InputStream dataInput = zipFile.getInputStream(
+                new ZipEntry(ZIP_ENTRY_DATA));
+        if (dataInput == null) {
+            throw new IOException("Invalid file: No data entry");
         }
         inStream.close();
         m_outFile = inFile;
