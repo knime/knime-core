@@ -159,17 +159,23 @@ public class NumericCoordinate extends Coordinate {
                     + type.toString());
         }
 
-        // set the domain ragne
+        // check and set the domain ragne
         DataColumnDomain domain = getDataColumnSpec().getDomain();
         if (domain == null) {
 
-            m_minDomainValue = m_maxDomainValue = Double.NaN;
+            // if there is no domain a coordinate makes no sense
+            throw new IllegalArgumentException(
+                    "The domain of the set column spec is null. "
+                            + "Coordinate can not be created.");
         }
 
         DataCell lowerBound = domain.getLowerBound();
         if (lowerBound == null) {
 
-            m_minDomainValue = Double.NaN;
+            // if there is no lower bound a coordinate makes no sense
+            throw new IllegalArgumentException(
+                    "The lower bound of the set column spec is null. "
+                            + "Coordinate can not be created.");
         } else {
             m_minDomainValue = ((DoubleValue)lowerBound).getDoubleValue();
         }
@@ -177,7 +183,10 @@ public class NumericCoordinate extends Coordinate {
         DataCell upperBound = domain.getUpperBound();
         if (upperBound == null) {
 
-            m_maxDomainValue = Double.NaN;
+            // if there is no upper bound a coordinate makes no sense
+            throw new IllegalArgumentException(
+                    "The upper bound of the set column spec is null. "
+                            + "Coordinate can not be created.");
         } else {
             m_maxDomainValue = ((DoubleValue)upperBound).getDoubleValue();
         }
@@ -570,7 +579,7 @@ public class NumericCoordinate extends Coordinate {
     public void setLowerDomainValue(final double value) {
         m_minDomainValue = value;
     }
-    
+
     /**
      * Sets the upper domain value.
      * 
