@@ -904,5 +904,12 @@ public final class DataType implements Serializable {
         public int hashCode() {
             return toString().hashCode();
         }
+        
+        /** Overridden here to return the singleton. This method is being 
+         * called  by the java reflection mechanism.
+         */
+        private Object readResolve() {
+            return INSTANCE;
+        }
     }
 }
