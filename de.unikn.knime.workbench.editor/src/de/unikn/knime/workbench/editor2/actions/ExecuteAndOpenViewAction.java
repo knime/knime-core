@@ -101,6 +101,9 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         // check if there is at least one view
         boolean enabled = parts[0].getNodeContainer().getNumViews() > 0;
 
+        // the node must not be an interruptible node
+        enabled &= !parts[0].getNodeContainer().isInterruptible();
+
         // check if the node is executable
         enabled &= parts[0].getNodeContainer().isExecutableUpToHere();
 
