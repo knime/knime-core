@@ -1,0 +1,279 @@
+/* @(#)$RCSfile$ 
+ * $Revision: 178 $ $Date: 2006-02-15 09:52:11 +0100 (Mi, 15 Feb 2006) $ $Author: ohl $
+ * 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   11.10.2005 (Normal): created
+ */
+package de.unikn.knime.core.node.interrupt;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+
+import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NodeView;
+
+/**
+ * This class provides a generic view for the InterruptibleNodeModel and all
+ * deriving classes, which basically consists in a control panel, with some
+ * control elements such as a "Run"-, a "Break"- and a "Finish"-Button and a
+ * slider to adjust the delay. Additionally, all the listener stuff is done
+ * here, that is the status of he InterruptibleNodeModel is set from here to
+ * paused or not or finished.
+ * 
+ * 
+ * @author Fabian Dill, University of Konstanz
+ */
+public abstract class InterruptibleNodeView extends NodeView implements
+        ActionListener {
+
+    private InterruptControlPanel m_controlPanel;
+
+    private JMenuItem m_runItem = new JMenuItem(InterruptControlPanel.RUN);
+
+    private JMenuItem m_breakItem = new JMenuItem(InterruptControlPanel.BREAK);
+
+    private JMenuItem m_nextItem = new JMenuItem(InterruptControlPanel.NEXT);
+    
+    private JMenuItem m_finishItem 
+        = new JMenuItem(InterruptControlPanel.FINISH);
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(InterruptibleNodeView.class);
+
+    /**
+     * Constructs an instance of the InterruptibleNodeView with the underlying
+     * InterruptibleNodeModel and a title.
+     * 
+     * @param model - the underlying InterruptibleNodeModel.
+     * @param title - the title of the view.
+     */
+    public InterruptibleNodeView(final InterruptibleNodeModel model,
+            final String title) {
+        super(model, title);
+        setShowNODATALabel(false);
+        // The interrupt menu
+        // add the menu entry to the menu bar
+        super.getJMenuBar().add(createInterruptMenu());
+        //TODO: this is still a hack!
+        //setComponent(getControlPanel());
+    }
+    
+    
+    public InterruptibleNodeView(String title, InterruptibleNodeModel model, 
+            JPanel innerView){
+        super(model, title);
+        
+        setShowNODATALabel(false);
+        
+        //add the menu
+        getJMenuBar().add(createInterruptMenu());
+        
+        //create the control panel
+        m_controlPanel = new InterruptControlPanel();
+        m_controlPanel.getRunButton().addActionListener(this);
+        m_controlPanel.getBreakButton().addActionListener(this);
+        m_controlPanel.getNextStepButton().addActionListener(this);
+        m_controlPanel.getFinishButton().addActionListener(this);
+        m_controlPanel.getDelaySlider().addMouseListener(new InterruptMouseAdapter());
+        
+        //now create the whole content in a panel
+        JPanel composite = new JPanel();
+        composite.setLayout(new BorderLayout());
+        
+        //add the control panel
+        composite.add(m_controlPanel, BorderLayout.NORTH);
+        //and  now the nodeviews panel
+        composite.add(innerView);
+    }
+
+    private JMenu createInterruptMenu(){
+        JMenu menu = new JMenu("Interrupt");
+        // the run entry
+        m_runItem.addActionListener(this);
+        menu.add(m_runItem);
+
+        // the break entry
+        m_breakItem.addActionListener(this);
+        menu.add(m_breakItem);
+
+        m_nextItem.addActionListener(this);
+        menu.add(m_nextItem);
+        
+        // the finish entry
+        m_finishItem.addActionListener(this);
+        menu.add(m_finishItem);
+        
+        refreshInterruptMenu();
+        
+        return menu;
+    }
+    
+    /**
+     * Here the control of the InterruptibleNodeModel is done. Either from the
+     * menu or the buttons coming events to control the InterruptibleNodeModel
+     * are processed here. Basically these events are "run", "break" and
+     * "finish".
+     * 
+     * @see java.awt.event.ActionListener#actionPerformed(ActionEvent)
+     */
+    public void actionPerformed(final ActionEvent e) {
+        if (e.getActionCommand().equals(InterruptControlPanel.RUN)) {
+            LOGGER.debug("run");
+            ((InterruptibleNodeModel)getNodeModel()).pause(false);
+        } else if (e.getActionCommand().equals(InterruptControlPanel.BREAK)) {
+            LOGGER.debug("break");
+            ((InterruptibleNodeModel)getNodeModel()).pause(true);
+            updateModel((InterruptibleNodeModel)getNodeModel());
+        }else if (e.getActionCommand().equals(InterruptControlPanel.NEXT)){
+            assert ((InterruptibleNodeModel)getNodeModel()).isPaused();
+            LOGGER.debug("next step");
+            ((InterruptibleNodeModel)getNodeModel()).executeOneIteration();
+            ((InterruptibleNodeModel)getNodeModel()).incrementIterationCounter();
+            updateModel((InterruptibleNodeModel)getNodeModel());
+        } else if (e.getActionCommand().equals(InterruptControlPanel.FINISH)) {
+            LOGGER.debug("finish");
+            ((InterruptibleNodeModel)getNodeModel()).finish();
+        }
+        refreshInterruptMenu();
+    }
+
+    /**
+     * This method returns the control panel, which provides control elements
+     * over the underlying model. It also realises a lazy initialisation of the
+     * control panel.
+     * 
+     * @return - the controlPanel which itself provides getters to its
+     *         components.
+     */
+    public InterruptControlPanel getControlPanel() {
+        if (m_controlPanel == null) {
+            m_controlPanel = new InterruptControlPanel();
+            m_controlPanel.getRunButton().addActionListener(this);
+            m_controlPanel.getBreakButton().addActionListener(this);
+            m_controlPanel.getNextStepButton().addActionListener(this);
+            m_controlPanel.getFinishButton().addActionListener(this);
+            m_controlPanel.getDelaySlider().addMouseListener(new InterruptMouseAdapter());
+        }
+        return m_controlPanel;
+    }
+
+    /**
+     * Refreshes the enabled status of the control elements depending on the
+     * status of the underlying model. It makes no sense to have an enabled
+     * "Break"-Button, when the status is paused, and so on. Call it whenever
+     * the status of the underlying method changes without the influence of the
+     * control elements in order to set their right status again.
+     * 
+     */
+    public void refreshInterruptMenu() {
+        InterruptibleNodeModel model = (InterruptibleNodeModel)getNodeModel();
+        m_runItem.setEnabled(model.isPaused() && !model.isFinished());
+        m_breakItem.setEnabled(!model.isPaused() && !model.isFinished());
+        m_nextItem.setEnabled(model.isPaused() && !model.isFinished());
+        m_finishItem.setEnabled(!model.isFinished());
+
+        getControlPanel().getRunButton().setEnabled(
+                model.isPaused() && !model.isFinished());
+        getControlPanel().getBreakButton().setEnabled(
+                !model.isPaused() && !model.isFinished());
+        getControlPanel().getNextStepButton().setEnabled(
+                model.isPaused() && !model.isFinished());
+        getControlPanel().getFinishButton().setEnabled(!model.isFinished());
+    }
+
+    /**
+     * Forces the model to pause and then to finish. Since it makes no sense to
+     * let the model run without watching at it.
+     * 
+     * @see de.unikn.knime.core.node.NodeView#onClose()
+     */
+    public void onClose() {
+        ((InterruptibleNodeModel)getNodeModel()).pause(true);
+        ((InterruptibleNodeModel)getNodeModel()).finish();
+        refreshInterruptMenu();
+    }
+
+    /**
+     * Overrides the setComponent method in order to guarantee that the control
+     * panel is always added and at the very top of the view. The passed
+     * component will be set below the control panel.
+     * 
+     * @see de.unikn.knime.core.node.NodeView#setComponent(java.awt.Component)
+     * @param toBeSet - the panel to be set below the control panel, mind that
+     *            all view components necessary for the underlying model have to
+     *            be packed in one component.
+     */
+    public void setComponent(final Component toBeSet) {
+        JPanel packPanel = new JPanel();
+        packPanel.setLayout(new BorderLayout());
+        packPanel.add(getControlPanel(), BorderLayout.NORTH);
+        packPanel.add(toBeSet, BorderLayout.CENTER);
+        super.setComponent(packPanel);
+    }
+   
+
+    /**
+     * The <code>updateModel(Object model)</code> method is invoked whenever
+     * the <code>NodeModel.notifyViews(Object)</code> method was called and
+     * the <code>NodeView.modelChanged()</code> method is only called when
+     * execution is finished but is the default method to implement the
+     * visualization of the NodeModel. Therefore this method simply invokes the
+     * <code>NodeView.modelChanged()</code> method.
+     * 
+     * @see de.unikn.knime.core.node.NodeView#updateModel(java.lang.Object)
+     */
+    @Override
+    public void updateModel(Object model){
+        modelChanged();
+    }
+
+    /**
+     * Implement here all the view updating methods. This method is called
+     * whenever the underlying model triggers a refresh (that is every delay-th
+     * iteration).
+     * @see de.unikn.knime.core.node.NodeView#modelChanged()
+     */
+    @Override
+    public abstract void modelChanged();
+
+    
+    private class InterruptMouseAdapter extends MouseAdapter{
+        /**
+         * Here the slider to adjust the delay is read and passed to the underlying
+         * model.
+         * 
+         * @see java.awt.event.MouseListener#mouseReleased(MouseEvent)
+         */
+        public void mouseReleased(final MouseEvent arg0) {
+            LOGGER.debug("Mouse released from: " + arg0.getSource());
+            getControlPanel().getDelaySlider().setToolTipText(
+                    "" + getControlPanel().getDelaySlider().getValue());
+            ((InterruptibleNodeModel)getNodeModel()).setDelay(getControlPanel()
+                    .getDelaySlider().getValue());
+        }
+    }
+
+}
