@@ -205,31 +205,8 @@ public final class FilterColumnPanel extends JPanel {
         JButton searchButtonIncl = new JButton("...");
         ActionListener actionListenerIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                String text = searchFieldIncl.getText();
-                if (m_inclMdl.isEmpty() || text.equals("")) {
-                    return;
-                }
-                int start = Math.max(0, m_inclList.getSelectedIndex() + 1);
-                if (start >= m_inclMdl.getSize()) {
-                    start = 0;
-                }
-                //if the user has ticked the mark all search hits box 
-                if (m_markAllHitsIncl.isSelected()) {
-                    int[] searchHits = getAllSearchHits(m_inclList, text);
-                    if (searchHits.length > 0) {
-                        m_inclList.setSelectedIndices(searchHits);
-                        m_inclList.scrollRectToVisible(
-                                m_inclList.getCellBounds(searchHits[0], 
-                                        searchHits[0]));
-                    }
-                } else {
-                    int f = searchInList(m_inclList, text, start);
-                    if (f >= 0) {
-                        m_inclList.scrollRectToVisible(
-                                m_inclList.getCellBounds(f, f));
-                        m_inclList.setSelectedIndex(f);
-                    }
-                }
+                onSearch(m_inclList, m_inclMdl, searchFieldIncl, 
+                        m_markAllHitsIncl.isSelected());
             }
         };
         searchFieldIncl.addActionListener(actionListenerIncl);
@@ -241,6 +218,7 @@ public final class FilterColumnPanel extends JPanel {
         inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(searchButtonIncl, BorderLayout.EAST);
         m_markAllHitsIncl = new JCheckBox("Mark all search hits");
+        m_markAllHitsIncl.addActionListener(actionListenerIncl);
         inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(" Include ");
@@ -262,31 +240,8 @@ public final class FilterColumnPanel extends JPanel {
         JButton searchButtonExcl = new JButton("...");
         ActionListener actionListenerExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                String text = searchFieldExcl.getText();
-                if (m_exclMdl.isEmpty() || text.equals("")) {
-                    return;
-                }
-                int start = Math.max(0, m_exclList.getSelectedIndex() + 1);
-                if (start >= m_exclMdl.getSize()) {
-                    start = 0;
-                }
-//              if the user has ticked the mark all search hits box
-                if (m_markAllHitsExcl.isSelected()) {
-                    int[] searchHits = getAllSearchHits(m_exclList, text);
-                    if (searchHits.length > 0) {
-                        m_exclList.setSelectedIndices(searchHits);
-                        m_exclList.scrollRectToVisible(
-                                m_exclList.getCellBounds(searchHits[0], 
-                                        searchHits[0]));
-                    }
-                } else {
-                    int f = searchInList(m_exclList, text, start);
-                    if (f >= 0) {
-                        m_exclList.scrollRectToVisible(
-                                m_exclList.getCellBounds(f, f));
-                        m_exclList.setSelectedIndex(f);
-                    }
-                }
+                onSearch(m_exclList, m_exclMdl, searchFieldExcl, 
+                        m_markAllHitsExcl.isSelected());
             }
         };
         searchFieldExcl.addActionListener(actionListenerExcl);
@@ -298,6 +253,7 @@ public final class FilterColumnPanel extends JPanel {
         exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Mark all search hits");
+        m_markAllHitsExcl.addActionListener(actionListenerExcl);
         exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(" Exclude ");
@@ -522,6 +478,51 @@ public final class FilterColumnPanel extends JPanel {
             }
         }
         return null;
+    }
+    
+    /**
+     * This method is called when the user wants to search the given 
+     * <code>JList</code> for the text of the given <code>JTextField</code>.
+     * 
+     * @param list the <code>JList</code> to search in
+     * @param model the <code>DefaultListModel</code> on which the 
+     * <code>JList</code> based on
+     * @param searchField The <code>JTextField</code> with the text to search 
+     * for
+     * @param markAllHits if set to <code>true</code> the method will mark all
+     * occurrences of the given search text in the given list. If set to
+     * <code>false</code> the method will mark the next occurrences of the 
+     * search text after the current marked list element
+     */
+    private static void onSearch(final JList list, final DefaultListModel model,
+            final JTextField searchField, final boolean markAllHits) {
+        if (list == null || model == null || searchField == null) {
+            return;
+        }
+        final String searchStr = searchField.getText().trim();
+        if (model.isEmpty() || searchStr.equals("")) {
+            return;
+        }
+        if (markAllHits) {
+            int[] searchHits = getAllSearchHits(list, searchStr);
+            if (searchHits.length > 0) {
+                list.setSelectedIndices(searchHits);
+                list.scrollRectToVisible(
+                        list.getCellBounds(searchHits[0], 
+                                searchHits[0]));
+            }
+        } else {
+            int start = Math.max(0, list.getSelectedIndex() + 1);
+            if (start >= model.getSize()) {
+                start = 0;
+            } 
+            int f = searchInList(list, searchStr, start);
+            if (f >= 0) {
+                list.scrollRectToVisible(
+                        list.getCellBounds(f, f));
+                list.setSelectedIndex(f);
+            }
+        }
     }
 
     /** 
