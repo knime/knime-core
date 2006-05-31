@@ -1017,4 +1017,11 @@ public class NodeContainer implements NodeStateListener {
 
         return m_node.getNodeStatus();
     }
+
+    /**
+     * @return true if this node's model is a interruptible model
+     */
+    public boolean isInterruptible() {
+        return m_node.isInterruptible();
+    }
 }
