@@ -434,7 +434,7 @@ public final class DataType implements Serializable {
         LinkedHashSet<Class<? extends DataValue>> hash = 
             new LinkedHashSet<Class<? extends DataValue>>();
         hash.addAll(type1.m_valueClasses);
-        hash.addAll(type2.m_valueClasses);
+        hash.retainAll(type2.m_valueClasses);
         m_valueClasses = new ArrayList<Class<? extends DataValue>>(hash);
         m_cellClass = null;
     }
