@@ -133,9 +133,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
         } else {
             idxBox.add(m_colCombo);
-            m_colCombo.setPreferredSize(new Dimension(75, 20));
-            m_colCombo.setMaximumSize(new Dimension(75, 20));        
-            m_colCombo.setPreferredSize(new Dimension(75, 20));
+            m_colCombo.setPreferredSize(new Dimension(150, 20));
+            m_colCombo.setMaximumSize(new Dimension(150, 20));        
+            m_colCombo.setPreferredSize(new Dimension(150, 20));
         }
         idxBox.add(Box.createHorizontalGlue());
         panel.add(idxBox);
