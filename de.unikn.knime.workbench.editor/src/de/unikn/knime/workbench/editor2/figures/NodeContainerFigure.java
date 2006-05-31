@@ -40,6 +40,7 @@ import org.eclipse.jface.resource.CompositeImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
@@ -118,17 +119,31 @@ public class NodeContainerFigure extends RectangleFigure {
     /** State: Error. * */
     public static final int STATE_ERROR = 6;
 
-    private static final Font FONT_NORMAL = new Font(Display.getCurrent(),
-            "Arial", 9, SWT.NORMAL);
+    private static final Font FONT_NORMAL;
 
-    private static final Font FONT_USER_NAME = new Font(Display.getCurrent(),
-            "Arial", 9, SWT.ITALIC);
+    private static final Font FONT_USER_NAME;
 
-    private static final Font FONT_EXECUTING = new Font(Display.getCurrent(),
-            "Arial", 9, SWT.ITALIC);
+    private static final Font FONT_EXECUTING;
 
-    private static final Font FONT_EXECUTED = new Font(Display.getCurrent(),
-            "Arial", 8, SWT.BOLD);
+    private static final Font FONT_EXECUTED;
+    
+    static {
+        // I (Bernd) had problem using the hardcoded font "Arial" -
+        // this static block derives the fonts from the system font.
+        Display current = Display.getCurrent();
+        Font systemFont = current.getSystemFont();
+        FontData[] systemFontData = systemFont.getFontData();
+        String name = "Arial"; // fallback
+        int height = 9;
+        if (systemFontData.length >= 1) {
+            name = systemFontData[0].getName();
+            height = systemFontData[0].getHeight();
+        }
+        FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
+        FONT_USER_NAME = new Font(current, name, height, SWT.ITALIC);
+        FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
+        FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
+    }
 
     /** tooltip for displaying the full heading. * */
     private NewToolTipFigure m_headingTooltip;
