@@ -21,6 +21,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -33,6 +34,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -55,7 +57,7 @@ import de.unikn.knime.core.node.util.DataColumnSpecListCellRenderer;
  * 
  * <p>
  * You can add a property change listener to this class that is notified when
- * the inlude list changes.
+ * the include list changes.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -78,6 +80,12 @@ public final class FilterColumnPanel extends JPanel {
 
     /** Exclude model. */
     private final DefaultListModel m_exclMdl;
+    
+    /**Mark all search hits in the include model.*/
+    private final JCheckBox m_markAllHitsIncl;
+    
+    /**Mark all search hits in the exclude model.*/
+    private final JCheckBox m_markAllHitsExcl;
 
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
     private final LinkedHashSet<DataColumnSpec> m_order = 
@@ -205,11 +213,22 @@ public final class FilterColumnPanel extends JPanel {
                 if (start >= m_inclMdl.getSize()) {
                     start = 0;
                 }
-                int f = searchInList(m_inclList, text, start);
-                if (f >= 0) {
-                    m_inclList.scrollRectToVisible(m_inclList.getCellBounds(f,
-                            f));
-                    m_inclList.setSelectedIndex(f);
+                //if the user has ticked the mark all search hits box 
+                if (m_markAllHitsIncl.isSelected()) {
+                    int[] searchHits = getAllSearchHits(m_inclList, text);
+                    if (searchHits.length > 0) {
+                        m_inclList.setSelectedIndices(searchHits);
+                        m_inclList.scrollRectToVisible(
+                                m_inclList.getCellBounds(searchHits[0], 
+                                        searchHits[0]));
+                    }
+                } else {
+                    int f = searchInList(m_inclList, text, start);
+                    if (f >= 0) {
+                        m_inclList.scrollRectToVisible(
+                                m_inclList.getCellBounds(f, f));
+                        m_inclList.setSelectedIndex(f);
+                    }
                 }
             }
         };
@@ -221,6 +240,8 @@ public final class FilterColumnPanel extends JPanel {
                 BorderFactory.createEmptyBorder(15, 15, 15, 15));
         inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(searchButtonIncl, BorderLayout.EAST);
+        m_markAllHitsIncl = new JCheckBox("Mark all search hits");
+        inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(" Include ");
         includePanel.setBorder(m_includeBorder);
@@ -249,11 +270,22 @@ public final class FilterColumnPanel extends JPanel {
                 if (start >= m_exclMdl.getSize()) {
                     start = 0;
                 }
-                int f = searchInList(m_exclList, text, start);
-                if (f >= 0) {
-                    m_exclList.scrollRectToVisible(m_exclList.getCellBounds(f,
-                            f));
-                    m_exclList.setSelectedIndex(f);
+//              if the user has ticked the mark all search hits box
+                if (m_markAllHitsExcl.isSelected()) {
+                    int[] searchHits = getAllSearchHits(m_exclList, text);
+                    if (searchHits.length > 0) {
+                        m_exclList.setSelectedIndices(searchHits);
+                        m_exclList.scrollRectToVisible(
+                                m_exclList.getCellBounds(searchHits[0], 
+                                        searchHits[0]));
+                    }
+                } else {
+                    int f = searchInList(m_exclList, text, start);
+                    if (f >= 0) {
+                        m_exclList.scrollRectToVisible(
+                                m_exclList.getCellBounds(f, f));
+                        m_exclList.setSelectedIndex(f);
+                    }
                 }
             }
         };
@@ -265,6 +297,8 @@ public final class FilterColumnPanel extends JPanel {
         exclSearchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
         exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
+        m_markAllHitsExcl = new JCheckBox("Mark all search hits");
+        exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(" Exclude ");
         excludePanel.setBorder(m_excludeBorder);
@@ -491,7 +525,7 @@ public final class FilterColumnPanel extends JPanel {
     }
 
     /** 
-     * Finds in the list any occurence of the argument string (as substring). 
+     * Finds in the list any occurrence of the argument string (as substring). 
      */
     private static int searchInList(final JList list, final String str,
             final int startIndex) {
@@ -533,6 +567,49 @@ public final class FilterColumnPanel extends JPanel {
             index = (index + 1 + max) % max;
         } while (index != startIndex);
         return -1;
+    }
+    
+    /**
+     * Uses the <code>searchInList(JList, String, int)</code> method to
+     * get all occurrences of the given <code>String</code> in the given 
+     * <code>JList</code> and returns the index off all occurrences as a
+     * <code>int[]</code>.
+     * @see #searchInList(JList, String, int) 
+     * @param list the <code>JList</code> to search in
+     * @param str the <code>String</code> to search for
+     * @return <code>int[]</code> with the indices off all objects from the
+     * given <code>JList</code> which match the given <code>String</code>. If 
+     * no hits exists the method returns an empty <code>int[]</code>.
+     * 
+     */
+    private static int[] getAllSearchHits(final JList list, final String str) {
+       
+        ListModel model = list.getModel();
+        int max = model.getSize();
+        final ArrayList<Integer> hits = new ArrayList<Integer>(max);
+        int index = 0;
+        do {
+            int tempIndex = searchInList(list, str, index);
+            //if the search returns no hit or returns a hit before the
+            //current search position exit the while loop
+            if (tempIndex < index || tempIndex < 0) {
+                break;
+            }
+            index = tempIndex;
+            hits.add(new Integer(index));
+            //increase the index to start the search from the next position 
+            //after the current hit
+            index++;
+        } while (index < max);
+        
+        if (hits.size() > 0) {
+            final int[] resultArray = new int[hits.size()];
+            for (int i = 0, length = hits.size(); i < length; i++) {
+                resultArray[i] = hits.get(i).intValue();
+            }
+            return resultArray;
+        }
+        return new int[0];
     }
 
     /**
