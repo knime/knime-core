@@ -1,5 +1,6 @@
 /* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
+ * $Revision$ $Date$ 
+ * $Author$
  * 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
@@ -83,6 +84,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /* List of DataCellColumnSpecss to keep initial ordering of DataCells. */
     private final LinkedHashSet<Object> m_order = new LinkedHashSet<Object>();
 
+    /* Store the excluded or the included cols into the settings? */
+    private final boolean m_storeExcluded;
+
     /**
      * Creates a new filter column panel with three component which are the
      * include list, button panel to shift elements between the two lists, and
@@ -95,6 +99,24 @@ public class DialogComponentColumnFilter extends DialogComponent {
      */
     public DialogComponentColumnFilter(final String configName,
             final String label) {
+        this(configName, label, true);
+    } // FilterColumnNodeDialogPanel()
+
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter.
+     * 
+     * @param configName name of entry in setting object
+     * @param label description of this panel
+     * @param excluded true if the excluded columns should be stored into the
+     *            spec, false otherwise.
+     * @see #update(DataTableSpec, Set, boolean)
+     */
+    public DialogComponentColumnFilter(final String configName,
+            final String label, final boolean excluded) {
+        m_storeExcluded = excluded;
         m_configName = configName;
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel(new GridLayout(0, 1, 5, 5));
@@ -230,11 +252,11 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 return this;
             }
         });
-       
+
         // adds include, button, exclude component
         JPanel buttonPan2 = new JPanel(new FlowLayout());
         buttonPan2.add(buttonPan);
-        
+
         JPanel overallPan = new JPanel();
         overallPan.setLayout(new BoxLayout(overallPan, BoxLayout.X_AXIS));
         overallPan.add(includePanel);
@@ -242,7 +264,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
         overallPan.add(excludePanel);
         overallPan.setBorder(new TitledBorder(label));
         super.add(overallPan);
-    } // FilterColumnNodeDialogPanel()
+    }
 
     /**
      * Called by the 'remove >>' button to exclude the selected elements from
@@ -333,7 +355,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 }
             }
         } finally {
-            this.update(specs[0], excl, true);
+            this.update(specs[0], excl, m_storeExcluded);
         }
     }
 
@@ -347,14 +369,19 @@ public class DialogComponentColumnFilter extends DialogComponent {
      */
     @Override
     public void saveSettingsTo(final NodeSettings settings) {
-        List<String> exclList = this.getExcludedColumnList();
-        String[] exclCells = new String[exclList.size()];
+        List<String> colList;
+        if (m_storeExcluded) {
+            colList = this.getExcludedColumnList();
+        } else {
+            colList = this.getIncludedColumnList();
+        }
+        String[] colCells = new String[colList.size()];
         int i = 0;
-        for (String cell : exclList) {
-            exclCells[i] = cell;
+        for (String cell : colList) {
+            colCells[i] = cell;
             i++;
         }
-        settings.addStringArray(m_configName, exclCells);
+        settings.addStringArray(m_configName, colCells);
     }
 
     /**
@@ -428,7 +455,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
             if (o instanceof DataColumnSpec) {
                 cell = ((DataColumnSpec)o).getName();
             } else {
-                cell = (String) o;
+                cell = (String)o;
             }
             list.add(cell);
         }
@@ -498,7 +525,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     protected void setEnabledComponents(final boolean enabled) {
         recSetEnabledContainer(this, enabled);
     }
-    
+
     private void recSetEnabledContainer(final Container cont, final boolean b) {
         cont.setEnabled(b);
         for (Component c : cont.getComponents()) {
