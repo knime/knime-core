@@ -93,6 +93,12 @@ public final class NodeLogger {
     private static final HashMap<Writer, WriterAppender> WRITER = 
         new HashMap<Writer, WriterAppender>();
     
+    /** 
+     * Maximum number of chars printed on <code>System.out</code> and 
+     * <code>System.err</code>. 
+     */
+    private static final int MAX_CHARS = 1000;
+    
     /** <code>System.err</code> log appender. */
     private static final ConsoleAppender SERR_APPENDER;
     /** <code>System.out</code> log appender. */
@@ -110,17 +116,18 @@ public final class NodeLogger {
         root.setLevel(Level.ALL);
         // add System.out
         SOUT_APPENDER = new ConsoleAppender(new PatternLayout(
-                "%-5p\t %c{1}\t %m\n"), "System.out");
+                "%-5p\t %c{1}\t %." + MAX_CHARS + "m\n"), 
+                ConsoleAppender.SYSTEM_OUT);
         SOUT_APPENDER.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(Level.DEBUG);
         filter.setLevelMax(Level.FATAL);
         SOUT_APPENDER.addFilter(filter);
-        // sout.setThreshold(Level.INFO);
         root.addAppender(SOUT_APPENDER);
         // add System.err
         SERR_APPENDER = new ConsoleAppender(new PatternLayout(
-                "%-5p\t %t : %c\t %m\n"), "System.err");
+                "%-5p\t %t : %c\t %." + MAX_CHARS + "m\n"), 
+                ConsoleAppender.SYSTEM_ERR);
         SERR_APPENDER.setImmediateFlush(true);
         SERR_APPENDER.setThreshold(Level.ERROR);
         root.addAppender(SERR_APPENDER);
