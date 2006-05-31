@@ -27,6 +27,7 @@ import javax.swing.UIManager;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
+import de.unikn.knime.core.node.interrupt.InterruptibleNodeModel;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -1371,10 +1372,10 @@ public class Node {
             NodeSettings modelSettings = new NodeSettings("Compare");
             m_nodeDialogPane.finishEditingAndSaveSettingsTo(dialogSettings);
             m_nodeModel.saveSettingsTo(modelSettings);
-           
+
             // check for equality
             return dialogSettings.isIdentical(modelSettings);
-            
+
         } catch (InvalidSettingsException ise) {
             // if there are invalid settings it is assumed that the settings
             // are not equal
@@ -1581,6 +1582,17 @@ public class Node {
      */
     protected NodeModel getNodeModel() {
         return m_nodeModel;
+    }
+
+    /**
+     * @return true if this node's model is a interruptible model
+     */
+    public boolean isInterruptible() {
+        if (m_nodeModel instanceof InterruptibleNodeModel) {
+            return true;
+        }
+
+        return false;
     }
 
 } // Node
