@@ -51,41 +51,42 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
 
-//        // use shell of the active workbench
-//        Shell parent = Display.getDefault().getActiveShell();
-//
-//        final Shell splashWin = new Shell(parent, SWT.NO_TRIM
-//                | SWT.APPLICATION_MODAL);
-//        splashWin.setLayout(new FillLayout());
-//        Composite comp = new Composite(splashWin, SWT.NONE);
-//        comp.setLayout(new GridLayout());
-//        Label label = new Label(comp, SWT.NONE);
-//
-//        // create splash image
-//        m_splashImage = AbstractUIPlugin.imageDescriptorFromPlugin(PLUGIN_ID,
-//                "icons/splash.bmp").createImage();
-//
-//        label.setImage(m_splashImage);
-//        final ProgressBar progress = new ProgressBar(comp, SWT.INDETERMINATE);
-//        progress.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-//        progress.setToolTipText("loading nodes....");
-//
-//        label.pack();
-//        progress.pack();
-//
-//        comp.pack();
-//        comp.layout(true);
-//        splashWin.pack();
-//        splashWin.layout(true);
-//
-//        // center the splash on the current monitor
-//        Rectangle r = splashWin.getMonitor().getBounds();
-//        Rectangle r2 = splashWin.getBounds();
-//        splashWin.setBounds(r.width / 2 - r2.width / 2, r.height / 2
-//                - r2.height / 2, r2.width, r2.height);
-//
-//        // open splash window
-//        splashWin.open();
+        // // use shell of the active workbench
+        // Shell parent = Display.getDefault().getActiveShell();
+        //
+        // final Shell splashWin = new Shell(parent, SWT.NO_TRIM
+        // | SWT.APPLICATION_MODAL);
+        // splashWin.setLayout(new FillLayout());
+        // Composite comp = new Composite(splashWin, SWT.NONE);
+        // comp.setLayout(new GridLayout());
+        // Label label = new Label(comp, SWT.NONE);
+        //
+        // // create splash image
+        // m_splashImage = AbstractUIPlugin.imageDescriptorFromPlugin(PLUGIN_ID,
+        // "icons/splash.bmp").createImage();
+        //
+        // label.setImage(m_splashImage);
+        // final ProgressBar progress = new ProgressBar(comp,
+        // SWT.INDETERMINATE);
+        // progress.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        // progress.setToolTipText("loading nodes....");
+        //
+        // label.pack();
+        // progress.pack();
+        //
+        // comp.pack();
+        // comp.layout(true);
+        // splashWin.pack();
+        // splashWin.layout(true);
+        //
+        // // center the splash on the current monitor
+        // Rectangle r = splashWin.getMonitor().getBounds();
+        // Rectangle r2 = splashWin.getBounds();
+        // splashWin.setBounds(r.width / 2 - r2.width / 2, r.height / 2
+        // - r2.height / 2, r2.width, r2.height);
+        //
+        // // open splash window
+        // splashWin.open();
 
         // Do the actual work: load the repository
         try {
@@ -94,8 +95,8 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
             WorkbenchErrorLogger.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
         } finally {
-//            splashWin.close();
-//            splashWin.dispose();
+            // splashWin.close();
+            // splashWin.dispose();
         }
 
     }
@@ -163,15 +164,18 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
      * @return The image, or a default image if missing.
      */
     public Image getImage(final ImageDescriptor descriptor) {
+
+        if (descriptor == null) {
+            return null;
+        }
+        
         // create the registry if needed
         if (m_imageRegistry == null) {
             m_imageRegistry = new ImageRegistry();
         }
         // try to lookup previously cached image
-        
+
         Image img = m_imageRegistry.get(descriptor.toString());
-        
-        
 
         // if null, create the image and store it in the registry for further
         // requests
