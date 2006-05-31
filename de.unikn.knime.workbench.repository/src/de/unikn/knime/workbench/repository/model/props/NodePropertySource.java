@@ -122,9 +122,6 @@ public class NodePropertySource implements IPropertySource {
         if ("category".equals(id)) {
             return m_node.getCategoryPath();
         }
-        if ("icon.small".equals(id)) {
-            return m_node.getIconDescriptor();
-        }
 
         // this should not happen
         assert false : "Unknown property id: " + id;

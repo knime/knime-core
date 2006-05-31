@@ -6,7 +6,8 @@
          <meta.schema plugin="de.unikn.knime.workbench.repository" id="category" name="Category"/>
       </appInfo>
       <documentation>
-         [Enter description of this extension point.]
+         Defines a category to store knime nodes and sub categories.
+         Corresponds to directories in a file system.
       </documentation>
    </annotation>
 

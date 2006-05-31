@@ -23,7 +23,6 @@ package de.unikn.knime.workbench.repository.model;
 
 import java.util.HashSet;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.views.properties.IPropertySource;
 
@@ -84,13 +83,9 @@ public class NodeTemplate extends AbstractSimpleObject {
 
     private Image m_icon;
 
-    private ImageDescriptor m_iconDescriptor;
-
     private String m_categoryPath;
 
     private String m_type;
-    
-    private String m_iconPath;
     
     private String m_pluginID;
     
@@ -183,21 +178,6 @@ public class NodeTemplate extends AbstractSimpleObject {
     }
 
     /**
-     * @return Returns the iconSmallDescriptor.
-     */
-    public ImageDescriptor getIconDescriptor() {
-        return m_iconDescriptor;
-    }
-
-    /**
-     * @param iconDescriptor The iconSmallDescriptor to set.
-     */
-    public void setIconDescriptor(final ImageDescriptor iconDescriptor) {
-        m_iconDescriptor = iconDescriptor;
-    }
-
-
-    /**
      * @return Returns the type.
      */
     public String getType() {
@@ -210,20 +190,6 @@ public class NodeTemplate extends AbstractSimpleObject {
     public void setType(final String type) {
         assert TYPES.contains(type) : "Illegal node type: " + type;
         m_type = type;
-    }
-
-    /**
-     * @return Returns the iconPath.
-     */
-    public String getIconPath() {
-        return m_iconPath;
-    }
-
-    /**
-     * @param iconPath The iconPath to set.
-     */
-    public void setIconPath(final String iconPath) {
-        m_iconPath = iconPath;
     }
 
     /**

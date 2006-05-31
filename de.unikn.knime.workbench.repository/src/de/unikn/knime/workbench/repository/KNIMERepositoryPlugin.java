@@ -3,7 +3,6 @@ package de.unikn.knime.workbench.repository;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.eclipse.core.runtime.Plugin;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
@@ -17,7 +16,7 @@ import de.unikn.knime.workbench.core.WorkbenchErrorLogger;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class KNIMERepositoryPlugin extends Plugin {
+public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     // Make sure that this *always* matches the ID in plugin.xml
     /** The plugin-id. */

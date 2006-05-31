@@ -23,7 +23,9 @@ package de.unikn.knime.workbench.repository;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.swt.graphics.Image;
 
+import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.workbench.repository.model.Category;
 import de.unikn.knime.workbench.repository.model.IContainerObject;
 import de.unikn.knime.workbench.repository.model.IRepositoryObject;
@@ -55,36 +57,14 @@ public final class RepositoryFactory {
 
         NodeTemplate node = new NodeTemplate(id);
 
-        node.setName(str(element.getAttribute("name"), "!name is missing!"));
-        node
-                .setType(str(element.getAttribute("type"),
-                        NodeTemplate.TYPE_OTHER));
-
-        String icon = str(element.getAttribute("icon"), "");
-        // TODO FIXME compatibility (old name): to be removed !!
-        if (icon.equals("")) {
-            icon = str(element.getAttribute("icon-small"), "");
-        }
-        node.setIconPath(icon);
-
-        // Load images from declaring plugin
-        String pluginID = element.getDeclaringExtension().getNamespace();
-        node.setPluginID(pluginID);
-
-        // FIXME dispose this somewhere !!
-        node.setIcon(KNIMERepositoryPlugin.getDefault()
-                .getImage(pluginID, icon));
-        node.setIconDescriptor(KNIMERepositoryPlugin.getDefault()
-                .getImageDescriptor(pluginID, icon));
-
-        node.setCategoryPath(str(element.getAttribute("category-path"), "/"));
-
         // Try to load the node factory class...
+        NodeFactory factory;
         try {
-            Object factory;
+
             // this ensures that the class is loaded by the correct eclipse
             // classloaders
-            factory = element.createExecutableExtension("factory-class");
+            factory = (NodeFactory)element
+                    .createExecutableExtension("factory-class");
 
             node.setFactory(factory.getClass());
         } catch (CoreException e) {
@@ -94,6 +74,27 @@ public final class RepositoryFactory {
                             + element.getAttribute("factory-class"));
 
         }
+
+        node.setName(factory.getNodeName());
+        node
+                .setType(str(element.getAttribute("type"),
+                        NodeTemplate.TYPE_OTHER));
+
+        Image icon = ImageRepository.getScaledImage(factory.getIcon(), 16, 16);
+        // get default image if null
+        if (icon == null) {
+            icon = ImageRepository.getScaledImage(NodeFactory.getDefaultIcon(),
+                    16, 16);
+        }
+
+        // Load images from declaring plugin
+        String pluginID = element.getDeclaringExtension().getNamespace();
+        node.setPluginID(pluginID);
+
+        // FIXME dispose this somewhere !!
+        node.setIcon(icon);
+
+        node.setCategoryPath(str(element.getAttribute("category-path"), "/"));
 
         return node;
     }
@@ -154,11 +155,11 @@ public final class RepositoryFactory {
                 continue;
             }
 
-            child = (IContainerObject) obj;
+            child = (IContainerObject)obj;
 
             // if we have found a category (root will be skipped) ....
             if (child instanceof Category) {
-                Category category = (Category) child;
+                Category category = (Category)child;
                 if (category == null) {
                     // ASSERT: the segment is not empty
                     assert (segments[i] != null)

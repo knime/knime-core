@@ -55,13 +55,7 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="name" type="string" use="required">
-            <annotation>
-               <documentation>
-                  The canonical name for the node.
-               </documentation>
-            </annotation>
-         </attribute>
+         
          <attribute name="type" use="required">
             <annotation>
                <documentation>
@@ -102,33 +96,6 @@
                <documentation>
                   Defines the category path, under which this node should be registered, e.g. &quot;/knime.readers&quot;.
                </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="description" type="string">
-            <annotation>
-               <documentation>
-                  A short description for this node
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="icon-small" type="string">
-            <annotation>
-               <documentation>
-                  Small (16x16 pixel) icon.
-               </documentation>
-               <appInfo>
-                  <meta.attribute kind="resource"/>
-               </appInfo>
-            </annotation>
-         </attribute>
-         <attribute name="icon-large" type="string">
-            <annotation>
-               <documentation>
-                  Large (32x32 pixel) icon, used e.g. in the editor.
-               </documentation>
-               <appInfo>
-                  <meta.attribute kind="resource"/>
-               </appInfo>
             </annotation>
          </attribute>
       </complexType>
