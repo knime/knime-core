@@ -47,6 +47,7 @@ import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.ComplexNumberCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.DefaultFuzzyIntervalCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.DefaultFuzzyNumberCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.DoubleCellEntry;
@@ -130,7 +131,7 @@ public abstract class Config extends AbstractConfigEntry
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addDouble(CLASS.getName(), 
+                config.addDouble(CLASS.getSimpleName(), 
                         ((DoubleCell) cell).getDoubleValue());
             }
             /**
@@ -154,14 +155,15 @@ public abstract class Config extends AbstractConfigEntry
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addInt("int", ((IntCell) cell).getIntValue());
+                config.addInt(CLASS.getSimpleName(), 
+                        ((IntCell) cell).getIntValue());
             }
             /**
              * @see Config.DataCellEntry#createCell(Config)
              */
             public DataCell createCell(final Config config) 
                     throws InvalidSettingsException {
-                return new IntCell(config.getInt("int"));
+                return new IntCell(config.getInt(CLASS.getSimpleName()));
             }
         };
         
@@ -300,6 +302,8 @@ public abstract class Config extends AbstractConfigEntry
         DATACELL_MAP.put(IntCellEntry.CLASS.getName(), new IntCellEntry());
         DATACELL_MAP.put(MissingCellEntry.CLASS.getName(), 
                 new MissingCellEntry());
+        DATACELL_MAP.put(ComplexNumberCellEntry.CLASS.getName(), 
+                new ComplexNumberCellEntry());
         DATACELL_MAP.put(DefaultFuzzyIntervalCellEntry.CLASS.getName(), 
                 new DefaultFuzzyIntervalCellEntry());
         DATACELL_MAP.put(DefaultFuzzyNumberCellEntry.CLASS.getName(), 

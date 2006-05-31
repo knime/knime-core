@@ -29,6 +29,7 @@ import java.util.Set;
 import junit.framework.TestCase;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.def.ComplexNumberCell;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
 import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
@@ -301,11 +302,11 @@ public final class NodeSettingsTest extends TestCase {
     }
 
     /**
-     * Test write/read of DataCells.
+     * Test write/read of StringCells.
      * 
      * @throws Exception Should not happen.
      */
-    public void testDataCell() throws Exception {
+    public void testStringDataCell() throws Exception {
         try {
             SETT.addDataCell(null, new StringCell("null"));
             fail();
@@ -351,7 +352,43 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(unknownCell.equals(SETT.getDataCell(key)));
     }
-
+    
+    /**
+     * Test write/read of DataCells.
+     * 
+     * @throws Exception Should not happen.
+     */
+    public void testDataCell() throws Exception {
+        StringCell s = new StringCell("stringi");
+        SETT.addDataCell("string", s);
+        assertTrue(SETT.containsKey("string"));
+        assertTrue(SETT.getDataCell("string").equals(s));
+        DoubleCell d = new DoubleCell(45.42);
+        SETT.addDataCell("double", d);
+        assertTrue(SETT.containsKey("double"));
+        assertTrue(SETT.getDataCell("double").equals(d));
+        IntCell i = new IntCell(11);
+        SETT.addDataCell("int", i);
+        assertTrue(SETT.containsKey("int"));
+        assertTrue(SETT.getDataCell("int").equals(i));
+        DataCell m = DataType.getMissingCell();
+        SETT.addDataCell("missing", m);
+        assertTrue(SETT.containsKey("missing"));
+        assertTrue(SETT.getDataCell("missing").equals(m));
+        ComplexNumberCell c = new ComplexNumberCell(5.4, 4.5);
+        SETT.addDataCell("complex", c);
+        assertTrue(SETT.containsKey("complex"));
+        assertTrue(SETT.getDataCell("complex").equals(c));
+        DefaultFuzzyNumberCell n = new DefaultFuzzyNumberCell(1, 2, 4);
+        SETT.addDataCell("fnumber", n);
+        assertTrue(SETT.containsKey("fnumber"));
+        assertTrue(SETT.getDataCell("fnumber").equals(n));
+        DefaultFuzzyIntervalCell f = new DefaultFuzzyIntervalCell(1, 2, 3, 4);
+        SETT.addDataCell("finterval", f);
+        assertTrue(SETT.containsKey("finterval"));
+        assertTrue(SETT.getDataCell("finterval").equals(f));
+    }
+    
     /**
      * Test write/read of DataType elements.
      * 
