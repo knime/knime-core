@@ -115,9 +115,14 @@ public final class ImageRepository {
      * @param iconURL the url of the icon
      */
     public static void addImage(final URL iconURL) {
-        
-        registry.remove(iconURL.toString());
-        registry.put(iconURL.toString(), createImageFromURL(iconURL));
+
+        Image image = createImageFromURL(iconURL);
+
+        // only add if not null
+        if (image != null) {
+            registry.put(iconURL.toString(), image);
+        }
+
     }
 
     /**
