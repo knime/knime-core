@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -111,6 +109,12 @@ public class DialogComponentFileChooser extends DialogComponent {
                 if (directoryOnly) {
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 } else {
+                    // if extensions are defined
+                    if (validExtensions != null && validExtensions.length > 0) {
+                        // disable "All Files" selection
+                        chooser.setAcceptAllFileFilterUsed(false);
+                    }
+                    // set file filter for given extensions
                     chooser.setFileFilter(
                             new SimpleFileFilter(validExtensions));
                 }
@@ -120,8 +124,16 @@ public class DialogComponentFileChooser extends DialogComponent {
                     try {
                         newFile = chooser.getSelectedFile().getAbsoluteFile()
                                 .toString();
-                    } catch (Exception e) {
-                        newFile = "<Error: Couldn't create URL for file>";
+                        // if ile selection and only on extension available
+                        if (!directoryOnly && validExtensions.length == 1) {
+                            // and the file names has no this extension
+                            if (!newFile.endsWith(validExtensions[0])) {
+                                // then append it
+                                newFile += validExtensions[0];
+                            }
+                        }
+                    } catch (SecurityException se) {
+                        newFile = "<Error: " + se.getMessage() + ">";
                     }
                     m_fileURL.setText(newFile);
                 }
