@@ -552,11 +552,11 @@ public final class DataTableSpec
      */
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer("[");
+        StringBuffer buffer = new StringBuffer("name=" + m_name + ",columns=[");
         for (int i = 0; i < getNumColumns(); i++) {
             DataColumnSpec spec = getColumnSpec(i);
             buffer.append(i > 0 ? ", " : "");
-            buffer.append(spec.toString());
+            buffer.append(spec.getName().toString());
         }
         buffer.append("]");
         return buffer.toString();
