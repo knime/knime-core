@@ -116,7 +116,8 @@ public class SingleNodeJob extends Job implements NodeProgressListener {
     public SingleNodeJob(final WorkflowManager manager,
             final NodeContainer container,
             final IProgressMonitor parentMonitor, final int ticks) {
-        super("Executing " + container.getNodeNameWithID());
+        super("Executing " + container.getNodeName() + " (" 
+                + container.getUserName() + ")");
 
         // m_monitor = parentMonitor;
         m_container = container;
