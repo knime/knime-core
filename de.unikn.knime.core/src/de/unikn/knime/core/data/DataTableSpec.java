@@ -21,8 +21,10 @@ package de.unikn.knime.core.data;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.data.property.SizeHandler;
@@ -69,6 +71,9 @@ public final class DataTableSpec
 
     /** The index of the column holding the ColorHandler or -1 if not set. */
     private final int m_colorHandlerColIndex;
+    
+    private final transient Map<String, Integer> m_colIndexMap 
+        = new HashMap<String, Integer>();
 
     /**
      * Creates an empty table spec with no columns defined and <i>default</i>
@@ -141,6 +146,7 @@ public final class DataTableSpec
                     }
                 }
             }
+            m_colIndexMap.put(colSpecs[i].getName(), i);
             m_columnSpecs[i] = colSpecs[i];
         }
         m_sizeHandlerColIndex = searchSizeHandler();
@@ -219,6 +225,7 @@ public final class DataTableSpec
             }
             columnSpecs[i] = new DataColumnSpecCreator(names[i], types[i])
                     .createSpec();
+           
         }
         return columnSpecs;
     }
@@ -505,7 +512,7 @@ public final class DataTableSpec
     /**
      * Finds the column with the specified name in the TableSpec and returns its
      * index, or -1 if the name doesn't exist in the table. This method returns
-     * -1 if the argument is <code>null</code>.
+     * -1 if the argument is <code>null</code>. 
      * 
      * @param columnName the name to search for
      * @return the index of the column with the specified name, or -1 if not
@@ -513,14 +520,12 @@ public final class DataTableSpec
      */
     public int findColumnIndex(final String columnName) {
         if (columnName == null) {
+            return -1; 
+        }
+        if (m_colIndexMap.get(columnName) == null) {
             return -1;
-        }
-        for (int i = 0; i < getNumColumns(); i++) {
-            if (getColumnSpec(i).getName().equals(columnName)) {
-                return i;
-            }
-        }
-        return -1;
+        } 
+        return m_colIndexMap.get(columnName);
     }
 
     /**
