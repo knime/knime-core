@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   16.11.2005 (gdf): created
+ *   2006-05-26 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
@@ -33,9 +32,9 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
 
 /**
- * Provide a standard component for a dialog that allows to edit a double value.
- * Provides label and JFormattedTextField that checks ranges as well as
- * functionality to load/store into config object.
+ * Provides a standard component for a dialog that allows to edit a double
+ * value. Provides label and {@link javax.swing.JFormattedTextField} that checks
+ * ranges as well as functionality to load/store into config object.
  * 
  * @author Giuseppe Di Fatta, University of Konstanz and ICAR-CNR
  * 
@@ -46,12 +45,10 @@ public class DialogComponentDouble extends DialogComponent {
 
     private final JFormattedTextField m_dvalueField;
 
-    private final NumberFormat m_dvalueFormat;
-
     private final String m_configName;
 
     /**
-     * Constructor put label and JFormattedTextField into panel.
+     * Constructor that puts label and JFormattedTextField into panel.
      * 
      * @param configName name used in configuration file
      * @param label label for dialog in front of JFormattedTextField
@@ -61,20 +58,21 @@ public class DialogComponentDouble extends DialogComponent {
             final double defaultValue) {
         this.add(new JLabel(label));
         m_dvalue = defaultValue;
-        m_dvalueFormat = NumberFormat.getNumberInstance();
-        m_dvalueField = new JFormattedTextField(m_dvalueFormat);
-        m_dvalueField.setValue(new Double(m_dvalue));
+        m_dvalueField =
+            new JFormattedTextField(NumberFormat.getNumberInstance());
+        m_dvalueField.setValue(m_dvalue);
         m_dvalueField.setColumns(6);
         this.add(m_dvalueField);
         m_configName = configName;
     }
 
     /**
-     * Read value for this dialog component from configuration object.
+     * Reads value for this dialog component from configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The input specs.
-     */
+     * @param settings the <code>NodeSettings</code> to read from
+     * @param specs the input specs
+     */        
+    @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) {
          double value = settings.getDouble(m_configName, m_dvalue);
@@ -82,17 +80,18 @@ public class DialogComponentDouble extends DialogComponent {
     }
 
     /**
-     * write settings of this dialog component into the configuration object.
+     * Writes settings of this dialog component into the configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to write into.
+     * @param settings the <code>NodeSettings</code> to write into
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
+    @Override
     public void saveSettingsTo(final NodeSettings settings)
             throws InvalidSettingsException {
         try {
             m_dvalueField.commitEdit();
         } catch (ParseException e) {
-            throw new InvalidSettingsException("Only doubles please");
+           throw new InvalidSettingsException("Only double values are allowed");
         }
         double amount = ((Number)m_dvalueField.getValue()).doubleValue();
         settings.addDouble(m_configName, amount);
@@ -109,8 +108,8 @@ public class DialogComponentDouble extends DialogComponent {
     
     /**
      * Sets the preferred size of the internal component.
-     * @param width The width.
-     * @param height The height.
+     * @param width the width
+     * @param height the height
      */
     public void setSizeComponents(final int width, final int height) {
         m_dvalueField.setPreferredSize(new Dimension(width, height));

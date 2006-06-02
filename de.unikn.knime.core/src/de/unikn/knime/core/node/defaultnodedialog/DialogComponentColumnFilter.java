@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ 
- * $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,6 +16,7 @@
  * 
  * History
  *   16.11.2005 (mb): created
+ *   2006-05-26 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
@@ -81,14 +79,14 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /* Exclude model. */
     private final DefaultListModel m_exclMdl;
 
-    /* List of DataCellColumnSpecss to keep initial ordering of DataCells. */
+    /* List of DataCellColumnSpecs to keep initial ordering of DataCells. */
     private final LinkedHashSet<Object> m_order = new LinkedHashSet<Object>();
 
     /* Store the excluded or the included cols into the settings? */
     private final boolean m_storeExcluded;
 
     /**
-     * Creates a new filter column panel with three component which are the
+     * Creates a new filter column panel with three components which are the
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The include list then will contain all values to
      * filter.
@@ -237,6 +235,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
         // set renderer so that icon and column name are displayed nicely
         // (for both lists)
         setListCellRenderer(new DefaultListCellRenderer() {
+            @Override
             public Component getListCellRendererComponent(final JList list,
                     final Object value, final int index,
                     final boolean isSelected, final boolean cellHasFocus) {
@@ -267,7 +266,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     }
 
     /**
-     * Called by the 'remove >>' button to exclude the selected elements from
+     * Called by the '> remove >' button to exclude the selected elements from
      * the include list.
      */
     private void onRemIt() {
@@ -298,18 +297,17 @@ public class DialogComponentColumnFilter extends DialogComponent {
     }
 
     /**
-     * Called by the '<< add' button to include the selected elements from the
+     * Called by the '< add <' button to include the selected elements from the
      * exclude list.
      */
     private void onAddIt() {
         // add all selected elements from the exclude to the include list
         Object[] o = m_exclList.getSelectedValues();
-        if (o != null) {
-            for (int i = 0; i < o.length; i++) {
-                m_inclMdl.addElement(o[i]);
-                m_exclMdl.removeElement(o[i]);
-            }
+        for (int i = 0; i < o.length; i++) {
+            m_inclMdl.addElement(o[i]);
+            m_exclMdl.removeElement(o[i]);
         }
+
         // again, remove all from the include list and start adding them from
         // the table spec by double-checking the include list
         List l = Arrays.asList(m_inclMdl.toArray());
@@ -334,7 +332,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     }
 
     /**
-     * read contents of this dialog from config file (the list of excluded
+     * Read contents of this dialog from config file (the list of excluded
      * columns only in this case - everything else can be reconstructed from
      * that).
      * 
@@ -350,8 +348,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
         try {
             String[] excludedCells = settings.getStringArray(m_configName);
             if (excludedCells != null) {
-                for (int i = 0; i < excludedCells.length; i++) {
-                    excl.add(excludedCells[i]);
+                for (String s : excludedCells) {
+                    excl.add(s);
                 }
             }
         } finally {
@@ -360,7 +358,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     }
 
     /**
-     * store contents of this dialog to config file (the list of excluded
+     * Store contents of this dialog to config file (the list of excluded
      * columns only in this case - everything else can be reconstructed from
      * that).
      * 
@@ -389,9 +387,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * include and exclude list. The include list will contain all column names
      * from the spec afterwards.
      * 
-     * @param spec The spec to retrieve the column names from.
-     * @param excl The list of columns to exclude or include.
-     * @param exclude The flag if <code>excl</code> contains the columns to
+     * @param spec the spec to retrieve the column names from
+     * @param excl the list of columns to exclude or include
+     * @param exclude the flag if <code>excl</code> contains the columns to
      *            exclude otherwise include.
      */
     public void update(final DataTableSpec spec, final Set<String> excl,
@@ -424,7 +422,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /**
      * Returns all columns from the exclude list.
      * 
-     * @return A list of all columns from the exclude list.
+     * @return a list of all columns from the exclude list
      */
     public List<String> getExcludedColumnList() {
         return getColumnList(m_exclMdl);
@@ -433,7 +431,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /**
      * Returns all columns from the include list.
      * 
-     * @return A list of all columns from the include list.
+     * @return a list of all columns from the include list
      */
     public List<String> getIncludedColumnList() {
         return getColumnList(m_inclMdl);
@@ -442,7 +440,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /**
      * Helper for the get***ColumnList methods.
      * 
-     * @param list The list from which to retrieve the elements
+     * @param model the list from which to retrieve the elements
+     * @return all elements if the given model in a lists
      */
     private static List<String> getColumnList(final ListModel model) {
         final ArrayList<String> list = new ArrayList<String>();
@@ -462,7 +461,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
         return list;
     }
 
-    /** Finds in the list any occurence of the argument string (as substring).*/
+    /**
+     * Finds in the list any occurence of the argument string (as substring).
+     */
     private static int searchInList(final JList list, final String str,
             final int startIndex) {
         // this method was (slightly modified) copied from
@@ -471,10 +472,11 @@ public class DialogComponentColumnFilter extends DialogComponent {
         int max = model.getSize();
         String prefix = str;
         if (prefix == null) {
-            throw new IllegalArgumentException();
+           throw new IllegalArgumentException("Paremeter str must not be null");
         }
         if (startIndex < 0 || startIndex >= max) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid start index: "
+                    + startIndex);
         }
         prefix = prefix.toUpperCase();
 
@@ -507,9 +509,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
     }
 
     /**
-     * Set the renderer that is used for both list in this panel.
+     * Set the renderer that is used for both lists in this panel.
      * 
-     * @param renderer New renderer being used.
+     * @param renderer new renderer being used
      * @see JList#setCellRenderer(javax.swing.ListCellRenderer)
      */
     protected final void setListCellRenderer(final ListCellRenderer renderer) {

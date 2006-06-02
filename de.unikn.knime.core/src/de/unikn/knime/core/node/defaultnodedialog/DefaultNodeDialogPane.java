@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   20.09.2005 (mb): created
+ *   2006-05-24 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
@@ -32,7 +31,8 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
 
-/** Default implementation for a NodeDialogPane that allows to register
+/**
+ * Default implementation for a NodeDialogPane that allows to register
  * standard DialogComponents which will be displayed in a standard
  * way and automatically stored and retrieved in the node settings
  * objects.
@@ -40,13 +40,14 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author M. Berthold, University of Konstanz
  */
 public class DefaultNodeDialogPane extends NodeDialogPane {
-    private List<DialogComponent> m_dialogComponents;
-    private JPanel m_panel;
+    private final List<DialogComponent> m_dialogComponents;
+    private final JPanel m_panel;
 
     /* The tabs' names. */
     private static final String TAB_TITLE = "Default Options";
     
-    /** Constructor for DefaultNodeDialogPane.
+    /**
+     * Constructor for DefaultNodeDialogPane.
      * 
      * @param title dialog title
      */
@@ -58,9 +59,11 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
         super.addTab(TAB_TITLE, m_panel);
     }
 
-    /** add a new DialogComponent to the underlying dialog. It will
+    /**
+     * Add a new DialogComponent to the underlying dialog. It will
      * automatically be added in the dialog and saved/loaded from/to
      * the config.
+     * 
      * @param diaC component to be added
      */
     public void addDialogComponent(final DialogComponent diaC) {
@@ -68,10 +71,13 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
         m_panel.add(diaC);
     }
 
-    /** Load Settings for all registered components.
-     * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The input specs.
+    /**
+     * Load settings for all registered components.
+     * 
+     * @param settings the <code>NodeSettings</code> to read from
+     * @param specs the input specs
      */
+    @Override
     public final void loadSettingsFrom(
             final NodeSettings settings, final DataTableSpec[] specs) {
         assert (settings != null && specs != null);
@@ -91,14 +97,15 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
 //    }
     
     /**
-     * save settings of all registered <code>DialogComponents</code> into
+     * Save settings of all registered <code>DialogComponents</code> into
      * the configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to write into.
+     * @param settings the <code>NodeSettings</code> to write into
      * @see NodeDialogPane#saveSettingsTo(NodeSettings)
      * @throws InvalidSettingsException if the user has entered wrong
-     * values.
+     * values
      */
+    @Override
     public final void saveSettingsTo(final NodeSettings settings) 
                                 throws InvalidSettingsException {
         for (DialogComponent comp : m_dialogComponents) {
@@ -109,5 +116,4 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
 
 //    public void saveAdditionalSettingsTo(final NodeSettings settings) {
 //    }
-    
 }

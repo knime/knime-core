@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   21.09.2005 (mb): created
+ *   2006-05-24 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
@@ -37,17 +36,16 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author M. Berthold, University of Konstanz
  */
 public final class DialogComponentBoolean extends DialogComponent {
-    
     private final JCheckBox m_checkbox;
     private final String m_configName;
     private final boolean m_dftValue;
 
     /**
-     * Constructor put label and checkbox into panel.
+     * Constructor puts label and checkbox into panel.
      * 
      * @param configName name used in configuration file
      * @param label label for dialog in front of checkbox
-     * @param isSelected default value for CheckBox.
+     * @param isSelected default value for checkbox
      */
     public DialogComponentBoolean(final String configName, final String label,
             final boolean isSelected) {
@@ -62,9 +60,10 @@ public final class DialogComponentBoolean extends DialogComponent {
     /**
      * Read value for this dialog component from configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The input specs.
+     * @param settings the <code>NodeSettings</code> to read from
+     * @param specs the input specs
      */
+    @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) {
         boolean newBool = settings.getBoolean(m_configName, m_dftValue);
@@ -72,10 +71,11 @@ public final class DialogComponentBoolean extends DialogComponent {
     }
 
     /**
-     * write settings of this dialog component into the configuration object.
+     * Write settings of this dialog component into the configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to write into.
+     * @param settings the <code>NodeSettings</code> to write into
      */
+    @Override
     public void saveSettingsTo(final NodeSettings settings) {
         settings.addBoolean(m_configName, m_checkbox.getModel().isSelected());
     }
@@ -91,7 +91,8 @@ public final class DialogComponentBoolean extends DialogComponent {
     
     /**
      * Adds the listener to the underlying checkbox component.
-     * @param l The listener to add.
+     * 
+     * @param l the listener to add
      */
     public void addItemListener(final ItemListener l) {
         m_checkbox.addItemListener(l);
@@ -99,14 +100,17 @@ public final class DialogComponentBoolean extends DialogComponent {
     
     /**
      * Removes the listener from the underlying checkbox component.
-     * @param l The listener to remove.
+     * @param l the listener to remove
      */
     public void removeItemListener(final ItemListener l) {
         m_checkbox.removeItemListener(l);
     }
     
     /**
-     * @return true if the checkbox is selected.
+     * Returns if the checkbox is selected.
+     * 
+     * @return <code>true</code> if the checkbox is selected, <code>false</code>
+     * otherwise
      */
     public boolean isSelected() {
         return m_checkbox.isSelected();
@@ -114,10 +118,10 @@ public final class DialogComponentBoolean extends DialogComponent {
 
     /**
      * Set the selection state of the checkbox.
-     * @param select true or false.
+     * 
+     * @param select <code>true</code> or <code>false</code>
      */
     public void setSelected(final boolean select) {
         m_checkbox.setSelected(select);
     }
-    
 }

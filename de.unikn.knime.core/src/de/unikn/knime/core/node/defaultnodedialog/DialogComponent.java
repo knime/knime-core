@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   21.09.2005 (mb): created
+ *   2006-05-24 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
@@ -29,11 +28,12 @@ import de.unikn.knime.core.node.NodeSettings;
 
 /**
  * Abstract (=empty) implementation of a component handling a standard type in a
- * NodeDialog. Actual implementation will make sure the label and editable
+ * NodeDialog. Actual implementations will make sure the label and editable
  * components are placed nicely in the underlying JPanel and handle save/load to
- * and from config objects. Using the <code>DefaultNodeDialogPane</code> it is
- * easy to add such Component to quickly assemble a dialog dealing wit typical
- * parameters.
+ * and from config objects. Using the
+ * {@link de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane} it
+ * is easy to add such Component to quickly assemble a dialog dealing with
+ * typical parameters.
  * 
  * @see DefaultNodeDialogPane
  * 
@@ -44,8 +44,8 @@ public abstract class DialogComponent extends JPanel {
     /**
      * Read value(s) of this dialog component from configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The input specs.
+     * @param settings the <code>NodeSettings</code> to read from
+     * @param specs the input specs
      * @throws InvalidSettingsException if load fails.
      */
     public abstract void loadSettingsFrom(final NodeSettings settings,
@@ -54,7 +54,7 @@ public abstract class DialogComponent extends JPanel {
     /**
      * Write value(s) of this dialog component to configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to read from.
+     * @param settings the <code>NodeSettings</code> to read from
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
     public abstract void saveSettingsTo(final NodeSettings settings)
@@ -63,9 +63,10 @@ public abstract class DialogComponent extends JPanel {
     /**
      * We need to override the JPanel's method because we need to enable all
      * components contained in this dialog component. It's final because it
-     * calls the abstract method <code>setEnabledComponents</code>.
+     * calls the abstract method {@link #setEnabledComponents(boolean)}.
      * 
-     * @param enabled if true the contained components will be enabled.
+     * @param enabled if <code>true</code> the contained components will be
+     * enabled
      * @see #setEnabledComponents(boolean)
      * @see java.awt.Component#setEnabled(boolean)
      */
@@ -76,7 +77,7 @@ public abstract class DialogComponent extends JPanel {
     }
 
     /**
-     * This method is called by the above (final) <code>setEnabled</code>
+     * This method is called by the above (final) {@link #setEnabled(boolean)}
      * method. Derived classes should disable all the contained components in
      * here.
      * 
@@ -84,5 +85,4 @@ public abstract class DialogComponent extends JPanel {
      * @see #setEnabled(boolean)
      */
     protected abstract void setEnabledComponents(final boolean enabled);
-
 }

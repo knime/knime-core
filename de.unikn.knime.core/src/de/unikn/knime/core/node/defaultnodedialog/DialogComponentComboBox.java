@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,11 +16,11 @@
  * 
  * History
  *   17.11.2005 (gdf): created
+ *   2006-05-26 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JComboBox;
@@ -34,7 +32,7 @@ import de.unikn.knime.core.node.NodeSettings;
 
 /**
  * Provide a standard component for a dialog that allows to select among a list
- * of option provided as an ArrayList of String elements.
+ * of options provided as a list of String elements.
  * 
  * @author Giuseppe Di Fatta, University of Konstanz and ICAR-CNR
  * 
@@ -48,20 +46,18 @@ public class DialogComponentComboBox extends DialogComponent {
     private String m_configName;
 
     /**
-     * Constructor put label and combobox into panel.
+     * Constructor that puts label and combobox into panel.
      * 
      * @param configName name used in configuration file
      * @param label label for dialog in front of combobox
-     * @param list list of items (String) for the combobox
+     * @param list list of items for the combobox
      */
     public DialogComponentComboBox(final String configName, final String label,
             final List<String> list) {
         this.add(new JLabel(label));
         m_combobox = new JComboBox();
 
-        Iterator it = list.iterator();
-        while (it.hasNext()) {
-            String s = (String)it.next();
+        for (String s : list) {
             m_combobox.addItem(s);
         }
 
@@ -70,11 +66,11 @@ public class DialogComponentComboBox extends DialogComponent {
     }
 
     /**
-     * Constructor put label and combobox into panel.
+     * Constructor that puts label and combobox into panel.
      * 
      * @param configName name used in configuration file
      * @param label label for dialog in front of combobox
-     * @param list list of items (String) for the combobox
+     * @param list list of items for the combobox
      */
     public DialogComponentComboBox(final String configName, final String label,
             final String... list) {
@@ -84,13 +80,13 @@ public class DialogComponentComboBox extends DialogComponent {
     /**
      * Read value for this dialog component from configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The items of the combobox.
-     * @throws InvalidSettingsException If the settings could not be read.
+     * @param settings the <code>NodeSettings</code> to read from
+     * @param specs the items of the combobox
+     * @throws InvalidSettingsException if the settings could not be read
      */
+    @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
-        assert (settings != null);
         String selection = null;
         selection = settings.getString(m_configName);
         if (selection != null) {
@@ -99,15 +95,14 @@ public class DialogComponentComboBox extends DialogComponent {
     }
 
     /**
-     * write settings of this dialog component into the configuration object.
+     * Writes settings of this dialog component into the configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to write into.
+     * @param settings the <code>NodeSettings</code> to write into
      */
+    @Override
     public void saveSettingsTo(final NodeSettings settings) {
         settings.addString(m_configName, m_combobox.getSelectedItem()
                 .toString());
-        // LOGGER.debug("<saveSettingsTo>" + m_configName
-        // + ": " + m_combobox.getSelectedItem().toString());
     }
 
     /**

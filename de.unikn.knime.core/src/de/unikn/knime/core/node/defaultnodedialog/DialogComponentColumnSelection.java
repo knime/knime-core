@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   21.09.2005 (mb): created
+ *   2006-05-26 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
@@ -31,15 +30,15 @@ import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.util.ColumnSelectionPanel;
 
 /**
- * Provide a standard component for a dialog that allows to select a column in a
- * given <code>DataTableSpec</code>. Provides label and list (possibly
- * filtered by a given DataCell Type) as well as functionality to load/store
- * into config object.
+ * Provides a standard component for a dialog that allows to select a column in
+ * a given {@link de.unikn.knime.core.data.DataTableSpec}. Provides label and
+ * list (possibly filtered by a given {@link de.unikn.knime.core.data.DataCell}
+ * type) as well as functionality to load/store into config object.
  * 
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentColumnSelection extends DialogComponent {
-    /** Contains all column names for the given given filter class. */
+    /** Contains all column names matching the given given filter class. */
     private final ColumnSelectionPanel m_chooser;
 
     private final String m_configName;
@@ -47,7 +46,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
     private final int m_specIndex;
 
     /**
-     * Constructor put label and checkbox into panel.
+     * Constructor that puts label and checkbox into panel.
      * 
      * @param configName name used in configuration file
      * @param label label for dialog in front of checkbox
@@ -65,16 +64,16 @@ public class DialogComponentColumnSelection extends DialogComponent {
     }
 
     /**
-     * Read value for this dialog component from configuration object.
+     * Reads values for this dialog component from configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The input specs.
-     * @throws InvalidSettingsException If the settings could not be read.
+     * @param settings the <code>NodeSettings</code> to read from
+     * @param specs the input specs
+     * @throws InvalidSettingsException if the settings could not be read
      */
+    @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
-        assert (settings != null);
-        String classCol = null;
+        String classCol = "** Unknown column **";
         try {
             classCol = settings.getString(m_configName);
         } finally {
@@ -85,10 +84,11 @@ public class DialogComponentColumnSelection extends DialogComponent {
     }
 
     /**
-     * write settings of this dialog component into the configuration object.
+     * Writes settings of this dialog component into the configuration object.
      * 
-     * @param settings The <code>NodeSettings</code> to write into.
+     * @param settings the <code>NodeSettings</code> to write into
      */
+    @Override
     public void saveSettingsTo(final NodeSettings settings) {
         String classCol = m_chooser.getSelectedColumn();
         settings.addString(m_configName, classCol);

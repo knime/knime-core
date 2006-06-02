@@ -16,6 +16,7 @@
  * 
  * History
  *   29.10.2005 (mb): created
+ *   2006-05-26 (tm): reviewed
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
@@ -47,10 +48,12 @@ public class DialogComponentFileChooser extends DialogComponent {
     private final JButton m_browseButton;
     
     /**
-     * Constructor. Default is a JFileChooser.OPEN_DIALOG.
+     * Constructor that creates a file chooser with an
+     * {@link JFileChooser#OPEN_DIALOG} that filters files according to the
+     * given extensions.
      * 
      * @param configName key for filename in config object
-     * @param validExtensions prefer files with those extensions
+     * @param validExtensions only show files with those extensions
      */
     public DialogComponentFileChooser(final String configName,
             final String... validExtensions) {
@@ -58,12 +61,14 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
     
     /**
-     * Constructor, no valid extensions set.
+     * Constructor that creates a file chooser of the given type without a file
+     * filter.
      * 
      * @param configName key for filename in config object
-     * @param dialogType JFileChooser.OPEN_DIALOG, SAVE_DIALOG, CUSTOM_DIALOG.
-     * @param directoryOnly If directories are only selectable, otherwise
-     *        only files can be selected.
+     * @param dialogType {@link JFileChooser#OPEN_DIALOG},
+     *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
+     * @param directoryOnly <code>true</code> if only directories should be
+     * selectable, otherwise only files can be selected
      */
     public DialogComponentFileChooser(final String configName,
             final int dialogType, final boolean directoryOnly) {
@@ -71,11 +76,13 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
     
     /**
-     * Constructor.
+     * Constructor that creates a file chooser of the given type that filters
+     * the files according to the given extensions.
      * 
      * @param configName key for filename in config object
-     * @param dialogType JFileChooser.OPEN_DIALOG, SAVE_DIALOG, CUSTOM_DIALOG.
-     * @param validExtensions prefer files with those extensions
+     * @param dialogType {@link JFileChooser#OPEN_DIALOG},
+     *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
+     * @param validExtensions only show files with those extensions
      */
     public DialogComponentFileChooser(final String configName,
             final int dialogType, final String... validExtensions) {
@@ -83,13 +90,15 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * Constructor.
+     * Constructor that creates a file chooser of the given type that filters
+     * the files according to the given extensions.
      * 
      * @param configName key for filename in config object
-     * @param dialogType JFileChooser.OPEN_DIALOG, SAVE_DIALOG, CUSTOM_DIALOG.
-     * @param directoryOnly If directories are only selectable, otherwise
-     *        only files can be selected.
-     * @param validExtensions prefer files with those extensions
+     * @param dialogType {@link JFileChooser#OPEN_DIALOG},
+     *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
+     * @param directoryOnly <code>true</code> if only directories should be
+     *  selectable, otherwise only files can be selected
+     * @param validExtensions only show files with those extensions
      */
     public DialogComponentFileChooser(final String configName,
             final int dialogType, final boolean directoryOnly,
@@ -151,6 +160,9 @@ public class DialogComponentFileChooser extends DialogComponent {
         private String[] m_validExtensions;
 
         /**
+         * Creates a new simple file filter that filters out all files not
+         * mathcing the given extensions.
+         * 
          * @param exts allowed extensions
          */
         public SimpleFileFilter(final String[] exts) {
@@ -160,6 +172,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         /**
          * @see java.io.FileFilter#accept(java.io.File)
          */
+        @Override
         public boolean accept(final File f) {
             if (f != null) {
                 if (f.isDirectory()) {
@@ -178,6 +191,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         /**
          * @see javax.swing.filechooser.FileFilter#getDescription()
          */
+        @Override
         public String getDescription() {
             String descr = "";
             for (String ext : m_validExtensions) {
@@ -191,9 +205,9 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @see de.unikn.knime.core.node.defaultnodedialog.DialogComponent
      *      #loadSettingsFrom(NodeSettings, DataTableSpec[])
      * 
-     * @param settings the NodeSettings object to read settings from.
-     * @param specs of all input tables.
-     * @throws InvalidSettingsException If the settings could not be read.
+     * @param settings the NodeSettings object to read settings from
+     * @param specs specs of all input tables
+     * @throws InvalidSettingsException if the settings could not be read
      */
     @Override
     public void loadSettingsFrom(final NodeSettings settings,
