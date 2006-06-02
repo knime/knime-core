@@ -199,7 +199,8 @@ public final class ConsoleViewAppender extends Writer {
      */
     public void write(final char[] cbuf, final int off, final int len)
             throws IOException {
-        Display.getDefault().syncExec(new Runnable() {
+//        Display.getDefault().syncExec(new Runnable() {
+          Display.getDefault().asyncExec(new Runnable() {            
             public void run() {
                 MessageConsole console = findConsole(CONSOLE_NAME);
                 MessageConsoleStream out = console.newMessageStream();
