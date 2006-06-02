@@ -65,14 +65,20 @@ public final class FilterColumnTable implements DataTable {
      * @param columns The column indices to INCLUDE or EXCLUDE from the table.
      * @param include If <code>true</code> the columns are INCLUDE otherwise
      *            EXCLUDED.
-     * @throws NullPointerException If one of the args is <code>null</code>.
      * @throws ArrayIndexOutOfBoundsException If one of the column indices lies
      *             not within the table's column range.
-     * @throws IllegalArgumentException If the column indices are empty or one
-     *             of the column indices is used twice.
+     * @throws IllegalArgumentException If the <i>data</i> or <i>columns</i> are
+     *         <code>null</code>, or column indices are out of range or appear 
+     *         as duplicates in the array.
      */
     public FilterColumnTable(final DataTable data, final boolean include,
             final int... columns) {
+        if (data == null) {
+            throw new IllegalArgumentException("Table must not be null");
+        }
+        if (columns == null) {
+            throw new IllegalArgumentException("Indices must not be null.");
+        }
         // keep input data
         m_data = data;
         DataTableSpec spec = data.getDataTableSpec();
@@ -152,6 +158,7 @@ public final class FilterColumnTable implements DataTable {
     }
 
     private static int[] inverse(final int[] columns, final int len) {
+        checkIndices(len, columns);
         boolean[] ins = new boolean[len];
         for (int i = 0; i < columns.length; i++) {
             ins[columns[i]] = true; // exclude it
@@ -184,34 +191,32 @@ public final class FilterColumnTable implements DataTable {
      */
     public static final DataTableSpec createFilterTableSpec(
             final DataTableSpec spec, final int... columns) {
-
-        assert (spec != null);
-
-        for (int i = 0; i < columns.length; i++) {
-            if (columns[i] < 0 || columns[i] >= spec.getNumColumns()) {
-                throw new ArrayIndexOutOfBoundsException(
-                        "Column index is out of range: 0 <= " + columns[i]
-                                + " < " + spec.getNumColumns() + ".");
-            } else {
-                // test if column already in use
-                for (int j = 0; j < i; j++) {
-                    if (columns[i] == columns[j]) {
-                        throw new IllegalArgumentException(
-                                "Column index is already is use: [" + i
-                                        + "] = [" + j + "] = " + columns[i]
-                                        + ".");
-                    }
-                }
-            }
-        }
-
+        checkIndices(spec.getNumColumns(), columns);
         DataColumnSpec[] cspecs = new DataColumnSpec[columns.length];
         for (int i = 0; i < columns.length; i++) {
             cspecs[i] = spec.getColumnSpec(columns[i]);
         }
-
         return new DataTableSpec(cspecs);
-    } // createFilterColumnTableSpec(DataTableSpec,int...)
+    }
+    
+    private static void checkIndices(final int ncols, final int... indices) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < indices.length; i++) {
+            if (indices[i] < 0 || indices[i] >= ncols) {
+                throw new ArrayIndexOutOfBoundsException("index out of range: "
+                        + indices[i]);
+            }
+            for (int j = i + 1; j < indices.length; j++) {
+                if (indices[i] == indices[j]) {
+                    sb.append(" (" + i + "," + j + ")");
+                }
+            }
+        }
+        if (sb.length() > 0) {
+            throw new IllegalArgumentException("column duplicates:" 
+                    + sb.toString());
+        }
+    }
 
     /**
      * Inits a new filter column table based on a <code>DataTable</code> and a
@@ -236,6 +241,9 @@ public final class FilterColumnTable implements DataTable {
      */
     private static int[] findColumnIndices(final DataTableSpec spec,
             final String... columns) {
+        if (columns == null) {
+            throw new IllegalArgumentException("Columns must not be null.");
+        }
         int[] ret = new int[columns.length];
         for (int i = 0; i < columns.length; i++) {
             if (columns[i] == null) {
@@ -245,18 +253,11 @@ public final class FilterColumnTable implements DataTable {
                 ret[i] = spec.findColumnIndex(columns[i]);
                 if (ret[i] < 0 || ret[i] >= spec.getNumColumns()) {
                     throw new IllegalArgumentException("Column name "
-                            + columns[i].toString() + " not found.");
-                }
-                // check uniqueness
-                for (int k = 0; k < i; k++) {
-                    if (ret[i] == ret[k]) {
-                        throw new IllegalArgumentException(
-                                "Column index is already in use: [" + i
-                                        + "] = [" + k + "] = " + ret[k] + ".");
-                    }
+                            + columns[i] + " not found.");
                 }
             }
         }
+        checkIndices(spec.getNumColumns(), ret);
         return ret;
     }
 
@@ -267,14 +268,16 @@ public final class FilterColumnTable implements DataTable {
      * 
      * @param data The underlying table.
      * @param type The column type to be extracted.
-     * @throws NullPointerException if one of the args is <code>null</code>.
-     * @throws ClassCastException If the column type is not assignable from
-     *             <code>DataCell</code>.
      * @throws IllegalArgumentException If the given type does not appear in the
      *             table.
      */
     public FilterColumnTable(final DataTable data, final DataType type) {
-
+        if (data == null) {
+            throw new IllegalArgumentException("Table must not be null.");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("DataType must not be null.");
+        }
         // retrieve input spec and keep data table
         DataTableSpec spec = data.getDataTableSpec();
         m_data = data;

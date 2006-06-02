@@ -310,7 +310,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(null, new int[] {0});
             fail("Exception expected: Table is null.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -322,7 +322,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, (int[])null);
             fail("Exception expected: Column indices are null.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -342,11 +342,11 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, new int[] {0, 1, 0});
             fail("Exception expected: Column index 0 found twice.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
-
+    
     /**
      * Negative column index in array.
      */
@@ -354,7 +354,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, new int[] {0, 1, -1});
             fail("Exception expected: Negative column index -1.");
-        } catch (Exception e) {
+        } catch (ArrayIndexOutOfBoundsException e) {
             assertTrue(true);
         }
     }
@@ -366,7 +366,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, new int[] {0, 1, 2, 3, 4, 5});
             fail("Exception expected: Column index out of range 5.");
-        } catch (Exception e) {
+        } catch (ArrayIndexOutOfBoundsException e) {
             assertTrue(true);
         }
     }
@@ -378,7 +378,19 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, (DataType)null);
             fail("Exception expected: Class type is null.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+    }
+    
+    /**
+     * Column index in array appears twice.
+     */
+    public void testInConstructorException8() {
+        try {
+            new FilterColumnTable(m_table, false, new int[] {0, 0});
+            fail("Exception expected: Column index 0 found twice.");
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -390,7 +402,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, (String[]) null);
             fail("Exception expected: Array of column names is null.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -399,7 +411,7 @@ public final class FilterColumnTableTest extends TestCase {
      * Array of column indices is empty.
      */
     public void testInConstructorException11() {
-        new FilterColumnTable(m_table, new String[] {});
+        new FilterColumnTable(m_table, new String[]{});
         assertTrue(true);
     }
 
@@ -410,7 +422,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, "Bla");
             fail("Exception expected: Column name \"Bla\" not in data.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -422,7 +434,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, new String[] {"Col_A", "Col_A"});
             fail("Exception expected: Column name \"Col_A\" found twice.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -477,7 +489,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(null, false, 0);
             fail("Exception expected: Table is null.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -489,7 +501,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, false, (int[])null);
             fail("Exception expected: Column indices are null.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -509,7 +521,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, false, new int[] {0, 1, 0});
             fail("Exception expected: Column index 0 found twice.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
@@ -521,7 +533,7 @@ public final class FilterColumnTableTest extends TestCase {
         try {
             new FilterColumnTable(m_table, false, new int[] {0, 1, -1});
             fail("Exception expected: Negative column index -1.");
-        } catch (Exception e) {
+        } catch (ArrayIndexOutOfBoundsException e) {
             assertTrue(true);
         }
     }
@@ -534,7 +546,7 @@ public final class FilterColumnTableTest extends TestCase {
             new FilterColumnTable(m_table, false, 
                     new int[] {0, 1, 2, 3, 4, 5});
             fail("Exception expected: Column index out of range 5.");
-        } catch (Exception e) {
+        } catch (ArrayIndexOutOfBoundsException e) {
             assertTrue(true);
         }
     }
