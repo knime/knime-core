@@ -159,7 +159,7 @@ public class SingleNodeJob extends Job implements NodeProgressListener {
         CANCEL_CHECKER.addJob(this, future);        
         
         // dummy progress changed
-        progressChanged(0.00, "running...");
+        // progressChanged(0.00, "running...");
         try {
             future.get();
         } catch (Exception ex) {
