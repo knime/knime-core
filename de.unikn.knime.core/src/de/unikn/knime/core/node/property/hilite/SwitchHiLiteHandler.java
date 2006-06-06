@@ -25,7 +25,7 @@ import java.util.Set;
 import de.unikn.knime.core.data.DataCell;
 
 /**
- * Allows the switching of hilite events between several hilite handlers.
+ * Translates hilite events between several hilite handlers and listeners.
  * This hilite handler/-listener listenes to some handlers, propagates the 
  * hilite events of them to the other handlers and to the registered listeners.
  * The hilite handler part of this class informs the handlers it listens to 
