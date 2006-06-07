@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 295 $ $Date: 2006-02-23 10:32:31 +0100 (Do, 23 Feb 2006) $ $Author: gabriel $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -28,15 +26,17 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
 
 /**
- * A Handler computing sizes of objects (rows) based on the double value of
- * a DataCell.
+ * A <code>SizeModel</code> computing sizes of objects (rows) based on the 
+ * <code>double</code> value of <code>DataCell</code>.
  * 
  * @author M. Berthold, University of Konstanz
  */
 public class SizeModelDouble implements SizeModel {
 
-    /* store range of domain */
+    /** Minimum range value of domain. */
     private final double m_min;
+    
+    /** Maximum range value of domain. */
     private final double m_max;
 
     /**
@@ -74,11 +74,25 @@ public class SizeModelDouble implements SizeModel {
         return -1;       // incomptible type: -1
     }
     
+    /**
+     * Saves min and max ranges to the given <code>Config</code>.
+     * @param config To write bounds into.
+     * @see de.unikn.knime.core.data.property.SizeHandler.SizeModel
+     *      #save(de.unikn.knime.core.node.config.Config)
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>.
+     */
     public void save(final Config config) {
         config.addDouble("min", m_min);
         config.addDouble("max", m_max);
     }
     
+    /**
+     * Reads the size settings and return a new <code>SizeModelDouble</code>.
+     * @param config Read min and max bound from.
+     * @return A new size model.
+     * @throws InvalidSettingsException If the bounds could not be read.
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>.
+     */
     public static SizeModelDouble load(final Config config) 
             throws InvalidSettingsException {
         double min = config.getDouble("min");

@@ -24,10 +24,9 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
 
 /**
- * Interface for a color handler generating colors based on - usually
- * user controlled - function on the value of a <code>DataCell</code>. The 
- * internal <code>ColorModel</code> allows to set colors and supports save and
- * load.
+ * Final <code>ColorHandler</code> implementation which forwards color
+ * requests to its internal <code>ColorModel</code>, both are able to
+ * save and load their color settings to an <code>Config</code> object.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -39,8 +38,8 @@ public final class ColorHandler implements PropertyHandler {
     private final ColorModel m_model;
     
     /**
-     * Create new color handler with the given model.
-     * @param model The color model which keep the color settings.
+     * Create new color handler with the given <code>ColorModel</code>.
+     * @param model The color model which has the color settings.
      * @throws IllegalArgumentException If the model is <code>null</code>.
      */
     public ColorHandler(final ColorModel model) {
@@ -51,8 +50,9 @@ public final class ColorHandler implements PropertyHandler {
     }
     
     /**
-     * Return a <code>ColorAttr</code> as specified by the content
-     * of the given <code>DataCell</code>. If no <code>ColorAttr</code>
+     * Returns a <code>ColorAttr</code> object as specified by the content
+     * of the given <code>DataCell</code> requested from the underlying 
+     * <code>ColorModel</code>. If no <code>ColorAttr</code>
      * is assigned to <i>dc</i>, this method shall return a default
      * color, but never <code>null</code>.
      * 
@@ -61,14 +61,34 @@ public final class ColorHandler implements PropertyHandler {
      * @see ColorAttr#DEFAULT
      */
     public ColorAttr getColorAttr(final DataCell dc) {
-        return m_model.getColorAttr(dc);
+        ColorAttr color = m_model.getColorAttr(dc);
+        if (color == null) {
+            return ColorAttr.DEFAULT;
+        }
+        return color;
     }
     
+    /**
+     * Saves the <code>ColorModel</code> to the given <code>Config</code> by
+     * adding a the <code>ColorModel</code> class as String and calling
+     * <code>save()</code> within the model.
+     * @param config Color settings save to.
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>.
+     */
     public void save(final Config config) {
         config.addString("color_model_class", m_model.getClass().getName());
         m_model.save(config);
     }
     
+    /**
+     * Reads the color model settings from the given <code>Config</code>, inits 
+     * the model, and returns a new <code>ColorHandler</code>.
+     * @param config Read color settings from.
+     * @return A new <code>ColorHandler</code> object.
+     * @throws InvalidSettingsException If either the class or color model
+     *         could not be read.
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
+     */
     public static ColorHandler load(final Config config) 
             throws InvalidSettingsException {
         String modelClass = config.getString("color_model_class");
@@ -77,13 +97,25 @@ public final class ColorHandler implements PropertyHandler {
         } else if (modelClass.equals(ColorModelRange.class.getName())) {
             return new ColorHandler(ColorModelRange.load(config));
         } else {
-            throw new InvalidSettingsException("Unknown ColorModel: "
+            throw new InvalidSettingsException("Unknown ColorModel class: "
                     + modelClass);
         }
     }
-    
+ 
+    /**
+     * Interface for allowing requests for color settings. Only package visible.
+     */
     interface ColorModel {
+        /**
+         * Returns the <code>ColorAttr</code> for given attribut value.
+         * @param dc The <code>DataCell</code> to get the color for.
+         * @return A <code>ColorAttr</code> object, but not <code>null</code>.
+         */
         ColorAttr getColorAttr(DataCell dc);
+        /**
+         * Save color model settings to the given <code>Config</code>.
+         * @param config Save settings to.
+         */
         void save(Config config);
     }
 

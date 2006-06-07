@@ -31,20 +31,26 @@ import de.unikn.knime.core.node.config.Config;
 
 /**
  * Computes colors based on a range of minimum and maximum values
- * assigned to certain colors which are interpolated.
+ * assigned to certain colors which are interpolated between a min and
+ * maximum color.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ColorModelRange implements ColorModel {
 
+    /** Lower bound. */
     private final double m_lower;
     
+    /** Upper bound. */
     private final double m_upper;
 
+    /** Upper minus lower bound. */
     private final double m_range;
 
+    /** Minimum color for lower bound. */
     private final Color m_min;
 
+    /** Maximum color for upper bound. */
     private final Color m_max;
 
     /**
@@ -83,7 +89,8 @@ public final class ColorModelRange implements ColorModel {
      * @return A ColorAttr for a DataCell value or the DEFAULT ColorAttr.
      */
     public ColorAttr getColorAttr(final DataCell dc) {
-        if (dc == null || !dc.getType().isCompatible(DoubleValue.class)) {
+        if (dc == null || dc.isMissing() 
+                || !dc.getType().isCompatible(DoubleValue.class)) {
             return ColorAttr.DEFAULT;
         }
         double ratio;
@@ -113,7 +120,7 @@ public final class ColorModelRange implements ColorModel {
 
     /**
      * Save lower and upper, and min and max colors to the given Config.
-     * @param Config to save settings to.
+     * @param config to save settings to.
      * @see de.unikn.knime.core.data.property.ColorHandler.ColorModel
      *      #save(de.unikn.knime.core.node.config.Config)
      */
@@ -131,7 +138,7 @@ public final class ColorModelRange implements ColorModel {
      * min and max colors.
      * @param config Read settings from.
      * @return A new <code>ColorModelRange</code> object. 
-     * @throws InvalidSettingsException
+     * @throws InvalidSettingsException If the settings could not be read.
      */
     public static ColorModelRange load(final Config config) 
             throws InvalidSettingsException {

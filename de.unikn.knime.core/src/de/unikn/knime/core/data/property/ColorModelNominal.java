@@ -31,7 +31,8 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
 
 /**
- * Maps nominal or other DataCell values to ColorAttr objects.
+ * Color model which maps a set of <code>DataCell</code> objects to 
+ * <code>Color</code>.
  */
 public final class ColorModelNominal implements ColorModel {
     
@@ -64,6 +65,15 @@ public final class ColorModelNominal implements ColorModel {
         return (ColorAttr) o;
     }
     
+    /**
+     * Saves the <code>DataCell</code> to <code>Color</code> mapping to the 
+     * given <code>Config</code>. The color is split into red, green, blue, and
+     * alpha component which are stored as int array.
+     * @param config Save settings to.
+     * @see de.unikn.knime.core.data.property.ColorHandler.ColorModel
+     *      #save(de.unikn.knime.core.node.config.Config)
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
+     */
     public void save(final Config config) {
         DataCell[] keys = m_map.keySet().toArray(new DataCell[0]);
         config.addDataCellArray("keys", keys);
@@ -75,6 +85,15 @@ public final class ColorModelNominal implements ColorModel {
         }
     }
     
+    /**
+     * Read color settings from given <code>Config</code> and returns a new
+     * <code>ColorModelNominal</code> object.
+     * @param config Reads color model from.
+     * @return A new <code>ColorModelNominal</code> object.
+     * @throws InvalidSettingsException If the color model settings could not
+     *         be read.
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>.
+     */
     public static ColorModelNominal load(final Config config) 
             throws InvalidSettingsException {
         Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
