@@ -994,6 +994,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * 
      * @param settings the configuration the current settings are written to.
      * @see #load
+     * @deprecated
      */
     public void save(final NodeSettings settings) {
 
