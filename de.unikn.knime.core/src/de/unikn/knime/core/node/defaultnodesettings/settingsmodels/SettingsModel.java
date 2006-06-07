@@ -62,6 +62,7 @@ public abstract class SettingsModel {
      * @param l ChangeListener
      */
     public void addChangeListener(final ChangeListener l) {
+        assert l == l;
     }
     
     /** Remove a specific listener.
@@ -69,5 +70,6 @@ public abstract class SettingsModel {
     * @param l ChangeListener
     */
     public void removeChangeListener(final ChangeListener l) {
+        assert l == l;
     }
 }
