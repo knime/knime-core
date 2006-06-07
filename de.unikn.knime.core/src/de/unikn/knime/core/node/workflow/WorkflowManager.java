@@ -21,6 +21,10 @@
  */
 package de.unikn.knime.core.node.workflow;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -76,23 +80,58 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
     // change listener support (transient)
     private final transient ArrayList<WorkflowListener> m_eventListeners;
+    
+    /** Workflow name. */
+    private String m_workflowName;
+    
+    /**
+     * Identifier for KNIME workflows. 
+     */
+    public static final String WORKFLOW_ID = "workflow.knime";
+    
+    private static final String WORKFLOW_NAME_KEY = "workflow_name";
 
     /**
      * Create new Workflow.
-     * 
+     * @deprecated
      */
     public WorkflowManager() {
         m_nodesByID = new HashMap<Integer, NodeContainer>();
         m_nodesByNode = new HashMap<Node, Integer>();
         m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
         m_eventListeners = new ArrayList<WorkflowListener>();
+        m_workflowName = WORKFLOW_ID;
     }
+    
+    public WorkflowManager(final String name) {
+        m_nodesByID = new HashMap<Integer, NodeContainer>();
+        m_nodesByNode = new HashMap<Node, Integer>();
+        m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
+        m_eventListeners = new ArrayList<WorkflowListener>();
+        m_workflowName = name;
+    }
+    
+    public WorkflowManager(final File file) 
+            throws IOException, InvalidSettingsException {
+        this(toNodeSettings(file));
+    }
+    
+    private static NodeSettings toNodeSettings(final File file)
+            throws IOException, InvalidSettingsException {
+        if (!file.isDirectory()) {
+            throw new IOException("File " + file + " is not a directory.");
+        }
+        File settings = new File(file.getAbsolutePath() + WORKFLOW_ID);
+        return NodeSettings.loadFromXML(new FileInputStream(settings));
+    }    
+    
 
     /**
      * Create new Workflow from NodeSettings.
      * 
      * @param settings Workflow read from.
      * @throws InvalidSettingsException If the settings could not be loaded.
+     * @deprecated
      */
     public WorkflowManager(final NodeSettings settings)
             throws InvalidSettingsException {
@@ -102,6 +141,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
         m_eventListeners = new ArrayList<WorkflowListener>();
         // read name
+        m_workflowName = settings.getString(WORKFLOW_NAME_KEY);
         // read running ids for new nodes and connections
         m_runningNodeID = settings.getInt(KEY_RUNNING_NODE_ID);
         m_runningConnectionID = settings.getInt(KEY_RUNNING_CONN_ID);
@@ -980,6 +1020,17 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             // TODO notify about connection settings saved ????
         }
     }
+    
+    public void save(final File file) throws IOException {
+        if (!file.isDirectory()) {
+            throw new IOException("File " + file + " is not a directory.");
+        }
+        NodeSettings settings = new NodeSettings(m_workflowName);
+        this.save(settings);
+        FileOutputStream fos = new FileOutputStream(
+                new File(file + WORKFLOW_ID));
+        settings.saveToXML(fos);
+    }
 
     /**
      * Read workflow setup from configuration object. Nodes will be read first
@@ -994,6 +1045,11 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             throws InvalidSettingsException {
         return new WorkflowManager(settings);
     }
+    
+    public static WorkflowManager load(final File file)
+            throws IOException, InvalidSettingsException {
+        return new WorkflowManager(file);
+    }
 
     /**
      * Returns the amount of nodes currently managed by this instance.
@@ -1003,6 +1059,14 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     public int getNumNodes() {
         return m_nodesByID.keySet().size();
     }
+    
+    public String getWorkflowName() {
+        return m_workflowName;
+    }
+    
+    public void setWorkflowName(final String name) {
+        m_workflowName = name;
+    }   
 
     /**
      * Returns all nodes currently managed by this instance.
