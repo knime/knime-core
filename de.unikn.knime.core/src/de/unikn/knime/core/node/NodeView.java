@@ -41,10 +41,9 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
-
-import de.unikn.knime.core.node.util.SimpleMessageBox;
 
 /**
  * Node view base class which implements the basic and common window properties.
@@ -58,6 +57,12 @@ import de.unikn.knime.core.node.util.SimpleMessageBox;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeView {
+
+    /**
+     * The node logger for this class; do not make static to make sure the right
+     * class name is printed in messages.
+     */
+    private final NodeLogger m_logger;
 
     /**
      * Holds the underlying <code>NodeModel</code>.
@@ -124,7 +129,7 @@ public abstract class NodeView {
     /**
      * The directory to export the view as image.
      */
-    private static String s_exportDir;
+    private static String s_exportDir = "";
 
     /**
      * This class sends property events when the status changes. So far, the
@@ -151,6 +156,9 @@ public abstract class NodeView {
         if (nodeModel == null) {
             throw new NullPointerException();
         }
+
+        // create logger
+        m_logger = NodeLogger.getLogger(this.getClass());
 
         // store reference to the node model
         m_nodeModel = nodeModel;
@@ -222,9 +230,6 @@ public abstract class NodeView {
         // after view has been created: register the view with the model
         m_nodeModel.registerView(this);
 
-        // the directory to export the view as image is initally empty
-        s_exportDir = "";
-
     } // NodeView(NodeModel,String)
 
     /**
@@ -246,10 +251,11 @@ public abstract class NodeView {
             // file chooser starts at the default location
         }
 
+        String path;
         JFileChooser chooser = new JFileChooser(exportDirFile);
-        int returnVal = chooser.showOpenDialog(m_frame);
+        int returnVal = chooser.showSaveDialog(m_frame);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            String path;
+            
             try {
                 path = chooser.getSelectedFile().getAbsoluteFile().toURL()
                         .toString();
@@ -273,20 +279,20 @@ public abstract class NodeView {
 
         // write image to file
         try {
-            File exportFile = new File(new URL(s_exportDir).getFile());
+            File exportFile = new File(new URL(path).getFile());
             exportFile.createNewFile();
             ImageIO.write(image, "png", exportFile);
         } catch (Exception e) {
 
-            SimpleMessageBox messageBox = new SimpleMessageBox(
-                    "View could not be exported.", m_frame);
-            messageBox.setVisible(true);
-            e.printStackTrace();
+            JOptionPane.showConfirmDialog(m_frame,
+                    "View could not be exported.", "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
+
+            m_logger.warn("View could not be exported due to io problems: ", e);
         }
-        
-        SimpleMessageBox messageBox = new SimpleMessageBox(
-                "View was successfully exported.", m_frame);
-        messageBox.setVisible(true);
+
+        JOptionPane.showConfirmDialog(m_frame, "View successfully exported.",
+                "Info", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
