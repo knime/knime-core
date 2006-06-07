@@ -19,7 +19,6 @@
  */
 package de.unikn.knime.core.data;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,8 +55,7 @@ import de.unikn.knime.core.node.config.Config;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public final class DataTableSpec 
-    implements Iterable<DataColumnSpec>, Serializable {
+public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DataTableSpec.class);

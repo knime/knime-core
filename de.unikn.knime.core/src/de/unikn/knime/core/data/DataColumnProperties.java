@@ -19,7 +19,6 @@
  */
 package de.unikn.knime.core.data;
 
-import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -37,7 +36,7 @@ import de.unikn.knime.core.node.config.Config;
  * 
  * @author wiswedel, University of Konstanz
  */
-public final class DataColumnProperties implements Cloneable, Serializable {
+public final class DataColumnProperties implements Cloneable {
 
    private final Properties m_props;
     

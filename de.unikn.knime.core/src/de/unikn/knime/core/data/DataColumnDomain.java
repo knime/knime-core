@@ -15,7 +15,6 @@
  */
 package de.unikn.knime.core.data;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -37,7 +36,7 @@ import de.unikn.knime.core.node.config.Config;
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-public final class DataColumnDomain implements Serializable {
+public final class DataColumnDomain {
     
     /**
      * Lower bound value or <code>null</code>.

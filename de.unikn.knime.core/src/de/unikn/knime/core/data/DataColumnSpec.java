@@ -16,8 +16,6 @@
  */
 package de.unikn.knime.core.data;
 
-import java.io.Serializable;
-
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -42,7 +40,7 @@ import de.unikn.knime.core.node.config.Config;
  * @author Michael Berthold, University of Konstanz
  * 
  */
-public final class DataColumnSpec implements Serializable {
+public final class DataColumnSpec {
 
     /** Keeps the column name. */
     private final String m_name;
