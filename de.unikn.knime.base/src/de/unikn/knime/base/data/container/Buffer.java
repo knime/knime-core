@@ -25,8 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -51,8 +50,10 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
+import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
+import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NodeSettings;
 
 /**
  * A buffer writes the rows from a <code>DataContainer</code> to a file. 
@@ -87,7 +88,20 @@ final class Buffer {
     private static final String ZIP_ENTRY_DATA = "data.bin";
     
     /** Name of the zip entry containing the spec. */
-    private static final String ZIP_ENTRY_SPEC = "spec.bin";
+    private static final String ZIP_ENTRY_SPEC = "spec.xml";
+    
+    /** Config entries when writing the spec to the file (uses NodeSettings
+     * object, which uses key-value pairs. Here: size of the table (#rows).
+     */
+    private static final String CFG_SIZE = "table.size";
+    
+    /** Config entry: Array of the used DataCell classes; storing the class
+     * names as strings, see m_shortCutsLookup. */
+    private static final String CFG_CELL_CLASSES = "table.datacell.classes";
+    
+    /** Config entry: The spec of the table. */
+    private static final String CFG_TABLESPEC = "table.spec";
+    
 
     /** Contains weak references to file iterators that have ever been created
      * but not (yet) garbage collected. We will add a shutdown hook 
@@ -208,8 +222,7 @@ final class Buffer {
         if (specInput == null) {
             throw new IOException("Invalid file: No spec information");
         }
-        ObjectInputStream inStream = new GlobalObjectInputStream(
-                new BufferedInputStream(specInput));
+        InputStream inStream = new BufferedInputStream(specInput);
         try {
             readSpecFromFile(inStream);
         } catch (ClassNotFoundException cnfe) {
@@ -218,7 +231,13 @@ final class Buffer {
                     + inFile.getAbsolutePath() + "\"");
             ioe.initCause(cnfe);
             throw ioe;
-        } 
+        } catch (InvalidSettingsException ise) {
+            IOException ioe = new IOException(
+                    "Unable to read spec from zip file \""
+                    + inFile.getAbsolutePath() + "\"");
+            ioe.initCause(ise);
+            throw ioe;
+        }
         InputStream dataInput = zipFile.getInputStream(
                 new ZipEntry(ZIP_ENTRY_DATA));
         if (dataInput == null) {
@@ -285,10 +304,7 @@ final class Buffer {
                     (ZipOutputStream)m_outStream.getUnderylingStream();
                 zipOut.closeEntry();
                 zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
-                ObjectOutputStream outStream = new ObjectOutputStream(zipOut);
-                writeSpecToFile(outStream);
-                outStream.flush();
-                zipOut.closeEntry();
+                writeSpecToFile(zipOut);
                 zipOut.close();
             } else {
                 m_outStream.close();
@@ -309,23 +325,44 @@ final class Buffer {
      * @param outStream The stream to write to.
      * @throws IOException If that fails.
      */
-    private void writeSpecToFile(final ObjectOutputStream outStream)
+    private void writeSpecToFile(final OutputStream outStream)
             throws IOException {
-        outStream.writeInt(m_size);
-        // first write the short cut array
-        outStream.writeObject(m_shortCutsLookup);
-        outStream.writeObject(m_spec);
+        NodeSettings settings = new NodeSettings("Table Meta Information");
+        settings.addInt(CFG_SIZE, m_size);
+        // m_shortCutsLookup to string array, saved in config
+        String[] cellClasses = new String[m_shortCutsLookup.length];
+        for (int i = 0; i < m_shortCutsLookup.length; i++) {
+            cellClasses[i] = m_shortCutsLookup[i].getName();
+        }
+        settings.addStringArray(CFG_CELL_CLASSES, cellClasses);
+        NodeSettings specSettings = settings.addConfig(CFG_TABLESPEC);
+        m_spec.save(specSettings);
+        settings.saveToXML(outStream);
     }
     
     /**
      * Reads the zip entry containing the spec.
      */
     @SuppressWarnings("unchecked") // cast with generics
-    private void readSpecFromFile(final ObjectInputStream inStream) 
-        throws IOException, ClassNotFoundException {
-        m_size = inStream.readInt();
-        m_shortCutsLookup = (Class<? extends DataCell>[])inStream.readObject();
-        m_spec = (DataTableSpec)inStream.readObject();
+    private void readSpecFromFile(final InputStream inStream) 
+        throws IOException, ClassNotFoundException, InvalidSettingsException {
+        NodeSettings settings = NodeSettings.loadFromXML(inStream);
+        m_size = settings.getInt(CFG_SIZE);
+        if (m_size < 0) {
+            throw new IOException("Table size must not be < 0: " + m_size);
+        }
+        String[] cellClasses = settings.getStringArray(CFG_CELL_CLASSES);
+        m_shortCutsLookup = new Class[cellClasses.length];
+        for (int i = 0; i < cellClasses.length; i++) {
+            Class cl = GlobalClassCreator.createClass(cellClasses[i]);
+            if (!DataCell.class.isAssignableFrom(cl)) {
+                throw new InvalidSettingsException("No data cell class: \"" 
+                        + cellClasses[i] + "\"");
+            }
+            m_shortCutsLookup[i] = cl;
+        }
+        NodeSettings specSettings = settings.getConfig(CFG_TABLESPEC);
+        m_spec = DataTableSpec.load(specSettings);
     }
     
     /** Create the shortcut table. */
