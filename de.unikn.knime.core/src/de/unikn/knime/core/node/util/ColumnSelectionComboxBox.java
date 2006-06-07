@@ -1,5 +1,18 @@
 /*
- * Created on Mar 6, 2006
+ * --------------------------------------------------------------------- *
+ *   This source code, its documentation and all appendant files         *
+ *   are protected by copyright law. All rights reserved.                *
+ *                                                                       *
+ *   Copyright, 2003 - 2006                                              *
+ *   Universitaet Konstanz, Germany.                                     *
+ *   Lehrstuhl fuer Angewandte Informatik                                *
+ *   Prof. Dr. Michael R. Berthold                                       *
+ *                                                                       *
+ *   You may not modify, publish, transmit, transfer or sell, reproduce, *
+ *   create derivative works from, distribute, perform, display, or in   *
+ *   any way exploit any of the content, in whole or in part, except as  *
+ *   otherwise expressly permitted in writing by the copyright owner.    *
+ * --------------------------------------------------------------------- *
  */
 package de.unikn.knime.core.node.util;
 
@@ -115,7 +128,8 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
      */
-    public final void update(final DataTableSpec spec, final String selColName) {
+    public final void update(
+            final DataTableSpec spec, final String selColName) {
         update(spec, selColName, false);
     }
     
