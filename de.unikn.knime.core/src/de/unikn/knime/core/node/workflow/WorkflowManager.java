@@ -81,34 +81,19 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     // change listener support (transient)
     private final transient ArrayList<WorkflowListener> m_eventListeners;
     
-    /** Workflow name. */
-    private String m_workflowName;
-    
     /**
      * Identifier for KNIME workflows. 
      */
-    public static final String WORKFLOW_ID = "workflow.knime";
+    public static final String WORKFLOW_FILE = "workflow.knime";
     
-    private static final String WORKFLOW_NAME_KEY = "workflow_name";
-
     /**
      * Create new Workflow.
-     * @deprecated
      */
     public WorkflowManager() {
         m_nodesByID = new HashMap<Integer, NodeContainer>();
         m_nodesByNode = new HashMap<Node, Integer>();
         m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
         m_eventListeners = new ArrayList<WorkflowListener>();
-        m_workflowName = WORKFLOW_ID;
-    }
-    
-    public WorkflowManager(final String name) {
-        m_nodesByID = new HashMap<Integer, NodeContainer>();
-        m_nodesByNode = new HashMap<Node, Integer>();
-        m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
-        m_eventListeners = new ArrayList<WorkflowListener>();
-        m_workflowName = name;
     }
     
     public WorkflowManager(final File file) 
@@ -121,7 +106,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         if (!file.isDirectory()) {
             throw new IOException("File " + file + " is not a directory.");
         }
-        File settings = new File(file.getAbsolutePath() + WORKFLOW_ID);
+        File settings = new File(file.getAbsolutePath() 
+                + File.separator + WORKFLOW_FILE);
         return NodeSettings.loadFromXML(new FileInputStream(settings));
     }    
     
@@ -140,8 +126,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         m_nodesByNode = new HashMap<Node, Integer>();
         m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
         m_eventListeners = new ArrayList<WorkflowListener>();
-        // read name
-        m_workflowName = settings.getString(WORKFLOW_NAME_KEY);
         // read running ids for new nodes and connections
         m_runningNodeID = settings.getInt(KEY_RUNNING_NODE_ID);
         m_runningConnectionID = settings.getInt(KEY_RUNNING_CONN_ID);
@@ -1026,10 +1010,11 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         if (!file.isDirectory()) {
             throw new IOException("File " + file + " is not a directory.");
         }
-        NodeSettings settings = new NodeSettings(m_workflowName);
+        // file.getName is ignored when reading.
+        NodeSettings settings = new NodeSettings(file.getName());
         this.save(settings);
         FileOutputStream fos = new FileOutputStream(
-                new File(file + WORKFLOW_ID));
+                new File(file + File.separator + WORKFLOW_FILE));
         settings.saveToXML(fos);
     }
 
@@ -1061,14 +1046,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         return m_nodesByID.keySet().size();
     }
     
-    public String getWorkflowName() {
-        return m_workflowName;
-    }
-    
-    public void setWorkflowName(final String name) {
-        m_workflowName = name;
-    }   
-
     /**
      * Returns all nodes currently managed by this instance.
      * 
