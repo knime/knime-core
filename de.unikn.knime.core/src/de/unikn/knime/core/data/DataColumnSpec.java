@@ -1,4 +1,5 @@
-/* --------------------------------------------------------------------- *
+/* 
+ * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -16,10 +17,11 @@
 package de.unikn.knime.core.data;
 
 import java.io.Serializable;
-import java.util.Iterator;
 
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
+import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.config.Config;
 
 /**
  * Interface describing the makeup of one column in a <code>DataTable</code>
@@ -200,33 +202,59 @@ public final class DataColumnSpec implements Serializable {
     }
 
     /**
-     * Returns a String summary of this column spec inclusing name, type,
-     * possible nominal values, and lower/upper bound if available.
+     * Returns a String summary of this column spec including name and type.
      * 
      * @return A String summary of this column spec.
      */
     @Override
     public String toString() {
-        final StringBuffer buffer = new StringBuffer();
-        buffer.append("(" + getName() + ", ");
-        buffer.append(getType().toString() + ", ");
-        if (!m_domain.hasValues()) {
-            buffer.append("{" + m_domain + "}");
-        } else {
-            buffer.append("{");
-            for (Iterator<DataCell> it = m_domain.getValues().iterator(); it
-                    .hasNext();) {
-                buffer.append(it.next());
-                if (it.hasNext()) {
-                    buffer.append(", ");
-                }
-            }
-            buffer.append("}");
+        return "name=" + getName() + ",type=" + getType();
+    }
+    
+    /**
+     * Saves name, type, domain and properties and - if available - color and 
+     * size property to the given <code>Config</code>. 
+     * @param config Write properties into.
+     */
+    public void save(final Config config) {
+        config.addString("name", m_name);
+        m_type.save(config.addConfig("type"));
+        m_domain.save(config.addConfig("domain"));
+        m_properties.save(config.addConfig("properties"));
+        if (m_colorHandler != null) {
+            m_colorHandler.save(config.addConfig("color"));
         }
-        buffer.append(", " + getDomain().getLowerBound());
-        buffer.append(", " + getDomain().getUpperBound());
-        buffer.append(")");
-        return buffer.toString();
+        if (m_sizeHandler != null) {
+            m_sizeHandler.save(config.addConfig("size"));
+        }   
+    }
+    
+    /**
+     * Reads name, type, domain, and properties from the given 
+     * <code>Config</code> and - if available - size and color property; return 
+     * a new <code>DataColumnSpec</code> object.
+     * @param config To read properties from.
+     * @return A new column spec object.
+     * @throws InvalidSettingsException If one of the non-optinal properties is
+     *         not available or can't be initialized.
+     */
+    public static DataColumnSpec load(final Config config) 
+            throws InvalidSettingsException {
+        String name = config.getString("name");
+        DataType type = DataType.load(config.getConfig("type"));
+        DataColumnDomain domain = 
+            DataColumnDomain.load(config.getConfig("domain"));
+        DataColumnProperties properties = 
+            DataColumnProperties.load(config.getConfig("properties"));
+        ColorHandler color = null;
+        if (config.containsKey("color")) {
+            color = ColorHandler.load(config.getConfig("color"));
+        }
+        SizeHandler size = null;
+        if (config.containsKey("size")) {
+            size = SizeHandler.load(config.getConfig("size"));
+        }
+        return new DataColumnSpec(name, type, domain, properties, size, color);
     }
 
 } // DataColumnSpec

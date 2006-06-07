@@ -1449,7 +1449,7 @@ public abstract class Config extends AbstractConfigEntry
         return toString(0, new StringBuffer());
     }
 
-    private static final int TAB_SIZE = "\t".length();
+    private static final int TAB_SIZE = 2;
 
     private String toString(final int indent, final StringBuffer sb) {
         assert (indent >= 0);
@@ -1467,7 +1467,7 @@ public abstract class Config extends AbstractConfigEntry
             } else {
                 String value = ((ConfigurableEntry)e).toStringValue();
                 if (value == null) {
-                    sb.append("->null\n");
+                    sb.append("->null");
                 } else {
                     sb.append("->" + value);
                 }
@@ -1612,4 +1612,5 @@ public abstract class Config extends AbstractConfigEntry
     public void copyTo(final Config dest) {
         dest.m_map.putAll(this.m_map);
     }
+    
 } // Config

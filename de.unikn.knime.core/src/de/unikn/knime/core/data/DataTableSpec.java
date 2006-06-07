@@ -1,4 +1,5 @@
-/* --------------------------------------------------------------------- *
+/* 
+ * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
  *                                                                       *
@@ -28,7 +29,9 @@ import java.util.Map;
 
 import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.data.property.SizeHandler;
+import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.config.Config;
 
 /**
  * DataTableSpecs are used in two ways: As meta information to specify the
@@ -52,7 +55,6 @@ import de.unikn.knime.core.node.NodeLogger;
  * @see DataColumnSpec
  * 
  * @author Peter Ohl, University of Konstanz
- * 
  */
 public final class DataTableSpec 
     implements Iterable<DataColumnSpec>, Serializable {
@@ -71,7 +73,8 @@ public final class DataTableSpec
 
     /** The index of the column holding the ColorHandler or -1 if not set. */
     private final int m_colorHandlerColIndex;
-    
+   
+    /** Keeps column to column index mapping for faster access. */
     private final transient Map<String, Integer> m_colIndexMap 
         = new HashMap<String, Integer>();
 
@@ -576,6 +579,40 @@ public final class DataTableSpec
     public Iterator<DataColumnSpec> iterator() {
         return (Collections.unmodifiableList(Arrays.asList(m_columnSpecs)))
                 .iterator();
+    }
+    
+    /**
+     * Saves name and all <code>DataColumnSpec</code> objects to the given
+     * <code>Config</code> object.
+     * @param config Write column properties into this object.
+     */
+    public void save(final Config config) {
+        config.addString("name", m_name);
+        config.addInt("nr_columns", m_columnSpecs.length);
+        for (int i = 0; i < m_columnSpecs.length; i++) {
+            Config column = config.addConfig("column_" + i);
+            m_columnSpecs[i].save(column);
+        }
+    }
+    
+    /**
+     * Reads a DataColumnSpec objects from the given <code>Config</code> and 
+     * returns a new <code>DataTableSpec</code> object.
+     * @param config Read specs from.
+     * @return A new table spec object.
+     * @throws InvalidSettingsException If the name, number of columns, or
+     *         a column spec could not be read,
+     */
+    public static DataTableSpec load(final Config config) 
+            throws InvalidSettingsException {
+        String name = config.getString("name");
+        int ncols = config.getInt("nr_columns");
+        DataColumnSpec[] specs = new DataColumnSpec[ncols]; 
+        for (int i = 0; i < ncols; i++) {
+            Config column = config.getConfig("column_" + i);
+            specs[i] = DataColumnSpec.load(column);
+        }
+        return new DataTableSpec(name, specs);
     }
 
 } // DataTableSpec

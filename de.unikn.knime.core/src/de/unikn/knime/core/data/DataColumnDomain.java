@@ -16,8 +16,13 @@
 package de.unikn.knime.core.data;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
+
+import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.config.Config;
 
 /**
  * A column domain object holds information about one column's domain, that are,
@@ -207,6 +212,54 @@ public final class DataColumnDomain implements Serializable {
             }
         }
         return tempHash;
+    }
+    
+    /**
+     * Returns summary of this domain including lower and upper bound, and 
+     * possible values.
+     * @return Summary as String. 
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        String lower = 
+            (m_lowerBound == null ? "null" : m_lowerBound.toString());
+        String upper = 
+            (m_upperBound == null ? "null" : m_upperBound.toString());
+        String values = (m_values == null ? "null" : m_values.toString());
+        return "lower=" + lower + ",upper=" + upper + ",values=" + values;
+    }
+    
+    /**
+     * Save this domain to the given <code>Config</code> including lower and 
+     * upper bound, and possible values - if available.
+     * @param config The <code>Config</code> to write into.
+     */
+    public void save(final Config config) {
+        config.addDataCell("lower_bound", m_lowerBound);
+        config.addDataCell("upper_bound", m_upperBound);
+        if (m_values != null) {
+            DataCell[] values = m_values.toArray(new DataCell[0]);
+            config.addDataCellArray("values", values);
+        }
+    }
+    
+    /**
+     * Reads lower and upper bound from <code>Config</code>, and possible values
+     * if available.
+     * @param config To read entries from.
+     * @return A new domain object with the read properties.
+     * @throws InvalidSettingsException If lower or upper bound are ot defined.
+     */
+    public static DataColumnDomain load(final Config config) 
+            throws InvalidSettingsException {
+        DataCell lower = config.getDataCell("lower_bound");
+        DataCell upper = config.getDataCell("upper_bound");
+        Set<DataCell> values = null;
+        if (config.containsKey("values")) {
+            values = new LinkedHashSet<DataCell>();
+            values.addAll(Arrays.asList(config.getDataCellArray("values")));
+        }   
+        return new DataColumnDomain(lower, upper, values);
     }
 
 } // DataColumnDomain

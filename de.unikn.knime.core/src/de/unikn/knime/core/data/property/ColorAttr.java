@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -37,13 +35,13 @@ public final class ColorAttr implements Serializable {
      */
     public static final ColorAttr DEFAULT;
 
-    /*
+    /**
      * The object's color.
      */
     private final Color m_attrColor;
     
     /*
-     * color variations for different settings (selection/hiliting)
+     * Color variations for different settings (selection/hiliting)
      */
     private final Color m_attrColorSelected;
     private final Color m_attrColorHilite;
@@ -107,7 +105,6 @@ public final class ColorAttr implements Serializable {
         Color.RGBtoHSB(attColor.getRed(), attColor.getGreen(),
                 attColor.getBlue(), hsbVals);
         m_attrColor = attColor;
-//            Color.getColor(null, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
         m_attrColorSelected =
             Color.getColor(null, Color.HSBtoRGB(hsbVals[0], 0.6f, 0.6f));
         m_attrColorHilite = 

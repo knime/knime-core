@@ -1,4 +1,5 @@
-/* -------------------------------------------------------------------
+/* 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -21,18 +22,41 @@ package de.unikn.knime.core.data;
 import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Properties;
+
+import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.config.Config;
 
 /**
  * Property map that contains (labeled) annotations assigned to a column. This
- * interface implements a slim, read only version of java's
- * <code>Properties</code> class. This interface is used by the
- * <code>DataColumnSpec</code>.
+ * class implements a slim, read only version of java's <code>Properties</code> 
+ * class. This class is used by the <code>DataColumnSpec</code>.
  * 
  * @see java.util.Properties
  * @see de.unikn.knime.core.data.DataColumnSpec#getProperties()
+ * 
  * @author wiswedel, University of Konstanz
  */
-public interface DataColumnProperties extends Serializable {
+public final class DataColumnProperties implements Cloneable, Serializable {
+
+   private final Properties m_props;
+    
+    /** Creates an empty DataColumnProperties object. */
+    public DataColumnProperties() {
+        this(new Hashtable<String, String>());
+    }
+    
+    /**
+     * Creates a properties object containing the (key, value) pairs from the
+     * argument. The argument must not be null (but may be empty). Any 
+     * subsequent change to the argument is not reflected in this object.
+     * @param content  Where to get the properties from
+     * @throws NullPointerException If the argument is null.
+     */
+    public DataColumnProperties(final Hashtable<String, String> content) {
+        m_props = new Properties();
+        m_props.putAll(content);
+    }
 
     /**
      * Tests if this properties object contains a given key.
@@ -40,8 +64,12 @@ public interface DataColumnProperties extends Serializable {
      * @param key The requested key.
      * @return <code>true</code> if <code>key</code> is contained in this
      *         property object, <code>false</code> otherwise.
+     * 
+     * @see Properties#containsKey(String)
      */
-    boolean containsProperty(final String key);
+    public boolean containsProperty(final String key) {
+        return m_props.containsKey(key);
+    }
 
     /**
      * Get the property assigned to <code>key</code> or - if this property
@@ -52,8 +80,12 @@ public interface DataColumnProperties extends Serializable {
      *            contained in this property object.
      * @return The value to <code>key</code> or <code>defaultValue</code>.
      * @throws NullPointerException If <code>key</code> is <code>null</code>.
+     * 
+     * @see Properties#getProperty(String, String)
      */
-    String getProperty(final String key, final String defaultValue);
+    public String getProperty(final String key, final String defaultValue) {
+        return m_props.getProperty(key, defaultValue);
+    }
 
     /**
      * Get the property annotated by <code>key</code> or <code>null</code>
@@ -63,23 +95,36 @@ public interface DataColumnProperties extends Serializable {
      * @return The value to which key is mapped to or <code>null</code> if
      *         <code>key</code> is not contained.
      * @throws NullPointerException If argument is <code>null</code>.
+     *
+     * @see Properties#getProperty(String)
      */
-    String getProperty(final String key);
-
+    public String getProperty(final String key) {
+        return m_props.getProperty(key);
+    }
+    
     /**
      * Get the number of properties in this object.
      * 
      * @return The number of stored properties.
+     *
+     * @see Properties#size()
      */
-    int size();
-
+    public int size() {
+        return m_props.size();
+    }
+    
     /**
      * Get an enumeration on all keys in this property object.
      * 
      * @return An enumeration on the keys.
+     *
+     * @see Properties#propertyNames()
      */
-    Enumeration<String> properties();
-
+    @SuppressWarnings("unchecked")
+    public Enumeration<String> properties() {
+        return (Enumeration<String>)m_props.propertyNames();
+    }
+    
     /**
      * Creates a new instance which carries all properties from this object
      * unless they are overwritten by the argument in which case the argument's
@@ -90,7 +135,78 @@ public interface DataColumnProperties extends Serializable {
      * @return A (almost) clone of this object with additional properties.
      * @throws NullPointerException If the argument is <code>null</code>.
      */
-    DataColumnProperties cloneAndOverwrite(
-            final Hashtable<String, String> overwrite);
+    public DataColumnProperties cloneAndOverwrite(
+            final Hashtable<String, String> overwrite) {
+        DataColumnProperties clone = new DataColumnProperties();
+        clone.m_props.putAll(m_props);
+        clone.m_props.putAll(overwrite);
+        return clone;
+    }
+    
+    /** 
+     * Returns a string containing key=value pairs, separated by ", ".
+     * @see Properties#toString()
+     */
+    @Override
+    public String toString() {
+        return m_props.toString();
+    }
+    
+    /**
+     * Compares a given object on equality. It will be equal if it is also
+     * a <code>DataColumnProperties</code> object and contains the equal key
+     * value pairs.
+     * @param obj To compare to.
+     * @return If the given object is equal to this property object.
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof DataColumnProperties)) {
+            return false;
+        }
+        return m_props.equals(((DataColumnProperties) obj).m_props);
+    }
+    
+    /**
+     * Hash code based on underlying <code>java.util.Properties</code> class.
+     * @see Object#hashCode() 
+     */
+    @Override
+    public int hashCode() {
+        return m_props.hashCode();
+    }
+    
+    /**
+     * Saves all key-value pairs to the given <code>Config</code>. 
+     * @param config Write properties into this object.
+     */
+    public void save(final Config config) {
+        String[] keys = m_props.keySet().toArray(new String[0]);
+        config.addStringArray("keys", keys);
+        for (int i = 0; i < keys.length; i++) {
+            config.addString(keys[i], getProperty(keys[i]));
+        }
+    }
+    
+    /**
+     * Reads all properties (key-value pairs) from the given <code>Config</code>
+     * and return a new <code>DataColumnProperty</code> object.
+     * @param config To read properties from.
+     * @return A new property object.
+     * @throws InvalidSettingsException If the <i>keys</i> entry is not 
+     *         available or a value is not available for a given key.
+     */
+    public static DataColumnProperties load(final Config config) 
+            throws InvalidSettingsException {
+        Hashtable<String, String> table = new Hashtable<String, String>();
+        String[] keys = config.getStringArray("keys");
+        for (int i = 0; i < keys.length; i++) {
+            table.put(keys[i], config.getString(keys[i]));
+        }        
+        return new DataColumnProperties(table);
+    }
 
 }

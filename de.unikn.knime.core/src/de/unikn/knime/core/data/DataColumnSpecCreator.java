@@ -18,7 +18,6 @@
  */
 package de.unikn.knime.core.data;
 
-import de.unikn.knime.core.data.def.DefaultDataColumnProperties;
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 
@@ -67,7 +66,7 @@ public class DataColumnSpecCreator {
         m_name = name;
         m_type = type;
         m_domain = new DataColumnDomain(null, null, null);
-        m_properties = new DefaultDataColumnProperties();
+        m_properties = new DataColumnProperties();
     }
 
     /**
@@ -140,7 +139,7 @@ public class DataColumnSpecCreator {
      */
     public void setProperties(final DataColumnProperties props) {
         if (props == null) {
-            m_properties = new DefaultDataColumnProperties();
+            m_properties = new DataColumnProperties();
         } else {
             m_properties = props;
         }
