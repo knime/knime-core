@@ -75,7 +75,7 @@ public final class DataTableSpec
     private final int m_colorHandlerColIndex;
    
     /** Keeps column to column index mapping for faster access. */
-    private final transient Map<String, Integer> m_colIndexMap 
+    private final Map<String, Integer> m_colIndexMap 
         = new HashMap<String, Integer>();
 
     /**
