@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -49,8 +47,18 @@ public class WorkflowExecutor implements WorkflowListener {
      * are executed (or at least Workflow claims to be done).
      */
     public void executeAll() {
-        m_flowMgr.prepareForExecAllNodes();
-        executeWorkflow();
+        synchronized (m_executionInProgress) {
+            m_flowMgr.prepareForExecAllNodes();
+            startNodeExecution();
+
+            try {
+                m_executionInProgress.wait();
+            } catch (InterruptedException ie) {
+                assert false;  // shouldn't happen
+            }
+        }
+
+        
     }
     
     /** Execute all nodes in workflow leading to a certain node.
@@ -60,44 +68,45 @@ public class WorkflowExecutor implements WorkflowListener {
      * @param nodeID id of node to be executed.
      */
     public void executeUpToNode(final int nodeID) {
-        m_flowMgr.prepareForExecUpToNode(nodeID);
-        executeWorkflow();
-    }
-    
-    /* start execution of an already prepare workflow (i.e. nodes that are
-     * to be executed are marked (prepared...) accordingly).
-     */    
-    private void executeWorkflow() {        
         synchronized (m_executionInProgress) {
-            createThreads();
+            m_flowMgr.prepareForExecUpToNode(nodeID);
+            startNodeExecution();
+
             try {
                 m_executionInProgress.wait();
             } catch (InterruptedException ie) {
                 assert false;  // shouldn't happen
             }
-        } 
-    }
-    
-    /* create threads for all currently executable nodes
-     */
-    private void createThreads() {
-        NodeContainer nextNode = m_flowMgr.getNextExecutableNode();
-        while (nextNode != null) {
-            nextNode.startExecution(new DefaultNodeProgressMonitor());
-            nextNode = m_flowMgr.getNextExecutableNode();
         }
     }
     
-    /** Create new threads when workflow has changed, stop execution when
+    /**
+     * Starts the execution of all nodes that can be executed at the moment.
+     *  
+     * @return <code>true</code> if at least one node has been started,
+     * <code>false</code> otherwise
+     */
+    private boolean startNodeExecution() {
+        NodeContainer nextNode = null;
+        boolean b = false;
+        while ((nextNode = m_flowMgr.getNextExecutableNode()) != null) {
+            nextNode.startExecution(new DefaultNodeProgressMonitor());
+            b = true;
+        }
+        
+        return b;
+    }
+    
+    /**
+     * Starts additional nodes when workflow has changed, stops execution when
      * workflow is done.
      * 
-     * @param event the WorkflowEvent to be handled.
+     * @param event the WorkflowEvent to be handled
      */
     public void workflowChanged(final WorkflowEvent event) {
-        if (event.getEventType() == WorkflowEvent.EXEC_POOL_CHANGED) {
-            createThreads();
-        }
-        if (event.getEventType() == WorkflowEvent.EXEC_POOL_DONE) {
+        if (event instanceof WorkflowEvent.ExecPoolChanged) {
+            startNodeExecution();
+        } else if (event instanceof WorkflowEvent.ExecPoolDone) {
             synchronized (m_executionInProgress) {
                 m_executionInProgress.notifyAll();
             } 

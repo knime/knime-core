@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,7 +30,6 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author M. Berthold, University of Konstanz
  */
 public interface ConnectionExtraInfo {
-
     /**
      * Stores all contained information into the given configuration.
      * 
@@ -51,6 +48,4 @@ public interface ConnectionExtraInfo {
      * @see #save
      */
     void load(final NodeSettings config) throws InvalidSettingsException;
-
-
 }

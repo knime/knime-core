@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -33,6 +31,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
 
 /**
  * A dialog that contains a progress bar, a label with a message, and a cancel
@@ -89,7 +88,7 @@ public class NodeProgressMonitorView extends JDialog implements
         m_monitor = mon;
         m_monitor.addProgressListener(this);
         m_label = new JLabel();
-        m_label.setHorizontalAlignment(JLabel.CENTER);
+        m_label.setHorizontalAlignment(SwingConstants.CENTER);
         m_progressBar = new JProgressBar(0, 100);
         m_progressBar.setStringPainted(true);
         m_cancelButton = new JButton("Cancel");

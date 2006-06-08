@@ -70,6 +70,7 @@ public class DefaultNodeDialog extends NodeDialogPane {
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
      */
+    @Override
     public final void loadSettingsFrom(
             final NodeSettings settings, final DataTableSpec[] specs) {
         assert (settings != null && specs != null);
@@ -91,6 +92,7 @@ public class DefaultNodeDialog extends NodeDialogPane {
      * @throws InvalidSettingsException if the user has entered wrong
      * values.
      */
+    @Override
     public final void saveSettingsTo(final NodeSettings settings) 
                                 throws InvalidSettingsException {
         for (DialogComponent comp : m_dialogComponents) {

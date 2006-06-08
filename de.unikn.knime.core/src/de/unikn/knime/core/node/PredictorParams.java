@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -41,6 +39,7 @@ public final class PredictorParams extends NodeSettings {
     /**
      * @see de.unikn.knime.core.node.config.Config#getInstance(java.lang.String)
      */
+    @Override
     protected PredictorParams getInstance(final String key) {
         return new PredictorParams(key);
     }
@@ -53,6 +52,7 @@ public final class PredictorParams extends NodeSettings {
      * 
      * @see de.unikn.knime.core.node.NodeSettings#getConfig(String)
      */
+    @Override
     public PredictorParams addConfig(final String key) {
         return (PredictorParams)super.addConfig(key);
     }
@@ -64,6 +64,7 @@ public final class PredictorParams extends NodeSettings {
      * @return The PredictorParams object.
      * @throws InvalidSettingsException The PredictorParams could not be found.
      */
+    @Override
     public PredictorParams getConfig(final String key)
             throws InvalidSettingsException {
         return (PredictorParams)super.getConfig(key);

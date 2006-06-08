@@ -125,12 +125,11 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * a column name is provided and it is not filtered out the corresponding
      * item in the combo box will be selected.
      * 
-     * @param spec To get the column names, types and the current index from.
+     * @param sp To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
      */
-    public final void update(
-            final DataTableSpec spec, final String selColName) {
-        update(spec, selColName, false);
+    public final void update(final DataTableSpec sp, final String selColName) {
+        update(sp, selColName, false);
     }
     
     /**

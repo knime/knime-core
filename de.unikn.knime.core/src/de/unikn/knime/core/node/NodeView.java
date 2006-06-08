@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -129,7 +127,7 @@ public abstract class NodeView {
     /**
      * The directory to export the view as image.
      */
-    private static String s_exportDir = "";
+    private static String exportDir;
 
     /**
      * This class sends property events when the status changes. So far, the
@@ -172,6 +170,7 @@ public abstract class NodeView {
         m_frame.setBackground(COLOR_BACKGROUND);
         m_frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         m_frame.addWindowListener(new WindowAdapter() {
+            @Override
             public void windowClosed(final WindowEvent e) {
                 closeViewComponent();
             }
@@ -230,6 +229,8 @@ public abstract class NodeView {
         // after view has been created: register the view with the model
         m_nodeModel.registerView(this);
 
+        // the directory to export the view as image is initally empty
+        exportDir = "";
     } // NodeView(NodeModel,String)
 
     /**
@@ -242,7 +243,7 @@ public abstract class NodeView {
         File exportDirFile = null;
         try {
 
-            exportDirFile = new File(new URL(s_exportDir).getFile());
+            exportDirFile = new File(new URL(exportDir).getFile());
 
         } catch (Exception e) {
 
@@ -262,7 +263,7 @@ public abstract class NodeView {
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
-            s_exportDir = path;
+            exportDir = path;
         } else {
             // do not save anything
             return;
@@ -279,7 +280,7 @@ public abstract class NodeView {
 
         // write image to file
         try {
-            File exportFile = new File(new URL(path).getFile());
+            File exportFile = new File(new URL(exportDir).getFile());
             exportFile.createNewFile();
             ImageIO.write(image, "png", exportFile);
         } catch (Exception e) {

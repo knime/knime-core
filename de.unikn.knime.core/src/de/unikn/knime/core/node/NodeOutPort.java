@@ -29,7 +29,6 @@ import java.util.Set;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeOutPort extends NodePort {
-
     /**
      * Keeps all connected input ports of the next nodes.
      */
@@ -45,9 +44,10 @@ public abstract class NodeOutPort extends NodePort {
      * output ports of this node) for the given node.
      * 
      * @param portID This port ID.
+     * @param node the node this port belongs to
      */
-    protected NodeOutPort(final int portID) {
-        super(portID);
+    protected NodeOutPort(final int portID, final Node node) {
+        super(portID, node);
         m_connInPorts = Collections
                 .synchronizedSet(new LinkedHashSet<NodeInPort>());
         m_portView = null;
@@ -98,6 +98,7 @@ public abstract class NodeOutPort extends NodePort {
      * 
      * @return If a connection is available.
      */
+    @Override
     public boolean isConnected() {
         return (m_connInPorts.size() > 0);
     }
@@ -198,6 +199,7 @@ public abstract class NodeOutPort extends NodePort {
      * 
      * @see java.lang.Object#finalize()
      */
+    @Override
     protected void finalize() throws Throwable {
         // make sure to blow away the port view
         disposePortView();

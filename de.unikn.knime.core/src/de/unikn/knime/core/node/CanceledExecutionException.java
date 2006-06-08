@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,16 +18,17 @@
 package de.unikn.knime.core.node;
 
 /**
- * This exception is use in the <code>ExecutionMonitor</code> when a node's
- * execution has been canceled. If the <code>NodeModel</code> ask the
- * <code>NodeProgressMonitor</code> if a cancel is requested, this method will
- * throw this exception which then leads the process to terminate.
+ * This exception is used in the
+ * {@link de.unikn.knime.core.node.ExecutionMonitor} when a node's
+ * execution has been canceled. If the
+ * {@link de.unikn.knime.core.node.NodeModel} ask the
+ * {@link de.unikn.knime.core.node.NodeProgressMonitor} if a cancel is
+ * requested, this method will throw this exception which then leads the
+ * process to terminate.
  * 
  * @author Thomas Gabriel, Konstanz University
  */
 public class CanceledExecutionException extends Exception {
-    private static final long serialVersionUID = -1321799722994980718L;
-
     /**
      * Constructs an <code>CancelExecutionException</code> with the specified
      * detail message.
@@ -37,10 +36,9 @@ public class CanceledExecutionException extends Exception {
      * Use a helpful message here as it will be displayed to the user, and it is
      * the only hint ones gets to correct the problem.
      * 
-     * @param s A detail message about the cancelation.
+     * @param s a detail message about the cancelation
      */
     public CanceledExecutionException(final String s) {
         super(s);
     }
-
 }

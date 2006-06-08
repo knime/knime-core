@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -27,12 +25,11 @@ package de.unikn.knime.core.node.workflow;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public interface WorkflowListener {
-    
+public interface WorkflowListener { 
     /**
      * Called from the manager if something changed.
      * 
-     * @param event The event containing that occured
+     * @param event the event that occured
      */
     public void workflowChanged(final WorkflowEvent event);
 

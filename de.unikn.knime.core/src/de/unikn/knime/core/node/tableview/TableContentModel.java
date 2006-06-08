@@ -643,7 +643,6 @@ public class TableContentModel extends AbstractTableModel
      *  
      * @param row The row of interest
      * @return The color information for that row
-     * @see de.unikn.knime.core.data.RowKey#getColorAttr()
      */
     public ColorAttr getColorAttr(final int row) {
         // makes also sure row is cached

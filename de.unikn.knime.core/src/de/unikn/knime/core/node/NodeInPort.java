@@ -28,13 +28,6 @@ package de.unikn.knime.core.node;
  * @see NodeOutPort
  */
 public abstract class NodeInPort extends NodePort {
-
-    /**
-     * The node this port is input for. Needs to be notified of (dis)connect
-     * actions and new data available at the connected counter part (outport).
-     */
-    private final Node m_node;
-
     /**
      * The output port of the predecessor which is connected to this port, can
      * be <code>null</code>, if no connection exists.
@@ -49,11 +42,10 @@ public abstract class NodeInPort extends NodePort {
      * @throws NullPointerException If the node is null.
      */
     NodeInPort(final int portId, final Node node) {
-        super(portId);
+        super(portId, node);
         if (node == null) {
             throw new NullPointerException("Ports can't belong to null nodes.");
         }
-        m_node = node;
         m_connOutPort = null;
     }
 
@@ -91,13 +83,6 @@ public abstract class NodeInPort extends NodePort {
     }
 
     /**
-     * @return The node this port belongs to.
-     */
-    final Node getNode() {
-        return m_node;
-    }
-
-    /**
      * Diconnects this port. It will return the currently connected port, or
      * null, if not connected.
      * 
@@ -124,6 +109,7 @@ public abstract class NodeInPort extends NodePort {
      * 
      * @return <code>true</code> if connected, otherwise <code>false</code>.
      */
+    @Override
     public final boolean isConnected() {
         return (m_connOutPort != null);
     }

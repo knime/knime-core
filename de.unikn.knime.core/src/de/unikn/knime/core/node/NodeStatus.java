@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -28,63 +26,164 @@ package de.unikn.knime.core.node;
  * @author Thomas Gabriel, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
-public final class NodeStatus {
-
-    // ------------ The possible node states ----------------------------------
+public abstract class NodeStatus {
     /** Node reset. */
-    public static final int RESET = 1001;
+    public static class Reset extends NodeStatus {
+        /**
+         * Creates a new "reset" node status.
+         */
+        public Reset() { super(); }
 
+        /**
+         * Creates a new "reset" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public Reset(final String messsage) { super(messsage); }
+    }
+    
     /** Node execution started. */
-    public static final int START_EXECUTE = 1002;
+    public static class StartExecute extends NodeStatus {
+        /**
+         * Creates a new "start execute" node status.
+         */
+        public StartExecute() { super(); }
 
+        /**
+         * Creates a new "start execute" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public StartExecute(final String messsage) { super(messsage); }
+    }
+    
     /** Node execution finished. */
-    public static final int END_EXECUTE = 1003;
+    public static class EndExecute extends NodeStatus {
+        /**
+         * Creates a new "end execute" node status.
+         */
+        public EndExecute() { super(); }
+
+        /**
+         * Creates a new "end execute" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public EndExecute(final String messsage) { super(messsage); }
+    }
 
     /** Node configured. */
-    public static final int CONFIGURED = 1004;
-    
-    /** User name set to node */
-    public static final int USER_NAME = 1005;
-    
-    /** User description set to node */
-    public static final int USER_DESCRIPTION = 1006;
+    public static class Configured extends NodeStatus {
+        /**
+         * Creates a new "configured" node status.
+         */
+        public Configured() { super(); }
+
+        /**
+         * Creates a new "configured" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public Configured(final String messsage) { super(messsage); }
+    }
+
+    /** Custom name set to node. */
+    public static class CustomName extends NodeStatus {
+        /**
+         * Creates a new "custom name" node status.
+         */
+        public CustomName() { super(); }
+
+        /**
+         * Creates a new "custom name" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public CustomName(final String messsage) { super(messsage); }
+    }
+
+    /** Custom description set to node. */
+    public static class CustomDescription extends NodeStatus {
+        /**
+         * Creates a new "custom description" node status.
+         */
+        public CustomDescription() { super(); }
+
+        /**
+         * Creates a new "custom description" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public CustomDescription(final String messsage) { super(messsage); }
+    }
 
     /** Warning during execution. */
-    public static final int WARNING = 2001;
+    public static class Warning extends NodeStatus {
+        /**
+         * Creates a new "warning" node status.
+         * 
+         * @param messsage the warning message
+         */
+        public Warning(final String messsage) { super(messsage); }
+    }
 
-    /** Warning during execution. */
-    public static final int ERROR = 3001;
-    
+    /** Error during execution. */
+    public static class Error extends NodeStatus {
+        /**
+         * Creates a new "error" node status.
+         * 
+         * @param messsage the error message
+         */
+        public Error(final String messsage) { super(messsage); }
+    }
+
     /** Indicates a general status change. */
-    public static final int STATUS_CHANGED = 4001;
+    public static class StatusChanged extends NodeStatus {
+        /**
+         * Creates a new "status changed" node status.
+         */
+        public StatusChanged() { super(); }
+
+        /**
+         * Creates a new "status changed" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public StatusChanged(final String messsage) { super(messsage); }
+    }
+
+    /** Indicates extra info changes of meta workflows. */
+    public static class ExtrainfoChanged extends NodeStatus {
+        /**
+         * Creates a new "extra info changed" node status.
+         */
+        public ExtrainfoChanged() { super(); }
+
+        /**
+         * Creates a new "extra info changed" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public ExtrainfoChanged(final String messsage) { super(messsage); }
+    }
     
-    /** Indicates extra infor changes of meta workflows. */
-    public static final int STATUS_EXTRA_INFO_CHANGED = 5001;
-
-    /** The status code. */
-    private final int m_statusId;
-
     /** The internal message to show or null if not available. */
     private final String m_message;
 
     /**
-     * Create new status object with an empty message and given id.
-     * 
-     * @param statusId The status id for this status object.
+     * Create new status object with an empty message. 
      */
-    public NodeStatus(final int statusId) {
-        this(statusId, null);
+    public NodeStatus() {
+        this(null);
     }
 
     /**
-     * Create new message, with Id and message.
+     * Create new status object with a  message.
      * 
-     * @param statusId the status id for this status object
      * @param messsage free text description
      */
-    public NodeStatus(final int statusId, final String messsage) {
+    public NodeStatus(final String messsage) {
         m_message = messsage;
-        m_statusId = statusId;
     }
 
     /**
@@ -93,19 +192,4 @@ public final class NodeStatus {
     public String getMessage() {
         return m_message;
     }
-
-    /**
-     * @return <code>true</code> if no message available.
-     */
-    public boolean messageAvailable() {
-        return m_message != null;
-    }
-
-    /**
-     * @return The status id.
-     */
-    public int getStatusId() {
-        return m_statusId;
-    }
-
 }

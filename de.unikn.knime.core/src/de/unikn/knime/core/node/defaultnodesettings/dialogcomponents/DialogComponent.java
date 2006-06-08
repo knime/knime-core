@@ -23,7 +23,6 @@ package de.unikn.knime.core.node.defaultnodesettings.dialogcomponents;
 
 import javax.swing.JPanel;
 
-import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import de.unikn.knime.core.node.defaultnodesettings.settingsmodels.SettingsModel;
 
 /**
@@ -34,7 +33,7 @@ import de.unikn.knime.core.node.defaultnodesettings.settingsmodels.SettingsModel
  * Using the <code>DefaultNodeDialog</code> it is easy to add such Component to
  * quickly assemble a dialog dealing with typical parameters.
  * 
- * @see DefaultNodeDialogPane
+ * @see de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane
  * 
  * @author M. Berthold, University of Konstanz
  */

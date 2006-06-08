@@ -24,6 +24,7 @@ package de.unikn.knime.core.node.workflow;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Future;
@@ -36,6 +37,7 @@ import de.unikn.knime.core.node.Node;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeInPort;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeOutPort;
 import de.unikn.knime.core.node.NodeProgressMonitor;
 import de.unikn.knime.core.node.NodeSettings;
@@ -51,37 +53,89 @@ import de.unikn.knime.core.node.NodeView;
  * after adding the node's ID.
  * 
  * @author M. Berthold, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
 public class NodeContainer implements NodeStateListener {
+
+    /**
+     * Flags for events modeling information regarding state of node.
+     */    
+    public enum State {
+        /** is currently being executed. */
+        CurrentlyExecuting,
+        /** not waiting for anything. */
+        Idle,
+        /** can be executed. */
+        IsExecutable,
+        /** has been returned as EXECUTABLE and waits for thread to start. */
+        WaitingForExecution,
+        /** is waiting to be excuted once the underlying node is executable. */
+        WaitingToBeExecutable
+    }
+
+    /** Key for this node's user description. */
+    protected static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
+
+    /** Key for this node's user name. */
+    protected static final String KEY_CUSTOM_NAME = "customName";
+
+    /** Key for extra info's class name. */
+    protected static final String KEY_EXTRAINFOCLASS = "extraInfoClassName";
+
+    /** Key for this node's internal ID. */
+    protected static final String KEY_ID = "id";
 
     // The logger for static methods
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainer.class);
 
-    // The node logger for the underlying node is used here.
-    private final NodeLogger m_logger;
-
-    // remember node itself...
-    private final Node m_node;
-
-    // ...it's ID
-    private int m_id;
-
     /**
-     * A userspecified name for this node.
+     * Creates the <code>NodeExtraInfo</code> from given settings, describing
+     * whatever additional information was stored (graphical layout?).
+     * 
+     * @param sett the setting to construct the extra info from
+     * @return new <code>NodeExtraInfo</code> object or null
+     * @throws InvalidSettingsException if the settings are invalid
      */
-    private String m_userName;
+    protected static NodeExtraInfo createExtraInfo(final NodeSettings sett)
+            throws InvalidSettingsException {
+        NodeExtraInfo extraInfo = null; // null if it doesn't exist
+        if (sett.containsKey(NodeContainer.KEY_EXTRAINFOCLASS)) {
+            // if it does exist, determine type of extrainfo
+            String extraInfoClassName = sett
+                    .getString(NodeContainer.KEY_EXTRAINFOCLASS);
+            try {
+                // use global Class Creator utility for Eclipse "compatibility"
+                extraInfo = (NodeExtraInfo)(GlobalClassCreator
+                        .createClass(extraInfoClassName).newInstance());
+                // and load content of extrainfo
+                extraInfo.load(sett);
+            } catch (Exception e) {
+                LOGGER.warn("ExtraInfoClass could not " + "be loaded "
+                        + extraInfoClassName + " reason: " + e.getMessage());
+            }
+        }
+        return extraInfo;
+    }
 
-    /**
-     * A userspecified description for this node.
-     */
+    /** A userspecified name for this node. */
+    private String m_customName;
+
+    /** A userspecified description for this node. */
     private String m_description;
 
-    // ...for each port a list of successors...
-    private final Vector<List<NodeContainer>> m_succ;
+    // store list of listeners - essentially this Container will listen
+    // to events coming from its <code>Node</code>, add the id to the
+    // event and forward it.
+    private final List<NodeStateListener> m_eventListeners;
+    
+    private boolean m_executionCanceled;
 
-    // ...and an array of predecessors (only one per port!)
-    private final Vector<NodeContainer> m_pred;
+    // for execution of the Node in its own Thread, hold status
+    // information of the execution thread...
+    private boolean m_executionRunning;
+
+    private boolean m_executionSuccess;
 
     // Also hold an object storing information about this node's
     // position on the visual representation of this workflow (or
@@ -90,53 +144,31 @@ public class NodeContainer implements NodeStateListener {
     // stored and retrieved using the appropriate interface.
     private NodeExtraInfo m_extraInfo;
 
-    /**
-     * flags for events modeling information regarding state of node
-     */
-    /** not waiting for anything. */
-    public static final int STATE_IDLE = 0;
+    // ...its ID
+    private int m_id;
 
-    /** is waiting to be excuted once the underlying node is executable. */
-    public static final int STATE_WAITING_TO_BE_EXECUTABLE = 1;
+    // The node logger for the underlying node is used here.
+    private final NodeLogger m_logger;
 
-    /** can be executed. */
-    public static final int STATE_IS_EXECUTABLE = 2;
+    // remember node itself...
+    private final Node m_node;
 
-    /** has been returned as EXECUTABLE and waits for thread to start. */
-    public static final int STATE_WAITING_FOR_EXECUTION = 3;
-
-    /** is currently being executed. */
-    public static final int STATE_CURRENTLY_EXECUTING = 4;
-
-    /** properties (extra info) have changed. */
-    public static final int EVENT_EXTRAINFO_CHANGED = 1000;
-
-    // and also remember the actual state: initialize using default.
-    private int m_state = STATE_IDLE;
-
-    // Holds the current <code>NodeContainer</code> status number and message.
-    // which are essentially warnings and error messages (note the difference
-    // to the node state!). The status is used by e.g. a GUI to display
-    // things that went wrong during execution or setup. So it may explain
-    // the reasons why a specific state has (or has not) been reached.
-    // private NodeStatus m_nodeStatus;
-
-    // for execution of the Node in it's own Thread, hold status
-    // information of the execution thread...
-    private boolean m_executionRunning;
-
-    private boolean m_executionSuccess;
-
-    private boolean m_executionCanceled;
+    // ...and an array of predecessors (only one per port!)
+    private final Vector<NodeContainer> m_pred;
 
     // ... and a progress monitor as well as the thread itself.
     private NodeProgressMonitor m_progressMonitor;
 
-    // store list of listeners - essentially this Container will listen
-    // to events coming from it's <code>Node</code>, add the id to the
-    // event and forward it.
-    private final ArrayList<NodeStateListener> m_eventListeners;
+    // and also remember the actual state: initialize using default.
+    private State m_state = State.Idle;
 
+    // ...for each port a list of successors...
+    private final Vector<List<NodeContainer>> m_succ;
+
+    
+    private List<NodeInPort> m_cachedInPorts;
+    private List<NodeOutPort> m_cachedOutPorts; 
+    
     /**
      * Create new container using an existing Node and a predefined ID.
      * 
@@ -144,10 +176,10 @@ public class NodeContainer implements NodeStateListener {
      * @param id identifier of the node
      */
     public NodeContainer(final Node n, final int id) {
-        m_logger = NodeLogger.getLogger(n.getNodeName());
+        m_logger = NodeLogger.getLogger(n.getName());
         m_node = n;
         m_id = id;
-        m_userName = "Node " + (id + 1); // initial name is the node id
+        m_customName = "Node " + (id + 1); // initial name is the node id
         m_description = null; // no initial description
         m_succ = new Vector<List<NodeContainer>>(m_node.getNrOutPorts());
         m_pred = new Vector<NodeContainer>(m_node.getNrInPorts());
@@ -159,423 +191,46 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @return the icon associated with this node
-     */
-    public URL getIcon() {
-        return m_node.getNodeFactory().getIcon();
-    }
-
-    /**
-     * @return This container's underlying <code>Node</code>.
-     */
-    protected Node getNode() {
-        return m_node;
-    }
-
-    /**
-     * Checks whether the in port given by its index is a PredictorParams port,
-     * that is, the port takes information about a predictor model as an input.
+     * Creates a new NodeContainer and reads it's status and information from
+     * the NodeSettings object. Note that the list of predecessors and
+     * successors will NOT be initalized correctly. The Workflow manager is
+     * required to take care of re-initializing the connections.
      * 
-     * @param portNumber the port number
+     * @param sett Retrieve the data from.
+     * @param wfm the workflowmanager that is responsible for this node
+     * @throws InvalidSettingsException If the required keys are not available
+     *             in the NodeSettings.
      * 
-     * @return true if the port is a PredictorParams port, false otherwise
+     * @see #save
      */
-    public boolean isPredictorInPort(final int portNumber) {
-        return m_node.isPredictorInPort(portNumber);
-    }
+    public NodeContainer(final NodeSettings sett, final WorkflowManager wfm)
+            throws InvalidSettingsException {
+        this (new Node(sett, wfm), sett.getInt(KEY_ID));
+        setExtraInfo(createExtraInfo(sett));
 
-    /**
-     * Checks whether the out port given by its index is a PredictorParams port.
-     * 
-     * @param portNumber the port number
-     * 
-     * @return true if the port is a PredictorParams port, false otherwise
-     */
-    public boolean isPredictorOutPort(final int portNumber) {
-        return m_node.isPredictorOutPort(portNumber);
-    }
+        try {
+            // read custom name
+            String name = sett.getString(KEY_CUSTOM_NAME);
 
-    /**
-     * Returns the number of views for this node.
-     * 
-     * @return number views of this node
-     */
-    public int getNumViews() {
-        return m_node.getNumViews();
-    }
-
-    /**
-     * Opens the node's view. (Which may be empty if node is not executed.)
-     * 
-     * @param viewIndex the index of the view (=0 if there is only one)
-     */
-    public void showView(final int viewIndex) {
-        m_node.showView(viewIndex);
-    }
-
-    /**
-     * Returns the node's view.
-     * 
-     * @param viewIndex the index of the view (if more than one)
-     * @return The view, or <code>null</code> in case of an error
-     */
-    public NodeView getView(final int viewIndex) {
-        return m_node.getView(viewIndex);
-    }
-
-    /**
-     * Returns the view name for the given index.
-     * 
-     * @param viewIndex the index of the view (if more than one)
-     * @return the name of the given view
-     */
-    public String getViewName(final int viewIndex) {
-        return m_node.getViewName(viewIndex);
-    }
-
-    /**
-     * @return flag indicating if this node has a dialog.
-     */
-    public boolean hasDialog() {
-        return m_node.hasDialog();
-    }
-
-    /**
-     * Opens the node's dialog.
-     */
-    public void showDialog() {
-        m_node.showDialog();
-    }
-
-    /**
-     * @return identifier of this node
-     */
-    public int getID() {
-        return m_id;
-    }
-
-    /**
-     * @return user specified name of this node
-     */
-    public String getUserName() {
-        return m_userName;
-    }
-
-    /**
-     * @return user specified description of this node
-     */
-    public String getDescription() {
-        return m_description;
-    }
-
-    /**
-     * Sets a user name for this node.
-     * 
-     * @param name the user name to set for this node
-     */
-    public void setUserName(final String name) {
-        m_userName = name;
-
-        notifyStateListeners(new NodeStatus(NodeStatus.USER_NAME));
-    }
-
-    /**
-     * Sets a user description for this node.
-     * 
-     * @param description the user name to set for this node
-     */
-    public void setDescription(final String description) {
-        m_description = description;
-        notifyStateListeners(new NodeStatus(NodeStatus.USER_DESCRIPTION));
-    }
-
-    /**
-     * @return This node's name.
-     */
-    public String getNodeName() {
-        return m_node.getNodeName();
-    }
-
-    /**
-     * @return If this node is auto executable.
-     * @see Node#isAutoExecutable()
-     */
-    public boolean isAutoExecutable() {
-        return m_node.isAutoExecutable();
-    }
-
-    /**
-     * @return This node's name with id.
-     */
-    public String getNodeNameWithID() {
-        return getNodeName() + " (#" + getID() + ")";
-    }
-
-    /**
-     * @return a html page containing the node's description
-     * @see de.unikn.knime.core.node.Node#getFullHTMLDescription()
-     */
-    public String getFullHTMLNodeDescription() {
-        return m_node.getFullHTMLDescription();
-    }
-
-    /**
-     * @return a single line containing a brief node description
-     * @see de.unikn.knime.core.node.Node#getOneLineDescription
-     */
-    public String getNodeOneLineDescription() {
-        return m_node.getOneLineDescription();
-    }
-
-    /**
-     * @return extra information object of this node
-     */
-    public NodeExtraInfo getExtraInfo() {
-        return m_extraInfo;
-    }
-
-    /**
-     * Overwrite <code>ExtraInfo</code> object of this node.
-     * 
-     * @param ei new extra information object for this node
-     */
-    public void setExtraInfo(final NodeExtraInfo ei) {
-        m_extraInfo = ei;
-        // send event notification
-        stateChanged(new NodeStatus(NodeStatus.STATUS_EXTRA_INFO_CHANGED), m_id);
-    }
-
-    /**
-     * @return int current state of this node
-     */
-    int getState() {
-        return m_state;
-    }
-
-    /**
-     * Set new state of node.
-     * 
-     * 
-     * @param s new state of this node
-     * @throws IllegalArgumentException If the argument is out of range, i.e.
-     *             not one of STATE_CURRENTLY_EXECUTING, STATE_IDLE,
-     *             STATE_IS_EXECUTABLE, STATE_WAITING_FOR_EXECUTION, or
-     *             STATE_WAITING_TO_BE_EXECUTABLE.
-     */
-    void setState(final int s) {
-        switch (s) {
-        case STATE_CURRENTLY_EXECUTING:
-        case STATE_IDLE:
-        case STATE_IS_EXECUTABLE:
-        case STATE_WAITING_FOR_EXECUTION:
-        case STATE_WAITING_TO_BE_EXECUTABLE:
-            break;
-        default:
-            throw new IllegalArgumentException("Invalid state identifier: " + s);
-        }
-        m_state = s;
-    }
-
-    //
-    // TODO: remove the next two functions - no deep access to NodePorts!
-    //
-
-    /**
-     * Returns all in ports of this node.
-     * 
-     * @return the in ports of this node.
-     */
-    public Collection<NodeInPort> getNodeInPorts() {
-        List<NodeInPort> inPorts = new ArrayList<NodeInPort>();
-        for (int i = 0; i < m_node.getNrInPorts(); i++) {
-            inPorts.add(m_node.getNodeInPort(i));
-        }
-        return inPorts;
-    }
-
-    /**
-     * Returns all out ports of this node.
-     * 
-     * @return the out ports of this node.
-     */
-    public Collection<NodeOutPort> getNodeOutPorts() {
-        List<NodeOutPort> outPorts = new ArrayList<NodeOutPort>();
-        for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-            outPorts.add(m_node.getNodeOutPort(i));
-        }
-        return outPorts;
-    }
-
-    /**
-     * Return The dialog pane which holds all the settings' components. In
-     * addition this method loads the settings from the model into the dialog
-     * pane. The pane might be <code>null</code> if no dialog is available.
-     * 
-     * @return dialog pane
-     */
-    public NodeDialogPane getDialogPane() {
-        return m_node.getDialogPane();
-    }
-
-    /**
-     * Opens the port view of this node for the given port.
-     * 
-     * @param index the index of the port to open the view for
-     */
-    public void openPortView(final int index) {
-        NodeOutPort port = m_node.getNodeOutPort(index);
-        port.openPortView(m_node.getNodeName() + " (#" + index + ")");
-    }
-
-    /**
-     * Returns the number of output ports of the underlying node.
-     * 
-     * @return the number of outports
-     */
-    public int getNrOutPorts() {
-        return m_node.getNrOutPorts();
-    }
-
-    /**
-     * Returns the number of input ports of the underlying node.
-     * 
-     * @return the number of inports
-     */
-    public int getNrInPorts() {
-        return m_node.getNrInPorts();
-    }
-
-    /**
-     * @return The number of data output ports.
-     */
-    public int getNrDataOutPorts() {
-        return m_node.getNrDataOutPorts();
-    }
-
-    /**
-     * @return The number of <code>PredictorParams</code> output ports.
-     */
-    public int getNrPredictorInPorts() {
-        return m_node.getNrPredictorInPorts();
-    }
-
-    /**
-     * @return The number of data output ports.
-     */
-    public int getNrDataInPorts() {
-        return m_node.getNrDataInPorts();
-    }
-
-    /**
-     * @return The number of <code>PredictorParams</code> output ports.
-     */
-    public int getNrPredictorOutPorts() {
-        return m_node.getNrPredictorOutPorts();
-    }
-
-    /**
-     * Delegation method to nodes's <code>getOutputDescription</code> method.
-     * 
-     * @param port The port id of interest.
-     * @return The description to that port.
-     * @throws IndexOutOfBoundsException If argument is out of range.
-     */
-    public String getOutputDescription(final int port) {
-        return m_node.getOutputPortDescription(port);
-    }
-
-    /**
-     * Delegation method to the node's <code>getInputDescription</code>
-     * method.
-     * 
-     * @param port The port id of interest
-     * @return The description to that port
-     */
-    public String getInputDescription(final int port) {
-        return m_node.getInputPortDescription(port);
-    }
-
-    /**
-     * @return the node's <code>toString</code> description
-     */
-    public String nodeToString() {
-        return m_node.toString();
-    }
-
-    /**
-     * Check if node can be executed - this is also true if all nodes leading up
-     * to this node can be executed. In a GUI this would mean that this node
-     * will show up "yellow".
-     * 
-     * @return true if node can be used to initiate an execution up to here.
-     */
-    public boolean isExecutableUpToHere() {
-        // check first if node is executed
-        if (isExecuted()) {
-            return false;
-        }
-        // update internal flag so we know if we can actually
-        // initiate an "execution up to here" from this node or not
-        boolean isExectuableUpToHere = false;
-        if (m_node.isConfigured()) {
-            isExectuableUpToHere = true;
-            // if this node is executable in principle (= is configured),
-            // verify that all predecessors are executable-up-to-here.
-            NodeContainer[] pred = this.getPredecessors();
-            for (int p = 0; p < pred.length; p++) {
-                if (pred[p] == null) {
-                    isExectuableUpToHere = false;
-                    break;
-                }
-                if (pred[p].isExecuted()) {
-                    continue;
-                }
-                if (!pred[p].isExecutableUpToHere()) {
-                    isExectuableUpToHere = false;
-                    break;
-                }
+            // if there was no user node name defined than keep the default name
+            if (name != null) {
+                setCustomName(name);
             }
+        } catch (InvalidSettingsException ise) {
+            LOGGER.warn("In the settings of node <id:" + getID()
+                    + "|type:" + getName()
+                    + "> is no user name specified");
         }
-        return isExectuableUpToHere;
-    }
 
-    /**
-     * @return true if node has successfully been executed
-     */
-    public boolean isExecuted() {
-        return m_node.isExecuted();
-    }
-
-    /**
-     * Resets the node. Will reset the entire flow from here by propagating this
-     * through the output ports.
-     */
-    public void resetNode() {
-        m_node.resetNode();
-    }
-
-    /**
-     * Adds an outgoing connection to a specified port. Note that more than one
-     * outgoing connection can exist for each port.
-     * 
-     * @param port index of outgoing port
-     * @param nc NodeContainer this connection points to (sink).
-     */
-    void addOutgoingConnection(final int port, final NodeContainer nc) {
-        // sanity checks:
-        if (nc == null) {
-            throw new NullPointerException("Outgoing connection at port #"
-                    + port + " has no target node defined (null).");
+        try {
+            // read custom description
+            String description = sett.getString(KEY_CUSTOM_DESCRIPTION);
+            setDescription(description);
+        } catch (InvalidSettingsException ise) {
+            LOGGER.warn("In the settings of node <id:" + getID()
+                    + "|type:" + getName()
+                    + "> is no user description specified");
         }
-        if (port < 0 || port > getNrOutPorts()) {
-            throw new IndexOutOfBoundsException("Port index out of bounds: "
-                    + port);
-        }
-        // add connection also on the other side (the sink).
-        if (m_succ.get(port) == null) {
-            m_succ.set(port, new ArrayList<NodeContainer>());
-        }
-        m_succ.get(port).add(nc);
     }
 
     /**
@@ -606,23 +261,291 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * Deletes an incoming connection.
+     * Adds a listener, has no effect if the listener is already registered.
      * 
-     * @param port index of port to be disconnected
+     * @param listener The listener to add
      */
-    void removeIncomingConnection(final int port) {
-        m_pred.set(port, null);
+    public void addListener(final NodeStateListener listener) {
+        if (!m_eventListeners.contains(listener)) {
+            m_eventListeners.add(listener);
+        }
     }
 
     /**
-     * Remove an outgoing connection.
+     * Adds an outgoing connection to a specified port. Note that more than one
+     * outgoing connection can exist for each port.
      * 
      * @param port index of outgoing port
-     * @param node node the connection to be deleted points to
+     * @param nc NodeContainer this connection points to (sink).
      */
-    void removeOutgoingConnection(final int port, final NodeContainer node) {
-        List<NodeContainer> list = m_succ.get(port);
-        list.remove(node);
+    void addOutgoingConnection(final int port, final NodeContainer nc) {
+        // sanity checks:
+        if (nc == null) {
+            throw new NullPointerException("Outgoing connection at port #"
+                    + port + " has no target node defined (null).");
+        }
+        if (port < 0 || port > getNrOutPorts()) {
+            throw new IndexOutOfBoundsException("Port index out of bounds: "
+                    + port);
+        }
+        // add connection also on the other side (the sink).
+        if (m_succ.get(port) == null) {
+            m_succ.set(port, new ArrayList<NodeContainer>());
+        }
+        m_succ.get(port).add(nc);
+    }
+
+    /**
+     * attempt to cancel execution by setting corresponding flag in.
+     * ExecutionMonitor
+     */
+    public void cancelExecution() {
+        if (m_progressMonitor != null) {
+            m_progressMonitor.setExecuteCanceled();
+            // TODO needs to come back from Monitor not just set here!
+            // but we need Node to tell us that execution was cancelled...
+            m_executionCanceled = true;
+        }
+    }
+
+    /**
+     * This method is only intended to change the id in case a node was copied
+     * to assign a unique id.
+     * 
+     * @param id the new id to assign
+     */
+    void changeId(final int id) {
+        m_id = id;
+    }
+
+    /**
+     * @return Returns whether the execution terminated successfully
+     */
+    public synchronized boolean executionSucceeded() {
+        return m_executionSuccess;
+    }
+
+    /**
+     * @return Returns whether the execution was canceled prematurely
+     */
+    public synchronized boolean executionWasCanceled() {
+        return m_executionCanceled;
+    }
+
+    /**
+     * @return user specified name of this node
+     */
+    public String getCustomName() {
+        return m_customName;
+    }
+
+    /**
+     * @return user specified description of this node
+     */
+    public String getDescription() {
+        return m_description;
+    }
+
+    /**
+     * Return The dialog pane which holds all the settings' components. In
+     * addition this method loads the settings from the model into the dialog
+     * pane. The pane might be <code>null</code> if no dialog is available.
+     * 
+     * @return dialog pane
+     */
+    public NodeDialogPane getDialogPane() {
+        return m_node.getDialogPane();
+    }
+
+    /** 
+     * Returns the embedded workflow manager, if the underlying node contains
+     * a meta node model.
+     * 
+     * @return the embedded workflow manager or <code>null</code> if the
+     * underlying node model is not a meta node model
+     */
+    public WorkflowManager getEmbeddedWorkflowManager() {
+        return m_node.getEmbeddedWorkflowManager();
+    }
+
+    /**
+     * @return extra information object of this node
+     */
+    public NodeExtraInfo getExtraInfo() {
+        return m_extraInfo;
+    }
+
+    /**
+     * @return a html page containing the node's description
+     * @see de.unikn.knime.core.node.Node#getFullHTMLDescription()
+     */
+    public String getFullHTMLNodeDescription() {
+        return m_node.getFullHTMLDescription();
+    }
+
+    /**
+     * @return the icon associated with this node
+     */
+    public URL getIcon() {
+        return m_node.getFactory().getIcon();
+    }
+
+    /**
+     * @return identifier of this node
+     */
+    public int getID() {
+        return m_id;
+    }
+
+    /**
+     * Returns an unmodifieable list of all in ports of this node.
+     * 
+     * @return the in ports of this node.
+     */
+    public List<NodeInPort> getInPorts() {
+        if (m_cachedInPorts == null) {
+            List<NodeInPort> inPorts = new ArrayList<NodeInPort>();
+            for (int i = 0; i < m_node.getNrInPorts(); i++) {
+                inPorts.add(m_node.getInPort(i));
+            }
+            m_cachedInPorts = Collections.unmodifiableList(inPorts);
+        }
+        return m_cachedInPorts;
+    }
+
+    /**
+     * Delegation method to the node's <code>getInputDescription</code>
+     * method.
+     * 
+     * @param port The port id of interest
+     * @return The description to that port
+     */
+    public String getInputDescription(final int port) {
+        return m_node.getInputPortDescription(port);
+    }
+
+    /**
+     * Returns the concrete class of this node's model.
+     * 
+     * @return the model's class
+     */
+    public Class<? extends NodeModel> getModelClass() {
+        return m_node.getModelClass();
+    }
+
+    //
+    // TODO: remove the next two functions - no deep access to NodePorts!
+    //
+
+    /**
+     * @return This node's name.
+     */
+    public String getName() {
+        return m_node.getName();
+    }
+
+    /**
+     * @return This node's name with id.
+     */
+    public String getNameWithID() {
+        return getName() + " (#" + getID() + ")";
+    }
+
+    /**
+     * @return This container's underlying <code>Node</code>.
+     */
+    protected Node getNode() {
+        return m_node;
+    }
+
+    /**
+     * @return The number of data output ports.
+     */
+    public int getNrDataInPorts() {
+        return m_node.getNrDataInPorts();
+    }
+
+    /**
+     * @return The number of data output ports.
+     */
+    public int getNrDataOutPorts() {
+        return m_node.getNrDataOutPorts();
+    }
+
+    /**
+     * Returns the number of input ports of the underlying node.
+     * 
+     * @return the number of inports
+     */
+    public int getNrInPorts() {
+        return m_node.getNrInPorts();
+    }
+
+    /**
+     * Returns the number of output ports of the underlying node.
+     * 
+     * @return the number of outports
+     */
+    public int getNrOutPorts() {
+        return m_node.getNrOutPorts();
+    }
+
+    /**
+     * @return The number of <code>PredictorParams</code> output ports.
+     */
+    public int getNrPredictorInPorts() {
+        return m_node.getNrPredictorInPorts();
+    }
+
+    /**
+     * @return The number of <code>PredictorParams</code> output ports.
+     */
+    public int getNrPredictorOutPorts() {
+        return m_node.getNrPredictorOutPorts();
+    }
+
+    /**
+     * Returns the number of views for this node.
+     * 
+     * @return number views of this node
+     */
+    public int getNumViews() {
+        return m_node.getNumViews();
+    }
+
+    /**
+     * @return a single line containing a brief node description
+     * @see de.unikn.knime.core.node.Node#getOneLineDescription
+     */
+    public String getOneLineDescription() {
+        return m_node.getOneLineDescription();
+    }
+
+    /**
+     * Returns all out ports of this node.
+     * 
+     * @return the out ports of this node.
+     */
+    public List<NodeOutPort> getOutPorts() {
+        if (m_cachedOutPorts == null) {
+            List<NodeOutPort> outPorts = new ArrayList<NodeOutPort>();
+            for (int i = 0; i < m_node.getNrOutPorts(); i++) {
+                outPorts.add(m_node.getOutPort(i));
+            }
+            m_cachedOutPorts = Collections.unmodifiableList(outPorts);
+        }
+        return m_cachedOutPorts;
+    }
+
+    /**
+     * Delegation method to nodes's <code>getOutputDescription</code> method.
+     * 
+     * @param port The port id of interest.
+     * @return The description to that port.
+     * @throws IndexOutOfBoundsException If argument is out of range.
+     */
+    public String getOutputDescription(final int port) {
+        return m_node.getOutputPortDescription(port);
     }
 
     /**
@@ -630,8 +553,24 @@ public class NodeContainer implements NodeStateListener {
      * 
      * @return an array of NodeContainers, one entry for each InPort.
      */
-    public NodeContainer[] getPredecessors() {
-        return m_pred.toArray(new NodeContainer[0]);
+    public Collection<NodeContainer> getPredecessors() {
+        return Collections.unmodifiableCollection(m_pred);
+    }
+
+    /**
+     * @return int current state of this node
+     */
+    State getState() {
+        return m_state;
+    }
+
+    /**
+     * Returns the node status object of this <code>Node</code>.
+     * 
+     * @return the node status
+     */
+    public NodeStatus getStatus() {
+        return m_node.getStatus();
     }
 
     /**
@@ -651,6 +590,86 @@ public class NodeContainer implements NodeStateListener {
         }
         return result;
     }
+
+    /**
+     * Returns the node's view.
+     * 
+     * @param viewIndex the index of the view (if more than one)
+     * @return The view, or <code>null</code> in case of an error
+     */
+    public NodeView getView(final int viewIndex) {
+        return m_node.getView(viewIndex);
+    }
+
+    /**
+     * Returns the view name for the given index.
+     * 
+     * @param viewIndex the index of the view (if more than one)
+     * @return the name of the given view
+     */
+    public String getViewName(final int viewIndex) {
+        return m_node.getViewName(viewIndex);
+    }
+
+    /**
+     * @return flag indicating if this node has a dialog.
+     */
+    public boolean hasDialog() {
+        return m_node.hasDialog();
+    }
+
+    /**
+     * @return If this node is auto executable.
+     * @see Node#isAutoExecutable()
+     */
+    public boolean isAutoExecutable() {
+        return m_node.isAutoExecutable();
+    }
+
+    /**
+     * Check if node can be executed - this is also true if all nodes leading up
+     * to this node can be executed. In a GUI this would mean that this node
+     * will show up "yellow".
+     * 
+     * @return true if node can be used to initiate an execution up to here.
+     */
+    public boolean isExecutableUpToHere() {
+        // check first if node is executed
+        if (isExecuted()) {
+            return false;
+        }
+        // update internal flag so we know if we can actually
+        // initiate an "execution up to here" from this node or not
+        boolean isExectuableUpToHere = false;
+        if (m_node.isConfigured()) {
+            isExectuableUpToHere = true;
+            // if this node is executable in principle (= is configured),
+            // verify that all predecessors are executable-up-to-here.
+            for (NodeContainer pred : getPredecessors()) {
+                if (pred == null) {
+                    isExectuableUpToHere = false;
+                    break;
+                } else if (pred.isExecuted()) {
+                    continue;
+                } else if (!pred.isExecutableUpToHere()) {
+                    isExectuableUpToHere = false;
+                    break;
+                }
+            }
+        }
+        return isExectuableUpToHere;
+    }
+
+    /**
+     * @return true if node has successfully been executed
+     */
+    public boolean isExecuted() {
+        return m_node.isExecuted();
+    }
+
+    // ////////////////////////
+    // NodeContainer save&load
+    // ////////////////////////
 
     /**
      * Test if a given node is among the (direct or indirect) successors of this
@@ -680,37 +699,140 @@ public class NodeContainer implements NodeStateListener {
         return hasReached;
     }
 
+    /**
+     * Checks whether the in port given by its index is a PredictorParams port,
+     * that is, the port takes information about a predictor model as an input.
+     * 
+     * @param portNumber the port number
+     * 
+     * @return true if the port is a PredictorParams port, false otherwise
+     */
+    public boolean isPredictorInPort(final int portNumber) {
+        return m_node.isPredictorInPort(portNumber);
+    }
+
+    /**
+     * Checks whether the out port given by its index is a PredictorParams port.
+     * 
+     * @param portNumber the port number
+     * 
+     * @return true if the port is a PredictorParams port, false otherwise
+     */
+    public boolean isPredictorOutPort(final int portNumber) {
+        return m_node.isPredictorOutPort(portNumber);
+    }
+
+    /**
+     * Loads new <code>NodeSettings</code> into the underlying
+     * <code>Node</code>.
+     * 
+     * @param settings the settings to load
+     */
+    public void load(final NodeSettings settings) {
+        try {
+            m_node.load(settings);
+        } catch (InvalidSettingsException ise) {
+            m_logger.error("Settings could not be loaded. " + ise.getMessage());
+        }
+    }
+
+    /**
+     * @return the node's <code>toString</code> description
+     */
+    public String nodeToString() {
+        return m_node.toString();
+    }
+
+    /**
+     * Notifies all state listeners that the state of this
+     * <code>NodeContainer</code> has changed. Protected so that
+     * <code>MetaNodeContainer</code> can use it.
+     * 
+     * @param state <code>NodeStateListener</code>
+     */
+    protected void notifyStateListeners(final NodeStatus state) {
+        for (NodeStateListener listener : m_eventListeners) {
+            listener.stateChanged(state, m_id);
+        }
+    }
+
+    /**
+     * Opens the port view of this node for the given port.
+     * 
+     * @param index the index of the port to open the view for
+     */
+    public void openPortView(final int index) {
+        NodeOutPort port = m_node.getOutPort(index);
+        port.openPortView(m_node.getName() + " (#" + index + ")");
+    }
+
+    // ///////////////////
+    // Execution Handling
+    // ///////////////////
+
+    /**
+     * Removes all listeners. For convenience.
+     */
+    public void removeAllListeners() {
+        m_eventListeners.clear();
+    }
+
+    /**
+     * Deletes an incoming connection.
+     * 
+     * @param port index of port to be disconnected
+     */
+    void removeIncomingConnection(final int port) {
+        m_pred.set(port, null);
+    }
+
+    /**
+     * Removes a listener, has no effect if the listener was not registered.
+     * 
+     * @param listener The listener to remove
+     */
+    public void removeListener(final NodeStateListener listener) {
+        m_eventListeners.remove(listener);
+    }
+
+    /**
+     * Remove an outgoing connection.
+     * 
+     * @param port index of outgoing port
+     * @param node node the connection to be deleted points to
+     */
+    void removeOutgoingConnection(final int port, final NodeContainer node) {
+        List<NodeContainer> list = m_succ.get(port);
+        list.remove(node);
+    }
+
+    /**
+     * Resets the node. Will reset the entire flow from here by propagating this
+     * through the output ports.
+     */
+    public void reset() {
+        m_node.reset();
+    }
+
     // ////////////////////////
-    // NodeContainer save&load
+    // Event Listener handling
     // ////////////////////////
-
-    /** Key for extra info's class name. */
-    protected static final String KEY_EXTRAINFOCLASS = "extraInfoClassName";
-
-    /** Key for this node's internal ID. */
-    protected static final String KEY_ID = "id";
-
-    /** Key for this node's user name. */
-    protected static final String KEY_USER_NAME = "userName";
-
-    /** Key for this node's user description. */
-    protected static final String KEY_USER_DESCRIPTION = "userDescription";
 
     /**
      * Stores all information into the given configuration.
      * 
      * @param config The configuration to write to current settings into.
-     * @see #createNewNodeContainer
+     * @see #NodeContainer(NodeSettings, WorkflowManager)
      */
     public void save(final NodeSettings config) {
         // save configuration of underlying node
-        m_node.saveConfigTo(config);
+        m_node.save(config);
         // save id
         config.addInt(KEY_ID, m_id);
         // save name
-        config.addString(KEY_USER_NAME, m_userName);
+        config.addString(KEY_CUSTOM_NAME, m_customName);
         // save description
-        config.addString(KEY_USER_DESCRIPTION, m_description);
+        config.addString(KEY_CUSTOM_DESCRIPTION, m_description);
         // save type of extrainfo and also it's content - but only if it exists
         if (m_extraInfo != null) {
             config.addString(KEY_EXTRAINFOCLASS, m_extraInfo.getClass()
@@ -720,107 +842,65 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * Creates a new NodeContainer and reads it's status and information from
-     * the NodeSettings object. Note that the list of predecessors and
-     * successors will NOT be initalized correctly. The Workflow manager is
-     * required to take care of re-initializing the connections.
+     * Sets a user name for this node.
      * 
-     * @param sett Retrieve the data from.
-     * @return new NodeContainer
-     * @throws InvalidSettingsException If the required keys are not available
-     *             in the NodeSettings.
-     * 
-     * @see #save
+     * @param name the user name to set for this node
      */
-    public static NodeContainer createNewNodeContainer(final NodeSettings sett)
-            throws InvalidSettingsException {
-        // create new Node based on configuration
-        Node newNode = Node.createNode(sett);
-
-        // read id
-        int newID = sett.getInt(KEY_ID);
-        // create new NodeContainer and return it
-        NodeContainer newNC = new NodeContainer(newNode, newID);
-
-        newNC.setExtraInfo(createExtraInfo(sett));
-
-        try {
-            // read user name
-            String name = sett.getString(KEY_USER_NAME);
-
-            // if there was no user node name defined than keep the default name
-            if (name != null) {
-                newNC.setUserName(name);
-            }
-        } catch (InvalidSettingsException ise) {
-
-            LOGGER.warn("In the settings of node <id:" + newNC.getID()
-                    + "|type:" + newNode.getNodeName()
-                    + "> is no user name specified");
-        }
-
-        try {
-            // read user description
-            String description = sett.getString(KEY_USER_DESCRIPTION);
-            newNC.setDescription(description);
-        } catch (InvalidSettingsException ise) {
-
-            LOGGER.warn("In the settings of node <id:" + newNC.getID()
-                    + "|type:" + newNode.getNodeName()
-                    + "> is no user description specified");
-        }
-
-        return newNC;
+    public void setCustomName(final String name) {
+        m_customName = name;
+        notifyStateListeners(new NodeStatus.CustomName());
     }
 
     /**
-     * Creates the <code>NodeExtraInfo</code> from given settings, describing
-     * whatever additional information was stored (graphical layout?).
+     * Sets a user description for this node.
      * 
-     * @param sett the setting to construct the extra info from
-     * @return new <code>NodeExtraInfo</code> object or null
-     * @throws InvalidSettingsException if the settings are invalid
+     * @param description the user name to set for this node
      */
-    protected static NodeExtraInfo createExtraInfo(final NodeSettings sett)
-            throws InvalidSettingsException {
-        NodeExtraInfo extraInfo = null; // null if it doesn't exist
-        if (sett.containsKey(NodeContainer.KEY_EXTRAINFOCLASS)) {
-            // if it does exist, determine type of extrainfo
-            String extraInfoClassName = sett
-                    .getString(NodeContainer.KEY_EXTRAINFOCLASS);
-            try {
-                // use global Class Creator utility for Eclipse "compatibility"
-                extraInfo = (NodeExtraInfo)(GlobalClassCreator
-                        .createClass(extraInfoClassName).newInstance());
-                // and load content of extrainfo
-                extraInfo.load(sett);
-            } catch (Exception e) {
-                LOGGER.warn("ExtraInfoClass could not " + "be loaded "
-                        + extraInfoClassName + " reason: " + e.getMessage());
-            }
-
-        }
-        return extraInfo;
+    public void setDescription(final String description) {
+        m_description = description;
+        notifyStateListeners(new NodeStatus.CustomDescription());
     }
 
     /**
-     * Loads new <code>NodeSettings</code> into the underlying
-     * <code>Node</code>.
+     * Overwrite <code>ExtraInfo</code> object of this node.
      * 
-     * @param settings the settings to load
+     * @param ei new extra information object for this node
      */
-    public void loadConfigFrom(final NodeSettings settings) {
-        try {
-            m_node.loadConfigFrom(settings);
-        } catch (InvalidSettingsException ise) {
-            m_logger.error("Settings could not be loaded. " + ise.getMessage());
-        }
+    public void setExtraInfo(final NodeExtraInfo ei) {
+        m_extraInfo = ei;
+        notifyStateListeners(new NodeStatus.ExtrainfoChanged());
     }
 
-    // ///////////////////
-    // Execution Handling
-    // ///////////////////
+    /**
+     * Set new state of node.
+     * 
+     * 
+     * @param s new state of this node
+     * @throws IllegalArgumentException If the argument is out of range, i.e.
+     *             not one of STATE_CURRENTLY_EXECUTING, STATE_IDLE,
+     *             STATE_IS_EXECUTABLE, STATE_WAITING_FOR_EXECUTION, or
+     *             STATE_WAITING_TO_BE_EXECUTABLE.
+     */
+    void setState(final State s) {
+        m_state = s;
+    }
 
+    /**
+     * Opens the node's dialog.
+     */
+    public void showDialog() {
+        m_node.showDialog();
+    }
+
+    /**
+     * Opens the node's view. (Which may be empty if node is not executed.)
+     * 
+     * @param viewIndex the index of the view (=0 if there is only one)
+     */
+    public void showView(final int viewIndex) {
+        m_node.showView(viewIndex);
+    }
+    
     /**
      * Starts the execution. The node must not be already started and has to be
      * in executable state.
@@ -829,9 +909,7 @@ public class NodeContainer implements NodeStateListener {
      * @return the future that has been created for the node
      */
     public synchronized Future<?> startExecution(final NodeProgressMonitor pm) {
-
         if (!m_node.isExecutable()) {
-
             throw new IllegalStateException("Node is not in executable state");
         }
         // make sure node is not already executing (should not happen)
@@ -857,7 +935,7 @@ public class NodeContainer implements NodeStateListener {
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
                     m_executionSuccess = m_node
-                            .executeNode(new ExecutionMonitor(pm));
+                            .execute(new ExecutionMonitor(pm));
                 } catch (Exception e) {
                     // some other error - this should never happen!
                     m_executionSuccess = false;
@@ -878,145 +956,37 @@ public class NodeContainer implements NodeStateListener {
                     // from Node.execute itself to avoid racing conditions
                     // (event arrives before m_executionSuccess flag is set
                     // correctly.
-                    for (int i = 0; i < m_eventListeners.size(); i++) {
-                        NodeStateListener listener = m_eventListeners.get(i);
-                        listener.stateChanged(new NodeStatus(
-                                NodeStatus.END_EXECUTE), m_id);
-                    }
+                    notifyStateListeners(new NodeStatus.EndExecute());
                 }
-
             }
-
         };
-        pm.setMessage("Scheduled for execution...");
+        if (pm != null) {
+            pm.setMessage("Scheduled for execution...");
+        }
         pm.setProgress(0.0);
         return KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(r);
     }
-
-    /**
-     * attempt to cancel execution by setting corresponding flag in.
-     * ExecutionMonitor
-     */
-    public void cancelExecution() {
-        if (m_progressMonitor != null) {
-            m_progressMonitor.setExecuteCanceled();
-            // TODO needs to come back from Monitor not just set here!
-            // but we need Node to tell us that execution was cancelled...
-            m_executionCanceled = true;
-        }
-    }
-
-    /**
-     * @return Returns whether the node is currently executed
-     */
-    public synchronized boolean isExecuting() {
-        return m_executionRunning;
-    }
-
-    /**
-     * @return Returns whether the execution terminated successfully
-     */
-    public synchronized boolean executionSucceeded() {
-        return m_executionSuccess;
-    }
-
-    /**
-     * @return Returns whether the execution was canceled prematurely
-     */
-    public synchronized boolean executionWasCanceled() {
-        return m_executionCanceled;
-    }
-
-    // ////////////////////////
-    // Event Listener handling
-    // ////////////////////////
-
-    /**
-     * Adds a listener, has no effect if the listener is already registered.
-     * 
-     * @param listener The listener to add
-     */
-    public void addListener(final NodeStateListener listener) {
-        if (!m_eventListeners.contains(listener)) {
-            m_eventListeners.add(listener);
-        }
-    }
-
-    /**
-     * Removes a listener, has no effect if the listener was not registered.
-     * 
-     * @param listener The listener to remove
-     */
-    public void removeListener(final NodeStateListener listener) {
-        if (m_eventListeners.contains(listener)) {
-            m_eventListeners.remove(listener);
-        }
-    }
-
-    /**
-     * Removes all listeners. For convenience.
-     */
-    public void removeAllListeners() {
-        m_eventListeners.clear();
-    }
-
+    
     /**
      * Callback from node (this <code>NodeContainer</code> has registered
      * itself as a listener to the underlying <code>Node</code>), indicating
      * that the underlying node has changed its state. Fire new event to all
      * listeners with the node-ID added.
      * 
-     * @param state Indicates the type of status change of this node.
+     * @param st Indicates the type of status change of this node.
      * @param id identifier from <code>Node</code>: will be overwritten with
      *            NodeContainer ID
      */
-    public synchronized void stateChanged(final NodeStatus state, final int id) {
-        if (state.getStatusId() == NodeStatus.END_EXECUTE) {
+    public synchronized void stateChanged(final NodeStatus st, final int id) {
+        if (st instanceof NodeStatus.EndExecute) {
             // do not immediately forward this event. We will generate a
             // new event after we have actually set all internal flags
             // correctly. Otherwise this event may overtake the
             // processing of the return value of Node.execute()!
         } else {
             // forward all other events immediately
-            notifyStateListeners(state);
+            notifyStateListeners(st);
         }
-
-    }
-
-    /**
-     * Notifies all state listeners that the state of this
-     * <code>NodeContainer</code> has changed. Protected so that
-     * <code>MetaNodeContainer</code> can use it.
-     * 
-     * @param state <code>NodeStateListener</code>
-     */
-    protected void notifyStateListeners(final NodeStatus state) {
-        // for all listeners
-        for (int i = 0; i < m_eventListeners.size(); i++) {
-            NodeStateListener listener = m_eventListeners.get(i);
-            listener.stateChanged(state, m_id);
-        }
-    }
-
-    /**
-     * This method is only intended to change the id in case a node was copied
-     * to assign a unique id.
-     * 
-     * @param id the new id to assign
-     */
-    void changeId(final int id) {
-
-        m_id = id;
-    }
-
-    /**
-     * Returns the node status object of this <code>Node</code>.
-     * 
-     * @return the node status
-     */
-    public NodeStatus getNodeStatus() {
-
-        return m_node.getNodeStatus();
     }
 
     /**

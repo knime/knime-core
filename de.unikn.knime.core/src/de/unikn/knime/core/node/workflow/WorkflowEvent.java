@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,67 +32,175 @@ import java.util.Date;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class WorkflowEvent {
-
+public abstract class WorkflowEvent {
     /** Event: node added to workflow. */
-    public static final int NODE_ADDED = 0;
-
+    public static class NodeAdded extends WorkflowEvent {
+        /**
+         * Creates a new "node added" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public NodeAdded(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
+    
     /** Event: node removed from workflow. */
-    public static final int NODE_REMOVED = 1;
+    public static class NodeRemoved extends WorkflowEvent {
+        /**
+         * Creates a new "node removed" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public NodeRemoved(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
 
     /** Event: connection added to workflow. */
-    public static final int CONNECTION_ADDED = 2;
+    public static class ConnectionAdded extends WorkflowEvent {
+        /**
+         * Creates a new "connection added" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public ConnectionAdded(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
 
     /** Event: connection removed from workflow. */
-    public static final int CONNECTION_REMOVED = 3;
-
+    public static class ConnectionRemoved extends WorkflowEvent {
+        /**
+         * Creates a new "connection removed" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public ConnectionRemoved(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
+    
     /** Event: pool of executable nodes has changed. */
-    public static final int EXEC_POOL_CHANGED = 4;
-
+    public static class ExecPoolChanged extends WorkflowEvent {
+        /**
+         * Creates a new "exec pool changed" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public ExecPoolChanged(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
+    
     /** Event: pool of executable nodes is now empty: execute wf finished. */
-    public static final int EXEC_POOL_DONE = 5;
+    public static class ExecPoolDone extends WorkflowEvent {
+        /**
+         * Creates a new "exec pool done" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public ExecPoolDone(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
 
     /** Event: node was reset. */
-    public static final int NODE_RESET = 10;
-
+    public static class NodeReset extends WorkflowEvent {
+        /**
+         * Creates a new "node reset" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public NodeReset(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
+    
     /** Event: node was reset. */
-    public static final int NODE_CONFIGURED = 11;
+    public static class NodeConfigured extends WorkflowEvent {
+        /**
+         * Creates a new "node configured" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public NodeConfigured(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
     
     /** Event: extra info attached to node has changed. */
-    public static final int NODE_EXTRAINFO_CHANGED = 100;
+    public static class NodeExtrainfoChanged extends WorkflowEvent {
+        /**
+         * Creates a new "node extra info changed" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public NodeExtrainfoChanged(final int nodeID, final Object oldValue,
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
     
     /** Event: extra info attached to connection has changed. */
-    public static final int CONNECTION_EXTRAINFO_CHANGED = 200;
+    public static class ConnectionExtrainfoChanged extends WorkflowEvent {
+        /**
+         * Creates a new "connection extra info changed" event.
+         *  
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>)
+         */
+        public ConnectionExtrainfoChanged(final int nodeID,
+                final Object oldValue, final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
 
-    /* Private fields, not always all valid */
     private int m_id;
     private long m_timestamp;
-    private int m_eventType;
     private Object m_oldValue;
     private Object m_newValue;
 
     /**
      * Creates a new workflow event.
      * 
-     * @param type event type
      * @param nodeID The ID for the affected node
      * @param oldValue value before the change (may be <code>null</code>)
      * @param newValue value after the change (may be <code>null</code>)
      */
-    public WorkflowEvent(final int type, final int nodeID,
+    public WorkflowEvent(final int nodeID,
             final Object oldValue, final Object newValue) {
-        m_eventType = type;
         m_id = nodeID;
         m_oldValue = oldValue;
         m_newValue = newValue;
         m_timestamp = System.currentTimeMillis();
-    }
-
-    /**
-     * @return Returns the eventType.
-     */
-    public int getEventType() {
-        return m_eventType;
     }
 
     /**
@@ -123,12 +229,12 @@ public class WorkflowEvent {
      * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
-
-        return "WorkflowEvent [type=" + m_eventType + ";old=" + m_oldValue
+        return "WorkflowEvent [type=" + getClass().getSimpleName()
+                + ";old=" + m_oldValue
                 + ";new=" + m_newValue + ";timestamp="
-                + DateFormat.getDateInstance().format(new Date(m_timestamp))
+                + DateFormat.getDateTimeInstance().format(new Date(m_timestamp))
                 + "]";
     }
-
 }

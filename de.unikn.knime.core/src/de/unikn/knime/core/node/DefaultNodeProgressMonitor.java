@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -129,7 +127,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
     }
 
-    /** Sets progress internally, returns if old value has changed. */
+    /*
+     * Sets progress internally, returns if old value has changed.
+     */
     private boolean setProgressIntern(final double progress) {
         final double oldProgress = m_progress;
         if (progress >= 0.0 && progress <= 1.0) {
@@ -142,7 +142,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         return changed;
     }
 
-    /** Sets message internally, returns if old value has changed. */
+    /*
+     * Sets message internally, returns if old value has changed.
+     */
     private boolean setMessageIntern(final String message) {
         if (message == m_message) {
             return false;

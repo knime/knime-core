@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -39,7 +37,7 @@ public interface NodeExtraInfo {
      * @param config The configuration to write the current settings into.
      * @see #load
      */
-    void save(final NodeSettings config);
+    public void save(final NodeSettings config);
     
     /**
      * Reads the information from the NodeSettings object.
@@ -50,14 +48,14 @@ public interface NodeExtraInfo {
      * 
      * @see #save
      */
-    void load(final NodeSettings config) throws InvalidSettingsException;
+    public void load(final NodeSettings config) throws InvalidSettingsException;
     
     /**
      * Checks if all information for this extra info is set properly.
      * 
      * @return true if infos are set properly
      */
-    boolean isFilledProperly();
+    public boolean isFilledProperly();
     
     /**
      * Changes the position according to

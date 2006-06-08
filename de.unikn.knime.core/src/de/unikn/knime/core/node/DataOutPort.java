@@ -55,9 +55,10 @@ public final class DataOutPort extends NodeOutPort
     /**
      * Creates a new output data port. 
      * @param portId The port's ID.
+     * @param node the node this port belongs to
      */
-    public DataOutPort(final int portId) {
-        super(portId);
+    public DataOutPort(final int portId, final Node node) {
+        super(portId, node);
         m_tableSpec = null;
         m_dataTable = null;
         m_hiliteHdl = null;
@@ -157,6 +158,7 @@ public final class DataOutPort extends NodeOutPort
      * spec, and hilite handler settings.
      * @param nodeName The name of the node this port belongs to. 
      */
+    @Override
     public void openPortView(final String nodeName) {
         if (getPortView() == null) {
             super.setPortView(new DataOutPortView(nodeName, getPortName()));

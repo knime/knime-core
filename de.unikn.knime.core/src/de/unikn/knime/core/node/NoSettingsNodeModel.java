@@ -28,7 +28,6 @@ package de.unikn.knime.core.node;
  * @author Florian Georg, University of Konstanz
  */
 public abstract class NoSettingsNodeModel extends NodeModel {
-
     /**
      * Creates a <code>NodeModel</code> based on data in- and outports.
      * @param nrInputs number of in ports
@@ -62,6 +61,7 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     /**
      * @see NodeModel#saveSettingsTo(NodeSettings)
      */
+    @Override
     protected final void saveSettingsTo(final NodeSettings settings) {
         // nothing
 
@@ -70,6 +70,7 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettings)
      */
+    @Override
     protected final void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         // nothing
@@ -78,6 +79,7 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
      */
+    @Override
     protected final void loadValidatedSettingsFrom(
             final NodeSettings settings) throws InvalidSettingsException {
         // nothing
@@ -87,9 +89,8 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     /**
      * @see NodeModel#reset()
      */
+    @Override
     protected void reset() {
         // default: do nothing
-    }
-
-   
+    }   
 }

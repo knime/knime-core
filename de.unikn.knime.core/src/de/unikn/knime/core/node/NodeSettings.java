@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -46,6 +44,7 @@ public class NodeSettings extends Config {
     /**
      * @see Config#getInstance(java.lang.String)
      */
+    @Override
     protected NodeSettings getInstance(final String key) {
         return new NodeSettings(key);
     }
@@ -92,6 +91,7 @@ public class NodeSettings extends Config {
     /**
      * @see Config#addConfig(java.lang.String)
      */
+    @Override
     public NodeSettings addConfig(final String key) {
         return (NodeSettings)super.addConfig(key);
     }
@@ -99,6 +99,7 @@ public class NodeSettings extends Config {
     /**
      * @see Config#getConfig(java.lang.String)
      */
+    @Override
     public NodeSettings getConfig(final String key)
             throws InvalidSettingsException {
         return (NodeSettings)super.getConfig(key);

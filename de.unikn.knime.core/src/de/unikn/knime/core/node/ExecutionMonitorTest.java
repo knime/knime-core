@@ -68,7 +68,7 @@ public class ExecutionMonitorTest extends TestCase {
                             fail();
                         }
                     }
-                };
+                }
             });
         }
         for (int i = 0; i < ts.length; i++) {

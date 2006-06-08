@@ -1,8 +1,9 @@
-/* -------------------------------------------------------------------
+/* Created on May 29, 2006 10:36:14 AM by thor
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
- * Copyright, 2003 - 2004
+ * Copyright, 2003 - 2006
  * Universitaet Konstanz, Germany.
  * Lehrstuhl fuer Angewandte Informatik
  * Prof. Dr. Michael R. Berthold
@@ -13,8 +14,6 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  * 
- * History
- *   13.06.2005 (cebron): created
  */
 package de.unikn.knime.core.node.meta;
 
@@ -24,61 +23,68 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * Factory class to produce a MetaOutputNode.
- * The MetaOutputNode is a utility node to build fully connected
- * workflows inside a NodeModel. The method <code>createNodeModel</code>
- * returns a singleton <code>MetaOutputNodeModel</code>.
+ * This factory creates models for meta output nodes. The usage of this class
+ * is for meta workflows only.
+ * Note that because the constructor is parameterized, this factory cannot be
+ * created by loading a workflow but must be instantiated by the meta node
+ * itself.
  * 
- * @author cebron, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
+
 public class MetaOutputNodeFactory extends NodeFactory {
-
-    /*
-     * The MetaOutputNodeModel singleton.
-     */
-    private MetaOutputNodeModel m_model;
-
+    private final int m_dataPorts, m_modelPorts;
+    
     /**
-     * no dialog.
-     * @see NodeFactory#createNodeDialogPane()
+     * Creates a new factory for meta output node models.
+     * 
+     * @param dataPorts the number of data ports
+     * @param modelPorts the number of model ports
      */
-    public NodeDialogPane createNodeDialogPane() {
-        return null;
+    MetaOutputNodeFactory(final int dataPorts, final int modelPorts) {
+        super(false);
+        m_dataPorts = dataPorts;
+        m_modelPorts = modelPorts;
     }
 
     /**
-     * Singleton.
-     * @see NodeFactory#createNodeModel()
+     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
-    public NodeModel createNodeModel() {
-        if (m_model == null) {
-            m_model = new MetaOutputNodeModel();
-        }
-        return m_model;
-    }
-
-       /**
-     * no view.
-     * @see NodeFactory#createNodeView(int, NodeModel)
-     */
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        return null;
+    @Override
+    protected NodeModel createNodeModel() {
+        return new MetaOutputNodeModel(m_dataPorts, m_modelPorts);
     }
 
     /**
-     * no view.
-     * @see NodeFactory#getNrNodeViews()
+     * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
-    public int getNrNodeViews() {
+    @Override
+    protected int getNrNodeViews() {
         return 0;
     }
 
     /**
-     * no dialog.
-     * @see NodeFactory#hasDialog()
+     * @see de.unikn.knime.core.node.NodeFactory
+     *  #createNodeView(int, de.unikn.knime.core.node.NodeModel)
      */
-    public boolean hasDialog() {
+    @Override
+    public NodeView createNodeView(final int vi, final NodeModel nm) {
+        return null;
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
+     */
+    @Override
+    protected boolean hasDialog() {
         return false;
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 }

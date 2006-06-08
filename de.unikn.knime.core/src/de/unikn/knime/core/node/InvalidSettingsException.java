@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,7 +29,6 @@ package de.unikn.knime.core.node;
  * @author Peter Ohl, University of Konstanz
  */
 public class InvalidSettingsException extends Exception {
-
     /**
      * Constructs an <code>InvalidSettingsException</code> with the specified
      * detail message. Use a helpful message here as it will be displayed to the
@@ -43,4 +40,28 @@ public class InvalidSettingsException extends Exception {
         super(s);
     }
 
+    
+    /**
+     * Constructs an <code>InvalidSettingsException</code> with the specified
+     * cause.
+     * 
+     * @param cause the original cause of the execption
+     */
+    public InvalidSettingsException(final Throwable cause) {
+        super(cause);
+    }
+
+
+    /**
+     * Constructs an <code>InvalidSettingsException</code> with the specified
+     * detail message and a cause. Use a helpful message here as it will be
+     * displayed to the user, and it is the only hint ones understands to actual
+     * the problem.
+
+     * @param msg the detail message
+     * @param cause the root cause
+     */
+    public InvalidSettingsException(final String msg, final Throwable cause) {
+        super(msg, cause);
+    }
 }

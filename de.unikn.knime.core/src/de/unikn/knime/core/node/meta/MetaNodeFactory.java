@@ -58,6 +58,7 @@ public class MetaNodeFactory extends NodeFactory {
      * no dialog.
      * @see NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return null;
     }
@@ -65,14 +66,16 @@ public class MetaNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
-        return new MetaNodeModel(m_nrIns, m_nrOuts);
+        return new MetaNodeModel(m_nrIns, m_nrOuts, this);
     }
     
     /**
      * no view.
      * @see NodeFactory#createNodeView(int, NodeModel)
      */
+    @Override
     public NodeView createNodeView(final int viewIndex,
                                    final NodeModel nodeModel) {
         return null;
@@ -82,6 +85,7 @@ public class MetaNodeFactory extends NodeFactory {
      * no view.
      * @see NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
@@ -90,6 +94,7 @@ public class MetaNodeFactory extends NodeFactory {
      * no dialog.
      * @see NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return false;
     }

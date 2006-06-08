@@ -83,12 +83,11 @@ public abstract class NodeFactory {
 
     private static Transformer transformer;
 
-    private static URL DEFAULT_ICON = null;
+    private static URL defaultIcon = null;
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     static {
-
         try {
             String imagePath = "./default.png";
             if (!imagePath.startsWith("/")) {
@@ -100,7 +99,7 @@ public abstract class NodeFactory {
             URL iconURL = NodeFactory.class.getClassLoader().getResource(
                     imagePath);
 
-            DEFAULT_ICON = iconURL;
+            defaultIcon = iconURL;
         } catch (Exception ioe) {
             LOGGER.error("Default icon could not be read.");
         }
@@ -118,18 +117,17 @@ public abstract class NodeFactory {
 
             DefaultHandler dh = new DefaultHandler() {
                 @Override
-                public InputSource resolveEntity(final String publicId,
-                        final String systemId) throws IOException, SAXException {
-                    if ((publicId != null)
-                            && publicId
-                                    .equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
+                public InputSource resolveEntity(final String pubId,
+                        final String sysId) throws IOException, SAXException {
+                    if ((pubId != null)
+                          && pubId.equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
                         String path = NodeFactory.class.getPackage().getName();
                         path = path.replace('.', '/') + "/Node.dtd";
                         InputStream in = NodeFactory.class.getClassLoader()
                                 .getResourceAsStream(path);
                         return new InputSource(in);
                     } else {
-                        return super.resolveEntity(publicId, systemId);
+                        return super.resolveEntity(pubId, sysId);
                     }
                 }
 
@@ -155,6 +153,21 @@ public abstract class NodeFactory {
         }
     }
 
+    
+    /**
+     * Constructor for use in subclasses that can be used to avoid checking
+     * the XML file. Please think twice if you really need to use this
+     * constructor. 
+     * 
+     * @param checkXML <code>true</code> if the XML file should be checked
+     * (this is the default when using the standard constructor),
+     * <code>false</code> otherwise
+     */
+    protected NodeFactory(final boolean checkXML) {
+        this();
+        m_hasXMLBeenValidated = !checkXML;
+    }
+    
     /**
      * Creates a new <code>NodeFactory</code> and tries to read to properties
      * file named <code>Node.xml</code> in the same package as the factory.
@@ -163,11 +176,22 @@ public abstract class NodeFactory {
         if (parser == null) {
             instantiateParser();
         }
-        String path = getClass().getPackage().getName();
-        path = path.replace('.', '/') + "/" + getClass().getSimpleName()
-                + ".xml";
+        
         ClassLoader loader = getClass().getClassLoader();
-        InputStream propInStream = loader.getResourceAsStream(path);
+        InputStream propInStream;
+        String path;
+        Class clazz = getClass();
+        
+        do {
+            path = clazz.getPackage().getName();
+            path = path.replace('.', '/') + "/" + clazz.getSimpleName()
+                    + ".xml";
+            
+            propInStream = loader.getResourceAsStream(path);
+            clazz = clazz.getSuperclass();
+        } while ((propInStream == null) && (clazz != Object.class));        
+        
+        
         // fall back node name if no xml file available or invalid.
         String defaultNodeName = getClass().getSimpleName();
         if (defaultNodeName.endsWith("NodeFactory")) {
@@ -469,7 +493,7 @@ public abstract class NodeFactory {
      * @param index the index of the input port, starting at 0
      * @return an input port description
      */
-    protected final String getInportDescription(final int index) {
+    public String getInportDescription(final int index) {
         if (m_inPorts == null) {
             return "No description available";
         } else {
@@ -483,7 +507,7 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an output port description
      */
-    protected final String getOutportDescription(final int index) {
+    public String getOutportDescription(final int index) {
         if (m_outPorts == null) {
             return "No description available";
         } else {
@@ -497,7 +521,7 @@ public abstract class NodeFactory {
      * @param index the index of the input port, starting at 0
      * @return an predictor parameter input port description
      */
-    protected final String getPredParamInDescription(final int index) {
+    public String getPredParamInDescription(final int index) {
         if (m_predParamIns == null) {
             return "No description available";
         } else {
@@ -511,7 +535,7 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an predictor parameter output port description
      */
-    protected final String getPredParamOutDescription(final int index) {
+    public String getPredParamOutDescription(final int index) {
         if (m_predParamOuts == null) {
             return "No description available";
         } else {
@@ -664,16 +688,17 @@ public abstract class NodeFactory {
             m_logger.coding("Missing or surplus output port description");
         }
         if ((m.getNrModelIns() > 0)
-                && ((m_predParamIns == null) || (m.getNrModelIns() != m_predParamIns
-                        .size()))) {
-            m_logger
-                    .coding("Missing or surplus predictor input port description");
+                && ((m_predParamIns == null)
+                        || (m.getNrModelIns() != m_predParamIns.size()))) {
+            m_logger.coding("Missing or surplus predictor input port"
+                    + " description");
         }
         if ((m.getNrModelOuts() > 0)
-                && ((m_predParamOuts == null) || m.getNrModelOuts() != m_predParamOuts
-                        .size())) {
+                && ((m_predParamOuts == null)
+                        || m.getNrModelOuts() != m_predParamOuts.size())) {
             m_logger
-                    .coding("Missing or surplus predictor output port description");
+                    .coding("Missing or surplus predictor output port"
+                            + " description");
         }
         if ((getNrNodeViews() > 0)
                 && ((m_views == null) || getNrNodeViews() != m_views.size())) {
@@ -699,9 +724,8 @@ public abstract class NodeFactory {
         if (m_predParamIns != null) {
             for (int i = 0; i < m_predParamIns.size(); i++) {
                 if (m_predParamIns.get(i) == null) {
-                    m_logger
-                            .coding("Missing description for predictor input port "
-                                    + i);
+                    m_logger.coding("Missing description for predictor input"
+                            + " port " + i);
                 }
             }
         }
@@ -710,8 +734,8 @@ public abstract class NodeFactory {
             for (int i = 0; i < m_predParamOuts.size(); i++) {
                 if (m_predParamOuts.get(i) == null) {
                     m_logger
-                            .coding("Missing description for predictor output port "
-                                    + i);
+                            .coding("Missing description for predictor output"
+                                    + " port " + i);
                 }
             }
         }
@@ -725,7 +749,12 @@ public abstract class NodeFactory {
         }
     }
 
+    /**
+     * Returns the default icon for nodes that do not define their own.
+     * 
+     * @return an URL to the default icon 
+     */
     public static URL getDefaultIcon() {
-        return DEFAULT_ICON;
+        return defaultIcon;
     }
 }

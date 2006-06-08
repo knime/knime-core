@@ -33,6 +33,11 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodePort {
+    /**
+     * The node this port is input for. Needs to be notified of (dis)connect
+     * actions and new data available at the connected counter part (outport).
+     */
+    private final Node m_node;
 
     /** This ports ID assigned from the underlying node. */
     private final int m_portID;
@@ -45,13 +50,15 @@ public abstract class NodePort {
      * default port name is "Port [portID]" and can be changed via
      * <code>#setPortName(String)</code>.
      * 
-     * @param portID The port's id, greater or equal zero.
+     * @param portID the port's id, greater or equal zero
+     * @param node the node this port belongs to
      * 
      * @see #setPortName(String)
      */
-    NodePort(final int portID) {
+    NodePort(final int portID, final Node node) {
         assert (portID >= 0);
         m_portID = portID;
+        m_node = node;
         setPortName(null);
     }
 
@@ -126,4 +133,10 @@ public abstract class NodePort {
         PredictorParams getPredictorParams();
     }
 
+    /**
+     * @return The node this port belongs to.
+     */
+    final Node getNode() {
+        return m_node;
+    }
 } // NodePort

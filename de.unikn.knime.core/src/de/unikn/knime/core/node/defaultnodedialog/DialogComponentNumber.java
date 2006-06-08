@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -112,6 +110,7 @@ public class DialogComponentNumber extends DialogComponent {
      * @param specs The input specs.
      * @throws InvalidSettingsException If the settings could not be read.
      */
+    @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         assert (settings != null);
@@ -131,6 +130,7 @@ public class DialogComponentNumber extends DialogComponent {
      * 
      * @param settings The <code>NodeSettings</code> to write into.
      */
+    @Override
     public void saveSettingsTo(final NodeSettings settings) {
         if (m_type.equals(Type.INT)) {
             settings.addInt(m_configName, ((Integer)m_spinner.getValue()));

@@ -49,6 +49,7 @@ public final class NodeSettingsTest extends TestCase {
     /**
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     public void tearDown() {
         System.out.println(SETT.toString());
         testFile();

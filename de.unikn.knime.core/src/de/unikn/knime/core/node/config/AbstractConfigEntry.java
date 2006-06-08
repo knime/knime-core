@@ -79,6 +79,7 @@ abstract class AbstractConfigEntry implements ConfigurableEntry {
      * A String represation including key, type and value.
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "key=" + m_key + ",type=" + m_type + ",value=" + toStringValue();
     }
@@ -88,6 +89,7 @@ abstract class AbstractConfigEntry implements ConfigurableEntry {
      * be considered.
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public final boolean equals(final Object o) {
         if (o == null) {
             return false;
@@ -129,6 +131,7 @@ abstract class AbstractConfigEntry implements ConfigurableEntry {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public final int hashCode() {
         return m_key.hashCode() ^ m_type.hashCode();
     }

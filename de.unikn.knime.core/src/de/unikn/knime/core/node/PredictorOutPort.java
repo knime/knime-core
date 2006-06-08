@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -37,9 +35,10 @@ public final class PredictorOutPort extends NodeOutPort implements
      * params object is set to null.
      * 
      * @param portId An unique port ID.
+     * @param node the node this port belongs to
      */
-    PredictorOutPort(final int portId) {
-        super(portId);
+    PredictorOutPort(final int portId, final Node node) {
+        super(portId, node);
         m_predParams = null;
     }
 
@@ -79,6 +78,7 @@ public final class PredictorOutPort extends NodeOutPort implements
      * @param name The view's name.
      * @see NodeOutPort#openPortView(java.lang.String)
      */
+    @Override
     public void openPortView(final String name) {
         if (getPortView() == null) {
             super.setPortView(new PredictorOutPortView(name, getPortName()));

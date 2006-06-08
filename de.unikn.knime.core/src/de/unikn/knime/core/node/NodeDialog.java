@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -204,7 +202,9 @@ final class NodeDialog {
         cont.add(p);
     }
 
-    /** Inits the underlying dialog with title and icon. */
+    /*
+     * Inits the underlying dialog with title and icon.
+     */
     private JDialog initDialog(final String title) {
         JFrame dummy = new JFrame();
         if (KNIMEConstants.KNIME16X16 != null) {
@@ -218,11 +218,13 @@ final class NodeDialog {
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         dialog.addWindowListener(new WindowAdapter() {
             /** Invoked when the window close icon X is pressed. */
+            @Override
             public void windowClosed(final WindowEvent e) {
                 onClose(e);
             }
 
             /** Invoked when the window is opened. */
+            @Override
             public void windowOpened(final WindowEvent we) {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {

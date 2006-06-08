@@ -35,6 +35,7 @@ enum ConfigEntries {
          * @param value The String value.
          * @return A new Config entry.
          */
+        @Override
         ConfigStringEntry createEntry(final String key, final String value) {
             return new ConfigStringEntry(key, value);
         }
@@ -50,6 +51,7 @@ enum ConfigEntries {
          * @param value The String value as int.
          * @return A new Config entry.
          */
+        @Override
         ConfigIntEntry createEntry(final String key, final String value) {
             return new ConfigIntEntry(key, value);
         }
@@ -65,6 +67,7 @@ enum ConfigEntries {
          * @param value The String value as double.
          * @return A new Config entry.
          */
+        @Override
         ConfigDoubleEntry createEntry(final String key, final String value) {
             return new ConfigDoubleEntry(key, value);
         }
@@ -80,6 +83,7 @@ enum ConfigEntries {
          * @param value The String value as long.
          * @return A new Config entry.
          */
+        @Override
         ConfigLongEntry createEntry(final String key, final String value) {
             return new ConfigLongEntry(key, value);
         }
@@ -95,6 +99,7 @@ enum ConfigEntries {
          * @param value The String value as short.
          * @return A new Config entry.
          */
+        @Override
         ConfigShortEntry createEntry(final String key, final String value) {
             return new ConfigShortEntry(key, value);
         }
@@ -110,6 +115,7 @@ enum ConfigEntries {
          * @param value The String value as byte.
          * @return A new Config entry.
          */
+        @Override
         ConfigByteEntry createEntry(final String key, final String value) {
             return new ConfigByteEntry(key, value);
         }
@@ -125,6 +131,7 @@ enum ConfigEntries {
          * @param value The String value as char.
          * @return A new Config entry.
          */
+        @Override
         ConfigCharEntry createEntry(final String key, final String value) {
             return new ConfigCharEntry(key, value);
         }
@@ -140,6 +147,7 @@ enum ConfigEntries {
          * @param value The String value as boolean.
          * @return A new Config entry.
          */
+        @Override
         ConfigBooleanEntry createEntry(final String key, final String value) {
             return new ConfigBooleanEntry(key, value);
         }
@@ -158,6 +166,7 @@ enum ConfigEntries {
          * @return nothing, as it throws an exception
          * @throws UnsupportedOperationException always.
          */
+        @Override
         Config createEntry(final String key, final String value) {
             throw new UnsupportedOperationException("Do not call this method" 
                     + " on sub config entries"); 
@@ -172,5 +181,4 @@ enum ConfigEntries {
      */
     abstract AbstractConfigEntry createEntry(
             final String key, final String value);
-
 }

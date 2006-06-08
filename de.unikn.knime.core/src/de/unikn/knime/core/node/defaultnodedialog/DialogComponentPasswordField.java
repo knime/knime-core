@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -61,7 +59,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
             NodeLogger.getLogger("Password").warn("Could not generate DES key",
                     e);
         }
-    };
+    }
     
     /**
      * Constructor put label and JTextField into panel.
@@ -84,6 +82,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
      */
+    @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) {
         m_pwField.setText("");
@@ -95,6 +94,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @param settings The <code>NodeSettings</code> to write into.
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
+    @Override
     public void saveSettingsTo(final NodeSettings settings)
             throws InvalidSettingsException {
         char[] pw = m_pwField.getPassword();

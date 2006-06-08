@@ -1,11 +1,9 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* Created on May 29, 2006 3:12:46 PM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
- * Copyright, 2003 - 2004
+ * Copyright, 2003 - 2006
  * Universitaet Konstanz, Germany.
  * Lehrstuhl fuer Angewandte Informatik
  * Prof. Dr. Michael R. Berthold
@@ -16,94 +14,26 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  * 
- * History
- *   13.06.2005 (cebron): created
  */
 package de.unikn.knime.core.node.meta;
 
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NoSettingsNodeModel;
-
 /**
+ * This model is a subclass of
+ * {@link de.unikn.knime.core.node.meta.PassThroughNodeModel} that adds no
+ * special behaviour but is just used to "tag" the model as an output node
+ * model.
  * 
- * A model that has a getInDataTable-method instead of providing an output port.
- * 
- * @author cebron, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
-public class MetaOutputNodeModel extends NoSettingsNodeModel {
-
-    /*
-     * Output DataTable that will be forwarded to the outport
-     */
-    private DataTable m_outDataTable;
-
-    /*
-     * Output DatatableSpec that is coming from the inport
-     */
-    private DataTableSpec m_outDataTableSpec;
-
+public final class MetaOutputNodeModel extends PassThroughNodeModel {
     /**
-     * This NodeModel has one input, but no output.
-     */
-    MetaOutputNodeModel() {
-        super(1, 0);
-    }
-
-    /**
-     * Input <code>DataTableSpec</code>s are saved internally.
-     * @see de.unikn.knime.core.node.NodeModel#configure(DataTableSpec[])
-     */
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-        // assure that a output node has just one input tablespec
-        assert (inSpecs.length == 1);
-        m_outDataTableSpec = inSpecs[0];
-        return new DataTableSpec[]{};
-    }
-
-    /**
-     * @see de.unikn.knime.core.node.NodeModel#execute(DataTable[],
-     * ExecutionMonitor)
-     */
-    protected DataTable[] execute(final DataTable[] inData,
-            final ExecutionMonitor exec) throws Exception {
-
-        // assure that a output node has just one input data table
-        assert (inData.length == 1);
-
-        m_outDataTable = inData[0];
-
-        // returns an empty DataTable array as the output data is transfered
-        // manually to the external nodes of this MetaNode
-        return new DataTable[]{};
-    }
-
-    /**
+     * Creates a new node model that simply passes the input data to the
+     * output ports.
      * 
-     * @return <code>DataTable</code> at the end of the inner workflow.
+     * @param dataOuts the number of data ports
+     * @param modelOuts the number od model ports
      */
-    public DataTable getOutDataTable() {
-        return m_outDataTable;
-    }
-
-    /**
-     * 
-     * @return the output DataTableSpec at the end of the inner workflow.
-     */
-    public DataTableSpec getOutTableSpec() {
-        return m_outDataTableSpec;
-    }
-
-    /**
-     * Sets the internal <code>DataTable</code> and <code>DataTableSpec</code> 
-     * to null.
-     * @see de.unikn.knime.core.node.NodeModel#reset()
-     */
-    protected void reset() {
-        m_outDataTable = null;
-        m_outDataTableSpec = null;
+    MetaOutputNodeModel(final int dataOuts, final int modelOuts) {
+        super(dataOuts, modelOuts);
     }
 }

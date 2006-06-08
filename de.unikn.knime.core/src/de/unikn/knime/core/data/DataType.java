@@ -808,7 +808,7 @@ public final class DataType {
             prototype = new DataType((Class<? extends DataCell>) cellClass, 
                     hasPrefValueClass, valueClasses);
         } catch (IllegalArgumentException iae) {
-            throw new InvalidSettingsException(iae.getMessage());
+            throw new InvalidSettingsException(iae);
         }
         // make sure there is only one DataType object for a given cell class 
         if (cellClass != null) {

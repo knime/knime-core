@@ -287,7 +287,7 @@ public abstract class NodeDialogPane {
         noLightWeight(comp);
     }
 
-    /**
+    /*
      * Converts the specified and all its parent Component object to no-light
      * weight components if they are of type JComboBox, JPopupMenu, or
      * BasicComboPopup.

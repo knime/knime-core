@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -66,6 +64,7 @@ public final class DialogComponentTextField extends DialogComponent {
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
      */
+    @Override
     public void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) {
         m_textField.setText(settings.getString(m_configName, m_dftText));
@@ -76,6 +75,7 @@ public final class DialogComponentTextField extends DialogComponent {
      * 
      * @param settings The <code>NodeSettings</code> to write into.
      */
+    @Override
     public void saveSettingsTo(final NodeSettings settings) {
         settings.addString(m_configName, m_textField.getText());
     }
