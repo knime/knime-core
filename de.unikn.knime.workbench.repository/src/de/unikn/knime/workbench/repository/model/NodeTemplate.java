@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,6 +20,7 @@
 package de.unikn.knime.workbench.repository.model;
 
 import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -60,10 +59,14 @@ public class NodeTemplate extends AbstractSimpleObject {
     /** Type for nodes that evaluate some model. */
     public static final String TYPE_EVALUATOR = "evaluator";
 
+    /** Type for nodes that are in fact meta nodes. */
+    public static final String TYPE_META = "meta";
+
+    
     /** Type for nodes that can't be assigned to one of the other types. */
     public static final String TYPE_OTHER = "other";
 
-    private static final HashSet TYPES = new HashSet();
+    private static final Set<String> TYPES = new HashSet<String>();
 
     static {
         TYPES.add(TYPE_DATA_READER);
@@ -72,6 +75,7 @@ public class NodeTemplate extends AbstractSimpleObject {
         TYPES.add(TYPE_PREDICTOR);
         TYPES.add(TYPE_VISUALIZER);
         TYPES.add(TYPE_EVALUATOR);
+        TYPES.add(TYPE_META);
         TYPES.add(TYPE_OTHER);
     }
 
@@ -169,6 +173,7 @@ public class NodeTemplate extends AbstractSimpleObject {
      * @see de.unikn.knime.workbench.repository.model.AbstractRepositoryObject#
      *      getAdapter(java.lang.Class)
      */
+    @Override
     public Object getAdapter(final Class adapter) {
         if (adapter == IPropertySource.class) {
             return new NodePropertySource(this);

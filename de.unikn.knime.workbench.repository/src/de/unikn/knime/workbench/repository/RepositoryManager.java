@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -122,7 +120,8 @@ public final class RepositoryManager {
         //
         // First, process the contributed categories
         //
-        ArrayList<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
+        ArrayList<IConfigurationElement> allElements =
+            new ArrayList<IConfigurationElement>();
 
         for (int i = 0; i < categoryExtensions.length; i++) {
 
@@ -135,19 +134,18 @@ public final class RepositoryManager {
 
         // sort first by path-depth, so that everything is there in the
         // right order
-        IConfigurationElement[] categoryElements = (IConfigurationElement[])allElements
+        IConfigurationElement[] categoryElements = allElements
                 .toArray(new IConfigurationElement[allElements.size()]);
 
-        Arrays.sort(categoryElements, new Comparator() {
+        Arrays.sort(categoryElements, new Comparator<IConfigurationElement>() {
 
-            public int compare(final Object o1, final Object o2) {
-                String element1 = ((IConfigurationElement)o1)
-                        .getAttribute("path");
-                String element2 = ((IConfigurationElement)o2)
-                        .getAttribute("path");
+            public int compare(final IConfigurationElement o1,
+                    final IConfigurationElement o2) {
+                String element1 = o1.getAttribute("path");
                 if (element1.equals("/")) {
                     return -1;
                 }
+                String element2 = o2.getAttribute("path");
                 if (element2.equals("/")) {
                     return +1;
                 }
@@ -274,7 +272,7 @@ public final class RepositoryManager {
 
         WorkflowManager manager = new WorkflowManager();
         try {
-            manager = WorkflowManager.load(settings);
+            manager = new WorkflowManager(settings);
         } catch (InvalidSettingsException e) {
             LOGGER.error("Could not load workflow.");
             LOGGER.debug("Could not load workflow\n" + settings, e);
