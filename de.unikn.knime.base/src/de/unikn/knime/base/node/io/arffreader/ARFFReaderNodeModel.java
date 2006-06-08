@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -82,6 +80,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
             throws InvalidSettingsException {
         if (m_file == null) {
@@ -92,10 +91,10 @@ public class ARFFReaderNodeModel extends NodeModel {
                 ARFFTable.createDataTableSpecFromARFFfile(m_file, null)};
         } catch (IOException ioe) {
             throw new InvalidSettingsException(
-                    "ARFFReader: I/O Error: " + ioe.getMessage());
+                    "ARFFReader: I/O Error", ioe);
         } catch (InvalidSettingsException ise) {
             throw new InvalidSettingsException(
-                    "ARFFReader: ARFF Header Error: " + ise.getMessage());
+                    "ARFFReader: ARFF Header Error", ise);
         } catch (CanceledExecutionException cee) {
             // never flies
             throw new InvalidSettingsException(
@@ -106,6 +105,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#execute(DataTable[],ExecutionMonitor)
      */
+    @Override
     protected DataTable[] execute(
             final DataTable[] inData, final ExecutionMonitor exec) 
             throws Exception {
@@ -124,13 +124,13 @@ public class ARFFReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
             throws InvalidSettingsException {
         try {
             m_file = stringToURL(settings.getString(CFGKEY_FILEURL));
         } catch (MalformedURLException mue) {
-            throw new InvalidSettingsException("Malformed URL: "
-                    + mue.getMessage());
+            throw new InvalidSettingsException(mue);
         }
         m_rowPrefix = settings.getString(CFGKEY_ROWPREFIX);
     }
@@ -138,6 +138,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
         // nothing to do.
     }
@@ -145,6 +146,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#saveSettingsTo(NodeSettings)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettings settings) {
 
         if (m_file != null) {
@@ -159,6 +161,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettings)
      */
+    @Override
     protected void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         settings.getString(CFGKEY_FILEURL);

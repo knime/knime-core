@@ -95,7 +95,7 @@ public class PredictorReaderNodeModel extends NodeModel {
             FileInputStream is = new FileInputStream(new File(m_fileName));
             NodeSettings.loadFromXML(predParam, is);
         } catch (IOException ioe) {
-            throw new InvalidSettingsException("File I/O failed: " + ioe);
+            throw new InvalidSettingsException(ioe);
         }
     }
 

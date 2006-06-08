@@ -94,7 +94,7 @@ public class TableNodeModel extends NodeModel {
      * Invoked when data is reset. Removes the data from the underlying
      * <code>TableContentModel</code>. Do not call this method, it is called
      * from the node's <code>reset()</code> method.
-     * @see de.unikn.knime.core.node.Node#resetNode()
+     * @see de.unikn.knime.core.node.Node#reset()
      */ 
     protected void reset() {
         m_contModel.setDataTable(null);

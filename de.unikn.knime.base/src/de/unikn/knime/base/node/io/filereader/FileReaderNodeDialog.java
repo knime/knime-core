@@ -225,6 +225,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
             }
         });
         m_urlCombo.addFocusListener(new FocusAdapter() {
+            @Override
             public void focusLost(final FocusEvent e) {
                 // analyze file on focus lost.
                 analyzeDataFileAndUpdatePreview(false);
@@ -545,7 +546,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_readPosValues.setText("read all poss. values");
 
         for (int c = 0; c < m_frSettings.getNumberOfColumns(); c++) {
-            ColProperty cProp = (ColProperty)m_frSettings.getColumnProperties()
+            ColProperty cProp = m_frSettings.getColumnProperties()
                     .get(c);
 
             if (cProp.getColumnSpec().getType().equals(StringCell.TYPE)) {
@@ -638,8 +639,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         int userSpecified = 0;
 
         for (int c = 0; c < m_frSettings.getNumberOfColumns(); c++) {
-            ColProperty cProp = (ColProperty)m_frSettings.getColumnProperties()
-                    .get(c);
+            ColProperty cProp = m_frSettings.getColumnProperties().get(c);
             if (cProp.getReadPossibleValuesFromFile()
                     || cProp.getReadBoundsFromFile()) {
                 readPosValsCols++;
@@ -935,9 +935,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettings)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettings settings)
             throws InvalidSettingsException {
-
         saveSettings();
         if (m_previewTable.getErrorOccured()) {
             throw new InvalidSettingsException("With the current settings"
@@ -1161,14 +1161,12 @@ class FileReaderNodeDialog extends NodeDialogPane {
      * field.
      */
     private void saveSettings() throws InvalidSettingsException {
-
         try {
             URL dataURL = textToURL(m_urlCombo.getSelectedItem().toString());
             m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
-            return;
         } catch (MalformedURLException mfue) {
             throw new InvalidSettingsException("Invalid (malformed) URL for "
-                    + "the data file location.");
+                    + "the data file location.", mfue);
         }
     }
 
@@ -1392,6 +1390,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
          * @see BasicComboBoxRenderer#getListCellRendererComponent(
          *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
          */
+        @Override
         public Component getListCellRendererComponent(final JList list,
                 final Object value, final int index, final boolean isSelected,
                 final boolean cellHasFocus) {
