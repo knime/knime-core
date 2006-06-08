@@ -20,10 +20,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
 
-import de.unikn.knime.base.data.container.DataContainer;
 import de.unikn.knime.base.node.util.StringHistory;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;

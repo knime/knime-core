@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.base.data.container;
+package de.unikn.knime.core.data.container;
 
 import java.util.Collections;
 import java.util.Comparator;

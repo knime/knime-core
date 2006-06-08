@@ -17,7 +17,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.base.data.container;
+package de.unikn.knime.core.data.container;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

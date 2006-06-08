@@ -17,7 +17,7 @@
  * History
  *   Apr 20, 2006 (thor): created
  */
-package de.unikn.knime.base.data.container;
+package de.unikn.knime.core.data.container;
 
 import de.unikn.knime.core.data.DataRow;
 

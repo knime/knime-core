@@ -23,9 +23,9 @@ package de.unikn.knime.base.node.io.table.write;
 
 import java.io.File;
 
-import de.unikn.knime.base.data.container.DataContainer;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;

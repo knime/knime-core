@@ -14,7 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  */
-package de.unikn.knime.base.data.container;
+package de.unikn.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
