@@ -23,6 +23,7 @@ package de.unikn.knime.core.data.coordinate;
 
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Vector;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
@@ -40,6 +41,11 @@ public class NominalCoordinate extends Coordinate {
      * The number of different nominal values.
      */
     private int m_numberPossibleValues;
+
+    /**
+     * Holds the possible values as <code>DataCell</code>s.
+     */
+    private Vector<DataCell> m_possibleValues;
 
     /**
      * Constructs a nominal coordinate according to the given column spec.
@@ -60,7 +66,33 @@ public class NominalCoordinate extends Coordinate {
                     + dataColumnSpec.getType().toString());
         }
 
+        // now init the possible values vector
+        // this is needed to rearange the nominal values later
+        m_possibleValues = new Vector<DataCell>(possibleValues.size());
+        Iterator<DataCell> possibleValuesIter = possibleValues.iterator();
+        while (possibleValuesIter.hasNext()) {
+
+            DataCell posValue = possibleValuesIter.next();
+            m_possibleValues.add(posValue);
+        }
+
         m_numberPossibleValues = possibleValues.size();
+    }
+
+    /**
+     * Changes the position of a nominal value on the axis. This is due to
+     * reordering nominal values which do not have a inherent order.
+     * 
+     * @param nominalValue the value to replace
+     * @param index the position to set the value
+     */
+    public void changeValuePosition(final DataCell nominalValue, final int index) {
+
+        // first remove the value to relocate
+        m_possibleValues.remove(nominalValue);
+
+        // re-add the value at the specified location
+        m_possibleValues.add(index, nominalValue);
     }
 
     /**
@@ -96,12 +128,8 @@ public class NominalCoordinate extends Coordinate {
             halfEquiDistance = Math.floor(equiDistance / 2);
         }
 
-        // get all possible values
-        Set<DataCell> possibleValues = getDataColumnSpec().getDomain()
-                .getValues();
-
         // Iterate over all possible values
-        Iterator<DataCell> possibleValuesIter = possibleValues.iterator();
+        Iterator<DataCell> possibleValuesIter = m_possibleValues.iterator();
 
         // set first tick half the equi distance from the begining of the
         // mapping
@@ -126,8 +154,9 @@ public class NominalCoordinate extends Coordinate {
      * Calculates a numeric mapping assuming a column with a given number of
      * possible values.
      * 
-     * @see de.unikn.knime.core.data.coordinate.Coordinate#calculateMappedValue(de.unikn.knime.core.data.DataCell,
-     *      double, boolean)
+     * @see de.unikn.knime.core.data.coordinate.Coordinate#
+     *      calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
+     *      boolean)
      */
     @Override
     public double calculateMappedValue(final DataCell domainValueCell,
