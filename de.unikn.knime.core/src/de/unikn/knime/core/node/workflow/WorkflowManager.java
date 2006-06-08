@@ -33,6 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.Node;
 import de.unikn.knime.core.node.NodeFactory;
@@ -111,16 +114,26 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     public WorkflowManager(final File file) 
             throws IOException, InvalidSettingsException {
         this(toNodeSettings(file));
+        ExecutionMonitor exec = new ExecutionMonitor(
+                new DefaultNodeProgressMonitor());
+        for (NodeContainer nextNode : m_nodeContainerByID.values()) {
+            Node n = nextNode.getNode();
+            if (n.isExecuted()) {
+                File targetDir = new File(file.getParentFile(), 
+                        "node_" + nextNode.getID());
+                n.loadInternals(targetDir, exec);
+            }
+        }
+
     }
     
     private static NodeSettings toNodeSettings(final File file)
-            throws IOException {
-        if (!file.isDirectory()) {
-            throw new IOException("File " + file + " is not a directory.");
+            throws IOException, InvalidSettingsException {
+        if (!file.isFile() || !file.getName().equals(WORKFLOW_FILE)) {
+            throw new IOException("File must be named: \"" 
+                    + WORKFLOW_FILE + "\": " + file);
         }
-        File settings = new File(file.getAbsolutePath() 
-                + File.separator + WORKFLOW_FILE);
-        return NodeSettings.loadFromXML(new FileInputStream(settings));
+        return NodeSettings.loadFromXML(new FileInputStream(file));
     }    
     
 
@@ -1106,16 +1119,30 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         }
     }
     
-    public void save(final File file) throws IOException {
-        if (!file.isDirectory()) {
-            throw new IOException("File " + file + " is not a directory.");
+    public void save(final File file) 
+        throws IOException, CanceledExecutionException {
+        if (!file.isFile() || !file.getName().equals(WORKFLOW_FILE)) {
+            throw new IOException("File must be named: \"" 
+                    + WORKFLOW_FILE + "\": " + file);
         }
         // file.getName is ignored when reading.
         NodeSettings settings = new NodeSettings(file.getName());
         this.save(settings);
-        FileOutputStream fos = new FileOutputStream(
-                new File(file + File.separator + WORKFLOW_FILE));
+        FileOutputStream fos = new FileOutputStream(file);
         settings.saveToXML(fos);
+        ExecutionMonitor exec = new ExecutionMonitor(
+                new DefaultNodeProgressMonitor());
+        for (NodeContainer nextNode : m_nodeContainerByID.values()) {
+            Node n = nextNode.getNode();
+            if (n.isExecuted()) {
+                File targetDir = new File(file.getParentFile(), 
+                        "node_" + nextNode.getID());
+                if (!targetDir.isDirectory() && !targetDir.mkdir()) {
+                    throw new IOException("Unable to create dir: " + targetDir);
+                }
+                n.saveInternals(targetDir, exec);
+            }
+        }
     }
 
     

@@ -408,16 +408,21 @@ public abstract class NodeModel {
             }
         }
 
-        // set the state flag to "executed"
-        m_executed = true;
-
-        // and inform all views about the new model
-        stateChanged();
+        setExecuted(true);
 
         // return array of output DataTable
         return outData;
 
     } // executeModel(DataTable[],ExecutionMonitor)
+    
+    final void setExecuted(final boolean isExecuted) {
+        if (isExecuted != isExecuted()) {
+            // set the state flag to "executed"
+            m_executed = isExecuted;
+            // and inform all views about the new model
+            stateChanged();
+        }
+    }
 
     /**
      * Returns <code>true</code> if this model has been executed otherwise

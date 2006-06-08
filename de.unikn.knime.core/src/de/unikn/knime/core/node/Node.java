@@ -18,6 +18,12 @@
  */
 package de.unikn.knime.core.node;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +32,7 @@ import javax.swing.UIManager;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.interrupt.InterruptibleNodeModel;
 import de.unikn.knime.core.node.meta.MetaNodeModel;
@@ -1225,7 +1232,47 @@ public final class Node {
         assert false : "Can't return dialog pane, node has no dialog!";
         return null;
     }
+    
+    public void saveInternals(
+            final File targetDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        if (!isExecuted()) {
+            throw new IllegalStateException(
+                    "Unable to save, node is not executed.");
+        }
+        for (int i = 0; i < m_outDataPorts.length; i++) {
+            DataTable outTable = m_outDataPorts[i].getDataTable();
+            File targetFile = new File(targetDir, "data_" + i + ".knime");
+            DataContainer.writeToZip(outTable, targetFile, exec);
+        }
+        for (int i = 0; i < m_outModelPorts.length; i++) {
+            PredictorParams pred = m_outModelPorts[i].getPredictorParams();
+            File targetFile = new File(targetDir, "model_" + i + ".pmml");
+            BufferedOutputStream out = 
+                new BufferedOutputStream(new FileOutputStream(targetFile));
+            pred.saveToXML(out);
+            out.close();
+        }
+    }
 
+    public void loadInternals(
+            final File targetDir, final ExecutionMonitor exec)
+    throws IOException {
+        for (int i = 0; i < m_outDataPorts.length; i++) {
+            File targetFile = new File(targetDir, "data_" + i + ".knime");
+            DataTable outTable = DataContainer.readFromZip(targetFile);
+            m_outDataPorts[i].setDataTable(outTable);
+        }
+        for (int i = 0; i < m_outModelPorts.length; i++) {
+            File targetFile = new File(targetDir, "model_" + i + ".pmml");
+            BufferedInputStream in = 
+                new BufferedInputStream(new FileInputStream(targetFile));
+            PredictorParams pred = PredictorParams.loadFromXML(in);
+            m_outModelPorts[i].setPredictorParams(pred);
+            in.close();
+        }
+    }
+    
     /**
      * Writes the current <code>Node</code> and <code>NodeModel</code>
      * settings into the given <code>NodeSettings</code> object. These are the

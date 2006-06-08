@@ -19,6 +19,11 @@
  */
 package de.unikn.knime.core.node;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import de.unikn.knime.core.node.config.Config;
+
 /**
  * This PredictorParams is used to stored models. This class needs to be
  * modified to provide more functions to store model parts PMML like.
@@ -68,6 +73,22 @@ public final class PredictorParams extends NodeSettings {
     public PredictorParams getConfig(final String key)
             throws InvalidSettingsException {
         return (PredictorParams)super.getConfig(key);
+    }
+    
+    /**
+     * Reads settings from the given XML stream and returns a new
+     * <code>PredictorParams</code> object.
+     * 
+     * @param in XML input stream to read settings from.
+     * @return A new settings object.
+     * @throws IOException If the stream could not be read.
+     * @throws NullPointerException If one of the arguments is 
+     *         <code>null</code>.
+     */
+    public static synchronized PredictorParams loadFromXML(
+            final InputStream in) throws IOException {
+        PredictorParams tmpSettings = new PredictorParams("tmp");
+        return (PredictorParams)Config.loadFromXML(tmpSettings, in, true);
     }
 
 }
