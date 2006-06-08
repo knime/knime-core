@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -70,6 +68,7 @@ public class CreateNodeCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
+    @Override
     public boolean canExecute() {
         return (m_manager != null) && (m_factory != null)
                 && (m_location != null);
@@ -78,9 +77,10 @@ public class CreateNodeCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
         // Add node to workflow and get the container
-        m_container = m_manager.createNode(m_factory);
+        m_container = m_manager.addNewNode(m_factory);
 
         // lookup extra info from node repository and store it in the instance
         NodeTemplate template = RepositoryManager.INSTANCE.getRoot()
@@ -89,14 +89,7 @@ public class CreateNodeCommand extends Command {
         // create extra info and set it
         ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
         info.setNodeLocation(m_location.x, m_location.y, -1, -1);
-        
-       
-        
-        
-
         info.setType(template.getType());
-        info.setPluginID(template.getPluginID());
-
         m_container.setExtraInfo(info);
 
     }
@@ -106,6 +99,7 @@ public class CreateNodeCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#canUndo()
      */
+    @Override
     public boolean canUndo() {
         return true;
     }
@@ -113,6 +107,7 @@ public class CreateNodeCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#undo()
      */
+    @Override
     public void undo() {
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
         m_manager.removeNode(m_container);

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,7 +19,6 @@
  */
 package de.unikn.knime.workbench.editor2.editparts;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,6 +45,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
     /**
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
      */
+    @Override
     protected IFigure createFigure() {
 
         // Create the figure, we need the number of ports from the parent
@@ -70,18 +68,17 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      * 
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
      */
+    @Override
     public List getModelSourceConnections() {
-
-        ConnectionContainer[] containers = null;
+        List<ConnectionContainer> containers;
         containers = getManager().getOutgoingConnectionsAt(getNodeContainer(),
                 getId());
 
         if (containers != null) {
-            return Arrays.asList(containers);
+             return containers;
         }
 
         return Collections.EMPTY_LIST;
-
     }
 
     /**
@@ -91,8 +88,8 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
      *      #getModelSourceConnections()
      */
+    @Override
     protected List getModelTargetConnections() {
-
         return Collections.EMPTY_LIST;
     }
 }

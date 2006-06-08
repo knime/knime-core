@@ -56,7 +56,7 @@ public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
         // get the value of the cell editor representing the new user node name
         String value = (String)request.getCellEditor().getValue();
         
-        ((NodeContainerFigure)getHostFigure()).setUserName(value);
+        ((NodeContainerFigure)getHostFigure()).setCustomName(value);
         
         // hack to prevent async layout from placing the cell editor twice.
         getHostFigure().getUpdateManager().performUpdate();

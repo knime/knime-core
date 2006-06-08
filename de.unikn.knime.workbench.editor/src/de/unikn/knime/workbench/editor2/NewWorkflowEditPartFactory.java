@@ -91,7 +91,7 @@ public final class NewWorkflowEditPartFactory implements EditPartFactory {
             // ConnectionContainer -> ConnectionContainerEditPart
             //
             ConnectionContainer cc = (ConnectionContainer)model;
-            int srcID = cc.getSourcePort();
+            int srcID = cc.getSourcePortID();
             boolean isModelPortConn = cc.getSource().isPredictorOutPort(srcID);
             part = new ConnectionContainerEditPart(isModelPortConn);
         } else {

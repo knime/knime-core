@@ -1,7 +1,4 @@
-
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -130,6 +127,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.EditPart#activate()
      */
+    @Override
     public void activate() {
         super.activate();
 
@@ -154,6 +152,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.EditPart#deactivate()
      */
+    @Override
     public void deactivate() {
 
         getNodeContainer().removeListener(this);
@@ -162,6 +161,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
      */
+    @Override
     protected IFigure createFigure() {
 
         // create the visuals for the node container
@@ -171,7 +171,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         nodeFigure.addMouseListener(this);
 
         // init the user specified node name
-        nodeFigure.setUserName(getNodeContainer().getUserName());
+        nodeFigure.setCustomName(getNodeContainer().getCustomName());
 
         return nodeFigure;
     }
@@ -181,6 +181,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.GraphicalEditPart#getContentPane()
      */
+    @Override
     public IFigure getContentPane() {
         return ((NodeContainerFigure)getFigure()).getContentFigure();
 
@@ -200,6 +201,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * @see org.eclipse.gef.EditPart#performRequest(org.eclipse.gef.Request)
      */
+    @Override
     public void performRequest(final Request request) {
 
         if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
@@ -213,6 +215,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
      */
+    @Override
     protected void createEditPolicies() {
 
         // Handles the creation of DeleteCommands for nodes in a workflow
@@ -237,13 +240,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#getModelChildren()
      */
+    @Override
     protected List getModelChildren() {
         ArrayList<NodePort> ports = new ArrayList<NodePort>();
         NodeContainer container = getNodeContainer();
 
-        ports.addAll(container.getNodeInPorts());
+        ports.addAll(container.getInPorts());
 
-        ports.addAll(container.getNodeOutPorts());
+        ports.addAll(container.getOutPorts());
 
         return ports;
     }
@@ -253,6 +257,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#refreshVisuals()
      */
+    @Override
     protected void refreshVisuals() {
         // TODO Auto-generated method stub
         super.refreshVisuals();
@@ -272,16 +277,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         Display.getDefault().asyncExec(new Runnable() {
 
             public void run() {
-                int stateId = state.getStatusId();
-
                 NodeContainer nodeContainer = getNodeContainer();
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
 
-                switch (stateId) {
-                //
-                // ExtraInfo changed -> set constraints (bounds)
-                //
-                case NodeStatus.STATUS_EXTRA_INFO_CHANGED:
+                if (state instanceof NodeStatus.ExtrainfoChanged) {
                     // case NodeContainer.EVENT_EXTRAINFO_CHANGED:
                     LOGGER.debug("ExtraInfo changed, "
                             + "updating bounds and visuals...");
@@ -315,10 +314,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
                     // check status of node
                     updateNodeStatus();
-
-                    break;
-
-                case NodeStatus.CONFIGURED:
+                } else if (state instanceof NodeStatus.Configured) {
                     if (getNodeContainer().isExecutableUpToHere()) {
                         fig.setState(NodeContainerFigure.STATE_READY, state
                                 .getMessage());
@@ -326,8 +322,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED,
                                 state.getMessage());
                     }
-                    break;
-                case NodeStatus.RESET:
+                } else if (state instanceof NodeStatus.Reset) {
                     if (getNodeContainer().isExecutableUpToHere()) {
                         fig.setState(NodeContainerFigure.STATE_READY, state
                                 .getMessage());
@@ -335,17 +330,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED,
                                 state.getMessage());
                     }
-                    break;
-                case NodeStatus.START_EXECUTE:
+                } else if (state instanceof  NodeStatus.StartExecute) {
                     fig.setState(NodeContainerFigure.STATE_EXECUTING, state
                             .getMessage());
 
                     // deactivate edit part and set locking flag
                     // NodeContainerEditPart.this.deactivateEditPolicies();
                     m_isLocked = true;
-
-                    break;
-                case NodeStatus.END_EXECUTE:
+                } else if (state instanceof NodeStatus.EndExecute) {
                     if (nodeContainer.isExecuted()) {
                         fig.setState(NodeContainerFigure.STATE_EXECUTED, state
                                 .getMessage());
@@ -363,28 +355,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     // re-activate edit part and clear locking flag
                     // NodeContainerEditPart.this.activateEditPolicies();
                     m_isLocked = false;
-
-                    break;
-
-                case NodeStatus.WARNING:
+                } else if (state instanceof NodeStatus.Warning) {
                     fig.setState(NodeContainerFigure.STATE_WARNING, state
                             .getMessage());
-                    break;
-
-                case NodeStatus.ERROR:
+                } else if (state instanceof NodeStatus.Error) {
                     fig.setState(NodeContainerFigure.STATE_ERROR, state
                             .getMessage());
-                    break;
-                case NodeStatus.USER_NAME:
-                    fig.setUserName(getNodeContainer().getUserName());
-                    break;
-                case NodeStatus.USER_DESCRIPTION:
-                    fig.setUserDescription(getNodeContainer().getDescription());
-                    break;
-
-                default:
-
-                    break;
+                } else if (state instanceof NodeStatus.CustomName) {
+                    fig.setCustomName(getNodeContainer().getCustomName());
+                } else if (state instanceof NodeStatus.CustomDescription) {
+                    fig.setCustomDescription(getNodeContainer().getDescription());
                 }
                 updateNodeStatus();
 
@@ -416,8 +396,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         //String plugin = ei.getPluginID();
         // String iconPath = ei.getIconPath();
         String type = ei.getType();
-        String name = getNodeContainer().getNodeName();
-        String userName = getNodeContainer().getUserName();
+        String name = getNodeContainer().getName();
+        String userName = getNodeContainer().getCustomName();
         String description = getNodeContainer().getDescription();
 
         // get the icon
@@ -447,8 +427,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         f.setType(type);
         f.setLabelText(name);
-        f.setUserName(userName);
-        f.setUserDescription(description);
+        f.setCustomName(userName);
+        f.setCustomDescription(description);
 
         // TODO FIXME construct initial state here (after loading) - this should
         // be made nicer
@@ -464,7 +444,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * currently displayed message is removed.
      */
     private void updateNodeStatus() {
-        NodeStatus status = getNodeContainer().getNodeStatus();
+        NodeStatus status = getNodeContainer().getStatus();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
 
         if (status != null) {
@@ -474,15 +454,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // if set
             if (message != null && !message.trim().equals("")) {
 
-                int messageType = status.getStatusId();
+                int messageType;
 
                 // message type tranlation for workbench
-                if (messageType == NodeStatus.ERROR) {
+                if (status instanceof NodeStatus.Error) {
                     messageType = NodeContainerFigure.STATE_ERROR;
                 } else {
                     messageType = NodeContainerFigure.STATE_WARNING;
                 }
-
                 containerFigure.setState(messageType, message);
             } else {
                 containerFigure.removeMessages();
@@ -510,13 +489,13 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // if this node does not have a dialog
             if (!container.hasDialog()) {
 
-                LOGGER.debug(container.getNodeName()
+                LOGGER.debug(container.getName()
                         + ": Opening node dialog after double "
                         + "click not possible");
                 return;
             }
 
-            LOGGER.debug(container.getNodeName()
+            LOGGER.debug(container.getName()
                     + ": Opening node dialog after double click...");
 
             //  
@@ -557,6 +536,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.EditPart#getDragTracker(Request)
      */
+    @Override
     public DragTracker getDragTracker(final Request request) {
         return new WorkflowSelectionDragEditPartsTracker(this);
     }

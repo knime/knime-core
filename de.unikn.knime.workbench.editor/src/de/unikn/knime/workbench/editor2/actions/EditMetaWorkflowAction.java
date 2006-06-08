@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -27,7 +25,8 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.PlatformUI;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.meta.MetaNodeContainer;
+import de.unikn.knime.core.node.meta.MetaNodeModel;
+import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 import de.unikn.knime.workbench.editor2.MetaWorkflowEditor;
 import de.unikn.knime.workbench.editor2.MetaWorkflowEditorInput;
@@ -46,21 +45,21 @@ public class EditMetaWorkflowAction extends Action {
     /**
      * The meta node to open the editor for.
      */
-    private MetaNodeContainer m_nodeContainer;
+    private NodeContainer m_nodeContainer;
 
     /**
      * New action to create a workflow editor for a meta node.
      * 
      * @param nodeContainer The node
      */
-    public EditMetaWorkflowAction(final MetaNodeContainer nodeContainer) {
-
+    public EditMetaWorkflowAction(final NodeContainer nodeContainer) {
         m_nodeContainer = nodeContainer;
     }
 
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/openView.gif");
     }
@@ -68,6 +67,7 @@ public class EditMetaWorkflowAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Opens meta-workflow editor";
     }
@@ -75,19 +75,20 @@ public class EditMetaWorkflowAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
-
         return "Open meta-workflow editor";
     }
 
     /**
      * @see org.eclipse.jface.action.Action#run()
      */
+    @Override
     public void run() {
-
         // check if this node is a meta-workflow
-        if (!(m_nodeContainer instanceof MetaNodeContainer)) {
-            LOGGER.debug("Not a meta-node!" + m_nodeContainer.nodeToString());
+        if (!MetaNodeModel.class.isAssignableFrom(
+                m_nodeContainer.getModelClass())) {
+            LOGGER.debug("Not a meta-node! " + m_nodeContainer.nodeToString());
             return;
         }
 
@@ -130,7 +131,7 @@ public class EditMetaWorkflowAction extends Action {
                     .getActiveWorkbenchWindow()
                     .getActivePage()
                     .openEditor(editorInput,
-                            "de.unikn.knime.workbench.editor.MetaWorkflowEditor");
+                          "de.unikn.knime.workbench.editor.MetaWorkflowEditor");
 
             parentEditor.addEditor(childEditor);
 

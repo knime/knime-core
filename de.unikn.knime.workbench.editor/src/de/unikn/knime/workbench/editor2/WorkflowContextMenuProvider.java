@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -35,7 +33,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.meta.MetaNodeContainer;
+import de.unikn.knime.core.node.meta.MetaNodeModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
 import de.unikn.knime.workbench.editor2.actions.EditMetaWorkflowAction;
@@ -89,6 +87,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
      * @see org.eclipse.gef.ContextMenuProvider
      *      #buildContextMenu(org.eclipse.jface.action.IMenuManager)
      */
+    @Override
     public void buildContextMenu(final IMenuManager manager) {
         LOGGER.debug("Building up context menu...");
         manager.add(new Separator(IWorkbenchActionConstants.GROUP_APP));
@@ -180,11 +179,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // add meta node option if applicable
-                if (container instanceof MetaNodeContainer) {
+                if (MetaNodeModel.class.isAssignableFrom(
+                        container.getModelClass())) {
                     LOGGER.debug("adding 'edit meta-node' option "
                             + "to context menu...");
-                    action = new EditMetaWorkflowAction(
-                            (MetaNodeContainer)container);
+                    action = new EditMetaWorkflowAction(container);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                             action);
                 }

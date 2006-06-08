@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -98,6 +96,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * 
      * @see org.eclipse.gef.EditPart#activate()
      */
+    @Override
     public void activate() {
         super.activate();
         getManager().addListener(this);
@@ -108,6 +107,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * 
      * @see org.eclipse.gef.EditPart#deactivate()
      */
+    @Override
     public void deactivate() {
         super.deactivate();
         getManager().removeListener(this);
@@ -119,6 +119,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
      */
+    @Override
     protected void createEditPolicies() {
         // This policy provides create/reconnect commands for connections that
         // are associated at this port
@@ -132,6 +133,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#refreshVisuals()
      */
+    @Override
     protected void refreshVisuals() {
         // get the figure and update the constraint for it - locator is provided
         // by the figure itself
@@ -149,15 +151,10 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public void workflowChanged(final WorkflowEvent event) {
         ConnectionContainer c = null;
 
-        switch (event.getEventType()) {
-        case WorkflowEvent.CONNECTION_ADDED:
+        if (event instanceof WorkflowEvent.ConnectionAdded) {
             c = (ConnectionContainer) event.getNewValue();
-            break;
-        case WorkflowEvent.CONNECTION_REMOVED:
+        } else if (event instanceof WorkflowEvent.ConnectionRemoved) {
             c = (ConnectionContainer) event.getOldValue();
-            break;
-        default:
-            break;
         }
 
         // if we have a connection to refresh...
@@ -179,6 +176,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * 
      * @see org.eclipse.gef.EditPart#getDragTracker(org.eclipse.gef.Request)
      */
+    @Override
     public DragTracker getDragTracker(final Request request) {
 
         // Selection event: Start the connection creation

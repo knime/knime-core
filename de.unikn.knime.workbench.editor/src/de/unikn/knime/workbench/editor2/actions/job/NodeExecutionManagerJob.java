@@ -88,7 +88,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
         while (nextNode != null) {
             m_counter++;
             // start the job
-            monitor.beginTask("Executing " + nextNode.getNodeNameWithID(),
+            monitor.beginTask("Executing " + nextNode.getNameWithID(),
                     IProgressMonitor.UNKNOWN);
             SingleNodeJob subJob = new SingleNodeJob(m_manager, nextNode,
                     new SubProgressMonitor(monitor, 100), 100);
@@ -160,7 +160,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
             // create a monitor object
             LOGGER.info("executing up to node #" + container.getID());
             monitor.beginTask("Executing flow up to "
-                    + container.getNodeNameWithID(), IProgressMonitor.UNKNOWN);
+                    + container.getNameWithID(), IProgressMonitor.UNKNOWN);
 
             // Prepare execution
             m_manager.prepareForExecUpToNode(container.getID());
@@ -233,8 +233,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
      *      #workflowChanged(de.unikn.knime.core.node.workflow.WorkflowEvent)
      */
     public void workflowChanged(final WorkflowEvent event) {
-        switch (event.getEventType()) {
-        case WorkflowEvent.EXEC_POOL_CHANGED:
+        if (event instanceof WorkflowEvent.ExecPoolChanged) {
             LOGGER.info("Exec pool has changed...");
             m_finished = false;
 
@@ -242,16 +241,9 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
             synchronized (m_manager) {
                 createJobsForAvailableNodes(m_monitor);
             }
-            break;
-
-        case WorkflowEvent.EXEC_POOL_DONE:
+        } else if (event instanceof WorkflowEvent.ExecPoolDone) {
             LOGGER.info("Execution pool has finished...");
             m_finished = true;
-            break;
-        default:
-            break;
         }
-
     }
-
 }

@@ -109,7 +109,7 @@ public class ResetAction extends AbstractNodeAction {
 
             // TODO FIXME This should be executed on the WFM, and result in a
             // "workflow changed event" that triggers calculateEnabled !
-            nodeParts[i].getNodeContainer().resetNode();
+            nodeParts[i].getNodeContainer().reset();
         }
     }
 

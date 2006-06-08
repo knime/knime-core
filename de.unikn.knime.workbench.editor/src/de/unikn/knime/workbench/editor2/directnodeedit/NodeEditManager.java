@@ -113,7 +113,7 @@ public class NodeEditManager extends DirectEditManager {
         Text text = (Text)getCellEditor().getControl();
         NodeContainerFigure nodeFigure = (NodeContainerFigure)getEditPart()
                 .getFigure();
-        String initialLabelText = nodeFigure.getUserName();
+        String initialLabelText = nodeFigure.getCustomName();
         getCellEditor().setValue(initialLabelText);
         IFigure figure = getEditPart().getFigure();
         m_scaledFont = figure.getFont();

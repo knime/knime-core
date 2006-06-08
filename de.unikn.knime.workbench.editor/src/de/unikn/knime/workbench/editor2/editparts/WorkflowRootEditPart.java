@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,7 +19,7 @@
  */
 package de.unikn.knime.workbench.editor2.editparts;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.List;
 
@@ -34,10 +32,8 @@ import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
-import de.unikn.knime.workbench.editor2.editparts.policy.
-       NewWorkflowContainerEditPolicy;
-import de.unikn.knime.workbench.editor2.editparts.policy.
-       NewWorkflowXYLayoutPolicy;
+import de.unikn.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
+import de.unikn.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import de.unikn.knime.workbench.editor2.figures.WorkflowFigure;
 import de.unikn.knime.workbench.editor2.figures.WorkflowLayout;
 
@@ -67,9 +63,11 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * that are stored in the workflow manager.
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#getModelChildren()
-     */
-    protected List getModelChildren() {
-        return Arrays.asList(getWorkflowManager().getNodes());
+     */ 
+    @Override
+    @SuppressWarnings("unchecked")
+    protected List getModelChildren() {        
+        return new ArrayList(getWorkflowManager().getNodes());
     }
 
     /**
@@ -77,6 +75,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.EditPart#activate()
      */
+    @Override
     public void activate() {
         super.activate();
         LOGGER.debug("WorkflowRootEditPart activated");
@@ -95,6 +94,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.EditPart#deactivate()
      */
+    @Override
     public void deactivate() {
         super.deactivate();
         LOGGER.debug("WorkflowRootEditPart deactivated");
@@ -111,6 +111,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
      */
+    @Override
     protected IFigure createFigure() {
         IFigure backgroundFigure = new WorkflowFigure();
 
@@ -131,6 +132,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
      */
+    @Override
     protected void createEditPolicies() {
 
         // install the CONTAINER_ROLE
@@ -172,5 +174,4 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         LOGGER.debug("WorkflowRoot: command stack changed");
 
     }
-
 }

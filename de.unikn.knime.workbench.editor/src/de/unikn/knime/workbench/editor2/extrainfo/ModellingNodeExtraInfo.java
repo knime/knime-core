@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -61,8 +59,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     private int[] m_bounds = new int[]{0, 0, -1, -1};
 
-    private String m_pluginID;
-
     private String m_type;
 
     /**
@@ -71,7 +67,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void save(final NodeSettings config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
-        config.addString(KEY_PLUGIN, m_pluginID);
         config.addString(KEY_TYPE, m_type);
     }
 
@@ -79,21 +74,16 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      * @see de.unikn.knime.core.node.workflow.NodeExtraInfo
      *      #load(de.unikn.knime.core.node.NodeSettings)
      */
-    public void load(final NodeSettings config) throws InvalidSettingsException {
-        m_bounds = config.getIntArray(KEY_BOUNDS);
-        m_pluginID = config.getString(KEY_PLUGIN);
-        m_type = config.getString(KEY_TYPE);
+    public void load(final NodeSettings conf) throws InvalidSettingsException {
+        m_bounds = conf.getIntArray(KEY_BOUNDS);
+        m_type = conf.getString(KEY_TYPE);
     }
 
     /**
      * @see de.unikn.knime.core.node.workflow.NodeExtraInfo#isFilledProperly()
      */
     public boolean isFilledProperly() {
-
         if (m_bounds == null) {
-            return false;
-        }
-        if (m_pluginID == null || m_pluginID.trim().equals("")) {
             return false;
         }
 
@@ -129,20 +119,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void setBounds(final int[] bounds) {
         m_bounds = bounds;
-    }
-
-    /**
-     * @return Returns the pluginID.
-     */
-    public String getPluginID() {
-        return m_pluginID;
-    }
-
-    /**
-     * @param pluginID The pluginID to set.
-     */
-    public void setPluginID(final String pluginID) {
-        m_pluginID = pluginID;
     }
 
     /**

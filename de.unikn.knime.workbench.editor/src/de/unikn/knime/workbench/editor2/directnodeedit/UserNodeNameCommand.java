@@ -62,8 +62,8 @@ public class UserNodeNameCommand extends Command {
      */
     public void execute() {
 
-        m_oldName = m_nodeContainer.getUserName();
-        m_nodeContainer.setUserName(m_newName);
+        m_oldName = m_nodeContainer.getCustomName();
+        m_nodeContainer.setCustomName(m_newName);
     }
 
     /**
@@ -73,6 +73,6 @@ public class UserNodeNameCommand extends Command {
      */
     public void undo() {
 
-        m_nodeContainer.setUserName(m_oldName);
+        m_nodeContainer.setCustomName(m_oldName);
     }
 }

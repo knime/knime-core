@@ -84,7 +84,7 @@ import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeLogger.LEVEL;
-import de.unikn.knime.core.node.meta.MetaNodeContainer;
+import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
@@ -124,7 +124,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * The static clipboard for copy/cut/paste.
      */
-    private static ClipboardObject m_clipboard;
+    private static ClipboardObject clipboard;
 
     /** root model object (=editor input) that is handled by the editor. * */
     private WorkflowManager m_manager;
@@ -342,7 +342,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public ClipboardObject getClipboardContent() {
 
-        return m_clipboard;
+        return clipboard;
         // if (m_clipboard == null) {
         // m_clipboard = new Clipboard(getSite().getShell().getDisplay());
         // }
@@ -358,7 +358,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public void setClipboardContent(final ClipboardObject content) {
 
-        m_clipboard = content;
+        clipboard = content;
     }
 
     /**
@@ -1044,7 +1044,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *         not found
      */
     public MetaWorkflowEditor getEditor(
-            final MetaNodeContainer metaNodeContainer) {
+            final NodeContainer metaNodeContainer) {
 
         for (MetaWorkflowEditor metaWorkflowEditor : m_childEditors) {
 

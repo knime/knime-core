@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,18 +17,18 @@
  */
 package de.unikn.knime.workbench.editor2;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.ui.IEditorInput;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.meta.MetaIONodeContainer;
-import de.unikn.knime.core.node.meta.MetaInputNodeContainer;
-import de.unikn.knime.core.node.meta.MetaNodeContainer;
-import de.unikn.knime.core.node.meta.MetaOutputNodeContainer;
+import de.unikn.knime.core.node.NodeModel;
+import de.unikn.knime.core.node.meta.MetaInputNodeModel;
+import de.unikn.knime.core.node.meta.MetaOutputNodeModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
-import de.unikn.knime.workbench.repository.RepositoryManager;
 import de.unikn.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -52,7 +50,7 @@ public class MetaWorkflowEditor extends WorkflowEditor {
     /**
      * The <code>NodeContainer</code> representing this meta-workflow.
      */
-    private MetaNodeContainer m_metaNodeContainer;
+    private NodeContainer m_metaNodeContainer;
 
     /**
      * No arg constructor, creates the edit domain for this editor.
@@ -69,6 +67,7 @@ public class MetaWorkflowEditor extends WorkflowEditor {
      * 
      * @see org.eclipse.ui.part.EditorPart#setInput(org.eclipse.ui.IEditorInput)
      */
+    @Override
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
 
@@ -82,8 +81,8 @@ public class MetaWorkflowEditor extends WorkflowEditor {
                 .getNodeContainer();
 
         name = "Meta-workflow";
-
-        setWorkflowManager(m_metaNodeContainer.getMetaNodeWorkflowManager());
+        
+        setWorkflowManager(m_metaNodeContainer.getEmbeddedWorkflowManager());
 
         setUpMetaPortNodeExtrainfos();
 
@@ -100,18 +99,16 @@ public class MetaWorkflowEditor extends WorkflowEditor {
      * already set and if not it arranges the nodes.
      */
     private void setUpMetaPortNodeExtrainfos() {
-        NodeContainer[] nodes = getWorkflowManager().getNodes();
-        Vector<MetaInputNodeContainer> inputContainer = new Vector<MetaInputNodeContainer>();
-        Vector<MetaOutputNodeContainer> outputContainer = new Vector<MetaOutputNodeContainer>();
+        Collection<NodeContainer> nodes = getWorkflowManager().getNodes();
+        List<NodeContainer> inputContainer = new ArrayList<NodeContainer>();
+        List<NodeContainer> outputContainer = new ArrayList<NodeContainer>();
 
-        for (NodeContainer container : nodes) {
-
-            if (container instanceof MetaInputNodeContainer) {
-                inputContainer.add((MetaInputNodeContainer)container);
-
-            } else if (container instanceof MetaOutputNodeContainer) {
-                outputContainer.add((MetaOutputNodeContainer)container);
-
+        for (NodeContainer nc : nodes) {
+            Class<? extends NodeModel> clazz = nc.getModelClass();
+            if (MetaInputNodeModel.class.isAssignableFrom(clazz)) {
+                inputContainer.add(nc);
+            } else if (MetaOutputNodeModel.class.isAssignableFrom(clazz)) {
+                outputContainer.add(nc);
             }
         }
 
@@ -123,12 +120,10 @@ public class MetaWorkflowEditor extends WorkflowEditor {
         // set the position of the meta input nodes
         // the y position is a running variable to arrange the input nodes
         if (inputContainer.size() > 0) {
-            int stepSize = (int)(height / inputContainer.size());
+            int stepSize = height / inputContainer.size();
             int yPos = 0;
-            for (MetaInputNodeContainer container : inputContainer) {
-
+            for (NodeContainer container : inputContainer) {
                 setUpSingleInfo(container, yPos, 0);
-
                 yPos += stepSize;
             }
         }
@@ -136,12 +131,10 @@ public class MetaWorkflowEditor extends WorkflowEditor {
         // set the position of the meta output nodes
         // the y position is a running variable to arrange the output nodes
         if (outputContainer.size() > 0) {
-            int stepSize = (int)(height / outputContainer.size());
+            int stepSize = height / outputContainer.size();
             int yPos = 0;
-            for (MetaOutputNodeContainer container : outputContainer) {
-
+            for (NodeContainer container : outputContainer) {
                 setUpSingleInfo(container, yPos, width - 40);
-
                 yPos += stepSize;
             }
         }
@@ -156,7 +149,7 @@ public class MetaWorkflowEditor extends WorkflowEditor {
      * @param xPos the x position to set the node in the editor
      * 
      */
-    private void setUpSingleInfo(final MetaIONodeContainer container,
+    private void setUpSingleInfo(final NodeContainer container,
             final int yPos, final int xPos) {
         // check if the extraninfo has been set already
         if (container.getExtraInfo() != null
@@ -164,23 +157,16 @@ public class MetaWorkflowEditor extends WorkflowEditor {
             return;
         }
 
-        // lookup extra info from node repository and store it in the
-        // instance
-        NodeTemplate template = RepositoryManager.INSTANCE.getRoot()
-                .findTemplateByFactory(
-                        container.getFactoryName());
-
         ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
         info.setNodeLocation(xPos, yPos, 40, 40);
-        info.setType(template.getType());
-        info.setPluginID(template.getPluginID());
+        info.setType(NodeTemplate.TYPE_META);
         container.setExtraInfo(info);
-
     }
 
     /**
      * @see org.eclipse.ui.part.EditorPart#isDirty()
      */
+    @Override
     public boolean isDirty() {
         return false;
     }

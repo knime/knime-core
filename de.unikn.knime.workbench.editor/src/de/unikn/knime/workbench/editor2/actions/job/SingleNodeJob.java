@@ -116,8 +116,8 @@ public class SingleNodeJob extends Job implements NodeProgressListener {
     public SingleNodeJob(final WorkflowManager manager,
             final NodeContainer container,
             final IProgressMonitor parentMonitor, final int ticks) {
-        super("Executing " + container.getNodeName() + " (" 
-                + container.getUserName() + ")");
+        super("Executing " + container.getName() + " (" 
+                + container.getCustomName() + ")");
 
         // m_monitor = parentMonitor;
         m_container = container;
@@ -156,7 +156,7 @@ public class SingleNodeJob extends Job implements NodeProgressListener {
 
         // fire it up !
         Future<?> future = m_container.startExecution(nodeProgress);
-        CANCEL_CHECKER.addJob(this, future);        
+        CANCEL_CHECKER.addJob(this, future);
         
         // dummy progress changed
         // progressChanged(0.00, "running...");

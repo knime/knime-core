@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -25,7 +23,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
 
-import de.unikn.knime.core.node.meta.MetaNodeContainer;
+import de.unikn.knime.core.node.meta.MetaNodeModel;
+import de.unikn.knime.core.node.workflow.NodeContainer;
 
 /**
  * This node wraps a meta-workflow in form of setting. It is used to set up a
@@ -36,7 +35,7 @@ import de.unikn.knime.core.node.meta.MetaNodeContainer;
  */
 public class MetaWorkflowEditorInput implements IEditorInput {
 
-    private MetaNodeContainer m_nodeContainer;
+    private NodeContainer m_nodeContainer;
 
     /**
      * Creates a <code>IEditorInput</code> wrapper for the settings describing
@@ -44,7 +43,11 @@ public class MetaWorkflowEditorInput implements IEditorInput {
      * 
      * @param container the container node representing a meta-workflow
      */
-    public MetaWorkflowEditorInput(final MetaNodeContainer container) {
+    public MetaWorkflowEditorInput(final NodeContainer container) {
+        if (!MetaNodeModel.class.isAssignableFrom(container.getModelClass())) {
+            throw new IllegalArgumentException("This node container does not"
+                    + " hold a MetaNodeModel");
+        }
         m_nodeContainer = container;
     }
 
@@ -94,7 +97,7 @@ public class MetaWorkflowEditorInput implements IEditorInput {
      * @return the <code>NodeContainer</code> representing the meta-node
      *         input.
      */
-    public MetaNodeContainer getNodeContainer() {
+    public NodeContainer getNodeContainer() {
         return m_nodeContainer;
     }
 }

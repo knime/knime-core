@@ -140,7 +140,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
         Shell parent = Display.getCurrent().getActiveShell();
 
         NameDescriptionDialog dialog = new NameDescriptionDialog(parent,
-                container.getUserName(), container.getDescription());
+                container.getCustomName(), container.getDescription());
 
         int result = dialog.open();
 
@@ -153,24 +153,24 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
             String userName = dialog.getName();
             if (userName.trim().equals("")) {
 
-                if (container.getUserName() != null
+                if (container.getCustomName() != null
                         || container.getDescription() != null) {
 
                     // mark editor as dirty
                     getEditor().markDirty();
                 }
-                container.setUserName(null);
+                container.setCustomName(null);
                 container.setDescription(null);
 
             } else {
 
                 // if name or description is different mark editor dirty
-                if (!userName.equals(container.getUserName())
+                if (!userName.equals(container.getCustomName())
                         || !description.equals(container.getDescription())) {
                     getEditor().markDirty();
                 }
 
-                container.setUserName(userName);
+                container.setCustomName(userName);
                 container.setDescription(description);
             }
         }

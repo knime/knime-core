@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -266,7 +264,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * 
      * @param name The name to set.
      */
-    public void setUserName(final String name) {
+    public void setCustomName(final String name) {
 
         if (name == null || name.trim().equals("")) {
 
@@ -304,7 +302,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * 
      * @param description the description to set as tooltip
      */
-    public void setUserDescription(final String description) {
+    public void setCustomDescription(final String description) {
 
         if (description == null || description.trim().equals("")) {
 
@@ -312,7 +310,7 @@ public class NodeContainerFigure extends RectangleFigure {
             // and invoke the set name method once more to
             // adjust the tooltip text
             m_description = null;
-            setUserName(m_name.getText());
+            setCustomName(m_name.getText());
             return;
         }
 
@@ -392,6 +390,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * 
      * @see org.eclipse.draw2d.IFigure#getMinimumSize(int, int)
      */
+    @Override
     public Dimension getMinimumSize(final int whint, final int hhint) {
         return getPreferredSize(whint, hhint);
     }
@@ -399,6 +398,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
      */
+    @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
         return new Dimension(Math
                 .max(WIDTH, m_heading.getPreferredSize().width), super
@@ -408,6 +408,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * @see org.eclipse.draw2d.IFigure#getBackgroundColor()
      */
+    @Override
     public Color getBackgroundColor() {
         return ColorConstants.white;
     }
@@ -415,6 +416,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * @see org.eclipse.draw2d.IFigure#getForegroundColor()
      */
+    @Override
     public Color getForegroundColor() {
         return ColorConstants.white;
     }
@@ -438,6 +440,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * 
      * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
      */
+    @Override
     protected void fillShape(final Graphics graphics) {
         graphics.setBackgroundColor(getBackgroundColor());
         super.fillShape(graphics);
@@ -548,6 +551,7 @@ public class NodeContainerFigure extends RectangleFigure {
          * 
          * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
          */
+        @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
             return new Dimension(-1, HEIGHT);
         }
@@ -639,21 +643,18 @@ public class NodeContainerFigure extends RectangleFigure {
                 // in case of 0 children the sign can simply be inserted
                 if (children.size() == 0) {
                     add(m_warningFigure);
-                }
-                // in case of 2 children, the warning sign must be at index 1
-                else if (children.size() == 2) {
+                } else if (children.size() == 2) {
+                    // in case of 2 children, the warning sign must be at idx 1
                     add(m_warningFigure, 1);
-                }
-                // else there is exact 1 child
-                else {
+                } else {
+                    // else there is exact 1 child
                     Figure figure = children.get(0);
                     // in case of the error sign, the warning sign has to be
                     // inserted before the error sign
                     if (figure == m_errorFigure) {
                         add(m_warningFigure, 0);
-                    }
-                    // else append at the end (after the info sign)
-                    else {
+                    } else {
+                        // else append at the end (after the info sign)
                         add(m_warningFigure);
                     }
                 }
@@ -748,6 +749,7 @@ public class NodeContainerFigure extends RectangleFigure {
          * 
          * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
          */
+        @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
             return super.getPreferredSize(WIDTH,
                     m_label.getPreferredSize().height);
@@ -834,6 +836,7 @@ public class NodeContainerFigure extends RectangleFigure {
         /**
          * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
          */
+        @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
             return super.getPreferredSize(WIDTH,
                     m_label.getPreferredSize().height);
@@ -860,6 +863,7 @@ public class NodeContainerFigure extends RectangleFigure {
             getImageData();
         }
 
+        @Override
         protected void drawCompositeImage(final int width, final int height) {
             // To draw a composite image, the base image should be
             // drawn first (first layer) and then the overlay image
@@ -879,6 +883,7 @@ public class NodeContainerFigure extends RectangleFigure {
             drawImage(overlayImageData, xValue, yValue);
         }
 
+        @Override
         protected Point getSize() {
             return new Point(18, 18);
         }
@@ -895,7 +900,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * @return the user node name of this figure
      */
-    public String getUserName() {
+    public String getCustomName() {
 
         return m_name.getText();
     }
