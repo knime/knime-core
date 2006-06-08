@@ -9,7 +9,6 @@ Bundle-Localization: plugin
 Require-Bundle: de.unikn.knime.core;reprovide=true
 Provide-Package: de.unikn.knime.base.data.append.column,
  de.unikn.knime.base.data.append.row,
- de.unikn.knime.base.data.container,
  de.unikn.knime.base.data.filter.column,
  de.unikn.knime.base.data.util,
  de.unikn.knime.base.node.append.row,
