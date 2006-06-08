@@ -294,21 +294,16 @@ final class Buffer {
                 writeEldestRow();
             }
             createShortCutArray();
-            // if we write to a customized cell, we also need to 
-            // add the table spec information (storing permanently)
-            if (!m_hasCreatedTempFile) {
-                // we push the underlying stream forward; need to make
-                // sure that m_outStream is done with everything.
-                m_outStream.flush();
-                ZipOutputStream zipOut = 
-                    (ZipOutputStream)m_outStream.getUnderylingStream();
-                zipOut.closeEntry();
-                zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
-                writeSpecToFile(zipOut);
-                zipOut.close();
-            } else {
-                m_outStream.close();
-            }
+            // Write spec.
+            // we push the underlying stream forward; need to make
+            // sure that m_outStream is done with everything.
+            m_outStream.flush();
+            ZipOutputStream zipOut = 
+                (ZipOutputStream)m_outStream.getUnderylingStream();
+            zipOut.closeEntry();
+            zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
+            writeSpecToFile(zipOut);
+            zipOut.close();
             double sizeInMB = m_outFile.length() / (double)(1 << 20);
             String size = NumberFormat.getInstance().format(sizeInMB);
             LOGGER.info("Buffer file (" + m_outFile.getAbsolutePath() 
@@ -383,6 +378,14 @@ final class Buffer {
      */
     boolean usesOutFile() {
         return m_outFile != null;
+    }
+    
+    /** Get reference to the file that we use or <code>null</code> if we keep
+     * the data in main memory.
+     * @return The file we use.
+     */
+    File getFile() {
+        return m_outFile;
     }
     
     /** Get the table spec that was set in the constructor.
