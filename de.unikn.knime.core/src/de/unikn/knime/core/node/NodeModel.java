@@ -144,6 +144,10 @@ public abstract class NodeModel {
      * load the <code>PredictorParams</code> after the previous node has been
      * executed successfully or is reset.
      * 
+     * <p>This implementation throws a InvalidSettingsException as it should 
+     * not have been called: If a derived NodeModel defines a model input, it
+     * must override this method.
+     * 
      * @param index The input index, starting from 0.
      * @param predParams The PredictorParams to load, which can be null to
      *            indicate that no PredictorParams model is available.
@@ -154,7 +158,7 @@ public abstract class NodeModel {
             final PredictorParams predParams) throws InvalidSettingsException {
         assert predParams == predParams;
         throw new InvalidSettingsException(
-                "loadPredictorParams() not overriden: " + index);
+                "loadPredictorParams() not overridden: " + index);
     }
 
     /**
@@ -164,6 +168,10 @@ public abstract class NodeModel {
      * <code>PredictorParams</code> after this node has been successfully
      * executed.
      * 
+     * <p>This implementation throws a InvalidSettingsException as it should 
+     * not have been called: If a derived NodeModel defines a model output, it
+     * must override this method.
+
      * @param index The output index, starting from 0.
      * @param predParams The PredictorParams to save to.
      * @throws InvalidSettingsException If the model could not be saved.
@@ -172,7 +180,7 @@ public abstract class NodeModel {
             final PredictorParams predParams) throws InvalidSettingsException {
         assert predParams == predParams;
         throw new InvalidSettingsException(
-                "savePredictorParams() not overriden: " + index);
+                "savePredictorParams() not overridden: " + index);
     }
 
     /**
