@@ -129,7 +129,12 @@ public class AppendedRowsTable implements DataTable {
      */
     public static final DataTableSpec generateDataTableSpec(
             final DataTableSpec... tableSpecs) {
-        LinkedHashMap<String, DataType> columnSet = 
+        // memorize the first column spec in the argument array for 
+        // each column name, we use it later on to initialize the column
+        // spec creator.
+        LinkedHashMap<String, DataColumnSpec> columnSet = 
+            new LinkedHashMap<String, DataColumnSpec>();
+        LinkedHashMap<String, DataType> typeSet = 
             new LinkedHashMap<String, DataType>();
         LinkedHashMap<String, DataColumnDomain> domainSet = 
             new LinkedHashMap<String, DataColumnDomain>();
@@ -140,12 +145,16 @@ public class AppendedRowsTable implements DataTable {
             for (int c = 0; c < cur.getNumColumns(); c++) {
                 DataColumnSpec colSpec = cur.getColumnSpec(c);
                 String colName = colSpec.getName();
+                // set the spec for this column if not yet done
+                if (!columnSet.containsKey(colName)) {
+                    columnSet.put(colName, colSpec);
+                }
                 DataType colType = colSpec.getType();
                 DataColumnDomain colDomain = colSpec.getDomain();
 
                 // duplicates are welcome - but only if they match the type
-                if (columnSet.containsKey(colName)) {
-                    DataType oldType = columnSet.get(colName);
+                if (typeSet.containsKey(colName)) {
+                    DataType oldType = typeSet.get(colName);
                     DataColumnDomain oldDomain = domainSet.get(colName);
                     // the base type they share
                     DataType type = DataType.getCommonSuperType(oldType,
@@ -159,29 +168,31 @@ public class AppendedRowsTable implements DataTable {
                                 + " vs. " + colType.toString() + "\n"
                                 + "Using common base type " + type.toString());
                         // that must not change the order.
-                        columnSet.put(colName, type);
+                        typeSet.put(colName, type);
                     }
                     DataColumnDomain newDomain = merge(
                             oldDomain, colDomain, type.getComparator());
                     domainSet.put(colName, newDomain);
                 } else { // doesn't contain the key
-                    columnSet.put(colName, colType);
+                    typeSet.put(colName, colType);
                     domainSet.put(colName, colDomain);
                 }
             } // for all columns in the current table spec
         } // for all tables
 
-        DataColumnSpec[] colSpecs = new DataColumnSpec[columnSet.size()];
+        DataColumnSpec[] colSpecs = new DataColumnSpec[typeSet.size()];
         int i = 0;
-        for (Map.Entry<String, DataType> entry : columnSet.entrySet()) {
+        for (Map.Entry<String, DataType> entry : typeSet.entrySet()) {
             String   name = entry.getKey();
             DataType type = entry.getValue();
             // domain is null, if we did not remember it (e.g. "keepDomain" was
             // false)
             DataColumnDomain domain = domainSet.get(name);
+            DataColumnSpec initSpec = columnSet.get(name);
             DataColumnSpecCreator specCreator = 
-                new DataColumnSpecCreator(name, type);
+                new DataColumnSpecCreator(initSpec);
             specCreator.setDomain(domain);
+            specCreator.setType(type);
             colSpecs[i++] = specCreator.createSpec();
         }
         return new DataTableSpec(colSpecs);
