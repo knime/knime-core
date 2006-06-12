@@ -135,9 +135,7 @@ class AppendedRowsIterator extends RowIterator {
             if (m_suffix == null) {
                 String error = "Table contains duplicate entry \""
                     + key.toString() + "\", skipping this row.";
-                if (m_hasPrintedError) {
-                    LOGGER.debug(error);
-                } else {
+                if (!m_hasPrintedError) {
                     LOGGER.warn(error);
                     LOGGER.warn("Suppress further warnings.");
                     m_hasPrintedError = true;
@@ -145,15 +143,14 @@ class AppendedRowsIterator extends RowIterator {
                 initNextRow();
                 return;
             } else {
-                String oldId = key.toString();
                 do {
                     keyHasChanged = true;
                     DataCell cell = key.getId();
                     String newId = cell.toString() + m_suffix;
                     key = new RowKey(newId);
                 } while (!m_duplicateHash.add(key));
-                LOGGER.debug("Found duplicate rowkey \"" + oldId 
-                        + "\", replacing by \"" + key.toString() + "\".");
+                // do not print warning here, user specified explicitly
+                // to do duplicate handling.
             }
         }
         // no missing cells implies the base row is complete
