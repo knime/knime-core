@@ -922,6 +922,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             }
         }
         
+        // FIXME do not execute all nodes in the parent flow
         if (m_parent != null) { m_parent.prepareForExecAllNodes(); }
         
         if (newExecutables == 0) {

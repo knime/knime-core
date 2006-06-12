@@ -25,7 +25,7 @@ package de.unikn.knime.core.node.meta;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public final class MetaInputNodeModel extends PassThroughNodeModel {
+public class MetaInputNodeModel extends PassThroughNodeModel {
     /**
      * Creates a new node model that simply passes the input data to the
      * output ports.
@@ -33,7 +33,7 @@ public final class MetaInputNodeModel extends PassThroughNodeModel {
      * @param dataIns the number of data ports
      * @param modelIns the number od model ports
      */
-    MetaInputNodeModel(final int dataIns, final int modelIns) {
+    public MetaInputNodeModel(final int dataIns, final int modelIns) {
         super(dataIns, modelIns);
     }
 }

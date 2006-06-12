@@ -68,6 +68,33 @@ public class MetaNodeModel extends SpecialNodeModel
     
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(MetaNodeModel.class);
+
+    
+    /**
+     * Creates a new new meta node model.
+     * 
+     * @param outerDataIns the number of data input ports
+     * @param outerDataOuts the number of data output ports
+     * @param outerPredParamsIns the number of predictor param input ports
+     * @param outerPredParamsOuts the number of predictor param output ports
+     * @param factory the factory that created this model
+     */
+    protected MetaNodeModel(final int outerDataIns, final int outerDataOuts,
+            final int outerPredParamsIns, final int outerPredParamsOuts,
+            final int innerDataIns, final int innerDataOuts,
+            final int innerPredParamsIns, final int innerPredParamsOuts,
+            final MetaNodeFactory factory) {
+        super(outerDataIns, outerDataOuts, outerPredParamsIns,
+                outerPredParamsOuts);
+
+        m_dataInContainer = new NodeContainer[innerDataIns];
+        m_dataOutContainer = new NodeContainer[innerDataOuts];
+        m_modelInContainer = new NodeContainer[innerPredParamsIns];
+        m_modelOutContainer = new NodeContainer[innerPredParamsOuts];
+        m_myFactory = factory;        
+        m_stateListeners = new ArrayList<NodeStateListener>();
+    }
+
     
     /**
      * Creates a new new meta node model.
@@ -78,17 +105,11 @@ public class MetaNodeModel extends SpecialNodeModel
      * @param nrPredParamsOuts the number of predictor param output ports
      * @param factory the factory that created this model
      */
-    MetaNodeModel(final int nrDataIns, final int nrDataOuts,
+    protected MetaNodeModel(final int nrDataIns, final int nrDataOuts,
             final int nrPredParamsIns, final int nrPredParamsOuts,
             final MetaNodeFactory factory) {
-        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
-
-        m_dataInContainer = new NodeContainer[nrDataIns];
-        m_dataOutContainer = new NodeContainer[nrDataOuts];
-        m_modelInContainer = new NodeContainer[nrPredParamsIns];
-        m_modelOutContainer = new NodeContainer[nrPredParamsOuts];
-        m_myFactory = factory;        
-        m_stateListeners = new ArrayList<NodeStateListener>();
+        this(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts,
+             nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts, factory);
     }
     
 
@@ -101,7 +122,8 @@ public class MetaNodeModel extends SpecialNodeModel
      * @param nrOuts number of output nodes.
      * @param f the factory that created this model
      */
-    MetaNodeModel(final int nrIns, final int nrOuts, final MetaNodeFactory f) {
+    protected MetaNodeModel(final int nrIns, final int nrOuts,
+            final MetaNodeFactory f) {
         this(nrIns, nrOuts, 0, 0, f);
     }
 
@@ -124,8 +146,10 @@ public class MetaNodeModel extends SpecialNodeModel
         
         // collect all output specs
         DataTableSpec[] outspecs = new DataTableSpec[m_dataOutContainer.length];
-        for (int i = 0; i < outspecs.length; i++) {
-            if (m_dataOutContainer[i] != null) {
+        final int min = Math.min(outspecs.length, m_dataOutContainer.length);
+        for (int i = 0; i < min; i++) {
+            if ((m_dataOutContainer[i] != null)
+                    && (m_dataOutContainer[0].getOutPorts().size() > 0)) {
                 outspecs[i] = ((DataOutPort) m_dataOutContainer[i]
                     .getOutPorts().get(0)).getDataTableSpec();
             }
@@ -169,63 +193,78 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
-            throws InvalidSettingsException {
-        m_internalWFM.clear();
-        addInOutNodes();
-        
+            throws InvalidSettingsException {        
         // load the "internal" workflow
         if (settings.containsKey(WORKFLOW_KEY)) {
+            m_internalWFM.clear();
+            addInOutNodes();
+
             m_internalWFM.load(settings.getConfig(WORKFLOW_KEY));
+            addInOutConnections(settings.getConfig(INOUT_CONNECTIONS_KEY));
         }
-        
-        addInOutConnections(settings.getConfig(INOUT_CONNECTIONS_KEY));
     }
 
+    protected NodeFactory getDataInputNodeFactory(final int portIndex) {
+        return new MetaInputNodeFactory(1, 0) {
+            @Override
+            public String getOutportDescription(final int index) {
+                return m_myFactory.getInportDescription(portIndex);
+            }
+        };        
+    }
+    
+    protected NodeFactory getModelInputNodeFactory(final int portIndex) {
+        return new MetaInputNodeFactory(0, 1) {
+            @Override
+            public String getPredParamOutDescription(final int index) {
+                return m_myFactory.getPredParamInDescription(portIndex);
+            }                        
+        };
+    }
+    
+    
+    protected NodeFactory getModelOutputNodeFactory(final int portIndex) {
+        return new MetaOutputNodeFactory(0, 1) {
+            @Override
+            public String getPredParamInDescription(final int index) {
+                return m_myFactory.getPredParamOutDescription(portIndex);
+            }
+        };
+    }
+    
+    
+    protected NodeFactory getDataOutputNodeFactory(final int portIndex) {
+        return new MetaOutputNodeFactory(1, 0) {
+            @Override
+            public String getInportDescription(final int index) {
+                return m_myFactory.getOutportDescription(portIndex);
+            }
+        };
+    }
+    
+    
+    
     private void addInOutNodes() {
         LOGGER.debug("Adding in- and output nodes");
-        for (int i = 0; i < m_dataInContainer.length; i++) {
-            final int temp = i; 
-            m_dataInContainer[i] = m_internalWFM.addNewNode(
-                new MetaInputNodeFactory(1, 0) {
-                    @Override
-                    public String getOutportDescription(final int index) {
-                        return m_myFactory.getInportDescription(temp);
-                    }
-                });
+        for (int i = 0; i < m_dataInContainer.length; i++) { 
+            m_dataInContainer[i] =
+                m_internalWFM.addNewNode(getDataInputNodeFactory(i));
         }
 
         for (int i = 0; i < m_dataOutContainer.length; i++) {
-            final int temp = i;
-            m_dataOutContainer[i] = m_internalWFM.addNewNode(
-                new MetaOutputNodeFactory(1, 0) {
-                    @Override
-                    public String getInportDescription(final int index) {
-                        return m_myFactory.getOutportDescription(temp);
-                    }
-                });
+            m_dataOutContainer[i] =
+                m_internalWFM.addNewNode(getDataOutputNodeFactory(i));
             m_dataOutContainer[i].addListener(this);
         }
 
         for (int i = 0; i < m_modelInContainer.length; i++) {
-            final int temp = i;
-            m_modelInContainer[i] = m_internalWFM.addNewNode(
-                new MetaInputNodeFactory(0, 1) {
-                    @Override
-                    public String getPredParamOutDescription(final int index) {
-                        return m_myFactory.getPredParamInDescription(temp);
-                    }                        
-                });
+            m_modelInContainer[i] =
+                m_internalWFM.addNewNode(getModelInputNodeFactory(i));
         }
 
         for (int i = 0; i < m_modelOutContainer.length; i++) {
-            final int temp = i;
-            m_modelOutContainer[i] = m_internalWFM.addNewNode(
-                new MetaOutputNodeFactory(0, 1) {
-                    @Override
-                    public String getPredParamInDescription(final int index) {
-                        return m_myFactory.getPredParamOutDescription(temp);
-                    }                        
-                });
+            m_modelOutContainer[i] =
+                m_internalWFM.addNewNode(getModelOutputNodeFactory(i));
             m_modelOutContainer[i].addListener(this);
         }        
     }
@@ -477,5 +516,21 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
             }
         }
+    }
+    
+    protected final NodeContainer dataInContainer(final int index) {
+        return m_dataInContainer[index];
+    }
+
+    protected final NodeContainer dataOutContainer(final int index) {
+        return m_dataOutContainer[index];
+    }
+
+    protected final NodeContainer modelInContainer(final int index) {
+        return m_modelInContainer[index];
+    }
+
+    protected final NodeContainer modelOutContainer(final int index) {
+        return m_modelOutContainer[index];
     }
 }

@@ -293,7 +293,7 @@ public abstract class NodeView {
         }
 
         JOptionPane.showConfirmDialog(m_frame, "View successfully exported.",
-                "Info", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
+           "Info", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
