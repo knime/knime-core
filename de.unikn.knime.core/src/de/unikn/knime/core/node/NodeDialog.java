@@ -152,7 +152,7 @@ final class NodeDialog {
                     JOptionPane.showMessageDialog(m_dialog, ioe.getMessage(),
                                     "Couldn't Load Settings",
                                     JOptionPane.ERROR_MESSAGE);
-                } catch (InvalidSettingsException ex) {
+                } catch (NotConfigurableException ex) {
                     JOptionPane.showMessageDialog(m_dialog, ex.getMessage(),
                             "Couldn't Load Settings",
                             JOptionPane.ERROR_MESSAGE);

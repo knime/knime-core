@@ -30,6 +30,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Default implementation for a NodeDialogPane that allows to register
@@ -79,7 +80,7 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
      */
     @Override
     public final void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws InvalidSettingsException {
+            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
         assert (settings != null && specs != null);
         try {
             for (DialogComponent comp : m_dialogComponents) {

@@ -44,6 +44,7 @@ import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.NodeView;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Wrapper for a Node and the surrounding graph information, i.e. successors and
@@ -352,11 +353,11 @@ public class NodeContainer implements NodeStateListener {
      * pane. The pane might be <code>null</code> if no dialog is available.
      * 
      * @return dialog pane
-     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * @throws NotConfigurableException if the dialog cannot be opened because
      * of real invalid settings or if any predconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
      */
-    public NodeDialogPane getDialogPane() throws InvalidSettingsException {
+    public NodeDialogPane getDialogPane() throws NotConfigurableException {
         return m_node.getDialogPane();
     }
 

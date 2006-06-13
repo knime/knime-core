@@ -1215,12 +1215,12 @@ public final class Node {
      *         addition this method loads the settings from the model into the
      *         dialog pane. The pane might be <code>null</code> if no dialog
      *         is available.
-     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * @throws NotConfigurableException if the dialog cannot be opened because
      * of real invalid settings or if any predconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
      * @see #hasDialog()
      */
-    public NodeDialogPane getDialogPane() throws InvalidSettingsException {
+    public NodeDialogPane getDialogPane() throws NotConfigurableException {
         if (hasDialog()) {
             // init dialog pane, if not done yet.
             if (m_dialogPane == null) {
@@ -1462,11 +1462,11 @@ public final class Node {
     /**
      * Reads the current settings from the model and load them into the dialog
      * pane.
-     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * @throws NotConfigurableException if the dialog cannot be opened because
      * of real invalid settings or if any predconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
      */
-    private void loadDialogSettingsFromModel() throws InvalidSettingsException {
+    private void loadDialogSettingsFromModel() throws NotConfigurableException {
         // get the model's current settings ...
         NodeSettings currSettings = new NodeSettings(this.getName());
         m_model.saveSettingsTo(currSettings);
