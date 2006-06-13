@@ -1523,7 +1523,7 @@ public abstract class Config extends AbstractConfigEntry
         if (os == null) {
             throw new NullPointerException();
         }
-        XMLConfig.save(this, os);
+        XMLConfig2.save(this, os);
     }
 
     /**
@@ -1554,7 +1554,7 @@ public abstract class Config extends AbstractConfigEntry
         if (in == null) {
             throw new NullPointerException();
         }
-        return XMLConfig.load(config, in, readRoot);
+        return XMLConfig2.load(config, in, readRoot);
     }
 
     /* --- serialize objects --- */
