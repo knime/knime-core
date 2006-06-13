@@ -30,9 +30,7 @@ import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
  * @author M. Berthold, University of Konstanz
  */
 public class WorkflowExecutor implements WorkflowListener {
-
     private final WorkflowManager m_flowMgr;
-    private final Object m_executionInProgress = new Object();
     
     /** Create executor class and register as listener for events.
      * 
@@ -47,18 +45,8 @@ public class WorkflowExecutor implements WorkflowListener {
      * are executed (or at least Workflow claims to be done).
      */
     public void executeAll() {
-        synchronized (m_executionInProgress) {
-            m_flowMgr.prepareForExecAllNodes();
-            startNodeExecution();
-
-            try {
-                m_executionInProgress.wait();
-            } catch (InterruptedException ie) {
-                assert false;  // shouldn't happen
-            }
-        }
-
-        
+        m_flowMgr.prepareForExecAllNodes();
+        m_flowMgr.startExecution(true);
     }
     
     /** Execute all nodes in workflow leading to a certain node.
@@ -68,33 +56,8 @@ public class WorkflowExecutor implements WorkflowListener {
      * @param nodeID id of node to be executed.
      */
     public void executeUpToNode(final int nodeID) {
-        synchronized (m_executionInProgress) {
-            m_flowMgr.prepareForExecUpToNode(nodeID);
-            startNodeExecution();
-
-            try {
-                m_executionInProgress.wait();
-            } catch (InterruptedException ie) {
-                assert false;  // shouldn't happen
-            }
-        }
-    }
-    
-    /**
-     * Starts the execution of all nodes that can be executed at the moment.
-     *  
-     * @return <code>true</code> if at least one node has been started,
-     * <code>false</code> otherwise
-     */
-    private boolean startNodeExecution() {
-        NodeContainer nextNode = null;
-        boolean b = false;
-        while ((nextNode = m_flowMgr.getNextExecutableNode()) != null) {
-            nextNode.startExecution(new DefaultNodeProgressMonitor());
-            b = true;
-        }
-        
-        return b;
+        m_flowMgr.prepareForExecUpToNode(nodeID);
+        m_flowMgr.startExecution(true);
     }
     
     /**
@@ -105,11 +68,10 @@ public class WorkflowExecutor implements WorkflowListener {
      */
     public void workflowChanged(final WorkflowEvent event) {
         if (event instanceof WorkflowEvent.ExecPoolChanged) {
-            startNodeExecution();
-        } else if (event instanceof WorkflowEvent.ExecPoolDone) {
-            synchronized (m_executionInProgress) {
-                m_executionInProgress.notifyAll();
-            } 
+            NodeContainer nextNode = null;
+            while ((nextNode = m_flowMgr.getNextExecutableNode()) != null) {
+                nextNode.startExecution(new DefaultNodeProgressMonitor());
+            }
         }
     }
 

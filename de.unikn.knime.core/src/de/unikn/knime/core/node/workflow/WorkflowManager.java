@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -91,13 +91,15 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         new HashMap<Integer, NodeContainer>();
     
     private final WorkflowManager m_parent;
-    private final List<SoftReference<WorkflowManager>> m_children =
-        new ArrayList<SoftReference<WorkflowManager>>();
+    private final List<WeakReference<WorkflowManager>> m_children =
+        new ArrayList<WeakReference<WorkflowManager>>();
 
     private volatile int m_runningConnectionID = -1;
     
     // internal variables to allow generation of unique indices
     private volatile int m_runningNodeID = -1;
+    
+    private final Object m_execDone = new Object();
     
     /**
      * Identifier for KNIME workflows. 
@@ -160,7 +162,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      */
     protected WorkflowManager(final WorkflowManager parent) {
         m_parent = parent;
-        m_parent.m_children.add(new SoftReference<WorkflowManager>(this));
+        m_parent.m_children.add(new WeakReference<WorkflowManager>(this));
     }
 
     /**
@@ -691,6 +693,12 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         for (WorkflowListener l : temp) {
             l.workflowChanged(event);
         }
+        
+        if (event instanceof WorkflowEvent.ExecPoolDone) {
+            synchronized (m_execDone) {
+                m_execDone.notifyAll();
+            }
+        }
     }
 
     /**
@@ -755,6 +763,20 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         return null;
     }
 
+    
+    public void startExecution(final boolean wait) {
+        checkForExecutableNodes();
+        if (wait) {
+            synchronized (m_execDone) {
+                try {
+                    m_execDone.wait();
+                } catch (InterruptedException ex) {
+                    // may happen, so what?
+                }
+            }
+        }
+    }
+    
     /**
      * return a node for a specific identifier. Returns null if ID is not found,
      * throws an exception if something odd happens.
@@ -899,7 +921,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             }
         }
     }
-
+    
+    
     /**
      * Mark all nodes that are not yet executed as "to be executed" and the ones
      * that are actually executable (all predecessors data is available) as
@@ -907,7 +930,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * {@link WorkflowEvent.ExecPoolDone} is fired.
      */
     public synchronized void prepareForExecAllNodes() {
-        int newExecutables = 0;
         for (NodeContainer nc : m_nodeContainerByID.values()) {
             if (!(nc.getNode().isExecuted())
                 && (nc.getState() != NodeContainer.State.WaitingForExecution)
@@ -915,7 +937,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 
                 if (nc.getNode().isExecutable()) {
                     nc.setState(NodeContainer.State.IsExecutable);
-                    newExecutables++;
                 } else {
                     nc.setState(NodeContainer.State.WaitingToBeExecutable);
                 }
@@ -924,10 +945,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         
         // FIXME do not execute all nodes in the parent flow
         if (m_parent != null) { m_parent.prepareForExecAllNodes(); }
-        
-        if (newExecutables == 0) {
-            fireWorkflowEvent(new WorkflowEvent.ExecPoolDone(-1, null, null));
-        }
     }
 
     /**
@@ -939,9 +956,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      */
     public synchronized void prepareForExecUpToNode(final int nodeID) {
         NodeContainer nc = m_nodeContainerByID.get(nodeID);
-        if (!prepareForExecUpToNode(nc)) {
-            fireWorkflowEvent(new WorkflowEvent.ExecPoolDone(-1, null, null));
-        }
+        prepareForExecUpToNode(nc);
     }
 
     /**
@@ -951,10 +966,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * is set appropriately.
      * 
      * @param n a node container
-     * @return true if at least one node's EXECUTABLE flag was set
      */
-    private synchronized boolean prepareForExecUpToNode(final NodeContainer n) {
-        boolean newExecutable = false;
+    private synchronized void prepareForExecUpToNode(final NodeContainer n) {
         if (!(n.getNode().isExecuted())
                 && (n.getState() != NodeContainer.State.WaitingForExecution)
                 && (n.getState() != NodeContainer.State.CurrentlyExecuting)) {
@@ -962,7 +975,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             // according to the underlying Node's "isExecutable" status.
             if (n.getNode().isExecutable()) {
                 n.setState(NodeContainer.State.IsExecutable);
-                newExecutable = true;
             } else {
                 n.setState(NodeContainer.State.WaitingToBeExecutable);
             }
@@ -971,9 +983,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             for (NodeContainer pred : n.getPredecessors()) {
                 if (pred != null) {
                     if (m_idsByNode.containsKey(pred.getNode())) {
-                        newExecutable |= prepareForExecUpToNode(pred);
+                        prepareForExecUpToNode(pred);
                     } else if (m_parent != null) {
-                        newExecutable |= m_parent.prepareForExecUpToNode(pred);
+                        m_parent.prepareForExecUpToNode(pred);
                     } else {
                         throw new IllegalStateException("The node #"
                                 + pred.getID() + "(" + pred.nodeToString() + ")"
@@ -986,7 +998,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 }
             }
         }
-        return newExecutable;
     }
 
     /**
@@ -1240,11 +1251,12 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                     && (nc.getNode().isExecutable())) {
                 nc.setState(NodeContainer.State.IsExecutable);
                 newExecutables++;
-            }
-            if ((nc.isAutoExecutable())
+            } else if ((nc.isAutoExecutable())
                     && (nc.getState() == NodeContainer.State.Idle)
                     && (nc.getNode().isExecutable())) {
                 nc.setState(NodeContainer.State.IsExecutable);
+                newExecutables++;
+            } else if (nc.getState() == NodeContainer.State.IsExecutable) {
                 newExecutables++;
             }
         }
@@ -1277,13 +1289,13 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
         
         // check all child managers if they have some nodes to execute now
-        Iterator<SoftReference<WorkflowManager>> it = m_children.iterator();
+        Iterator<WeakReference<WorkflowManager>> it = m_children.iterator();
         while (it.hasNext()) {
-            SoftReference<WorkflowManager> sr = it.next();
-            if (sr.get() == null) {
+            WeakReference<WorkflowManager> wr = it.next();
+            if (wr.get() == null) {
                 it.remove();
             } else {
-                sr.get().checkForExecutableNodes();
+                wr.get().checkForExecutableNodes();
             }
         }
     }
