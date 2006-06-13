@@ -45,15 +45,15 @@ import de.unikn.knime.core.node.InvalidSettingsException;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class XMLConfig2 {
+final class XMLConfig {
 
-    private XMLConfig2() {
+    private XMLConfig() {
 
     }
     
     /** dtd name from class name. */
     static final String DTD_NAME = 
-        XMLConfig3.class.getName().replace('.', '/') + ".dtd";
+        XMLConfig.class.getName().replace('.', '/') + ".dtd";
 
 
     /**
