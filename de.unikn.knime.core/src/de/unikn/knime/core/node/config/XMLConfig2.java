@@ -48,20 +48,20 @@ import org.xml.sax.SAXParseException;
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-final class XMLConfig3 {
+final class XMLConfig2 {
 
-    private XMLConfig3() {
+    private XMLConfig2() {
 
     }
     
     /** dtd name from class name. */
     private static final String DTD_NAME = 
-        XMLConfig3.class.getName().replace('.', '/') + ".dtd";
+        XMLConfig.class.getName().replace('.', '/') + ".dtd";
 
     private static InputSource getInputSourceDTD() 
             throws IOException {
         // gets URL for systemId which specifies the dtd file+path
-        ClassLoader classLoader = XMLConfig3.class.getClassLoader();
+        ClassLoader classLoader = XMLConfig2.class.getClassLoader();
         URL dtdURL = classLoader.getResource(DTD_NAME);
         InputStream is = dtdURL.openStream();
         return new InputSource(is);
