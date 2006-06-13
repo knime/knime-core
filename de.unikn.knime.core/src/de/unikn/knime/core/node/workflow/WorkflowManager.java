@@ -764,6 +764,14 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     }
 
     
+    /**
+     * Starts the execution of a workflow (or parts of it) by sending events.
+     * No node will be directly executed by this method.
+     * 
+     * @param wait <code>true</code> if the caller should be blocked until the
+     * execution of the workflow has finished, <code>false</code> if the call
+     * should return immediately
+     */
     public void startExecution(final boolean wait) {
         checkForExecutableNodes();
         if (wait) {
