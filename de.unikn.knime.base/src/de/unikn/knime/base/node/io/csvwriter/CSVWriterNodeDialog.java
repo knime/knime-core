@@ -95,7 +95,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) {
+            final NodeSettings settings, final DataTableSpec[] specs) throws InvalidSettingsException {
         String fileName = 
             settings.getString(CSVWriterNodeModel.CFGKEY_FILE, null);
         boolean writeColHeader = 

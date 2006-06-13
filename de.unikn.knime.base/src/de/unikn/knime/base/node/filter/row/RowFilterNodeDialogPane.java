@@ -181,7 +181,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
      *      de.unikn.knime.core.data.DataTableSpec[])
      */
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) {
+            final DataTableSpec[] specs) throws InvalidSettingsException {
 
         // remove the old filter panels, if any
         if (m_rangePanel != null) {

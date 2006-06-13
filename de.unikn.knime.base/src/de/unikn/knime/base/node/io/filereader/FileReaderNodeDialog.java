@@ -877,7 +877,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) {
+            final DataTableSpec[] specs) throws InvalidSettingsException {
         assert (settings != null && specs != null);
 
         String[] history = FileReaderNodeModel.getFileHistory();

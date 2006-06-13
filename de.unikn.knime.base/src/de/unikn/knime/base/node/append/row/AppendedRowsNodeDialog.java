@@ -92,7 +92,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) {
+            final NodeSettings settings, final DataTableSpec[] specs) throws InvalidSettingsException {
         boolean appendSuffix = 
             settings.getBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, false);
         String suffix = 

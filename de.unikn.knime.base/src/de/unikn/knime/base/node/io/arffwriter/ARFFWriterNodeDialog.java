@@ -79,7 +79,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) {
+            final DataTableSpec[] specs) throws InvalidSettingsException {
 
         m_textField.setText(
                 settings.getString(ARFFWriterNodeModel.CFGKEY_FILENAME, ""));

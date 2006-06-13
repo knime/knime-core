@@ -262,7 +262,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) {
+            final DataTableSpec[] specs) throws InvalidSettingsException {
         m_url.setText(settings.
                 getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
         m_rowPrefix.setText(settings.getString(
