@@ -196,7 +196,7 @@ final class XMLConfig {
     }
 
     /**
-     * Saves given Config into an XML stream.
+     * Saves given Config into an XML stream. The stream is closed at the end.
      * 
      * @param config The Config the save.
      * @param os The stream to write Config as XML to.
@@ -218,6 +218,7 @@ final class XMLConfig {
         root.setAttribute("key", config.getKey());
         save(config, root, doc);
         emitDocument(doc, os);
+        os.close();
     }
 
     /**
