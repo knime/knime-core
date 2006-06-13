@@ -64,11 +64,11 @@ public class WrappedNodeDialog extends Dialog {
 
     private Composite m_container;
 
-    private final NodeContainer m_nodeContainer;
+    private final NodeContainer m_nodeContainer; 
 
     private Panel2CompositeWrapper m_wrapper;
 
-    private NodeDialogPane m_dialogPane;
+    private final NodeDialogPane m_dialogPane;
 
     private Menu m_menuBar;
 
@@ -83,12 +83,16 @@ public class WrappedNodeDialog extends Dialog {
      * 
      * @param parentShell The parent shell
      * @param nodeContainer The node.
+     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * of real invalid settings or if any predconditions are not fulfilled, e.g.
+     * no predecessor node, no nominal column in input table, etc.
      */
     public WrappedNodeDialog(final Shell parentShell,
-            final NodeContainer nodeContainer) {
+            final NodeContainer nodeContainer) throws InvalidSettingsException {
         super(parentShell);
         this.setShellStyle(SWT.APPLICATION_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
+        m_dialogPane = m_nodeContainer.getDialogPane();
     }
 
     /**
@@ -127,6 +131,8 @@ public class WrappedNodeDialog extends Dialog {
                         showErrorMessage(fnfe.getMessage());
                     } catch (IOException ioe) {
                         showErrorMessage(ioe.getMessage());
+                    } catch (InvalidSettingsException ex) {
+                        showErrorMessage(ex.getMessage());
                     }
                 }
             }
@@ -176,7 +182,6 @@ public class WrappedNodeDialog extends Dialog {
         // + " the '" + m_nodeContainer.getNodeName() + "' node.");
 
         // create the dialogs' panel and pass it to the SWT wrapper composite
-        m_dialogPane = m_nodeContainer.getDialogPane();
         getShell().setText(m_dialogPane.getTitle());
 
         JPanel p = m_dialogPane.getPanel();
