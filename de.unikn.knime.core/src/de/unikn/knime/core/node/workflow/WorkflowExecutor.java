@@ -22,20 +22,25 @@ package de.unikn.knime.core.node.workflow;
 
 
 /**
- * Interface for a workflow executor.
+ * Interface for a workflow executor. Because it causes great problems if more
+ * than one workflow executor is registered at the same workflow manager
+ * the workflow manager is now responsible for maintaining a single executor.
+ * Just call
+ * {@link de.unikn.knime.core.node.workflow.WorkflowManager#getExecutor()} to
+ * get the executor.
  * 
  * @author M. Berthold, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
 public interface WorkflowExecutor {
-    /** Execute all nodes in workflow - return when all nodes
-     * are executed (or at least Workflow claims to be done).
+    /**
+     * Execute all nodes in workflow - return when all nodes are executed.
      */
     public void executeAll();
     
-    /** Execute all nodes in workflow leading to a certain node.
-     * Return when all nodes are executed (or at least Workflow
-     * claims to be done).
+    /**
+     * Execute all nodes in workflow leading to a certain node. Return when all
+     * nodes are executed.
      * 
      * @param nodeID id of node to be executed.
      */
