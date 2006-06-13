@@ -51,6 +51,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
+import de.unikn.knime.core.node.NotConfigurableException;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
@@ -83,12 +84,12 @@ public class WrappedNodeDialog extends Dialog {
      * 
      * @param parentShell The parent shell
      * @param nodeContainer The node.
-     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * @throws NotConfigurableException if the dialog cannot be opened because
      * of real invalid settings or if any predconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
      */
     public WrappedNodeDialog(final Shell parentShell,
-            final NodeContainer nodeContainer) throws InvalidSettingsException {
+            final NodeContainer nodeContainer) throws NotConfigurableException {
         super(parentShell);
         this.setShellStyle(SWT.APPLICATION_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
@@ -131,7 +132,7 @@ public class WrappedNodeDialog extends Dialog {
                         showErrorMessage(fnfe.getMessage());
                     } catch (IOException ioe) {
                         showErrorMessage(ioe.getMessage());
-                    } catch (InvalidSettingsException ex) {
+                    } catch (NotConfigurableException ex) {
                         showErrorMessage(ex.getMessage());
                     }
                 }
