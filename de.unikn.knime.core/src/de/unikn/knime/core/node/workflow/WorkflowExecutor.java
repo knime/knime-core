@@ -20,6 +20,8 @@
  */
 package de.unikn.knime.core.node.workflow;
 
+import java.util.concurrent.CountDownLatch;
+
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
 
 /** Convenience Class that supports Execution of a Workflow stored within
@@ -31,6 +33,7 @@ import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
  */
 public class WorkflowExecutor implements WorkflowListener {
     private final WorkflowManager m_flowMgr;
+    private CountDownLatch m_execDone = new CountDownLatch(0);
     
     /** Create executor class and register as listener for events.
      * 
@@ -44,9 +47,15 @@ public class WorkflowExecutor implements WorkflowListener {
     /** Execute all nodes in workflow - return when all nodes
      * are executed (or at least Workflow claims to be done).
      */
-    public void executeAll() {
+    public synchronized void executeAll() {
+        m_execDone = new CountDownLatch(1);
         m_flowMgr.prepareForExecAllNodes();
-        m_flowMgr.startExecution(true);
+        m_flowMgr.startExecution();
+        try {
+            m_execDone.await();
+        } catch (InterruptedException ex) {
+            // nothing to do
+        }
     }
     
     /** Execute all nodes in workflow leading to a certain node.
@@ -55,9 +64,15 @@ public class WorkflowExecutor implements WorkflowListener {
      * 
      * @param nodeID id of node to be executed.
      */
-    public void executeUpToNode(final int nodeID) {
+    public synchronized void executeUpToNode(final int nodeID) {
+        m_execDone = new CountDownLatch(1);
         m_flowMgr.prepareForExecUpToNode(nodeID);
-        m_flowMgr.startExecution(true);
+        m_flowMgr.startExecution();
+        try {
+            m_execDone.await();
+        } catch (InterruptedException ex) {
+            // nothing to do
+        }
     }
     
     /**
@@ -72,6 +87,8 @@ public class WorkflowExecutor implements WorkflowListener {
             while ((nextNode = m_flowMgr.getNextExecutableNode()) != null) {
                 nextNode.startExecution(new DefaultNodeProgressMonitor());
             }
+        } else if (event instanceof WorkflowEvent.ExecPoolDone) {
+            m_execDone.countDown();
         }
     }
 
