@@ -36,6 +36,8 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.def.DefaultTable;
+import de.unikn.knime.core.data.property.ColorHandler;
+import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.tableview.TableView;
 
@@ -252,8 +254,9 @@ final class DataOutPortView extends NodeOutPortView {
                     maxNumValues = v.size();
                 }
             }
-            int numRows = maxNumValues + 4;
-            // + 4 for 'Name', 'Type', lower bound, and upper bound
+            int numRows = maxNumValues + 6;
+            // + 4 for 'Name', 'Type', lower bound, and upper bound, colorHdl,
+            // and sizeHdl
             rows = new DataRow[numRows];
 
             // now, generate those rows:
@@ -275,7 +278,32 @@ final class DataOutPortView extends NodeOutPortView {
             }
             rows[1] = new DefaultRow(new StringCell("<html><b>Type"),
                     cols);
-            // Row[2]: displays the lower bound of the domain
+            // Row[2]: shows who has a color handler set
+            cols = new DataCell[numCols];
+            for (int c = 0; c < numCols; c++) {
+                if (spec.getColumnSpec(c).getColorHandler() == null) {
+                    cols[c] = new StringCell("");
+                } else {
+                    ColorHandler cHdl = spec.getColumnSpec(c).getColorHandler();
+                    cols[c] = new StringCell(cHdl.toString().substring(
+                            cHdl.toString().indexOf('@')));
+                }
+            }
+            rows[2] = new DefaultRow(new StringCell("ColorHandler"), cols);
+            // Row[3]: shows who has a SizeHandler set
+            cols = new DataCell[numCols];
+            for (int c = 0; c < numCols; c++) {
+                if (spec.getColumnSpec(c).getSizeHandler() == null) {
+                    cols[c] = new StringCell("");
+                } else {
+                    SizeHandler sHdl = spec.getColumnSpec(c).getSizeHandler();
+                    cols[c] = new StringCell(sHdl.toString().substring(
+                            sHdl.toString().indexOf('@')));
+                }
+            }
+            rows[3] = new DefaultRow(new StringCell("SizeHandler"), cols);
+            
+            // Row[4]: displays the lower bound of the domain
             cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
                 String boundText = "<null>";
@@ -285,9 +313,9 @@ final class DataOutPortView extends NodeOutPortView {
                 }
                 cols[c] = new StringCell(boundText);
             }
-            rows[2] = new DefaultRow(new StringCell(
+            rows[4] = new DefaultRow(new StringCell(
                     "<html><b>lower bound"), cols);
-            // Row[3]: shows the upper bound value of the domain
+            // Row[5]: shows the upper bound value of the domain
             cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
                 String boundText = "<null>";
@@ -297,10 +325,11 @@ final class DataOutPortView extends NodeOutPortView {
                 }
                 cols[c] = new StringCell(boundText);
             }
-            rows[3] = new DefaultRow(new StringCell(
+            rows[5] = new DefaultRow(new StringCell(
                     "<html><b>upper bound"), cols);
 
-            // from row 4: show the nominal values of that column. If any.
+            
+            // from row 6: show the nominal values of that column. If any.
             Iterator<DataCell> emptyIter = new ArrayList<DataCell>().iterator();
             Iterator<?>[] valueIter = new Iterator<?>[numCols];
             // store an iterator for _each_ column
@@ -315,7 +344,7 @@ final class DataOutPortView extends NodeOutPortView {
             }
             DataCell emptyStringCell = new StringCell("");
 
-            for (int r = 4; r < numRows; r++) {
+            for (int r = 6; r < numRows; r++) {
                 cols = new DataCell[numCols];
                 for (int c = 0; c < numCols; c++) {
                     if (!valueIter[c].hasNext()) {
