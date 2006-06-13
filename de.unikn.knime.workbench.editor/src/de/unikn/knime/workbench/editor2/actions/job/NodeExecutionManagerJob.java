@@ -58,7 +58,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
 
     private IProgressMonitor m_monitor;
 
-    private ArrayList<Job> m_scheduledJobs;
+    private final ArrayList<Job> m_scheduledJobs = new ArrayList<Job>();
 
     private int m_counter;
 
@@ -78,20 +78,17 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
 
     /**
      * Create jobs for the currently available nodes.
-     * 
-     * @param monitor The monitor
      */
-    private synchronized void createJobsForAvailableNodes(
-            final IProgressMonitor monitor) {
+    private synchronized void createJobsForAvailableNodes() {
         // start a sub-job for each available node
-        NodeContainer nextNode = m_manager.getNextExecutableNode();
-        while (nextNode != null) {
+        NodeContainer nextNode;        
+        while ((nextNode = m_manager.getNextExecutableNode()) != null) {
             m_counter++;
             // start the job
-            monitor.beginTask("Executing " + nextNode.getNameWithID(),
+            m_monitor.beginTask("Executing " + nextNode.getNameWithID(),
                     IProgressMonitor.UNKNOWN);
             SingleNodeJob subJob = new SingleNodeJob(m_manager, nextNode,
-                    new SubProgressMonitor(monitor, 100), 100);
+                    new SubProgressMonitor(m_monitor, 100), 100);
 
             // Sub jobs do the main work and therefore
             // have a high priority (unlike the "system" priority of the overall
@@ -103,8 +100,6 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
 
             // we remember the job so that we can join it at the end
             m_scheduledJobs.add(subJob);
-            // get next job
-            nextNode = m_manager.getNextExecutableNode();
         }
     }
 
@@ -112,10 +107,8 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
      * Waits until this job has been finished.
      */
     public void waitUntilFinished() {
-
         // if not finished yet
         if (!m_finished) {
-
             synchronized (m_waitDummy) {
                 try {
                     m_waitDummy.wait();
@@ -132,94 +125,84 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
      */
     @Override
     protected IStatus run(final IProgressMonitor monitor) {
-
-        // we must register on the manager to get lifecycle events
-        m_manager.addListener(this);
-        m_monitor = monitor;
-        // list to remember the sub jobs
-        m_scheduledJobs = new ArrayList<Job>();
-
-        m_finished = false;
-
         // state to return to user (OK, cancel)
         IStatus state = Status.OK_STATUS;
-
+        m_monitor = monitor;
         // loop over all parts, and start sub-jobs
         m_finished = false;
 
-        for (int i = 0; i < m_parts.length; i++) {
-
-            // This is the node up to which the flow should be executed.
-            NodeContainer container = m_parts[i].getNodeContainer();
-            // check if the part is already locked execution
-            if (m_parts[i].isLocked()) {
-                LOGGER.warn("Node is (already?) locked, skipping...");
-                continue;
-            }
-
-            // create a monitor object
-            LOGGER.info("executing up to node #" + container.getID());
-            monitor.beginTask("Executing flow up to "
-                    + container.getNameWithID(), IProgressMonitor.UNKNOWN);
-
-            // Prepare execution
-            m_manager.prepareForExecUpToNode(container.getID());
-
-            // create and schedule jobs for currently available nodes
-
-            // explicit synchronization to avoid deadlock
-            synchronized (m_manager) {
-                createJobsForAvailableNodes(m_monitor);
-
-            }
-        }
-
-        // wait until the state changes or the monitor was chanceled
-        while (!(m_finished || monitor.isCanceled())) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            //
-            // User canceled (pressed terminate button)
-            //
-            if (monitor.isCanceled()) {
-                LOGGER.info("User requested cancelation, "
-                        + "stopping scheduled sub-jobs !");
-                // try to cancel all sub jobs
-                for (int j = 0; j < m_scheduledJobs.size(); j++) {
-                    m_scheduledJobs.get(j).cancel();
+        try {
+            // we must register on the manager to get lifecycle events
+            m_manager.addListener(this);
+            
+            // list to remember the sub jobs
+            m_scheduledJobs.clear();    
+    
+            for (int i = 0; i < m_parts.length; i++) {
+                // This is the node up to which the flow should be executed.
+                NodeContainer container = m_parts[i].getNodeContainer();
+                // check if the part is already locked execution
+                if (m_parts[i].isLocked()) {
+                    LOGGER.warn("Node is (already?) locked, skipping...");
+                    continue;
                 }
-                m_finished = true;
-                state = Status.CANCEL_STATUS;
-                break;
+    
+                // create a monitor object
+                LOGGER.info("executing up to node #" + container.getID());
+                monitor.beginTask("Executing flow up to "
+                        + container.getNameWithID(), IProgressMonitor.UNKNOWN);
+    
+                // Prepare execution
+                m_manager.prepareForExecUpToNode(container.getID());
+                m_manager.startExecution(false);
             }
-
-        }
-
-        // We must wait for all jobs to end
-        for (int i = 0; i < m_scheduledJobs.size(); i++) {
-            Job job = m_scheduledJobs.get(i);
-            LOGGER.debug("Waiting for remaining job to finish: "
-                    + job.getName());
-            try {
-                job.join();
-            } catch (InterruptedException e) {
-                LOGGER.error("Could not join job: " + job.getName(), e);
+    
+            // wait until the state changes or the monitor was chanceled
+            while (!m_finished) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+    
+                //
+                // User canceled (pressed terminate button)
+                //
+                if (monitor.isCanceled()) {
+                    LOGGER.info("User requested cancelation, "
+                            + "stopping scheduled sub-jobs !");
+                    // try to cancel all sub jobs
+                    for (int j = 0; j < m_scheduledJobs.size(); j++) {
+                        m_scheduledJobs.get(j).cancel();
+                    }
+                    m_finished = true;
+                    state = Status.CANCEL_STATUS;
+                }
             }
-        }
-        if (m_counter == 0) {
-            LOGGER.warn("No nodes could be executed!");
-        }
-
-        LOGGER.info("Execution finished (" + m_counter + " node(s))");
-        m_manager.removeListener(this);
-
-        // notify potential waiting threads
-        synchronized (m_waitDummy) {
-            m_waitDummy.notifyAll();
+    
+            // We must wait for all jobs to end
+            for (int i = 0; i < m_scheduledJobs.size(); i++) {
+                Job job = m_scheduledJobs.get(i);
+                LOGGER.debug("Waiting for remaining job to finish: "
+                        + job.getName());
+                try {
+                    job.join();
+                } catch (InterruptedException e) {
+                    LOGGER.error("Could not join job: " + job.getName(), e);
+                }
+            }
+            if (m_counter == 0) {
+                LOGGER.warn("No nodes could be executed!");
+            }
+        } finally {    
+            LOGGER.info("Execution finished (" + m_counter + " node(s))");
+            m_manager.removeListener(this);
+            m_finished = true;
+    
+            // notify potential waiting threads
+            synchronized (m_waitDummy) {
+                m_waitDummy.notifyAll();
+            }
         }
 
         return state;
@@ -235,12 +218,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
     public void workflowChanged(final WorkflowEvent event) {
         if (event instanceof WorkflowEvent.ExecPoolChanged) {
             LOGGER.info("Exec pool has changed...");
-            m_finished = false;
-
-            // explicit synchronization to avoid deadlock
-            synchronized (m_manager) {
-                createJobsForAvailableNodes(m_monitor);
-            }
+            createJobsForAvailableNodes();
         } else if (event instanceof WorkflowEvent.ExecPoolDone) {
             LOGGER.info("Execution pool has finished...");
             m_finished = true;
