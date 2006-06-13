@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
@@ -43,6 +44,7 @@ import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
+import de.unikn.knime.core.util.MutableInteger;
 
 
 /**
@@ -99,7 +101,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     // internal variables to allow generation of unique indices
     private volatile int m_runningNodeID = -1;
     
-    private final Object m_execDone = new Object();
+    private CountDownLatch m_execDone = new CountDownLatch(1);
     
     /**
      * Identifier for KNIME workflows. 
@@ -695,9 +697,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         }
         
         if (event instanceof WorkflowEvent.ExecPoolDone) {
-            synchronized (m_execDone) {
-                m_execDone.notifyAll();
-            }
+            m_execDone.countDown();
         }
     }
 
@@ -773,14 +773,13 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * should return immediately
      */
     public void startExecution(final boolean wait) {
+        m_execDone = new CountDownLatch(1);
         checkForExecutableNodes();
         if (wait) {
-            synchronized (m_execDone) {
-                try {
-                    m_execDone.wait();
-                } catch (InterruptedException ex) {
-                    // may happen, so what?
-                }
+            try {
+                m_execDone.await();
+            } catch (InterruptedException ex) {
+                // do nothing
             }
         }
     }
