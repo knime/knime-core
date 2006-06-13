@@ -79,7 +79,7 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
      */
     @Override
     public final void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) {
+            final NodeSettings settings, final DataTableSpec[] specs) throws InvalidSettingsException {
         assert (settings != null && specs != null);
         try {
             for (DialogComponent comp : m_dialogComponents) {

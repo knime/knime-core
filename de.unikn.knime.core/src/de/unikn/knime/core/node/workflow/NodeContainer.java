@@ -352,8 +352,11 @@ public class NodeContainer implements NodeStateListener {
      * pane. The pane might be <code>null</code> if no dialog is available.
      * 
      * @return dialog pane
+     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * of real invalid settings or if any predconditions are not fulfilled, e.g.
+     * no predecessor node, no nominal column in input table, etc.
      */
-    public NodeDialogPane getDialogPane() {
+    public NodeDialogPane getDialogPane() throws InvalidSettingsException {
         return m_node.getDialogPane();
     }
 

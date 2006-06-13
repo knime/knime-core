@@ -105,8 +105,12 @@ public abstract class NodeDialogPane {
      * 
      * @param is The XML stream to read the settings from.
      * @throws IOException If the stream is not valid.
+     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * of real invalid settings or if any predconditions are not fulfilled, e.g.
+     * no predecessor node, no nominal column in input table, etc.
      */
-    public final void loadSettings(final InputStream is) throws IOException {
+    public final void loadSettings(final InputStream is)
+    throws IOException, InvalidSettingsException {
         DataTableSpec[] specs = m_node.getInDataTableSpecs();
         loadSettingsFrom(NodeSettings.loadFromXML(is), specs);
     }
@@ -150,11 +154,14 @@ public abstract class NodeDialogPane {
      *            object or contain invalid settings. But will never be null.
      * @param specs The input data table specs. Items of the array could be null
      *            if no spec is available from the corresponding input port.
+     * @throws InvalidSettingsException if the dialog cannot be opened because
+     * of real invalid settings or if any predconditions are not fulfilled, e.g.
+     * no predecessor node, no nominal column in input table, etc.
      *            
      * @see NodeModel#loadSettingsFrom(NodeSettings)
      */
     protected abstract void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs);
+            final DataTableSpec[] specs) throws InvalidSettingsException;
 
     /**
      * Invoked when the settings need to be applied. The implementation should

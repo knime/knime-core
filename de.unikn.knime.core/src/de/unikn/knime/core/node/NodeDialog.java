@@ -145,15 +145,17 @@ final class NodeDialog {
                         m_dialogPane.loadSettings(is);
                     }
                 } catch (FileNotFoundException fnfe) {
-                    JOptionPane
-                            .showMessageDialog(m_dialog, fnfe.getMessage(),
+                    JOptionPane.showMessageDialog(m_dialog, fnfe.getMessage(),
                                     "Couldn't Load Settings",
                                     JOptionPane.ERROR_MESSAGE);
                 } catch (IOException ioe) {
-                    JOptionPane
-                            .showMessageDialog(m_dialog, ioe.getMessage(),
+                    JOptionPane.showMessageDialog(m_dialog, ioe.getMessage(),
                                     "Couldn't Load Settings",
                                     JOptionPane.ERROR_MESSAGE);
+                } catch (InvalidSettingsException ex) {
+                    JOptionPane.showMessageDialog(m_dialog, ex.getMessage(),
+                            "Couldn't Load Settings",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
