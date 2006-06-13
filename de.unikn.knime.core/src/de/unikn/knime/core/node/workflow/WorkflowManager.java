@@ -44,7 +44,6 @@ import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
-import de.unikn.knime.core.util.MutableInteger;
 
 
 /**
