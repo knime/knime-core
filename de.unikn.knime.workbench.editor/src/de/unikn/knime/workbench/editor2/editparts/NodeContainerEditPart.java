@@ -30,9 +30,12 @@ import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 
+import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodePort;
@@ -501,9 +504,19 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             //  
             // This is embedded in a special JFace wrapper dialog
             //
-            WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
-                    .getActiveShell(), container);
-            dlg.open();
+            try {
+                WrappedNodeDialog dlg = new WrappedNodeDialog(
+                        Display.getCurrent().getActiveShell(), container);
+                dlg.open();
+            } catch (InvalidSettingsException ex) {
+                MessageBox mb = new MessageBox(
+                        Display.getDefault().getActiveShell(),
+                        SWT.ICON_WARNING | SWT.OK);
+                mb.setText("Dialog cannot be opened");
+                mb.setMessage("The dialog cannot be opened for the following"
+                        + " reason:\n" + ex.getMessage());
+                mb.open();                
+            }
 
         }
         m_lastClick = System.currentTimeMillis();

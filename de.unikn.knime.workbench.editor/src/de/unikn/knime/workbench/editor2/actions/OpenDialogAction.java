@@ -22,8 +22,11 @@
 package de.unikn.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 
+import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.ImageRepository;
@@ -108,10 +111,20 @@ public class OpenDialogAction extends AbstractNodeAction {
         //  
         // This is embedded in a special JFace wrapper dialog
         //
-        WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
-                .getActiveShell(), container);
-        dlg.open();
-        dlg.close();
+        try {
+            WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
+                    .getActiveShell(), container);
+            dlg.open();
+            dlg.close();
+        } catch (InvalidSettingsException ex) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_WARNING | SWT.OK);
+            mb.setText("Dialog cannot be opened");
+            mb.setMessage("The dialog cannot be opened for the following"
+                    + " reason:\n" + ex.getMessage());
+            mb.open();            
+        }
     }
 
 }
