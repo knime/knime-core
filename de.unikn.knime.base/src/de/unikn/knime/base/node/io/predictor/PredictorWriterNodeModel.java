@@ -19,9 +19,12 @@
  */
 package de.unikn.knime.base.node.io.predictor;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.zip.GZIPOutputStream;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
@@ -44,13 +47,13 @@ public class PredictorWriterNodeModel extends NodeModel {
 
     private String m_fileName = null; // "<no file>";
 
-    private PredictorParams m_predParams;
+    private NodeSettings m_predParams;
 
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
      */
     public PredictorWriterNodeModel() {
-        super(0, 0, /* #model ports in= */1, 0);
+        super(0, 0, 1, 0);
     }
 
     /**
@@ -58,9 +61,7 @@ public class PredictorWriterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettings settings) {
-        // if (m_fileName != null) {
         settings.addString(FILENAME, m_fileName);
-        // }
     }
 
     /**
@@ -82,8 +83,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     }
 
     /**
-     * Load PredictorParams from input port. TODO copy config, not just
-     * reference? (mb)
+     * Load PredictorParams from input port. 
      * 
      * @see de.unikn.knime.core.node.NodeModel#loadPredictorParams(int,
      *      PredictorParams)
@@ -104,6 +104,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     protected DataTable[] execute(final DataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
+        OutputStream os = null;
         try {
             // delete original file
             File realFile = new File(m_fileName);
@@ -116,16 +117,22 @@ public class PredictorWriterNodeModel extends NodeModel {
                 tempFile.delete();
             }
             // open stream
-            FileOutputStream os = new FileOutputStream(tempFile);
+            os = new BufferedOutputStream(new FileOutputStream(tempFile));
+            if (m_fileName.endsWith(".gz")) {
+                os = new GZIPOutputStream(os);
+            }
             // and write PredictorParams object as XML
             m_predParams.saveToXML(os);
-            os.close();
             // and finally rename temp file to real file name
             if (!tempFile.renameTo(realFile)) {
                 throw new IOException("write: rename of temp file failed");
             }
         } catch (Exception e) {
             throw new IOException("write to file failed: " + e);
+        } finally {
+            if (os != null) {
+                os.close();
+            }
         }
         // execution succeful return empty array
         return new DataTable[0];
@@ -162,8 +169,8 @@ public class PredictorWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No file set.");
         }
         String newFileName = fileName;
-        if (!fileName.endsWith(".pmml")) {
-            newFileName += ".pmml";
+        if (!fileName.endsWith(".pmml") && !fileName.endsWith(".pmml.gz")) {
+            newFileName += ".pmml.gz";
         }
         File file = new File(newFileName);
         if (file.isDirectory()) {

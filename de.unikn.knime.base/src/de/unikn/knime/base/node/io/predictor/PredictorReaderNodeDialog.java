@@ -34,8 +34,8 @@ public class PredictorReaderNodeDialog extends DefaultNodeDialogPane {
     public PredictorReaderNodeDialog() {
         super("Reader Options");
         DialogComponentFileChooser fcComp
-        = new DialogComponentFileChooser(PredictorReaderNodeModel.FILENAME, 
-                new String[] {".pmml"});
+            = new DialogComponentFileChooser(PredictorReaderNodeModel.FILENAME, 
+                ".pmml.gz", ".pmml");
         this.addDialogComponent(fcComp);
     }
     

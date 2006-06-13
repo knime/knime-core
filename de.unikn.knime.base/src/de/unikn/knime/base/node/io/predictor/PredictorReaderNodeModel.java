@@ -19,9 +19,12 @@
  */
 package de.unikn.knime.base.node.io.predictor;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
@@ -43,12 +46,14 @@ public class PredictorReaderNodeModel extends NodeModel {
     static final String FILENAME = "filename";
 
     private String m_fileName = null; // "<no file>";
+    
+    private NodeSettings m_predParams;
 
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
      */
     public PredictorReaderNodeModel() {
-        super(0, 0, 0, /* #model ports out= */1);
+        super(0, 0, 0, 1);
     }
 
     /**
@@ -56,9 +61,7 @@ public class PredictorReaderNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettings settings) {
-        // if (m_fileName != null) {
         settings.addString(FILENAME, m_fileName);
-        // }
     }
 
     /**
@@ -91,11 +94,8 @@ public class PredictorReaderNodeModel extends NodeModel {
     protected void savePredictorParams(final int index,
             final PredictorParams predParam) throws InvalidSettingsException {
         assert index == 0 : index;
-        try {
-            FileInputStream is = new FileInputStream(new File(m_fileName));
-            NodeSettings.loadFromXML(predParam, is);
-        } catch (IOException ioe) {
-            throw new InvalidSettingsException(ioe);
+        if (predParam != null && m_predParams != null) {
+            m_predParams.copyTo(predParam);
         }
     }
 
@@ -109,7 +109,20 @@ public class PredictorReaderNodeModel extends NodeModel {
     protected DataTable[] execute(final DataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
-        // execution always succeful: return empty array
+        m_predParams = new NodeSettings("default");
+        InputStream is = null;
+        try {
+            is = new BufferedInputStream(
+                    new FileInputStream(new File(m_fileName)));
+            if (m_fileName.endsWith(".gz")) {
+                is = new GZIPInputStream(is);
+            }
+            NodeSettings.loadFromXML(m_predParams, is);
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
         return new DataTable[0];
     }
 
@@ -144,8 +157,8 @@ public class PredictorReaderNodeModel extends NodeModel {
             throw new InvalidSettingsException("No file set.");
         }
         String newFileName = fileName;
-        if (!fileName.endsWith(".pmml")) {
-            newFileName += ".pmml";
+        if (!fileName.endsWith(".pmml") && !fileName.endsWith(".pmml.gz")) {
+            newFileName += ".pmml.gz";
         }
         File file = new File(newFileName);
         if (file.isDirectory()) {
