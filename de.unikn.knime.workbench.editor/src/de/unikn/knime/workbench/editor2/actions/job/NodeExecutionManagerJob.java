@@ -154,7 +154,7 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
     
                 // Prepare execution
                 m_manager.prepareForExecUpToNode(container.getID());
-                m_manager.startExecution(false);
+                m_manager.startExecution();
             }
     
             // wait until the state changes or the monitor was chanceled
