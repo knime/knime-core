@@ -33,6 +33,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
@@ -99,6 +101,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     
     // internal variables to allow generation of unique indices
     private volatile int m_runningNodeID = -1;
+    
+    private WorkflowExecutor m_executor;
     
     private final Object m_modificationLock = new Object();
     
@@ -1140,7 +1144,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                     File targetDir = new File(file.getParentFile(), 
                             "node_" + nextNode.getID());
                     if (!targetDir.isDirectory() && !targetDir.mkdir()) {
-                        throw new IOException("Unable to create dir: " + targetDir);
+                        throw new IOException("Unable to create dir: "
+                                + targetDir);
                     }
                     n.saveInternals(targetDir, exec);
                 }
@@ -1211,7 +1216,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         if (state instanceof NodeStatus.StartExecute) {
             // change state from WAITING_FOR_EXECUTION to CURRENTLY_EXECUTING
             assert (changedNode.getState()
-                    == NodeContainer.State.WaitingForExecution);
+                    == NodeContainer.State.WaitingForExecution)
+                    : "Node " + changedNode.getCustomName() + " is in state "
+                    + changedNode.getState();
             changedNode.setState(NodeContainer.State.CurrentlyExecuting);
         } else if (state instanceof NodeStatus.EndExecute) {
             // if this is an event indicating the end of a node's execution:
@@ -1300,5 +1307,103 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             // just forward the event
             fireWorkflowEvent(event);
         }
+    }
+    
+    /**
+     * Returns the one and only executor for this workflow.
+     * 
+     * @return a workflow executor
+     */
+    public WorkflowExecutor getExecutor() {
+        if (m_executor == null) {
+            m_executor = new DefaultWorkflowExecutor();
+        }
+        return m_executor;
+    }
+    
+    
+    /**
+     * Default implementation of a workflow executor. Please note that there
+     * must not be more than one registered workflow executor per workflow.
+     * Otherwise the end of execution might not be detected correctly and
+     * the thread that called {@link #executeAll()} or
+     * {@link #executeUpToNode(int)} might be blocked.
+     * 
+     * @author M. Berthold, University of Konstanz
+     * @author Thorsten Meinl, University of Konstanz
+     */
+    private class DefaultWorkflowExecutor implements WorkflowExecutor,
+    WorkflowListener, NodeStateListener {
+        private CountDownLatch m_execDone = new CountDownLatch(0);
+        private final AtomicInteger m_runningNodes = new AtomicInteger();
+        
+        /**
+         * Create executor class and register as listener for events.
+         */
+        public DefaultWorkflowExecutor() {
+            WorkflowManager.this.addListener(this);
+        }
+
+        /** Execute all nodes in workflow - return when all nodes
+         * are executed (or at least Workflow claims to be done).
+         */
+        public synchronized void executeAll() {
+            m_execDone = new CountDownLatch(1);
+            prepareForExecAllNodes();
+            startExecution();
+            try {
+                m_execDone.await();
+            } catch (InterruptedException ex) {
+                // nothing to do
+            }
+            System.out.println();
+        }
+        
+        /** Execute all nodes in workflow leading to a certain node.
+         * Return when all nodes are executed (or at least Workflow
+         * claims to be done).
+         * 
+         * @param nodeID id of node to be executed.
+         */
+        public synchronized void executeUpToNode(final int nodeID) {
+            m_execDone = new CountDownLatch(1);
+            prepareForExecUpToNode(nodeID);
+            startExecution();
+            try {
+                m_execDone.await();
+            } catch (InterruptedException ex) {
+                // nothing to do
+            }
+        }
+        
+        /**
+         * Starts additional nodes when workflow has changed, stops execution
+         * when workflow is done.
+         * 
+         * @param event the WorkflowEvent to be handled
+         */
+        public void workflowChanged(final WorkflowEvent event) {
+            if (event instanceof WorkflowEvent.ExecPoolChanged) {
+                NodeContainer nextNode = null;
+                while ((nextNode = getNextExecutableNode()) != null) {
+                    nextNode.addListener(this);
+                    m_runningNodes.incrementAndGet();
+                    nextNode.startExecution(new DefaultNodeProgressMonitor());
+                }
+            }
+        }
+
+        /**
+         * @see de.unikn.knime.core.node.NodeStateListener
+         *  #stateChanged(de.unikn.knime.core.node.NodeStatus, int)
+         */
+        public void stateChanged(final NodeStatus state, final int id) {
+            if (state instanceof NodeStatus.EndExecute) {
+                getNodeContainerById(id).removeListener(this);
+                if (m_runningNodes.decrementAndGet() <= 0) {
+                    m_execDone.countDown();
+                }
+            }
+        }        
     }
 }

@@ -77,6 +77,10 @@ public class MetaNodeModel extends SpecialNodeModel
      * @param outerDataOuts the number of data output ports
      * @param outerPredParamsIns the number of predictor param input ports
      * @param outerPredParamsOuts the number of predictor param output ports
+     * @param innerDataIns the number of meta data input nodes
+     * @param innerDataOuts the number of meta data output nodes
+     * @param innerPredParamsIns the number of meta model input nodes
+     * @param innerPredParamsOuts the number of meta model output nodes
      * @param factory the factory that created this model
      */
     protected MetaNodeModel(final int outerDataIns, final int outerDataOuts,
@@ -141,7 +145,7 @@ public class MetaNodeModel extends SpecialNodeModel
             m_internalWFM = getResponsibleWorkflowManager().createSubManager();
             m_internalWFM.addListener(this);
             addInOutNodes();
-            m_workflowExecutor = new WorkflowExecutor(m_internalWFM);
+            m_workflowExecutor = m_internalWFM.getExecutor();
         }
         
         // collect all output specs
@@ -204,46 +208,84 @@ public class MetaNodeModel extends SpecialNodeModel
         }
     }
 
-    protected NodeFactory getDataInputNodeFactory(final int portIndex) {
+    /**
+     * Returns a factory for the meta data input node with the given index. The
+     * default implementation returns a {@link MetaInputNodeFactory}. Subclasses
+     * may override this method and return other special factory which must
+     * create subclasses of {@link MetaInputNodeModel}s.
+     * 
+     * @param inputNodeIndex the index of the data input node
+     * @return a factory
+     */
+    protected NodeFactory getDataInputNodeFactory(final int inputNodeIndex) {
         return new MetaInputNodeFactory(1, 0) {
             @Override
             public String getOutportDescription(final int index) {
-                return m_myFactory.getInportDescription(portIndex);
+                return m_myFactory.getInportDescription(inputNodeIndex);
             }
         };        
     }
     
-    protected NodeFactory getModelInputNodeFactory(final int portIndex) {
+    /**
+     * Returns a factory for the meta model input node with the given index. The
+     * default implementation returns a {@link MetaInputNodeFactory}. Subclasses
+     * may override this method and return other special factory which must
+     * create subclasses of {@link MetaInputNodeModel}s.
+     * 
+     * @param inputNodeIndex the index of the model input node
+     * @return a factory
+     */
+    protected NodeFactory getModelInputNodeFactory(final int inputNodeIndex) {
         return new MetaInputNodeFactory(0, 1) {
             @Override
             public String getPredParamOutDescription(final int index) {
-                return m_myFactory.getPredParamInDescription(portIndex);
+                return m_myFactory.getPredParamInDescription(inputNodeIndex);
             }                        
         };
     }
     
-    
-    protected NodeFactory getModelOutputNodeFactory(final int portIndex) {
+
+    /**
+     * Returns a factory for the meta data output node with the given index. The
+     * default implementation returns a {@link MetaOutputNodeFactory}.
+     * Subclasses may override this method and return other special factory
+     * which must create subclasses of {@link MetaOutputNodeModel}s.
+     * 
+     * @param outputNodeIndex the index of the data input node
+     * @return a factory
+     */
+    protected NodeFactory getModelOutputNodeFactory(final int outputNodeIndex) {
         return new MetaOutputNodeFactory(0, 1) {
             @Override
             public String getPredParamInDescription(final int index) {
-                return m_myFactory.getPredParamOutDescription(portIndex);
+                return m_myFactory.getPredParamOutDescription(outputNodeIndex);
             }
         };
     }
     
     
-    protected NodeFactory getDataOutputNodeFactory(final int portIndex) {
+    /**
+     * Returns a factory for the meta model output node with the given index.
+     * The default implementation returns a {@link MetaOutputNodeFactory}.
+     * Subclasses may override this method and return other special factory
+     * which must create subclasses of {@link MetaOutputNodeModel}s.
+     * 
+     * @param outputNodeIndex the index of the data input node
+     * @return a factory
+     */
+    protected NodeFactory getDataOutputNodeFactory(final int outputNodeIndex) {
         return new MetaOutputNodeFactory(1, 0) {
             @Override
             public String getInportDescription(final int index) {
-                return m_myFactory.getOutportDescription(portIndex);
+                return m_myFactory.getOutportDescription(outputNodeIndex);
             }
         };
     }
     
     
-    
+    /**
+     * Adds the input and output nodes to the workflow.
+     */
     private void addInOutNodes() {
         LOGGER.debug("Adding in- and output nodes");
         for (int i = 0; i < m_dataInContainer.length; i++) { 
@@ -270,6 +312,12 @@ public class MetaNodeModel extends SpecialNodeModel
     }
     
     
+    /**
+     * Adds the connection from and to the in-/output nodes.
+     * 
+     * @param connections the settings in which the connections are stored
+     * @throws InvalidSettingsException if one of the settings is invalid
+     */
     private void addInOutConnections(final NodeSettings connections)
     throws InvalidSettingsException {
         LOGGER.debug("Adding in- and output connections");
@@ -518,19 +566,53 @@ public class MetaNodeModel extends SpecialNodeModel
         }
     }
     
+    /**
+     * Returns the node container for a data input node.
+     * 
+     * @param index the index of the data input node
+     * @return a node container
+     */
     protected final NodeContainer dataInContainer(final int index) {
         return m_dataInContainer[index];
     }
 
+
+    /**
+     * Returns the node container for a data output node.
+     * 
+     * @param index the index of the data output node
+     * @return a node container
+     */
     protected final NodeContainer dataOutContainer(final int index) {
         return m_dataOutContainer[index];
     }
 
+    
+    /**
+     * Returns the node container for a model input node.
+     * 
+     * @param index the index of the model input node
+     * @return a node container
+     */
     protected final NodeContainer modelInContainer(final int index) {
         return m_modelInContainer[index];
     }
 
+    /**
+     * Returns the node container for a model output node.
+     * 
+     * @param index the index of the model output node
+     * @return a node container
+     */
     protected final NodeContainer modelOutContainer(final int index) {
         return m_modelOutContainer[index];
+    }
+    
+    /**
+     * Returns the executor for the inner workflow.
+     * @return a workflow executor
+     */
+    protected final WorkflowExecutor workflowExecutor() {
+        return m_workflowExecutor;
     }
 }
