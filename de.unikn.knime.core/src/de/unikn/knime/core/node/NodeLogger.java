@@ -94,10 +94,10 @@ public final class NodeLogger {
         new HashMap<Writer, WriterAppender>();
     
     /** 
-     * Maximum number of chars printed on <code>System.out</code> and 
+     * Maximum number of chars (1000) printed on <code>System.out</code> and 
      * <code>System.err</code>. 
      */
-    private static final int MAX_CHARS = 1000;
+    private static final int MAX_CHARS = 10000;
     
     /** <code>System.err</code> log appender. */
     private static final ConsoleAppender SERR_APPENDER;
@@ -450,7 +450,7 @@ public final class NodeLogger {
         }
         // register new appender
         WriterAppender app = new WriterAppender(new PatternLayout(
-                "%-5p\t %c{1}\t %m\n"), writer);
+                "%-5p\t %c{1}\t %." + MAX_CHARS + "m\n"), writer);
         app.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(getLevel(minLevel));
