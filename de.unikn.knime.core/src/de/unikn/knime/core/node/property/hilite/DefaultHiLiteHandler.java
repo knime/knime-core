@@ -79,8 +79,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
                 // Note: It doesn't hurt to not remove all of the empty 
                 // listener, this if-statement is an optional maintenance task
                 it.remove();
-            }
-            if (l.equals(listener)) {
+            } else if (l.equals(listener)) {
                 return;
             }
         }
@@ -102,8 +101,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
                 // Note: It doesn't hurt to not remove all of the empty 
                 // listener, this if-statement is an optional maintenance task
                 it.remove();
-            }
-            if (l.equals(listener)) {
+            } else if (l.equals(listener)) {
                 it.remove();
                 return;
             }
@@ -250,8 +248,9 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
                 // Note: It doesn't hurt to not remove all of the empty 
                 // listener, this if-statement is an optional maintenance task
                 it.remove();
+            } else {
+                l.hiLite(event);
             }
-            l.hiLite(event);
         }
     }
 
@@ -271,8 +270,9 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
                 // Note: It doesn't hurt to not remove all of the empty 
                 // listener, this if-statement is an optional maintenance task
                 it.remove();
+            } else {
+                l.unHiLite(event);
             }
-            l.unHiLite(event);
         }
     }
     
@@ -288,8 +288,9 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
                 // Note: It doesn't hurt to not remove all of the empty 
                 // listener, this if-statement is an optional maintenance task
                 it.remove();
+            } else {
+                l.unHiLiteAll();
             }
-            l.unHiLiteAll();
         }
     }
 
