@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -26,8 +24,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NotConfigurableException;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
@@ -58,6 +56,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getId()
      */
+    @Override
     public String getId() {
         return ID;
     }
@@ -65,6 +64,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Configure";
     }
@@ -72,6 +72,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/openDialog.gif");
     }
@@ -79,6 +80,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Open configuration dialog for this node";
     }
@@ -88,6 +90,7 @@ public class OpenDialogAction extends AbstractNodeAction {
      *         dialog
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
         if (getSelectedNodeParts().length != 1) {
             return false;
@@ -104,6 +107,7 @@ public class OpenDialogAction extends AbstractNodeAction {
      *      #runOnNodes(de.unikn.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
+    @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Opening node dialog...");
         NodeContainer container = (NodeContainer) nodeParts[0].getModel();
@@ -116,7 +120,7 @@ public class OpenDialogAction extends AbstractNodeAction {
                     .getActiveShell(), container);
             dlg.open();
             dlg.close();
-        } catch (InvalidSettingsException ex) {
+        } catch (NotConfigurableException ex) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
                     SWT.ICON_WARNING | SWT.OK);

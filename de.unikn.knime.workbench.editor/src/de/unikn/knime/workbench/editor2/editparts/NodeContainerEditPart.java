@@ -35,12 +35,12 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodePort;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
+import de.unikn.knime.core.node.NotConfigurableException;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ImageRepository;
@@ -508,7 +508,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 WrappedNodeDialog dlg = new WrappedNodeDialog(
                         Display.getCurrent().getActiveShell(), container);
                 dlg.open();
-            } catch (InvalidSettingsException ex) {
+            } catch (NotConfigurableException ex) {
                 MessageBox mb = new MessageBox(
                         Display.getDefault().getActiveShell(),
                         SWT.ICON_WARNING | SWT.OK);
