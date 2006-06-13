@@ -47,6 +47,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Contains the dialog for the ARFF file reader.
@@ -262,7 +263,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) throws InvalidSettingsException {
+            final DataTableSpec[] specs) throws NotConfigurableException {
         m_url.setText(settings.
                 getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
         m_rowPrefix.setText(settings.getString(

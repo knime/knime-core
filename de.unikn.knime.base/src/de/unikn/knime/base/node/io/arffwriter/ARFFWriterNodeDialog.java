@@ -36,6 +36,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * 
@@ -79,7 +80,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) throws InvalidSettingsException {
+            final DataTableSpec[] specs) throws NotConfigurableException {
 
         m_textField.setText(
                 settings.getString(ARFFWriterNodeModel.CFGKEY_FILENAME, ""));

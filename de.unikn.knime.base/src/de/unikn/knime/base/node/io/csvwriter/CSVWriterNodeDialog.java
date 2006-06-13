@@ -33,6 +33,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Dialog to choose a file for csv output.
@@ -95,7 +96,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws InvalidSettingsException {
+            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
         String fileName = 
             settings.getString(CSVWriterNodeModel.CFGKEY_FILE, null);
         boolean writeColHeader = 

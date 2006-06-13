@@ -72,6 +72,7 @@ import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 import de.unikn.knime.core.node.tableview.TableView;
 
 /**
@@ -877,7 +878,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) throws InvalidSettingsException {
+            final DataTableSpec[] specs) throws NotConfigurableException {
         assert (settings != null && specs != null);
 
         String[] history = FileReaderNodeModel.getFileHistory();

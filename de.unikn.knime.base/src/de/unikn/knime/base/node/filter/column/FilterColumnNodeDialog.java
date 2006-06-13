@@ -20,9 +20,9 @@ import java.util.Set;
 
 import de.unikn.knime.base.node.util.FilterColumnPanel;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * This is the dialog for the column filter. The user can specify
@@ -55,7 +55,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      * @param specs The input specs.
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws InvalidSettingsException {
+            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
         assert (settings != null && specs.length == 1);
         if (specs[FilterColumnNodeModel.INPORT] == null) {
             // settings can't be evaluated against the spec

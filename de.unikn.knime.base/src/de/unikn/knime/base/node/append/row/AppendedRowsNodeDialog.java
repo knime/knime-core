@@ -37,6 +37,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Dialog that allows for treatment of duplicate row keys. Possible options
@@ -92,7 +93,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws InvalidSettingsException {
+            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
         boolean appendSuffix = 
             settings.getBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, false);
         String suffix = 

@@ -38,6 +38,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * 
@@ -181,7 +182,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
      *      de.unikn.knime.core.data.DataTableSpec[])
      */
     protected void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) throws InvalidSettingsException {
+            final DataTableSpec[] specs) throws NotConfigurableException {
 
         // remove the old filter panels, if any
         if (m_rangePanel != null) {
