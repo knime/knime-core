@@ -19,20 +19,15 @@
       <perspectiveExtension
             targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
          <view
+               id="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator"
                ratio="0.2"
-               relative="org.eclipse.ui.editorss"
                relationship="left"
-               id="org.eclipse.ui.views.ResourceNavigator">
-         </view>
+               relative="org.eclipse.ui.editorss"/>
          <view
-               ratio="0.4"
-               showTitle="true"
-               relative="org.eclipse.ui.views.ResourceNavigator"
-               closeable="false"
-               visible="true"
+               id="de.unikn.knime.workbench.repository.view.RepositoryView"
+               ratio="0.3"
                relationship="bottom"
-               id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
-         </view>
+               relative="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator"/>
          <view
                closeable="false"
                visible="true"
@@ -55,16 +50,12 @@
                closeable="true"
                id="de.unikn.knime.workbench.helpview"
                moveable="true"
-               ratio="1.0"
+               ratio="0.7"
                relationship="right"
                relative="org.eclipse.ui.editorss"/>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
-         <viewShortcut
-               id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
-         </viewShortcut>
-         <viewShortcut id="org.eclipse.ui.views.ResourceNavigator"/>
          <viewShortcut id="org.eclipse.ui.console.ConsoleView"/>
          <viewShortcut id="org.eclipse.ui.views.ProgressView"/>
          <viewShortcut
