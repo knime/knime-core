@@ -12,12 +12,18 @@
             icon="icons/view.png"
             category="de.unikn.knime.workbench.ui.category"
             class="de.unikn.knime.workbench.repository.view.RepositoryView"
-            id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
+            id="de.unikn.knime.workbench.repository.view.RepositoryView">
          <description>
             This contains all known nodes, grouped into categories, that can be used to model
 a data &quot;workflow&quot;
          </description>
       </view>
+      <view
+            category="de.unikn.knime.workbench.ui.category"
+            class="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator"
+            icon="icons/view.png"
+            id="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator"
+            name="Knime Resource"/>
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
@@ -26,10 +32,18 @@ a data &quot;workflow&quot;
          <view
                ratio="0.5"
                moveable="true"
-               relative="org.eclipse.ui.views.ResourceNavigator"
+               relative="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator"
                closeable="false"
                relationship="bottom"
-               id="de.unikn.knime.workbench.repository.views.repository.RepositoryView">
+               id="de.unikn.knime.workbench.repository.view.RepositoryView">
+         </view>
+         <view
+               ratio="0.5"
+               moveable="true"
+               relative="org.eclipse.ui.editorss"
+               closeable="false"
+               relationship="left"
+               id="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator">
          </view>
       </perspectiveExtension>
    </extension>

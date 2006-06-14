@@ -13,5 +13,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.ui.views,
  de.unikn.knime.workbench.core;reprovide=true,
- org.eclipse.gef
+ org.eclipse.gef,
+ org.eclipse.ui.ide
 Eclipse-AutoStart: true
