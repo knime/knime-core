@@ -46,7 +46,7 @@ public class PredictorReaderNodeModel extends NodeModel {
     static final String FILENAME = "filename";
 
     private String m_fileName = null; // "<no file>";
-    
+
     private NodeSettings m_predParams;
 
     /**
@@ -110,19 +110,12 @@ public class PredictorReaderNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
         m_predParams = new NodeSettings("default");
-        InputStream is = null;
-        try {
-            is = new BufferedInputStream(
-                    new FileInputStream(new File(m_fileName)));
-            if (m_fileName.endsWith(".gz")) {
-                is = new GZIPInputStream(is);
-            }
-            NodeSettings.loadFromXML(m_predParams, is);
-        } finally {
-            if (is != null) {
-                is.close();
-            }
+        InputStream is = new BufferedInputStream(new FileInputStream(new File(
+                m_fileName)));
+        if (m_fileName.endsWith(".gz")) {
+            is = new GZIPInputStream(is);
         }
+        NodeSettings.loadFromXML(m_predParams, is);
         return new DataTable[0];
     }
 

@@ -83,7 +83,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     }
 
     /**
-     * Load PredictorParams from input port. 
+     * Load PredictorParams from input port.
      * 
      * @see de.unikn.knime.core.node.NodeModel#loadPredictorParams(int,
      *      PredictorParams)
@@ -129,10 +129,6 @@ public class PredictorWriterNodeModel extends NodeModel {
             }
         } catch (Exception e) {
             throw new IOException("write to file failed: " + e);
-        } finally {
-            if (os != null) {
-                os.close();
-            }
         }
         // execution succeful return empty array
         return new DataTable[0];
