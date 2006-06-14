@@ -1518,24 +1518,12 @@ public abstract class Config extends AbstractConfigEntry
      * @param os The stream to write into.
      * @throws IOException If this Config could be stored to the stream.
      */
-    public synchronized void saveToXML(final OutputStream os)
+    public final synchronized void saveToXML(final OutputStream os)
             throws IOException {
         if (os == null) {
             throw new NullPointerException();
         }
         XMLConfig.save(this, os);
-    }
-
-    /**
-     * Reads Config from XML into the given arg.
-     * 
-     * @param config Write Config into this object.
-     * @param in The stream to read XML Config from.
-     * @throws IOException If the Config could not be load from stream.
-     */
-    protected static synchronized void loadFromXML(final Config config,
-            final InputStream in) throws IOException {
-        Config.loadFromXML(config, in, false);
     }
 
     /**

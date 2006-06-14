@@ -58,18 +58,20 @@ public class NodeSettings extends Config {
     }
 
     /**
-     * Reads settings from a given XML input stream and writes them into the
-     * given <code>NodeSettings</code> object.
-     * 
-     * @param settings The object to write into.
+     * Reads <code>NodeSettings</code> object from a given XML input stream and 
+     * writes them into the given <code>NodeSettings</code> object.
+     *
      * @param in XML input stream to read settings from.
+     * @param readRoot If the root element should be read from XML.
+     * @return A new settings object.
      * @throws IOException If the stream could not be read.
      * @throws NullPointerException If one of the arguments is 
      *         <code>null</code>.
      */
-    public static synchronized void loadFromXML(final NodeSettings settings,
-            final InputStream in) throws IOException {
-        Config.loadFromXML(settings, in);
+    public static synchronized NodeSettings loadFromXML(final InputStream in,
+            final boolean readRoot) throws IOException {
+        NodeSettings tmp = new NodeSettings("ignored");
+        return (NodeSettings) Config.loadFromXML(tmp, in, readRoot);
     }
 
     /**
@@ -84,8 +86,7 @@ public class NodeSettings extends Config {
      */
     public static synchronized NodeSettings loadFromXML(final InputStream in)
             throws IOException {
-        NodeSettings tmpSettings = new NodeSettings("tmp");
-        return (NodeSettings)Config.loadFromXML(tmpSettings, in, true);
+        return NodeSettings.loadFromXML(in, true);
     }
 
     /**
