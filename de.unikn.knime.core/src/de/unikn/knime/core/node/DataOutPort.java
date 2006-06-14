@@ -95,7 +95,11 @@ public final class DataOutPort extends NodeOutPort
      * 
      * @param dataTable The new data table for this port or null.
      */
-    public void setDataTable(final DataTable dataTable) {
+    void setDataTable(final DataTable dataTable) {
+        //  (tg) also set the new spec here
+        if (dataTable != null) {
+            setDataTableSpec(dataTable.getDataTableSpec());
+        }
         m_dataTable = dataTable;
         for (NodeInPort inPort : super.getConnectedInPorts()) {
             ((DataInPort) inPort).newDataTableAvailable();
