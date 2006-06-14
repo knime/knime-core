@@ -231,7 +231,11 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     @Override
     public void saveSettingsTo(final NodeSettings settings) {
-        settings.addString(m_configName, m_fileURL.getText());
+        String file = m_fileURL.getText().trim();
+        if (file.length() == 0) {
+            file = null;
+        }
+        settings.addString(m_configName, file);
     }
 
     /**
