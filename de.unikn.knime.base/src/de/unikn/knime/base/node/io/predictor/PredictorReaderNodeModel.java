@@ -109,6 +109,7 @@ public class PredictorReaderNodeModel extends NodeModel {
     protected DataTable[] execute(final DataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
+        m_predParams = null;
         InputStream is = new BufferedInputStream(new FileInputStream(new File(
                 m_fileName)));
         if (m_fileName.endsWith(".gz")) {
