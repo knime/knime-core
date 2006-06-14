@@ -49,7 +49,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
-import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.ui.builder.KNIMEProjectBuilder;
 import de.unikn.knime.workbench.ui.nature.KNIMEProjectNature;
 
@@ -60,9 +60,6 @@ import de.unikn.knime.workbench.ui.nature.KNIMEProjectNature;
  * @author Florian Georg, University of Konstanz
  */
 public class NewProjectWizard extends Wizard implements INewWizard {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NewProjectWizard.class);
 
     /**
      * Build command invoking KNIME project builder.
@@ -126,7 +123,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     throws InvocationTargetException {
                 try {
                     // call the worker method
-                    doFinish(projectName, addWorkflowFile, false, monitor);
+                    doFinish(projectName, addWorkflowFile, monitor);
                 } catch (CoreException e) {
                     throw new InvocationTargetException(e);
                 } finally {
@@ -155,14 +152,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * @param projectName Name of the project to create in workspace
      * @param addWorkflowFile flag, indicating that a default.knime should be
      *            created
-     * @param addDataset flag, indicating that an example dataset (IRIS) should
-     *            be copied into the new project
      * @param monitor Progress monitor
      * @throws CoreException if error while creating the project
      */
     protected void doFinish(final String projectName,
-            final boolean addWorkflowFile, final boolean addDataset,
-            final IProgressMonitor monitor) throws CoreException {
+            final boolean addWorkflowFile, final IProgressMonitor monitor) 
+        throws CoreException {
 
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 
@@ -187,15 +182,11 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         //
         // 2. Create the optional files, if wanted
         //
-        final IFile defaultFile = project.getFile("Workflow.knime");
+        final IFile defaultFile = 
+            project.getFile(WorkflowManager.WORKFLOW_FILE);
         if (addWorkflowFile) {
             InputStream is = new ByteArrayInputStream("".getBytes());
             defaultFile.create(is, true, monitor);
-        }
-
-        if (addDataset) {
-            // TODO copy iris dataset from plugin into new project.
-            LOGGER.warn("Add dataset: not implemented yet");
         }
 
         // open the default file, if it was created
