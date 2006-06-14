@@ -37,7 +37,7 @@ public final class PredictorParams extends NodeSettings {
      * 
      * @param key The key for this PredictorParams.
      */
-    PredictorParams(final String key) {
+    public PredictorParams(final String key) {
         super(key);
     }
 
