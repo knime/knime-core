@@ -96,6 +96,8 @@ final class XMLConfig {
             IOException ioe = new IOException(pce.getMessage());
             ioe.initCause(pce);
             throw ioe;
+        } finally {
+            is.close();
         }
         if (readRoot) {   
             // return first child of cfg
@@ -151,6 +153,8 @@ final class XMLConfig {
                     + " failed: " + se.getMessage());
             ioe.initCause(se);
             throw ioe;
+        } finally {
+            os.close();
         }
     }
 
