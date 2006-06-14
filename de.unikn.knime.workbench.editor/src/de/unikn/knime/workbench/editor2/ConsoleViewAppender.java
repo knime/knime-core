@@ -201,13 +201,15 @@ public final class ConsoleViewAppender extends Writer {
             throws IOException {
         // Fix Bug #462: sync execution causes deadlock at the root category
         // Display.getDefault().syncExec(new Runnable() {
+        // make new string here as the caller reuses the char[]
+        final String str = new String(cbuf, off, len);
         Display.getDefault().asyncExec(new Runnable() {            
             public void run() {
                 MessageConsole console = findConsole(CONSOLE_NAME);
                 MessageConsoleStream out = console.newMessageStream();
                 //activateConsole();
                 out.setColor(m_color);
-                out.print(new String(cbuf, off, len));
+                out.print(str);
             }
         });
 
