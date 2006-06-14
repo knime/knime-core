@@ -47,7 +47,7 @@ public class PredictorWriterNodeModel extends NodeModel {
 
     private String m_fileName = null; // "<no file>";
 
-    private NodeSettings m_predParams;
+    private PredictorParams m_predParams;
 
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
