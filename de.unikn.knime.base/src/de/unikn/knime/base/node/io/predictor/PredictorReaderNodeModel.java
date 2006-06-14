@@ -47,7 +47,7 @@ public class PredictorReaderNodeModel extends NodeModel {
 
     private String m_fileName = null; // "<no file>";
 
-    private NodeSettings m_predParams;
+    private PredictorParams m_predParams;
 
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
@@ -109,13 +109,12 @@ public class PredictorReaderNodeModel extends NodeModel {
     protected DataTable[] execute(final DataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
-        m_predParams = new NodeSettings("default");
         InputStream is = new BufferedInputStream(new FileInputStream(new File(
                 m_fileName)));
         if (m_fileName.endsWith(".gz")) {
             is = new GZIPInputStream(is);
         }
-        NodeSettings.loadFromXML(m_predParams, is);
+        m_predParams = PredictorParams.loadFromXML(is);
         return new DataTable[0];
     }
 
