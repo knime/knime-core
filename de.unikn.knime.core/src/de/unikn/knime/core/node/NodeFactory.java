@@ -483,7 +483,7 @@ public abstract class NodeFactory {
      * 
      * @return the node's name.
      */
-    public final String getNodeName() {
+    public String getNodeName() {
         return m_nodeName;
     }
 

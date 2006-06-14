@@ -43,6 +43,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.Node;
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NodeProgressMonitor;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
@@ -950,8 +951,13 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             }
         }
         
-        // FIXME do not execute all nodes in the parent flow
-        if (m_parent != null) { m_parent.prepareForExecAllNodes(); }
+        if (m_parent != null) {
+            for (ConnectionContainer cc : m_connectionsByID.values()) {
+                if (!m_nodeContainerByID.containsValue(cc.getSource())) {
+                    m_parent.prepareForExecUpToNode(cc.getSource());
+                }
+            }
+        }
     }
 
     /**
@@ -1336,6 +1342,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     WorkflowListener, NodeStateListener {
         private CountDownLatch m_execDone = new CountDownLatch(0);
         private final AtomicInteger m_runningNodes = new AtomicInteger();
+        private NodeProgressMonitor m_progressMonitor =
+            new DefaultNodeProgressMonitor();
         
         /**
          * Create executor class and register as listener for events.
@@ -1388,7 +1396,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 while ((nextNode = getNextExecutableNode()) != null) {
                     nextNode.addListener(this);
                     m_runningNodes.incrementAndGet();
-                    nextNode.startExecution(new DefaultNodeProgressMonitor());
+                    nextNode.startExecution(m_progressMonitor);
                 }
             }
         }
@@ -1404,6 +1412,14 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                     m_execDone.countDown();
                 }
             }
+        }
+
+        /**
+         * @see de.unikn.knime.core.node.workflow.WorkflowExecutor
+         *  #setProgressMonitor(de.unikn.knime.core.node.NodeProgressMonitor)
+         */
+        public void setProgressMonitor(final NodeProgressMonitor monitor) {
+            m_progressMonitor = monitor;            
         }        
     }
 }

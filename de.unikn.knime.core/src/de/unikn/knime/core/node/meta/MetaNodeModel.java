@@ -173,8 +173,11 @@ public class MetaNodeModel extends SpecialNodeModel
     protected DataTable[] execute(final DataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
         exec.setMessage("Executing inner workflow");
+        
+        m_workflowExecutor.setProgressMonitor(getNodeProgressMonitor(exec));
         m_workflowExecutor.executeAll();
-
+        exec.checkCanceled();
+        
         // translate output
         exec.setMessage("Collecting output");
         DataTable[] out = new DataTable[m_dataOutContainer.length];

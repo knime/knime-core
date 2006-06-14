@@ -20,6 +20,8 @@
  */
 package de.unikn.knime.core.node.workflow;
 
+import de.unikn.knime.core.node.NodeProgressMonitor;
+
 
 /**
  * Interface for a workflow executor. Because it causes great problems if more
@@ -45,4 +47,11 @@ public interface WorkflowExecutor {
      * @param nodeID id of node to be executed.
      */
     public void executeUpToNode(final int nodeID);
+    
+    /**
+     * Sets the progress monitor that is passed to the nodes upon execution.
+     * 
+     * @param monitor a node progress monitor
+     */
+    public void setProgressMonitor(final NodeProgressMonitor monitor);
 }

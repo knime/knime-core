@@ -165,5 +165,14 @@ public abstract class SpecialNodeModel extends NodeModel {
         // nothing to do for this class here
     }
     
-    // TODO we need some mechanism to reset a node from itself
+    /**
+     * Returns the node progress monitor inside the execution monitor.
+     * 
+     * @param exec an execution monitor
+     * @return the wrapped node progress monitor
+     */
+    protected static final NodeProgressMonitor getNodeProgressMonitor(
+            final ExecutionMonitor exec) {
+        return exec.getProgressMonitor();
+    }
 }
