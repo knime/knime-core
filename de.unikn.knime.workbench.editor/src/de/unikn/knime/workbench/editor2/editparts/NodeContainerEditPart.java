@@ -435,9 +435,17 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // TODO FIXME construct initial state here (after loading) - this should
         // be made nicer
-        boolean isExecutable = getNodeContainer().isExecutableUpToHere();
-        f.setState(isExecutable ? NodeContainerFigure.STATE_READY
-                : NodeContainerFigure.STATE_NOT_CONFIGURED, null);
+        boolean isExecuted = getNodeContainer().isExecuted();
+        if (isExecuted) {
+            f.setState(NodeContainerFigure.STATE_EXECUTED, null);
+        } else {
+            boolean isExecutable = getNodeContainer().isExecutableUpToHere();
+            if (isExecutable) {
+                f.setState(NodeContainerFigure.STATE_READY, null);
+            } else {
+                f.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, null);
+            }
+        }
 
     }
 
