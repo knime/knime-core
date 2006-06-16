@@ -446,7 +446,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 f.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, null);
             }
         }
-
+        updateNodeStatus();
     }
 
     /**
