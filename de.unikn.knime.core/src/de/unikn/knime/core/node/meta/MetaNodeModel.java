@@ -359,7 +359,7 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void saveSettingsTo(final NodeSettings settings) {
-        if (m_internalWFM == null) return;
+        if (m_internalWFM == null) { return; }
         
         NodeSettings connections = settings.addConfig(INOUT_CONNECTIONS_KEY);
         
