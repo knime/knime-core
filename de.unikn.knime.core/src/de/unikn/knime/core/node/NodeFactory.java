@@ -455,15 +455,20 @@ public abstract class NodeFactory {
         for (int k = destList.size(); k <= index; k++) {
             destList.add("No description available");
         }
-        Node w3cNode = port.getFirstChild();
-        if (w3cNode == null) {
-            return;
+        if (port.getAttribute("name").length() > 0) {
+            destList.set(index, port.getAttribute("name"));
+        } else {
+            
+            Node w3cNode = port.getFirstChild();
+            if (w3cNode == null) {
+                return;
+            }
+            String value = w3cNode.getNodeValue();
+            if (value == null || value.length() == 0) {
+                return;
+            }
+            destList.set(index, value);
         }
-        String value = w3cNode.getNodeValue();
-        if (value == null || value.length() == 0) {
-            return;
-        }
-        destList.set(index, value);
     }
 
     private String readFullDescription() {

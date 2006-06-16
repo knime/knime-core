@@ -21,12 +21,16 @@
 <!ELEMENT ports (dataIn*, dataOut*, predParamIn*, predParamOut*) >
 <!ELEMENT dataIn (#PCDATA) >
 <!ATTLIST dataIn index CDATA #REQUIRED>
+<!ATTLIST dataIn name CDATA #IMPLIED>
 <!ELEMENT dataOut (#PCDATA) >
 <!ATTLIST dataOut index CDATA #REQUIRED>
+<!ATTLIST dataOut name CDATA #IMPLIED>
 <!ELEMENT predParamIn (#PCDATA) >
 <!ATTLIST predParamIn index CDATA #REQUIRED>
+<!ATTLIST predParamIn name CDATA #IMPLIED>
 <!ELEMENT predParamOut (#PCDATA) >
 <!ATTLIST predParamOut index CDATA #REQUIRED>
+<!ATTLIST predParamOut name CDATA #IMPLIED>
 
 <!ELEMENT views (view+) >
 <!ELEMENT view (#PCDATA) >
