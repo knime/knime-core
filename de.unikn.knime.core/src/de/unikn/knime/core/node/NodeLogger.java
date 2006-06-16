@@ -450,7 +450,7 @@ public final class NodeLogger {
         }
         // register new appender
         WriterAppender app = new WriterAppender(new PatternLayout(
-                "%-5p\t %c{1}\t m\n"), writer);
+                "%-5p\t %c{1}\t %." + MAX_CHARS + "m\n"), writer);
         app.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(getLevel(minLevel));
