@@ -860,7 +860,8 @@ public class FileTokenizer {
             if (nextChar == EOF) {
                 break;
             }
-            if ((m_charType[nextChar] & LINECONT) != 0) {
+            if ((nextChar <= MAX_CHAR) 
+                && ((m_charType[nextChar] & LINECONT) != 0)) {
                 // we support line continuations within quoted strings.
                 int tmp = getNextChar();
                 if (tmp == LF) {
@@ -1027,17 +1028,20 @@ public class FileTokenizer {
         for (Comment comment : ftSettings.getAllComments()) { 
             assert comment != null;
             m_commentPatterns.add(comment);
-            m_charType[comment.getFirstCharOfBegin()] |= COMMENT;
+            char c = comment.getFirstCharOfBegin();
+            m_charType[c] |= COMMENT;
         }
         for (Delimiter delim : ftSettings.getAllDelimiters()) { 
             assert delim != null;
             m_delimPatterns.add(delim);
-            m_charType[delim.getFirstChar()] |= DELIM;
+            char c = delim.getFirstChar();
+            m_charType[c] |= DELIM;
         }
         for (Quote quote : ftSettings.getAllQuotes()) {
             assert quote != null;
             m_quotePatterns.add(quote);
-            m_charType[quote.getFirstCharOfLeft()] |= QUOTE;
+            char c = quote.getFirstCharOfLeft();
+            m_charType[c] |= QUOTE;
         }
         for (String ws : ftSettings.getAllWhiteSpaces()) {
             assert ws != null;
