@@ -33,11 +33,11 @@ import javax.swing.UIManager;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
-import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.interrupt.InterruptibleNodeModel;
 import de.unikn.knime.core.node.meta.MetaNodeModel;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
+import de.unikn.knime.core.util.FileUtil;
 
 /**
  * Implementation of a node as basic processing unit within the workflow. A
@@ -63,9 +63,6 @@ import de.unikn.knime.core.node.workflow.WorkflowManager;
  * 
  */
 public final class Node {
-
-    /** The key under which the factory name is stored in the config. */
-    private static final String CONFIG_FACTORY_KEY = "factory";
 
     /** The node logger for this class. */
     private final NodeLogger m_logger;
@@ -99,6 +96,11 @@ public final class Node {
 
     /** The listeners that are interested in node state changes. */
     private final Set<NodeStateListener> m_stateListeners;
+    
+    /** Node settings XML file name. */
+    public static final String SETTINGS_FILE_NAME = "settings.xml";
+    
+    private File m_nodeDir = null;
 
     private final WorkflowManager m_workflowManager;
 
@@ -109,7 +111,6 @@ public final class Node {
             // use the default look and feel then.
         }
     }
-    
     
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
@@ -122,7 +123,7 @@ public final class Node {
      * @throws NullPointerException if the node factory is <code>null</code>
      */
     public Node(final NodeFactory nodeFactory) {
-        this(nodeFactory, null);
+        this(nodeFactory, (WorkflowManager) null);
     }
     
     /**
@@ -135,13 +136,13 @@ public final class Node {
      *            and dialog
      * @param wfm the workflow manager that is responsible for this node;
      * maybe <code>null</code>
-     * @throws NullPointerException if the node factory is <code>null</code>
+     * @throws IllegalArgumentException 
+     *         If the <i>nodeFactory</i> is <code>null</code>.
      */
     public Node(final NodeFactory nodeFactory, final WorkflowManager wfm) {
 
         if (nodeFactory == null) {
-            throw new NullPointerException("Specified Node Factory must not "
-                    + "be null.");
+            throw new IllegalArgumentException("NodeFactory must not be null.");
         }
         // remember NodeFactory
         m_factory = nodeFactory;
@@ -200,6 +201,8 @@ public final class Node {
         }
         
         // let the model create its 'default' table specs
+        // (tg) we can not automatically configure a Node when trying to load
+        // settings, data, and model(s).
         try {
             configureNode();
         } catch (InvalidSettingsException ise) {
@@ -207,6 +210,135 @@ public final class Node {
         }
 
     } // Node(NodeFactory)
+    
+    /**
+     * Reads the node settings from the given object. Inits the name, in- and
+     * outports, and the node intenal settings. In addition, the node state is
+     * read which is either executed and/or configured or not.
+     * @param settings Read node settings from.
+     * @throws InvalidSettingsException If node settings are invalid.
+     */
+    public void load(final NodeSettings settings)
+            throws InvalidSettingsException {
+        // read node name
+        m_name = settings.getString("name");
+        final NodeSettings inport = settings.getConfig("inports");
+        // read inports
+        for (int i = 0; i < m_inDataPorts.length; i++) {
+            m_inDataPorts[i].setPortName(inport.getString("" + i));
+        }
+        // read outports
+        final NodeSettings outport = settings.getConfig("outports");
+        for (int i = 0; i < m_outDataPorts.length; i++) {
+            m_outDataPorts[i].setPortName(outport.getString("" + i));
+        }
+        // read model and load settings
+        try {
+            // try to load configuration as well
+            m_model.loadSettingsFrom(settings.getConfig("model"));
+            m_model.setConfigured(true);
+            // read executed flag
+            boolean wasExecuted = settings.getBoolean("isExecuted");
+            m_model.setExecuted(wasExecuted);
+        } catch (InvalidSettingsException ise) {
+            // read configured flag
+            boolean wasConfigured = settings.getBoolean("isConfigured");
+            m_model.setConfigured(false);
+            if (wasConfigured) { // only pass exception if node was configured
+                m_logger.warn("Unable to load settings: " + ise.getMessage());
+            }
+        } catch (Exception e) {
+            m_logger.error("Unable to load settings", e);
+            throw new InvalidSettingsException(e);
+        } catch (Error e) {
+            m_logger.fatal("could not load settings", e);
+            throw new InvalidSettingsException(e);
+        } 
+        
+//        finally {
+//            // update data table specs
+//            try {
+//                configureNode();
+//            } catch (InvalidSettingsException ise) {
+//                m_status = new NodeStatus.Error(ise.getMessage());
+//                this.notifyStateListeners(m_status);
+//            } finally {
+//                // read executed flag
+//                boolean wasExecuted = settings.getBoolean("isExecuted");
+//                m_model.setExecuted(wasExecuted);
+//            }
+//        }
+        
+    }
+    
+    /**
+     * Loads the node settings and internal structures from the given location,
+     * depending on the node's state, configured or executed.
+     * @param nodeFile The node settings location.
+     * @param exec The execution monitor reporting progress during reading
+     *        structure.
+     * @throws IOException If the node settings file can't be found or read.
+     * @throws InvalidSettingsException If the settings are wrong.
+     */
+    public void load(final File nodeFile, final ExecutionMonitor exec)
+            throws IOException, InvalidSettingsException {
+        assert exec != null;
+        m_status = null;
+        if (!nodeFile.isFile() || !nodeFile.canRead()) {
+            m_model.setExecuted(false);
+            throw new IOException(SETTINGS_FILE_NAME + " can't be read: " 
+                    + nodeFile);
+        }
+
+        NodeSettings settings = 
+            NodeSettings.loadFromXML(new FileInputStream(nodeFile));
+        // load node settings
+        this.load(settings);
+
+        m_nodeDir = nodeFile.getParentFile();
+        
+        if (isConfigured()) {
+            NodeSettings spec = settings.getConfig("spec_files");
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                String specName = spec.getString("outport_" + i);
+                File targetFile = new File(m_nodeDir, specName);
+                File dest = File.createTempFile(specName, "~");
+                dest.deleteOnExit();
+                FileUtil.copy(targetFile, dest);
+                NodeSettings settingsSpec = NodeSettings.loadFromXML(
+                        new BufferedInputStream(new FileInputStream(dest)));
+                DataTableSpec outSpec = DataTableSpec.load(settingsSpec);
+                m_outDataPorts[i].setDataTableSpec(outSpec);
+            }
+        }
+        // load data is node was executed
+        if (isExecuted()) {
+            // load data
+            NodeSettings data = settings.getConfig("data_files");
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                String dataName = data.getString("outport_" + i);
+                File targetFile = new File(m_nodeDir, dataName);
+                File dest = File.createTempFile(dataName, "~");
+                dest.deleteOnExit();
+                FileUtil.copy(targetFile, dest);
+                DataTable outTable = DataContainer.readFromZip(dest);
+                m_outDataPorts[i].setDataTable(outTable);
+            }
+            // load models
+            NodeSettings model = settings.getConfig("model_files");
+            for (int i = 0; i < m_outModelPorts.length; i++) {
+                String modelName = model.getString("outport_" + i);
+                File targetFile = new File(m_nodeDir, modelName);
+                File dest = File.createTempFile(modelName, "~");
+                dest.deleteOnExit();
+                FileUtil.copy(targetFile, dest);
+                BufferedInputStream in = 
+                    new BufferedInputStream(new FileInputStream(dest));
+                PredictorParams pred = PredictorParams.loadFromXML(in);
+                m_outModelPorts[i].setPredictorParams(pred);
+            }
+        }
+    }
 
     /**
      * Returns the name for this node.
@@ -815,6 +947,13 @@ public final class Node {
         }
         // remove all state listeners
         m_stateListeners.clear();
+        // delete all node file with the node's directory
+        if (m_nodeDir != null) {
+            boolean b = FileUtil.deleteRecursively(m_nodeDir);
+            if (!b) {
+                m_logger.warn("Unable to delete dir: \"" + m_nodeDir + "\"");
+            }
+        }
     }
 
     /**
@@ -976,11 +1115,13 @@ public final class Node {
                     .getPredictorParams();
             m_model.loadPredictorParams(realId, params);
         } catch (InvalidSettingsException ise) {
-            m_logger.error("loadPredictorParams() failed: ", ise);
+            m_logger.warn("Unable to load PredictorParams: "
+                    + ise.getMessage());
             m_status = new NodeStatus.Error(
                     "Could not load PredictorParams: " + ise.getMessage());
             this.notifyStateListeners(m_status);
         }
+
         try {
             configureNode();
         } catch (InvalidSettingsException ise) {
@@ -1062,8 +1203,20 @@ public final class Node {
 
         // configure
         try {
-            // get inspecs
-            DataTableSpec[] inSpecs = getInDataTableSpecs();
+            String errorMsg = "";
+            // get inspecs at check them against null
+            DataTableSpec[] inSpecs = new DataTableSpec[getNrDataInPorts()];
+            for (int i = 0; i < inSpecs.length; i++) {
+                inSpecs[i] = m_inDataPorts[i].getDataTableSpec();
+                if (inSpecs[i] == null) {
+                    errorMsg += ", " + i;
+                }
+            }
+            
+            if (errorMsg.length() > 0) {
+                throw new InvalidSettingsException(
+                    "No input spec(s) available at inport(s):" + errorMsg);
+            }
 
             //
             // call model to create output table specs
@@ -1236,44 +1389,65 @@ public final class Node {
         return null;
     }
     
-    public void saveInternals(
-            final File targetDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        if (!isExecuted()) {
-            throw new IllegalStateException(
-                    "Unable to save, node is not executed.");
+    /**
+     * Saves the node, node settings, and all internal structures, spec, data,
+     * and models, to the given node directory (located at the node file).
+     * @param nodeFile To write node settings to.
+     * @param exec Used to report progress during saving.
+     * @throws IOException If the node file can't be found or read.
+     * @throws CanceledExecutionException If the saving has been canceled.
+     */
+    public void save(
+            final File nodeFile, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+        NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
+        this.save(settings);
+        File nodeDir = nodeFile.getParentFile();
+        if (isConfigured()) {
+            NodeSettings specs = settings.addConfig("spec_files");
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                String specName = "spec_" + i + ".xml";
+                specs.addString("outport_" + i, specName);
+                DataTableSpec outSpec = m_outDataPorts[i].getDataTableSpec();
+                NodeSettings specSettings = new NodeSettings("spec_" + i);
+                outSpec.save(specSettings);
+                File targetFile = new File(nodeDir, specName);
+                specSettings.saveToXML(new BufferedOutputStream(
+                        new FileOutputStream(targetFile)));
+            }
         }
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            DataTable outTable = m_outDataPorts[i].getDataTable();
-            File targetFile = new File(targetDir, "data_" + i + ".knime");
-            DataContainer.writeToZip(outTable, targetFile, exec);
+        if (isExecuted()) {
+            NodeSettings data = settings.addConfig("data_files");
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                String specName = "data_" + i + ".zip";
+                data.addString("outport_" + i, specName);
+                DataTable outTable = m_outDataPorts[i].getDataTable();
+                File targetFile = new File(nodeDir, specName);
+                DataContainer.writeToZip(outTable, targetFile, exec);
+            }
+            NodeSettings models = settings.addConfig("model_files");
+            for (int i = 0; i < m_outModelPorts.length; i++) {
+                String specName = "model_" + i + ".xml";
+                models.addString("outport_" + i, specName);
+                PredictorParams pred = m_outModelPorts[i].getPredictorParams();
+                File targetFile = new File(nodeDir, specName);
+                BufferedOutputStream out = 
+                    new BufferedOutputStream(new FileOutputStream(targetFile));
+                pred.saveToXML(out);
+            }
+        } else {
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                File specFile = new File(nodeDir, "spec_" + i + ".xml");
+                specFile.delete();
+                File dataFile = new File(nodeDir, "data_" + i + ".zip");
+                dataFile.delete();
+            }
+            for (int i = 0; i < m_outModelPorts.length; i++) {
+                File targetFile = new File(nodeDir, "model_" + i + ".xml");
+                targetFile.delete();            
+            }
         }
-        for (int i = 0; i < m_outModelPorts.length; i++) {
-            PredictorParams pred = m_outModelPorts[i].getPredictorParams();
-            File targetFile = new File(targetDir, "model_" + i + ".pmml");
-            BufferedOutputStream out = 
-                new BufferedOutputStream(new FileOutputStream(targetFile));
-            pred.saveToXML(out);
-            out.close();
-        }
-    }
-
-    public void loadInternals(
-            final File targetDir, final ExecutionMonitor exec)
-    throws IOException {
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            File targetFile = new File(targetDir, "data_" + i + ".knime");
-            DataTable outTable = DataContainer.readFromZip(targetFile);
-            m_outDataPorts[i].setDataTable(outTable);
-        }
-        for (int i = 0; i < m_outModelPorts.length; i++) {
-            File targetFile = new File(targetDir, "model_" + i + ".pmml");
-            BufferedInputStream in = 
-                new BufferedInputStream(new FileInputStream(targetFile));
-            PredictorParams pred = PredictorParams.loadFromXML(in);
-            m_outModelPorts[i].setPredictorParams(pred);
-            in.close();
-        }
+        settings.saveToXML(new FileOutputStream(nodeFile));    
     }
     
     /**
@@ -1287,13 +1461,12 @@ public final class Node {
      * @param settings The object to write the node's settings into.
      */
     public void save(final NodeSettings settings) {
-        // write node factory's class name (including package)
-        settings.addString(CONFIG_FACTORY_KEY, m_factory.getClass()
-                .getName());
         // write node name
         settings.addString("name", m_name);
-        // write configuration settings
+        // write configured flag
         settings.addBoolean("isConfigured", this.isConfigured());
+        // write executed flag
+        settings.addBoolean("isExecuted", this.isExecuted());
         // write inports
         final NodeSettings inport = settings.addConfig("inports");
         for (int i = 0; i < m_inDataPorts.length; i++) {
@@ -1312,95 +1485,6 @@ public final class Node {
             m_logger.error("Could not save model", e);
         } catch (Error e) {
             m_logger.fatal("Could not save model", e);
-        }
-    }
-
-    /**
-     * Loads specific <code>NodeSettings</code> and inits this
-     * <code>Node</code> with ports, model, and in- and outports. Also calls
-     * the model's <code>#loadConfig()</code> method to load the settings into
-     * the model. A configure will be executed, if the node was configured
-     * before.
-     * 
-     * @param settings The object the read the node's settings from.
-     * 
-     * @throws InvalidSettingsException If one property is not available.
-     */
-    public void load(final NodeSettings settings)
-            throws InvalidSettingsException {
-        // read node name
-        m_name = settings.getString("name");
-        final NodeSettings inport = settings.getConfig("inports");
-        // read inports
-        for (int i = 0; i < m_inDataPorts.length; i++) {
-            m_inDataPorts[i].setPortName(inport.getString("" + i));
-        }
-        // read outports
-        final NodeSettings outport = settings.getConfig("outports");
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            m_outDataPorts[i].setPortName(outport.getString("" + i));
-        }
-        // read model and load settings
-        try {
-            // try to load configuration as well
-            m_model.loadSettingsFrom(settings.getConfig("model"));
-        } catch (InvalidSettingsException ise) {
-            // read configuration settings
-            boolean wasConfigured = settings.getBoolean("isConfigured", false);
-            // TODO (mb) can be removed at some point when flag is standard
-            if (wasConfigured) { // only pass exception is note was
-                // configured
-                m_logger.warn("could not load settings: " + ise.getMessage());
-            }
-        } catch (Exception e) {
-            m_logger.error("could not load settings", e);
-            throw new InvalidSettingsException(e);
-        } catch (Error e) {
-            m_logger.fatal("could not load settings", e);
-            throw new InvalidSettingsException(e);
-        } finally {
-            // update data table specs
-            try {
-                configureNode();
-            } catch (InvalidSettingsException ise) {
-                m_status = new NodeStatus.Error(ise.getMessage());
-                this.notifyStateListeners(m_status);
-            }
-        }
-    }
-
-    /**
-     * Creates a new <code>Node</code> based on a <code>NodeSettings</code>.
-     * 
-     * @param settings The object to read the node's settings from.
-     * @param wfm the workflow manager that is responsible for this node;
-     * maybe <code>null</code>
-     * @throws InvalidSettingsException If one property is not available.
-     */
-    public Node(final NodeSettings settings, final WorkflowManager wfm)
-    throws InvalidSettingsException {
-        this(createNodeFactory(settings), wfm);
-        load(settings);
-    }
-
-    /**
-     * Creates a new <code>NodeFactory</code> from the given settings object.
-     * 
-     * @param settings The settings describing a factory.
-     * @return The constructed factory.
-     * @throws InvalidSettingsException if the settings are invalid
-     */
-    protected static NodeFactory createNodeFactory(final NodeSettings settings)
-            throws InvalidSettingsException {
-        // read node factory class name
-        String factoryClassName = settings.getString(CONFIG_FACTORY_KEY);
-        try {
-            // use global Class Creator utility for Eclipse "compatibility"
-            return (NodeFactory)((GlobalClassCreator
-                    .createClass(factoryClassName)).newInstance());
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Factory could not be loaded "
-                    + factoryClassName, e);
         }
     }
 

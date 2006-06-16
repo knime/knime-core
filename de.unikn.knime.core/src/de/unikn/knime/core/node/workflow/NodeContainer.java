@@ -35,6 +35,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.Node;
 import de.unikn.knime.core.node.NodeDialogPane;
+import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeInPort;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
@@ -73,7 +74,7 @@ public class NodeContainer implements NodeStateListener {
         /** is waiting to be excuted once the underlying node is executable. */
         WaitingToBeExecutable
     }
-
+    
     /** Key for this node's user description. */
     protected static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
 
@@ -85,6 +86,9 @@ public class NodeContainer implements NodeStateListener {
 
     /** Key for this node's internal ID. */
     protected static final String KEY_ID = "id";
+    
+    /** Key for the factory class name, used to load nodes. */
+    protected static final String KEY_FACTORY_NAME = "factory";
 
     // The logger for static methods
     private static final NodeLogger LOGGER = NodeLogger
@@ -190,28 +194,45 @@ public class NodeContainer implements NodeStateListener {
         m_eventListeners = new ArrayList<NodeStateListener>();
         m_node.addStateListener(this);
     }
-
+    
+    private static NodeFactory readNodeFactory(final NodeSettings settings)
+            throws InvalidSettingsException {
+        // read node factory class name
+        String factoryClassName = settings.getString(KEY_FACTORY_NAME);
+        try {
+            // use global Class Creator utility for Eclipse "compatibility"
+            return (NodeFactory)((GlobalClassCreator
+                    .createClass(factoryClassName)).newInstance());
+        } catch (Exception e) {
+            throw new InvalidSettingsException("NodeFactory could not be "
+                    + "loaded: " + factoryClassName, e);
+        }
+    }
+        
     /**
      * Creates a new NodeContainer and reads it's status and information from
      * the NodeSettings object. Note that the list of predecessors and
      * successors will NOT be initalized correctly. The Workflow manager is
      * required to take care of re-initializing the connections.
      * 
-     * @param sett Retrieve the data from.
+     * @param settings Retrieve the data from.
      * @param wfm the workflowmanager that is responsible for this node
      * @throws InvalidSettingsException If the required keys are not available
      *             in the NodeSettings.
      * 
-     * @see #save
+     * @see #save(NodeSettings)
      */
-    public NodeContainer(final NodeSettings sett, final WorkflowManager wfm)
+    public NodeContainer(
+            final NodeSettings settings,
+            final WorkflowManager wfm)
             throws InvalidSettingsException {
-        this (new Node(sett, wfm), sett.getInt(KEY_ID));
-        setExtraInfo(createExtraInfo(sett));
+        this(new Node(readNodeFactory(settings), wfm), settings.getInt(KEY_ID));
+        
+        setExtraInfo(createExtraInfo(settings));
 
         try {
             // read custom name
-            String name = sett.getString(KEY_CUSTOM_NAME);
+            String name = settings.getString(KEY_CUSTOM_NAME);
 
             // if there was no user node name defined than keep the default name
             if (name != null) {
@@ -225,7 +246,7 @@ public class NodeContainer implements NodeStateListener {
 
         try {
             // read custom description
-            String description = sett.getString(KEY_CUSTOM_DESCRIPTION);
+            String description = settings.getString(KEY_CUSTOM_DESCRIPTION);
             setDescription(description);
         } catch (InvalidSettingsException ise) {
             LOGGER.warn("In the settings of node <id:" + getID()
@@ -233,7 +254,7 @@ public class NodeContainer implements NodeStateListener {
                     + "> is no user description specified");
         }
     }
-
+    
     /**
      * Adds an incoming connection to a specified port. Only one incoming
      * connection is allowed per port - if this port is already connected it
@@ -727,20 +748,6 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * Loads new <code>NodeSettings</code> into the underlying
-     * <code>Node</code>.
-     * 
-     * @param settings the settings to load
-     */
-    public void load(final NodeSettings settings) {
-        try {
-            m_node.load(settings);
-        } catch (InvalidSettingsException ise) {
-            m_logger.error("Settings could not be loaded. " + ise.getMessage());
-        }
-    }
-
-    /**
      * @return the node's <code>toString</code> description
      */
     public String nodeToString() {
@@ -823,25 +830,25 @@ public class NodeContainer implements NodeStateListener {
     // ////////////////////////
 
     /**
-     * Stores all information into the given configuration.
-     * 
-     * @param config The configuration to write to current settings into.
-     * @see #NodeContainer(NodeSettings, WorkflowManager)
+     * Write node container settings which are factory name, node id, customer
+     * name and description, and extra info (optional).
+     * @param settings To write settings to.
      */
-    public void save(final NodeSettings config) {
-        // save configuration of underlying node
-        m_node.save(config);
+    public void save(final NodeSettings settings) {
+        // save node factory
+        settings.addString(KEY_FACTORY_NAME, 
+                m_node.getFactory().getClass().getName());
         // save id
-        config.addInt(KEY_ID, m_id);
+        settings.addInt(KEY_ID, m_id);
         // save name
-        config.addString(KEY_CUSTOM_NAME, m_customName);
+        settings.addString(KEY_CUSTOM_NAME, m_customName);
         // save description
-        config.addString(KEY_CUSTOM_DESCRIPTION, m_description);
+        settings.addString(KEY_CUSTOM_DESCRIPTION, m_description);
         // save type of extrainfo and also it's content - but only if it exists
         if (m_extraInfo != null) {
-            config.addString(KEY_EXTRAINFOCLASS, m_extraInfo.getClass()
+            settings.addString(KEY_EXTRAINFOCLASS, m_extraInfo.getClass()
                     .getName());
-            m_extraInfo.save(config);
+            m_extraInfo.save(settings);
         }
     }
 
@@ -994,9 +1001,18 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @return true if this node's model is a interruptible model
+     * @return <code>true</code> if this node's model is a interruptible model.
      */
     public boolean isInterruptible() {
         return m_node.isInterruptible();
+    }
+    
+    /**
+     * @return Node name and id.
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return getNode().getName() + "(#" + m_id + ")";
     }
 }

@@ -423,11 +423,29 @@ public abstract class NodeModel {
 
     } // executeModel(DataTable[],ExecutionMonitor)
     
+    /**
+     * Sets the isExecuted flag and fires a state change event.
+     * @param isExecuted Flag if this node is configured be executed or not.
+     */
     final void setExecuted(final boolean isExecuted) {
+        assert !(isExecuted && !m_configured);
         if (isExecuted != isExecuted()) {
             // set the state flag to "executed"
             m_executed = isExecuted;
             // and inform all views about the new model
+            stateChanged();
+        }
+    }
+
+    /**
+     * Sets the isConfigured flag and fires a state change event.
+     * @param isConfigured Flag if this node is configured or not.
+     */
+    final void setConfigured(final boolean isConfigured) {
+        assert !(m_executed && !isConfigured);
+        if (isConfigured != isConfigured()) {
+            // set the state flag to "configured"
+            m_configured = isConfigured;
             stateChanged();
         }
     }

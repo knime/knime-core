@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,6 @@ import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 
-
 /**
  * Manager for a workflow holding Nodes and the connecting edge information. The
  * information is stored in a graph based data structure and allows to access
@@ -67,6 +65,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     /** Key for nodes. */
     public static final String KEY_NODES = "nodes";
 
+    /** Links the node settings file name. */
+    public static final String KEY_NODE_SETTINGS_FILE = "node_settings_file";
+
     /** Key for current running connection id. */
     private static final String KEY_RUNNING_CONN_ID = "runningConnectionID";
 
@@ -78,87 +79,200 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             .getLogger(WorkflowManager.class);
 
     // quick access to connections
-    private final Map<Integer, ConnectionContainer> m_connectionsByID =
+    private final Map<Integer, ConnectionContainer> m_connectionsByID = 
         new HashMap<Integer, ConnectionContainer>();
 
     // change listener support (transient) <= why? (tm)
-    private final transient ArrayList<WorkflowListener> m_eventListeners =
+    private final transient ArrayList<WorkflowListener> m_eventListeners = 
         new ArrayList<WorkflowListener>();
 
     // quick access to IDs via Nodes
-    private final Map<Node, Integer> m_idsByNode =
-        new HashMap<Node, Integer>();
-    
-    
+    private final Map<Node, Integer> m_idsByNode = new HashMap<Node, Integer>();
+
     // quick access to nodes by ID
     private final Map<Integer, NodeContainer> m_nodeContainerByID = 
         new HashMap<Integer, NodeContainer>();
-    
+
     private final WorkflowManager m_parent;
-    private final List<WeakReference<WorkflowManager>> m_children =
+
+    private final List<WeakReference<WorkflowManager>> m_children = 
         new ArrayList<WeakReference<WorkflowManager>>();
 
     private volatile int m_runningConnectionID = -1;
-    
+
     // internal variables to allow generation of unique indices
     private volatile int m_runningNodeID = -1;
-    
+
     private WorkflowExecutor m_executor;
-    
+
     private final Object m_modificationLock = new Object();
-    
+
     /**
-     * Identifier for KNIME workflows. 
+     * Identifier for KNIME workflows.
      */
     public static final String WORKFLOW_FILE = "workflow.knime";
-    
+
     /**
      * Create new Workflow.
      */
     public WorkflowManager() {
         m_parent = null;
     }
-    
-    public WorkflowManager(final File file) 
-            throws IOException, InvalidSettingsException {
-        this(toNodeSettings(file));
+
+    /**
+     * Create new WorkflowManager by a given <code>WORKFLOW_FILE</code>. All
+     * nodes and connection are initialzied, and - if available -
+     * <code>NodeSettings</code>, <code>DataTableSpec</code>,
+     * <code>DataTable</code>, and <code>PredictiveParams</code> are loaded
+     * into each node.
+     * 
+     * @param workflowFile The location of the workflow file,
+     *            <code>WORKFLOW_FILE</code>.
+     * @throws InvalidSettingsException If settings can not be read.
+     * @throws IOException If the workflow file can not be found or files to
+     *             load node interna.
+     */
+    public WorkflowManager(final File workflowFile)
+            throws InvalidSettingsException, IOException {
+        this();
+
+        if (!workflowFile.isFile()
+                || !workflowFile.getName().equals(WORKFLOW_FILE)) {
+            throw new IOException("File must be named: \"" + WORKFLOW_FILE
+                    + "\": " + workflowFile);
+        }
+
+        // load workflow topology
+        NodeSettings settings = NodeSettings.loadFromXML(new FileInputStream(
+                workflowFile));
+        load(settings);
+
         ExecutionMonitor exec = new ExecutionMonitor(
                 new DefaultNodeProgressMonitor());
-        for (NodeContainer nextNode : m_nodeContainerByID.values()) {
-            Node n = nextNode.getNode();
-            if (n.isExecuted()) {
-                File targetDir = new File(file.getParentFile(), 
-                        "node_" + nextNode.getID());
-                n.loadInternals(targetDir, exec);
+        
+        File parentDir = workflowFile.getParentFile();
+        
+        // get all keys in there
+        for (NodeContainer newNode : analyzeTopology()) {
+            try {
+                NodeSettings nodeSetting = settings.getConfig(KEY_NODES);
+                String nodeFileName = 
+                    nodeSetting.getString(KEY_NODE_SETTINGS_FILE);
+                File nodeFile = new File(parentDir, nodeFileName);
+                newNode.getNode().load(nodeFile, exec);
+            } catch (IOException ioe) {
+                LOGGER.warn("Unable to load node internals for: "
+                        + newNode.getName() + "(#" + newNode.getID() + ")");
+                newNode.getNode().reset();
+            } catch (InvalidSettingsException ise) {
+                LOGGER.warn("Unable to load settings for: " + newNode.getName()
+                        + "(#" + newNode.getID() + ")");
+                newNode.getNode().reset();
+            }
+        }
+    }
+
+    /**
+     * Only load internal workflow manager settings, init nodes and connections.
+     * No NodeSettings, DataTableSpec, DataTable, or PredictiveParams are
+     * loaded.
+     * 
+     * @param settings Read settings from.
+     * @throws InvalidSettingsException If an error occurs during reading.
+     */
+    public void load(final NodeSettings settings)
+            throws InvalidSettingsException {
+        // read running ids for new nodes and connections
+        m_runningNodeID = settings.getInt(KEY_RUNNING_NODE_ID);
+        m_runningConnectionID = settings.getInt(KEY_RUNNING_CONN_ID);
+
+        // read nodes
+        NodeSettings nodes = settings.getConfig(KEY_NODES); // Node-Subconfig
+        // get all keys in there
+        for (String nodeKey : nodes.keySet()) {
+            NodeSettings nodeSetting = null;
+            try {
+                // retrieve config object for each node
+                nodeSetting = nodes.getConfig(nodeKey);
+                // create NodeContainer based on NodeSettings object
+                NodeContainer newNode = new NodeContainer(nodeSetting, this);
+                // and add it to workflow
+                addNodeWithID(newNode);
+            } catch (InvalidSettingsException ise) {
+                LOGGER.warn("Could not create node " + nodeKey + " reason: "
+                        + ise.getMessage());
+                LOGGER.debug(nodeSetting, ise);
             }
         }
 
-    }
-    
-    private static NodeSettings toNodeSettings(final File file)
-            throws IOException {
-        if (!file.isFile() || !file.getName().equals(WORKFLOW_FILE)) {
-            throw new IOException("File must be named: \"" 
-                    + WORKFLOW_FILE + "\": " + file);
+        // read connections
+        NodeSettings connections = settings.getConfig(KEY_CONNECTIONS);
+        for (String connectionKey : connections.keySet()) {
+            // retrieve config object for next connection
+            NodeSettings connectionConfig = connections
+                    .getConfig(connectionKey);
+            // and add appropriate connection to workflow
+            try {
+                ConnectionContainer cc = new ConnectionContainer(
+                        ++m_runningConnectionID, connectionConfig, this);
+                addConnection(cc);
+            } catch (InvalidSettingsException ise) {
+                LOGGER.warn("Could not create connection " + connectionKey
+                        + " reason: " + ise.getMessage());
+                LOGGER.debug(connectionConfig, ise);
+            }
         }
-        return NodeSettings.loadFromXML(new FileInputStream(file));
-    }    
-    
+    }
 
-    /**
-     * Creates a new workflow manager and reads a workflow from the given
-     * settings object.
-     * 
-     * @param settings the settings that contain the workflow
-     * @throws InvalidSettingsException if an expected key is missing in the
-     * settings
-     * @deprecated
-     */
-    @Deprecated
-    public WorkflowManager(final NodeSettings settings)
-    throws InvalidSettingsException {
-        this();
-        load(settings);
+    private Collection<NodeContainer> analyzeTopology() {
+        Collection<NodeContainer> termList = new ArrayList<NodeContainer>();
+        for (Integer nodeKey : m_nodeContainerByID.keySet()) {
+            NodeContainer newNode = m_nodeContainerByID.get(nodeKey);
+            NodeContainer[][] succ = newNode.getSuccessors();
+            boolean term = true;
+            for (int i = 0; i < succ.length; i++) {
+                if (succ[i].length > 0) {
+                    term = false;
+                    break;
+                }
+            }
+            if (term) {
+                termList.add(newNode);
+            }
+        }
+        ArrayList<NodeContainer> list = new ArrayList<NodeContainer>(termList);
+        analyzerHelp(termList, list);
+        return list;
+    }
+
+    private void analyzerHelp(final Collection<NodeContainer> current,
+            final ArrayList<NodeContainer> result) {
+        for (NodeContainer con : current) {
+            if (con != null) {
+                Collection<NodeContainer> pred = con.getPredecessors();
+                for (NodeContainer preCon : pred) {
+                    if (preCon != null && !result.contains(preCon)) {
+                        NodeContainer[][] succ = preCon.getSuccessors();
+                        boolean notContained = true;
+                        for (int i = 0; i < succ.length; i++) {
+                            for (int j = 0; j < succ[i].length; j++) {
+                                if (!result.contains(succ[i][j])) {
+                                    notContained = false;
+                                }
+                            }
+                        }
+                        if (notContained) {
+                            result.add(0, preCon);
+                        }
+                    }
+                }
+            }
+        }
+        for (NodeContainer con : current) {
+            if (con != null) {
+                analyzerHelp(con.getPredecessors(), result);
+            }
+        }
     }
 
     /**
@@ -182,24 +296,22 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * @return newly create edge
      * @throws IllegalArgumentException if port indices are invalid
      */
-    public synchronized ConnectionContainer addConnection(final int idOut,
+    public ConnectionContainer addConnection(final int idOut,
             final int portOut, final int idIn, final int portIn) {
-        synchronized (m_modificationLock) {
-            NodeContainer nodeOut = m_nodeContainerByID.get(idOut);
-            NodeContainer nodeIn = m_nodeContainerByID.get(idIn);
-    
-            if (nodeOut == null) {
-                throw new IllegalArgumentException("Node with id #" + idOut
-                        + " does not exist.");
-            }
-            if (nodeIn == null) {
-                throw new IllegalArgumentException("Node with id #" + idIn
-                        + " does not exist.");
-            }
-    
-            return addConnection(m_nodeContainerByID.get(idOut), portOut,
-                    m_nodeContainerByID.get(idIn), portIn);
+        NodeContainer nodeOut = m_nodeContainerByID.get(idOut);
+        NodeContainer nodeIn = m_nodeContainerByID.get(idIn);
+
+        if (nodeOut == null) {
+            throw new IllegalArgumentException("Node with id #" + idOut
+                    + " does not exist.");
         }
+        if (nodeIn == null) {
+            throw new IllegalArgumentException("Node with id #" + idIn
+                    + " does not exist.");
+        }
+
+        return addConnection(m_nodeContainerByID.get(idOut), portOut,
+                m_nodeContainerByID.get(idIn), portIn);
     }
 
     /**
@@ -212,44 +324,38 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * @param portIn index of port on target
      * @return newly create edge
      */
-    public ConnectionContainer addConnection(
-            final NodeContainer outNode, final int portOut,
-            final NodeContainer inNode, final int portIn) {
-        synchronized (m_modificationLock) {        
-            if (m_parent == null) {
-                if (!m_idsByNode.containsKey(outNode.getNode())) {
-                    throw new IllegalArgumentException("The output node"
-                            + " container is not handled by this workflow"
-                            + " manager");
-                }
-                if (!m_idsByNode.containsKey(inNode.getNode())) {
-                    throw new IllegalArgumentException("The input node"
-                            + " container is not handled by this workflow"
-                            + " manager");
-                }
+    public ConnectionContainer addConnection(final NodeContainer outNode,
+            final int portOut, final NodeContainer inNode, final int portIn) {
+        if (m_parent == null) {
+            if (!m_idsByNode.containsKey(outNode.getNode())) {
+                throw new IllegalArgumentException("The output node container"
+                        + " is not handled by this workflow manager");
             }
-    
-            ConnectionContainer newConnection = new ConnectionContainer(
-                    ++m_runningConnectionID, outNode, portOut, inNode, portIn);
-            addConnection(newConnection);
-            return newConnection;
+            if (!m_idsByNode.containsKey(inNode.getNode())) {
+                throw new IllegalArgumentException("The input node container"
+                        + " is not handled by this workflow manager");
+            }
         }
+
+        ConnectionContainer newConnection = new ConnectionContainer(
+                ++m_runningConnectionID, outNode, portOut, inNode, portIn);
+        addConnection(newConnection);
+        return newConnection;
     }
 
-    
     private void addConnection(final ConnectionContainer cc) {
         if (m_connectionsByID.containsKey(cc.getID())) {
-            throw new IllegalArgumentException("A connection with id #" 
+            throw new IllegalArgumentException("A connection with id #"
                     + cc.getID() + " already exists in the workflow.");
         }
-            
+
         NodeContainer outNode = cc.getSource();
         NodeContainer inNode = cc.getTarget();
         int outPort = cc.getSourcePortID();
         int inPort = cc.getTargetPortID();
-        
+
         m_connectionsByID.put(cc.getID(), cc);
-        
+
         // add outgoing edge
         outNode.addOutgoingConnection(outPort, inNode);
 
@@ -257,18 +363,17 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         inNode.addIncomingConnection(inPort, outNode);
         inNode.getNode().getInPort(inPort).connectPort(
                 outNode.getNode().getOutPort(outPort));
-        
-        
+
         // add this manager as listener for workflow event
-        cc.addWorkflowListener(this);        
+        cc.addWorkflowListener(this);
 
         // notify listeners
         LOGGER.debug("Added connection (from node id:" + outNode.getID()
-                + ", port:" + outPort
-                + " to node id:" + inNode.getID() + ", port:" + inPort + ")");
+                + ", port:" + outPort + " to node id:" + inNode.getID()
+                + ", port:" + inPort + ")");
         fireWorkflowEvent(new WorkflowEvent.ConnectionAdded(-1, null, cc));
     }
-    
+
     /**
      * Adds a listener to the workflow, has no effect if the listener is already
      * registered.
@@ -289,13 +394,11 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * @return the <code>NodeContainer</code> representing the created node
      */
     public NodeContainer addNewNode(final NodeFactory factory) {
-        synchronized (m_modificationLock) {
-            Node node = new Node(factory, this);
-            LOGGER.debug("adding node '" + node + "' to the workflow...");
-            int id = addNode(node);
-            LOGGER.debug("done, ID=" + id);
-            return getNodeContainer(node);
-        }
+        Node node = new Node(factory, this);
+        LOGGER.debug("adding node '" + node + "' to the workflow...");
+        int id = addNode(node);
+        LOGGER.debug("done, ID=" + id);
+        return getNodeContainer(node);
     }
 
     /**
@@ -315,7 +418,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         assert (!m_nodeContainerByID.containsKey(newNodeID));
         // create new wrapper for this node
 
-        NodeContainer newNode = new NodeContainer(n, newNodeID);        
+        NodeContainer newNode = new NodeContainer(n, newNodeID);
 
         // add WorkflowManager as listener for state change events
         newNode.addListener(this);
@@ -325,9 +428,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
         // notify listeners
         LOGGER.debug("Added " + newNode.getNameWithID());
-        fireWorkflowEvent(new WorkflowEvent.NodeAdded(newNodeID, null,
-                newNode));
-
+        fireWorkflowEvent(new WorkflowEvent.NodeAdded(
+                newNodeID, null, newNode));
         return newNodeID;
     }
 
@@ -434,14 +536,13 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         // }
         return !loop;
     }
-    
-    
+
     /**
      * Cancel execution of all remaining nodes after the specified node.
      * 
      * @param nodeID the node's ID after which excution is to be canceled.
      */
-    public void cancelExecutionAfterNode(final int nodeID) {
+    public synchronized void cancelExecutionAfterNode(final int nodeID) {
         NodeContainer thisNodeC = m_nodeContainerByID.get(nodeID);
         cancelExecutionAfterNode(thisNodeC);
         // check if any other nodes are either in the queue or already
@@ -458,7 +559,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         }
     }
 
-    private void cancelExecutionAfterNode(final NodeContainer n) {
+    private synchronized void cancelExecutionAfterNode(final NodeContainer n) {
         // try to cancel this node
         if ((n.getState() == NodeContainer.State.WaitingToBeExecutable)) {
             // ok, we can simply change the node's flag
@@ -498,7 +599,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * them will be asked to terminate. This routine requires the goodwill of
      * the implementations of the individual execute-routines.
      */
-    public void cancelExecutionAllRemainingNodes() {
+    public synchronized void cancelExecutionAllRemainingNodes() {
         int canceledNodes = 0; // how many could we cancel
         int currentlyInQueue = 0; // how many are already in the queue?
         int currentlyExecuting = 0; // how many are already executing?
@@ -532,10 +633,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         }
     }
 
-
     /**
-     * Creates and returns a new workflowmanager that handles a workflow
-     * that is contained in the workflow that this manager handles.
+     * Creates and returns a new workflowmanager that handles a workflow that is
+     * contained in the workflow that this manager handles.
      * 
      * @return a subordinate workflow manager
      */
@@ -558,7 +658,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      *             valid
      */
     public int[] createSubWorkflow(final NodeSettings settings,
-            final int positionChangeMultiplier)
+            final int positionChangeMultiplier) 
             throws InvalidSettingsException {
         NodeSettings nodes = settings.getConfig(KEY_NODES); // Node-Subconfig
 
@@ -574,9 +674,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 // retrieve config object for each node
                 nodeSetting = nodes.getConfig(nodeKey);
                 // create NodeContainer based on NodeSettings object
-                final NodeContainer newNode =
-                    new NodeContainer(nodeSetting, this);
-
+                final NodeContainer newNode = new NodeContainer(nodeSetting,
+                        this);
 
                 // change the id, as this id is already in use (it was copied)
                 // first remeber the old id "map(oldId, newId)"
@@ -639,7 +738,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                         || idMap.get(oldTargetID) == null) {
                     continue;
                 }
-                
+
                 ConnectionContainer cc = new ConnectionContainer(
                         ++m_runningConnectionID, connectionConfig, this, idMap);
                 addConnection(cc);
@@ -668,44 +767,42 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * @param nodeCont The container which should be completely disconnected
      */
     public void disconnectNodeContainer(final NodeContainer nodeCont) {
-        synchronized (m_modificationLock) {        
-            int numIn = nodeCont.getNode().getNrInPorts();
-            int numOut = nodeCont.getNode().getNrOutPorts();
-            
-            List<ConnectionContainer> connections =
-                new ArrayList<ConnectionContainer>();
-            // collect incoming connections
-            for (int i = 0; i < numIn; i++) {
-                ConnectionContainer c = getIncomingConnectionAt(nodeCont, i);
-                if (c != null) {
-                    connections.add(c);
-                }
+        int numIn = nodeCont.getNode().getNrInPorts();
+        int numOut = nodeCont.getNode().getNrOutPorts();
+
+        List<ConnectionContainer> connections = 
+            new ArrayList<ConnectionContainer>();
+        // collect incoming connections
+        for (int i = 0; i < numIn; i++) {
+            ConnectionContainer c = getIncomingConnectionAt(nodeCont, i);
+            if (c != null) {
+                connections.add(c);
             }
-            // collect outgoing connections
-            for (int i = 0; i < numOut; i++) {
-                List<ConnectionContainer> cArr =
-                    getOutgoingConnectionsAt(nodeCont, i);
-                if (cArr != null) {
-                    connections.addAll(cArr);
-                }
+        }
+        // collect outgoing connections
+        for (int i = 0; i < numOut; i++) {
+            List<ConnectionContainer> cArr = getOutgoingConnectionsAt(nodeCont,
+                    i);
+            if (cArr != null) {
+                connections.addAll(cArr);
             }
-    
-            // remove all collected connections
-            for (ConnectionContainer container : connections) {
-                removeConnectionIfExists(container);
-            }
+        }
+
+        // remove all collected connections
+        for (ConnectionContainer container : connections) {
+            removeConnectionIfExists(container);
         }
     }
 
     /*
-     * Notifes all registered listeners of the event. 
+     * Notifes all registered listeners of the event.
      */
     @SuppressWarnings("unchecked")
     private void fireWorkflowEvent(final WorkflowEvent event) {
         // we make a copy here because a listener can add or remove
         // itself or another listener during handling the event
         // this will then cause a ConcurrentModificationException
-        ArrayList<WorkflowListener> temp =
+        ArrayList<WorkflowListener> temp = 
             (ArrayList<WorkflowListener>)m_eventListeners.clone();
         for (WorkflowListener l : temp) {
             l.workflowChanged(event);
@@ -718,7 +815,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * @param container a node in the workflow
      * @param portNum index of the in-port
      * @return the connection that is attached to the given in-port or
-     * <code>null</code> if no such connection exists
+     *         <code>null</code> if no such connection exists
      * @throws IllegalArgumentException If either nodeID or portNum is invalid.
      */
     public ConnectionContainer getIncomingConnectionAt(
@@ -752,10 +849,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * never actually executed! We need a way to have a watchdog timer that
      * resets these flags if nothing has happened for "too long"...
      * 
-     * @return next runnable node or <code>null</code> of none is currently (!)
-     * available.
+     * @return next runnable node or <code>null</code> of none is currently
+     *         (!) available.
      */
-    public NodeContainer getNextExecutableNode() {
+    public synchronized NodeContainer getNextExecutableNode() {
         // right now just look for next runnable node from start every time
         for (NodeContainer nc : m_nodeContainerByID.values()) {
             if ((nc.getState() == NodeContainer.State.IsExecutable)
@@ -766,7 +863,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 return nc;
             }
         }
-        
+
         if (m_parent != null) {
             return m_parent.getNextExecutableNode();
         }
@@ -774,15 +871,14 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         return null;
     }
 
-    
     /**
-     * Starts the execution of a workflow (or parts of it) by sending events.
-     * No node will be directly executed by this method.
+     * Starts the execution of a workflow (or parts of it) by sending events. No
+     * node will be directly executed by this method.
      */
     public void startExecution() {
         checkForExecutableNodes();
     }
-    
+
     /**
      * return a node for a specific identifier. Returns null if ID is not found,
      * throws an exception if something odd happens.
@@ -814,7 +910,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 return null;
             }
         }
-        
+
         NodeContainer cont = m_nodeContainerByID.get(id);
         return cont;
     }
@@ -853,7 +949,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      */
     public List<ConnectionContainer> getOutgoingConnectionsAt(
             final NodeContainer container, final int portNum) {
-        List<ConnectionContainer> foundConnections =
+        List<ConnectionContainer> foundConnections = 
             new ArrayList<ConnectionContainer>();
 
         // If the node is contained, process it
@@ -875,74 +971,17 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     }
 
     /**
-     * Read workflow setup from configuration object. Nodes will be read first
-     * and then used to reconstruct the connections between them since the nodes
-     * do not store their connections.
-     * 
-     * @param settings the configuration object
-     * @throws InvalidSettingsException when a key is missing
-     */
-    public void load(final NodeSettings settings)
-            throws InvalidSettingsException {
-        synchronized (m_modificationLock) {        
-            // read name
-            // read running ids for new nodes and connections
-            m_runningNodeID = settings.getInt(KEY_RUNNING_NODE_ID);
-            m_runningConnectionID = settings.getInt(KEY_RUNNING_CONN_ID);
-            
-            // read nodes
-            NodeSettings nodes = settings.getConfig(KEY_NODES);
-            // object
-            // get all keys in there
-            for (String nodeKey : nodes.keySet()) {
-                NodeSettings nodeSetting = null;
-                try {
-                    // retrieve config object for each node
-                    nodeSetting = nodes.getConfig(nodeKey);
-                    // create NodeContainer based on NodeSettings object
-                    NodeContainer node = new NodeContainer(nodeSetting, this);
-                    // and add it to workflow
-                    addNodeWithID(node);
-                } catch (InvalidSettingsException ise) {
-                    LOGGER.warn("Could not create node " + nodeKey + " reason: "
-                            + ise.getMessage());
-                    LOGGER.debug(nodeSetting, ise);
-                }
-            }
-            
-            // read connections
-            NodeSettings connections = settings.getConfig(KEY_CONNECTIONS);
-            for (String connectionKey : connections.keySet()) {
-                // retrieve config object for next connection
-                NodeSettings connectionConfig = connections
-                        .getConfig(connectionKey);
-                // and add appropriate connection to workflow
-                try {
-                    ConnectionContainer cc = new ConnectionContainer(
-                            ++m_runningConnectionID, connectionConfig, this);
-                    addConnection(cc);
-                } catch (InvalidSettingsException ise) {
-                    LOGGER.warn("Could not create connection " + connectionKey
-                            + " reason: " + ise.getMessage());
-                    LOGGER.debug(connectionConfig, ise);
-                }
-            }
-        }
-    }
-    
-    
-    /**
      * Mark all nodes that are not yet executed as "to be executed" and the ones
      * that are actually executable (all predecessors data is available) as
      * "runnable". If no executable nodes have been found, a
      * {@link WorkflowEvent.ExecPoolDone} is fired.
      */
-    public void prepareForExecAllNodes() {
+    public synchronized void prepareForExecAllNodes() {
         for (NodeContainer nc : m_nodeContainerByID.values()) {
             if (!(nc.getNode().isExecuted())
                 && (nc.getState() != NodeContainer.State.WaitingForExecution)
                 && (nc.getState() != NodeContainer.State.CurrentlyExecuting)) {
-                
+
                 if (nc.getNode().isExecutable()) {
                     nc.setState(NodeContainer.State.IsExecutable);
                 } else {
@@ -950,7 +989,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 }
             }
         }
-        
+
         if (m_parent != null) {
             for (ConnectionContainer cc : m_connectionsByID.values()) {
                 if (!m_nodeContainerByID.containsValue(cc.getSource())) {
@@ -961,13 +1000,13 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     }
 
     /**
-     * Mark all nodes that are neceesary for the specificed node to be
-     * excecuted as "to be executed" - the remaining behaviour is similar to
+     * Mark all nodes that are neceesary for the specificed node to be excecuted
+     * as "to be executed" - the remaining behaviour is similar to
      * {@link #prepareForExecAllNodes()}.
      * 
      * @param nodeID the node's ID which is ultimately to be executed.
      */
-    public void prepareForExecUpToNode(final int nodeID) {
+    public synchronized void prepareForExecUpToNode(final int nodeID) {
         NodeContainer nc = m_nodeContainerByID.get(nodeID);
         prepareForExecUpToNode(nc);
     }
@@ -980,7 +1019,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * 
      * @param n a node container
      */
-    private void prepareForExecUpToNode(final NodeContainer n) {
+    private synchronized void prepareForExecUpToNode(final NodeContainer n) {
         if (!(n.getNode().isExecuted())
                 && (n.getState() != NodeContainer.State.WaitingForExecution)
                 && (n.getState() != NodeContainer.State.CurrentlyExecuting)) {
@@ -1001,7 +1040,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                         m_parent.prepareForExecUpToNode(pred);
                     } else {
                         throw new IllegalStateException("The node #"
-                                + pred.getID() + "(" + pred.nodeToString() + ")"
+                                + pred.getID() + "(" + pred.nodeToString()
+                                + ")"
                                 + " is not part of this workflow manager or"
                                 + " its parent manager");
                     }
@@ -1018,35 +1058,33 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * 
      * @param connection to be deleted
      */
-    public void removeConnectionIfExists(
+    public synchronized void removeConnectionIfExists(
             final ConnectionContainer connection) {
-        synchronized (m_modificationLock) {        
-            // if connection does not exist simply return
-            if (!(m_connectionsByID.containsKey(connection.getID()))) {
-                return;
-            }
-    
-            // retrieve source and target node
-            NodeContainer nodeOut = connection.getSource();
-            int portOut = connection.getSourcePortID();
-            NodeContainer nodeIn = connection.getTarget();
-            int portIn = connection.getTargetPortID();
-            // remove outgoing edge
-            nodeOut.removeOutgoingConnection(portOut, nodeIn);
-            // remove incoming edge
-            nodeIn.removeIncomingConnection(portIn);
-            // also disconnect the two underlying Nodes.
-            nodeIn.getNode().getInPort(portIn).disconnectPort();
-            // finally remove connection from internal list
-            m_connectionsByID.remove(connection.getID());
-    
-            // notify listeners
-            LOGGER.info("Removed connection (from node id:" + nodeOut.getID()
-                    + ", port:" + portOut + " to node id:" + nodeIn.getID()
-                    + ", port:" + portIn + ")");
-            fireWorkflowEvent(new WorkflowEvent.ConnectionRemoved(-1,
-                    connection, null));
+        // if connection does not exist simply return
+        if (!(m_connectionsByID.containsKey(connection.getID()))) {
+            return;
         }
+
+        // retrieve source and target node
+        NodeContainer nodeOut = connection.getSource();
+        int portOut = connection.getSourcePortID();
+        NodeContainer nodeIn = connection.getTarget();
+        int portIn = connection.getTargetPortID();
+        // remove outgoing edge
+        nodeOut.removeOutgoingConnection(portOut, nodeIn);
+        // remove incoming edge
+        nodeIn.removeIncomingConnection(portIn);
+        // also disconnect the two underlying Nodes.
+        nodeIn.getNode().getInPort(portIn).disconnectPort();
+        // finally remove connection from internal list
+        m_connectionsByID.remove(connection.getID());
+
+        // notify listeners
+        LOGGER.info("Removed connection (from node id:" + nodeOut.getID()
+                + ", port:" + portOut + " to node id:" + nodeIn.getID()
+                + ", port:" + portIn + ")");
+        fireWorkflowEvent(new WorkflowEvent.ConnectionRemoved(-1, connection,
+                null));
     }
 
     /**
@@ -1065,146 +1103,185 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * 
      * @param container node to be removed
      */
-    public void removeNode(final NodeContainer container) {
-        synchronized (m_modificationLock) {
-            Node node = container.getNode();
-            Integer id = m_idsByNode.get(node);
-            // tell node that it has been disconnected (close views...)
-            node.detach();
-    
-            if (id != null) {
-                // FG: First remove all connections
-                disconnectNodeContainer(container);
-    
-                container.removeAllListeners();
-    
-                m_nodeContainerByID.remove(id);
-                m_idsByNode.remove(container.getNode());
-    
-                // notify listeners
-                LOGGER.debug("Removed: " + container.getNameWithID());
-                fireWorkflowEvent(new WorkflowEvent.NodeRemoved(id, container,
-                        null));
-            } else {
-                LOGGER.error("Could not find (and remove): " + node.getName());
-                throw new IllegalArgumentException(
-                        "Node not managed by this workflow: " + node);
-            }
+    public synchronized void removeNode(final NodeContainer container) {
+        Node node = container.getNode();
+        Integer id = m_idsByNode.get(node);
+        // tell node that it has been disconnected (close views...)
+        node.detach();
+
+        if (id != null) {
+            // FG: First remove all connections
+            disconnectNodeContainer(container);
+
+            container.removeAllListeners();
+
+            m_nodeContainerByID.remove(id);
+            m_idsByNode.remove(container.getNode());
+
+            // notify listeners
+            LOGGER.debug("Removed: " + container.getNameWithID());
+            fireWorkflowEvent(
+                    new WorkflowEvent.NodeRemoved(id, container, null));
+        } else {
+            LOGGER.error("Could not find (and remove): " + node.getName());
+            throw new IllegalArgumentException(
+                    "Node not managed by this workflow: " + node);
         }
     }
 
-    
     /**
      * Removes all nodes and connection from the workflow.
      */
-    public void clear() {
-        synchronized (m_modificationLock) {
-            List<NodeContainer> containers =
-                new ArrayList<NodeContainer>(m_nodeContainerByID.values());
-            for (NodeContainer nc : containers) {
-                removeNode(nc);
-            }
-            
-            assert (m_nodeContainerByID.size() == 0);
-            assert (m_connectionsByID.size() == 0);
-            assert (m_idsByNode.size() == 0);
-            m_runningConnectionID = -1;
-            m_runningNodeID = -1;
+    public synchronized void clear() {
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(
+                m_nodeContainerByID.values());
+        for (NodeContainer nc : containers) {
+            removeNode(nc);
         }
+
+        assert (m_nodeContainerByID.size() == 0);
+        assert (m_connectionsByID.size() == 0);
+        assert (m_idsByNode.size() == 0);
+        m_runningConnectionID = -1;
+        m_runningNodeID = -1;
     }
-    
+
     /**
-     * Stores all workflow information into the given configuration. Note that
-     * we have to store both nodes and connections and re-create them in that
-     * order since connections reference IDs of nodes. Nodes themselves will not
-     * store their predecessors or successors.
-     * 
-     * @param settings the configuration the current settings are written to.
-     * @see #load
-     * @deprecated
+     * Saves this workflow manager settings including nodes and connections
+     * into the given file. In additon, all nodes' internal structures are
+     * stored - if available, depending on the current node state, reset, 
+     * configured, or executed. For each node a directory is created (at
+     * the workflow file's parent path) to save the node internals.
+     * @param workflowFile To write workflow manager settings to.
+     * @throws IOException If the workflow file can't be found.
+     * @throws CanceledExecutionException If the saving process has been 
+     *         canceled.
      */
-    @Deprecated
-    public void save(final NodeSettings settings) {
+    public void save(final File workflowFile) throws IOException,
+            CanceledExecutionException {
         synchronized (m_modificationLock) {
-            save(settings, new HashSet<NodeContainer>());
-        }
-    }
-    
-    public void save(final File file) 
-        throws IOException, CanceledExecutionException {
-        synchronized (m_modificationLock) {        
-            if (!file.isFile() || !file.getName().equals(WORKFLOW_FILE)) {
-                throw new IOException("File must be named: \"" 
-                        + WORKFLOW_FILE + "\": " + file);
+            if (!workflowFile.isFile()
+                    || !workflowFile.getName().equals(WORKFLOW_FILE)) {
+                throw new IOException("File must be named: \"" + WORKFLOW_FILE
+                        + "\": " + workflowFile);
             }
-            // file.getName is ignored when reading.
-            NodeSettings settings = new NodeSettings(file.getName());
-            this.save(settings);
-            FileOutputStream fos = new FileOutputStream(file);
-            settings.saveToXML(fos);
             ExecutionMonitor exec = new ExecutionMonitor(
                     new DefaultNodeProgressMonitor());
+            File parentDir = workflowFile.getParentFile();
+            // workflow settings
+            NodeSettings settings = new NodeSettings(WORKFLOW_FILE);
+            // save current running id
+            settings.addInt(KEY_RUNNING_NODE_ID, m_runningNodeID);
+            // save current connection id
+            settings.addInt(KEY_RUNNING_CONN_ID, m_runningConnectionID);
+            // save nodes in an own sub-config object as a series of configs
+            NodeSettings nodes = settings.addConfig(KEY_NODES);
             for (NodeContainer nextNode : m_nodeContainerByID.values()) {
-                Node n = nextNode.getNode();
-                if (n.isExecuted()) {
-                    File targetDir = new File(file.getParentFile(), 
-                            "node_" + nextNode.getID());
-                    if (!targetDir.isDirectory() && !targetDir.mkdir()) {
-                        throw new IOException("Unable to create dir: "
-                                + targetDir);
-                    }
-                    n.saveInternals(targetDir, exec);
+                String nodeDirID = "node_" + nextNode.getID();
+                // and save it to it's own config object
+                NodeSettings nextNodeConfig = nodes.addConfig(nodeDirID);
+                String nodeFileName = nodeDirID + "/" + Node.SETTINGS_FILE_NAME;
+                nextNodeConfig.addString(KEY_NODE_SETTINGS_FILE, nodeFileName);
+                File nodeFile = new File(parentDir, nodeFileName);
+                File nodeDir = nodeFile.getParentFile();
+                if (!nodeDir.isDirectory() && !nodeDir.mkdir()) {
+                    throw new IOException("Unable to create dir: " + nodeDir);
                 }
+                nextNode.save(nextNodeConfig);
+                nextNode.getNode().save(nodeFile, exec);
+                // TODO notify about node settings saved ????
             }
+            // save connections in an own sub-config object as a series of
+            // configs
+            NodeSettings connections = settings.addConfig(KEY_CONNECTIONS);
+            for (ConnectionContainer nextConnection : m_connectionsByID
+                    .values()) {
+                // and save it to it's own config object
+                NodeSettings nextConnectionConfig = connections
+                        .addConfig("connection_" + nextConnection.getID());
+                nextConnection.save(nextConnectionConfig);
+                // TODO notify about connection settings saved ????
+            }
+            settings.saveToXML(new FileOutputStream(workflowFile));
         }
     }
 
-    
     /**
-     * Saves the workflow but omits all nodes and their connection in the
-     * given set.
+     * Saves only the workflow manager nodes and connections.
+     * @param settings To write settings into.
+     */
+    public void save(final NodeSettings settings) {
+        // save current running id
+        settings.addInt(KEY_RUNNING_NODE_ID, m_runningNodeID);
+        // save current connection id
+        settings.addInt(KEY_RUNNING_CONN_ID, m_runningConnectionID);
+        // save nodes in an own sub-config object as a series of configs
+        NodeSettings nodes = settings.addConfig(KEY_NODES);
+        for (NodeContainer nextNode : m_nodeContainerByID.values()) {
+            String nodeSettingsID = "node_" + nextNode.getID();
+            // and save it to it's own config object
+            NodeSettings nextNodeConfig = nodes.addConfig(nodeSettingsID);
+            nextNode.save(nextNodeConfig);
+            nextNodeConfig.addString("node_path", nodeSettingsID + "/"
+                    + "settings.xml");
+            // TODO notify about node settings saved ????
+        }
+        // save connections in an own sub-config object as a series of configs
+        NodeSettings connections = settings.addConfig(KEY_CONNECTIONS);
+        for (ConnectionContainer nextConnection : m_connectionsByID.values()) {
+            // and save it to it's own config object
+            NodeSettings nextConnectionConfig = connections
+                    .addConfig("connection_" + nextConnection.getID());
+            nextConnection.save(nextConnectionConfig);
+            // TODO notify about connection settings saved ????
+        }
+    }
+
+    /**
+     * Saves the workflow but omits all nodes and their connection in the given
+     * set.
      * 
      * @param settings the configuration the current settings are written to.
      * @param omitNodes a set of nodes that should not be saved
      * @see #save(NodeSettings)
      */
-    public void save(final NodeSettings settings,
+    public synchronized void save(final NodeSettings settings,
             final Set<NodeContainer> omitNodes) {
-        synchronized (m_modificationLock) {
-            // save name
-            // save current running ids
-            settings.addInt(KEY_RUNNING_NODE_ID, m_runningNodeID);
-            settings.addInt(KEY_RUNNING_CONN_ID, m_runningConnectionID);
-            // save nodes in an own sub-config object as a series of configs
-            NodeSettings nodes = settings.addConfig(KEY_NODES);
-            for (NodeContainer nextNode : m_nodeContainerByID.values()) {
-                if (omitNodes.contains(nextNode)) { continue; }
-                
-                // and save it to it's own config object
-                NodeSettings nextNodeConfig = nodes.addConfig("node_"
-                        + nextNode.getID());
-                nextNode.save(nextNodeConfig);
-                // TODO notify about node settings saved ????
-            }
-            
-            // save connections in an own sub-config as a series of configs
-            NodeSettings connections = settings.addConfig(KEY_CONNECTIONS);
-            for (ConnectionContainer nextCon : m_connectionsByID.values()) {
-                if (omitNodes.contains(nextCon.getSource())
-                    || omitNodes.contains(nextCon.getTarget())) {
-                    continue;
-                }
-                
-                // and save it to it's own config object
-                NodeSettings nextConnectionConfig = connections
-                        .addConfig("connection_" + nextCon.getID());
-                nextCon.save(nextConnectionConfig);
-                // TODO notify about connection settings saved ????
+        List<Map.Entry<Integer, NodeContainer>> tempNodes =
+            new ArrayList<Map.Entry<Integer, NodeContainer>>();
+
+        for (Iterator<Map.Entry<Integer, NodeContainer>> it = 
+                m_nodeContainerByID.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<Integer, NodeContainer> e = it.next();
+            if (omitNodes.contains(e.getValue())) {
+                tempNodes.add(e);
+                it.remove();
             }
         }
+
+        List<Map.Entry<Integer, ConnectionContainer>> tempConns = 
+            new ArrayList<Map.Entry<Integer, ConnectionContainer>>();
+
+        for (Iterator<Map.Entry<Integer, ConnectionContainer>> it = 
+                m_connectionsByID.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<Integer, ConnectionContainer> e = it.next();
+            if (omitNodes.contains(e.getValue().getSource())
+                    || omitNodes.contains(e.getValue().getTarget())) {
+                tempConns.add(e);
+                it.remove();
+            }
+        }
+
+        save(settings);
+
+        for (Map.Entry<Integer, NodeContainer> e : tempNodes) {
+            m_nodeContainerByID.put(e.getKey(), e.getValue());
+        }
+        for (Map.Entry<Integer, ConnectionContainer> e : tempConns) {
+            m_connectionsByID.put(e.getKey(), e.getValue());
+        }
     }
-    
-    
+
     /**
      * Callback for NodeContainer state-changed events. Update pool of
      * executable nodes if we are in "workflow execution" mode.
@@ -1212,18 +1289,18 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
      * @param state The node state event type.
      * @param nodeID The node's ID.
      */
-    public void stateChanged(final NodeStatus state,
+    public synchronized void stateChanged(final NodeStatus state,
             final int nodeID) {
         NodeContainer changedNode = m_nodeContainerByID.get(nodeID);
-        assert (changedNode != null);        
-        
-        
+        assert (changedNode != null);
+
         // if this is an event indicating the start of a node's execution:
         if (state instanceof NodeStatus.StartExecute) {
             // change state from WAITING_FOR_EXECUTION to CURRENTLY_EXECUTING
-            assert (changedNode.getState()
-                    == NodeContainer.State.WaitingForExecution)
-                    : "Node " + changedNode.getCustomName() + " is in state "
+            assert (changedNode.getState() 
+                == NodeContainer.State.WaitingForExecution) : "Node "
+                    + changedNode.getCustomName()
+                    + " is in state "
                     + changedNode.getState();
             changedNode.setState(NodeContainer.State.CurrentlyExecuting);
         } else if (state instanceof NodeStatus.EndExecute) {
@@ -1232,7 +1309,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             // assert (changedNode.getState() ==
             // NodeContainer.STATE_CURRENTLY_EXECUTING);
             changedNode.setState(NodeContainer.State.Idle);
-        
+
             checkForExecutableNodes();
         } else if (state instanceof NodeStatus.Reset) {
             fireWorkflowEvent(new WorkflowEvent.NodeReset(nodeID, null, null));
@@ -1242,10 +1319,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         } else if (state instanceof NodeStatus.ExtrainfoChanged) {
             fireWorkflowEvent(new WorkflowEvent.NodeExtrainfoChanged(nodeID,
                     null, null));
-        }        
+        }
     }
-    
-    
+
     private void checkForExecutableNodes() {
         // check if there are any new nodes that need to be run:
         int newExecutables = 0;
@@ -1263,23 +1339,21 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 newExecutables++;
             }
         }
-        
-        
-        if (newExecutables > 0) {
-            fireWorkflowEvent(new WorkflowEvent.ExecPoolChanged(-1, null,
-                    null));
-        }
 
+        if (newExecutables > 0) {
+            fireWorkflowEvent(
+                    new WorkflowEvent.ExecPoolChanged(-1, null, null));
+        }
 
         int runningNodes = 0;
         // if not, check if there are some remaining that need to be run:
         for (NodeContainer nc : m_nodeContainerByID.values()) {
             if ((nc.getState() == NodeContainer.State.CurrentlyExecuting)
-            || (nc.getState() == NodeContainer.State.WaitingForExecution)) {
+                || (nc.getState() == NodeContainer.State.WaitingForExecution)) {
                 runningNodes++;
             }
         }
-        
+
         if ((newExecutables == 0) && (runningNodes == 0)) {
             // did not find any remaining nodes with an active action code: done
             fireWorkflowEvent(new WorkflowEvent.ExecPoolDone(-1, null, null));
@@ -1290,7 +1364,6 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             }
         }
 
-        
         // check all child managers if they have some nodes to execute now
         Iterator<WeakReference<WorkflowManager>> it = m_children.iterator();
         while (it.hasNext()) {
@@ -1302,7 +1375,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             }
         }
     }
-    
+
     /**
      * Callback for Workflow events.
      * 
@@ -1314,7 +1387,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             fireWorkflowEvent(event);
         }
     }
-    
+
     /**
      * Returns the one and only executor for this workflow.
      * 
@@ -1326,25 +1399,26 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         }
         return m_executor;
     }
-    
-    
+
     /**
      * Default implementation of a workflow executor. Please note that there
      * must not be more than one registered workflow executor per workflow.
-     * Otherwise the end of execution might not be detected correctly and
-     * the thread that called {@link #executeAll()} or
-     * {@link #executeUpToNode(int)} might be blocked.
+     * Otherwise the end of execution might not be detected correctly and the
+     * thread that called {@link #executeAll()} or {@link #executeUpToNode(int)}
+     * might be blocked.
      * 
      * @author M. Berthold, University of Konstanz
      * @author Thorsten Meinl, University of Konstanz
      */
     private class DefaultWorkflowExecutor implements WorkflowExecutor,
-    WorkflowListener, NodeStateListener {
+            WorkflowListener, NodeStateListener {
         private CountDownLatch m_execDone = new CountDownLatch(0);
+
         private final AtomicInteger m_runningNodes = new AtomicInteger();
-        private NodeProgressMonitor m_progressMonitor =
+
+        private NodeProgressMonitor m_progressMonitor = 
             new DefaultNodeProgressMonitor();
-        
+
         /**
          * Create executor class and register as listener for events.
          */
@@ -1352,8 +1426,9 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             WorkflowManager.this.addListener(this);
         }
 
-        /** Execute all nodes in workflow - return when all nodes
-         * are executed (or at least Workflow claims to be done).
+        /**
+         * Execute all nodes in workflow - return when all nodes are executed
+         * (or at least Workflow claims to be done).
          */
         public synchronized void executeAll() {
             m_execDone = new CountDownLatch(1);
@@ -1366,10 +1441,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             }
             System.out.println();
         }
-        
-        /** Execute all nodes in workflow leading to a certain node.
-         * Return when all nodes are executed (or at least Workflow
-         * claims to be done).
+
+        /**
+         * Execute all nodes in workflow leading to a certain node. Return when
+         * all nodes are executed (or at least Workflow claims to be done).
          * 
          * @param nodeID id of node to be executed.
          */
@@ -1383,7 +1458,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 // nothing to do
             }
         }
-        
+
         /**
          * Starts additional nodes when workflow has changed, stops execution
          * when workflow is done.
@@ -1403,7 +1478,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
         /**
          * @see de.unikn.knime.core.node.NodeStateListener
-         *  #stateChanged(de.unikn.knime.core.node.NodeStatus, int)
+         *      #stateChanged(de.unikn.knime.core.node.NodeStatus, int)
          */
         public void stateChanged(final NodeStatus state, final int id) {
             if (state instanceof NodeStatus.EndExecute) {
@@ -1416,10 +1491,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
 
         /**
          * @see de.unikn.knime.core.node.workflow.WorkflowExecutor
-         *  #setProgressMonitor(de.unikn.knime.core.node.NodeProgressMonitor)
+         *      #setProgressMonitor(NodeProgressMonitor)
          */
         public void setProgressMonitor(final NodeProgressMonitor monitor) {
-            m_progressMonitor = monitor;            
-        }        
+            m_progressMonitor = monitor;
+        }
     }
 }
