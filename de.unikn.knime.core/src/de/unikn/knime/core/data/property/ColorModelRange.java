@@ -102,12 +102,12 @@ public final class ColorModelRange implements ColorModel {
             double value = ((DoubleValue)dc).getDoubleValue();
             ratio = ((value - m_lower) / m_range);
         }
-        int r = (int)((m_min.getRed() - m_max.getRed()) * ratio)
-                + m_max.getRed();
-        int g = (int)((m_min.getGreen() - m_max.getGreen()) * ratio)
-                + m_max.getGreen();
-        int b = (int)((m_min.getBlue() - m_max.getBlue()) * ratio)
-                + m_max.getBlue();
+        int r = (int)((m_max.getRed() - m_min.getRed()) * ratio)
+                + m_min.getRed();
+        int g = (int)((m_max.getGreen() - m_min.getGreen()) * ratio)
+                + m_min.getGreen();
+        int b = (int)((m_max.getBlue() - m_min.getBlue()) * ratio)
+                + m_min.getBlue();
         // check color ranges first
         if (r < 0) { r = 0; }
         if (r > 255) { r = 255; }
