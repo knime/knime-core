@@ -33,10 +33,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
-import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.core.EclipseClassCreator;
 import de.unikn.knime.workbench.core.WorkbenchErrorLogger;
 import de.unikn.knime.workbench.repository.model.Category;
@@ -267,17 +264,17 @@ public final class RepositoryManager {
      * @param settings NodeSettings to load from.
      * @return The workflow manager.s
      */
-    public WorkflowManager loadWorkflowFromConfig(final NodeSettings settings) {
-        assert settings != null;
-
-        WorkflowManager manager = new WorkflowManager();
-        try {
-            manager = new WorkflowManager(settings);
-        } catch (InvalidSettingsException e) {
-            LOGGER.error("Could not load workflow.");
-            LOGGER.debug("Could not load workflow\n" + settings, e);
-        }
-
-        return manager;
-    }
+//    public WorkflowManager loadWorkflowFromConfig(final NodeSettings settings) {
+//        assert settings != null;
+//
+//        WorkflowManager manager = new WorkflowManager();
+//        try {
+//            manager = new WorkflowManager(settings);
+//        } catch (InvalidSettingsException e) {
+//            LOGGER.error("Could not load workflow.");
+//            LOGGER.debug("Could not load workflow\n" + settings, e);
+//        }
+//
+//        return manager;
+//    }
 }
