@@ -18,9 +18,7 @@
 package de.unikn.knime.workbench.editor2;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EventObject;
@@ -80,9 +78,10 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeLogger.LEVEL;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
@@ -116,8 +115,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditor.class);
-
-    private static final String EDITOR_ROOT_NAME = "knime";
 
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
@@ -633,28 +630,33 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // TODO try to load a WFM-config from the file, create an empty one if
         // this fails
-        // m_manager = new WorkflowManager(file.getName());
         // LOGGER.debug("Created new WFM object as input");
 
-        // ClassLoader oldLoader =
-        // Thread.currentThread().getContextClassLoader();
         File file = m_fileResource.getLocation().toFile();
         try {
-            NodeSettings settings = NodeSettings
-                    .loadFromXML(new FileInputStream(file));
-            // NodeSettings cfg = Config.readFromFile(
-            // new ObjectInputStream(new FileInputStream(file)));
-            createWorkflowManager(settings);
+            // FIXME:
+            // setInput is called before the entire repository is loaded,
+            // need to figure out how to do it the other way around
+            // the static block needs to be executed, access 
+            // RepositoryManager.INSTANCE
+            if (RepositoryManager.INSTANCE == null) {
+                LOGGER.fatal("Dummy line, never printed");
+            }
+            assert m_manager == null;
+            m_manager = new WorkflowManager(file);
+            m_manager.addListener(this);
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
         } catch (IOException ioe) {
-            if (file.length() > 0) {
-                LOGGER.error("Could not load workflow from: " + file.getName(),
-                        ioe);
+            if (file.length() == 0) {
+                LOGGER.info("New workflow created.");
             } else {
-                LOGGER.debug("File length: " + file.length()
-                        + " maybe a new workflow has been created.");
+                LOGGER.error("Could not load workflow from: " + file.getName(),
+                    ioe);
             }
+        } catch (InvalidSettingsException ise) {
+            LOGGER.error("Could not load workflow from: " + file.getName(),
+                    ise);
         } finally {
             // create empty WFM if loading failed
             if (m_manager == null) {
@@ -769,26 +771,22 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void doSave(final IProgressMonitor monitor) {
-
         LOGGER.debug("Saving workflow ....");
-        NodeSettings cfg = new NodeSettings(EDITOR_ROOT_NAME);
-        m_manager.save(cfg);
-
+        
         try {
-
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
             File file = m_fileResource.getLocation().toFile();
-            FileOutputStream os = new FileOutputStream(file);
-            cfg.saveToXML(os);
-            // cfg.writeToFile(new ObjectOutputStream(os));
-
+            m_manager.save(file);
             // mark command stack (no undo beyond this point)
             getCommandStack().markSaveLocation();
-
+            
+        } catch (CanceledExecutionException cee) {
+            LOGGER.debug("Saving of workflow canceled");
         } catch (Exception e) {
-            LOGGER.warn("Could not save workflow");
+            LOGGER.warn("Could not save workflow", e);
         }
+        
 
         // try {
         // // try to refresh project
@@ -1010,10 +1008,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @param settings the settings representing this workflow
      */
-    void createWorkflowManager(final NodeSettings settings) {
-        m_manager = RepositoryManager.INSTANCE.loadWorkflowFromConfig(settings);
-        m_manager.addListener(this);
-    }
+//    void createWorkflowManager(final NodeSettings settings) {
+//        m_manager = RepositoryManager.INSTANCE.loadWorkflowFromConfig(settings);
+//        m_manager.addListener(this);
+//    }
 
     /**
      * Sets the underlying workflow manager for this editor.
