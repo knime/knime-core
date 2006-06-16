@@ -184,7 +184,7 @@ public class NodeContainer implements NodeStateListener {
         m_logger = NodeLogger.getLogger(n.getName());
         m_node = n;
         m_id = id;
-        m_customName = "Node " + (id + 1); // initial name is the node id
+        m_customName = "Node " + id; // initial name is the node id
         m_description = null; // no initial description
         m_succ = new Vector<List<NodeContainer>>(m_node.getNrOutPorts());
         m_pred = new Vector<NodeContainer>(m_node.getNrInPorts());

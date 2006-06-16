@@ -101,7 +101,7 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
     private volatile int m_runningConnectionID = -1;
 
     // internal variables to allow generation of unique indices
-    private volatile int m_runningNodeID = -1;
+    private volatile int m_runningNodeID = 0;
 
     private WorkflowExecutor m_executor;
 
@@ -155,7 +155,8 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         // get all keys in there
         for (NodeContainer newNode : analyzeTopology()) {
             try {
-                NodeSettings nodeSetting = settings.getConfig(KEY_NODES);
+                NodeSettings nodeSetting = settings.getConfig(KEY_NODES)
+                    .getConfig("node_" + newNode.getID());
                 String nodeFileName = 
                     nodeSetting.getString(KEY_NODE_SETTINGS_FILE);
                 File nodeFile = new File(parentDir, nodeFileName);
