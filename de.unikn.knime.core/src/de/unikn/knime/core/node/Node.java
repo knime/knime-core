@@ -102,6 +102,12 @@ public final class Node {
     
     private File m_nodeDir = null;
 
+    /** Store when the current output data has been stored (to avoid 
+     * uneccesary re-save). Will be set when saved, will be unset upon  
+     * reset.
+     */
+    private boolean m_isCurrentlySaved = false;
+
     private final WorkflowManager m_workflowManager;
 
     static {
@@ -311,7 +317,7 @@ public final class Node {
                 m_outDataPorts[i].setDataTableSpec(outSpec);
             }
         }
-        // load data is node was executed
+        // load data if node was executed
         if (isExecuted()) {
             // load data
             NodeSettings data = settings.getConfig("data_files");
@@ -329,14 +335,12 @@ public final class Node {
             for (int i = 0; i < m_outModelPorts.length; i++) {
                 String modelName = model.getString("outport_" + i);
                 File targetFile = new File(m_nodeDir, modelName);
-                File dest = File.createTempFile(modelName, "~");
-                dest.deleteOnExit();
-                FileUtil.copy(targetFile, dest);
                 BufferedInputStream in = 
-                    new BufferedInputStream(new FileInputStream(dest));
+                    new BufferedInputStream(new FileInputStream(targetFile));
                 PredictorParams pred = PredictorParams.loadFromXML(in);
                 m_outModelPorts[i].setPredictorParams(pred);
             }
+            m_isCurrentlySaved = true;
         }
     }
 
@@ -812,7 +816,7 @@ public final class Node {
         for (int p = 0; p < getNrPredictorOutPorts(); p++) {
             m_outModelPorts[p].setPredictorParams(predParams[p]);
         }
-
+        m_isCurrentlySaved = false;
         notifyStateListeners(new NodeStatus.EndExecute());
         return true;
     } // executeNode(ExecutionMonitor)
@@ -885,6 +889,8 @@ public final class Node {
             m_status = new NodeStatus.Error(
                     "Node model could not be reset: " + e.getMessage());
             notifyStateListeners(m_status);
+        } finally {
+            m_isCurrentlySaved = false;
         }
         notifyStateListeners(new NodeStatus.Reset("Not configured."));
         // first, reset the rest of the flow, starting from the leafs
@@ -1416,36 +1422,45 @@ public final class Node {
                         new FileOutputStream(targetFile)));
             }
         }
-        if (isExecuted()) {
-            NodeSettings data = settings.addConfig("data_files");
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                String specName = "data_" + i + ".zip";
-                data.addString("outport_" + i, specName);
-                DataTable outTable = m_outDataPorts[i].getDataTable();
-                File targetFile = new File(nodeDir, specName);
-                DataContainer.writeToZip(outTable, targetFile, exec);
-            }
-            NodeSettings models = settings.addConfig("model_files");
-            for (int i = 0; i < m_outModelPorts.length; i++) {
-                String specName = "model_" + i + ".xml";
-                models.addString("outport_" + i, specName);
-                PredictorParams pred = m_outModelPorts[i].getPredictorParams();
-                File targetFile = new File(nodeDir, specName);
-                BufferedOutputStream out = 
-                    new BufferedOutputStream(new FileOutputStream(targetFile));
-                pred.saveToXML(out);
+        if (!m_isCurrentlySaved) {
+            if (isExecuted()) {
+                NodeSettings data = settings.addConfig("data_files");
+                for (int i = 0; i < m_outDataPorts.length; i++) {
+                    String specName = "data_" + i + ".zip";
+                    data.addString("outport_" + i, specName);
+                    DataTable outTable = m_outDataPorts[i].getDataTable();
+                    File targetFile = new File(nodeDir, specName);
+                    DataContainer.writeToZip(outTable, targetFile, exec);
+                }
+                NodeSettings models = settings.addConfig("model_files");
+                for (int i = 0; i < m_outModelPorts.length; i++) {
+                    String specName = "model_" + i + ".xml";
+                    models.addString("outport_" + i, specName);
+                    PredictorParams pred = 
+                        m_outModelPorts[i].getPredictorParams();
+                    File targetFile = new File(nodeDir, specName);
+                    BufferedOutputStream out = new BufferedOutputStream(
+                            new FileOutputStream(targetFile));
+                    pred.saveToXML(out);
+                }
+                m_isCurrentlySaved = true;
+            } else {
+                for (int i = 0; i < m_outDataPorts.length; i++) {
+                    File specFile = new File(nodeDir, "spec_" + i + ".xml");
+                    specFile.delete();
+                    File dataFile = new File(nodeDir, "data_" + i + ".zip");
+                    dataFile.delete();
+                }
+                for (int i = 0; i < m_outModelPorts.length; i++) {
+                    File targetFile = new File(nodeDir, "model_" + i + ".xml");
+                    targetFile.delete();            
+                }
             }
         } else {
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                File specFile = new File(nodeDir, "spec_" + i + ".xml");
-                specFile.delete();
-                File dataFile = new File(nodeDir, "data_" + i + ".zip");
-                dataFile.delete();
-            }
-            for (int i = 0; i < m_outModelPorts.length; i++) {
-                File targetFile = new File(nodeDir, "model_" + i + ".xml");
-                targetFile.delete();            
-            }
+             if (!isExecuted()) {
+                 m_logger.assertLog(
+                         false, "Saved flag is set but node is not executed.");
+             }
         }
         settings.saveToXML(new FileOutputStream(nodeFile));    
     }
