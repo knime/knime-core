@@ -163,11 +163,11 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
                 newNode.getNode().load(nodeFile, exec);
             } catch (IOException ioe) {
                 LOGGER.warn("Unable to load node internals for: "
-                        + newNode.getName() + "(#" + newNode.getID() + ")");
+                        + newNode.getNameWithID());
                 newNode.getNode().reset();
             } catch (InvalidSettingsException ise) {
-                LOGGER.warn("Unable to load settings for: " + newNode.getName()
-                        + "(#" + newNode.getID() + ")");
+                LOGGER.warn("Unable to load settings for: " 
+                        + newNode.getNameWithID());
                 newNode.getNode().reset();
             }
         }
@@ -1178,9 +1178,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             // save nodes in an own sub-config object as a series of configs
             NodeSettings nodes = settings.addConfig(KEY_NODES);
             for (NodeContainer nextNode : m_nodeContainerByID.values()) {
-                String nodeDirID = "node_" + nextNode.getID();
+                String nodeDirID = nextNode.getNameWithID();
                 // and save it to it's own config object
-                NodeSettings nextNodeConfig = nodes.addConfig(nodeDirID);
+                NodeSettings nextNodeConfig = nodes.addConfig(
+                        "node_" + nextNode.getID());
                 String nodeFileName = nodeDirID + "/" + Node.SETTINGS_FILE_NAME;
                 nextNodeConfig.addString(KEY_NODE_SETTINGS_FILE, nodeFileName);
                 File nodeFile = new File(parentDir, nodeFileName);
@@ -1219,12 +1220,10 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         // save nodes in an own sub-config object as a series of configs
         NodeSettings nodes = settings.addConfig(KEY_NODES);
         for (NodeContainer nextNode : m_nodeContainerByID.values()) {
-            String nodeSettingsID = "node_" + nextNode.getID();
+            String nodeSettingsID = nextNode.getNameWithID();
             // and save it to it's own config object
             NodeSettings nextNodeConfig = nodes.addConfig(nodeSettingsID);
             nextNode.save(nextNodeConfig);
-            nextNodeConfig.addString("node_path", nodeSettingsID + "/"
-                    + "settings.xml");
             // TODO notify about node settings saved ????
         }
         // save connections in an own sub-config object as a series of configs
