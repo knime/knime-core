@@ -1415,11 +1415,18 @@ public final class Node {
                 String specName = "spec_" + i + ".xml";
                 specs.addString("outport_" + i, specName);
                 DataTableSpec outSpec = m_outDataPorts[i].getDataTableSpec();
-                NodeSettings specSettings = new NodeSettings("spec_" + i);
-                outSpec.save(specSettings);
-                File targetFile = new File(nodeDir, specName);
-                specSettings.saveToXML(new BufferedOutputStream(
-                        new FileOutputStream(targetFile)));
+                if (outSpec != null) {
+                    NodeSettings specSettings = new NodeSettings("spec_" + i);
+                    outSpec.save(specSettings);
+                    File targetFile = new File(nodeDir, specName);
+                    specSettings.saveToXML(new BufferedOutputStream(
+                            new FileOutputStream(targetFile)));
+                }
+            }
+        } else {
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                File specFile = new File(nodeDir, "spec_" + i + ".xml");
+                specFile.delete();
             }
         }
         if (!m_isCurrentlySaved) {
@@ -1446,8 +1453,6 @@ public final class Node {
                 m_isCurrentlySaved = true;
             } else {
                 for (int i = 0; i < m_outDataPorts.length; i++) {
-                    File specFile = new File(nodeDir, "spec_" + i + ".xml");
-                    specFile.delete();
                     File dataFile = new File(nodeDir, "data_" + i + ".zip");
                     dataFile.delete();
                 }
