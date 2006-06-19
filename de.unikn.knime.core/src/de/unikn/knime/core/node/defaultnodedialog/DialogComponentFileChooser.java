@@ -23,6 +23,9 @@ package de.unikn.knime.core.node.defaultnodedialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -30,6 +33,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
 
+import de.unikn.knime.base.node.util.StringHistory;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
@@ -247,4 +251,36 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_browseButton.setEnabled(enabled);
         m_fileURL.setEnabled(enabled);
     }
+    
+    /**
+     * @return the current file history associated with the configName.
+     */
+    private String[] getFileHistory(final String id) {
+
+        StringHistor h = StringHistory.getInstance(FILEREADER_HISTORY_ID);
+        Vector<String> validLoc = new Vector<String>();
+        // dismiss not existing files
+        for (int l = 0; l < h.getHistory().length; l++) {
+            String loc = h.getHistory()[l];
+            URL url;
+            try {
+                url = new URL(loc);
+                if (url.getProtocol().equalsIgnoreCase("FILE")) {
+                    // if we have a file location check its existence
+                    File f = new File(url.getPath());
+                    if ((f != null) && (f.exists())) {
+                        validLoc.add(loc);
+                    } // else  ignore old, not existing entries
+                } else {
+                    // non-file URL we just take over
+                    validLoc.add(loc);
+                }
+            } catch (MalformedURLException mue) {
+                // ignore this (invalid) entry in the history
+            }
+        }
+        return validLoc.toArray(new String[0]);
+   
+    }
+
 }
