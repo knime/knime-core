@@ -748,6 +748,7 @@ public final class Node {
             m_status = new NodeStatus.Warning(
                     "Execution canceled!");
             notifyStateListeners(new NodeStatus.EndExecute());
+            // TODO must call reset here!
             return false;
         } catch (Exception e) {
             // execution failed
@@ -756,6 +757,7 @@ public final class Node {
                     "Execute failed: " + e.getMessage());
             this.notifyStateListeners(m_status);
             notifyStateListeners(new NodeStatus.EndExecute());
+            // TODO must call reset here
             return false;
         }
 
@@ -1201,9 +1203,10 @@ public final class Node {
 
         // only call for re-configuration if we are not executed
         if (isExecuted()) {
+            assert false : "Must not call configureNode when executed.";
             // this happens if a previous node in a row of executed ones
             // in configured, all other nodes will be re-configured
-            m_logger.warn("is executed: resetting");
+            m_logger.coding("is executed: resetting");
             resetWithoutConfigure();
         }
 
