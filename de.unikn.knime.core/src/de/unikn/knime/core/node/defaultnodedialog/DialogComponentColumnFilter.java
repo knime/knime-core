@@ -142,7 +142,6 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 onAddIt();
             }
         });
-
         final JButton addAllButton = new JButton("<< add all <<");
         buttonPan.add(addAllButton);
         addAllButton.addActionListener(new ActionListener() {
