@@ -1311,6 +1311,17 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
             changedNode.setState(NodeContainer.State.Idle);
 
             checkForExecutableNodes();
+            
+            // check all child managers if they have some nodes to execute now
+            Iterator<WeakReference<WorkflowManager>> it = m_children.iterator();
+            while (it.hasNext()) {
+                WorkflowManager wm = it.next().get();
+                if (wm == null) {
+                    it.remove();
+                } else {
+                    wm.checkForExecutableNodes();
+                }
+            }            
         } else if (state instanceof NodeStatus.Reset) {
             fireWorkflowEvent(new WorkflowEvent.NodeReset(nodeID, null, null));
         } else if (state instanceof NodeStatus.Configured) {
@@ -1322,58 +1333,46 @@ public class WorkflowManager implements NodeStateListener, WorkflowListener {
         }
     }
 
-    private void checkForExecutableNodes() {
+    private boolean checkForExecutableNodes() {
         // check if there are any new nodes that need to be run:
-        int newExecutables = 0;
+        int newExecutables = 0, runningNodes = 0;
         for (NodeContainer nc : m_nodeContainerByID.values()) {
-            if ((nc.getState() == NodeContainer.State.WaitingToBeExecutable)
+            NodeContainer.State s = nc.getState();
+            
+            if ((s == NodeContainer.State.WaitingToBeExecutable)
                     && (nc.getNode().isExecutable())) {
                 nc.setState(NodeContainer.State.IsExecutable);
                 newExecutables++;
             } else if ((nc.isAutoExecutable())
-                    && (nc.getState() == NodeContainer.State.Idle)
+                    && (s == NodeContainer.State.Idle)
                     && (nc.getNode().isExecutable())) {
                 nc.setState(NodeContainer.State.IsExecutable);
                 newExecutables++;
-            } else if (nc.getState() == NodeContainer.State.IsExecutable) {
+            } else if (s == NodeContainer.State.IsExecutable) {
                 newExecutables++;
+            } else if ((s == NodeContainer.State.CurrentlyExecuting)
+                    || (s == NodeContainer.State.WaitingForExecution)) {
+                runningNodes++;
             }
         }
 
         if (newExecutables > 0) {
             fireWorkflowEvent(
                     new WorkflowEvent.ExecPoolChanged(-1, null, null));
-        }
-
-        int runningNodes = 0;
-        // if not, check if there are some remaining that need to be run:
-        for (NodeContainer nc : m_nodeContainerByID.values()) {
-            if ((nc.getState() == NodeContainer.State.CurrentlyExecuting)
-                || (nc.getState() == NodeContainer.State.WaitingForExecution)) {
-                runningNodes++;
+        } else if (runningNodes == 0) {
+            if ((m_parent == null) || !m_parent.checkForExecutableNodes()) {
+                LOGGER.info("Workflow Pool done.");
+                // reset all flags to IDLE (just in case we missed some)
+                for (NodeContainer nc : m_nodeContainerByID.values()) {
+                    nc.setState(NodeContainer.State.Idle);
+                }            
+                fireWorkflowEvent(new WorkflowEvent.ExecPoolDone(-1, null,
+                        null));
+                return false;
             }
         }
 
-        if ((newExecutables == 0) && (runningNodes == 0)) {
-            // did not find any remaining nodes with an active action code: done
-            fireWorkflowEvent(new WorkflowEvent.ExecPoolDone(-1, null, null));
-            LOGGER.info("Workflow Pool done.");
-            // reset all flags to IDLE (just in case we missed some)
-            for (NodeContainer nc : m_nodeContainerByID.values()) {
-                nc.setState(NodeContainer.State.Idle);
-            }
-        }
-
-        // check all child managers if they have some nodes to execute now
-        Iterator<WeakReference<WorkflowManager>> it = m_children.iterator();
-        while (it.hasNext()) {
-            WeakReference<WorkflowManager> wr = it.next();
-            if (wr.get() == null) {
-                it.remove();
-            } else {
-                wr.get().checkForExecutableNodes();
-            }
-        }
+        return true;
     }
 
     /**

@@ -17,7 +17,6 @@
  */
 package de.unikn.knime.core.node;
 
-import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
 
@@ -118,16 +117,6 @@ public abstract class SpecialNodeModel extends NodeModel {
     
     
     /**
-     * Returns the workflow manager that is responsible for this node model.
-     * 
-     * @return the responsible workflow manager
-     */
-    protected final WorkflowManager getResponsibleWorkflowManager() {
-        return m_node.getWorkflowManager();
-    }
-
-    
-    /**
      * This method is called, if a new data table is available at an input port.
      * 
      * @param inPortID the ID of the data port
@@ -136,15 +125,6 @@ public abstract class SpecialNodeModel extends NodeModel {
         // nothing to do for this class here
     }
     
-    
-    /**
-     * Returns the node container that belongs to this model.
-     * 
-     * @return a node container
-     */
-    protected final NodeContainer getNodeContainer() {
-        return getResponsibleWorkflowManager().getNodeContainer(m_node);
-    }
     
     /**
      * This method is called if a new connection at an input port is added.
@@ -163,6 +143,11 @@ public abstract class SpecialNodeModel extends NodeModel {
      */
     protected void inportWasDisconnected(final int inPortID) {
         // nothing to do for this class here
+    }
+    
+    
+    protected final WorkflowManager createSubManager() {
+        return m_node.getWorkflowManager().createSubManager();
     }
     
     /**

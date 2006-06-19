@@ -17,23 +17,23 @@
  */
 package de.unikn.knime.core.node.meta;
 
+import de.unikn.knime.core.node.tableinput.DataTableInputNodeModel;
+
 
 /**
  * This model is a subclass of
- * {@link de.unikn.knime.core.node.meta.PassThroughNodeModel} that adds no
- * special behaviour but is just used to "tag" the model as an input node model.
+ * {@link de.unikn.knime.core.node.tableinput.DataTableInputNodeModel} that adds
+ * no special behaviour but is just used to "tag" the model as an input node
+ * model.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class MetaInputNodeModel extends PassThroughNodeModel {
+public class MetaInputNodeModel extends DataTableInputNodeModel {
     /**
      * Creates a new node model that simply passes the input data to the
-     * output ports.
-     * 
-     * @param dataIns the number of data ports
-     * @param modelIns the number od model ports
+     * output ports. 
      */
-    public MetaInputNodeModel(final int dataIns, final int modelIns) {
-        super(dataIns, modelIns);
+    public MetaInputNodeModel() {
+        super();
     }
 }

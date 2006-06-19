@@ -1,4 +1,4 @@
-/* Created on May 29, 2006 3:12:46 PM by thor
+/* Created on Jun 19, 2006 5:08:23 PM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -17,22 +17,18 @@
  */
 package de.unikn.knime.core.node.meta;
 
-import de.unikn.knime.core.node.tableinput.DataTableOutputNodeModel;
+import de.unikn.knime.core.node.tableinput.ModelOutputNodeModel;
 
 /**
- * This model is a subclass of
- * {@link de.unikn.knime.core.node.meta.PassThroughNodeModel} that adds no
- * special behaviour but is just used to "tag" the model as an output node
- * model.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class MetaOutputNodeModel extends DataTableOutputNodeModel {
+public class MetaOutputModelNodeModel extends ModelOutputNodeModel {
     /**
-     * Creates a new node model that simply passes the input data to the
-     * output ports.
+     * 
      */
-    public MetaOutputNodeModel() {
+    public MetaOutputModelNodeModel() {
         super();
     }
+
 }
