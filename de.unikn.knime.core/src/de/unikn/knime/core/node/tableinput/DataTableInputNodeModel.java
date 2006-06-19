@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.dev.node.tableinput;
+package de.unikn.knime.core.node.tableinput;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
