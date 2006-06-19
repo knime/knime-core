@@ -140,13 +140,8 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {        
-        if (m_internalWFM == null) {
-            m_internalWFM = getResponsibleWorkflowManager().createSubManager();
-            m_internalWFM.addListener(this);
-            addInOutNodes();
-            m_workflowExecutor = m_internalWFM.getExecutor();
-        }
+            throws InvalidSettingsException {
+        createInternalWFM();
         
         // collect all output specs
         DataTableSpec[] outspecs = new DataTableSpec[m_dataOutContainer.length];
@@ -200,7 +195,8 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
-            throws InvalidSettingsException {        
+            throws InvalidSettingsException {
+        createInternalWFM();
         // load the "internal" workflow
         if (settings.containsKey(WORKFLOW_KEY)) {
             m_internalWFM.clear();
@@ -499,6 +495,7 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void inportHasNewConnection(final int inPortID) {
+        createInternalWFM();
         LOGGER.debug("Adding new dummy connection for input #" + inPortID); 
         super.inportHasNewConnection(inPortID);
         
@@ -524,6 +521,7 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void inportHasNewDataTable(final int inPortID) {
+        createInternalWFM();
         LOGGER.debug("Executing input node #" + inPortID);
         super.inportHasNewDataTable(inPortID);
         // m_dataInContainer[inPortID].startExecution(null);
@@ -535,6 +533,7 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void inportWasDisconnected(final int inPortID) {
+        createInternalWFM();
         LOGGER.debug("Resetting input node #" + inPortID);
         super.inportWasDisconnected(inPortID);
         // m_dataInContainer[inPortID].reset();
@@ -619,5 +618,14 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     protected final WorkflowExecutor workflowExecutor() {
         return m_workflowExecutor;
+    }
+    
+    private void createInternalWFM() {
+        if (m_internalWFM == null) {
+            m_internalWFM = getResponsibleWorkflowManager().createSubManager();
+            m_internalWFM.addListener(this);
+            addInOutNodes();
+            m_workflowExecutor = m_internalWFM.getExecutor();
+        }        
     }
 }
