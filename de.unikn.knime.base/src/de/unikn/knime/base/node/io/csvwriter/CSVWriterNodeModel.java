@@ -24,7 +24,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
-import de.unikn.knime.base.node.util.StringHistory;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
@@ -37,6 +36,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.util.StringHistory;
 
 /**
  * NodeModel to write a DataTable to a csv (comma separated value) file.

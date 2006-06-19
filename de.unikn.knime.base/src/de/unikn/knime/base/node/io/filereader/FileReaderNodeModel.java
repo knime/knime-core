@@ -20,7 +20,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
 
-import de.unikn.knime.base.node.util.StringHistory;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
@@ -30,6 +29,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.util.StringHistory;
 
 /**
  * @author ohl University of Konstanz

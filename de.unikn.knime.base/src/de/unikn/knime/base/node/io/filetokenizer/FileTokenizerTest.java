@@ -627,7 +627,7 @@ public final class FileTokenizerTest extends TestCase {
         StringReader strReader = new StringReader(inputString);
         FileTokenizerSettings fts = new FileTokenizerSettings();
         FileTokenizer ft = new FileTokenizer(strReader);
-        /* ( combine, return, include */
+        /*                       (combine, return, include)*/
         fts.addDelimiterPattern(",", false, false, true);
         fts.addDelimiterPattern("+", false, true, false);
         fts.addDelimiterPattern("-", true, true, false);
@@ -636,9 +636,15 @@ public final class FileTokenizerTest extends TestCase {
         String token = ft.nextToken();
         assertEquals(token, "123,");
         token = ft.nextToken();
-        assertEquals(token, "+");
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, "+");
+        token = ft.nextToken();
+        assertEquals(token, "");        
+        token = ft.nextToken();
+        assertEquals(token, "+");
+        token = ft.nextToken();
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, "-");
         token = ft.nextToken();
@@ -652,6 +658,8 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "+");
         token = ft.nextToken();
+        assertEquals(token, "");
+        token = ft.nextToken();
         assertEquals(token, "-");
         token = ft.nextToken();
         assertEquals(token, ",");
@@ -663,6 +671,8 @@ public final class FileTokenizerTest extends TestCase {
         assertEquals(token, ",");
         token = ft.nextToken();
         assertEquals(token, "7*");
+        token = ft.nextToken();
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, "+");
         token = ft.nextToken();
@@ -710,6 +720,33 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "7");
 
+        
+        // ensure line continuation chars between tokens don't break combining 
+        inputString = "123---234-345--\\\n-243";
+        strReader = new StringReader(inputString);
+        fts = new FileTokenizerSettings();
+        ft = new FileTokenizer(strReader);
+        /*                       (combine, return, include) */
+        fts.addDelimiterPattern("-", true, true, false);
+        ft.setSettings(fts);
+        token = ft.nextToken();
+        assertEquals(token, "123");
+        token = ft.nextToken();
+        assertEquals(token, "-");
+        token = ft.nextToken();
+        assertEquals(token, "234");
+        token = ft.nextToken();
+        assertEquals(token, "-");
+        token = ft.nextToken();
+        assertEquals(token, "345");
+
+        token = ft.nextToken();
+        assertEquals(token, "-");
+        token = ft.nextToken();
+        assertEquals(token, "243");
+        token = ft.nextToken();
+        assertNull(token);
+        
         System.out.println("FileTokenizer AddDelimiterPattern: Done.");
     } // testAddDelimiterPatter()
 
