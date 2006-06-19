@@ -1462,7 +1462,18 @@ public final class Node {
                 }
             }
         } else {
-             if (!isExecuted()) {
+             if (isExecuted()) {
+                 NodeSettings data = settings.addConfig("data_files");
+                 for (int i = 0; i < m_outDataPorts.length; i++) {
+                     String specName = "data_" + i + ".zip";
+                     data.addString("outport_" + i, specName);
+                 }
+                 NodeSettings models = settings.addConfig("model_files");
+                 for (int i = 0; i < m_outModelPorts.length; i++) {
+                     String specName = "model_" + i + ".xml";
+                     models.addString("outport_" + i, specName);
+                 }
+             } else {
                  m_logger.assertLog(
                          false, "Saved flag is set but node is not executed.");
              }
