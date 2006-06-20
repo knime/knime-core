@@ -18,7 +18,9 @@ package de.unikn.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -526,4 +528,25 @@ public class DataContainer implements RowAppender {
         return new BufferedTable(buffer);
     }
     
+    /** the temp file will have a time stamp in its name. */
+    private static final SimpleDateFormat DATE_FORMAT = 
+        new SimpleDateFormat("yyyyMMdd");
+    
+    /** Creates a temp file called "knime_container_<i>date</i>_xxxx.zip" and
+     * marks it for deletion upon exit. This method is used to init the file 
+     * when the data container flushes to disk. It is also used when the nodes
+     * are read back in to copy the data to the tmp-directory.
+     * @return A temp file to use. The file is empty.
+     * @throws IOException If that fails for any reason.
+     */
+    public static final File createTempFile() throws IOException {
+        String date = DATE_FORMAT.format(new Date());
+        String fileName = "knime_container_" + date + "_";
+        String suffix = ".zip";
+        // TODO: Do we need to set our own tempory directory 
+        // as knime preferences?
+        File f = File.createTempFile(fileName, suffix);
+        f.deleteOnExit();
+        return f;
+    }
 }

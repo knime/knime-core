@@ -28,9 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -67,10 +65,6 @@ final class Buffer {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(Buffer.class);
-    
-    /** the temp file will have a time stamp in its name. */
-    private static final SimpleDateFormat DATE_FORMAT = 
-        new SimpleDateFormat("yyyyMMdd");
     
     /** Separator for different rows, new line. */
     private static final char ROW_SEPARATOR = '\n';
@@ -508,13 +502,7 @@ final class Buffer {
     private void initOutFile(final File outFile) throws IOException {
         assert (m_outStream == null);
         if (outFile == null) {
-            String date = DATE_FORMAT.format(new Date());
-            String fileName = "knime_container_" + date + "_";
-            String suffix = ".ser.zip";
-            // TODO: Do we need to set our own tempory directory 
-            // as knime preferences?
-            m_outFile = File.createTempFile(fileName, suffix);
-            m_outFile.deleteOnExit();
+            m_outFile = DataContainer.createTempFile();
             m_hasCreatedTempFile = true;
         } else {
             m_outFile = outFile;
