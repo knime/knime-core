@@ -19,6 +19,7 @@
  */
 package de.unikn.knime.core.node.config;
 
+
 /**
  * Config entry for String values.
  * 
@@ -31,13 +32,11 @@ public class ConfigStringEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new String entry. "null" is interpreted as null pointer.
-     * @param key The key for this entry.
      * @param value The String value or null.
      */
-    public ConfigStringEntry(final String key, final String value) {
-        super(key, ConfigEntries.xstring);
-        
-        m_string = value;   
+    ConfigStringEntry(final String value) {
+        super(ConfigEntries.xstring);
+        m_string = (value == null ? null : value.intern());   
     }
     
     /**
@@ -49,7 +48,6 @@ public class ConfigStringEntry extends AbstractConfigEntry {
     
     /**
      * @return The String value.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
      */
     public String toStringValue() {
         return m_string;

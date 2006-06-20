@@ -31,21 +31,19 @@ final class ConfigIntEntry extends AbstractConfigEntry {
 
     /**
      * Creates a new Config entry for an int value.
-     * @param key The key for this entry.
      * @param i The int value.
      */
-    ConfigIntEntry(final String key, final int i) {
-        super(key, ConfigEntries.xint);
+    ConfigIntEntry(final int i) {
+        super(ConfigEntries.xint);
         m_int = i;
     }
 
     /**
      * Creates a new Config entry for an int value.
-     * @param key The key for this entry.
      * @param i The int value as String.
      */
-    ConfigIntEntry(final String key, final String i) {
-        super(key, ConfigEntries.xint);
+    ConfigIntEntry(final String i) {
+        super(ConfigEntries.xint);
         m_int = Integer.parseInt(i);
     }
 
@@ -58,7 +56,7 @@ final class ConfigIntEntry extends AbstractConfigEntry {
     
     /**
      * @return A String representation of this int.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see Integer#toString(int)
      */
     public String toStringValue() {
         return Integer.toString(m_int);

@@ -75,7 +75,11 @@ public abstract class Config extends AbstractConfigEntry
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
 
-    private final LinkedHashMap<String, ConfigurableEntry> m_map;
+    private final LinkedHashMap<String, AbstractConfigEntry> m_map;
+    
+    private void put(final String key, final AbstractConfigEntry e) {
+        m_map.put(checkKey(key), e);
+    }
 
     /**
      * Interface for all registered <code>DataCell</code> objects.
@@ -310,14 +314,36 @@ public abstract class Config extends AbstractConfigEntry
                 new DefaultFuzzyNumberCellEntry());
     }
     
+    private final String m_key;
+    
+    /**
+     * @return This config's identifier.
+     */
+    public String getKey() {
+        return m_key;
+      }
+    
+    /**
+     * Check key on null and if empty.
+     * @param key The key to check.
+     * @return The original key.
+     */
+    private static final String checkKey(final String key) {
+        if (key == null || key.trim().length() == 0) {
+            throw new IllegalArgumentException("Key must not be empty: " + key);
+        }
+        return key;
+    }
+        
     /**
      * Creates a new, empty config object with the given key.
      * 
      * @param key The key for this Config.
      */
     protected Config(final String key) {
-        super(key, ConfigEntries.config);
-        m_map = new LinkedHashMap<String, ConfigurableEntry>();
+        super(ConfigEntries.config);
+        m_key = checkKey(key);
+        m_map = new LinkedHashMap<String, AbstractConfigEntry>();
     }
 
     /**
@@ -337,7 +363,7 @@ public abstract class Config extends AbstractConfigEntry
      */
     public Config addConfig(final String key) {
         final Config config = getInstance(key);
-        m_map.put(key, config);
+        put(key, config);
         return config;
     }
 
@@ -363,7 +389,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The int value.
      */
     public void addInt(final String key, final int value) {
-        m_map.put(key, new ConfigIntEntry(key, value));
+        put(key, new ConfigIntEntry(value));
     }
 
     /**
@@ -388,7 +414,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The double value to add.
      */
     public void addDouble(final String key, final double value) {
-        m_map.put(key, new ConfigDoubleEntry(key, value));
+        put(key, new ConfigDoubleEntry(value));
     }
 
     /**
@@ -413,7 +439,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The char to add.
      */
     public void addChar(final String key, final char value) {
-        m_map.put(key, new ConfigCharEntry(key, value));
+        put(key, new ConfigCharEntry(value));
     }
 
     /**
@@ -438,7 +464,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The short to add.
      */
     public void addShort(final String key, final short value) {
-        m_map.put(key, new ConfigShortEntry(key, value));
+        put(key, new ConfigShortEntry(value));
     }
 
     /**
@@ -463,7 +489,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The long to add.
      */
     public void addLong(final String key, final long value) {
-        m_map.put(key, new ConfigLongEntry(key, value));
+        put(key, new ConfigLongEntry(value));
     }
 
     /**
@@ -489,7 +515,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The byte to add.
      */
     public void addByte(final String key, final byte value) {
-        m_map.put(key, new ConfigByteEntry(key, value));
+        put(key, new ConfigByteEntry(value));
     }
 
     /**
@@ -515,7 +541,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The boolean to add.
      */
     public void addString(final String key, final String value) {
-        m_map.put(key, new ConfigStringEntry(key, value));
+        put(key, new ConfigStringEntry(value));
     }
 
     /**
@@ -657,8 +683,8 @@ public abstract class Config extends AbstractConfigEntry
             if (!otherCfg.m_map.containsKey(myKey)) {
                 return false;
             }
-            ConfigurableEntry ce = this.m_map.get(myKey);
-            ConfigurableEntry otherCe = otherCfg.m_map.get(myKey);
+            AbstractConfigEntry ce = this.m_map.get(myKey);
+            AbstractConfigEntry otherCe = otherCfg.m_map.get(myKey);
             if (ce == null) {
                 if (otherCe != null) {
                     return false;
@@ -709,7 +735,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The boolean to add.
      */
     public void addBoolean(final String key, final boolean value) {
-        m_map.put(key, new ConfigBooleanEntry(key, value));
+        put(key, new ConfigBooleanEntry(value));
     }
 
     /**
@@ -1421,8 +1447,8 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param entry The Config entry to add.
      */
-    void addEntry(final String key, final ConfigurableEntry entry) {
-        m_map.put(key, entry);
+    void addEntry(final String key, final AbstractConfigEntry entry) {
+        put(key, entry);
     }
 
     /**
@@ -1433,7 +1459,7 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see #toString()
      */
     public final String toStringValue() {
         return toString();
@@ -1453,7 +1479,7 @@ public abstract class Config extends AbstractConfigEntry
 
     private String toString(final int indent, final StringBuffer sb) {
         assert (indent >= 0);
-        for (String key : keySet()) {
+        for (String key : m_map.keySet()) {
             for (int t = 0; t < indent * TAB_SIZE; t++) {
                 sb.append(" ");
             }
@@ -1465,7 +1491,7 @@ public abstract class Config extends AbstractConfigEntry
                 Config ms = (Config)e;
                 ms.toString(++myindent, sb);
             } else {
-                String value = ((ConfigurableEntry)e).toStringValue();
+                String value = ((AbstractConfigEntry)e).toStringValue();
                 if (value == null) {
                     sb.append("->null");
                 } else {

@@ -29,21 +29,19 @@ final class ConfigLongEntry extends AbstractConfigEntry {
 
     /**
      * Creates a new Config entry for an long value.
-     * @param key The key for this entry.
      * @param l The long value.
      */
-    ConfigLongEntry(final String key, final long l) {
-        super(key, ConfigEntries.xlong);
+    ConfigLongEntry(final long l) {
+        super(ConfigEntries.xlong);
         m_long = l;
     }
 
     /**
      * Creates a new Config entry for a long value.
-     * @param key The key for this entry.
      * @param l The long value as String.
      */
-    ConfigLongEntry(final String key, final String l) {
-        super(key, ConfigEntries.xlong);
+    ConfigLongEntry(final String l) {
+        super(ConfigEntries.xlong);
         m_long = Long.parseLong(l);
     }
 
@@ -56,7 +54,7 @@ final class ConfigLongEntry extends AbstractConfigEntry {
     
     /**
      * @return A String representation of this long.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see Long#toString(long)
      */
     public String toStringValue() {
         return Long.toString(m_long);

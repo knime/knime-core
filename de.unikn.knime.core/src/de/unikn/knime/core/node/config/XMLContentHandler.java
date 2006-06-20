@@ -151,7 +151,7 @@ class XMLContentHandler extends DefaultHandler {
             if (isNull) {
                 value = null;
             }
-            ConfigurableEntry ab = configEntryType.createEntry(key, value);
+            AbstractConfigEntry ab = configEntryType.createEntry(value);
             peek.addEntry(key, ab);
         } else {
             // only "config" and "entry" are valid tag names 
@@ -199,9 +199,9 @@ class XMLContentHandler extends DefaultHandler {
                 internalAsXML((Config)e, handler);
             } else {
                 AttributesImpl a = new AttributesImpl();
-                a.addAttribute(null, null, "key", "CDATA", e.getKey());
+                a.addAttribute(null, null, "key", "CDATA", key);
                 a.addAttribute(null, null, "type", "CDATA", e.getType().name());
-                String value = ((ConfigurableEntry)e).toStringValue();
+                String value = ((AbstractConfigEntry)e).toStringValue();
 
                 if (value == null) {
                     a.addAttribute(null, null, "isnull", "CDATA", "true");

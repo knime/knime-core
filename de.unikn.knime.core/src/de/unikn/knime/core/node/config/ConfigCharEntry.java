@@ -31,21 +31,19 @@ final class ConfigCharEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new char entry.
-     * @param key This entry's key.
      * @param c The char value.
      */
-    ConfigCharEntry(final String key, final char c) {
-        super(key, ConfigEntries.xchar);
+    ConfigCharEntry(final char c) {
+        super(ConfigEntries.xchar);
         m_char = c;
     }
 
     /**
      * Creates a new char entry.
-     * @param key This entry's key.
      * @param c The char value as String.
      */
-    ConfigCharEntry(final String key, final String c) {
-        super(key, ConfigEntries.xchar);
+    ConfigCharEntry(final String c) {
+        super(ConfigEntries.xchar);
         if (c.length() > 1) {
             throw new IllegalArgumentException("ConfigCharEntry only takes " 
                     + "strings of length one.");
@@ -62,7 +60,7 @@ final class ConfigCharEntry extends AbstractConfigEntry {
     
     /**
      * @return A String representation of this char value.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see Character#toString(char)
      */
     public String toStringValue() {
         return Character.toString(m_char);

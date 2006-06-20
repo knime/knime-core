@@ -31,21 +31,19 @@ final class ConfigShortEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new short entry.
-     * @param key The key of this entry.
      * @param s The short value.
      */
-    ConfigShortEntry(final String key, final short s) {
-        super(key, ConfigEntries.xshort);
+    ConfigShortEntry(final short s) {
+        super(ConfigEntries.xshort);
         m_short = s;
     }
 
     /**
      * Creates a new short entry.
-     * @param key The key of this entry.
      * @param s The short value as String.
      */
-    ConfigShortEntry(final String key, final String s) {
-        super(key, ConfigEntries.xshort);
+    ConfigShortEntry(final String s) {
+        super(ConfigEntries.xshort);
         m_short = Short.parseShort(s);
     }
     
@@ -58,7 +56,7 @@ final class ConfigShortEntry extends AbstractConfigEntry {
     
     /**
      * @return A Sring representation of this short value.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see Short#toString(short)
      */
     public String toStringValue() {
         return Short.toString(m_short);

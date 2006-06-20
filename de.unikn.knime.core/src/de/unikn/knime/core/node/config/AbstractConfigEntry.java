@@ -17,62 +17,46 @@
  */
 package de.unikn.knime.core.node.config;
 
+import java.io.Serializable;
+
 /**
- * Abstract Config entry holding key and type. Deriving classes must store the
- * corresponding value and implement the toStringValue() method from the 
- * <code>ConfigurableEntry</code> interface.
+ * Abstract Config entry holding only a Config entry type. Deriving classes must
+ * store the corresponding value and implement the toStringValue() method.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-abstract class AbstractConfigEntry implements ConfigurableEntry {
-    
-    /** The key for this Config entry. */
-    private final String m_key;
+abstract class AbstractConfigEntry implements Serializable {
     
     /** The type of the stored value. */
     private final ConfigEntries m_type;
     
     /**
      * Creates a new Config entry by the given key and type.
-     * @param key This Config's key.
      * @param type This Config's type.
+     * @throws IllegalArgumentException If the type is null.
      */
-    AbstractConfigEntry(final String key, final ConfigEntries type) {
-        if ((key == null) || (key.trim().length() == 0)) {
-            throw new IllegalArgumentException("Key can't be null or empty");
-        }
+    AbstractConfigEntry(final ConfigEntries type) {
         if (type == null) {
-            throw new NullPointerException("Configtype can't be null");
+            throw new IllegalArgumentException(
+                    "Config entry type can't be null");
         }
-        m_key = key.trim();
         m_type = type;
     }
     
-    /**
+    /*
      * Reviewers (PO and CS): The current key should be renamed to "identifier"
      * or something similar. A new getKey method should return a key for the
      * hashmap, which must be a combination of the type and the identifier.
      * This will resolve the problem of replacing entries with the same 
      * identifier but different keys. The equals ans hashCode methods must be 
      * adopted accordingly.
-     * Also, replace all constructs handling the storage of DataCells. Create
-     * a ConfigDefaultStringCellEntry, just a DefaultXXXEntry for each supported
-     * DataCell type. 
-     * Next, replace all constructs handling DataTypes. 
-     * 
      */
+    
     /**
      * @return This Config's type.
      */
     final ConfigEntries getType() {
         return m_type;
-    }
-
-    /**
-     * @return This Config's key.
-     */
-    String getKey() {
-        return m_key;
     }
     
     /**
@@ -81,8 +65,15 @@ abstract class AbstractConfigEntry implements ConfigurableEntry {
      */
     @Override
     public String toString() {
-        return "key=" + m_key + ",type=" + m_type + ",value=" + toStringValue();
+        return "type=" + m_type + ",value=" + toStringValue();
     }
+    
+    /**
+     * Returns a String representation for this Config entry which is the used 
+     * to re-load this Config entry.
+     * @return A String representing this Config entry which can be null.
+     */
+    abstract String toStringValue();
     
     /**
      * Config entries are equal if the key and type match. The value will not
@@ -98,24 +89,22 @@ abstract class AbstractConfigEntry implements ConfigurableEntry {
             return false;
         }
         AbstractConfigEntry e = (AbstractConfigEntry) o;
-        
-        return (m_key.equals(e.m_key) && m_type.equals(e.m_type));
+        return m_type.name() == e.m_type.name();
     }
 
     /**
      * Checks the identity of two config enties. They are identical if they are
      * equal and contain equal values. Equality of the values is checked by
      * <code>hasIdenticalValue</code>, implemented in the derived classes.
-     * 
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry
-     *          #isIdentical(de.unikn.knime.core.node.config.ConfigurableEntry)
+     * @param ace Entry to check if identical.
+     * @return true, if both are equal and have identical values.
      */
-    public final boolean isIdentical(final ConfigurableEntry ce) {
-        if (!this.equals(ce)) {
+    public final boolean isIdentical(final AbstractConfigEntry ace) {
+        if (!this.equals(ace)) {
             return false;
         }
         // because objects are equal it is safe to typecast
-        return hasIdenticalValue((AbstractConfigEntry)ce);
+        return hasIdenticalValue((AbstractConfigEntry) ace);
     }
     
     /**
@@ -126,14 +115,14 @@ abstract class AbstractConfigEntry implements ConfigurableEntry {
      * @param ace the argument to compare the value with
      * @return true if the specified argument stores the same value as this.
      */
-    protected abstract boolean hasIdenticalValue(AbstractConfigEntry ace);
+    abstract boolean hasIdenticalValue(AbstractConfigEntry ace);
     
     /**
      * @see java.lang.Object#hashCode()
      */
     @Override
     public final int hashCode() {
-        return m_key.hashCode() ^ m_type.hashCode();
+        return m_type.hashCode();
     }
     
 }

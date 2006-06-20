@@ -31,21 +31,19 @@ final class ConfigBooleanEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new entry for boolean objects. 
-     * @param key This entry's key.
      * @param b The boolean value.
      */
-    ConfigBooleanEntry(final String key, final boolean b) {
-        super(key, ConfigEntries.xboolean);
+    ConfigBooleanEntry(final boolean b) {
+        super(ConfigEntries.xboolean);
         m_boolean = b;
     }
 
     /**
      * Creates a new entry for boolean objects. 
-     * @param key This entry's key.
      * @param b The boolean value as String.
      */
-    ConfigBooleanEntry(final String key, final String b) {
-        super(key, ConfigEntries.xboolean);
+    ConfigBooleanEntry(final String b) {
+        super(ConfigEntries.xboolean);
         m_boolean = Boolean.parseBoolean(b);
     }
     
@@ -58,7 +56,6 @@ final class ConfigBooleanEntry extends AbstractConfigEntry {
     
     /**
      * @return A String representation of this boolean.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
      * @see java.lang.Boolean#toString(boolean)
      */
     public String toStringValue() {

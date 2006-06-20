@@ -189,7 +189,7 @@ final class XMLConfig2 {
                     }
                 }
 
-                ConfigurableEntry ab = configEntryType.createEntry(key, value);
+                AbstractConfigEntry ab = configEntryType.createEntry(value);
                 config.addEntry(key, ab);
             }
         }
@@ -234,14 +234,14 @@ final class XMLConfig2 {
             if (e instanceof Config) {
                 Element entry = (Element)element.appendChild(doc
                         .createElement(ConfigEntries.config.name()));
-                entry.setAttribute("key", e.getKey());
+                entry.setAttribute("key", key);
                 save((Config)e, entry, doc);
             } else {
                 Element entry = (Element)element.appendChild(doc
                         .createElement("entry"));
-                entry.setAttribute("key", e.getKey());
+                entry.setAttribute("key", key);
                 entry.setAttribute("type", e.getType().name());
-                String value = ((ConfigurableEntry)e).toStringValue();
+                String value = ((AbstractConfigEntry)e).toStringValue();
 
                 if (value == null) {
                     entry.setAttribute("isnull", "true");

@@ -31,21 +31,19 @@ final class ConfigByteEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new config entry for bytes.
-     * @param key This entry's key.
      * @param b The byte value.
      */
-    ConfigByteEntry(final String key, final byte b) {
-        super(key, ConfigEntries.xbyte);
+    ConfigByteEntry(final byte b) {
+        super(ConfigEntries.xbyte);
         m_byte = b;
     }
 
     /**
      * Creates a new config entry for bytes.
-     * @param key This entry's key.
      * @param b The byte value as String.
      */
-    ConfigByteEntry(final String key, final String b) {
-        super(key, ConfigEntries.xbyte);
+    ConfigByteEntry(final String b) {
+        super(ConfigEntries.xbyte);
         m_byte = Byte.parseByte(b);
     }
 
@@ -58,7 +56,7 @@ final class ConfigByteEntry extends AbstractConfigEntry {
     
     /**
      * @return The byte value as String representation.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see Byte#toString(byte)
      */
     public String toStringValue() {
         return Byte.toString(m_byte);

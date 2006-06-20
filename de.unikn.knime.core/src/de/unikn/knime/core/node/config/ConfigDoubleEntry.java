@@ -31,21 +31,19 @@ final class ConfigDoubleEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new Config entry for type double.
-     * @param key This entry's key.
      * @param d The double value.
      */
-    ConfigDoubleEntry(final String key, final double d) {
-        super(key, ConfigEntries.xdouble);
+    ConfigDoubleEntry(final double d) {
+        super(ConfigEntries.xdouble);
         m_double = d;
     }
 
     /**
      * Creates a new Config entry for type double.
-     * @param key This entry's key.
      * @param d The double value as String.
      */
-    ConfigDoubleEntry(final String key, final String d) {
-        super(key, ConfigEntries.xdouble);
+    ConfigDoubleEntry(final String d) {
+        super(ConfigEntries.xdouble);
         m_double = Double.parseDouble(d);
     }
     
@@ -58,7 +56,7 @@ final class ConfigDoubleEntry extends AbstractConfigEntry {
 
     /**
      * @return A String representation of this double value.
-     * @see de.unikn.knime.core.node.config.ConfigurableEntry#toStringValue()
+     * @see Double#toString(double)
      */
     public String toStringValue() {
         return Double.toString(m_double);
