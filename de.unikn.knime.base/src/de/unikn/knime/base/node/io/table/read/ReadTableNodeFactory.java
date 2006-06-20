@@ -36,8 +36,7 @@ public class ReadTableNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeModel()
      */
-    @Override
-    protected NodeModel createNodeModel() {
+    public @Override NodeModel createNodeModel() {
         return new ReadTableNodeModel();
     }
 
