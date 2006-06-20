@@ -192,7 +192,7 @@ public abstract class NodeDialogPane {
      */
     void finishEditingAndSaveSettingsTo(final NodeSettings settings) 
         throws InvalidSettingsException {
-        commitJSpinners(getPanel());
+        commitComponentsRecursively(getPanel());
         saveSettingsTo(settings);
     }
 
@@ -243,7 +243,7 @@ public abstract class NodeDialogPane {
      * 
      * @param c Component to find JSpinner in.
      */
-    private static void commitJSpinners(final Component c) {
+    private static void commitComponentsRecursively(final Component c) {
         if (c instanceof JSpinner) {
             try {
                 ((JSpinner)c).commitEdit();
@@ -259,7 +259,7 @@ public abstract class NodeDialogPane {
         } else if (c instanceof Container) {
             Component[] cs = ((Container)c).getComponents();
             for (int i = 0; i < cs.length; i++) {
-                commitJSpinners(cs[i]);
+                commitComponentsRecursively(cs[i]);
             }
         }
     }

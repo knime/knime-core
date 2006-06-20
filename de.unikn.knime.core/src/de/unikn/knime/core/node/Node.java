@@ -1194,7 +1194,7 @@ public final class Node {
      * @throws InvalidSettingsException If configure failed due to wrong
      *             settings.
      */
-    protected void configureNode() throws InvalidSettingsException {
+    void configureNode() throws InvalidSettingsException {
 
         m_logger.info("configure");
 
@@ -1203,7 +1203,8 @@ public final class Node {
 
         // only call for re-configuration if we are not executed
         if (isExecuted()) {
-            assert false : "Must not call configureNode when executed.";
+            m_logger.assertLog(false, 
+                    "Must not call configureNode() when executed.");
             // this happens if a previous node in a row of executed ones
             // in configured, all other nodes will be re-configured
             m_logger.coding("is executed: resetting");
@@ -1548,6 +1549,10 @@ public final class Node {
         m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
         // and apply it to the model
         m_model.loadSettingsFrom(newSettings);
+        // reset node if executed
+        if (isExecuted()) {
+            resetWithoutConfigure();
+        }
         // update the output data table specs
         configureNode();
     }
@@ -1738,7 +1743,7 @@ public final class Node {
      * 
      * @param state The status object.
      */
-    protected synchronized void notifyStateListeners(final NodeStatus state) {
+    synchronized void notifyStateListeners(final NodeStatus state) {
         synchronized (m_stateListeners) {
             for (NodeStateListener listener : m_stateListeners) {
                 listener.stateChanged(state, -1);
@@ -1772,13 +1777,6 @@ public final class Node {
      */
     public NodeFactory getFactory() {
         return m_factory;
-    }
-
-    /**
-     * @return returns the node model of this node
-     */
-    protected NodeModel getModel() {
-        return m_model;
     }
 
     /**
