@@ -696,6 +696,18 @@ public class FileTokenizer {
                     .length() - 1);
         }
 
+        /* Now, if the token so far is empty, we have read in only comment.
+         * If the next character in the stream is a LF, we should consider it 
+         * part of the comment, as is was added only for better readability. 
+         * (Otherwise this LF causes an unexpected empty line most of the time.)
+         */
+        if (m_newToken.length() == 0) {
+            int c = getNextChar();
+            if (c != LF) {
+                putBackChar(c);
+            }
+        }
+        
         return result.toString();
     } // readComment(string)
 
