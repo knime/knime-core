@@ -127,6 +127,8 @@ public class ARFFTable implements DataTable {
 
         // prepare for creating a column spec for each "@attribute" read
         Vector<DataColumnSpec> colSpecs = new Vector<DataColumnSpec>();
+        String tableName = null;
+        
         String token;
 
         // now we collect the header information - until we see the EOF or
@@ -143,6 +145,10 @@ public class ARFFTable implements DataTable {
             if (token == null) {
                 throw new InvalidSettingsException("Incorrect/Incomplete " 
                         + "ARFF file. No data section found.");
+            }
+            if (token.length() == 0) {
+                // ignore empty lines
+                continue;
             }
             if (token.equalsIgnoreCase("@DATA")) {
                 // this starts the data section: we are done.
@@ -205,6 +211,13 @@ public class ARFFTable implements DataTable {
 
 
             } else if (token.equalsIgnoreCase("@RELATION")) {
+                tableName = tokenizer.nextToken();
+                if (tableName == null) {
+                    throw new InvalidSettingsException(
+                            "Incomplete '@relation' statement at line "
+                                    + tokenizer.getLineNumber()
+                                    + " in ARFF file '" + fileLoc + "'.");
+                }
                 // we just ignore the name of the data set.
                 readUntilEOL(tokenizer, null);
             } else if (token.charAt(0) == '@') {
@@ -240,7 +253,7 @@ public class ARFFTable implements DataTable {
         // 2.: check uniquity of possible values for each nominal column
         // we've moved that part where we read in the values
 
-        return new DataTableSpec(colSpecs.toArray(
+        return new DataTableSpec(tableName, colSpecs.toArray(
                 new DataColumnSpec[colSpecs.size()]));
 
     } // createDataTableSpecFromARFFfile(URL)

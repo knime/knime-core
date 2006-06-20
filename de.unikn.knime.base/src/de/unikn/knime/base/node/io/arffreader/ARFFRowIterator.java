@@ -131,7 +131,8 @@ public class ARFFRowIterator extends RowIterator {
         try {
             token = m_tokenizer.nextToken();
             // skip empty lines. Dont call this from within 'next()'
-            while ((token != null) && (token.equals("\n"))) {
+            while ((token != null) 
+                    && (token.equals("\n") || (token.length() == 0))) {
                 token = m_tokenizer.nextToken();
             }
             m_tokenizer.pushBack();
