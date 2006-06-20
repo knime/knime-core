@@ -17,6 +17,9 @@
  */
 package de.unikn.knime.core.node;
 
+import java.io.File;
+
+import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
 
@@ -121,7 +124,8 @@ public abstract class SpecialNodeModel extends NodeModel {
      * 
      * @param inPortID the ID of the data port
      */
-    protected void inportHasNewDataTable(final int inPortID) {
+    protected void inportHasNewDataTable(final DataTable table,
+            final int inPortID) {
         // nothing to do for this class here
     }
     
@@ -160,4 +164,11 @@ public abstract class SpecialNodeModel extends NodeModel {
             final ExecutionMonitor exec) {
         return exec.getProgressMonitor();
     }
+
+    protected void saveSettingsTo(final NodeSettings settings,
+            final File nodeFile) {
+        // nothing to do here
+    }
+    
+    
 }

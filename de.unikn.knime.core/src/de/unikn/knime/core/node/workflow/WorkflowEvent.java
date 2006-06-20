@@ -93,36 +93,6 @@ public abstract class WorkflowEvent {
         }        
     }
     
-    /** Event: pool of executable nodes has changed. */
-    public static class ExecPoolChanged extends WorkflowEvent {
-        /**
-         * Creates a new "exec pool changed" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public ExecPoolChanged(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-    
-    /** Event: pool of executable nodes is now empty: execute wf finished. */
-    public static class ExecPoolDone extends WorkflowEvent {
-        /**
-         * Creates a new "exec pool done" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public ExecPoolDone(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-
     /** Event: node was reset. */
     public static class NodeReset extends WorkflowEvent {
         /**
@@ -178,6 +148,23 @@ public abstract class WorkflowEvent {
          * @param newValue value after the change (may be <code>null</code>)
          */
         public ConnectionExtrainfoChanged(final int nodeID,
+                final Object oldValue, final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
+
+    /** Event: node is being executed. */
+    public static class NodeStarted extends WorkflowEvent {
+        public NodeStarted(final int nodeID,
+                final Object oldValue, final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }        
+    }
+
+
+    /** Event: node execution is finished. */
+    public static class NodeFinished extends WorkflowEvent {
+        public NodeFinished(final int nodeID,
                 final Object oldValue, final Object newValue) {
             super(nodeID, oldValue, newValue);
         }        

@@ -34,8 +34,7 @@ public class ModelOutputFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
-    @Override
-    protected NodeModel createNodeModel() {
+    public @Override NodeModel createNodeModel() {
         return new ModelOutputNodeModel();
     }
 

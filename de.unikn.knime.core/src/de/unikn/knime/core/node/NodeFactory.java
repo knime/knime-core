@@ -568,7 +568,7 @@ public abstract class NodeFactory {
      * 
      * @return A new NodeModel for this node. Never <code>null</code>!
      */
-    protected abstract NodeModel createNodeModel();
+    public abstract NodeModel createNodeModel();
 
     /**
      * Access method for <code>createNodeModel()</code>. This method will

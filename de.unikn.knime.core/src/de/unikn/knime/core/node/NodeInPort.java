@@ -122,12 +122,4 @@ public abstract class NodeInPort extends NodePort {
     public final NodeOutPort getConnectedPort() {
         return m_connOutPort;
     }
-
-    /**
-     * Invoked to reset the node of this input port.
-     */
-    final void resetNode() {
-        getNode().inportResetsNode(getPortID());
-    }
-
 } // NodeInPort

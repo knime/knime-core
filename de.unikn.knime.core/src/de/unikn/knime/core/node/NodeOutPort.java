@@ -167,15 +167,6 @@ public abstract class NodeOutPort extends NodePort {
     }
 
     /**
-     * Sends a reset request to all connected input ports.
-     */
-    final void resetConnected() {
-        for (NodeInPort inPort : m_connInPorts) {
-            inPort.resetNode();
-        }
-    }
-
-    /**
      * Opens the port view for this port with the given name.
      * 
      * @param name The name of the port view.

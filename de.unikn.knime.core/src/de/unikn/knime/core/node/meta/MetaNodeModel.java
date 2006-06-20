@@ -19,6 +19,8 @@
  */
 package de.unikn.knime.core.node.meta;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.Set;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DataOutPort;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -43,7 +46,6 @@ import de.unikn.knime.core.node.tableinput.ModelOutputFactory;
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
-import de.unikn.knime.core.node.workflow.WorkflowExecutor;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
@@ -58,7 +60,6 @@ public class MetaNodeModel extends SpecialNodeModel
     private static final String INOUT_CONNECTIONS_KEY = "inOutConnections";
     
     private WorkflowManager m_internalWFM;
-    private WorkflowExecutor m_workflowExecutor;
 
     private final NodeContainer[] m_dataInContainer, m_dataOutContainer;
     private final NodeContainer[] m_modelInContainer, m_modelOutContainer;
@@ -158,6 +159,11 @@ public class MetaNodeModel extends SpecialNodeModel
             throws InvalidSettingsException {
         createInternalWFM();
         
+        for (int i = 0; i < m_dataInModels.length; i++) {
+            m_dataInModels[i].setDataTableSpec(inSpecs[i]);
+            m_internalWFM.configureNode(m_dataInContainer[i].getID());
+        }
+        
         // collect all output specs
         DataTableSpec[] outspecs = new DataTableSpec[m_dataOutContainer.length];
         final int min = Math.min(outspecs.length, m_dataOutContainer.length);
@@ -184,8 +190,7 @@ public class MetaNodeModel extends SpecialNodeModel
             final ExecutionMonitor exec) throws Exception {
         exec.setMessage("Executing inner workflow");
         
-        m_workflowExecutor.setProgressMonitor(getNodeProgressMonitor(exec));
-        m_workflowExecutor.executeAll();
+        m_internalWFM.executeAll(true);
         exec.checkCanceled();
         
         // translate output
@@ -239,8 +244,8 @@ public class MetaNodeModel extends SpecialNodeModel
             }
 
             @Override
-            protected NodeModel createNodeModel() {
-                return m_dataInModels[inputNodeIndex];
+            public NodeModel createNodeModel() {
+                return new MetaInputNodeModel();
             }
         };
     }
@@ -262,8 +267,8 @@ public class MetaNodeModel extends SpecialNodeModel
             }                        
             
             @Override
-            protected NodeModel createNodeModel() {
-                return m_modelInModels[inputNodeIndex];
+            public NodeModel createNodeModel() {
+                return new MetaInputModelNodeModel();
             }            
         };
     }
@@ -286,8 +291,8 @@ public class MetaNodeModel extends SpecialNodeModel
             }
             
             @Override
-            protected NodeModel createNodeModel() {
-                return m_modelOutModels[outputNodeIndex];
+            public NodeModel createNodeModel() {
+                return new MetaOutputNodeModel();
             }
         };
     }
@@ -310,8 +315,8 @@ public class MetaNodeModel extends SpecialNodeModel
             }
             
             @Override
-            protected NodeModel createNodeModel() {
-                return m_dataOutModels[outputNodeIndex];
+            public NodeModel createNodeModel() {
+                return new MetaOutputNodeModel();
             }            
         };
     }
@@ -322,24 +327,28 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     private void addInOutNodes() {
         LOGGER.debug("Adding in- and output nodes");
-        for (int i = 0; i < m_dataInContainer.length; i++) { 
-            m_dataInContainer[i] =
-                m_internalWFM.addNewNode(getDataInputNodeFactory(i));
+        for (int i = 0; i < m_dataInContainer.length; i++) {
+            NodeFactory f = getDataInputNodeFactory(i);
+            m_dataInModels[i] = (MetaInputNodeModel)f.createNodeModel();
+            m_dataInContainer[i] = m_internalWFM.addNewNode(f);
         }
 
         for (int i = 0; i < m_dataOutContainer.length; i++) {
-            m_dataOutContainer[i] =
-                m_internalWFM.addNewNode(getDataOutputNodeFactory(i));
+            NodeFactory f = getDataOutputNodeFactory(i);
+            m_dataOutModels[i] = (MetaOutputNodeModel)f.createNodeModel();
+            m_dataOutContainer[i] = m_internalWFM.addNewNode(f);
         }
 
         for (int i = 0; i < m_modelInContainer.length; i++) {
-            m_modelInContainer[i] =
-                m_internalWFM.addNewNode(getModelInputNodeFactory(i));
+            NodeFactory f = getModelInputNodeFactory(i);
+            m_modelInModels[i] = (MetaInputModelNodeModel)f.createNodeModel();
+            m_modelInContainer[i] = m_internalWFM.addNewNode(f);
         }
 
         for (int i = 0; i < m_modelOutContainer.length; i++) {
-            m_modelOutContainer[i] =
-                m_internalWFM.addNewNode(getModelOutputNodeFactory(i));
+            NodeFactory f = getModelOutputNodeFactory(i);
+            m_modelOutModels[i] = (MetaOutputModelNodeModel)f.createNodeModel();
+            m_modelOutContainer[i] = m_internalWFM.addNewNode(f);
         }        
     }
     
@@ -376,11 +385,10 @@ public class MetaNodeModel extends SpecialNodeModel
 
     /**
      * Stores the inner workflow in the settings.
-     * 
-     * @see de.unikn.knime.core.node.NodeModel#saveSettingsTo(NodeSettings)
-     */
+     */    
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettings settings,
+            final File nodeFile) {
         if (m_internalWFM == null) { return; }
         
         NodeSettings connections = settings.addConfig(INOUT_CONNECTIONS_KEY);
@@ -455,8 +463,15 @@ public class MetaNodeModel extends SpecialNodeModel
         }
         
         
-        NodeSettings conf = settings.addConfig(WORKFLOW_KEY);
-        m_internalWFM.save(conf, omitNodes);
+        try {
+            File f = new File(nodeFile.getParentFile(), "workflow.knime");
+            f.createNewFile();
+            m_internalWFM.save(f, omitNodes);
+        } catch (IOException ex) {
+            LOGGER.error(ex);
+        } catch (CanceledExecutionException ex) {
+            LOGGER.error(ex);
+        }
     }
 
     /**
@@ -513,13 +528,16 @@ public class MetaNodeModel extends SpecialNodeModel
 
 
     /** 
-     * @see de.unikn.knime.core.node.SpecialNodeModel#inportHasNewDataTable(int)
+     * @see de.unikn.knime.core.node.SpecialNodeModel
+     *  #inportHasNewDataTable(DataTable, int)
      */
     @Override
-    protected void inportHasNewDataTable(final int inPortID) {
+    protected void inportHasNewDataTable(final DataTable table,
+            final int inPortID) {
         createInternalWFM();
-        LOGGER.debug("Executing input node #" + inPortID);
-        
+        m_dataInModels[inPortID].setDataTable(table);
+        m_internalWFM.executeUpToNode(m_dataInContainer[inPortID].getID(),
+                true);
     }
 
 
@@ -533,13 +551,12 @@ public class MetaNodeModel extends SpecialNodeModel
         super.inportWasDisconnected(inPortID);
         // m_dataInContainer[inPortID].reset();
         if (inPortID < getNrDataIns()) {
-            ConnectionContainer cc = m_internalWFM.getIncomingConnectionAt(
-                    m_dataInContainer[inPortID], 0);
-            m_internalWFM.removeConnectionIfExists(cc);
+            m_dataInModels[inPortID].setDataTable(null);
+            m_internalWFM.resetNode(m_dataInContainer[inPortID].getID());
         } else {
-            ConnectionContainer cc = m_internalWFM.getIncomingConnectionAt(
-                    m_dataInContainer[inPortID - getNrDataIns()], 0);
-            m_internalWFM.removeConnectionIfExists(cc);            
+            m_modelInModels[inPortID - getNrDataIns()].setPredictorParams(null);
+            m_internalWFM.resetNode(
+                    m_modelInContainer[inPortID - getNrDataIns()].getID());
         }
     }
 
@@ -586,22 +603,27 @@ public class MetaNodeModel extends SpecialNodeModel
         return m_modelOutContainer[index];
     }
     
-    /**
-     * Returns the executor for the inner workflow.
-     * @return a workflow executor
-     */
-    protected final WorkflowExecutor workflowExecutor() {
-        return m_workflowExecutor;
-    }
-    
+   
     private void createInternalWFM() {
         if (m_internalWFM == null) {
             m_internalWFM = createSubManager();
             m_internalWFM.addListener(this);
             addInOutNodes();
-            m_workflowExecutor = m_internalWFM.getExecutor();
         }        
     }
+
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettings settings) {
+        // nothing to do here
+    }
     
-    
+    protected WorkflowManager internalWFM() {
+        createInternalWFM();
+        return m_internalWFM;
+    }
 }

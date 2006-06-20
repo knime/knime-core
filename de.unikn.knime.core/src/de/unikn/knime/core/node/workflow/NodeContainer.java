@@ -58,23 +58,6 @@ import de.unikn.knime.core.node.NotConfigurableException;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class NodeContainer implements NodeStateListener {
-
-    /**
-     * Flags for events modeling information regarding state of node.
-     */    
-    public enum State {
-        /** is currently being executed. */
-        CurrentlyExecuting,
-        /** not waiting for anything. */
-        Idle,
-        /** can be executed. */
-        IsExecutable,
-        /** has been returned as EXECUTABLE and waits for thread to start. */
-        WaitingForExecution,
-        /** is waiting to be excuted once the underlying node is executable. */
-        WaitingToBeExecutable
-    }
-    
     /** Key for this node's user description. */
     protected static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
 
@@ -150,7 +133,7 @@ public class NodeContainer implements NodeStateListener {
     private NodeExtraInfo m_extraInfo;
 
     // ...its ID
-    private int m_id;
+    private final int m_id;
 
     // The node logger for the underlying node is used here.
     private final NodeLogger m_logger;
@@ -163,9 +146,6 @@ public class NodeContainer implements NodeStateListener {
 
     // ... and a progress monitor as well as the thread itself.
     private NodeProgressMonitor m_progressMonitor;
-
-    // and also remember the actual state: initialize using default.
-    private State m_state = State.Idle;
 
     // ...for each port a list of successors...
     private final Vector<List<NodeContainer>> m_succ;
@@ -181,9 +161,9 @@ public class NodeContainer implements NodeStateListener {
      * @param id identifier of the node
      */
     public NodeContainer(final Node n, final int id) {
-        m_logger = NodeLogger.getLogger(n.getName());
         m_node = n;
         m_id = id;
+        m_logger = NodeLogger.getLogger(getNameWithID());
         m_customName = "Node " + id; // initial name is the node id
         m_description = null; // no initial description
         m_succ = new Vector<List<NodeContainer>>(m_node.getNrOutPorts());
@@ -328,16 +308,6 @@ public class NodeContainer implements NodeStateListener {
             // but we need Node to tell us that execution was cancelled...
             m_executionCanceled = true;
         }
-    }
-
-    /**
-     * This method is only intended to change the id in case a node was copied
-     * to assign a unique id.
-     * 
-     * @param id the new id to assign
-     */
-    void changeId(final int id) {
-        m_id = id;
     }
 
     /**
@@ -583,13 +553,6 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @return int current state of this node
-     */
-    State getState() {
-        return m_state;
-    }
-
-    /**
      * Returns the node status object of this <code>Node</code>.
      * 
      * @return the node status
@@ -616,6 +579,30 @@ public class NodeContainer implements NodeStateListener {
         return result;
     }
 
+    
+    public Collection<NodeContainer> getAllSuccessors() {
+        ArrayList<NodeContainer> succ = new ArrayList<NodeContainer>();
+        for (List<NodeContainer> ncl : m_succ) {
+            if (ncl != null) {
+                for (NodeContainer nc : ncl) {
+                    if (!succ.contains(nc)) { succ.add(nc); }
+                }
+            }
+        }
+        
+        for (int i = 0; i < succ.size(); i++) {
+            for (List<NodeContainer> ncl : succ.get(i).m_succ) {
+                if (ncl != null) {
+                    for (NodeContainer nc : ncl) {
+                        if (!succ.contains(nc)) { succ.add(nc); }
+                    }
+                }
+            }            
+        }
+        
+        return succ;
+    }
+    
     /**
      * Returns the node's view.
      * 
@@ -821,7 +808,7 @@ public class NodeContainer implements NodeStateListener {
      * Resets the node. Will reset the entire flow from here by propagating this
      * through the output ports.
      */
-    public void reset() {
+    void reset() {
         m_node.reset();
     }
 
@@ -880,20 +867,6 @@ public class NodeContainer implements NodeStateListener {
     public void setExtraInfo(final NodeExtraInfo ei) {
         m_extraInfo = ei;
         notifyStateListeners(new NodeStatus.ExtrainfoChanged());
-    }
-
-    /**
-     * Set new state of node.
-     * 
-     * 
-     * @param s new state of this node
-     * @throws IllegalArgumentException If the argument is out of range, i.e.
-     *             not one of STATE_CURRENTLY_EXECUTING, STATE_IDLE,
-     *             STATE_IS_EXECUTABLE, STATE_WAITING_FOR_EXECUTION, or
-     *             STATE_WAITING_TO_BE_EXECUTABLE.
-     */
-    void setState(final State s) {
-        m_state = s;
     }
 
     /**

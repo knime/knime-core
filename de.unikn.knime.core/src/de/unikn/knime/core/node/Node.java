@@ -893,10 +893,6 @@ public final class Node {
             m_isCurrentlySaved = false;
         }
         notifyStateListeners(new NodeStatus.Reset("Not configured."));
-        // first, reset the rest of the flow, starting from the leafs
-        for (int p = 0; p < getNrDataOutPorts(); p++) {
-            m_outDataPorts[p].resetConnected();
-        }
 
         // blow away our data tables in the port
         for (int p = 0; p < getNrDataOutPorts(); p++) {
@@ -1074,7 +1070,8 @@ public final class Node {
         // data tables are propagated through data ports only
         boundDataInPort(inPortID);
         if (m_model instanceof SpecialNodeModel) {
-            ((SpecialNodeModel) m_model).inportHasNewDataTable(inPortID);
+            ((SpecialNodeModel) m_model).inportHasNewDataTable(
+                    m_inDataPorts[inPortID].getDataTable(), inPortID);
         }
     }
 
@@ -1138,21 +1135,6 @@ public final class Node {
     }
 
     /**
-     * Notification method, called by an input port to tell the node about a
-     * reset request from a predecessor outport. The notification is done, as
-     * the node itself should be responsible to cause the required actions. The
-     * node is reset without calling configureNode (as the reset initiator will
-     * trigger a configure later).
-     * 
-     * @param inPortID The port ID that has a new predictor model spec
-     *            available.
-     */
-    void inportResetsNode(final int inPortID) {
-        boundInPort(inPortID);
-        resetWithoutConfigure();
-    }
-
-    /**
      * Returns the <code>HiLiteHandler</code> for the given output port by
      * retrieving it from the node's <code>NodeModel</code>.
      * 
@@ -1192,8 +1174,7 @@ public final class Node {
      * @throws InvalidSettingsException If configure failed due to wrong
      *             settings.
      */
-    void configureNode() throws InvalidSettingsException {
-
+    public void configureNode() throws InvalidSettingsException {
         m_logger.info("configure");
 
         // reset status object to clean previous status messages.
@@ -1419,8 +1400,8 @@ public final class Node {
             final File nodeFile, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        this.save(settings);
-        File nodeDir = nodeFile.getParentFile();
+        save(settings, nodeFile);
+        m_nodeDir = nodeFile.getParentFile();
         if (isConfigured()) {
             NodeSettings specs = settings.addConfig("spec_files");
             for (int i = 0; i < m_outDataPorts.length; i++) {
@@ -1430,14 +1411,14 @@ public final class Node {
                 if (outSpec != null) {
                     NodeSettings specSettings = new NodeSettings("spec_" + i);
                     outSpec.save(specSettings);
-                    File targetFile = new File(nodeDir, specName);
+                    File targetFile = new File(m_nodeDir, specName);
                     specSettings.saveToXML(new BufferedOutputStream(
                             new FileOutputStream(targetFile)));
                 }
             }
         } else {
             for (int i = 0; i < m_outDataPorts.length; i++) {
-                File specFile = new File(nodeDir, "spec_" + i + ".xml");
+                File specFile = new File(m_nodeDir, "spec_" + i + ".xml");
                 specFile.delete();
             }
         }
@@ -1448,7 +1429,7 @@ public final class Node {
                     String specName = "data_" + i + ".zip";
                     data.addString("outport_" + i, specName);
                     DataTable outTable = m_outDataPorts[i].getDataTable();
-                    File targetFile = new File(nodeDir, specName);
+                    File targetFile = new File(m_nodeDir, specName);
                     DataContainer.writeToZip(outTable, targetFile, exec);
                 }
                 NodeSettings models = settings.addConfig("model_files");
@@ -1457,7 +1438,7 @@ public final class Node {
                     models.addString("outport_" + i, specName);
                     PredictorParams pred = 
                         m_outModelPorts[i].getPredictorParams();
-                    File targetFile = new File(nodeDir, specName);
+                    File targetFile = new File(m_nodeDir, specName);
                     BufferedOutputStream out = new BufferedOutputStream(
                             new FileOutputStream(targetFile));
                     pred.saveToXML(out);
@@ -1465,11 +1446,11 @@ public final class Node {
                 m_isCurrentlySaved = true;
             } else {
                 for (int i = 0; i < m_outDataPorts.length; i++) {
-                    File dataFile = new File(nodeDir, "data_" + i + ".zip");
+                    File dataFile = new File(m_nodeDir, "data_" + i + ".zip");
                     dataFile.delete();
                 }
                 for (int i = 0; i < m_outModelPorts.length; i++) {
-                    File targetFile = new File(nodeDir, "model_" + i + ".xml");
+                    File targetFile = new File(m_nodeDir, "model_" + i + ".xml");
                     targetFile.delete();            
                 }
             }
@@ -1503,7 +1484,7 @@ public final class Node {
      * 
      * @param settings The object to write the node's settings into.
      */
-    public void save(final NodeSettings settings) {
+    public void save(final NodeSettings settings, final File nodeFile) {
         // write node name
         settings.addString("name", m_name);
         // write configured flag
@@ -1523,6 +1504,9 @@ public final class Node {
         // write model
         final NodeSettings model = settings.addConfig("model");
         try {
+            if (m_model instanceof SpecialNodeModel) {
+                ((SpecialNodeModel) m_model).saveSettingsTo(settings, nodeFile);
+            }
             m_model.saveSettingsTo(model);
         } catch (Exception e) {
             m_logger.error("Could not save model", e);
