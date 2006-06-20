@@ -172,7 +172,8 @@ public abstract class NodeView {
         m_frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(final WindowEvent e) {
-                closeView();
+                onClose();
+                m_nodeModel.unregisterView(NodeView.this);
             }
         });
 
