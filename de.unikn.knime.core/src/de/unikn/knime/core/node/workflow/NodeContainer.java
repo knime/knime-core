@@ -913,6 +913,14 @@ public class NodeContainer implements NodeStateListener {
     }
     
     /**
+     * Closes all views.
+     *
+     */
+    public void closeAllViews() {
+        m_node.closeAllViews();
+    }
+    
+    /**
      * Starts the execution. The node must not be already started and has to be
      * in executable state.
      * 

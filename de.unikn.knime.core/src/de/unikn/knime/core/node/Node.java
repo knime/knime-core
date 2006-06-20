@@ -1340,6 +1340,16 @@ public final class Node {
         NodeView view = m_factory.createNodeView(viewIndex, m_model);
         return view;
     }
+    
+    /**
+     * Closes all views.
+     *
+     */
+    public void closeAllViews() {
+        for (NodeView view : m_model.getViews()) {
+            view.closeView();
+        }
+    }
 
     /**
      * @return <code>true</code> if a dialog is available.
