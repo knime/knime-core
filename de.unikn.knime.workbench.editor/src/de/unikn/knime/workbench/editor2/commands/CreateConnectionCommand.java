@@ -182,7 +182,7 @@ public class CreateConnectionCommand extends Command {
      */
     public void undo() {
         // Connection must be de-registered on workflow
-        m_manager.removeConnectionIfExists(m_connection);
+        m_manager.removeConnection(m_connection);
 
     }
 

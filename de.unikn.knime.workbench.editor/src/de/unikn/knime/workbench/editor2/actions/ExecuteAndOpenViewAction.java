@@ -157,8 +157,11 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         new Thread(new Runnable() {
             public void run() {
                 // wait until the job has finished execution
-                job.waitUntilFinished();
-
+                try {
+                    job.join();                    
+                } catch (InterruptedException ex) {
+                    // nothing to do here
+                }
                 nodeParts[0].getNodeContainer().showView(0);
             }
         }).start();

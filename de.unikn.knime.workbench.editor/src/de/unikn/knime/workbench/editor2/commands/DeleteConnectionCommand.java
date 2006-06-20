@@ -69,7 +69,7 @@ public class DeleteConnectionCommand extends Command {
         // before removing the given connection check if it still exists
 
         // remove container from the WFM
-        m_manager.removeConnectionIfExists((ConnectionContainer) m_connection
+        m_manager.removeConnection((ConnectionContainer) m_connection
                 .getModel());
     }
 

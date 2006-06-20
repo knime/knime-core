@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -55,6 +53,7 @@ public class ResetAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getId()
      */
+    @Override
     public String getId() {
         return ID;
     }
@@ -62,6 +61,7 @@ public class ResetAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Reset";
     }
@@ -69,6 +69,7 @@ public class ResetAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/resetNode.gif");
     }
@@ -76,6 +77,7 @@ public class ResetAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Reset the selected node(s)";
     }
@@ -88,6 +90,7 @@ public class ResetAction extends AbstractNodeAction {
      *      runOnNodes(de.unikn.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
+    @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                 SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
@@ -107,9 +110,7 @@ public class ResetAction extends AbstractNodeAction {
                 continue;
             }
 
-            // TODO FIXME This should be executed on the WFM, and result in a
-            // "workflow changed event" that triggers calculateEnabled !
-            nodeParts[i].getNodeContainer().reset();
+            getManager().resetNode(nodeParts[i].getNodeContainer().getID());
         }
     }
 
@@ -117,6 +118,7 @@ public class ResetAction extends AbstractNodeAction {
      * @return <code>true</code> if at least one node is executed
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
         
