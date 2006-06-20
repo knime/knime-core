@@ -308,11 +308,9 @@ public final class Node {
             for (int i = 0; i < m_outDataPorts.length; i++) {
                 String specName = spec.getString("outport_" + i);
                 File targetFile = new File(m_nodeDir, specName);
-                File dest = File.createTempFile(specName, "~");
-                dest.deleteOnExit();
-                FileUtil.copy(targetFile, dest);
                 NodeSettings settingsSpec = NodeSettings.loadFromXML(
-                        new BufferedInputStream(new FileInputStream(dest)));
+                        new BufferedInputStream(
+                                new FileInputStream(targetFile)));
                 DataTableSpec outSpec = DataTableSpec.load(settingsSpec);
                 m_outDataPorts[i].setDataTableSpec(outSpec);
             }
@@ -324,7 +322,7 @@ public final class Node {
             for (int i = 0; i < m_outDataPorts.length; i++) {
                 String dataName = data.getString("outport_" + i);
                 File targetFile = new File(m_nodeDir, dataName);
-                File dest = File.createTempFile(dataName, "~");
+                File dest = DataContainer.createTempFile();
                 dest.deleteOnExit();
                 FileUtil.copy(targetFile, dest);
                 DataTable outTable = DataContainer.readFromZip(dest);

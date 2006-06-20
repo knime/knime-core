@@ -172,7 +172,7 @@ public abstract class NodeView {
         m_frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(final WindowEvent e) {
-                closeViewComponent();
+                closeView();
             }
         });
 
@@ -425,18 +425,6 @@ public abstract class NodeView {
     }
 
     /**
-     * Calls the onClose method and unregisters this view from the model. If you
-     * derive this class, <strong>do not</strong> call this method. It's being
-     * used by the framework (if views are shown within a JFrame) or by eclipse
-     * (if available, i.e. when views are embedded in eclipse).
-     */
-    public final void closeViewComponent() {
-        // allow subclasses to clean up.
-        onClose();
-        m_nodeModel.unregisterView(this);
-    }
-
-    /**
      * Opens the view.
      * 
      * @see #onOpen
@@ -454,14 +442,24 @@ public abstract class NodeView {
 
     /**
      * Called by the node when it is deleted or by the "close" button. Disposes
-     * the frame
+     * the frame.
+     * <p>
+     * Calls the onClose method and unregisters this view from the model. If you
+     * derive this class, <strong>do not</strong> call this method. It's being
+     * used by the framework (if views are shown within a JFrame) or by eclipse
+     * (if available, i.e. when views are embedded in eclipse).
      */
-    void closeView() {
-        m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
-        // this will trigger a windowClosed event
-        // (listener see above) and call closeViewComponent()
-        m_frame.setVisible(false);
-        m_frame.dispose();
+    public final void closeView() {
+        onClose();
+        m_nodeModel.unregisterView(this);
+        if (m_frame != null) {
+            m_frame.getContentPane().firePropertyChange(
+                    PROP_CHANGE_CLOSE, 0, 1);
+            // this will trigger a windowClosed event
+            // (listener see above) and call closeViewComponent()
+            m_frame.setVisible(false);
+            m_frame.dispose();
+        }
     }
 
     /**
