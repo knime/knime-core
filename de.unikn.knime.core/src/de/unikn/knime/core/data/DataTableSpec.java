@@ -590,7 +590,6 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         for (int i = 0; i < m_columnSpecs.length; i++) {
             Config column = config.addConfig("column_" + i);
             m_columnSpecs[i].save(column);
-            LOGGER.info("column: " + i);
         }
     }
     
