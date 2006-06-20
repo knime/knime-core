@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -85,20 +83,6 @@ public class XMLProperties implements ErrorHandler {
         }
         m_xmlFile = xmlURL;
         
-//        // write input xml file from url to new internal tmp xml        
-//        InputStream isXml = xmlURL.openStream();
-//        m_xmlFile = File.createTempFile("~tmp_", ".xml");
-//        m_xmlFile.deleteOnExit();
-//            
-//        // copy DTD to this output stream using the tmp file
-//        OutputStream osXml = new FileOutputStream(m_xmlFile);
-//        int x;
-//        while ((x = isXml.read()) != -1) {
-//            osXml.write(x);
-//        }
-//        osXml.close();
-//        isXml.close();
-//        
         // create a DocumentBuilderFactory and configure it
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     
