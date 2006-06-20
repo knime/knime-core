@@ -541,6 +541,7 @@ public final class NodeSettingsTest extends TestCase {
         key.addString("N", "\n");
         key.addString("R", "\r");
         key.addString("T", "\t");
+        key.addString("GT", ">");
         key.addString("EMPTY", "");
         key.addString("LENGTH1", " ");
         key.addString("null", null);
@@ -548,6 +549,7 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(key.containsKey("N"));
         assertTrue(key.containsKey("R"));
         assertTrue(key.containsKey("T"));
+        assertTrue(key.containsKey("GT"));
         assertTrue(key.containsKey("EMPTY"));
         assertTrue(key.containsKey("null"));
         assertTrue(key.containsKey("NULL"));
@@ -555,6 +557,7 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(key.getString("N").equals("\n"));
         assertTrue(key.getString("R").equals("\r"));
         assertTrue(key.getString("T").equals("\t"));
+        assertTrue(key.getString("GT").equals(">"));
         assertTrue(key.getString("EMPTY").equals(""));
         assertTrue(key.getString("null"), key.getString("null") == null);
         assertTrue(key.getString("NULL").equals("null"));
