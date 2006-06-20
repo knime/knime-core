@@ -183,7 +183,7 @@ public class EmbeddedNodeView extends ViewPart
     /** Calls m_nodeView.closeViewComponent(). */
     private void releaseNodeView() {
         if (m_nodeView != null) {
-            m_nodeView.closeViewComponent();
+            m_nodeView.closeView();
             m_content.removePropertyChangeListener(this);
             m_awtFrame.remove(m_content);
         }
