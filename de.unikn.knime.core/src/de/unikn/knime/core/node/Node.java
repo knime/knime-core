@@ -1450,7 +1450,8 @@ public final class Node {
                     dataFile.delete();
                 }
                 for (int i = 0; i < m_outModelPorts.length; i++) {
-                    File targetFile = new File(m_nodeDir, "model_" + i + ".xml");
+                    File targetFile = 
+                        new File(m_nodeDir, "model_" + i + ".xml");
                     targetFile.delete();            
                 }
             }
@@ -1480,9 +1481,11 @@ public final class Node {
      * node name, and in- and out port names. Also calls the
      * <code>#saveConfig()</code> method inside the <code>NodeModel</code>
      * to append the model's settings to the given <code>NodeSettings</code>
-     * object.
+     * object. Also the node's internals such as specs, data, and model(s)
+     * of the outports are saved to the given file directory in its own files.
      * 
      * @param settings The object to write the node's settings into.
+     * @param nodeFile The file the node settings are saved into.
      */
     public void save(final NodeSettings settings, final File nodeFile) {
         // write node name
@@ -1541,12 +1544,6 @@ public final class Node {
         m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
         // and apply it to the model
         m_model.loadSettingsFrom(newSettings);
-        // reset node if executed
-        if (isExecuted()) {
-            resetWithoutConfigure();
-        }
-        // update the output data table specs
-        configureNode();
     }
 
     /**

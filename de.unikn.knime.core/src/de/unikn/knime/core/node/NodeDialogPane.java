@@ -67,6 +67,9 @@ public abstract class NodeDialogPane {
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
 
+    /** This dialog pane's logger. */
+    private final NodeLogger m_logger;
+    
     /**
      * Creates a new dialog with the given title. The pane holds a tabbed pane
      * ready to take additional components needed by the derived class 
@@ -75,13 +78,14 @@ public abstract class NodeDialogPane {
      * @param title The title of this dialog.
      */
     protected NodeDialogPane(final String title) {
+        m_logger = NodeLogger.getLogger(getClass());
         m_panel = new JPanel();
         // init the panel with layout
         m_panel.setLayout(new BorderLayout());
-        //m_panel.setBackground(Color.GREEN);
         // set title
-        m_panel.setName((title == null || title.length() == 0) 
-                ? "Dialog - <no title>" : "Dialog - " + title);
+        String theTitle = 
+            ((title == null || title.length() == 0) ? "<no title>" : title);
+        m_panel.setName("Dialog - " + theTitle);
         // init map for tabs
         m_tabs = new LinkedHashMap<String, Component>();
         // init tabbed pane and at it to the underlying panel
@@ -198,13 +202,25 @@ public abstract class NodeDialogPane {
 
     /**
      * Invoked when the derived dialog needs to apply its settings to the
-     * model.
+     * model. The node is reset - if executed and configured after settings
+     * were applied successfully.
      * 
-     * @throws InvalidSettingsException The setting could not be set in the
+     * @throws InvalidSettingsException If the settings could not be set in the
      *             <code>Node</code>.
      */
     public final void doApply() throws InvalidSettingsException {
+        // try to load dialog settings to dialog
         m_node.loadModelSettingsFromDialog();
+        // reset node if executed
+        if (isNodeExecuted()) {
+            m_node.resetWithoutConfigure();
+        }
+        try {
+            // configure node
+            m_node.configureNode();
+        } catch (InvalidSettingsException ise) {
+            m_logger.warn("Configure failed with current settings.", ise);
+        }
     }
     
     /**
