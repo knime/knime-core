@@ -308,10 +308,13 @@ public final class Node {
             for (int i = 0; i < m_outDataPorts.length; i++) {
                 String specName = spec.getString("outport_" + i);
                 File targetFile = new File(m_nodeDir, specName);
-                NodeSettings settingsSpec = NodeSettings.loadFromXML(
+                DataTableSpec outSpec = null;
+                if (targetFile.exists()) {
+                    NodeSettings settingsSpec = NodeSettings.loadFromXML(
                         new BufferedInputStream(
                                 new FileInputStream(targetFile)));
-                DataTableSpec outSpec = DataTableSpec.load(settingsSpec);
+                    outSpec = DataTableSpec.load(settingsSpec);
+                }
                 m_outDataPorts[i].setDataTableSpec(outSpec);
             }
         }
@@ -1090,12 +1093,8 @@ public final class Node {
         try {
             configureNode();
         } catch (InvalidSettingsException ise) {
-
-            m_logger.warn("Configure failed. Invalid settings: "
+            m_logger.info("Configure failed. Invalid settings: "
                     + ise.getMessage());
-            // m_nodeStatus = new NodeStatus(NodeStatus.Status.Error,
-            // "Configure failed. Invalid settings: " + ise.getMessage());
-            // this.notifyStateListeners(m_nodeStatus);
         }
     }
 

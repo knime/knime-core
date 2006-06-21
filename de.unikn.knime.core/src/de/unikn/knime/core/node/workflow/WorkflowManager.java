@@ -159,11 +159,11 @@ public class WorkflowManager implements WorkflowListener {
                 newNode.getNode().load(nodeFile, exec);
             } catch (IOException ioe) {
                 LOGGER.warn("Unable to load node internals for: "
-                        + newNode.getNameWithID());
+                        + newNode.getNameWithID(), ioe);
                 newNode.getNode().reset();
             } catch (InvalidSettingsException ise) {
                 LOGGER.warn("Unable to load settings for: " 
-                        + newNode.getNameWithID());
+                        + newNode.getNameWithID(), ise);
                 newNode.getNode().reset();
             }
         }
@@ -209,15 +209,17 @@ public class WorkflowManager implements WorkflowListener {
             NodeSettings connectionConfig = connections
                     .getConfig(connectionKey);
             // and add appropriate connection to workflow
+            ConnectionContainer cc = null;
             try {
-                ConnectionContainer cc = new ConnectionContainer(
+                // TODO (tg) what happends with the connection id if this fails? 
+                cc = new ConnectionContainer(
                         ++m_runningConnectionID, connectionConfig, this);
-                addConnection(cc);
             } catch (InvalidSettingsException ise) {
-                LOGGER.warn("Could not create connection " + connectionKey
+                LOGGER.warn("Could not create connection: " + connectionKey
                         + " reason: " + ise.getMessage());
                 LOGGER.debug(connectionConfig, ise);
             }
+            addConnection(cc);
         }
     }
 
@@ -1330,8 +1332,11 @@ public class WorkflowManager implements WorkflowListener {
         }        
     }
 
-    
-    public void configureNode(int nodeID) {
+    /**
+     * TODO Thorsten Meinl
+     * @param nodeID
+     */ 
+    public void configureNode(final int nodeID) {
         NodeContainer nodeCont = m_nodeContainerByID.get(nodeID);
         try {
             nodeCont.getNode().configureNode();
