@@ -12,7 +12,7 @@
  * any way exploit any of the content, in whole or in part, except as
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
- * 
+ * 21.06.06 (bw & po): reviewed.
  */
 package de.unikn.knime.core.data;
 
@@ -24,11 +24,11 @@ import de.unikn.knime.core.data.renderer.DataValueRendererFamily;
 /**
  * The interface all value interfaces of data cells are derived from. 
  * <code>DataCell</code>s implement different <code>DataValue</code> interfaces
- * to access generic (or complex) fields from the cell. Typically a 
+ * to allow access to generic (or complex) fields from the cell. Typically a 
  * <code>DataValue</code> brings along its own (set of) renderer, an icon 
  * (which is displayed in table column headers, for instance) and a comparator, 
- * which all are defined through the defintion of a static member UTITLITY. 
- * For more information regarding defintion of new data cells see the
+ * which are all defined through the definition of a static member UTITLITY. 
+ * For more information regarding definition of new data cells see the
  * {@link de.unikn.knime.core.data package description} and the
  * <a href="doc-files/newtypes.html">manual on how to define new types</a>, 
  * in particular the <a href="doc-files/newtypes.html#newtypes">
@@ -41,7 +41,7 @@ public interface DataValue {
     /** Static singleton for meta description. This field is accessed via
      * reflection in the DataType class. It is being used to determine renderer,
      * comparator, etc. Sub-Interfaces will &quot;override&quot; this 
-     * static member if the desire to define own renderes.
+     * static member if they desire to define own renderes.
      */
     public static final UtilityFactory UTILITY = new UtilityFactory();
 
@@ -123,17 +123,16 @@ public interface DataValue {
 
         /**
          * Derived classes should override this and provide a comparator that
-         * compares datacells of their native value. If null is returned the
+         * compare the respective DataValue. If null is returned the
          * cell implementing the DataValue interface is said to be not 
          * comparable with respect to this DataValue interface. If none
          * of the implemented DataValue interfaces is comparable, a fallback
          * comparator based on the cell's toString() method is used.
          *
-         * <p>This default implemenation returns <code>null</code>.
-         * @return A comparator to compare data cells of the native type, or
-         *         null if a comparator of a compatible type is as good.
+         * <p>This default implementation returns <code>null</code>.
+         * @return A comparator to compare values or <code>null</code>.
          */
-        protected DataCellComparator getComparator() {
+        protected DataValueComparator getComparator() {
             return null;
         }
     }

@@ -67,8 +67,8 @@ public interface ComplexNumberValue extends DataValue {
             ICON = icon;
         }
 
-        private static final ComplexNumberCellComparator COMPARATOR =
-            new ComplexNumberCellComparator();
+        private static final ComplexNumberValueComparator COMPARATOR =
+            new ComplexNumberValueComparator();
         
         /** Only subclasses are allowed to instantiate this class. */
         protected ComplexNumberUtilityFactory() {
@@ -86,7 +86,7 @@ public interface ComplexNumberValue extends DataValue {
          * @see UtilityFactory#getComparator()
          */
         @Override
-        protected DataCellComparator getComparator() {
+        protected DataValueComparator getComparator() {
             return COMPARATOR;
         }
 

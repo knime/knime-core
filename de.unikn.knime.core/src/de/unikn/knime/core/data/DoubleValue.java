@@ -64,8 +64,8 @@ public interface DoubleValue extends DataValue {
             ICON = icon;
         }
 
-        private static final DoubleCellComparator COMPARATOR =
-            new DoubleCellComparator();
+        private static final DoubleValueComparator COMPARATOR =
+            new DoubleValueComparator();
         
         /** Only subclasses are allowed to instantiate this class. */
         protected DoubleUtilityFactory() {
@@ -83,7 +83,7 @@ public interface DoubleValue extends DataValue {
          * @see UtilityFactory#getComparator()
          */
         @Override
-        protected DataCellComparator getComparator() {
+        protected DataValueComparator getComparator() {
             return COMPARATOR;
         }
 

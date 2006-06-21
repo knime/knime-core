@@ -16,6 +16,7 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -33,7 +34,7 @@ import de.unikn.knime.core.data.StringValue;
  * A data cell implementation holding a string value by storing this value in a
  * private <code>String</code> member.
  * 
- * @author mb, University of Konstanz
+ * @author Michael Berthold, University of Konstanz
  */
 public final class StringCell extends DataCell implements StringValue {
 
@@ -41,8 +42,7 @@ public final class StringCell extends DataCell implements StringValue {
      * <code>DataType.getType(StringCell.class)</code>. 
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = 
-        DataType.getType(StringCell.class);
+    public static final DataType TYPE = DataType.getType(StringCell.class);
     
     /** Returns the preferred value class of this cell implementation. 
      * This method is called per reflection to determine which is the 
@@ -69,6 +69,11 @@ public final class StringCell extends DataCell implements StringValue {
 
     /**
      * Creates a new String Cell based on the given String value.
+     * 
+     * <p><b>Note</b>: The serializing technique writes the given String to a
+     * <code>DataOutput</code> using the <code>writeUTF(String)</code> method.
+     * The implementation is limited to string lengths of at most 64kB - (in 
+     * UTF format - which may be not equal to <code>str.length()</code>).
      * 
      * @param str The String value to store.
      * @throws NullPointerException If the given String value is

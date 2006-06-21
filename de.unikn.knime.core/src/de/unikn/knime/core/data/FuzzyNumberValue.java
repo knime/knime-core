@@ -69,8 +69,8 @@ public interface FuzzyNumberValue extends DataValue {
             ICON = icon;
         }
 
-        private static final FuzzyNumberCellComparator COMPARATOR =
-            new FuzzyNumberCellComparator();
+        private static final FuzzyNumberValueComparator COMPARATOR =
+            new FuzzyNumberValueComparator();
         
         /** Only subclasses are allowed to instantiate this class. */
         protected FuzzyNumberUtilityFactory() {
@@ -88,7 +88,7 @@ public interface FuzzyNumberValue extends DataValue {
          * @see UtilityFactory#getComparator()
          */
         @Override
-        protected DataCellComparator getComparator() {
+        protected DataValueComparator getComparator() {
             return COMPARATOR;
         }
 

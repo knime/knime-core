@@ -80,8 +80,8 @@ public interface FuzzyIntervalValue extends DataValue {
             ICON = icon;
         }
 
-        private static final FuzzyIntervalCellComparator COMPARATOR =
-            new FuzzyIntervalCellComparator();
+        private static final FuzzyIntervalValueComparator COMPARATOR =
+            new FuzzyIntervalValueComparator();
         
         /** Only subclasses are allowed to instantiate this class. */
         protected FuzzyIntervalUtilityFactory() {
@@ -99,7 +99,7 @@ public interface FuzzyIntervalValue extends DataValue {
          * @see UtilityFactory#getComparator()
          */
         @Override
-        protected DataCellComparator getComparator() {
+        protected DataValueComparator getComparator() {
             return COMPARATOR;
         }
 

@@ -15,33 +15,28 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data;
 
 /**
- * Comparator returned by the <code>FuzzyNumberType</code> datacell type. 
+ * Comparator returned by the <code>FuzzyNumberValue</code> datacell type. 
  *
+ * @see de.unikn.knime.core.data.FuzzyNumberValue.FuzzyNumberUtilityFactory
  * @author Michael Berthold, Konstanz University
  */
-public class FuzzyNumberCellComparator extends DataCellComparator {
+public class FuzzyNumberValueComparator extends DataValueComparator {
 
     /**
-     * Compares to <code>DataCell</code> based in their
-     * <code>FuzzyNumberValue</code>.
-     * 
-     * @param c1 the first datacell to compare the other with
-     * @param c2 the other datacell to compare the first with
-     * @return whatever a comparator is supposed to return.
-     * 
-     * @throws ClassCastException If one of the cells is not
-     *             <code>FuzzyNumberValue</code> type.
-     * @see de.unikn.knime.core.data.DataCellComparator
-     *      #compareDataCells(de.unikn.knime.core.data.DataCell,
-     *                        de.unikn.knime.core.data.DataCell)
+     * Compares to <code>FuzzyNumberValue</code> based in their
+     * core value, min support value, or their max support value (in this 
+     * order if the comparison returns 0).
+     * @see de.unikn.knime.core.data.DataValueComparator
+     *      #compareDataValues(DataValue, DataValue)
      */
-    public int compareDataCells(final DataCell c1, final DataCell c2) {
-        FuzzyNumberValue fi1 = ((FuzzyNumberValue)c1);
-        FuzzyNumberValue fi2 = ((FuzzyNumberValue)c2);
+    public int compareDataValues(final DataValue v1, final DataValue v2) {
+        FuzzyNumberValue fi1 = ((FuzzyNumberValue)v1);
+        FuzzyNumberValue fi2 = ((FuzzyNumberValue)v2);
         int core = Double.compare(fi1.getCore(), fi2.getCore());
         if (core != 0) {
             return core;

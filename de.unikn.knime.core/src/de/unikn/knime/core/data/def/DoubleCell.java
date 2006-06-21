@@ -16,6 +16,7 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -36,7 +37,7 @@ import de.unikn.knime.core.data.FuzzyNumberValue;
  * private <code>double</code> member. It provides a double value and a fuzzy
  * number value, as well as a fuzzy interval value.
  * 
- * @author mb, University of Konstanz
+ * @author Michael Berthold, University of Konstanz
  */
 public final class DoubleCell extends DataCell implements DoubleValue,
         FuzzyNumberValue, FuzzyIntervalValue {
@@ -65,8 +66,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
-    public static final DataCellSerializer<DoubleCell> 
-        getCellSerializer() {
+    public static final DataCellSerializer<DoubleCell> getCellSerializer() {
         return SERIALIZER;
     }
     
@@ -151,7 +151,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "" + m_double;
+        return Double.toString(m_double);
     }
     
     /** Factory for (de-)serializing a DoubleCell. */
@@ -164,7 +164,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
         public void serialize(
                 final DoubleCell cell, final DataOutput out) 
             throws IOException {
-            out.writeDouble(cell.getDoubleValue());
+            out.writeDouble(cell.m_double);
         }
         
         /**

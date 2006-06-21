@@ -45,7 +45,7 @@ import javax.swing.event.DocumentListener;
 import de.unikn.knime.base.node.filter.row.rowfilter.ColValRowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataCellComparator;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
@@ -364,7 +364,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             return;
         }
         if ((lowBound != null) && (hiBound != null)) {
-            DataCellComparator comp;
+            DataValueComparator comp;
             comp = DataType.getCommonSuperType(lowBound.getType(),
                     hiBound.getType()).getComparator();
             if (comp.compare(hiBound, lowBound) == -1) {

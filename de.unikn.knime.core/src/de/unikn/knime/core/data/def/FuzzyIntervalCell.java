@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -37,17 +36,19 @@ import de.unikn.knime.core.data.FuzzyIntervalValue;
  * values of the support, and two for the min/max values of the core of the
  * fuzzy interval.
  * 
+ * <p>The height of the membership value in the core region is assumed to be 1.
+ * 
  * @author Michael Berthold, University of Konstanz
  */
-public final class DefaultFuzzyIntervalCell extends DataCell implements
+public final class FuzzyIntervalCell extends DataCell implements
         FuzzyIntervalValue {
 
     /** Convenience access member for 
-     * <code>DataType.getType(DefaultFuzzyIntervalCell.class)</code>. 
+     * <code>DataType.getType(FuzzyIntervalCell.class)</code>. 
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = 
-        DataType.getType(DefaultFuzzyIntervalCell.class);
+        DataType.getType(FuzzyIntervalCell.class);
 
     /** Returns the preferred value class of this cell implementation. 
      * This method is called per reflection to determine which is the 
@@ -71,68 +72,67 @@ public final class DefaultFuzzyIntervalCell extends DataCell implements
     }
     
     /** Minimum support value. */
-    private final double m_a;
+    private final double m_minSupp;
 
     /** Minimum core value. */
-    private final double m_b;
+    private final double m_minCore;
 
     /** Maximum core value. */
-    private final double m_c;
+    private final double m_maxCore;
 
     /** Maximum support value. */
-    private final double m_d;
+    private final double m_maxSupp;
 
     /**
      * Creates a new fuzzy interval cell based on the min/max of support and of
      * core.
      * 
-     * @param a Minimum support value.
-     * @param b Minumum core value.
-     * @param c Maximum core value.
-     * @param d Maximum support value.
+     * @param minSupp Minimum support value.
+     * @param minCore Minumum core value.
+     * @param maxCore Maximum core value.
+     * @param maxSupp Maximum support value.
      * @throws IllegalArgumentException If not <code>a <= b <= c <= d</code>.
      */
-    public DefaultFuzzyIntervalCell(final double a, final double b,
-            final double c, final double d) {
-        if (!((a < b || Math.abs(a - b) < 1e-9)
-                && (b < c || Math.abs(b - c) < 1e-9) && (c < d || Math.abs(c
-                - d) < 1e-9))) {
-            throw new IllegalArgumentException("Illegal FuzzyInterval: <" + a
-                    + "," + b + "," + c + "," + d + "> these numbers"
+    public FuzzyIntervalCell(final double minSupp, final double minCore,
+            final double maxCore, final double maxSupp) {
+        if (!(minSupp <= minCore && minCore <= maxCore && maxCore <= maxSupp)) {
+            throw new IllegalArgumentException("Illegal FuzzyInterval: <"
+                    + minSupp + ", " + minCore + ", " + maxCore + ", " + maxSupp
+                    + "> these numbers"
                     + " must be ascending from left to right!");
         }
-        m_a = a;
-        m_b = b;
-        m_c = c;
-        m_d = d;
+        m_minSupp = minSupp;
+        m_minCore = minCore;
+        m_maxCore = maxCore;
+        m_maxSupp = maxSupp;
     }
 
     /**
      * @return Minimum support value.
      */
     public double getMinSupport() {
-        return m_a;
+        return m_minSupp;
     }
 
     /**
      * @return Minimum core value.
      */
     public double getMinCore() {
-        return m_b;
+        return m_minCore;
     }
 
     /**
      * @return Maximum core value.
      */
     public double getMaxCore() {
-        return m_c;
+        return m_maxCore;
     }
 
     /**
      * @return Maximum support value.
      */
     public double getMaxSupport() {
-        return m_d;
+        return m_maxSupp;
     }
 
     /**
@@ -144,10 +144,6 @@ public final class DefaultFuzzyIntervalCell extends DataCell implements
      *         value is divided by the overall membership function volume.
      */
     public double getCenterOfGravity() {
-        if (isMissing()) {
-            assert false;
-            return Double.NaN;
-        }
         // left support
         double a1 = (getMinCore() - getMinSupport()) / 2.0;
         double s1 = getMinSupport() + (getMinCore() - getMinSupport()) * 2.0
@@ -170,20 +166,22 @@ public final class DefaultFuzzyIntervalCell extends DataCell implements
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
     protected boolean equalsDataCell(final DataCell dc) {
-        DefaultFuzzyIntervalCell fc = (DefaultFuzzyIntervalCell)dc;
-        return (fc.m_a == m_a) && (fc.m_b == m_b) && (fc.m_c == m_c)
-                && (fc.m_d == m_d);
+        FuzzyIntervalCell fc = (FuzzyIntervalCell)dc;
+        return (fc.m_minSupp == m_minSupp) && (fc.m_minCore == m_minCore) 
+            && (fc.m_maxCore == m_maxCore) && (fc.m_maxSupp == m_maxSupp);
     }
 
     /**
-     * Computes hash code based on the center of gravity of the fuzzy interval.
-     * 
-     * @return A hash code depending on the CoG of this cell.
-     * 
-     * @see java.lang.Double#hashCode()
+     * Computes hash code based on all private members.
+     * @see DataCell#hashCode()
      */
     public int hashCode() {
-        long bits = Double.doubleToLongBits(getCenterOfGravity());
+        long minSuppBits = Double.doubleToLongBits(m_minSupp);
+        long minCoreBits = Double.doubleToLongBits(m_minCore);
+        long maxCoreBits = Double.doubleToLongBits(m_maxCore);
+        long maxSuppBits = Double.doubleToLongBits(m_maxSupp);
+        long bits = minSuppBits ^ (minCoreBits >> 1) 
+            ^ (maxCoreBits >> 2) ^ (maxSuppBits << 1);
         return (int)(bits ^ (bits >>> 32));
     }
 
@@ -191,17 +189,18 @@ public final class DefaultFuzzyIntervalCell extends DataCell implements
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "<" + m_a + "," + m_b + "," + m_c + "," + m_d + ">";
+        return "<" + m_minSupp + "," + m_minCore + "," 
+            + m_maxCore + "," + m_maxSupp + ">";
     }
 
-    /** Factory for (de-)serializing a DefaultFuzzyIntervalCell. */
+    /** Factory for (de-)serializing a FuzzyIntervalCell. */
     private static class FuzzyIntervalSerializer 
-        implements DataCellSerializer<DefaultFuzzyIntervalCell> {
+        implements DataCellSerializer<FuzzyIntervalCell> {
         
         /**
          * @see DataCellSerializer#serialize(DataCell, DataOutput)
          */
-        public void serialize(final DefaultFuzzyIntervalCell cell, 
+        public void serialize(final FuzzyIntervalCell cell, 
                 final DataOutput output) throws IOException {
             output.writeDouble(cell.getMinSupport());
             output.writeDouble(cell.getMinCore());
@@ -212,13 +211,13 @@ public final class DefaultFuzzyIntervalCell extends DataCell implements
         /**
          * @see DataCellSerializer#deserialize(DataInput)
          */
-        public DefaultFuzzyIntervalCell deserialize(
+        public FuzzyIntervalCell deserialize(
                 final DataInput input) throws IOException {
             double minSupp = input.readDouble();
             double minCore = input.readDouble();
             double maxCore = input.readDouble();
             double maxSupp = input.readDouble();
-            return new DefaultFuzzyIntervalCell(
+            return new FuzzyIntervalCell(
                     minSupp, minCore, maxCore, maxSupp);
         }
     }

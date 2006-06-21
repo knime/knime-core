@@ -15,7 +15,7 @@
  * 
  * History
  *   07.07.2005 (mb): created
- *   09.01.2006(all): reviewed
+ *   20.06.2006 (bw & po): reviewed
  */
 package de.unikn.knime.core.data;
 
@@ -50,7 +50,7 @@ import java.io.Serializable;
  * that it is used.
  * 
  * <p>Since <code>DataCell</code> may implement different <code>DataValue</code>
- * interfaces but onlye one is the <i>native</i> value class, consider to 
+ * interfaces but only one is the <i>native</i> value class, consider to 
  * implement a static method in your derived class with the following signature:
  * <pre>
  *   public static final Class<? extends DataValue> getPreferredValueClass() {
@@ -69,7 +69,7 @@ import java.io.Serializable;
  * types</a>.
  * @see DataType
  * @see de.unikn.knime.core.data.DataCellSerializer
- * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class DataCell implements DataValue, Serializable {
 
@@ -93,15 +93,16 @@ public abstract class DataCell implements DataValue, Serializable {
          * Instead of testing of this != DataType.getMissing() we use here 
          * this slightly more complicated approach using the method 
          * isMissingInternal() with package scope in order to avoid class 
-         * loading  problems. Especially in eclipse it is know that there are 
+         * loading  problems. Especially in eclipse it is known that there are 
          * many different class loaders, each of which can potentially create 
          * its own DataType.MissingCell instance.  
          */
         return isMissingInternal();
     }
     
-    /** Internal implemenation of getMissing(). It will return false and is
-     * only overridden in the missing cell implementation.
+    /** Internal implemenation of getMissing(). It will return 
+     * <code>false</code> and is only overridden in the missing cell 
+     * implementation.
      * @return <code>false</code>.
      */
     boolean isMissingInternal() {
@@ -119,11 +120,11 @@ public abstract class DataCell implements DataValue, Serializable {
     public abstract String toString();
 
     /**
-     * Implements an equal method which returns true only if both cells are of
-     * the same class and are equal. For that, this final method calls the type 
-     * specific <code>equalsDataCell</code> method, which all derived data cells
-     * must provide. It handles the missing value and null cases, in all other 
-     * cases it delegates to the specific method.
+     * Implements an equal method which returns <code>true</code> only if both
+     * cells are of the same class and are equal. For that, this final method
+     * calls the type specific <code>equalsDataCell</code> method, which all
+     * derived data cells must provide. It handles the missing value and null
+     * cases, in all other cases it delegates to the specific method.
      * 
      * @param o The other object to check.
      * @return <b>true </b> if this instance and the given object are instances
@@ -160,12 +161,12 @@ public abstract class DataCell implements DataValue, Serializable {
 
     /**
      * Derived classes implement their specific equals function here. The
-     * argument is guaranteed to be not null, to be of the same class than this,
-     * and not representing a missing value.
+     * argument is guaranteed to be not <code>null</code>, to be of the same
+     * class than this, and not representing a missing value.
      * 
-     * @param dc the cell to compare this to. Won't be null, is of this.class,
-     *            and not missing.
-     * @return true if this is equal to the argument, false if not.
+     * @param dc the cell to compare this to.
+     * @return <code>true</code> if this is equal to the argument,
+     *         <code>false</code> if not.
      */
     protected abstract boolean equalsDataCell(final DataCell dc);
 

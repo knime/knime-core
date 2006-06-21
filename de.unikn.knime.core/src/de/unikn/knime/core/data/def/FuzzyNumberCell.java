@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -37,18 +36,19 @@ import de.unikn.knime.core.data.FuzzyNumberValue;
  * three private <code>double</code> members, that is one for the core and
  * two for the min/max of the support. It also provides a fuzzy interval value.
  * 
-
+ * <p>The height of the membership value at the core value is assumed to be 1.
+ * 
  * @author Michael Berthold, University of Konstanz
  */
-public final class DefaultFuzzyNumberCell extends DataCell implements
+public final class FuzzyNumberCell extends DataCell implements
         FuzzyNumberValue, FuzzyIntervalValue {
 
     /** Convenience access member for 
-     * <code>DataType.getType(DefaultFuzzyNumberCell.class)</code>. 
+     * <code>DataType.getType(FuzzyNumberCell.class)</code>. 
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = 
-        DataType.getType(DefaultFuzzyNumberCell.class);
+        DataType.getType(FuzzyNumberCell.class);
     
     private static final FuzzyNumberSerializer SERIALIZER = 
         new FuzzyNumberSerializer();
@@ -72,53 +72,54 @@ public final class DefaultFuzzyNumberCell extends DataCell implements
     }
 
     /** Minimum support value. */
-    private final double m_a;
+    private final double m_minSupp;
 
     /** Core value. */
-    private final double m_b;
+    private final double m_core;
 
     /** Maximum support value. */
-    private final double m_c;
+    private final double m_maxSupp;
 
     /**
      * Creates a new fuzzy number cell based on min, max support, and core.
      * 
-     * @param a Minimum support value.
-     * @param b Core value.
-     * @param c Maximum support value.
-     * @throws IllegalArgumentException If not <code>a <= b <= c</code>.
+     * @param minSupp Minimum support value.
+     * @param core Core value.
+     * @param maxSupp Maximum support value.
+     * @throws IllegalArgumentException If not 
+     * <code>minSupp <= core <= maxSupp</code>.
      */
-    public DefaultFuzzyNumberCell(final double a, final double b, 
-            final double c) {
-        if (!(a <= b && b <= c)) {
-            throw new IllegalArgumentException("Illegal FuzzyInterval: <" + a
-                    + "," + b + "," + c + "> these numbers"
+    public FuzzyNumberCell(final double minSupp, final double core, 
+            final double maxSupp) {
+        if (!(minSupp <= core && core <= maxSupp)) {
+            throw new IllegalArgumentException("Illegal FuzzyInterval: <" 
+                    + minSupp + "," + core + "," + maxSupp + "> these numbers"
                     + " must be ascending from left to right!");
         }
-        m_a = a;
-        m_b = b;
-        m_c = c;
+        m_minSupp = minSupp;
+        m_core = core;
+        m_maxSupp = maxSupp;
     }
 
     /**
      * @return Minimum support value.
      */
     public double getMinSupport() {
-        return m_a;
+        return m_minSupp;
     }
 
     /**
      * @return Core value.
      */
     public double getCore() {
-        return m_b;
+        return m_core;
     }
 
     /**
      * @return Maximum support value.
      */
     public double getMaxSupport() {
-        return m_c;
+        return m_maxSupp;
     }
 
     //
@@ -141,11 +142,9 @@ public final class DefaultFuzzyNumberCell extends DataCell implements
 
     /**
      * @return The center of gravity of this trapezoid membership function which
-     *         are the weighted (by the area) gravities of each of the three
-     *         areas (left triangle, core rectangle, right triangle) whereby the
-     *         triangles' gravity point is 2/3 and 1/3 resp. is computed by the
-     *         product of the gravity point and area for each interval. This
-     *         value is divided by the overall membership function volume.
+     *         are the weighted (by the area) gravities of each of the two areas
+     *         (left triangle, right triangle). This value is divided
+     *         by the overall membership function volume.
      */
     public double getCenterOfGravity() {
         // left support
@@ -167,15 +166,19 @@ public final class DefaultFuzzyNumberCell extends DataCell implements
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
     protected boolean equalsDataCell(final DataCell dc) {
-        DefaultFuzzyNumberCell fc = (DefaultFuzzyNumberCell)dc;
-        return (fc.m_a == m_a) && (fc.m_b == m_b) && (fc.m_c == m_c);
+        FuzzyNumberCell fc = (FuzzyNumberCell)dc;
+        return (fc.m_minSupp == m_minSupp) && (fc.m_core == m_core) 
+            && (fc.m_maxSupp == m_maxSupp);
     }
 
     /**
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
-        long bits = Double.doubleToLongBits(getCenterOfGravity());
+        long minSuppBits = Double.doubleToLongBits(m_minSupp);
+        long coreBits = Double.doubleToLongBits(m_core);
+        long maxSuppBits = Double.doubleToLongBits(m_maxSupp);
+        long bits = minSuppBits ^ (coreBits >> 1) ^ (maxSuppBits << 1);
         return (int)(bits ^ (bits >>> 32));
     }
 
@@ -183,16 +186,16 @@ public final class DefaultFuzzyNumberCell extends DataCell implements
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "<" + m_a + "," + m_b + "," + m_c + ">";
+        return "<" + m_minSupp + "," + m_core + "," + m_maxSupp + ">";
     }
     
-    /** Factory for (de-)serializing a DefaultFuzzyNumberCell. */
+    /** Factory for (de-)serializing a FuzzyNumberCell. */
     private static class FuzzyNumberSerializer 
-        implements DataCellSerializer<DefaultFuzzyNumberCell> {
+        implements DataCellSerializer<FuzzyNumberCell> {
         /**
          * @see DataCellSerializer#serialize(DataCell, DataOutput)
          */
-        public void serialize(final DefaultFuzzyNumberCell cell, 
+        public void serialize(final FuzzyNumberCell cell, 
                 final DataOutput output) throws IOException {
             output.writeDouble(cell.getMinSupport());
             output.writeDouble(cell.getCore());
@@ -202,12 +205,12 @@ public final class DefaultFuzzyNumberCell extends DataCell implements
         /**
          * @see DataCellSerializer#deserialize(DataInput)
          */
-        public DefaultFuzzyNumberCell deserialize(
+        public FuzzyNumberCell deserialize(
                 final DataInput input) throws IOException {
             double minSupp = input.readDouble();
             double core = input.readDouble();
             double maxSupp = input.readDouble();
-            return new DefaultFuzzyNumberCell(minSupp, core, maxSupp);
+            return new FuzzyNumberCell(minSupp, core, maxSupp);
         }
     }
 

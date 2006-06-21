@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   23.03.2006 (cebron): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -112,8 +111,9 @@ public final class ComplexNumberCell extends DataCell
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
-        // FIXME: take into account the imaginary value as well
-        long bits = Double.doubleToLongBits(m_real);
+        long bitsReal = Double.doubleToLongBits(m_real);
+        long bitsImag = Double.doubleToLongBits(m_imag);
+        long bits = bitsReal ^ (bitsImag >> 1);
         return (int)(bits ^ (bits >>> 32));
     }
 
@@ -131,7 +131,7 @@ public final class ComplexNumberCell extends DataCell
 
     /**
      * 
-     * @return the magnitude of the complex number.
+     * @return The magnitude of the complex number.
      */
     public double getDoubleValue() {
         return Math.sqrt(m_real * m_real + m_imag * m_imag);

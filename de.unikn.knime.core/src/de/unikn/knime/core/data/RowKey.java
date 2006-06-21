@@ -15,8 +15,8 @@
  * 
  * History
  *   01.03.2005 (mb): created
- *   09.01.2006 (all): reviewed
  *   23.05.2006 (mb): eliminated member holding ColorAttr
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data;
 
@@ -25,21 +25,21 @@ import java.io.Serializable;
 import de.unikn.knime.core.data.def.StringCell;
 
 /**
- * Unique key for a specific row which holds an identifier (of type
- * <code>DataCell</code>).
+ * Key for a specific row which holds an identifier 
+ * (of type <code>DataCell</code>).
  * 
  * @author M. Berthold, University of Konstanz
  */
 public final class RowKey implements Serializable {
 
-    // private members holding id and properties
+    // private members holding row id
     private final DataCell m_id;
 
     /**
      * Creates a row key based on a <code>DataCell</code> as id.
      * 
-     * @param id unique identifier for a <code>DataTable</code>.
-     * @throws NullPointerException If argument is null.
+     * @param id identifier for a <code>DataRow</code>.
+     * @throws NullPointerException If argument is <code>null</code>.
      */
     public RowKey(final DataCell id) {
         if (id == null) {
@@ -51,21 +51,17 @@ public final class RowKey implements Serializable {
     /**
      * Creates a row key based on a String as id. 
      * 
-     * @param id unique identifier for a <code>DataTable</code>.
+     * @param id identifier for a <code>DataRow</code>.
      * @throws NullPointerException If argument is null.
      */
     public RowKey(final String id) {
-        if (id == null) {
-            throw new NullPointerException("Can't create RowKey with null id.");
-        }
-        m_id = new StringCell(id);
+        this(new StringCell(id));
     }
 
     /**
-     * @return An non-null, unique ID for a row.
+     * @return An non-null, ID for a row.
      */
     public DataCell getId() {
-        assert m_id != null;
         return m_id;
     }
 

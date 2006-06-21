@@ -14,7 +14,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   07.07.2005 (mb): created
+ *      21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data;
 
@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,8 +78,7 @@ public final class DataType {
      * different instances of the DataCell implementation.
      */
     private static final Map<Class<? extends DataCell>, DataType> 
-        CLASS_TO_TYPE_MAP = 
-            new HashMap<Class<? extends DataCell>, DataType>();
+        CLASS_TO_TYPE_MAP = new HashMap<Class<? extends DataCell>, DataType>();
     
     /** 
      * Returns the runtime <code>DataType</code> for a <code>DataCell</code> 
@@ -96,18 +94,21 @@ public final class DataType {
      * <p>This method is the only way to determine the <code>DataType</code>
      * of a <code>DataCell</code>; however, most standard cell implementations
      * have a static member for convenience access, e.g. 
-     * {@link de.unikn.knime.core.data.def.DoubleCell#TYPE 
-     * DoubleCell.TYPE}.
+     * {@link de.unikn.knime.core.data.def.DoubleCell#TYPE DoubleCell.TYPE}.
      * 
      * @see DataCell
      * @see DataValue
      * @see DataCell#getType()
      * 
      * @param cl The runtime class of DataCell for which the DataType 
+     *         is requested
      * @return The corresponding type <code>cl</code>, never <code>null</code>.
      * @throws NullPointerException If the argument is <code>null</code>.
      */
     public static DataType getType(final Class<? extends DataCell> cl) {
+        if (cl == null) {
+            throw new NullPointerException("Class must not be null.");
+        }
         DataType result = CLASS_TO_TYPE_MAP.get(cl);
         if (result == null) {
             result = new DataType(cl);
@@ -146,14 +147,7 @@ public final class DataType {
             LOGGER.debug(result.getSimpleName() + " is the preferred value "
                     + "class of cell implementation " + cl.getSimpleName() 
                     + ", making sanity check");
-            if (getUtilityFor(result) != null) {
-                return result;
-            } else {
-                LOGGER.coding("Invalid preferred value class for DataCell \""
-                        + cl.getSimpleName() + "\": no valid meta information "
-                        + "for \"" + result.getSimpleName() + "\" available.");
-                return null;
-            }
+            return result;
         } catch (NoSuchMethodException nsme) {
             // no such method - perfectly ok, ignore it.
             LOGGER.debug("Class \"" + cl.getSimpleName() + "\" doesn't " 
@@ -202,6 +196,9 @@ public final class DataType {
                 Field typeField = cl.getField("UTILITY");
                 Object typeObject = typeField.get(null);
                 result = (DataValue.UtilityFactory)typeObject;
+                if (result == null) {
+                    throw new NullPointerException("UTILITY is null.");
+                }
             } catch (NoSuchFieldException nsfe) {
                 exception = nsfe;
             } catch (NullPointerException npe) {
@@ -240,7 +237,7 @@ public final class DataType {
      * @return The DataCellSerializer defined in the DataCell implementation
      * or <code>null</code> if no such serializer is available.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // access to CLASS_TO_SERIALIZER_MAP
     public static final <T extends DataCell> 
         DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
         if (CLASS_TO_SERIALIZER_MAP.containsKey(cl)) {
@@ -259,17 +256,21 @@ public final class DataType {
              * value matches the class information of the DataCell class as
              * DataCells may potentially be overwritten and we do not accept
              * the implementation of the superclass as we lose information
-             * of the more specialized class. 
+             * of the more specialized class when we use the superclass' 
+             * serializer.
              */ 
             boolean isAssignable =
                 DataCellSerializer.class.isAssignableFrom(rType);
-            Type genType = method.getGenericReturnType();
-            boolean hasRType = isAssignable && isCellSerializer(rType, cl);
-            hasRType |= isAssignable && isCellSerializer(genType, cl);
-            if (isAssignable && !hasRType) {
-                Type[] ins = rType.getGenericInterfaces();
-                for (int i = 0; i < ins.length && !hasRType; i++) {
-                    hasRType = isCellSerializer(ins[i], cl);
+            boolean hasRType = false;
+            if (isAssignable) {
+                Type genType = method.getGenericReturnType();
+                hasRType = isCellSerializer(rType, cl) 
+                    || isCellSerializer(genType, cl);
+                if (!hasRType) {
+                    Type[] ins = rType.getGenericInterfaces();
+                    for (int i = 0; i < ins.length && !hasRType; i++) {
+                        hasRType = isCellSerializer(ins[i], cl);
+                    }
                 }
             }
             if (!hasRType) {
@@ -308,7 +309,7 @@ public final class DataType {
     }
     
     /** Helper method that checks if the passed Type is a parameterized
-     * type (like DataCellSerializer&lt;someType&gt; and that is assignable
+     * type (like DataCellSerializer&lt;someType&gt; and that it is assignable
      * from the given cell class. This method is used to check if the return
      * class of getCellSerializer in a DataCell has the correct signature.
      */
@@ -353,7 +354,6 @@ public final class DataType {
      * (altough you can't cast the returned cell to the value) and will have
      * default icons, renderers and comparators.
      * @return Singleton of a missing cell.
-     * 
      */
     public static DataCell getMissingCell() {
         return MissingCell.INSTANCE;
@@ -372,10 +372,9 @@ public final class DataType {
         for (Class c : interfaces) {
             if (DataValue.class.isAssignableFrom(c)) {
                 Class<? extends DataValue> cv = (Class<? extends DataValue>)c;
-                UtilityFactory utitlity = getUtilityFor(cv);
-                if (utitlity != null) {
-                    set.add(cv);
-                }
+                // hash the utility object
+                getUtilityFor(cv);
+                set.add(cv);
             }
             // interfaces may extend other interface, handle them here!
             addDataValueInterfaces(set, c);
@@ -389,7 +388,7 @@ public final class DataType {
     /** List of all implemented DataValue interfaces. */
     private final List<Class<? extends DataValue>> m_valueClasses;
     /** Flag if the first element in m_valueClasses contains the 
-     * preferred type. */
+     * preferred value class. */
     private final boolean m_hasPreferredValueClass;
     /** Cell class, used, e.g. for toString() method. */
     private final Class<? extends DataCell> m_cellClass;
@@ -405,7 +404,8 @@ public final class DataType {
         LinkedHashSet<Class<? extends DataValue>> valueClasses = 
             new LinkedHashSet<Class<? extends DataValue>>();
         addDataValueInterfaces(valueClasses, cl);
-        Class<? extends DataValue> preferred = getPreferredValueClassFor(cl);
+        Class<? extends DataValue> preferred = 
+            DataType.getPreferredValueClassFor(cl);
         if (preferred != null && !valueClasses.contains(preferred)) {
             LOGGER.coding("Class \"" + cl.getSimpleName() + "\" declares \"" 
                     + preferred + "\" as its preferred value class but does " 
@@ -413,6 +413,7 @@ public final class DataType {
         }
         m_valueClasses = new ArrayList<Class<? extends DataValue>>();
         m_hasPreferredValueClass = preferred != null;
+        // put preferred value class at the first position in m_valueClasses
         if (m_hasPreferredValueClass) {
             m_valueClasses.add(preferred);
             valueClasses.remove(preferred);
@@ -429,7 +430,7 @@ public final class DataType {
         // preferred class must match, if any
         m_hasPreferredValueClass =  
             type1.m_hasPreferredValueClass && type2.m_hasPreferredValueClass
-            && type1.m_valueClasses.get(0).equals(type2.m_valueClasses);
+            && type1.m_valueClasses.get(0).equals(type2.m_valueClasses.get(0));
         LinkedHashSet<Class<? extends DataValue>> hash = 
             new LinkedHashSet<Class<? extends DataValue>>();
         hash.addAll(type1.m_valueClasses);
@@ -452,7 +453,8 @@ public final class DataType {
             throw new IllegalArgumentException("Invalid preferred " 
                     + "value class: " + preferred.getSimpleName());
         }
-        m_cellClass = type.m_cellClass;
+        // override, not assigned to any data cell implementation
+        m_cellClass = null;
         m_valueClasses = new ArrayList<Class<? extends DataValue>>();
         m_valueClasses.add(preferred);
         for (Class<? extends DataValue> c : type.m_valueClasses) {
@@ -464,32 +466,16 @@ public final class DataType {
     }
     
     /**
-     * Creates a new <code>DataType</code> given the cell class, 
-     * if the preferred value is set, and a list of value classes.
-     * @param cellClass <code>null</code> or the cell class for this type.
+     * Creates a new, non-native <code>DataType</code>. This method is used 
+     * from the <code>load(Config)</code> method.
      * @param hasPreferredValue If preferred value is set.
      * @param valueClasses All implemented <code>DataValue</code> interfaces.
      * @throws IllegalArgumentException If the cell class does not implement
      *         all given value class interfaces.
      */
-    private DataType(
-            final Class<? extends DataCell> cellClass, 
-            final boolean hasPreferredValue, 
+    private DataType(final boolean hasPreferredValue, 
             final List<Class<? extends DataValue>> valueClasses) {
-        if (cellClass != null) {
-            LinkedHashSet<Class<? extends DataValue>> sanity = 
-                new LinkedHashSet<Class<? extends DataValue>>();
-            addDataValueInterfaces(sanity, cellClass);
-            HashSet<Class<? extends DataValue>> clone =
-                new HashSet<Class<? extends DataValue>>(valueClasses);
-            clone.removeAll(sanity);
-            if (!clone.isEmpty()) {
-                throw new IllegalArgumentException("Cell class \"" + cellClass 
-                        + "\" does not implement interface(s) \"" 
-                        + Arrays.toString(clone.toArray()) + "\"");
-            }
-        }
-        m_cellClass = cellClass;
+        m_cellClass = null;
         m_hasPreferredValueClass = hasPreferredValue;
         m_valueClasses = valueClasses;
     }
@@ -497,10 +483,6 @@ public final class DataType {
     /**
      * Get an icon representing this type. This is used in table headers and
      * lists, for instance.
-     * 
-     * <p>
-     * Implementors who derive this class are invited to override this method
-     * and return a more specific icon (of size 16x16).
      * 
      * @return An icon for this type.
      */
@@ -566,16 +548,18 @@ public final class DataType {
 
     /**
      * Checks if the given <code>DataValue.class</code> is compatible to this
-     * type (or any of its compatible types). If it returns true the datacells
-     * of this type can be typecasted to the <code>valueClass</code>. This
-     * method returns <code>false</code> if the argument is <code>null</code>.
+     * type. If it returns <code>true</code> the datacells of this type can be
+     * typecasted to the <code>valueClass</code>. This method returns
+     * <code>false</code> if the argument is <code>null</code>.
      * 
      * @param valueClass Class to check compatibilty for.
-     * @return <code>true</code> if compatible to at least one type.
+     * @return <code>true</code> if compatible.
      */
     public final boolean isCompatible(
             final Class<? extends DataValue> valueClass) {
         // The DataType for the MissingCell is compatible to everything.
+        // TODO Think over, do missing cells need to be compatible to 
+        // everything? Better to nothing?
         if (m_cellClass != null && m_cellClass.equals(MissingCell.class)) {
             return true;
         }
@@ -623,25 +607,25 @@ public final class DataType {
      * the String representation comparator we fall back to if no other is
      * available.
      */
-    private static final DataCellComparator FALLBACK_COMP = 
-        new DataCellComparator() {
+    private static final DataValueComparator FALLBACK_COMP = 
+        new DataValueComparator() {
         @Override
-        protected int compareDataCells(
-                final DataCell c1, final DataCell c2) {
-            return c1.toString().compareTo(c2.toString());
+        protected int compareDataValues(
+                final DataValue v1, final DataValue v2) {
+            return v1.toString().compareTo(v2.toString());
         }
     };
     
     /**
-     * @return a comparator for data cell objects of this type. Will return the
-     *         native comparator (if provided), or any of the compatible types.
-     *         If none of them provide a comparator the comparator of the string
-     *         representations will be used
+     * A comparator for data cell objects of this type. Will return the native
+     * comparator (if provided). If no comparator is available the
+     * comparator of the string representations will be used.
+     * @return A comparator for cells of this type.
      */
-    public final DataCellComparator getComparator() {
+    public final DataValueComparator getComparator() {
         for (Class<? extends DataValue> cl : m_valueClasses) {
             UtilityFactory fac = getUtilityFor(cl);
-            DataCellComparator comparator = fac.getComparator();
+            DataValueComparator comparator = fac.getComparator();
             if (comparator != null) {
                 return comparator;
             }
@@ -650,12 +634,10 @@ public final class DataType {
     }
 
     /**
-     * Get a copy of all <code>DataType</code>s to which this type is
+     * Get a copy of all <code>DataValue</code>s to which this type is
      * compatible to. The returned List is non-modifiable, subsequent changes to
-     * the list will fail with an exception. This list does not contain a
-     * reference to this type (altough it is self-compatible) and does not
-     * contain duplicates.
-     * 
+     * the list will fail with an exception. The list does not contain 
+     * duplicates.
      * @return A non-modifiable list of compatible types.
      */
     public final List<Class<? extends DataValue>> getValueClasses() {
@@ -663,8 +645,8 @@ public final class DataType {
     }
 
     /**
-     * Returns a type which is compatible to only those types both given types
-     * are compatible to. I.e. it contains the intersection of both type lists.
+     * Returns a type which is compatible to only those values both given types
+     * are compatible to. I.e. it contains the intersection of both value lists.
      * This super type can be safely asked for a comparator for cells of both
      * specified types, or a renderer for datacells of any of the given types.
      * The returned object could be one of the arguments passed in, if one type
@@ -677,19 +659,17 @@ public final class DataType {
      * 
      * @param type1 Type 1.
      * @param type2 Type 2.
-     * @return a type compatible to types both arguments are compatible to.
-     * @throws IllegalArgumentException If one of the given types is
-     *             <code>null</code>.
+     * @return A type compatible to types both arguments are compatible to.
+     * @throws NullPointerException If one of the given types is 
+     *          <code>null</code>.
      */
     public static DataType getCommonSuperType(final DataType type1,
             final DataType type2) {
         if (type1 == null || type2 == null) {
-            throw new IllegalArgumentException("Cannot build super type of"
+            throw new NullPointerException("Cannot build super type of"
                     + " a null type");
         }
-        if (type1.equals(type2)) {
-            return type1;
-        }
+        // handles also the equals case
         if (type1.isASuperTypeOf(type2)) {
             return type1;
         }
@@ -697,14 +677,12 @@ public final class DataType {
             return type2;
         }
         return new DataType(type1, type2);
-
     }
 
     /**
      * Types are equal if the set of compatible value classes matches (ordering
      * does not matter) and both types have an preferred value class and the 
      * class is the same or both do not have a preferred value class. 
-     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -764,6 +742,10 @@ public final class DataType {
         return "Non-Native " + valuesToString;
     }
     
+    private static final String CFG_CELL_NAME = "cell_class";
+    private static final String CFG_HAS_PREF_VALUE = "has_pref_value_class";
+    private static final String CFG_VALUE_CLASSES = "value_classes";
+    
     /**
      * Loads <code>DataType</code> from a given <code>Config</code>.
      * @param config Load <code>DataType</code> from.
@@ -773,12 +755,13 @@ public final class DataType {
      */
     public static final DataType load(final Config config) 
             throws InvalidSettingsException {
-        String cellClassName = config.getString("cell_class");
-        Class<? extends DataCell> cellClass = null;
+        String cellClassName = config.getString(CFG_CELL_NAME);
         if (cellClassName != null) {
             try {
-                cellClass = (Class<? extends DataCell>) 
+                Class<? extends DataCell> cellClass = 
+                    (Class<? extends DataCell>)
                     GlobalClassCreator.createClass(cellClassName);
+                return getType(cellClass);
             } catch (ClassCastException cce) {
                 throw new InvalidSettingsException(cellClassName 
                     + " Class not derived from DataCell: " + cce.getMessage());
@@ -787,8 +770,10 @@ public final class DataType {
                     + " Class not found: " + cnfe.getMessage());
             }
         }
-        boolean hasPrefValueClass = config.getBoolean("has_pref_value_class");
-        String[] valueClassNames = config.getStringArray("value_classes");
+        
+        // non-native type, must have the following fields.
+        boolean hasPrefValueClass = config.getBoolean(CFG_HAS_PREF_VALUE);
+        String[] valueClassNames = config.getStringArray(CFG_VALUE_CLASSES);
         List<Class<? extends DataValue>> valueClasses = 
             new ArrayList<Class<? extends DataValue>>();
         for (int i = 0; i < valueClassNames.length; i++) {
@@ -803,23 +788,11 @@ public final class DataType {
                     + " Class not found: " + cnfe.getMessage());
             }
         }
-        DataType prototype = null;
         try { 
-            prototype = new DataType((Class<? extends DataCell>) cellClass, 
-                    hasPrefValueClass, valueClasses);
+            return new DataType(hasPrefValueClass, valueClasses);
         } catch (IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae);
         }
-        // make sure there is only one DataType object for a given cell class 
-        if (cellClass != null) {
-            DataType reference = getType(cellClass);
-            // may not be equal if the preferred value class has changed
-            // (as done by the rename node)
-            if (reference.equals(prototype)) {
-                return reference;
-            }
-        }
-        return prototype;
     }
     
     /**
@@ -830,23 +803,24 @@ public final class DataType {
      */
     public final void save(final Config config) {
         if (m_cellClass == null) {
-            config.addString("cell_class", null);
+            config.addString(CFG_CELL_NAME, null);
+            config.addBoolean(CFG_HAS_PREF_VALUE, m_hasPreferredValueClass);
+            String[] valueClasses = new String[m_valueClasses.size()];
+            for (int i = 0; i < valueClasses.length; i++) {
+                valueClasses[i] = m_valueClasses.get(i).getName();
+            }
+            config.addStringArray(CFG_VALUE_CLASSES, valueClasses);
         } else {
-            config.addString("cell_class", m_cellClass.getName());
+            // only memorize cell class (is hashed anyway)
+            config.addString(CFG_CELL_NAME, m_cellClass.getName());
         }
-        config.addBoolean("has_pref_value_class", m_hasPreferredValueClass);
-        String[] valueClasses = new String[m_valueClasses.size()];
-        for (int i = 0; i < valueClasses.length; i++) {
-            valueClasses[i] = m_valueClasses.get(i).getName();
-        }
-        config.addStringArray("value_classes", valueClasses);
     }
    
     /**
      * Implemenation of the missing cell. This datacell does not implement
-     * any DataValue interfaces but is compatible to any one that its type
-     * is ask for. This class is the very only implementation whose 
-     * isMissing() method returns true. 
+     * any DataValue interfaces but is compatible to any value class. 
+     * This class is the very only implementation whose isMissing() method 
+     * returns true. 
      */
     private static final class MissingCell extends DataCell {
         

@@ -1,7 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -16,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * History
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -26,12 +25,8 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.RowKey;
 
 /**
- * Default row for <code>DataCell</code>s which keeps a unique row identifier
+ * Default row for <code>DataCell</code>s which keeps a row identifier
  * and an array of <code>DataCell</code> objects.
- * 
- * This class sanity checks if the row key or one of the cells is
- * <code>null</code> and will throw a <code>IllegalArgumentException</code>
- * then.
  * 
  * @author ohl, University of Konstanz
  */
@@ -49,18 +44,14 @@ public class DefaultRow implements DataRow {
 
     /**
      * Inits a new <code>DefaultRow</code> object by row key and an array of
-     * <code>DataCell</code>'s.
+     * <code>DataCell</code>s. The content of the argument array is copied.
      * 
-     * Checks if none of the arguments or cell values is <code>null</code>.
-     * 
-     * @param rowKey A <code>RowKey</code> containing a unique row Id and the
-     *            corresponding properties.
+     * @param rowKey A <code>RowKey</code> containing a row Id.
      * @param row An array containing the actual data of this row.
      * @throws IllegalArgumentException if the <code>rowKey</code> or
      *             <code>row</code> or one of its cell is <code>null</code>.
      */
     public DefaultRow(final RowKey rowKey, final DataCell... row) {
-
         // check row key
         if (rowKey == null) {
             throw new NullPointerException("Row Key must not be null!");
@@ -77,7 +68,7 @@ public class DefaultRow implements DataRow {
         for (int i = 0; i < row.length; i++) {
             if (row[i] == null) {
                 throw new NullPointerException("Cell at index " + i
-                        + " must not be null!");
+                        + " is null!");
             }
             m_row[i] = row[i];
         }
@@ -87,13 +78,11 @@ public class DefaultRow implements DataRow {
 
     /**
      * Inits a new <code>DefaultRow</code> object by row id and an array of
-     * <code>DataCell</code>'s.
+     * <code>DataCell</code>s. The content of the argument array is copied.
      * 
-     * Checks if none of the arguments or cell values is <code>null</code>.
-     * 
-     * @param rowId A <code>DataCell</code> containing a unique row Id.
+     * @param rowId A <code>DataCell</code> containing a row Id.
      * @param row An array containing the actual data of this row.
-     * @throws NullPointerException if the specified rowID is null
+     * @throws NullPointerException if the specified rowID is <code>null</code>
      * @throws IllegalArgumentException if the <code>row</code> or one of its
      *             cells is <code>null</code>.
      */
@@ -104,9 +93,6 @@ public class DefaultRow implements DataRow {
     /**
      * Inits a new <code>DefaultRow</code> object by row key and an array of
      * <code>double</code>s.
-     * 
-     * Checks if none of the arguments is <code>null</code>.
-     * 
      * @param rowKey A <code>RowKey</code> containing a unique row Id.
      * @param row An array containing the actual data of this row.
      * @throws IllegalArgumentException if the <code>rowKey</code> or
@@ -118,14 +104,11 @@ public class DefaultRow implements DataRow {
         if (rowKey == null) {
             throw new NullPointerException("Row id must not be null!");
         }
-
         // check row array
         if (row == null) {
             throw new NullPointerException("Row array must not be null!");
         }
-
         m_rowKey = rowKey;
-
         // init row with cells
         m_row = new DataCell[row.length];
         // of all values in row array
@@ -159,20 +142,16 @@ public class DefaultRow implements DataRow {
      *             <code>row</code> is <code>null</code>.
      */
     public DefaultRow(final DataCell rowId, final int... row) {
-
         // check row key
         if (rowId == null) {
             throw new NullPointerException("Row id must not be null!");
         }
-
         // check row array
         if (row == null) {
             throw new NullPointerException("Row array must not be null!");
         }
-
         // create new RowKey where all properties are set to default values.
         m_rowKey = new RowKey(rowId);
-
         // init row with cells
         m_row = new DataCell[row.length];
         // of all values in the row array
@@ -185,38 +164,31 @@ public class DefaultRow implements DataRow {
      * Inits a new <code>DefaultRow</code> object by row id and an array of
      * <code>String</code> values.
      * 
-     * Checks if none of the arguments or string values is <code>null</code>.
-     * 
      * @param rowId A <code>DataCell</code> containing a unique row Id.
      * @param row An array containing the actual data of this row.
      * @throws IllegalArgumentException if the <code>rowId</code> or
      *             <code>row</code> or one of its strings is <code>null</code>.
      */
     public DefaultRow(final DataCell rowId, final String... row) {
-
         // check row key
         if (rowId == null) {
             throw new NullPointerException("Row id must not be null!");
         }
-
         // check row array
         if (row == null) {
             throw new NullPointerException("Row array must not be null!");
         }
-
         // check row elements and copy them into our private array
         m_row = new DataCell[row.length];
         for (int i = 0; i < row.length; i++) {
             if (row[i] == null) {
-                throw new NullPointerException("String at index " + i
-                        + " must not be null!");
+                throw new NullPointerException("String at index " + i 
+                        + " is null!");
             }
             m_row[i] = new StringCell(row[i]);
         }
-
         // create new RowKey where all properties are set to default values.
         m_rowKey = new RowKey(rowId);
-
     }
 
     /**

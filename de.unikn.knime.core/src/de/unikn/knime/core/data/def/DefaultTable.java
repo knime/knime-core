@@ -1,7 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -16,6 +13,8 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * History
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -35,13 +34,13 @@ import de.unikn.knime.core.data.util.ObjectToDataCellConverter;
 /**
  * Default implementation of a <code>DataTable</code> object. This
  * implementation keeps the data in memory all the time. It's really meant only
- * for use with very small data tables, where it's ensured they can't grow. All
- * others should rather use the <code>DataContainer</code> instead.
+ * for use with very small data tables. All others should rather use the 
+ * <code>DataContainer</code> instead.
  * 
  * There are basically two ways to initialize an instance of this class. Either
  * by passing directly <code>DataRow</code> objects along with the column
  * names and types or by providing arbitray java objects (or generic classes
- * like <code>int</code> and <code>double</code>)in a 2-D array. If one
+ * like <code>int</code> and <code>double</code>) in a 2-D array. If one
  * wishes to get objects being wrapped in <code>DataCell</code>s other than
  * the default {@link de.unikn.knime.core.data.util.ObjectToDataCellConverter
  * #createDataCell(Object) implementations} he should consider to override
@@ -131,7 +130,7 @@ public class DefaultTable implements DataTable {
     public DefaultTable(final DataRow[] rows, final String[] columnNames,
             final DataType[] columnTypes) {
         this(rows, new DataTableSpec(columnNames, columnTypes));
-    } // DefaultTable(DataRow[],DataCell[],java.lang.Class[])
+    }
 
     /**
      * Private constructor that is used by all constructors below. It inits the

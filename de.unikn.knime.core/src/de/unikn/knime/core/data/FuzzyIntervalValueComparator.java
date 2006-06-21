@@ -15,32 +15,33 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data;
 
 /**
- * Comparator returned by the <code>FuzzyIntervalType</code> datacell type.
+ * Comparator returned by the <code>FuzzyIntervalValue</code> datacell type.
  *  
+ * @see de.unikn.knime.core.data.FuzzyIntervalValue.FuzzyIntervalUtilityFactory
  * @author Michael Berthold, Konstanz University
  */
-public class FuzzyIntervalCellComparator extends DataCellComparator {
+public class FuzzyIntervalValueComparator extends DataValueComparator {
 
     /**
-     * The compare function called by the abstract DataCellComparator class.
+     * The compare function called by the abstract DataValueComparator class.
      * The comparison is based on the border values returned by
-     * <code>FuzzyIntervalCell.get{Min,Max}{Core,Support}()</code> methods.
+     * <code>FuzzyIntervalValue.get{Min,Max}{Core,Support}()</code> methods.
      * Note that comparing fuzzy intervals is far from trivial - we base the
      * comparison used here on the center of gravities of the fuzzy sets. Do not
      * call this method directly. Use <code>DataCell.compareTo</code> instead.
      * 
-     * @see de.unikn.knime.core.data.DataCellComparator
-     *      #compareDataCells(de.unikn.knime.core.data.DataCell,
-     *      de.unikn.knime.core.data.DataCell)
+     * @see de.unikn.knime.core.data.DataValueComparator
+     *      #compareDataValues(DataValue, DataValue)
      */
-    protected int compareDataCells(final DataCell c1, final DataCell c2) {
+    protected int compareDataValues(final DataValue v1, final DataValue v2) {
 
-        FuzzyIntervalValue f1 = (FuzzyIntervalValue)c1;
-        FuzzyIntervalValue f2 = (FuzzyIntervalValue)c2;
+        FuzzyIntervalValue f1 = (FuzzyIntervalValue)v1;
+        FuzzyIntervalValue f2 = (FuzzyIntervalValue)v2;
 
         // compute center of gravities of both trapezoid
         double f1CoG = f1.getCenterOfGravity();

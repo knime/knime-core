@@ -31,8 +31,8 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.ComplexNumberCell;
 import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
-import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
+import de.unikn.knime.core.data.def.FuzzyIntervalCell;
+import de.unikn.knime.core.data.def.FuzzyNumberCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.config.Config;
@@ -348,7 +348,7 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDataCellArray(key) == null);
         key = "unknownDataCell";
-        DataCell unknownCell = new DefaultFuzzyNumberCell(0.0, 1.0, 2.0);
+        DataCell unknownCell = new FuzzyNumberCell(0.0, 1.0, 2.0);
         SETT.addDataCell(key, unknownCell);
         assertTrue(SETT.containsKey(key));
         assertTrue(unknownCell.equals(SETT.getDataCell(key)));
@@ -380,11 +380,11 @@ public final class NodeSettingsTest extends TestCase {
         SETT.addDataCell("complex", c);
         assertTrue(SETT.containsKey("complex"));
         assertTrue(SETT.getDataCell("complex").equals(c));
-        DefaultFuzzyNumberCell n = new DefaultFuzzyNumberCell(1, 2, 4);
+        FuzzyNumberCell n = new FuzzyNumberCell(1, 2, 4);
         SETT.addDataCell("fnumber", n);
         assertTrue(SETT.containsKey("fnumber"));
         assertTrue(SETT.getDataCell("fnumber").equals(n));
-        DefaultFuzzyIntervalCell f = new DefaultFuzzyIntervalCell(1, 2, 3, 4);
+        FuzzyIntervalCell f = new FuzzyIntervalCell(1, 2, 3, 4);
         SETT.addDataCell("finterval", f);
         assertTrue(SETT.containsKey("finterval"));
         assertTrue(SETT.getDataCell("finterval").equals(f));
@@ -434,10 +434,10 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDataTypeArray(key) == null);
         key = "unknownDataType";
-        SETT.addDataType(key, DefaultFuzzyIntervalCell.TYPE);
+        SETT.addDataType(key, FuzzyIntervalCell.TYPE);
         assertTrue(SETT.containsKey(key));
         DataType unknownType = SETT.getDataType(key);
-        assertTrue(DefaultFuzzyIntervalCell.TYPE.equals(unknownType));
+        assertTrue(FuzzyIntervalCell.TYPE.equals(unknownType));
     }
 
     /**

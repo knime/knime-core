@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,6 +16,7 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
@@ -39,7 +38,7 @@ import de.unikn.knime.core.data.IntValue;
  * a private <code>int</code> member. It provides an int value, a double
  * value, a fuzzy number value, as well as a fuzzy interval value.
  * 
- * @author mb, University of Konstanz
+ * @author Michael Berthold, University of Konstanz
  */
 public class IntCell extends DataCell implements IntValue,
         DoubleValue, FuzzyNumberValue, FuzzyIntervalValue {
@@ -48,8 +47,7 @@ public class IntCell extends DataCell implements IntValue,
      * <code>DataType.getType(IntCell.class)</code>. 
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = 
-        DataType.getType(IntCell.class);
+    public static final DataType TYPE = DataType.getType(IntCell.class);
     
     /** Returns the preferred value class of this cell implementation. 
      * This method is called per reflection to determine which is the 
@@ -161,7 +159,7 @@ public class IntCell extends DataCell implements IntValue,
      */
     @Override
     public String toString() {
-        return "" + m_int;
+        return Integer.toString(m_int);
     }
 
     /** Factory for (de-)serializing a IntCell. */
@@ -173,8 +171,7 @@ public class IntCell extends DataCell implements IntValue,
          */
         public void serialize(final IntCell cell, 
                 final DataOutput output) throws IOException {
-            IntValue value = (IntValue)cell;
-            output.writeInt(value.getIntValue());
+            output.writeInt(cell.m_int);
         }
         
         /**

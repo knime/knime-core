@@ -15,36 +15,38 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed.
  */
 package de.unikn.knime.core.data;
 
 /**
- * Comparator returned by the <code>DoubleType</code> datacell type. 
+ * Comparator returned DoubleValue interface.
  * 
+ * @see de.unikn.knime.core.data.DoubleValue#UTILITY
  * @author Michael Berthold, Konstanz University
  */
-public class DoubleCellComparator extends DataCellComparator {
+public class DoubleValueComparator extends DataValueComparator {
 
     /**
-     * Compares to <code>DataCell</code> based on their
-     * <code>DoubleValue</code>.
+     * Compares to <code>DoubleValue</code> based on their generic 
+     * <code>double</code>.
      * 
-     * @param c1 the first datacell to compare the other with
-     * @param c2 the other datacell to compare the first with
+     * @param v1 the first <code>DoubleValue</code> to compare the other with
+     * @param v2 the other <code>DoubleValue</code> to compare the first with
      * @return what a comparator is supposed to return.
      * 
-     * @throws ClassCastException If one of the cells is not
-     *             <code>DoubleValue</code> type.
+     * @throws ClassCastException If one of the arguments is 
+     *          not <code>DoubleValue</code> type.
+     * @throws NullPointerException If any argument is <code>null</code>.
      * 
      * @see java.lang.Double#compare(double,double)
-     * @see de.unikn.knime.core.data.DataCellComparator
-     *      #compareDataCells(de.unikn.knime.core.data.DataCell,
-     *                        de.unikn.knime.core.data.DataCell)
+     * @see de.unikn.knime.core.data.DataValueComparator
+     *      #compareDataValues(DataValue, DataValue)
      */
     @Override
-    public int compareDataCells(final DataCell c1, final DataCell c2) {
-        double d1 = ((DoubleValue)c1).getDoubleValue();
-        double d2 = ((DoubleValue)c2).getDoubleValue();
+    public int compareDataValues(final DataValue v1, final DataValue v2) {
+        double d1 = ((DoubleValue)v1).getDoubleValue();
+        double d2 = ((DoubleValue)v2).getDoubleValue();
         return Double.compare(d1, d2);
     }
 

@@ -14,7 +14,7 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   09.01.2006(all): reviewed
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data;
 
@@ -40,6 +40,9 @@ import java.util.Iterator;
  *   // access the row here
  * }
  * </pre>
+ * 
+ * <p>The difference of this class to a generic Iterator&lt;DataRow&gt;
+ * is that it does not allow to remove elements. 
  * 
  * @see DataRow
  * @author Thomas Gabriel, University of Konstanz

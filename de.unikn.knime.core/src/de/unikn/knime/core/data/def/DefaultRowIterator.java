@@ -1,7 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- *
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -16,9 +13,12 @@
  *   any way exploit any of the content, in whole or in part, except as  *
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
+ * History
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data.def;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -27,7 +27,9 @@ import de.unikn.knime.core.data.RowIterator;
 
 /** 
  * Specific implementation for a <code>RowIterator</code> that iterates over a
- * generic <code>DataRow</code> container.
+ * generic <code>DataTable</code>. It delegates to a given 
+ * <code>Iterator&lt;DataRow&gt</code>; but disallows the invocation of 
+ * the <code>remove</code> method. 
  * @author Bernd Wiswedel, University Konstanz
  */
 public class DefaultRowIterator extends RowIterator {
@@ -48,8 +50,8 @@ public class DefaultRowIterator extends RowIterator {
      * @throws NullPointerException If argument is null.
      */
     public DefaultRowIterator(final DataRow... rows) {
-        // TODO: Shouldn't we rather make a private non-changeable copy? PO.
-        this(Arrays.asList(rows));
+        // prevent the caller from changing the array underneath.
+        this(new ArrayList<DataRow>(Arrays.asList(rows)));
     }
     
     /**

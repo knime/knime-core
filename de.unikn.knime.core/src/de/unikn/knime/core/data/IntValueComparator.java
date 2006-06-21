@@ -15,33 +15,27 @@
  * 
  * History
  *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
 package de.unikn.knime.core.data;
 
 /**
- * Comparator returned by the IntType datacell type. 
+ * Comparator returned by the IntValue interface. 
  *
+ * @see de.unikn.knime.core.data.IntValue#UTILITY
+ * @see de.unikn.knime.core.data.IntValue.IntUtilityFactory
  * @author Michael Berthold, Konstanz University
  */
-public class IntCellComparator extends DataCellComparator {
+public class IntValueComparator extends DataValueComparator {
 
     /**
-     * Compares to <code>DataCell</code> based in their <code>IntValue</code>.
-     * 
-     * @param c1 the first datacell to compare the other with
-     * @param c2 the other datacell to compare the first with
-     * @return whatever a comparator is supposed to return.
-
-     * @throws ClassCastException If one of the cells is not
-     *             <code>IntValue</code> type.
-     * 
-     * @see de.unikn.knime.core.data.DataCellComparator
-     *          #compareDataCells(de.unikn.knime.core.data.DataCell,
-     *                            de.unikn.knime.core.data.DataCell)
+     * Compares two <code>IntValue</code>s based in their <code>int</code>.
+     * @see de.unikn.knime.core.data.DataValueComparator
+     *          #compareDataValues(DataValue, DataValue)
      */
-    public int compareDataCells(final DataCell c1, final DataCell c2) {
-        int i1 = ((IntValue)c1).getIntValue();
-        int i2 = ((IntValue)c2).getIntValue();
+    public int compareDataValues(final DataValue v1, final DataValue v2) {
+        int i1 = ((IntValue)v1).getIntValue();
+        int i2 = ((IntValue)v2).getIntValue();
         if (i1 < i2) {
             return -1;
         }

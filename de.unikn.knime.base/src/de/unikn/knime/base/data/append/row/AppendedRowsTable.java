@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataCellComparator;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
@@ -216,7 +216,7 @@ public class AppendedRowsTable implements DataTable {
      * set. 
      */
     private static final DataColumnDomain merge(final DataColumnDomain d1, 
-            final DataColumnDomain d2, final DataCellComparator comp) {
+            final DataColumnDomain d2, final DataValueComparator comp) {
         final DataCell d1Min = d1.getLowerBound();
         final DataCell d1Max = d1.getUpperBound();
         final DataCell d2Min = d2.getLowerBound();

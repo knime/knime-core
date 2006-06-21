@@ -62,8 +62,8 @@ public interface IntValue extends DataValue {
             ICON = icon;
         }
 
-        private static final IntCellComparator COMPARATOR = 
-            new IntCellComparator();
+        private static final IntValueComparator COMPARATOR = 
+            new IntValueComparator();
         
         /** Only subclasses are allowed to instantiate this class. */
         protected IntUtilityFactory() {
@@ -81,7 +81,7 @@ public interface IntValue extends DataValue {
          * @see UtilityFactory#getComparator()
          */
         @Override
-        protected DataCellComparator getComparator() {
+        protected DataValueComparator getComparator() {
             return COMPARATOR;
         }
         

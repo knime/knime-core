@@ -54,7 +54,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataCellComparator;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
@@ -616,7 +616,7 @@ public class DomainDialog extends JDialog {
             try {
                 min = new IntCell(readIntSpinner(m_minIntValue));
                 max = new IntCell(readIntSpinner(m_maxIntValue));
-                DataCellComparator intComp = IntCell.TYPE.getComparator();
+                DataValueComparator intComp = IntCell.TYPE.getComparator();
 
                 // adjust the range (if we have any) to include the new value
                 if (intComp.compare(min, newIntCell) > 0) {
@@ -888,7 +888,7 @@ public class DomainDialog extends JDialog {
                     }
                 }
                 if ((min != null) && (max != null)) {
-                    DataCellComparator comp = DataType.getCommonSuperType(
+                    DataValueComparator comp = DataType.getCommonSuperType(
                             min.getType(), max.getType()).getComparator();
                     if (comp.compare(min, max) > 0) {
                         JOptionPane.showMessageDialog(
@@ -914,10 +914,10 @@ public class DomainDialog extends JDialog {
                             pVals.add(val);
                             // if we also have a range it must be inside
                             if ((min != null) && (max != null)) {
-                                DataCellComparator minComp = DataType
+                                DataValueComparator minComp = DataType
                                         .getCommonSuperType(min.getType(),
                                                 val.getType()).getComparator();
-                                DataCellComparator maxComp = DataType
+                                DataValueComparator maxComp = DataType
                                         .getCommonSuperType(max.getType(),
                                                 val.getType()).getComparator();
                                 if ((minComp.compare(min, val) > 0)

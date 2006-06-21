@@ -22,8 +22,8 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
-import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
+import de.unikn.knime.core.data.def.FuzzyIntervalCell;
+import de.unikn.knime.core.data.def.FuzzyNumberCell;
 
 /**
  * 
@@ -62,10 +62,10 @@ public class Test extends TestCase {
         DataCell[] cells = new DataCell[10];
         for (int i = 0; i < cells.length; i++) {
             if (Math.random() < 0.5) {
-                cells[i] = new DefaultFuzzyNumberCell((i - 1),
+                cells[i] = new FuzzyNumberCell((i - 1),
                         i, (i + 1));
             } else {
-                cells[i] = new DefaultFuzzyIntervalCell((i - 1),
+                cells[i] = new FuzzyIntervalCell((i - 1),
                         i, i + 0.5, (i + 1));
             }
         }
@@ -74,7 +74,7 @@ public class Test extends TestCase {
             superType = DataType.getCommonSuperType(superType, c.getType());
         }
         assertTrue(superType.isCompatible(FuzzyIntervalValue.class));
-        assertTrue(superType == DefaultFuzzyIntervalCell.TYPE);
+        assertTrue(superType == FuzzyIntervalCell.TYPE);
         // that would be desirable:
         // assertTrue(superType.canReturn(DblValue.class));
         for (int i = 0; i < cells.length; i++) {
@@ -91,10 +91,10 @@ public class Test extends TestCase {
         DataCell[] cells = new DataCell[10];
         for (int i = 0; i < cells.length; i++) {
             if (Math.random() < 0.5) {
-                cells[i] = new DefaultFuzzyNumberCell((i - 1),
+                cells[i] = new FuzzyNumberCell((i - 1),
                         i, (i + 1));
             } else {
-                cells[i] = new DefaultFuzzyIntervalCell((i - 1),
+                cells[i] = new FuzzyIntervalCell((i - 1),
                         i, i + 0.5, (i + 1));
             }
         }

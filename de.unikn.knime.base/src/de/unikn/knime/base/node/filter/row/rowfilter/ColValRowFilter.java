@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataCellComparator;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
@@ -79,7 +79,7 @@ public class ColValRowFilter extends RowFilter {
 
     private DataCell m_upperBound;
 
-    private DataCellComparator m_dcComp;
+    private DataValueComparator m_dcComp;
 
     /**
      * Creates a new filter which matches the string representation of the
@@ -141,7 +141,7 @@ public class ColValRowFilter extends RowFilter {
      * @param include determines whether to include or exclude rows with a value
      *            inside the range
      */
-    public ColValRowFilter(final DataCellComparator comp,
+    public ColValRowFilter(final DataValueComparator comp,
             final DataCell lowerBound, final DataCell upperBound,
             final int colIndex, final boolean include) {
         // clear all variables
@@ -198,7 +198,7 @@ public class ColValRowFilter extends RowFilter {
      * @param dcComp the comparator used to compare the column's value with the
      *            upper and lower range.
      */
-    public void setDataValueComparator(final DataCellComparator dcComp) {
+    public void setDataValueComparator(final DataValueComparator dcComp) {
         m_dcComp = dcComp;
     }
 

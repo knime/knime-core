@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataCellComparator;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
@@ -167,7 +167,7 @@ public class DefaultRowContainer implements RowContainer {
             // check min, max values and possible values for each column
             for (int c = 0; c < numOfColumns; c++) {
                 DataCell cell = row.getCell(c);
-                DataCellComparator comp = cell.getType().getComparator();
+                DataValueComparator comp = cell.getType().getComparator();
 
                 if (cell.isMissing()) {
                     // ignore missing values.

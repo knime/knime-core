@@ -62,8 +62,8 @@ public interface StringValue extends DataValue {
             ICON = icon;
         }
 
-        private static final StringCellComparator STRING_COMPARATOR = 
-            new StringCellComparator();
+        private static final StringValueComparator STRING_COMPARATOR = 
+            new StringValueComparator();
         
         /** Only subclasses are allowed to instantiate this class. */
         protected StringUtilityFactory() {
@@ -81,7 +81,7 @@ public interface StringValue extends DataValue {
          * @see UtilityFactory#getComparator()
          */
         @Override
-        protected DataCellComparator getComparator() {
+        protected DataValueComparator getComparator() {
             return STRING_COMPARATOR;
         }
         

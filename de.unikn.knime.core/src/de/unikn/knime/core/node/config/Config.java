@@ -39,8 +39,8 @@ import sun.misc.BASE64Encoder;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.ComplexNumberCell;
-import de.unikn.knime.core.data.def.DefaultFuzzyIntervalCell;
-import de.unikn.knime.core.data.def.DefaultFuzzyNumberCell;
+import de.unikn.knime.core.data.def.FuzzyIntervalCell;
+import de.unikn.knime.core.data.def.FuzzyNumberCell;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
@@ -226,20 +226,20 @@ public abstract class Config extends AbstractConfigEntry
         };
         
         /**
-         * <code>DefaultFuzzyIntervalCell</code> entry.
+         * <code>FuzzyIntervalCell</code> entry.
          */
         public static final class DefaultFuzzyIntervalCellEntry 
                 implements DataCellEntry {
             /**
-             * <code>DefaultFuzzyIntervalCell.class</code>.
+             * <code>FuzzyIntervalCell.class</code>.
              */
-            public static final Class CLASS = DefaultFuzzyIntervalCell.class;
+            public static final Class CLASS = FuzzyIntervalCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                DefaultFuzzyIntervalCell ocell = 
-                    (DefaultFuzzyIntervalCell) cell;
+                FuzzyIntervalCell ocell = 
+                    (FuzzyIntervalCell) cell;
                 config.addDouble("min_supp", ocell.getMinSupport());
                 config.addDouble("min_core", ocell.getMinCore());
                 config.addDouble("max_core", ocell.getMaxCore());
@@ -254,25 +254,25 @@ public abstract class Config extends AbstractConfigEntry
                 double minCore = config.getDouble("min_core");
                 double maxCore = config.getDouble("max_core");
                 double maxSupp = config.getDouble("max_supp");
-                return new DefaultFuzzyIntervalCell(
+                return new FuzzyIntervalCell(
                         minSupp, minCore, maxCore, maxSupp);
             }
         };
         
         /**
-         * <code>DefaultFuzzyNumberCell</code> entry.
+         * <code>FuzzyNumberCell</code> entry.
          */
         public static final class DefaultFuzzyNumberCellEntry 
                 implements DataCellEntry {
             /**
-             * <code>DefaultFuzzyNumberCell.class</code>.
+             * <code>FuzzyNumberCell.class</code>.
              */
-            public static final Class CLASS = DefaultFuzzyNumberCell.class;
+            public static final Class CLASS = FuzzyNumberCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                DefaultFuzzyNumberCell ocell = (DefaultFuzzyNumberCell) cell;
+                FuzzyNumberCell ocell = (FuzzyNumberCell) cell;
                 config.addDouble("left",  ocell.getMinSupport());
                 config.addDouble("core",  ocell.getMinCore());
                 assert ocell.getMinCore() == ocell.getMaxCore();
@@ -286,7 +286,7 @@ public abstract class Config extends AbstractConfigEntry
                 double left  = config.getDouble("left");
                 double core  = config.getDouble("core");
                 double right = config.getDouble("right");
-                return new DefaultFuzzyNumberCell(left, core, right);
+                return new FuzzyNumberCell(left, core, right);
             }
         };
     }
