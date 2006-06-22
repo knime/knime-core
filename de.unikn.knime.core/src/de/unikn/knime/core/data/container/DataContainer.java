@@ -218,12 +218,12 @@ public class DataContainer implements RowAppender {
             DataColumnSpec colSpec = m_spec.getColumnSpec(i);
             DataType colType = colSpec.getType();
             if (StringCell.TYPE.isASuperTypeOf(colType)) {
+                m_possibleValues[i] = new LinkedHashSet<DataCell>();
                 if (initDomain) {
                     Set<DataCell> values = colSpec.getDomain().getValues();
-                    m_possibleValues[i] = values != null 
-                        ? new LinkedHashSet(values) : null;
-                } else {
-                    m_possibleValues[i] = new LinkedHashSet<DataCell>();
+                    if (values != null) {
+                        m_possibleValues[i].addAll(values);
+                    }
                 }
             }
             if (DoubleCell.TYPE.isASuperTypeOf(colType)) {
@@ -452,7 +452,7 @@ public class DataContainer implements RowAppender {
             final ExecutionMonitor exec, final int maxCellsInMemory) 
         throws CanceledExecutionException {
         DataContainer buf = new DataContainer(maxCellsInMemory);
-        buf.open(table.getDataTableSpec());
+        buf.open(table.getDataTableSpec(), true);
         int row = 0;
         try {
             for (RowIterator it = table.iterator(); it.hasNext(); row++) {
@@ -501,7 +501,7 @@ public class DataContainer implements RowAppender {
                 return;
             }
         }
-        Buffer buf = new Buffer(outFile);
+        Buffer buf = new Buffer(outFile, table.getDataTableSpec().getName());
         int rowCount = 0;
         try {
             for (DataRow row : table) {
@@ -524,7 +524,7 @@ public class DataContainer implements RowAppender {
      * @throws IOException If that fails.
      */
     public static DataTable readFromZip(final File zipFile) throws IOException {
-        Buffer buffer = new Buffer(zipFile, /*ignore*/false);
+        Buffer buffer = new Buffer(zipFile);
         return new BufferedTable(buffer);
     }
     
