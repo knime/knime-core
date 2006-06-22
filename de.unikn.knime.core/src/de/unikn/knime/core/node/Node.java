@@ -878,7 +878,7 @@ public final class Node {
             m_status = new NodeStatus.Warning(
                     "Configure failed: " + e.getMessage());
         } finally {
-            notifyStateListeners(new NodeStatus.Reset("Not configured."));
+            notifyStateListeners(new NodeStatus.Configured("Configured."));
             notifyStateListeners(m_status);
         }
     }
@@ -1358,7 +1358,13 @@ public final class Node {
             final File nodeFile, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        save(settings, nodeFile);
+        save(settings);
+
+        if (m_model instanceof SpecialNodeModel) {
+            ((SpecialNodeModel) m_model).saveSettingsTo(nodeFile, exec);
+        }
+        
+        
         m_nodeDir = nodeFile.getParentFile();
         if (isConfigured()) {
             NodeSettings specs = settings.addConfig("spec_files");
@@ -1443,9 +1449,8 @@ public final class Node {
      * of the outports are saved to the given file directory in its own files.
      * 
      * @param settings The object to write the node's settings into.
-     * @param nodeFile The file the node settings are saved into.
      */
-    public void save(final NodeSettings settings, final File nodeFile) {
+    public void save(final NodeSettings settings) {
         // write node name
         settings.addString("name", m_name);
         // write configured flag
@@ -1465,9 +1470,6 @@ public final class Node {
         // write model
         final NodeSettings model = settings.addConfig("model");
         try {
-            if (m_model instanceof SpecialNodeModel) {
-                ((SpecialNodeModel) m_model).saveSettingsTo(settings, nodeFile);
-            }
             m_model.saveSettingsTo(model);
         } catch (Exception e) {
             m_logger.error("Could not save model", e);
