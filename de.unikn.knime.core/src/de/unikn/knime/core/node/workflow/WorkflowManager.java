@@ -890,19 +890,15 @@ public class WorkflowManager implements WorkflowListener {
             // tell node that it has been disconnected (close views...)
             node.detach();
 
-            resetAfterNode(id);
+            resetAndConfigureAfterNode(id);
             
-            // FG: First remove all connections
             disconnectNodeContainer(container);
 
             container.removeAllListeners();
 
             m_nodeContainerByID.remove(id);
-            m_idsByNode.remove(container.getNode());
-
+            m_idsByNode.remove(container.getNode());            
             
-            
-            // notify listeners
             LOGGER.debug("Removed: " + container.getNameWithID());
             fireWorkflowEvent(
                     new WorkflowEvent.NodeRemoved(id, container, null));
@@ -1315,43 +1311,43 @@ public class WorkflowManager implements WorkflowListener {
     }
     
     
-    public void resetNode(final int nodeID) {
+    public void resetAndConfigureNode(final int nodeID) {
+        if (m_executor.executionInProgress()) {
+            throw new IllegalStateException("Node cannot be reset while"
+                    + " execution is in progress.");
+        }
+        
         NodeContainer nodeCont = m_nodeContainerByID.get(nodeID);
-        nodeCont.reset();
+        nodeCont.resetAndConfigure();
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
-            nc.reset();
+            nc.resetAndConfigure();
         }
     }
 
-    public void resetAll() {
+    public void resetAndConfigureAll() {
+        if (m_executor.executionInProgress()) {
+            throw new IllegalStateException("Node cannot be reset while"
+                    + " execution is in progress.");
+        }
+        
         for (NodeContainer nc : m_nodeContainerByID.values()) {
-            nc.reset();
+            nc.resetAndConfigure();
         }
     }
 
     
-    public void resetAfterNode(final int nodeID) {
+    public void resetAndConfigureAfterNode(final int nodeID) {
+        if (m_executor.executionInProgress()) {
+            throw new IllegalStateException("Node cannot be reset while"
+                    + " execution is in progress.");
+        }
+        
         NodeContainer nodeCont = m_nodeContainerByID.get(nodeID);
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
-            nc.reset();
+            nc.resetAndConfigure();
         }        
     }
 
-    /**
-     * TODO Thorsten Meinl
-     * @param nodeID
-     * @deprecated use resetAndConfigure node, don't implement configure 
-     *             since nodes are always configured
-     */ 
-    public void configureNode(final int nodeID) {
-        NodeContainer nodeCont = m_nodeContainerByID.get(nodeID);
-        nodeCont.getNode().resetAndConfigure();
-        for (NodeContainer nc : nodeCont.getAllSuccessors()) {
-            nc.getNode().resetAndConfigure();
-        }        
-    }
-
-    
     /**
      * Callback for Workflow events.
      * 

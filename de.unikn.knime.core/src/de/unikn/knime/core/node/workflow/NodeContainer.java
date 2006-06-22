@@ -810,7 +810,7 @@ public class NodeContainer implements NodeStateListener {
      * Resets the node. Will reset the entire flow from here by propagating this
      * through the output ports.
      */
-    void reset() {
+    void resetAndConfigure() {
         m_node.resetAndConfigure();
     }
 

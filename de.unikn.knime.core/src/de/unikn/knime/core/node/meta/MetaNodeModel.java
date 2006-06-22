@@ -161,7 +161,7 @@ public class MetaNodeModel extends SpecialNodeModel
         
         for (int i = 0; i < m_dataInModels.length; i++) {
             m_dataInModels[i].setDataTableSpec(inSpecs[i]);
-            m_internalWFM.configureNode(m_dataInContainer[i].getID());
+            m_internalWFM.resetAndConfigureNode(m_dataInContainer[i].getID());
         }
         
         // collect all output specs
@@ -383,71 +383,14 @@ public class MetaNodeModel extends SpecialNodeModel
         // already resetting i.e. the reset was triggered from an internal node
     }
 
-    /**
-     * Stores the inner workflow in the settings.
-     */    
+    /** 
+     * @see de.unikn.knime.core.node.SpecialNodeModel
+     *  #saveSettingsTo(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings,
-            final File nodeFile) {
+    protected void saveSettingsTo(final File nodeFile,
+            final ExecutionMonitor exec) {
         if (m_internalWFM == null) { return; }
-        
-        NodeSettings connections = settings.addConfig(INOUT_CONNECTIONS_KEY);
-        
-        int count = 0;
-        int[] conn = new int[4];
-        
-        for (NodeContainer nc : m_dataInContainer) {
-            List<ConnectionContainer> conncon =
-                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
-            for (ConnectionContainer cc : conncon) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_dataIn_" + count++, conn);
-            }
-        }
-        
-        for (NodeContainer nc : m_dataOutContainer) {
-            ConnectionContainer cc =
-                m_internalWFM.getIncomingConnectionAt(nc, 0);
-            if (cc != null) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_dataOut_" + count++, conn);
-            }
-        }
-
-        for (NodeContainer nc : m_modelInContainer) {
-            List<ConnectionContainer> conncon =
-                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
-            for (ConnectionContainer cc : conncon) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_modelIn_" + count++, conn);
-            }
-        }
-        
-        for (NodeContainer nc : m_modelOutContainer) {
-            ConnectionContainer cc =
-                m_internalWFM.getIncomingConnectionAt(nc, 0);
-            if (cc != null) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_modelOut_" + count++, conn);
-            }
-        }
-
         Set<NodeContainer> omitNodes = new HashSet<NodeContainer>();
         for (NodeContainer nc : m_dataInContainer) {
             omitNodes.add(nc);
@@ -536,8 +479,10 @@ public class MetaNodeModel extends SpecialNodeModel
             final int inPortID) {
         createInternalWFM();
         m_dataInModels[inPortID].setDataTable(table);
-        m_internalWFM.executeUpToNode(m_dataInContainer[inPortID].getID(),
-                true);
+        if (table != null) {
+            m_internalWFM.executeUpToNode(m_dataInContainer[inPortID].getID(),
+                    true);
+        }
     }
 
 
@@ -552,10 +497,10 @@ public class MetaNodeModel extends SpecialNodeModel
         // m_dataInContainer[inPortID].reset();
         if (inPortID < getNrDataIns()) {
             m_dataInModels[inPortID].setDataTable(null);
-            m_internalWFM.resetNode(m_dataInContainer[inPortID].getID());
+            m_internalWFM.resetAndConfigureNode(m_dataInContainer[inPortID].getID());
         } else {
             m_modelInModels[inPortID - getNrDataIns()].setPredictorParams(null);
-            m_internalWFM.resetNode(
+            m_internalWFM.resetAndConfigureNode(
                     m_modelInContainer[inPortID - getNrDataIns()].getID());
         }
     }
@@ -619,7 +564,64 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void saveSettingsTo(final NodeSettings settings) {
-        // nothing to do here
+        if (m_internalWFM == null) { return; }
+        
+        NodeSettings connections = settings.addConfig(INOUT_CONNECTIONS_KEY);
+        
+        int count = 0;
+        int[] conn = new int[4];
+        
+        for (NodeContainer nc : m_dataInContainer) {
+            List<ConnectionContainer> conncon =
+                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
+            for (ConnectionContainer cc : conncon) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_dataIn_" + count++, conn);
+            }
+        }
+        
+        for (NodeContainer nc : m_dataOutContainer) {
+            ConnectionContainer cc =
+                m_internalWFM.getIncomingConnectionAt(nc, 0);
+            if (cc != null) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_dataOut_" + count++, conn);
+            }
+        }
+
+        for (NodeContainer nc : m_modelInContainer) {
+            List<ConnectionContainer> conncon =
+                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
+            for (ConnectionContainer cc : conncon) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_modelIn_" + count++, conn);
+            }
+        }
+        
+        for (NodeContainer nc : m_modelOutContainer) {
+            ConnectionContainer cc =
+                m_internalWFM.getIncomingConnectionAt(nc, 0);
+            if (cc != null) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_modelOut_" + count++, conn);
+            }
+        }
     }
     
     protected WorkflowManager internalWFM() {

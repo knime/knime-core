@@ -92,7 +92,7 @@ public class ThreadPool {
          */
         public Worker() {
             super("KNIME-Worker-" + workerCounter++);
-            setPriority(NORM_PRIORITY - 1);
+            setPriority(NORM_PRIORITY - 2);
             setDaemon(true);
         }
 

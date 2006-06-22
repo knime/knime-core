@@ -165,8 +165,8 @@ public abstract class SpecialNodeModel extends NodeModel {
         return exec.getProgressMonitor();
     }
 
-    protected void saveSettingsTo(final NodeSettings settings,
-            final File nodeFile) {
+    protected void saveSettingsTo(final File nodeFile,
+            final ExecutionMonitor exec) {
         // nothing to do here
     }
     
