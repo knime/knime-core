@@ -207,13 +207,8 @@ public final class Node {
         }
         
         // let the model create its 'default' table specs
-        // (tg) we can not automatically configure a Node when trying to load
-        // settings, data, and model(s).
-        try {
-            configureNode();
-        } catch (InvalidSettingsException ise) {
-            // do nothing
-        }
+        configure();
+  
 
     } // Node(NodeFactory)
     
@@ -301,8 +296,10 @@ public final class Node {
         // load node settings
         this.load(settings);
 
+        
         m_nodeDir = nodeFile.getParentFile();
         
+        // if node was configured
         if (isConfigured()) {
             NodeSettings spec = settings.getConfig("spec_files");
             for (int i = 0; i < m_outDataPorts.length; i++) {
@@ -571,7 +568,7 @@ public final class Node {
      *         <code>false</code>.
      * 
      * @see #execute()
-     * @see #reset()
+     * @see #resetAndConfigure()
      */
     public boolean isConfigured() {
         return m_model.isConfigured();
@@ -850,30 +847,39 @@ public final class Node {
      * order to reset the underlying model. The <code>#isExecuted()</code>
      * method will return <code>false</code> after this call.
      * 
-     * @see #resetWithoutConfigure()
+     * @see #reset()
+     * @see #configure()
      */
-    public void reset() {
-        m_logger.info("reset");
+    public void resetAndConfigure() {
+        // reset
         try {
-            resetWithoutConfigure();
+            reset();
         } catch (Exception e) {
             m_logger.error("Reset failed", e);
             m_status = new NodeStatus.Warning(
                     "Reset failed: " + e.getMessage());
-            notifyStateListeners(m_status);
         } catch (Error e) {
             m_logger.fatal("Reset failed", e);
             m_status = new NodeStatus.Warning(
                     "Reset failed: " + e.getMessage());
-            notifyStateListeners(m_status);
         } finally {
-            try {
-                configureNode();
-            } catch (InvalidSettingsException ise) {
-                m_status = new NodeStatus.Warning(
-                        "Invalid settings: " + ise.getMessage());
-                notifyStateListeners(m_status);
-            }
+            notifyStateListeners(new NodeStatus.Reset("Not configured."));
+            notifyStateListeners(m_status);
+        }
+        // configure
+        try {
+            configure();
+        } catch (Exception e) {
+            m_logger.error("Configure failed", e);
+            m_status = new NodeStatus.Warning(
+                    "Configure failed: " + e.getMessage());
+        } catch (Error e) {
+            m_logger.fatal("Configure failed", e);
+            m_status = new NodeStatus.Warning(
+                    "Configure failed: " + e.getMessage());
+        } finally {
+            notifyStateListeners(new NodeStatus.Reset("Not configured."));
+            notifyStateListeners(m_status);
         }
     }
 
@@ -882,20 +888,14 @@ public final class Node {
      * reset, as well as the <code>DataTable</code>s and
      * <code>PredictParams</code> at the outports.
      */
-    void resetWithoutConfigure() {
-        m_logger.debug("resetting without configure");
+    private void reset() {
+        m_logger.info("reset");
         // reset the model
         try {
             m_model.resetModel();
-        } catch (Exception e) {
-            m_logger.error("Node model could not be reset: " + e.getMessage());
-            m_status = new NodeStatus.Error(
-                    "Node model could not be reset: " + e.getMessage());
-            notifyStateListeners(m_status);
         } finally {
             m_isCurrentlySaved = false;
         }
-        notifyStateListeners(new NodeStatus.Reset("Not configured."));
 
         // blow away our data tables in the port
         for (int p = 0; p < getNrDataOutPorts(); p++) {
@@ -914,11 +914,7 @@ public final class Node {
                 m_model.loadPredictorParams(p, m_inModelPorts[p]
                         .getPredictorParams());
             } catch (InvalidSettingsException ise) {
-                // TODO (cs) do we need to throw this to the "outside"?
-                m_status = new NodeStatus.Error(
-                        "PredictorParams could not be loaded: "
-                                + ise.getMessage());
-                notifyStateListeners(m_status);
+                // (tg) do nothing
             }
         }
 
@@ -934,7 +930,7 @@ public final class Node {
      */
     public void detach() {
         // reset this node first
-        resetWithoutConfigure();
+        reset();
         // close and unregister all views
         NodeView[] views = m_model.getViews().toArray(new NodeView[0]);
         for (NodeView view : views) {
@@ -1002,7 +998,7 @@ public final class Node {
     void inportWasDisconnected(final int inPortID) {
         boundInPort(inPortID);
         // call reset
-        resetWithoutConfigure();
+        reset();
 
         if (isDataInPort(inPortID)) {
             // reset hilite handler in this node.
@@ -1027,16 +1023,7 @@ public final class Node {
             }
         }
         // re-create out table specs, as incoming table specs/models are gone.
-        try {
-            configureNode();
-        } catch (InvalidSettingsException ise) {
-
-            m_logger.warn("Configure failed. Invalid settings: "
-                    + ise.getMessage());
-            // m_nodeStatus = new NodeStatus(NodeStatus.Status.Error,
-            // "Configure failed. Invalid settings: " + ise.getMessage());
-            // this.notifyStateListeners(m_nodeStatus);
-        }
+        configure();
         
         if (m_model instanceof SpecialNodeModel) {
             ((SpecialNodeModel) m_model).inportWasDisconnected(inPortID);
@@ -1090,12 +1077,10 @@ public final class Node {
     void inportHasNewTableSpec(final int inPortID) {
         // data tables specs are propagated through data ports only
         boundDataInPort(inPortID);
-        try {
-            configureNode();
-        } catch (InvalidSettingsException ise) {
-            m_logger.info("Configure failed. Invalid settings: "
-                    + ise.getMessage());
+        if (isExecuted()) {
+            reset();
         }
+        configure();
     }
 
     /**
@@ -1111,6 +1096,9 @@ public final class Node {
     void inportHasNewPredictorParams(final int inPortID) {
         // Predictor params are propagated through model ports only
         boundPredParamsInPort(inPortID);
+        if (isExecuted()) {
+            reset();
+        }
         try {
             int realId = inPortID - getNrDataInPorts();
             PredictorParams params = m_inModelPorts[realId]
@@ -1123,14 +1111,8 @@ public final class Node {
                     "Could not load PredictorParams: " + ise.getMessage());
             this.notifyStateListeners(m_status);
         }
+        configure();
 
-        try {
-            configureNode();
-        } catch (InvalidSettingsException ise) {
-            m_status = new NodeStatus.Error(
-                    "Configure failed. Invalid settings: " + ise.getMessage());
-            this.notifyStateListeners(m_status);
-        }
     }
 
     /**
@@ -1173,44 +1155,39 @@ public final class Node {
      * @throws InvalidSettingsException If configure failed due to wrong
      *             settings.
      */
-    public void configureNode() throws InvalidSettingsException {
-        m_logger.info("configure");
+    private void configure() {
+        if (isExecuted()) {
+            m_logger.info("configure");
+        }
+        m_logger.assertLog(!isExecuted(),
+                "Must not call configure when executed.");
 
         // reset status object to clean previous status messages.
         m_status = null;
 
-        // only call for re-configuration if we are not executed
-        if (isExecuted()) {
-            m_logger.assertLog(false, 
-                    "Must not call configureNode() when executed.");
-            // this happens if a previous node in a row of executed ones
-            // in configured, all other nodes will be re-configured
-            m_logger.coding("is executed: resetting");
-            resetWithoutConfigure();
-        }
-
         // configure
         try {
             String errorMsg = "";
-            // get inspecs at check them against null
+            // get inspecs and check them against null
             DataTableSpec[] inSpecs = new DataTableSpec[getNrDataInPorts()];
             for (int i = 0; i < inSpecs.length; i++) {
                 inSpecs[i] = m_inDataPorts[i].getDataTableSpec();
                 if (inSpecs[i] == null) {
-                    errorMsg += ", " + i;
+                    if (errorMsg.length() > 0) {
+                        errorMsg += ",";
+                    }
+                    errorMsg += i;
                 }
             }
-            
+            // if an in spec is null
             if (errorMsg.length() > 0) {
                 throw new InvalidSettingsException(
                     "No input spec(s) available at inport(s):" + errorMsg);
             }
 
-            //
-            // call model to create output table specs
-            //
+            // call configure model to create output table specs
             DataTableSpec[] newSpecs = m_model.configureModel(inSpecs);
-            // notify state listeners
+            // notify state listeners before the new specs are propagated
             this.notifyStateListeners(new NodeStatus.Configured("Configured"));
             /*
              * set the new specs in the output ports, which will propagate them
@@ -1224,32 +1201,14 @@ public final class Node {
             // check for model warnings
             processModelWarnings();
         } catch (InvalidSettingsException ise) {
-            m_logger.debug("Configure failed: " + ise.getMessage());
-            notConfigured();
-            throw ise;
+            m_logger.warn("Configure failed: " + ise.getMessage());
+            reset();
         } catch (Exception e) {
             m_logger.error("Configure failed", e);
-            notConfigured();
-            throw new InvalidSettingsException(e);
+            reset();
         } catch (Error e) {
             m_logger.fatal("Configure failed", e);
-            notConfigured();
-            throw new InvalidSettingsException(e);
-        }
-    }
-
-    /**
-     * Called if configured failed. Send state changed event to all listeners
-     * and propagates <code>null</code> data table specs.
-     */
-    private void notConfigured() {
-        // notify state listeners
-        this.notifyStateListeners(new NodeStatus.Configured());
-        // set null specs in the output ports (they will propagate it to
-        // connected successor nodes)
-        for (int p = 0; p < getNrDataOutPorts(); p++) {
-            // update data table spec
-            m_outDataPorts[p].setDataTableSpec(null);
+            reset();
         }
     }
 
@@ -1533,7 +1492,6 @@ public final class Node {
     /**
      * Reads the current settings from the dialog and writes them into the
      * model.
-     * 
      * @throws InvalidSettingsException If the settings are not valid for the
      *             underlying model.
      */
@@ -1552,14 +1510,12 @@ public final class Node {
      * @return true if the settings are equal
      */
     boolean isModelAndDialogSettingsEqual() {
-
         try {
             // save new dialog's config into new object
             NodeSettings dialogSettings = new NodeSettings("Compare");
             NodeSettings modelSettings = new NodeSettings("Compare");
             m_dialogPane.finishEditingAndSaveSettingsTo(dialogSettings);
             m_model.saveSettingsTo(modelSettings);
-
             // check for equality
             return dialogSettings.isIdentical(modelSettings);
 

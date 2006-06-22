@@ -159,12 +159,12 @@ public class WorkflowManager implements WorkflowListener {
                 newNode.getNode().load(nodeFile, exec);
             } catch (IOException ioe) {
                 LOGGER.warn("Unable to load node internals for: "
-                        + newNode.getNameWithID(), ioe);
-                newNode.getNode().reset();
+                        + newNode.getNameWithID());
+                newNode.getNode().resetAndConfigure();
             } catch (InvalidSettingsException ise) {
                 LOGGER.warn("Unable to load settings for: " 
-                        + newNode.getNameWithID(), ise);
-                newNode.getNode().reset();
+                        + newNode.getNameWithID());
+                newNode.getNode().resetAndConfigure();
             }
         }
     }
@@ -211,7 +211,7 @@ public class WorkflowManager implements WorkflowListener {
             // and add appropriate connection to workflow
             ConnectionContainer cc = null;
             try {
-                // TODO (tg) what happends with the connection id if this fails? 
+                // TODO (tg) what happends with the connection id if this fails?
                 cc = new ConnectionContainer(
                         ++m_runningConnectionID, connectionConfig, this);
             } catch (InvalidSettingsException ise) {
@@ -949,6 +949,7 @@ public class WorkflowManager implements WorkflowListener {
     }
     
     /**
+     * TODO Thorsten, please check docu.
      * Saves this workflow manager settings including nodes and connections
      * into the given file. In additon, all nodes' internal structures are
      * stored - if available, depending on the current node state, reset, 
@@ -983,8 +984,10 @@ public class WorkflowManager implements WorkflowListener {
                 if ((omitNodes != null) && omitNodes.contains(nextNode)) {
                     continue;
                 }
-                
-                String nodeDirID = nextNode.getNameWithID();
+                // create node directory based on the nodes name and id
+                // all chars which are not letter or number are replaced by '_'
+                String nodeDirID = nextNode.getName().replaceAll(
+                        "[^a-zA-Z0-9 ]", "_") + " (#" + nextNode.getID() + ")";
                 // and save it to it's own config object
                 NodeSettings nextNodeConfig = nodes.addConfig(
                         "node_" + nextNode.getID());
@@ -1057,7 +1060,9 @@ public class WorkflowManager implements WorkflowListener {
             new LinkedList<NodeContainer>();
         private final List<NodeContainer> m_runningNodes =
             new LinkedList<NodeContainer>();
-
+        /**
+         * TODO 
+         */
         public WorkflowExecutor() {
             super("KNIME Workflow Executor");
             setDaemon(true);
@@ -1335,20 +1340,14 @@ public class WorkflowManager implements WorkflowListener {
     /**
      * TODO Thorsten Meinl
      * @param nodeID
+     * @deprecated use resetAndConfigure node, don't implement configure 
+     *             since nodes are always configured
      */ 
     public void configureNode(final int nodeID) {
         NodeContainer nodeCont = m_nodeContainerByID.get(nodeID);
-        try {
-            nodeCont.getNode().configureNode();
-        } catch (InvalidSettingsException ex) {
-            // what should I do with it
-        }
+        nodeCont.getNode().resetAndConfigure();
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
-            try {
-                nc.getNode().configureNode();
-            } catch (InvalidSettingsException ex) {
-                // what should I do with it                
-            }
+            nc.getNode().resetAndConfigure();
         }        
     }
 

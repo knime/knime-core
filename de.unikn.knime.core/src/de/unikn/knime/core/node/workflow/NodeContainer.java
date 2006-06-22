@@ -1,5 +1,4 @@
-/* @(#)$RCSfile$ 
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -579,7 +578,10 @@ public class NodeContainer implements NodeStateListener {
         return result;
     }
 
-    
+    /**
+     * TODO Thorsten Meinl
+     * @return
+     */
     public Collection<NodeContainer> getAllSuccessors() {
         ArrayList<NodeContainer> succ = new ArrayList<NodeContainer>();
         for (List<NodeContainer> ncl : m_succ) {
@@ -809,7 +811,7 @@ public class NodeContainer implements NodeStateListener {
      * through the output ports.
      */
     void reset() {
-        m_node.reset();
+        m_node.resetAndConfigure();
     }
 
     // ////////////////////////

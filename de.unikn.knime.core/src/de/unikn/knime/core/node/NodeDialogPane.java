@@ -66,9 +66,6 @@ public abstract class NodeDialogPane {
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
-
-    /** This dialog pane's logger. */
-    private final NodeLogger m_logger;
     
     /**
      * Creates a new dialog with the given title. The pane holds a tabbed pane
@@ -78,7 +75,6 @@ public abstract class NodeDialogPane {
      * @param title The title of this dialog.
      */
     protected NodeDialogPane(final String title) {
-        m_logger = NodeLogger.getLogger(getClass());
         m_panel = new JPanel();
         // init the panel with layout
         m_panel.setLayout(new BorderLayout());
@@ -202,25 +198,17 @@ public abstract class NodeDialogPane {
 
     /**
      * Invoked when the derived dialog needs to apply its settings to the
-     * model. The node is reset - if executed and configured after settings
-     * were applied successfully.
-     * 
+     * model. The node is reset and configured after settings
+     * were applied successfully - only if the model and dialog settings
+     * are not identical.
      * @throws InvalidSettingsException If the settings could not be set in the
      *             <code>Node</code>.
      */
     public final void doApply() throws InvalidSettingsException {
-        // try to load dialog settings to dialog
+        // try to load dialog settings to the model
         m_node.loadModelSettingsFromDialog();
-        // reset node if executed
-        if (isNodeExecuted()) {
-            m_node.resetWithoutConfigure();
-        }
-        try {
-            // configure node
-            m_node.configureNode();
-        } catch (InvalidSettingsException ise) {
-            m_logger.warn("Configure failed with current settings.", ise);
-        }
+        // reset node and configure
+        m_node.resetAndConfigure();
     }
     
     /**
@@ -229,8 +217,7 @@ public abstract class NodeDialogPane {
      * 
      * @return true if the settings are equal
      */
-    public boolean isModelAndDialogSettingsEqual() {
-
+    public final boolean isModelAndDialogSettingsEqual() {
         return m_node.isModelAndDialogSettingsEqual();
     }
 
