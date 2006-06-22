@@ -279,10 +279,12 @@ public final class Node {
      * @param exec The execution monitor reporting progress during reading
      *        structure.
      * @throws IOException If the node settings file can't be found or read.
+     * @throws CanceledExecutionException If loading was canceled.
      * @throws InvalidSettingsException If the settings are wrong.
      */
     public void load(final File nodeFile, final ExecutionMonitor exec)
-            throws IOException, InvalidSettingsException {
+            throws IOException, CanceledExecutionException, 
+                   InvalidSettingsException {
         assert exec != null;
         m_status = null;
         if (!nodeFile.isFile() || !nodeFile.canRead()) {
@@ -324,7 +326,7 @@ public final class Node {
                 File targetFile = new File(m_nodeDir, dataName);
                 File dest = DataContainer.createTempFile();
                 dest.deleteOnExit();
-                FileUtil.copy(targetFile, dest);
+                FileUtil.copy(targetFile, dest, exec);
                 DataTable outTable = DataContainer.readFromZip(dest);
                 m_outDataPorts[i].setDataTable(outTable);
             }

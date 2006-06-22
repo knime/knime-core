@@ -125,11 +125,13 @@ public class WorkflowManager implements WorkflowListener {
      * @param workflowFile The location of the workflow file,
      *            <code>WORKFLOW_FILE</code>.
      * @throws InvalidSettingsException If settings can not be read.
+     * @throws CanceledExecutionException If loading was canceled.
      * @throws IOException If the workflow file can not be found or files to
      *             load node interna.
      */
     public WorkflowManager(final File workflowFile)
-            throws InvalidSettingsException, IOException {
+            throws InvalidSettingsException, CanceledExecutionException, 
+                   IOException {
         this();
 
         if (!workflowFile.isFile()
@@ -965,8 +967,9 @@ public class WorkflowManager implements WorkflowListener {
                 throw new IOException("File must be named: \"" + WORKFLOW_FILE
                         + "\": " + workflowFile);
             }
-            ExecutionMonitor exec = new ExecutionMonitor(
-                    new DefaultNodeProgressMonitor());
+            
+            ExecutionMonitor exec = new ExecutionMonitor();
+            
             File parentDir = workflowFile.getParentFile();
             // workflow settings
             NodeSettings settings = new NodeSettings(WORKFLOW_FILE);
