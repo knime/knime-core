@@ -688,8 +688,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * @return true if the file reader ignores empty lines (or lines with only
-     *         comment)
+     * @return true if the file reader ignores empty lines.
      */
     public boolean getIgnoreEmtpyLines() {
         return m_ignoreEmptyLines;
