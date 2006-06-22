@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *
@@ -94,7 +92,7 @@ public class TableNodeModel extends NodeModel {
      * Invoked when data is reset. Removes the data from the underlying
      * <code>TableContentModel</code>. Do not call this method, it is called
      * from the node's <code>reset()</code> method.
-     * @see de.unikn.knime.core.node.Node#reset()
+     * @see de.unikn.knime.core.node.NodeModel#reset()
      */ 
     protected void reset() {
         m_contModel.setDataTable(null);
