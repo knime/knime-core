@@ -657,6 +657,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         } catch (InvalidSettingsException ise) {
             LOGGER.error("Could not load workflow from: " + file.getName(),
                     ise);
+        } catch (CanceledExecutionException cee) {
+            LOGGER.info("Canceled loading worflow: " + file.getName());
         } finally {
             // create empty WFM if loading failed
             if (m_manager == null) {
