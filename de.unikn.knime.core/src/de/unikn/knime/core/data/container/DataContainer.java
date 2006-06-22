@@ -501,7 +501,7 @@ public class DataContainer implements RowAppender {
                 return;
             }
         }
-        Buffer buf = new Buffer(outFile, table.getDataTableSpec().getName());
+        Buffer buf = new Buffer(outFile);
         int rowCount = 0;
         try {
             for (DataRow row : table) {
@@ -524,7 +524,7 @@ public class DataContainer implements RowAppender {
      * @throws IOException If that fails.
      */
     public static DataTable readFromZip(final File zipFile) throws IOException {
-        Buffer buffer = new Buffer(zipFile);
+        Buffer buffer = new Buffer(zipFile, /*ignoreMe*/false);
         return new BufferedTable(buffer);
     }
     
