@@ -134,7 +134,21 @@ public class PredictorReaderNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        checkFileAccess(m_fileName);
+        File file = new File(m_fileName);
+        if (file.isDirectory()) {
+            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
+                    + "\" is a directory.");
+        }
+        if (!file.exists()) {
+            // dunno how to check the write access to the directory. If we can't
+            // create the file the execute of the node will fail. Well, too bad.
+            throw new InvalidSettingsException("File does not exist: "
+                    + m_fileName);
+        }
+        if (!file.canRead()) {
+            throw new InvalidSettingsException("Cannot write to file \""
+                    + file.getAbsolutePath() + "\".");
+        }
         return new DataTableSpec[0];
     }
 
@@ -152,21 +166,6 @@ public class PredictorReaderNodeModel extends NodeModel {
         String newFileName = fileName;
         if (!fileName.endsWith(".pmml") && !fileName.endsWith(".pmml.gz")) {
             newFileName += ".pmml.gz";
-        }
-        File file = new File(newFileName);
-        if (file.isDirectory()) {
-            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory.");
-        }
-        if (!file.exists()) {
-            // dunno how to check the write access to the directory. If we can't
-            // create the file the execute of the node will fail. Well, too bad.
-            throw new InvalidSettingsException("File does not exist: "
-                    + newFileName);
-        }
-        if (!file.canRead()) {
-            throw new InvalidSettingsException("Cannot write to file \""
-                    + file.getAbsolutePath() + "\".");
         }
         return newFileName;
     }
