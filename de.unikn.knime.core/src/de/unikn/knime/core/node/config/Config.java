@@ -377,7 +377,8 @@ public abstract class Config extends AbstractConfigEntry
     public Config getConfig(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof Config)) {
-            throw new InvalidSettingsException(key + " for config not found.");
+            throw new InvalidSettingsException(
+                    "Config for key \"" + key + "\" not found.");
         }
         return (Config)o;
     }
@@ -402,7 +403,8 @@ public abstract class Config extends AbstractConfigEntry
     public int getInt(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigIntEntry)) {
-            throw new InvalidSettingsException(key + " for int not found.");
+            throw new InvalidSettingsException(
+                    "Int for key \"" + key + "\" not found.");
         }
         return ((ConfigIntEntry)o).getInt();
     }
@@ -427,7 +429,8 @@ public abstract class Config extends AbstractConfigEntry
     public double getDouble(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigDoubleEntry)) {
-            throw new InvalidSettingsException(key + " for double not found.");
+            throw new InvalidSettingsException(
+                    "Double for key \"" + key + "\" not found.");
         }
         return ((ConfigDoubleEntry)o).getDouble();
     }
@@ -452,7 +455,8 @@ public abstract class Config extends AbstractConfigEntry
     public char getChar(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigCharEntry)) {
-            throw new InvalidSettingsException(key + " for char not found.");
+            throw new InvalidSettingsException(
+                    "Char for key \"" + key + "\" not found.");
         }
         return ((ConfigCharEntry)o).getChar();
     }
@@ -477,7 +481,8 @@ public abstract class Config extends AbstractConfigEntry
     public short getShort(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigShortEntry)) {
-            throw new InvalidSettingsException(key + " for short not found.");
+            throw new InvalidSettingsException(
+                    "Short for key \"" + key + "\" not found.");
         }
         return ((ConfigShortEntry)o).getShort();
     }
@@ -502,7 +507,8 @@ public abstract class Config extends AbstractConfigEntry
     public long getLong(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigLongEntry)) {
-            throw new InvalidSettingsException(key + " for long not found.");
+            throw new InvalidSettingsException(
+                    "Long for key \"" + key + "\" not found.");
         }
         return ((ConfigLongEntry)o).getLong();
     }
@@ -528,7 +534,8 @@ public abstract class Config extends AbstractConfigEntry
     public byte getByte(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigByteEntry)) {
-            throw new InvalidSettingsException(key + " for byte not found.");
+            throw new InvalidSettingsException(
+                    "Byte for key \"" + key + "\" not found.");
         }
         return ((ConfigByteEntry)o).getByte();
     }
@@ -554,7 +561,8 @@ public abstract class Config extends AbstractConfigEntry
     public String getString(final String key) throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigStringEntry)) {
-            throw new InvalidSettingsException(key + " for String not found.");
+            throw new InvalidSettingsException(
+                    "String for key \"" + key + "\" not found.");
         }
         return ((ConfigStringEntry)o).getString();
     }
@@ -723,7 +731,8 @@ public abstract class Config extends AbstractConfigEntry
             throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigBooleanEntry)) {
-            throw new InvalidSettingsException(key + " for boolean not found.");
+            throw new InvalidSettingsException(
+                    "Boolean for key \"" + key + "\" not found.");
         }
         return ((ConfigBooleanEntry)o).getBoolean();
     }
