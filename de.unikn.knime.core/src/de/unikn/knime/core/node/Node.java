@@ -100,6 +100,9 @@ public final class Node {
     /** Node settings XML file name. */
     public static final String SETTINGS_FILE_NAME = "settings.xml";
     
+    /** Directory name to save and load node internals. */
+    private static final String INTERN_FILE_DIR = "intern";
+    
     private File m_nodeDir = null;
 
     /** Store when the current output data has been stored (to avoid 
@@ -298,7 +301,6 @@ public final class Node {
         // load node settings
         this.load(settings);
 
-        
         m_nodeDir = nodeFile.getParentFile();
         
         // if node was configured
@@ -319,6 +321,11 @@ public final class Node {
         }
         // load data if node was executed
         if (isExecuted()) {
+            File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
+            if (internDir.exists() 
+                    && internDir.isDirectory() && internDir.canRead()) {
+                m_model.loadInternals(internDir);
+            }
             // load data
             NodeSettings data = settings.getConfig("data_files");
             for (int i = 0; i < m_outDataPorts.length; i++) {
@@ -1366,8 +1373,8 @@ public final class Node {
             ((SpecialNodeModel) m_model).saveSettingsTo(nodeFile, exec);
         }
         
-        
         m_nodeDir = nodeFile.getParentFile();
+        
         if (isConfigured()) {
             NodeSettings specs = settings.addConfig("spec_files");
             for (int i = 0; i < m_outDataPorts.length; i++) {
@@ -1390,6 +1397,13 @@ public final class Node {
         }
         if (!m_isCurrentlySaved) {
             if (isExecuted()) {
+                File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
+                if (internDir.mkdir() && internDir.canWrite()) {
+                    m_model.saveInternals(internDir);
+                    if (internDir.getCanonicalFile().listFiles().length == 0) {
+                        FileUtil.deleteRecursively(internDir);
+                    }
+                }
                 NodeSettings data = settings.addConfig("data_files");
                 for (int i = 0; i < m_outDataPorts.length; i++) {
                     String specName = "data_" + i + ".zip";
@@ -1411,6 +1425,8 @@ public final class Node {
                 }
                 m_isCurrentlySaved = true;
             } else {
+                File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
+                FileUtil.deleteRecursively(internDir);
                 for (int i = 0; i < m_outDataPorts.length; i++) {
                     File dataFile = new File(m_nodeDir, "data_" + i + ".zip");
                     dataFile.delete();

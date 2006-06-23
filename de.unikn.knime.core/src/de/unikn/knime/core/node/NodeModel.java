@@ -18,6 +18,8 @@
  */
 package de.unikn.knime.core.node;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -136,6 +138,50 @@ public abstract class NodeModel {
      */
     protected NodeModel(final int nrDataIns, final int nrDataOuts) {
         this(nrDataIns, nrDataOuts, 0, 0);
+    }
+    
+    /**
+     * Load internal settings into the <code>NodeModel</code>. Read all your
+     * internal structures from the given directory.
+     * @param nodeInternDir The directory to read from.
+     * @throws IOException If an error occurs during reading from this dir.
+     * @throws CanceledExecutionException If the loading has been canceled.
+     * @see #saveInternals(File)
+     */
+    protected void loadInternals(final File nodeInternDir)
+        throws IOException, CanceledExecutionException {
+        // avoid checkstyle warning  
+        assert nodeInternDir == nodeInternDir;
+        if (false) {
+            throw new IOException();
+        }
+        if (false) {
+            throw new CanceledExecutionException();
+        }
+        m_logger.warn("NodeModel does not overwrite loadInternals(): "
+                + " Node will be reset");
+        // this.setExecuted(false);
+    }
+
+    /**
+     * Save internal settings of the <code>NodeModel</code>. Save all your
+     * internal structures into the given directory.
+     * @param nodeInternDir The directory to write into.
+     * @throws IOException If an error occurs during writting to this dir.
+     * @throws CanceledExecutionException If the saving has been canceled.
+     * @see #loadInternals(File)
+     */
+    protected void saveInternals(final File nodeInternDir)
+        throws IOException, CanceledExecutionException {
+        // avoid checkstyle warning  
+        assert nodeInternDir == nodeInternDir;
+        if (false) {
+            throw new IOException();
+        }
+        if (false) {
+            throw new CanceledExecutionException();
+        }
+        m_logger.warn("NodeModel does not overwrite saveInternals().");
     }
 
     /**
@@ -303,7 +349,7 @@ public abstract class NodeModel {
      */
     final void loadSettingsFrom(final NodeSettings settings)
             throws InvalidSettingsException {
-        // validate the settings before loadng them
+        // validate the settings before loading them
         validateSettings(settings);
         // load settings into the model
         loadValidatedSettingsFrom(settings);

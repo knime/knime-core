@@ -29,6 +29,14 @@ package de.unikn.knime.core.node;
  * @author Thomas Gabriel, Konstanz University
  */
 public class CanceledExecutionException extends Exception {
+    
+    /**
+     * Creates a new exeception of this type with an error message.
+     */
+    public CanceledExecutionException() {
+        super();
+    }
+    
     /**
      * Constructs an <code>CancelExecutionException</code> with the specified
      * detail message.
