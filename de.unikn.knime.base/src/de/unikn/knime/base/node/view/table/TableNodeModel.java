@@ -87,6 +87,28 @@ public class TableNodeModel extends NodeModel {
         assert (m_contModel.hasData());
         return new DataTable[0];
     }
+    
+//    protected void loadInternals(final File nodeDir)
+//            throws IOException {
+//        File tableFile = new File(nodeDir, "table.zip");
+//        if (tableFile.exists() && tableFile.canRead()) {
+//            DataTable table = DataContainer.readFromZip(tableFile);
+//            if (table != null) {
+//                HiLiteHandler inProp = getInHiLiteHandler(INPORT);
+//                m_contModel.setDataTable(table);
+//                m_contModel.setHiLiteHandler(inProp);
+//            }
+//        }
+//    }
+//
+//    protected void saveInternals(final File nodeDir)
+//            throws IOException, CanceledExecutionException {
+//        DataTable table = m_contModel.getDataTable();
+//        if (table != null) {
+//            File tableFile = new File(nodeDir, "table.zip"); 
+//            DataContainer.writeToZip(table, tableFile, new ExecutionMonitor());
+//        }
+//    }
 
     /** 
      * Invoked when data is reset. Removes the data from the underlying
