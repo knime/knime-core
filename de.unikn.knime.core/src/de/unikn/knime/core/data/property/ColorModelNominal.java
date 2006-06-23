@@ -22,6 +22,7 @@
 package de.unikn.knime.core.data.property;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,6 +66,8 @@ public final class ColorModelNominal implements ColorModel {
         return (ColorAttr) o;
     }
     
+    private static final String CFG_KEYS = "keys";
+    
     /**
      * Saves the <code>DataCell</code> to <code>Color</code> mapping to the 
      * given <code>Config</code>. The color is split into red, green, blue, and
@@ -75,11 +78,14 @@ public final class ColorModelNominal implements ColorModel {
      * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
      */
     public void save(final Config config) {
-        DataCell[] keys = m_map.keySet().toArray(new DataCell[0]);
-        config.addDataCellArray("keys", keys);
-        for (int i = 0; i < keys.length; i++) {
-            Color color = m_map.get(keys[i]).getColor();
-            config.addIntArray(keys[i].toString(), 
+        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
+            +  Arrays.toString(config.keySet().toArray());
+        Config keyConfig = config.addConfig(CFG_KEYS);
+        for (Map.Entry<DataCell, ColorAttr> e : m_map.entrySet()) {
+            DataCell key = e.getKey();
+            keyConfig.addDataCell(key.toString(), key);
+            Color color = e.getValue().getColor();
+            config.addIntArray(key.toString(), 
                     color.getRed(), color.getGreen(), 
                     color.getBlue(), color.getAlpha());
         }
@@ -97,12 +103,14 @@ public final class ColorModelNominal implements ColorModel {
     public static ColorModelNominal load(final Config config) 
             throws InvalidSettingsException {
         Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
-        DataCell[] keys = config.getDataCellArray("keys");
-        for (int i = 0; i < keys.length; i++) {
-            int[] value = config.getIntArray(keys[i].toString());
+        Config keyConfig = config.getConfig(CFG_KEYS);
+        for (String key : keyConfig.keySet()) {
+            int[] value = config.getIntArray(key.toString());
             Color color = new Color(value[0], value[1], value[2], value[3]);
-            map.put(keys[i], ColorAttr.getInstance(color));
+            DataCell cell = keyConfig.getDataCell(key);
+            map.put(cell, ColorAttr.getInstance(color));
         }
         return new ColorModelNominal(map);
     }
+    
 }   

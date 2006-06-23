@@ -19,6 +19,8 @@
  */
 package de.unikn.knime.core.data.property;
 
+import java.util.Arrays;
+
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
@@ -64,6 +66,9 @@ public final class SizeHandler implements PropertyHandler {
         return m_model.getSize(dc);
     }
     
+    private static final String CFG_SIZE_MODEL_CLASS = "size_model_class";
+    private static final String CFG_SIZE_MODEL        = "size_model";
+    
     /**
      * Save the <code>SizeModel</code> class and settings to the given 
      * <code>Config</code>. 
@@ -71,8 +76,10 @@ public final class SizeHandler implements PropertyHandler {
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
     public void save(final Config config) {
-        config.addString("size_model_class", m_model.getClass().getName());
-        m_model.save(config);
+        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
+            +  Arrays.toString(config.keySet().toArray());
+        config.addString(CFG_SIZE_MODEL_CLASS, m_model.getClass().getName());
+        m_model.save(config.addConfig(CFG_SIZE_MODEL));
     }
     
     /**
@@ -86,9 +93,10 @@ public final class SizeHandler implements PropertyHandler {
      */
     public static SizeHandler load(final Config config) 
             throws InvalidSettingsException {
-        String modelClass = config.getString("size_model_class");
+        String modelClass = config.getString(CFG_SIZE_MODEL_CLASS);
         if (modelClass.equals(SizeModelDouble.class.getName())) {
-            return new SizeHandler(SizeModelDouble.load(config));
+            Config subConfig = config.getConfig(CFG_SIZE_MODEL);
+            return new SizeHandler(SizeModelDouble.load(subConfig));
         } else {
             throw new InvalidSettingsException("Unknown SizeModel class: "
                    + modelClass);

@@ -105,6 +105,13 @@ public class HiLiteTranslator implements HiLiteListener {
     }
     
     /**
+     * @return The mapper which contains the mapping, can be null.
+     */
+    public HiLiteMapper getMapper() {
+        return m_mapper;
+    }
+        
+    /**
      * Removes a <code>HiLiteHandler</code> from "to"-set.
      * 
      * @param toHandler the hilite handler to remove

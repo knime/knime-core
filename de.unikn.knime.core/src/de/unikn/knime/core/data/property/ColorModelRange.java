@@ -22,6 +22,7 @@
 package de.unikn.knime.core.data.property;
 
 import java.awt.Color;
+import java.util.Arrays;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DoubleValue;
@@ -117,6 +118,11 @@ public final class ColorModelRange implements ColorModel {
         if (b > 255) { b = 255; }
         return ColorAttr.getInstance(new Color(r, g, b));
     }
+    
+    private static final String CFG_LOWER_VALUE = "lower_value";
+    private static final String CFG_UPPER_VALUE = "upper_value";
+    private static final String CFG_LOWER_COLOR = "lower_color";
+    private static final String CFG_UPPER_COLOR = "upper_color";
 
     /**
      * Save lower and upper, and min and max colors to the given Config.
@@ -125,11 +131,13 @@ public final class ColorModelRange implements ColorModel {
      *      #save(de.unikn.knime.core.node.config.Config)
      */
     public void save(final Config config) {
-        config.addDouble("lower", m_lower);
-        config.addDouble("upper", m_upper);
-        config.addIntArray("min_color", m_min.getRed(), m_min.getGreen(), 
+        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
+            +  Arrays.toString(config.keySet().toArray());
+        config.addDouble(CFG_LOWER_VALUE, m_lower);
+        config.addDouble(CFG_UPPER_VALUE, m_upper);
+        config.addIntArray(CFG_LOWER_COLOR, m_min.getRed(), m_min.getGreen(), 
                 m_min.getBlue(), m_min.getAlpha());
-        config.addIntArray("max_color", m_max.getRed(), m_max.getGreen(), 
+        config.addIntArray(CFG_UPPER_COLOR, m_max.getRed(), m_max.getGreen(), 
                 m_max.getBlue(), m_max.getAlpha());
     }
     
@@ -142,11 +150,11 @@ public final class ColorModelRange implements ColorModel {
      */
     public static ColorModelRange load(final Config config) 
             throws InvalidSettingsException {
-        double lower = config.getDouble("lower");
-        double upper = config.getDouble("upper");
-        int[] min = config.getIntArray("min_color");
+        double lower = config.getDouble(CFG_LOWER_VALUE);
+        double upper = config.getDouble(CFG_UPPER_VALUE);
+        int[] min = config.getIntArray(CFG_LOWER_COLOR);
         Color minColor = new Color(min[0], min[1], min[2], min[3]);
-        int[] max = config.getIntArray("max_color");
+        int[] max = config.getIntArray(CFG_UPPER_COLOR);
         Color maxColor = new Color(max[0], max[1], min[2], min[3]);
         return new ColorModelRange(lower, minColor, upper, maxColor);
     }

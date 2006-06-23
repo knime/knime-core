@@ -802,6 +802,8 @@ public final class DataType {
      * @param config Write to this <code>Config</code>.
      */
     public final void save(final Config config) {
+        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
+            +  Arrays.toString(config.keySet().toArray());
         if (m_cellClass == null) {
             config.addString(CFG_CELL_NAME, null);
             config.addBoolean(CFG_HAS_PREF_VALUE, m_hasPreferredValueClass);

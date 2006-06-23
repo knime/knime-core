@@ -60,15 +60,6 @@ abstract class AbstractConfigEntry implements Serializable {
     }
     
     /**
-     * A String represation including key, type and value.
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        return "type=" + m_type + ",value=" + toStringValue();
-    }
-    
-    /**
      * Returns a String representation for this Config entry which is the used 
      * to re-load this Config entry.
      * @return A String representing this Config entry which can be null.

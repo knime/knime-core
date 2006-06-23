@@ -74,6 +74,10 @@ public abstract class Config extends AbstractConfigEntry
         implements Serializable, Iterable<String> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
+    
+    private static final String CFG_ARRAY_SIZE = "array_size";
+    private static final String CFG_IS_NULL    = "is_null";
+    private static final String CFG_DATA_CELL  = "datacell";
 
     private final LinkedHashMap<String, AbstractConfigEntry> m_map;
     
@@ -202,6 +206,8 @@ public abstract class Config extends AbstractConfigEntry
          */
         public static final class ComplexNumberCellEntry 
                 implements DataCellEntry {
+            private static final String CFG_REAL = "real";
+            private static final String CFG_IMAG = "imaginary";
             /**
              * <code>ComplexNumberCell.class</code>.
              */
@@ -211,16 +217,16 @@ public abstract class Config extends AbstractConfigEntry
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 ComplexNumberCell ocell = (ComplexNumberCell) cell;
-                config.addDouble("real", ocell.getRealValue());
-                config.addDouble("imaginary", ocell.getImaginaryValue());
+                config.addDouble(CFG_REAL, ocell.getRealValue());
+                config.addDouble(CFG_IMAG, ocell.getImaginaryValue());
             }
             /**
              * @see Config.DataCellEntry#createCell(Config)
              */
             public DataCell createCell(final Config config) 
                     throws InvalidSettingsException {
-                double r = config.getDouble("real");
-                double i = config.getDouble("imaginary");
+                double r = config.getDouble(CFG_REAL);
+                double i = config.getDouble(CFG_IMAG);
                 return new ComplexNumberCell(r, i);
             }
         };
@@ -230,9 +236,11 @@ public abstract class Config extends AbstractConfigEntry
          */
         public static final class DefaultFuzzyIntervalCellEntry 
                 implements DataCellEntry {
-            /**
-             * <code>FuzzyIntervalCell.class</code>.
-             */
+            private static final String CFG_MIN_SUPP = "min_supp";
+            private static final String CFG_MIN_CORE = "min_core";
+            private static final String CFG_MAX_CORE = "max_core";
+            private static final String CFG_MAX_SUPP = "max_supp";
+            /** <code>FuzzyIntervalCell.class</code>. */
             public static final Class CLASS = FuzzyIntervalCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
@@ -240,20 +248,20 @@ public abstract class Config extends AbstractConfigEntry
             public void saveToConfig(final DataCell cell, final Config config) {
                 FuzzyIntervalCell ocell = 
                     (FuzzyIntervalCell) cell;
-                config.addDouble("min_supp", ocell.getMinSupport());
-                config.addDouble("min_core", ocell.getMinCore());
-                config.addDouble("max_core", ocell.getMaxCore());
-                config.addDouble("max_supp", ocell.getMaxSupport());
+                config.addDouble(CFG_MIN_SUPP, ocell.getMinSupport());
+                config.addDouble(CFG_MIN_CORE, ocell.getMinCore());
+                config.addDouble(CFG_MAX_CORE, ocell.getMaxCore());
+                config.addDouble(CFG_MAX_SUPP, ocell.getMaxSupport());
             }
             /**
              * @see Config.DataCellEntry#createCell(Config)
              */
             public DataCell createCell(final Config config) 
                     throws InvalidSettingsException {
-                double minSupp = config.getDouble("min_supp");
-                double minCore = config.getDouble("min_core");
-                double maxCore = config.getDouble("max_core");
-                double maxSupp = config.getDouble("max_supp");
+                double minSupp = config.getDouble(CFG_MIN_SUPP);
+                double minCore = config.getDouble(CFG_MIN_CORE);
+                double maxCore = config.getDouble(CFG_MAX_CORE);
+                double maxSupp = config.getDouble(CFG_MAX_SUPP);
                 return new FuzzyIntervalCell(
                         minSupp, minCore, maxCore, maxSupp);
             }
@@ -264,28 +272,29 @@ public abstract class Config extends AbstractConfigEntry
          */
         public static final class DefaultFuzzyNumberCellEntry 
                 implements DataCellEntry {
-            /**
-             * <code>FuzzyNumberCell.class</code>.
-             */
+            private static final String CFG_LEFT = "left";
+            private static final String CFG_CORE = "core";
+            private static final String CFG_RIGHT = "right";
+            /** <code>FuzzyNumberCell.class</code>. */
             public static final Class CLASS = FuzzyNumberCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 FuzzyNumberCell ocell = (FuzzyNumberCell) cell;
-                config.addDouble("left",  ocell.getMinSupport());
-                config.addDouble("core",  ocell.getMinCore());
+                config.addDouble(CFG_LEFT,  ocell.getMinSupport());
+                config.addDouble(CFG_CORE,  ocell.getMinCore());
                 assert ocell.getMinCore() == ocell.getMaxCore();
-                config.addDouble("right", ocell.getMaxSupport());
+                config.addDouble(CFG_RIGHT, ocell.getMaxSupport());
             }
             /**
              * @see Config.DataCellEntry#createCell(Config)
              */
             public DataCell createCell(final Config config) 
                     throws InvalidSettingsException {
-                double left  = config.getDouble("left");
-                double core  = config.getDouble("core");
-                double right = config.getDouble("right");
+                double left  = config.getDouble(CFG_LEFT);
+                double core  = config.getDouble(CFG_CORE);
+                double right = config.getDouble(CFG_RIGHT);
                 return new FuzzyNumberCell(left, core, right);
             }
         };
@@ -314,8 +323,6 @@ public abstract class Config extends AbstractConfigEntry
                 new DefaultFuzzyNumberCellEntry());
     }
     
-    private final String m_key;
-    
     /**
      * @return This config's identifier.
      */
@@ -334,6 +341,10 @@ public abstract class Config extends AbstractConfigEntry
         }
         return key;
     }
+    
+    /** The key for this Config used inside the parent Config to access this
+     * Config by key. */
+    private final String m_key;
         
     /**
      * Creates a new, empty config object with the given key.
@@ -577,19 +588,19 @@ public abstract class Config extends AbstractConfigEntry
     public void addDataCell(final String key, final DataCell cell) {
         Config config = addConfig(key);
         if (cell == null) {
-            config.addString("datacell", null);
+            config.addString(CFG_DATA_CELL, null);
         } else {
             String className = cell.getClass().getName();
             Object o = DATACELL_MAP.get(className);
             if (o != null) {
-               config.addString("datacell", className);
+               config.addString(CFG_DATA_CELL, className);
                DataCellEntry e = (DataCellEntry) o;
                Config cellConfig = config.addConfig(className);
                e.saveToConfig(cell, cellConfig);
             } else { 
                 try {
                     // serialize DataCell
-                    config.addString("datacell", Config.writeObject(cell));
+                    config.addString(CFG_DATA_CELL, Config.writeObject(cell));
                 } catch (IOException ioe) {
                     LOGGER.warn("Could not write DataCell: " + cell);
                     LOGGER.debug("", ioe);
@@ -608,10 +619,10 @@ public abstract class Config extends AbstractConfigEntry
     public void addDataType(final String key, final DataType type) {
         Config config = addConfig(key);
         if (type == null) {
-            config.addBoolean("is_null", true);
+            config.addBoolean(CFG_IS_NULL, true);
         } else {
-            config.addBoolean("is_null", false);
             type.save(config);
+            config.addBoolean(CFG_IS_NULL, false);
         }
     }
 
@@ -625,7 +636,7 @@ public abstract class Config extends AbstractConfigEntry
     public DataCell getDataCell(final String key)
             throws InvalidSettingsException {
         Config config = getConfig(key);
-        String className = config.getString("datacell");
+        String className = config.getString(CFG_DATA_CELL);
         if (className == null) {
             return null;
         }
@@ -660,7 +671,7 @@ public abstract class Config extends AbstractConfigEntry
     public DataType getDataType(final String key)
             throws InvalidSettingsException {
         Config config = getConfig(key);
-        boolean isNull = config.getBoolean("is_null");
+        boolean isNull = config.getBoolean(CFG_IS_NULL);
         if (isNull) {
             return null;
         }
@@ -772,7 +783,7 @@ public abstract class Config extends AbstractConfigEntry
      */
     public int[] getIntArray(final String key) throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -808,7 +819,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addIntArray(final String key, final int... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addInt("" + i, values[i]);
             }
@@ -840,7 +851,7 @@ public abstract class Config extends AbstractConfigEntry
     public double[] getDoubleArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -877,7 +888,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addDoubleArray(final String key, final double... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addDouble("" + i, values[i]);
             }
@@ -909,7 +920,7 @@ public abstract class Config extends AbstractConfigEntry
     public char[] getCharArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -946,7 +957,7 @@ public abstract class Config extends AbstractConfigEntry
     public byte[] getByteArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -967,7 +978,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addByteArray(final String key, final byte... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addByte("" + i, values[i]);
             }
@@ -1000,7 +1011,7 @@ public abstract class Config extends AbstractConfigEntry
     public short[] getShortArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -1038,7 +1049,7 @@ public abstract class Config extends AbstractConfigEntry
     public long[] getLongArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -1074,7 +1085,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addShortArray(final String key, final short... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addShort("" + i, values[i]);
             }
@@ -1105,7 +1116,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addLongArray(final String key, final long... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addLong("" + i, values[i]);
             }
@@ -1152,7 +1163,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addCharArray(final String key, final char... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addChar("" + i, values[i]);
             }
@@ -1184,7 +1195,7 @@ public abstract class Config extends AbstractConfigEntry
     public boolean[] getBooleanArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -1221,7 +1232,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addBooleanArray(final String key, final boolean... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addBoolean("" + i, values[i]);
             }
@@ -1254,7 +1265,7 @@ public abstract class Config extends AbstractConfigEntry
     public String[] getStringArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -1291,7 +1302,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addStringArray(final String key, final String... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addString("" + i, values[i]);
             }
@@ -1340,7 +1351,7 @@ public abstract class Config extends AbstractConfigEntry
     public DataCell[] getDataCellArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -1379,7 +1390,7 @@ public abstract class Config extends AbstractConfigEntry
     public DataType[] getDataTypeArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
-        int size = config.getInt("array-size", -1);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
             return null;
         }
@@ -1416,7 +1427,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addDataCellArray(final String key, final DataCell... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addDataCell("" + i, values[i]);
             }
@@ -1433,7 +1444,7 @@ public abstract class Config extends AbstractConfigEntry
     public void addDataTypeArray(final String key, final DataType... values) {
         Config config = this.addConfig(key);
         if (values != null) {
-            config.addInt("array-size", values.length);
+            config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addDataType("" + i, values[i]);
             }

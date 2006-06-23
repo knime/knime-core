@@ -19,6 +19,8 @@
  */
 package de.unikn.knime.core.data.property;
 
+import java.util.Arrays;
+
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
@@ -68,6 +70,9 @@ public final class ColorHandler implements PropertyHandler {
         return color;
     }
     
+    private static final String CFG_COLOR_MODEL_CLASS = "color_model_class";
+    private static final String CFG_COLOR_MODEL = "color_model";
+    
     /**
      * Saves the <code>ColorModel</code> to the given <code>Config</code> by
      * adding a the <code>ColorModel</code> class as String and calling
@@ -76,8 +81,10 @@ public final class ColorHandler implements PropertyHandler {
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
     public void save(final Config config) {
-        config.addString("color_model_class", m_model.getClass().getName());
-        m_model.save(config);
+        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
+            +  Arrays.toString(config.keySet().toArray());
+        config.addString(CFG_COLOR_MODEL_CLASS, m_model.getClass().getName());
+        m_model.save(config.addConfig(CFG_COLOR_MODEL));
     }
     
     /**
@@ -91,11 +98,13 @@ public final class ColorHandler implements PropertyHandler {
      */
     public static ColorHandler load(final Config config) 
             throws InvalidSettingsException {
-        String modelClass = config.getString("color_model_class");
+        String modelClass = config.getString(CFG_COLOR_MODEL_CLASS);
         if (modelClass.equals(ColorModelNominal.class.getName())) {
-            return new ColorHandler(ColorModelNominal.load(config));
+            Config subConfig = config.getConfig(CFG_COLOR_MODEL);
+            return new ColorHandler(ColorModelNominal.load(subConfig));
         } else if (modelClass.equals(ColorModelRange.class.getName())) {
-            return new ColorHandler(ColorModelRange.load(config));
+            Config subConfig = config.getConfig(CFG_COLOR_MODEL);
+            return new ColorHandler(ColorModelRange.load(subConfig));
         } else {
             throw new InvalidSettingsException("Unknown ColorModel class: "
                     + modelClass);

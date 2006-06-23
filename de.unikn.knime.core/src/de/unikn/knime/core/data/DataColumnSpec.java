@@ -16,6 +16,8 @@
  */
 package de.unikn.knime.core.data;
 
+import java.util.Arrays;
+
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -209,21 +211,30 @@ public final class DataColumnSpec {
         return "name=" + getName() + ",type=" + getType();
     }
     
+    private static final String CFG_COLUMN_NAME   = "column_name";
+    private static final String CFG_COLUMN_TYPE   = "column_type";
+    private static final String CFG_COLUMN_DOMAIN = "column_domain";
+    private static final String CFG_COLUMN_PROPS  = "column_properties";
+    private static final String CFG_COLORS        = "color_handler";
+    private static final String CFG_SIZES         = "size_handler";
+    
     /**
      * Saves name, type, domain and properties and - if available - color and 
      * size property to the given <code>Config</code>. 
      * @param config Write properties into.
      */
     public void save(final Config config) {
-        config.addString("name", m_name);
-        m_type.save(config.addConfig("type"));
-        m_domain.save(config.addConfig("domain"));
-        m_properties.save(config.addConfig("properties"));
+        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
+            +  Arrays.toString(config.keySet().toArray());
+        config.addString(CFG_COLUMN_NAME, m_name);
+        m_type.save(config.addConfig(CFG_COLUMN_TYPE));
+        m_domain.save(config.addConfig(CFG_COLUMN_DOMAIN));
+        m_properties.save(config.addConfig(CFG_COLUMN_PROPS));
         if (m_colorHandler != null) {
-            m_colorHandler.save(config.addConfig("color"));
+            m_colorHandler.save(config.addConfig(CFG_COLORS));
         }
         if (m_sizeHandler != null) {
-            m_sizeHandler.save(config.addConfig("size"));
+            m_sizeHandler.save(config.addConfig(CFG_SIZES));
         }   
     }
     
@@ -238,19 +249,19 @@ public final class DataColumnSpec {
      */
     public static DataColumnSpec load(final Config config) 
             throws InvalidSettingsException {
-        String name = config.getString("name");
-        DataType type = DataType.load(config.getConfig("type"));
+        String name = config.getString(CFG_COLUMN_NAME);
+        DataType type = DataType.load(config.getConfig(CFG_COLUMN_TYPE));
         DataColumnDomain domain = 
-            DataColumnDomain.load(config.getConfig("domain"));
+            DataColumnDomain.load(config.getConfig(CFG_COLUMN_DOMAIN));
         DataColumnProperties properties = 
-            DataColumnProperties.load(config.getConfig("properties"));
+            DataColumnProperties.load(config.getConfig(CFG_COLUMN_PROPS));
         ColorHandler color = null;
-        if (config.containsKey("color")) {
-            color = ColorHandler.load(config.getConfig("color"));
+        if (config.containsKey(CFG_COLORS)) {
+            color = ColorHandler.load(config.getConfig(CFG_COLORS));
         }
         SizeHandler size = null;
-        if (config.containsKey("size")) {
-            size = SizeHandler.load(config.getConfig("size"));
+        if (config.containsKey(CFG_COLORS)) {
+            size = SizeHandler.load(config.getConfig(CFG_SIZES));
         }
         return new DataColumnSpec(name, type, domain, properties, size, color);
     }

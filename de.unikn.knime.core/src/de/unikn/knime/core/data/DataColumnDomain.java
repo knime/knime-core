@@ -37,31 +37,32 @@ import de.unikn.knime.core.node.config.Config;
  * @author Thomas Gabriel, Konstanz University
  */
 public final class DataColumnDomain {
-    
+
     /**
      * Lower bound value or <code>null</code>.
      */
     private final DataCell m_lowerBound;
-    
+
     /**
      * Upper bound value or <code>null</code>.
      */
     private final DataCell m_upperBound;
-    
+
     /**
      * Set of possible values or <code>null</code>.
      */
     private final Set<DataCell> m_values;
-    
+
     /**
-     * Create new column name with lower and upper bounds, and set of
-     * possible values. All arguments can be <code>null</code> in case non of
-     * these properties are avaiable.
+     * Create new column name with lower and upper bounds, and set of possible
+     * values. All arguments can be <code>null</code> in case non of these
+     * properties are avaiable.
+     * 
      * @param lower The lower bound value.
      * @param upper The upper bound value.
      * @param values A set of nominal values.
      */
-    DataColumnDomain(final DataCell lower, final DataCell upper, 
+    DataColumnDomain(final DataCell lower, final DataCell upper,
             final Set<DataCell> values) {
         m_lowerBound = lower;
         m_upperBound = upper;
@@ -146,14 +147,14 @@ public final class DataColumnDomain {
     public boolean hasUpperBound() {
         return m_upperBound != null;
     }
-    
+
     /**
-     * @return true, if lower and upper bound are defined. 
+     * @return true, if lower and upper bound are defined.
      */
     public boolean hasBounds() {
         return this.hasLowerBound() && this.hasUpperBound();
     }
-    
+
     /**
      * Compares this domain with the other one by the possible values and lower
      * and upper bound.
@@ -193,7 +194,7 @@ public final class DataColumnDomain {
         }
         return ret;
     }
-    
+
     /**
      * @see java.lang.Object#hashCode()
      */
@@ -212,11 +213,12 @@ public final class DataColumnDomain {
         }
         return tempHash;
     }
-    
+
     /**
-     * Returns summary of this domain including lower and upper bound, and 
+     * Returns summary of this domain including lower and upper bound, and
      * possible values.
-     * @return Summary as String. 
+     * 
+     * @return Summary as String.
      * @see java.lang.Object#toString()
      */
     public String toString() {
@@ -227,37 +229,46 @@ public final class DataColumnDomain {
         String values = (m_values == null ? "null" : m_values.toString());
         return "lower=" + lower + ",upper=" + upper + ",values=" + values;
     }
-    
+
+    private static final String CFG_LOWER_BOUND = "lower_bound";
+    private static final String CFG_UPPER_BOUND = "upper_bound";
+    private static final String CFG_POSS_VALUES = "possible_values";
+
     /**
-     * Save this domain to the given <code>Config</code> including lower and 
+     * Save this domain to the given <code>Config</code> including lower and
      * upper bound, and possible values - if available.
+     * 
      * @param config The <code>Config</code> to write into.
      */
     public void save(final Config config) {
-        config.addDataCell("lower_bound", m_lowerBound);
-        config.addDataCell("upper_bound", m_upperBound);
+        assert config.keySet().isEmpty() : "Subconfig must be empty: "
+                + Arrays.toString(config.keySet().toArray());
+        config.addDataCell(CFG_LOWER_BOUND, m_lowerBound);
+        config.addDataCell(CFG_UPPER_BOUND, m_upperBound);
         if (m_values != null) {
             DataCell[] values = m_values.toArray(new DataCell[0]);
-            config.addDataCellArray("values", values);
+            config.addDataCellArray(CFG_POSS_VALUES, values);
         }
     }
-    
+
     /**
-     * Reads lower and upper bound from <code>Config</code>, and possible values
-     * if available.
+     * Reads lower and upper bound from <code>Config</code>, and possible
+     * values if available.
+     * 
      * @param config To read entries from.
      * @return A new domain object with the read properties.
      * @throws InvalidSettingsException If lower or upper bound are ot defined.
      */
-    public static DataColumnDomain load(final Config config) 
+    public static DataColumnDomain load(final Config config)
             throws InvalidSettingsException {
-        DataCell lower = config.getDataCell("lower_bound");
-        DataCell upper = config.getDataCell("upper_bound");
+        DataCell lower = config.getDataCell(CFG_LOWER_BOUND);
+        DataCell upper = config.getDataCell(CFG_UPPER_BOUND);
         Set<DataCell> values = null;
-        if (config.containsKey("values")) {
+        if (config.containsKey(CFG_POSS_VALUES)) {
             values = new LinkedHashSet<DataCell>();
-            values.addAll(Arrays.asList(config.getDataCellArray("values")));
-        }   
+            values.addAll(Arrays.asList(config
+                    .getDataCellArray(CFG_POSS_VALUES)));
+        }
         return new DataColumnDomain(lower, upper, values);
     }
 

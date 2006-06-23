@@ -19,6 +19,8 @@
  */
 package de.unikn.knime.core.data.property;
 
+import java.util.Arrays;
+
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.property.SizeHandler.SizeModel;
@@ -74,6 +76,9 @@ public class SizeModelDouble implements SizeModel {
         return -1;       // incomptible type: -1
     }
     
+    private static final String CFG_MIN = "min";
+    private static final String CFG_MAX = "max";
+    
     /**
      * Saves min and max ranges to the given <code>Config</code>.
      * @param config To write bounds into.
@@ -82,8 +87,10 @@ public class SizeModelDouble implements SizeModel {
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
     public void save(final Config config) {
-        config.addDouble("min", m_min);
-        config.addDouble("max", m_max);
+        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
+            +  Arrays.toString(config.keySet().toArray());
+        config.addDouble(CFG_MIN, m_min);
+        config.addDouble(CFG_MAX, m_max);
     }
     
     /**
@@ -95,8 +102,8 @@ public class SizeModelDouble implements SizeModel {
      */
     public static SizeModelDouble load(final Config config) 
             throws InvalidSettingsException {
-        double min = config.getDouble("min");
-        double max = config.getDouble("max");
+        double min = config.getDouble(CFG_MIN);
+        double max = config.getDouble(CFG_MAX);
         return new SizeModelDouble(min, max);
     }
     
