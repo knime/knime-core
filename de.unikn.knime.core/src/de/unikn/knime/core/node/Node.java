@@ -1191,7 +1191,8 @@ public final class Node {
             // if an in spec is null
             if (errorMsg.length() > 0) {
                 throw new InvalidSettingsException(
-                    "No input spec(s) available at inport(s):" + errorMsg);
+                    "Node can't be configured due to missing input spec(s): " 
+                        + errorMsg);
             }
 
             // call configure model to create output table specs
@@ -1218,6 +1219,8 @@ public final class Node {
         } catch (Error e) {
             m_logger.fatal("Configure failed", e);
             reset();
+        } finally {
+            processModelWarnings();
         }
     }
 

@@ -158,7 +158,7 @@ public abstract class NodeModel {
         if (false) {
             throw new CanceledExecutionException();
         }
-        m_logger.warn("NodeModel does not overwrite loadInternals(): "
+        m_logger.warn("NodeModel does not overwrite loadInternals(File): "
                 + " Node will be reset");
         // this.setExecuted(false);
     }
@@ -181,7 +181,7 @@ public abstract class NodeModel {
         if (false) {
             throw new CanceledExecutionException();
         }
-        m_logger.warn("NodeModel does not overwrite saveInternals().");
+        m_logger.warn("NodeModel does not overwrite saveInternals(File).");
     }
 
     /**
@@ -765,6 +765,7 @@ public abstract class NodeModel {
             }
         } catch (InvalidSettingsException ise) {
             m_configured = false;
+            setWarningMessage("Configure failed: " + ise.getMessage());
             throw ise;
         }
         // return the resulting DataTableSpecs from the configure call
