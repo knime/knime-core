@@ -37,6 +37,7 @@ import de.unikn.knime.core.node.workflow.WorkflowManager;
 /**
  * Job for executing a single node in a Workflow.
  * 
+ * @deprecated This file has been replaced by DummyNodeJob (by Thorsten)
  * @author Florian Georg, University of Konstanz
  */
 public class SingleNodeJob extends Job implements NodeProgressListener {

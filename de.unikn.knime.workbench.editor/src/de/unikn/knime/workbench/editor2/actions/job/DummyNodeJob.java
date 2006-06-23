@@ -37,6 +37,8 @@ public class DummyNodeJob extends Job implements NodeProgressListener,
     private final NodeProgressMonitor m_nodeMonitor;
     private final NodeContainer m_node;
     private IProgressMonitor m_eclipseMonitor;
+    private int m_currentWorked;
+    private String m_currentProgressMessage;
     private volatile boolean m_finished;
     
     public DummyNodeJob(final String name, final NodeProgressMonitor monitor,
@@ -45,9 +47,7 @@ public class DummyNodeJob extends Job implements NodeProgressListener,
         m_nodeMonitor = monitor;
         m_node = node;
         m_node.addListener(this);
-        
         setPriority(LONG);
-        
     }
 
     /**
@@ -57,8 +57,16 @@ public class DummyNodeJob extends Job implements NodeProgressListener,
     @Override
     protected IStatus run(final IProgressMonitor monitor) {
         m_eclipseMonitor = monitor;
-        m_nodeMonitor.addProgressListener(this);        
-        m_eclipseMonitor.beginTask("Executing", 100);
+        m_currentWorked = 0;
+        m_currentProgressMessage = "Executing";
+        m_nodeMonitor.addProgressListener(this);
+        // Start new task (100 %, must be converted from internal double scale)
+        // TODO use IProgressMonitor.UNKNOWN if unknown !!!
+        
+        // TODO workaround for bug #239. The very last progress (remainder 100)
+        // is not shown in the progress bar in eclipse. If we set it to 101
+        // here, it will be shown with little space to the right.
+        m_eclipseMonitor.beginTask(m_currentProgressMessage, 101);
         
         try {
             while (!m_finished) {
@@ -80,15 +88,35 @@ public class DummyNodeJob extends Job implements NodeProgressListener,
     }
 
     /**
+     * Updates UI after progress has changed.
+     * 
      * @see de.unikn.knime.core.node.NodeProgressListener
-     *  #progressChanged(double, java.lang.String)
+     *      #progressChanged(double, java.lang.String)
      */
-    public void progressChanged(final double progress, final String message) {
-        int worked = (int)Math.round(
-                Math.max(0, Math.min(progress * 100, 100)));
+    public synchronized void progressChanged(final double progress,
+            final String message) {
 
-        m_eclipseMonitor.worked(worked);
-        m_eclipseMonitor.subTask(message == null ? "" : message);        
+        int newWorked = (int)Math.round(
+                Math.max(0, Math.min(progress * 100, 100)));
+        boolean change = newWorked > m_currentWorked 
+            || !m_currentProgressMessage.equals(message);
+        
+        if (change) {
+            // TODO this does not work if we don't know if progress is provided
+            int worked = newWorked - m_currentWorked; 
+            if (worked > 0) { // only update if something changed
+                m_eclipseMonitor.worked(worked);
+                m_currentWorked = newWorked;
+            }
+
+            if (!m_currentProgressMessage.equals(message)) {
+                m_eclipseMonitor.subTask(message == null ? "" : message);
+            }
+
+            m_currentProgressMessage = message == null ? "" : message;
+
+        }
+
     }
 
     /**
