@@ -1,5 +1,6 @@
 /* @(#)$RCSfile$ 
- * $Revision: 2187 $ $Date: 2006-05-26 13:47:51 +0200 (Fr, 26 Mai 2006) $ $Author: dill $
+ * $Revision: 2187 $ $Date: 2006-05-26 13:47:51 +0200 (Fr, 26 Mai 2006) $ 
+ * $Author: dill $
  * 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
@@ -88,8 +89,6 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      *            elements available as inputs.
      * @param nrPredParamsOuts The number of <code>PredictorParams</code>
      *            objects available at the output.
-     * @see NodeModel#loadPredictorParams(int, PredictorParams)
-     * @see NodeModel#savePredictorParams(int, PredictorParams)
      */
     public InterruptibleNodeModel(final int nrInPorts, final int nrOutPorts,
             final int nrPredParamsIns, final int nrPredParamsOuts) {
@@ -163,7 +162,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      */
     public synchronized void pause(final boolean b) {
         m_pause = b;
-        if(!m_pause){
+        if (!m_pause) {
             notify();
         }
     }
@@ -259,7 +258,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
                     }
                 }
             } else if (!isPaused()) {
-                synchronized(this){
+                synchronized (this) {
                     // LOGGER.debug("execute one iteration");
                     executeOneIteration();
                     incrementIterationCounter();

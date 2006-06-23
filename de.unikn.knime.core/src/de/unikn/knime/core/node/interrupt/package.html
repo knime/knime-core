@@ -1,0 +1,31 @@
+<body>
+This package contains the necessary classes for an interruptible framework.
+The <code>InterruptibleNodeModel</code> consists of three abstract methods:
+<li>
+	<ul><code>init(DataTable[] input)</code></ul>
+	<ul><code>executeOneIteration()</code></ul>
+	<ul><code>DataTable[] getOutput()</code></ul>
+</li>
+When an InterruptibleNodeModel is executed, first the <code>init m(DataTable[])</code> 
+method is called. The model starts with <code>paused = true</code>. 
+When this is set to <code>paused = false</code> the
+<code>executeOneIteration</code> method is called until the model is set to the 
+paused state again. In this way the model could be run and paused arbitrary often.
+When the model is set to <code>finish()</code> the 
+<code>getOutput()</code>method is called and the result is provided at the outport 
+and the model is executed and must be resetted for a new run.
+<br />
+
+Existing models can be easily be adapted to an interruptible model, since most 
+of  all models contain a <code>for-</code> or <code>while-</code>loop. 
+Then the content of this loop has to be put into <code>executeOneIteration</code>
+method.
+<br />
+
+A default implementation for the <code>InterruptibleNodeView</code> is also provided, with 
+some default control elements alwasy on top. These control elements are contained 
+in the <code>InterruptControlPanel</code>. They are a play, break and finish and
+a netx step button and a slider to adjust the delay how often the 
+<code>InterruptibleNodeView</code> is refreshed.
+
+</body>

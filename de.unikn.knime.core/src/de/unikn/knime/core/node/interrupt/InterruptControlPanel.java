@@ -18,6 +18,10 @@ import javax.swing.JSlider;
  */
 public class InterruptControlPanel extends JPanel {
 
+    private static final int MINOR_TICKS = 5;
+
+    private static final int MAJOR_TICKS = 20;
+
     /**
      * The identifier for the event to break and pause the execution of the
      * InterruptibleNodeModel.
@@ -77,8 +81,8 @@ public class InterruptControlPanel extends JPanel {
 
         m_delaySlider = new JSlider(JSlider.HORIZONTAL, 0, SLIDER_MAX,
                 InterruptibleNodeModel.INITIAL_DELAY);
-        m_delaySlider.setMajorTickSpacing(20);
-        m_delaySlider.setMinorTickSpacing(5);
+        m_delaySlider.setMajorTickSpacing(MAJOR_TICKS);
+        m_delaySlider.setMinorTickSpacing(MINOR_TICKS);
         m_delaySlider.setPaintTicks(true);
         m_delaySlider.setPaintLabels(true);
 
