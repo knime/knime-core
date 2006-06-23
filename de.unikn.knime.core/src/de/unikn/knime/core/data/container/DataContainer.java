@@ -228,8 +228,12 @@ public class DataContainer implements RowAppender {
             }
             if (DoubleCell.TYPE.isASuperTypeOf(colType)) {
                 if (initDomain) {
-                    m_minCells[i] = colSpec.getDomain().getLowerBound();
-                    m_maxCells[i] = colSpec.getDomain().getUpperBound();
+                    DataCell min = colSpec.getDomain().getLowerBound();
+                    DataCell max = colSpec.getDomain().getLowerBound();
+                    m_minCells[i] = 
+                        min != null ? min : DataType.getMissingCell();
+                    m_maxCells[i] = 
+                        max != null ? max : DataType.getMissingCell();
                 } else {
                     m_minCells[i] = DataType.getMissingCell();
                     m_maxCells[i] = DataType.getMissingCell();
