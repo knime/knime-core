@@ -123,16 +123,15 @@ public class FileReaderNodeModel extends NodeModel {
             throw new InvalidSettingsException(status.getAllErrorMessages(10));
         }
         
-        // we always want to traverse through the entire table here to make
-        // sure that warnings/errors/exceptions occure here, rather than 
-        // somewhere later in the flow where nobody would relate them to the
-        // filereader settings.
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
         FileTable fTable = new FileTable(tSpec, m_frSettings);
         
         // create a DataContainer and fill it with the rows read. It is faster
         // then reading the file everytime (for each row iterator), and it
-        // collects the domain for each column for us.
+        // collects the domain for each column for us. Also, if things fail,
+        // the error message is printed during filereader execution (were it
+        // belongs to) and not some time later when a node uses the row 
+        // iterator from the file table.
         DataTable cacheTable = DataContainer.cache(fTable, exec);
         return new DataTable[] {cacheTable};
     }
@@ -156,7 +155,7 @@ public class FileReaderNodeModel extends NodeModel {
         }
 
         // see if settings are good enough for execution
-        SettingsStatus status = m_frSettings.getStatusOfSettings();
+        SettingsStatus status = m_frSettings.getStatusOfSettings(true, null);
         if (status.getNumOfErrors() == 0) {
             return new DataTableSpec[] {m_frSettings
                     .createDataTableSpec()};
@@ -181,14 +180,13 @@ public class FileReaderNodeModel extends NodeModel {
                 settings);
 
         // check consistency of settings.
-        SettingsStatus status = newSettings.getStatusOfSettings(true, null);
+        SettingsStatus status = newSettings.getStatusOfSettings();
         if (status.getNumOfErrors() > 0) {
             throw new InvalidSettingsException(status.getAllErrorMessages(0));
         }
 
         if (!validateOnly) {
             // everything looks good - take over the new settings.
-            // If we are supposed to.
             m_frSettings = newSettings;
             // save the filename to our filehistory
             StringHistory h = StringHistory.getInstance(FILEREADER_HISTORY_ID);
