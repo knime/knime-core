@@ -234,41 +234,47 @@ public abstract class InterruptibleNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws Exception {
         m_inData = inData;
         init(inData);
-        while (!isFinished()) {
-            exec.checkCanceled();
-            if (isFinished()) {
-                LOGGER.debug(Thread.currentThread().getName()
-                        + " says: 'bye, bye...'");
-                break;
-            }
-            if (isPaused()) {
-                while (isPaused() && !isFinished()) {
-                    exec.checkCanceled();
-                    try {
-                        synchronized (this) {
-                            while (isPaused() && !isFinished()) {
-                                wait();
+        try {
+            while (!isFinished()) {
+                exec.checkCanceled();
+                if (isFinished()) {
+                    LOGGER.debug(Thread.currentThread().getName()
+                            + " says: 'bye, bye...'");
+                    break;
+                }
+                if (isPaused()) {
+                    while (isPaused() && !isFinished()) {
+                        exec.checkCanceled();
+                        try {
+                            synchronized (this) {
+                                while (isPaused() && !isFinished()) {
+                                    wait();
+                                }
                             }
+                            // Thread.sleep(SLEEPING_MILLIS);
+                        } catch (InterruptedException ie) {
+                            ie.printStackTrace();
+                            LOGGER.debug("interrupted while sleeping");
+                            break;
                         }
-                        // Thread.sleep(SLEEPING_MILLIS);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                        LOGGER.debug("interrupted while sleeping");
-                        break;
                     }
-                }
-            } else if (!isPaused()) {
-                synchronized (this) {
-                    // LOGGER.debug("execute one iteration");
-                    executeOneIteration();
-                    incrementIterationCounter();
-                    if (getNumberOfIterations() % m_delay == 0) {
-                        // LOGGER.debug("notify views at iteration nr.: "
-                        // + getNumberOfIterations());
-                        notifyViews(this);
+                } else if (!isPaused()) {
+                    synchronized (this) {
+                        // LOGGER.debug("execute one iteration");
+                        executeOneIteration();
+                        incrementIterationCounter();
+                        if (getNumberOfIterations() % m_delay == 0) {
+                            // LOGGER.debug("notify views at iteration nr.: "
+                            // + getNumberOfIterations());
+                            notifyViews(this);
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            finish();
+            e.printStackTrace();
+            throw new Exception(e);
         }
         LOGGER.debug(this.getClass().getSimpleName()
                 + " says: 'I'm down and out...'");
