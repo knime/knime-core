@@ -592,8 +592,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @param config Write column properties into this object.
      */
     public void save(final Config config) {
-        assert config.keySet().isEmpty() 
-            : Arrays.toString(config.keySet().toArray()); 
+        assert config.keySet().isEmpty() : "Config must be empty: " 
+            + Arrays.toString(config.keySet().toArray()); 
         config.addString(CFG_SPEC_NAME, m_name);
         config.addInt(CFG_NR_COLUMNS, m_columnSpecs.length);
         for (int i = 0; i < m_columnSpecs.length; i++) {
