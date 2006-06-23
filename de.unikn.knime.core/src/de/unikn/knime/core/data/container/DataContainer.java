@@ -461,7 +461,7 @@ public class DataContainer implements RowAppender {
         try {
             for (RowIterator it = table.iterator(); it.hasNext(); row++) {
                 DataRow next = it.next();
-                exec.setMessage("Caching row " + row + " (\"" 
+                exec.setMessage("Caching row #" + (row + 1) + " (\"" 
                         + next.getKey() + "\")");
                 exec.checkCanceled();
                 buf.addRowToTable(next);
