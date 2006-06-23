@@ -260,7 +260,7 @@ public final class DataColumnSpec {
             color = ColorHandler.load(config.getConfig(CFG_COLORS));
         }
         SizeHandler size = null;
-        if (config.containsKey(CFG_COLORS)) {
+        if (config.containsKey(CFG_SIZES)) {
             size = SizeHandler.load(config.getConfig(CFG_SIZES));
         }
         return new DataColumnSpec(name, type, domain, properties, size, color);
