@@ -579,16 +579,25 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                 .iterator();
     }
     
+    /** Key for this specs name. */
+    private static final String CFG_SPEC_NAME   = "spec_name";
+    /** Key for number of columns within this spec. */
+    private static final String CFG_NR_COLUMNS  = "number_columns";
+    /** Key for column spec sub-configs. */
+    private static final String CFG_COLUMN_SPEC = "column_spec_";
+    
     /**
      * Saves name and all <code>DataColumnSpec</code> objects to the given
      * <code>Config</code> object.
      * @param config Write column properties into this object.
      */
     public void save(final Config config) {
-        config.addString("name", m_name);
-        config.addInt("nr_columns", m_columnSpecs.length);
+        assert config.keySet().isEmpty() 
+            : Arrays.toString(config.keySet().toArray()); 
+        config.addString(CFG_SPEC_NAME, m_name);
+        config.addInt(CFG_NR_COLUMNS, m_columnSpecs.length);
         for (int i = 0; i < m_columnSpecs.length; i++) {
-            Config column = config.addConfig("column_" + i);
+            Config column = config.addConfig(CFG_COLUMN_SPEC + i);
             m_columnSpecs[i].save(column);
         }
     }
@@ -603,11 +612,11 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      */
     public static DataTableSpec load(final Config config) 
             throws InvalidSettingsException {
-        String name = config.getString("name");
-        int ncols = config.getInt("nr_columns");
+        String name = config.getString(CFG_SPEC_NAME);
+        int ncols = config.getInt(CFG_NR_COLUMNS);
         DataColumnSpec[] specs = new DataColumnSpec[ncols]; 
         for (int i = 0; i < ncols; i++) {
-            Config column = config.getConfig("column_" + i);
+            Config column = config.getConfig(CFG_COLUMN_SPEC + i);
             specs[i] = DataColumnSpec.load(column);
         }
         return new DataTableSpec(name, specs);
