@@ -21,6 +21,7 @@ package de.unikn.knime.core.data;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -178,15 +179,19 @@ public final class DataColumnProperties implements Cloneable {
         return m_props.hashCode();
     }
     
+    private static final String CFG_SUBCONFIG = "properties.subconfig";
+    
     /**
-     * Saves all key-value pairs to the given <code>Config</code>. 
+     * Saves all key-value pairs to the given <code>Config</code> by adding
+     * a subconfig.
      * @param config Write properties into this object.
      */
     public void save(final Config config) {
-        String[] keys = m_props.keySet().toArray(new String[0]);
-        config.addStringArray("keys", keys);
-        for (int i = 0; i < keys.length; i++) {
-            config.addString(keys[i], getProperty(keys[i]));
+        Config subConfig = config.addConfig(CFG_SUBCONFIG);
+        for (Map.Entry<Object, Object> p : m_props.entrySet()) {
+            String key = (String)p.getKey();
+            String val = (String)p.getValue();
+            subConfig.addString(key, val);
         }
     }
     
@@ -201,10 +206,10 @@ public final class DataColumnProperties implements Cloneable {
     public static DataColumnProperties load(final Config config) 
             throws InvalidSettingsException {
         Hashtable<String, String> table = new Hashtable<String, String>();
-        String[] keys = config.getStringArray("keys");
-        for (int i = 0; i < keys.length; i++) {
-            table.put(keys[i], config.getString(keys[i]));
-        }        
+        Config subConfig = config.getConfig(CFG_SUBCONFIG);
+        for (String key : subConfig) {
+            table.put(key, subConfig.getString(key));
+        }
         return new DataColumnProperties(table);
     }
 
