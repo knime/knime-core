@@ -232,8 +232,8 @@ public class FileTokenizer {
 
         m_settingsLocked = true;
 
-        // if the last token got pushed back just return it again.
         if (m_pushedBack) {
+            // if the last token got pushed back just return it again.
             m_pushedBack = false;
             return m_lastToken;
         }
@@ -248,16 +248,14 @@ public class FileTokenizer {
         m_lastToken = null;
         m_newToken.setLength(0);
         m_lastQuotes = null;
-        int lastEndQuoteIdx = -1; // the idx of the end quote last seen or added
         
+        int lastEndQuoteIdx = -1; // the idx of the end quote last seen or added
         int c = getNextChar();
         while (c != EOF) {
-
             int ctype = 0;
             if (ctype <= MAX_CHAR) {
                 ctype = m_charType[c & MAX_CHAR];
             }
-
             if (ctype == 0) {
                 // it's an ordinary character - just add it to the result
                 m_newToken.append((char)c);
@@ -398,7 +396,10 @@ public class FileTokenizer {
             // m_currIdx points to the last char read from the buffer
             if (m_eobIdx == m_currIdx) {
                 // we need to read a new character from the stream
-                m_readBuffer[m_currIdx] = m_source.read();
+                if ((m_readBuffer[m_currIdx] = m_source.read()) == -1) {
+                    // seen the EOF. Any further read will cause IOException.
+                    m_source.close();
+                }   
                 if (m_readBuffer[m_currIdx] == CR) {
                     // read the next char to see if we need to swallow the CR
                     m_eobIdx = (m_eobIdx + 1) % BUFFER_LENGTH;
@@ -448,6 +449,13 @@ public class FileTokenizer {
         assert m_currIdx != m_eobIdx : "TokenizerPutBack: Buffer overrun!";
     }
 
+    /*
+     * Discards all characters (possibly) stored (pushed back) in the buffer and
+     * causes the next character to be read from the stream.
+     */
+    private void clearReadBuffer() {
+        m_currIdx = m_eobIdx;
+    }
     
     /*
      * This function reads from the stream (or buffer) as long as it gets spaces
@@ -1008,6 +1016,23 @@ public class FileTokenizer {
         return m_lineNo;
     }
 
+    /**
+     * Closes the stream the tokenizer reads from. After the tokenizer read the
+     * EOF from the stream it closes it automatically. If it's required to close
+     * the stream before the end is read, you can call this method. A call to
+     * <code>nextToken()</code> after a call to this token will return 
+     * <code>null</code> (indicating the end of the file).
+     */
+    public void closeSourceStream() {
+        // discard any characters pushed back. 
+        clearReadBuffer();
+        try {
+            m_source.close();
+        } catch (IOException ioe) {
+            // okay, then don't close it.
+        }
+    }
+    
     /**
      * Set new user settings in this tokenizer. The only way to configure this
      * tokenizer is to create an instance of the

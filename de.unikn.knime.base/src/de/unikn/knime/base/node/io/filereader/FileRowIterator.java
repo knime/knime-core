@@ -33,6 +33,9 @@ import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.StringCell;
 
 /**
+ * Row iterator for the FileTable. 
+ * <p>
+ * The iterator provides a method 
  * 
  * @author Peter Ohl, University of Konstanz
  * 
@@ -140,6 +143,7 @@ final class FileRowIterator extends RowIterator {
             token = m_tokenizer.nextToken();
 
             if (token == null) {
+                // Reading the EOF closes the stream.
                 return false;
             }
 
@@ -189,8 +193,7 @@ final class FileRowIterator extends RowIterator {
             try {
                 token = m_tokenizer.nextToken();
             } catch (FileTokenizerException fte) {
-                m_exceptionThrown = true;
-                throw createException(fte.getMessage() + " (Source: "
+                throw prepareForException(fte.getMessage() + " (Source: "
                         + m_frSettings.getDataFileLocation() + ", line "
                         + m_tokenizer.getLineNumber() + ")", m_tokenizer
                         .getLineNumber(), rowHeader, row);
@@ -227,8 +230,7 @@ final class FileRowIterator extends RowIterator {
         // In case we've seen a row delimiter before the row was complete:
         // puke and die
         if (createdCols < noOfCols) {
-            m_exceptionThrown = true;
-            throw createException("Too few data elements in row "
+            throw prepareForException("Too few data elements in row "
                     + "(Source: '" + m_frSettings.getDataFileLocation()
                     + "' line: " + m_tokenizer.getLineNumber() + ")",
                     m_tokenizer.getLineNumber(), rowHeader, row);
@@ -237,8 +239,7 @@ final class FileRowIterator extends RowIterator {
         // data items in the file than we needed for one row: barf and die.
         token = m_tokenizer.nextToken();
         if (!m_frSettings.isRowDelimiter(token)) {
-            m_exceptionThrown = true;
-            throw createException("Too many data elements in row "
+            throw prepareForException("Too many data elements in row "
                     + "(Source: '" + m_frSettings.getDataFileLocation()
                     + "' line: " + m_tokenizer.getLineNumber() + ")",
                     m_tokenizer.getLineNumber(), rowHeader, row);
@@ -285,8 +286,7 @@ final class FileRowIterator extends RowIterator {
                 int val = Integer.parseInt(data);
                 return new IntCell(val);
             } catch (NumberFormatException nfe) {
-                m_exceptionThrown = true;
-                throw createException("Wrong data format. In line "
+                throw prepareForException("Wrong data format. In line "
                         + m_tokenizer.getLineNumber() + " read '" + data
                         + "' for an integer", m_tokenizer.getLineNumber(),
                         rowHeader, row);
@@ -296,7 +296,7 @@ final class FileRowIterator extends RowIterator {
             if (m_customDecimalSeparator) {
                 // we must reject tokens with a '.'. 
                 if (data.indexOf('.') >= 0) {
-                    throw createException("Wrong data format. In line "
+                    throw prepareForException("Wrong data format. In line "
                             + m_tokenizer.getLineNumber() + " read '" + data
                             + "' for a floating point.", m_tokenizer
                             .getLineNumber(), rowHeader, row);
@@ -307,15 +307,13 @@ final class FileRowIterator extends RowIterator {
                 double val = Double.parseDouble(dblData);
                 return new DoubleCell(val);
             } catch (NumberFormatException nfe) {
-                m_exceptionThrown = true;
-                throw createException("Wrong data format. In line "
+                throw prepareForException("Wrong data format. In line "
                         + m_tokenizer.getLineNumber() + " read '" + data
                         + "' for a floating point.", m_tokenizer
                         .getLineNumber(), rowHeader, row);
             }
         } else {
-            m_exceptionThrown = true;
-            throw createException("Cannot create DataCell of type "
+            throw prepareForException("Cannot create DataCell of type "
                     + type.toString() + ". Looks like an internal error.", 
                     m_tokenizer.getLineNumber(), rowHeader, row);
         }
@@ -409,9 +407,24 @@ final class FileRowIterator extends RowIterator {
 
     }
 
-    private FileReaderException createException(final String msg,
+    /* !!!!!!!!!!
+     * Creates the exception object (storing the last read items in the row
+     * of the exception), sets the global "exception thrown" flag, and closes
+     * the input stream.
+     * !!!!!!!!!!
+     */
+    private FileReaderException prepareForException(final String msg,
             final int lineNumber, final DataCell rowHeader,
             final DataCell[] cellsRead) {
+        
+        /* 
+         * indicate we have thrown (actually will throw...) an exception, and
+         * close the stream as we will not read anymore from the stream after
+         * the exception. 
+         */
+        m_exceptionThrown = true;
+        m_tokenizer.closeSourceStream();
+
         DataCell[] errCells = new DataCell[cellsRead.length];
         System.arraycopy(cellsRead, 0, errCells, 0, errCells.length);
 
