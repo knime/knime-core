@@ -50,7 +50,7 @@ import org.eclipse.ui.dialogs.ContainerSelectionDialog;
  */
 public class NewWorkflowPage extends WizardPage {
 
-    private static final String INITIAL_FILE_NAME_PREFIX = "Workflow";
+    private static final String INITIAL_FILE_NAME_PREFIX = "workflow";
 
     private static final String INITIAL_FILE_NAME_EXTENSION = ".knime";
 
