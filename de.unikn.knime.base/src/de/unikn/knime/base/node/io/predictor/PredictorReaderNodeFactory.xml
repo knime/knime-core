@@ -8,8 +8,8 @@
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>This node reads any prediction model from a file. Connect the output 
-	 	port to a model input port of any prediction model requiring node. Enter
+		<intro>This node reads any model from a file. Connect the output 
+	 	port to a model input port of any model requiring node. Enter
 	 	the source location in the configuration dialog of the node. When
 	 	executed, the node reads the model from the XML description in 
 	 	the specified file and provides it at its output port.
@@ -17,6 +17,6 @@
 	</fullDescription>
 	
 	<ports>
-		<predParamOut index="0">The prediction model just read.</predParamOut>
+		<predParamOut index="0">The model just read.</predParamOut>
 	</ports>	
 </knimeNode>
