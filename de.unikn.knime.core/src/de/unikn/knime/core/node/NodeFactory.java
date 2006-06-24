@@ -273,6 +273,9 @@ public abstract class NodeFactory {
      */
     private URL readIconFromXML() {
         String imagePath = m_knimeNode.getAttribute("icon");
+        if (imagePath.startsWith("./")) {
+            imagePath = imagePath.substring("./".length());
+        }
         if (!imagePath.startsWith("/")) {
             imagePath = getClass().getPackage().getName().replace('.', '/')
                     + "/" + imagePath;
