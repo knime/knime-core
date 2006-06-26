@@ -470,7 +470,7 @@ public abstract class NodeFactory {
             if (value == null || value.length() == 0) {
                 return;
             }
-            destList.set(index, value.trim().replace('\n', ' '));
+            destList.set(index, value.trim().replaceAll("(?:\\s+|\n)", " "));
         }
     }
 
@@ -562,7 +562,8 @@ public abstract class NodeFactory {
         if ((m_views == null) || ((e = m_views.get(index)) == null)) {
             return "No description available";
         } else {
-            return e.getFirstChild().getNodeValue().trim().replace('\n', ' ');
+            return e.getFirstChild().getNodeValue().trim()
+                .replaceAll("(?:\\s+|\n", " ");
         }
     }
 
