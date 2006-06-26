@@ -112,5 +112,22 @@ public final class ColorModelNominal implements ColorModel {
         }
         return new ColorModelNominal(map);
     }
+
+    /**
+     * @return A String for this <code>ColorModel</code> as list of 
+     * <code>DataCell</code> to <code>Color</code> mapping.
+     */
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        for (DataCell cell : m_map.keySet()) {
+            Color color = m_map.get(cell).getColor();
+            if (buf.length() > 0) {
+                buf.append(",");
+            }
+            buf.append(cell.toString() + "->" + color.toString());
+        }
+        return "[" + buf.toString() + "]";
+    }
     
 }   

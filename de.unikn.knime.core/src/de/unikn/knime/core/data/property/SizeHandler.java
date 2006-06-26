@@ -104,6 +104,15 @@ public final class SizeHandler implements PropertyHandler {
     }
     
     /**
+     * @return String summary of the underlying <code>SizeModel</code>.
+     * @see SizeModel#toString()
+     */
+    @Override
+    public String toString() {
+        return m_model.toString();
+    }
+    
+    /**
      * Internal <code>SizeModel</code> used to request sizes by 
      * <code>DataCell</code> attribut value.
      */

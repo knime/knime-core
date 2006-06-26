@@ -110,6 +110,16 @@ public final class ColorHandler implements PropertyHandler {
                     + modelClass);
         }
     }
+    
+    /**
+     * @return String summary of the underlying <code>ColorModel</code>.
+     * @see ColorModel#toString()
+     */
+    @Override
+    public String toString() {
+        return m_model.toString();
+    }
+    
  
     /**
      * Interface for allowing requests for color settings. Only package visible.
