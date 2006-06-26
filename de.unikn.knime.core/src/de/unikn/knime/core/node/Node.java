@@ -224,7 +224,7 @@ public final class Node {
      *        structure.
      * @throws IOException If the node settings file can't be found or read.
      * @throws InvalidSettingsException If the settings are wrong.
-     * @throws CanceledExecutionException 
+     * @throws CanceledExecutionException If loading was canceled. 
      */
     public void load(final File nodeFile, final ExecutionMonitor exec)
             throws IOException, InvalidSettingsException,
@@ -262,11 +262,13 @@ public final class Node {
 
         // read model and load settings
         try {
+            NodeSettings modelSettings = settings.getConfig("model");
             if (m_model instanceof SpecialNodeModel) {
                 ((SpecialNodeModel) m_model).loadValidatedSettingsFrom(nodeFile,
-                        settings.getConfig("model"), exec);
+                        modelSettings, exec);
             } else {            
-                m_model.loadSettingsFrom(settings.getConfig("model"));
+                m_model.validateSettings(modelSettings);
+                m_model.loadSettingsFrom(modelSettings);
             }            
         } catch (InvalidSettingsException ise) {
             m_logger.warn("Unable to load settings: " + ise.getMessage());
@@ -281,7 +283,6 @@ public final class Node {
             throw new InvalidSettingsException(e);
         }
 
-        
         m_nodeDir = nodeFile.getParentFile();
         
         // if node was configured
