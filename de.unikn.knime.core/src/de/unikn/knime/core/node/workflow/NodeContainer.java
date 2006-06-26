@@ -116,13 +116,9 @@ public class NodeContainer implements NodeStateListener {
     // event and forward it.
     private final List<NodeStateListener> m_eventListeners;
     
-    private boolean m_executionCanceled;
-
     // for execution of the Node in its own Thread, hold status
     // information of the execution thread...
     private boolean m_executionRunning;
-
-    private boolean m_executionSuccess;
 
     // Also hold an object storing information about this node's
     // position on the visual representation of this workflow (or
@@ -142,9 +138,6 @@ public class NodeContainer implements NodeStateListener {
 
     // ...and an array of predecessors (only one per port!)
     private final Vector<NodeContainer> m_pred;
-
-    // ... and a progress monitor as well as the thread itself.
-    private NodeProgressMonitor m_progressMonitor;
 
     // ...for each port a list of successors...
     private final Vector<List<NodeContainer>> m_succ;
@@ -294,33 +287,6 @@ public class NodeContainer implements NodeStateListener {
             m_succ.set(port, new ArrayList<NodeContainer>());
         }
         m_succ.get(port).add(nc);
-    }
-
-    /**
-     * attempt to cancel execution by setting corresponding flag in.
-     * ExecutionMonitor
-     */
-    public void cancelExecution() {
-        if (m_progressMonitor != null) {
-            m_progressMonitor.setExecuteCanceled();
-            // TODO needs to come back from Monitor not just set here!
-            // but we need Node to tell us that execution was cancelled...
-            m_executionCanceled = true;
-        }
-    }
-
-    /**
-     * @return Returns whether the execution terminated successfully
-     */
-    public synchronized boolean executionSucceeded() {
-        return m_executionSuccess;
-    }
-
-    /**
-     * @return Returns whether the execution was canceled prematurely
-     */
-    public synchronized boolean executionWasCanceled() {
-        return m_executionCanceled;
     }
 
     /**
@@ -814,6 +780,10 @@ public class NodeContainer implements NodeStateListener {
         m_node.resetAndConfigure();
     }
 
+    void configure() {
+        m_node.configure();
+    }
+    
     // ////////////////////////
     // Event Listener handling
     // ////////////////////////
@@ -915,31 +885,22 @@ public class NodeContainer implements NodeStateListener {
         m_executionRunning = true;
         // ok, let's start execution:
 
-        // so far execution was unsuccessful
-        m_executionSuccess = false;
-        // ...and not canceled
-        m_executionCanceled = false;
-        // create the actual worker thread and remember Progress Monitor
-        m_progressMonitor = pm;
         Runnable r = new Runnable() {
             public void run() {
                 try {
+                    pm.setMessage("Running");
                     // executeNode() should return as soon as possible if
                     // canceled - or after it has been finished of course
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
-                    m_executionSuccess = m_node
-                            .execute(new ExecutionMonitor(pm));
+                    m_node.execute(new ExecutionMonitor(pm));
                 } catch (Exception e) {
                     // some other error - this should never happen!
-                    m_executionSuccess = false;
                     m_logger.fatal("Fatal exception", e);
                 } catch (AssertionError ae) {
-                    m_executionSuccess = false;
                     m_logger.assertLog(false, ae.getMessage(), ae);
                 } catch (Error e) {
                     // some other error - should never happen!
-                    m_executionSuccess = false;
                     m_logger.fatal("Fatal error", e);
                 } finally {
                     // and always clean up, no matter how we got out of here

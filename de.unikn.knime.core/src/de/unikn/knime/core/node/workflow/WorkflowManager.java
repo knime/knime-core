@@ -133,7 +133,12 @@ public class WorkflowManager implements WorkflowListener {
             throws InvalidSettingsException, CanceledExecutionException, 
                    IOException {
         this();
+        load(workflowFile);
+    }
 
+    
+    public void load(final File workflowFile) throws IOException,
+    InvalidSettingsException, CanceledExecutionException {
         if (!workflowFile.isFile()
                 || !workflowFile.getName().equals(WORKFLOW_FILE)) {
             throw new IOException("File must be named: \"" + WORKFLOW_FILE
@@ -161,16 +166,16 @@ public class WorkflowManager implements WorkflowListener {
                 newNode.getNode().load(nodeFile, exec);
             } catch (IOException ioe) {
                 LOGGER.warn("Unable to load node internals for: "
-                        + newNode.getNameWithID());
+                        + newNode.getNameWithID(), ioe);
                 newNode.getNode().resetAndConfigure();
             } catch (InvalidSettingsException ise) {
                 LOGGER.warn("Unable to load settings for: " 
-                        + newNode.getNameWithID());
+                        + newNode.getNameWithID(), ise);
                 newNode.getNode().resetAndConfigure();
             }
-        }
+        }        
     }
-
+    
     /**
      * Only load internal workflow manager settings, init nodes and connections.
      * No NodeSettings, DataTableSpec, DataTable, or PredictiveParams are
@@ -926,7 +931,7 @@ public class WorkflowManager implements WorkflowListener {
         assert (m_connectionsByID.size() == 0);
         assert (m_idsByNode.size() == 0);
         m_runningConnectionID = -1;
-        m_runningNodeID = -1;
+        m_runningNodeID = 0;
     }
 
     
@@ -1054,63 +1059,44 @@ public class WorkflowManager implements WorkflowListener {
     private final WorkflowExecutor m_executor;
     
     
-    private class WorkflowExecutor extends Thread implements NodeStateListener {
+    private class WorkflowExecutor implements NodeStateListener {
         private final List<NodeContainer> m_waitingNodes =
             new LinkedList<NodeContainer>();
         private final List<NodeContainer> m_runningNodes =
             new LinkedList<NodeContainer>();
-        /**
-         * TODO 
-         */
-        public WorkflowExecutor() {
-            super("KNIME Workflow Executor");
-            setDaemon(true);
-            start();
-        }
         
-        @Override
-        public void run() {
-            while (!isInterrupted()) {
-                synchronized (m_waitingNodes) {
-                    Iterator<NodeContainer> it = m_waitingNodes.iterator();
-                    while (it.hasNext()) {
-                        NodeContainer nc = it.next();
-                        if (nc.getNode().isExecutable()) {
-                            m_runningNodes.add(nc);
-                            it.remove();
-                            
-                            DefaultNodeProgressMonitor pm =
-                                new DefaultNodeProgressMonitor();
-                            fireWorkflowEvent(new WorkflowEvent.NodeStarted(
-                                    nc.getID(), nc, pm));
-                            nc.addListener(this);
-                            nc.startExecution(pm);
-                        } else if (nc.isExecuted()) {
-                            it.remove();
-                        }
-                    }
-                    
-
-                    boolean finished = false;
-                    synchronized (m_runningNodes) {
-                        finished = (m_runningNodes.size() == 0);
-                    }
-                    if (finished) {
-                        synchronized (this) {
-                            notifyAll();
-                        }
-                    }
-
-                    
-                    try {
-                        m_waitingNodes.wait();
-                    } catch (InterruptedException ex) {
-                        // that's ok
+        
+        private void startNewNodes() {
+            synchronized (m_waitingNodes) {
+                Iterator<NodeContainer> it = m_waitingNodes.iterator();
+                while (it.hasNext()) {
+                    NodeContainer nc = it.next();
+                    if (nc.getNode().isExecutable()) {
+                        m_runningNodes.add(nc);
+                        it.remove();
+                        
+                        DefaultNodeProgressMonitor pm =
+                            new DefaultNodeProgressMonitor();
+                        fireWorkflowEvent(new WorkflowEvent.NodeStarted(
+                                nc.getID(), nc, pm));
+                        nc.addListener(this);
+                        nc.startExecution(pm);
+                    } else if (nc.isExecuted()) {
+                        it.remove();
                     }
                 }
-            }
+                
+
+                if (m_runningNodes.size() == 0) {
+                    if (m_waitingNodes.size() > 0) {
+                        LOGGER.warn("Some nodes were still waiting but none is"
+                                + " running: " + m_waitingNodes);
+                    }
+                    m_waitingNodes.clear();
+                    m_waitingNodes.notifyAll();
+                }
+            }            
         }
-        
         
         public void addWaitingNodes(final Collection<NodeContainer> nodes) {
             synchronized (m_waitingNodes) {
@@ -1122,21 +1108,43 @@ public class WorkflowManager implements WorkflowListener {
                         change = true;
                     }
                 }
-                if (change) { m_waitingNodes.notifyAll(); }
+                if (change) { startNewNodes(); }
             }
         }
         
         
-        public void waitUntilFinished() {            
-            synchronized (this) {
-                if ((m_runningNodes.size() > 0)
-                        || (m_waitingNodes.size() != 0)) {
-                    try {
-                        wait();
-                        // wake up all other waiting threads
-                        notifyAll();
-                    } catch (InterruptedException ex) {
-                        // that's ok
+        public void waitUntilFinished(final WorkflowManager wfm) {            
+            synchronized (m_waitingNodes) {
+                while (m_runningNodes.size() > 0) {
+                    // check if any of the nodes in the lists are from the
+                    // passed WFM
+                    boolean interesting = false;
+                    for (NodeContainer nc : m_runningNodes) {
+                        if (wfm.m_nodeContainerByID.values().contains(nc)) {
+                            interesting = true;
+                            break;
+                        }
+                    }
+
+                    if (!interesting) {
+                        for (NodeContainer nc : m_waitingNodes) {
+                            if (wfm.m_nodeContainerByID.values().contains(nc)) {
+                                interesting = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (interesting) {
+                        try {
+                            m_waitingNodes.wait();
+                            // wake up all other waiting threads
+                            m_waitingNodes.notifyAll();
+                        } catch (InterruptedException ex) {
+                            break;
+                        }
+                    } else {
+                        break;
                     }
                 }
             }
@@ -1149,7 +1157,7 @@ public class WorkflowManager implements WorkflowListener {
          */
         public void stateChanged(final NodeStatus state, final int id) {
             if (state instanceof NodeStatus.EndExecute) {
-                synchronized (m_runningNodes) {
+                synchronized (m_waitingNodes) {
                     Iterator<NodeContainer> it = m_runningNodes.iterator();
                     while (it.hasNext()) {
                         NodeContainer nc = it.next();
@@ -1161,10 +1169,8 @@ public class WorkflowManager implements WorkflowListener {
                                     nc.getID(), null, null));
                         }
                     }
-                }
-                
-                
-                synchronized (m_waitingNodes) {
+
+                    startNewNodes();
                     m_waitingNodes.notifyAll();
                 }
             }
@@ -1173,7 +1179,6 @@ public class WorkflowManager implements WorkflowListener {
         public void cancelExecution() {
             synchronized (m_waitingNodes) {
                 m_waitingNodes.clear();
-                m_waitingNodes.notifyAll();
             }
         }
 
@@ -1182,27 +1187,31 @@ public class WorkflowManager implements WorkflowListener {
                 for (NodeContainer nc : nodes) {
                     m_waitingNodes.remove(nc);
                 }
-                m_waitingNodes.notifyAll();
             }
         }
         
         public boolean executionInProgress() {
-            return (m_runningNodes.size() > 0 || m_waitingNodes.size() > 0);
+            System.out.println(m_runningNodes);
+            System.out.println(m_waitingNodes);
+            synchronized (m_waitingNodes) {
+                return (m_runningNodes.size() > 0 || m_waitingNodes.size() > 0);
+            }
         }
     }
+    
     
     public void executeAll(final boolean block) {
         Collection<NodeContainer> nodes = new ArrayList<NodeContainer>();
         findExecutableNodes(nodes);
         m_executor.addWaitingNodes(nodes);
         if (block) {
-            m_executor.waitUntilFinished();
+            m_executor.waitUntilFinished(this);
         }
     }
     
     
     public void waitUntilFinished() {
-        m_executor.waitUntilFinished();
+        m_executor.waitUntilFinished(this);
     }
     
     
@@ -1299,7 +1308,9 @@ public class WorkflowManager implements WorkflowListener {
         findExecutableNodes(nodes, nc);
         
         m_executor.addWaitingNodes(nodes);
-        if (block) { m_executor.waitUntilFinished(); }
+        if (block) {
+            m_executor.waitUntilFinished(this);
+        }
     }
     
     
@@ -1327,6 +1338,12 @@ public class WorkflowManager implements WorkflowListener {
         }
     }
 
+    public void configureNode(final int nodeID) {
+        NodeContainer nodeCont = m_nodeContainerByID.get(nodeID);
+        nodeCont.configure();
+    }
+    
+    
     public void resetAndConfigureAll() {
         if (m_executor.executionInProgress()) {
             throw new IllegalStateException("Node cannot be reset while"

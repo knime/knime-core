@@ -29,20 +29,17 @@ import java.util.Set;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.DataOutPort;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
+import de.unikn.knime.core.node.NodeView;
 import de.unikn.knime.core.node.SpecialNodeModel;
-import de.unikn.knime.core.node.tableinput.DataTableInputFactory;
-import de.unikn.knime.core.node.tableinput.DataTableOutputFactory;
-import de.unikn.knime.core.node.tableinput.ModelInputFactory;
-import de.unikn.knime.core.node.tableinput.ModelOutputFactory;
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
@@ -55,19 +52,18 @@ import de.unikn.knime.core.node.workflow.WorkflowManager;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class MetaNodeModel extends SpecialNodeModel
-    implements WorkflowListener {
-    private static final String WORKFLOW_KEY = "workflow";
+    implements WorkflowListener, NodeStateListener {
     private static final String INOUT_CONNECTIONS_KEY = "inOutConnections";
     
     private WorkflowManager m_internalWFM;
 
     private final NodeContainer[] m_dataInContainer, m_dataOutContainer;
     private final NodeContainer[] m_modelInContainer, m_modelOutContainer;
-    private final MetaInputNodeModel[] m_dataInModels;
-    private final MetaOutputNodeModel[] m_dataOutModels;    
-    private final MetaInputModelNodeModel[] m_modelInModels;
-    private final MetaOutputModelNodeModel[] m_modelOutModels;
-    
+    private final MetaInputModel[] m_dataInModels;
+    private final MetaOutputModel[] m_dataOutModels;    
+    private final MetaInputModel[] m_modelInModels;
+    private final NodeModel[] m_modelOutModels;
+    private boolean m_resetFromInterior;
     
     /*
      * The listeners that are interested in node state changes.
@@ -87,52 +83,32 @@ public class MetaNodeModel extends SpecialNodeModel
      * @param outerDataOuts the number of data output ports
      * @param outerPredParamsIns the number of predictor param input ports
      * @param outerPredParamsOuts the number of predictor param output ports
-     * @param innerDataIns the number of meta data input nodes
-     * @param innerDataOuts the number of meta data output nodes
-     * @param innerPredParamsIns the number of meta model input nodes
-     * @param innerPredParamsOuts the number of meta model output nodes
      * @param factory the factory that created this model
      */
     protected MetaNodeModel(final int outerDataIns, final int outerDataOuts,
             final int outerPredParamsIns, final int outerPredParamsOuts,
-            final int innerDataIns, final int innerDataOuts,
-            final int innerPredParamsIns, final int innerPredParamsOuts,
+            final MetaInputModel[] dataInModels,
+            final MetaInputModel[] modelInModels,
+            final MetaOutputModel[] dataOutModels,
+            final MetaOutputModel[] modelOutModels,
             final MetaNodeFactory factory) {
         super(outerDataIns, outerDataOuts, outerPredParamsIns,
                 outerPredParamsOuts);
 
-        m_dataInContainer = new NodeContainer[innerDataIns];
-        m_dataOutContainer = new NodeContainer[innerDataOuts];
-        m_modelInContainer = new NodeContainer[innerPredParamsIns];
-        m_modelOutContainer = new NodeContainer[innerPredParamsOuts];
+        m_dataInContainer = new NodeContainer[dataInModels.length];
+        m_dataOutContainer = new NodeContainer[dataOutModels.length];
+        m_modelInContainer = new NodeContainer[modelInModels.length];
+        m_modelOutContainer = new NodeContainer[modelOutModels.length];
 
-        m_dataInModels = new MetaInputNodeModel[innerDataIns];
-        m_dataOutModels = new MetaOutputNodeModel[innerDataOuts];
-        m_modelInModels = new MetaInputModelNodeModel[innerPredParamsIns];
-        m_modelOutModels = new MetaOutputModelNodeModel[innerPredParamsOuts];
-
+        m_dataInModels = dataInModels;        
+        m_dataOutModels = dataOutModels;
+        m_modelInModels = modelInModels;        
+        m_modelOutModels = modelOutModels;
         m_myFactory = factory;        
         m_stateListeners = new ArrayList<NodeStateListener>();
     }
 
     
-    /**
-     * Creates a new new meta node model.
-     * 
-     * @param nrDataIns the number of data input ports
-     * @param nrDataOuts the number of data output ports
-     * @param nrPredParamsIns the number of predictor param input ports
-     * @param nrPredParamsOuts the number of predictor param output ports
-     * @param factory the factory that created this model
-     */
-    protected MetaNodeModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns, final int nrPredParamsOuts,
-            final MetaNodeFactory factory) {
-        this(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts,
-             nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts, factory);
-    }
-    
-
     /**
      * The number of inputs and outputs must be provided, the corresponding
      * <code>MetaInputNode</code>s and <code>MetaOutputNode</code>s are created 
@@ -144,10 +120,29 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     protected MetaNodeModel(final int nrIns, final int nrOuts,
             final MetaNodeFactory f) {
-        this(nrIns, nrOuts, 0, 0, f);
+        this(nrIns, nrOuts, 0, 0, createDefaultDataInputModels(nrIns),
+                new MetaInputModel[0], createDefaultDataOutputModels(nrOuts),
+                new MetaOutputModel[0], f);
+    }
+
+        
+    private static MetaInputModel[] createDefaultDataInputModels(final int c) {
+        MetaInputModel[] m = new MetaInputModel[c];
+        for (int i = 0; i < c; i++) {
+            m[i] = new DataInputNodeModel();
+        }
+        return m;
     }
 
     
+    private static MetaOutputModel[] createDefaultDataOutputModels(final int c) {
+        MetaOutputModel[] m = new MetaOutputModel[c];
+        for (int i = 0; i < c; i++) {
+            m[i] = new DataOutputNodeModel();
+        }
+        return m;
+    }
+
     
     /**
      * The inSpecs are manually set in the <code>MetaInputNode</code>s. The
@@ -156,22 +151,22 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+            throws InvalidSettingsException {        
         createInternalWFM();
         
-        for (int i = 0; i < m_dataInModels.length; i++) {
-            m_dataInModels[i].setDataTableSpec(inSpecs[i]);
-            m_internalWFM.resetAndConfigureNode(m_dataInContainer[i].getID());
+        if (!m_resetFromInterior) {
+            for (int i = 0; i < m_dataInModels.length; i++) {
+                m_dataInModels[i].setDataTableSpec(inSpecs[i]);
+                m_internalWFM.configureNode(m_dataInContainer[i].getID());
+            }
         }
         
         // collect all output specs
         DataTableSpec[] outspecs = new DataTableSpec[m_dataOutContainer.length];
         final int min = Math.min(outspecs.length, m_dataOutContainer.length);
         for (int i = 0; i < min; i++) {
-            if ((m_dataOutContainer[i] != null)
-                    && (m_dataOutContainer[0].getOutPorts().size() > 0)) {
-                outspecs[i] = ((DataOutPort) m_dataOutContainer[i]
-                    .getOutPorts().get(0)).getDataTableSpec();
+            if (m_dataOutContainer[i] != null) {
+                outspecs[i] = m_dataOutModels[i].getDataTableSpec();
             }
         }
         return outspecs;
@@ -197,128 +192,26 @@ public class MetaNodeModel extends SpecialNodeModel
         exec.setMessage("Collecting output");
         DataTable[] out = new DataTable[m_dataOutContainer.length];
         for (int i = 0; i < out.length; i++) {
-            out[i] = ((DataOutPort) m_dataOutContainer[i]
-                 .getOutPorts().get(0)).getDataTable();
-            if (out[i] == null) {
-                System.out.println();
-            }
+            out[i] = m_dataOutModels[i].getDataTable();
         }
         return out;
     }
 
-    /**
-     * Loads the Meta Workflow from the settings. Internal references to the
-     * MetaInput and MetaOuput - Nodes are updated.
-     * 
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(NodeSettings)
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
-            throws InvalidSettingsException {
-        createInternalWFM();
-        // load the "internal" workflow
-        if (settings.containsKey(WORKFLOW_KEY)) {
-            m_internalWFM.clear();
-            addInOutNodes();
-
-            m_internalWFM.load(settings.getConfig(WORKFLOW_KEY));
-            addInOutConnections(settings.getConfig(INOUT_CONNECTIONS_KEY));
-        }
-    }
-
-    /**
-     * Returns a factory for the meta data input node with the given index. The
-     * default implementation returns a {@link DataTableInputFactory}.
-     * Subclasses may override this method and return other special factory
-     * which must create subclasses of {@link MetaInputNodeModel}s.
-     * 
-     * @param inputNodeIndex the index of the data input node
-     * @return a factory
-     */
-    protected NodeFactory getDataInputNodeFactory(final int inputNodeIndex) {
-        return new DataTableInputFactory() {
-            @Override
-            public String getOutportDescription(final int index) {
-                return m_myFactory.getInportDescription(inputNodeIndex);
-            }
-
-            @Override
-            public NodeModel createNodeModel() {
-                return new MetaInputNodeModel();
-            }
-        };
+    protected String getOutportDescription(final int inputNodeIndex) {
+        return m_myFactory.getInportDescription(inputNodeIndex);
     }
     
-    /**
-     * Returns a factory for the meta model input node with the given index. The
-     * default implementation returns a {@link ModelInputFactory}. Subclasses
-     * may override this method and return other special factory which must
-     * create subclasses of {@link MetaInputNodeModel}s.
-     * 
-     * @param inputNodeIndex the index of the model input node
-     * @return a factory
-     */
-    protected NodeFactory getModelInputNodeFactory(final int inputNodeIndex) {
-        return new ModelInputFactory() {
-            @Override
-            public String getPredParamOutDescription(final int index) {
-                return m_myFactory.getPredParamInDescription(inputNodeIndex);
-            }                        
-            
-            @Override
-            public NodeModel createNodeModel() {
-                return new MetaInputModelNodeModel();
-            }            
-        };
+    protected String getPredParamOutDescription(final int inputNodeIndex) {
+        return m_myFactory.getPredParamInDescription(inputNodeIndex);
     }
     
 
-    /**
-     * Returns a factory for the meta data output node with the given index. The
-     * default implementation returns a {@link ModelOutputFactory}.
-     * Subclasses may override this method and return other special factory
-     * which must create subclasses of {@link MetaOutputNodeModel}s.
-     * 
-     * @param outputNodeIndex the index of the data input node
-     * @return a factory
-     */
-    protected NodeFactory getModelOutputNodeFactory(final int outputNodeIndex) {
-        return new ModelOutputFactory() {
-            @Override
-            public String getPredParamInDescription(final int index) {
-                return m_myFactory.getPredParamOutDescription(outputNodeIndex);
-            }
-            
-            @Override
-            public NodeModel createNodeModel() {
-                return new MetaOutputNodeModel();
-            }
-        };
+    protected String getPredParamInDescription(final int outputNodeIndex) {
+        return m_myFactory.getPredParamOutDescription(outputNodeIndex);
     }
-    
-    
-    /**
-     * Returns a factory for the meta model output node with the given index.
-     * The default implementation returns a {@link DataTableOutputFactory}.
-     * Subclasses may override this method and return other special factory
-     * which must create subclasses of {@link MetaOutputNodeModel}s.
-     * 
-     * @param outputNodeIndex the index of the data input node
-     * @return a factory
-     */
-    protected NodeFactory getDataOutputNodeFactory(final int outputNodeIndex) {
-        return new DataTableOutputFactory() {
-            @Override
-            public String getInportDescription(final int index) {
-                return m_myFactory.getOutportDescription(outputNodeIndex);
-            }
-            
-            @Override
-            public NodeModel createNodeModel() {
-                return new MetaOutputNodeModel();
-            }            
-        };
+        
+    protected String getInportDescription(final int outputNodeIndex) {
+        return m_myFactory.getOutportDescription(outputNodeIndex);
     }
     
     
@@ -328,27 +221,129 @@ public class MetaNodeModel extends SpecialNodeModel
     private void addInOutNodes() {
         LOGGER.debug("Adding in- and output nodes");
         for (int i = 0; i < m_dataInContainer.length; i++) {
-            NodeFactory f = getDataInputNodeFactory(i);
-            m_dataInModels[i] = (MetaInputNodeModel)f.createNodeModel();
-            m_dataInContainer[i] = m_internalWFM.addNewNode(f);
+            final int temp = i;
+            m_dataInContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+                @Override
+                public NodeModel createNodeModel() {
+                    return m_dataInModels[temp];
+                }
+
+                @Override
+                protected int getNrNodeViews() {
+                    return 0;
+                }
+
+                @Override
+                public NodeView createNodeView(final int viewIndex,
+                        final NodeModel nodeModel) {
+                    return null;
+                }
+
+                @Override
+                protected boolean hasDialog() {
+                    return false;
+                }
+
+                @Override
+                protected NodeDialogPane createNodeDialogPane() {
+                    return null;
+                }
+            });
         }
 
         for (int i = 0; i < m_dataOutContainer.length; i++) {
-            NodeFactory f = getDataOutputNodeFactory(i);
-            m_dataOutModels[i] = (MetaOutputNodeModel)f.createNodeModel();
-            m_dataOutContainer[i] = m_internalWFM.addNewNode(f);
+            final int temp = i;
+            m_dataOutContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+                @Override
+                public NodeModel createNodeModel() {
+                    return m_dataOutModels[temp];
+                }
+
+                @Override
+                protected int getNrNodeViews() {
+                    return 0;
+                }
+
+                @Override
+                public NodeView createNodeView(final int viewIndex,
+                        final NodeModel nodeModel) {
+                    return null;
+                }
+
+                @Override
+                protected boolean hasDialog() {
+                    return false;
+                }
+
+                @Override
+                protected NodeDialogPane createNodeDialogPane() {
+                    return null;
+                }
+            });
+            m_dataOutContainer[i].addListener(this);
         }
 
         for (int i = 0; i < m_modelInContainer.length; i++) {
-            NodeFactory f = getModelInputNodeFactory(i);
-            m_modelInModels[i] = (MetaInputModelNodeModel)f.createNodeModel();
-            m_modelInContainer[i] = m_internalWFM.addNewNode(f);
+            final int temp = i;
+            m_modelInContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+                @Override
+                public NodeModel createNodeModel() {
+                    return m_modelInModels[temp];
+                }
+
+                @Override
+                protected int getNrNodeViews() {
+                    return 0;
+                }
+
+                @Override
+                public NodeView createNodeView(final int viewIndex,
+                        final NodeModel nodeModel) {
+                    return null;
+                }
+
+                @Override
+                protected boolean hasDialog() {
+                    return false;
+                }
+
+                @Override
+                protected NodeDialogPane createNodeDialogPane() {
+                    return null;
+                }
+            });
         }
 
         for (int i = 0; i < m_modelOutContainer.length; i++) {
-            NodeFactory f = getModelOutputNodeFactory(i);
-            m_modelOutModels[i] = (MetaOutputModelNodeModel)f.createNodeModel();
-            m_modelOutContainer[i] = m_internalWFM.addNewNode(f);
+            final int temp = i;
+            m_modelOutContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+                @Override
+                public NodeModel createNodeModel() {
+                    return m_modelOutModels[temp];
+                }
+
+                @Override
+                protected int getNrNodeViews() {
+                    return 0;
+                }
+
+                @Override
+                public NodeView createNodeView(final int viewIndex,
+                        final NodeModel nodeModel) {
+                    return null;
+                }
+
+                @Override
+                protected boolean hasDialog() {
+                    return false;
+                }
+
+                @Override
+                protected NodeDialogPane createNodeDialogPane() {
+                    return null;
+                }
+            });
+            m_modelOutContainer[i].addListener(this);
         }        
     }
     
@@ -378,19 +373,80 @@ public class MetaNodeModel extends SpecialNodeModel
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
     @Override
-    protected void reset() {
-        // TODO reset the internal workflow, but only if is currently not
-        // already resetting i.e. the reset was triggered from an internal node
+    protected void reset() {        
+        if (!m_resetFromInterior && (m_internalWFM != null)) {
+            m_internalWFM.resetAndConfigureAll();
+        }
     }
 
-    /** 
+ 
+    /**
      * @see de.unikn.knime.core.node.SpecialNodeModel
-     *  #saveSettingsTo(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     *  #saveSettingsTo(java.io.File, de.unikn.knime.core.node.NodeSettings,
+     *  de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveSettingsTo(final File nodeFile,
-            final ExecutionMonitor exec) {
+            final NodeSettings settings, final ExecutionMonitor exec) {
         if (m_internalWFM == null) { return; }
+        
+        NodeSettings connections = settings.addConfig(INOUT_CONNECTIONS_KEY);
+        
+        int count = 0;
+        int[] conn = new int[4];
+        
+        for (NodeContainer nc : m_dataInContainer) {
+            List<ConnectionContainer> conncon =
+                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
+            for (ConnectionContainer cc : conncon) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_dataIn_" + count++, conn);
+            }
+        }
+        
+        for (NodeContainer nc : m_dataOutContainer) {
+            ConnectionContainer cc =
+                m_internalWFM.getIncomingConnectionAt(nc, 0);
+            if (cc != null) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_dataOut_" + count++, conn);
+            }
+        }
+
+        for (NodeContainer nc : m_modelInContainer) {
+            List<ConnectionContainer> conncon =
+                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
+            for (ConnectionContainer cc : conncon) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_modelIn_" + count++, conn);
+            }
+        }
+        
+        for (NodeContainer nc : m_modelOutContainer) {
+            ConnectionContainer cc =
+                m_internalWFM.getIncomingConnectionAt(nc, 0);
+            if (cc != null) {
+                conn[0] = cc.getSource().getID();
+                conn[1] = cc.getSourcePortID();
+                conn[2] = cc.getTarget().getID();
+                conn[3] = cc.getTargetPortID();
+                
+                connections.addIntArray("connection_modelOut_" + count++, conn);
+            }
+        }        
+        
         Set<NodeContainer> omitNodes = new HashSet<NodeContainer>();
         for (NodeContainer nc : m_dataInContainer) {
             omitNodes.add(nc);
@@ -479,13 +535,23 @@ public class MetaNodeModel extends SpecialNodeModel
             final int inPortID) {
         createInternalWFM();
         m_dataInModels[inPortID].setDataTable(table);
-        if (table != null) {
-            m_internalWFM.executeUpToNode(m_dataInContainer[inPortID].getID(),
-                    true);
-        }
+        // m_internalWFM.resetAndConfigureNode(m_dataInContainer[inPortID].getID());
     }
 
 
+    /** 
+     * @see de.unikn.knime.core.node.SpecialNodeModel
+     *  #inportHasNewTableSpec(de.unikn.knime.core.data.DataTableSpec, int)
+     */
+    @Override
+    protected void inportHasNewTableSpec(final DataTableSpec spec, 
+            final int inPortID) {
+        createInternalWFM();
+        m_dataInModels[inPortID].setDataTableSpec(spec);
+        m_internalWFM.resetAndConfigureNode(m_dataInContainer[inPortID].getID());
+    }
+
+    
     /** 
      * @see de.unikn.knime.core.node.SpecialNodeModel#inportWasDisconnected(int)
      */
@@ -537,7 +603,16 @@ public class MetaNodeModel extends SpecialNodeModel
     protected final NodeContainer modelInContainer(final int index) {
         return m_modelInContainer[index];
     }
+    
+    protected final MetaInputModel dataInModel(final int index) {
+        return m_dataInModels[index];
+    }
 
+    protected final MetaOutputModel dataOutModel(final int index) {
+        return m_dataOutModels[index];
+    }
+    
+    
     /**
      * Returns the node container for a model output node.
      * 
@@ -557,75 +632,56 @@ public class MetaNodeModel extends SpecialNodeModel
         }        
     }
 
-
-    /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
-        if (m_internalWFM == null) { return; }
-        
-        NodeSettings connections = settings.addConfig(INOUT_CONNECTIONS_KEY);
-        
-        int count = 0;
-        int[] conn = new int[4];
-        
-        for (NodeContainer nc : m_dataInContainer) {
-            List<ConnectionContainer> conncon =
-                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
-            for (ConnectionContainer cc : conncon) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_dataIn_" + count++, conn);
-            }
-        }
-        
-        for (NodeContainer nc : m_dataOutContainer) {
-            ConnectionContainer cc =
-                m_internalWFM.getIncomingConnectionAt(nc, 0);
-            if (cc != null) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_dataOut_" + count++, conn);
-            }
-        }
-
-        for (NodeContainer nc : m_modelInContainer) {
-            List<ConnectionContainer> conncon =
-                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
-            for (ConnectionContainer cc : conncon) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_modelIn_" + count++, conn);
-            }
-        }
-        
-        for (NodeContainer nc : m_modelOutContainer) {
-            ConnectionContainer cc =
-                m_internalWFM.getIncomingConnectionAt(nc, 0);
-            if (cc != null) {
-                conn[0] = cc.getSource().getID();
-                conn[1] = cc.getSourcePortID();
-                conn[2] = cc.getTarget().getID();
-                conn[3] = cc.getTargetPortID();
-                
-                connections.addIntArray("connection_modelOut_" + count++, conn);
-            }
-        }
-    }
     
     protected WorkflowManager internalWFM() {
         createInternalWFM();
         return m_internalWFM;
     }
+
+
+    /** 
+     * @see de.unikn.knime.core.node.SpecialNodeModel
+     *  #loadValidatedSettingsFrom(java.io.File,
+     *  de.unikn.knime.core.node.NodeSettings,
+     *  de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final File nodeFile,
+            final NodeSettings settings, final ExecutionMonitor exec)
+            throws InvalidSettingsException {
+        createInternalWFM();
+        // load the "internal" workflow
+        File f = new File(nodeFile.getParentFile(), "workflow.knime");
+        if (f.exists() && f.isFile()) {
+            m_internalWFM.clear();
+            addInOutNodes();
+
+            try {
+                m_internalWFM.load(f);
+            } catch (IOException ex) {
+                throw new InvalidSettingsException("Could not load internal"
+                        + " workflow");
+            } catch (CanceledExecutionException ex) {
+                throw new InvalidSettingsException("Loading of internal"
+                        + " workflow has been interrupted by user");
+            }
+            addInOutConnections(settings.getConfig(INOUT_CONNECTIONS_KEY));
+        }
+    }
+
+
+    /**
+     * @see de.unikn.knime.core.node.NodeStateListener
+     *  #stateChanged(de.unikn.knime.core.node.NodeStatus, int)
+     */
+    public void stateChanged(final NodeStatus state, final int id) {
+        if (state instanceof NodeStatus.Reset) {
+            m_resetFromInterior = true;
+            try {
+                resetMyself();
+            } finally {
+                m_resetFromInterior = false;
+            }
+        }
+    }    
 }

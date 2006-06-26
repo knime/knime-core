@@ -1,4 +1,4 @@
-/* Created on May 29, 2006 10:18:52 AM by thor
+/* Created on Jun 23, 2006 1:24:01 PM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,65 +21,56 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.PredictorParams;
 
 /**
- * This node model represents a node that just passes all data at the input
- * ports unchanged to the output ports.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public abstract class PassThroughNodeModel extends NodeModel {
-    private final PredictorParams[] m_predictorParams;
-    
-    /**
-     * Creates a new node model that simply passes the input data to the
-     * output ports.
-     * 
-     * @param dataPorts the number of data ports
-     * @param modelPorts the number od model ports
-     */
-    protected PassThroughNodeModel(final int dataPorts,
-            final int modelPorts) {
-        super(dataPorts, dataPorts, modelPorts, modelPorts);
-        m_predictorParams = new PredictorParams[modelPorts];
+public class ModelOutputNodeModel extends MetaOutputModel {
+    private PredictorParams m_predictorParams;
+
+    public ModelOutputNodeModel() {
+        super(0, 0, 1, 0);
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *      #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
      */
     @Override
     protected void saveSettingsTo(final NodeSettings settings) {
-        // this node does not have settings
+        // nothing to do here
+
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     *      #validateSettings(de.unikn.knime.core.node.NodeSettings)
      */
     @Override
     protected void validateSettings(final NodeSettings settings)
-    throws InvalidSettingsException {
-        // this node does not have settings
+            throws InvalidSettingsException {
+        // nothing to do here
+
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *      #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
-    throws InvalidSettingsException {
-        // this node does not have settings
+            throws InvalidSettingsException {
+        // nothing to do here
+
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #execute(de.unikn.knime.core.data.DataTable[],
-     *  de.unikn.knime.core.node.ExecutionMonitor)
+     *      #execute(de.unikn.knime.core.data.DataTable[],
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected DataTable[] execute(final DataTable[] inData,
@@ -92,36 +83,47 @@ public abstract class PassThroughNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // nothing to do
+        m_predictorParams = null;
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #configure(de.unikn.knime.core.data.DataTableSpec[])
+     *      #configure(de.unikn.knime.core.data.DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-    throws InvalidSettingsException {
-        return inSpecs;
+            throws InvalidSettingsException {
+        return new DataTableSpec[0];
     }
 
-    /** 
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #loadPredictorParams(int, de.unikn.knime.core.node.PredictorParams)
+    /**
+     * @see de.unikn.knime.core.node.NodeModel #loadPredictorParams(int,
+     *      de.unikn.knime.core.node.PredictorParams)
      */
     @Override
     protected void loadPredictorParams(final int index,
             final PredictorParams predParams) throws InvalidSettingsException {
-        m_predictorParams[index] = predParams;
+        m_predictorParams = predParams;
     }
 
-    /** 
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #savePredictorParams(int, de.unikn.knime.core.node.PredictorParams)
+    @Override
+    public PredictorParams getPredictorParams() {
+        return m_predictorParams;
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.meta.MetaOutputModel#getDataTable()
      */
     @Override
-    protected void savePredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
-        m_predictorParams[index].copyTo(predParams);
+    public DataTable getDataTable() {
+        return null;
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.meta.MetaOutputModel#getDataTableSpec()
+     */
+    @Override
+    public DataTableSpec getDataTableSpec() {
+        return null;
     }
 }

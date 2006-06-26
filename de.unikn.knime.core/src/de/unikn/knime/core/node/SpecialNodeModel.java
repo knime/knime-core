@@ -20,6 +20,7 @@ package de.unikn.knime.core.node;
 import java.io.File;
 
 import de.unikn.knime.core.data.DataTable;
+import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
 
@@ -130,6 +131,11 @@ public abstract class SpecialNodeModel extends NodeModel {
     }
     
     
+    protected void inportHasNewTableSpec(final DataTableSpec spec,
+            final int inPortID) {
+        // nothing to do for this class here
+    }
+    
     /**
      * This method is called if a new connection at an input port is added.
      * 
@@ -165,10 +171,36 @@ public abstract class SpecialNodeModel extends NodeModel {
         return exec.getProgressMonitor();
     }
 
-    protected void saveSettingsTo(final File nodeFile,
-            final ExecutionMonitor exec) {
-        // nothing to do here
+        
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     */
+    @Override
+    protected final void loadValidatedSettingsFrom(final NodeSettings settings)
+    throws InvalidSettingsException {
+        // nothing to do here        
     }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     */
+    @Override
+    protected final void saveSettingsTo(final NodeSettings settings) {
+        // nothing to do here        
+    }
+
+    protected abstract void saveSettingsTo(final File nodeFile,
+            final NodeSettings settings, final ExecutionMonitor exec);
     
     
+    protected abstract void loadValidatedSettingsFrom(final File nodeFile,
+            final NodeSettings settings, final ExecutionMonitor exec)
+            throws InvalidSettingsException;
+    
+    
+    protected final void resetMyself() {
+        m_node.resetAndConfigure();
+    }
 }
