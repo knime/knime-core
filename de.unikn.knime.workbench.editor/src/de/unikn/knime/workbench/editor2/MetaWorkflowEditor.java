@@ -25,8 +25,8 @@ import org.eclipse.ui.IEditorInput;
 
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.meta.MetaInputNodeModel;
-import de.unikn.knime.core.node.meta.MetaOutputNodeModel;
+import de.unikn.knime.core.node.meta.MetaInputModel;
+import de.unikn.knime.core.node.meta.MetaOutputModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import de.unikn.knime.workbench.repository.model.NodeTemplate;
@@ -105,9 +105,9 @@ public class MetaWorkflowEditor extends WorkflowEditor {
 
         for (NodeContainer nc : nodes) {
             Class<? extends NodeModel> clazz = nc.getModelClass();
-            if (MetaInputNodeModel.class.isAssignableFrom(clazz)) {
+            if (MetaInputModel.class.isAssignableFrom(clazz)) {
                 inputContainer.add(nc);
-            } else if (MetaOutputNodeModel.class.isAssignableFrom(clazz)) {
+            } else if (MetaOutputModel.class.isAssignableFrom(clazz)) {
                 outputContainer.add(nc);
             }
         }

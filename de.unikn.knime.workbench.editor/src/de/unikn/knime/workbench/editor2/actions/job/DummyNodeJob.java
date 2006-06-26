@@ -74,7 +74,7 @@ public class DummyNodeJob extends Job implements NodeProgressListener,
                     m_nodeMonitor.setExecuteCanceled();
                 }
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(250);
                 } catch (InterruptedException ex) {
                     // nothing to do here
                 }
