@@ -308,7 +308,8 @@ public final class Node {
             if (internDir.exists() 
                     && internDir.isDirectory() && internDir.canRead()) {
                 try {
-                    boolean loadFlag = m_model.loadInternals(internDir);
+                    boolean loadFlag = m_model.loadInternals(
+                            internDir, exec);
                     if (!loadFlag) {
                         m_status = new NodeStatus.Warning(
                                 "loadInternals(File) not implemented!");
@@ -1431,7 +1432,8 @@ public final class Node {
                 File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
                 if (internDir.mkdir() && internDir.canWrite()) {
                     try {
-                        boolean saveFlag = m_model.saveInternals(internDir);
+                        boolean saveFlag = m_model.saveInternals(
+                                internDir, exec);
                         if (!saveFlag) {
                             m_status = new NodeStatus.Warning(
                                 "saveInternals(File) not implemented!");

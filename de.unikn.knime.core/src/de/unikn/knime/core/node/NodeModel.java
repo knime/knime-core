@@ -144,15 +144,18 @@ public abstract class NodeModel {
      * Load internal settings into the <code>NodeModel</code>. Read all your
      * internal structures from the given directory.
      * @param nodeInternDir The directory to read from.
+     * @param exec Used to report progress and to cancecl loading process.
      * @return true, if internals were successfully loaded.
      * @throws IOException If an error occurs during reading from this dir.
      * @throws CanceledExecutionException If the loading has been canceled.
-     * @see #saveInternals(File)
+     * @see #saveInternals(File,ExecutionMonitor)
      */
-    protected boolean loadInternals(final File nodeInternDir)
+    protected boolean loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // avoid checkstyle warning  
         assert nodeInternDir == nodeInternDir;
+        assert exec == exec;
         if (false) {
             throw new IOException();
         }
@@ -168,15 +171,18 @@ public abstract class NodeModel {
      * Save internal settings of the <code>NodeModel</code>. Save all your
      * internal structures into the given directory.
      * @param nodeInternDir The directory to write into.
+     * @param exec Used to report progress and to cancecl loading process.
      * @return true, if internals were successfully loaded.
      * @throws IOException If an error occurs during writting to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
-     * @see #loadInternals(File)
+     * @see #loadInternals(File,ExecutionMonitor)
      */
-    protected boolean saveInternals(final File nodeInternDir)
-        throws IOException, CanceledExecutionException {
+    protected boolean saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
         // avoid checkstyle warning  
         assert nodeInternDir == nodeInternDir;
+        assert exec == exec;
         if (false) {
             throw new IOException();
         }
