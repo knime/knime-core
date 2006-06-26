@@ -155,8 +155,14 @@ public class MetaNodeModel extends SpecialNodeModel
         createInternalWFM();
         
         if (!m_resetFromInterior) {
-            for (int i = 0; i < m_dataInModels.length; i++) {
+            for (int i = 0; (i < m_dataInModels.length)
+                && (i < inSpecs.length); i++) {
                 m_dataInModels[i].setDataTableSpec(inSpecs[i]);
+                m_internalWFM.configureNode(m_dataInContainer[i].getID());
+            }
+                        
+            for (int i = inSpecs.length; i < m_dataInModels.length; i++) {
+                m_dataInModels[i].setDataTableSpec(inSpecs[inSpecs.length - 1]);
                 m_internalWFM.configureNode(m_dataInContainer[i].getID());
             }
         }
@@ -248,6 +254,11 @@ public class MetaNodeModel extends SpecialNodeModel
                 protected NodeDialogPane createNodeDialogPane() {
                     return null;
                 }
+
+                @Override
+                public String getOutportDescription(final int index) {
+                    return MetaNodeModel.this.getOutportDescription(temp);
+                }                
             });
         }
 
@@ -279,6 +290,12 @@ public class MetaNodeModel extends SpecialNodeModel
                 protected NodeDialogPane createNodeDialogPane() {
                     return null;
                 }
+
+                @Override
+                public String getInportDescription(final int index) {
+                    return MetaNodeModel.this.getInportDescription(temp);
+                }
+
             });
             m_dataOutContainer[i].addListener(this);
         }
@@ -311,6 +328,11 @@ public class MetaNodeModel extends SpecialNodeModel
                 protected NodeDialogPane createNodeDialogPane() {
                     return null;
                 }
+
+                @Override
+                public String getPredParamOutDescription(final int index) {
+                    return MetaNodeModel.this.getPredParamOutDescription(temp);
+                }
             });
         }
 
@@ -341,6 +363,11 @@ public class MetaNodeModel extends SpecialNodeModel
                 @Override
                 protected NodeDialogPane createNodeDialogPane() {
                     return null;
+                }
+                
+                @Override
+                public String getPredParamInDescription(final int index) {
+                    return MetaNodeModel.this.getPredParamInDescription(temp);
                 }
             });
             m_modelOutContainer[i].addListener(this);
@@ -535,7 +562,12 @@ public class MetaNodeModel extends SpecialNodeModel
             final int inPortID) {
         createInternalWFM();
         m_dataInModels[inPortID].setDataTable(table);
-        // m_internalWFM.resetAndConfigureNode(m_dataInContainer[inPortID].getID());
+
+        if (inPortID == getNrDataIns() - 1) {
+            for (int i = 0; i < m_dataInModels.length; i++) {
+                m_dataInModels[i].setDataTable(table);
+            }
+        }    
     }
 
 
@@ -549,6 +581,14 @@ public class MetaNodeModel extends SpecialNodeModel
         createInternalWFM();
         m_dataInModels[inPortID].setDataTableSpec(spec);
         m_internalWFM.resetAndConfigureNode(m_dataInContainer[inPortID].getID());
+        
+        if (inPortID == getNrDataIns() - 1) {
+            for (int i = 0; i < m_dataInModels.length; i++) {
+                m_dataInModels[i].setDataTableSpec(spec);
+                m_internalWFM.resetAndConfigureNode(
+                        m_dataInContainer[i].getID());                
+            }
+        }
     }
 
     

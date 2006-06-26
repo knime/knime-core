@@ -680,6 +680,10 @@ public class WorkflowManager implements WorkflowListener {
         for (WorkflowListener l : temp) {
             l.workflowChanged(event);
         }
+        
+        if (m_parent != null) {
+            m_parent.fireWorkflowEvent(event);
+        }
     }
 
     
@@ -1071,8 +1075,7 @@ public class WorkflowManager implements WorkflowListener {
                 Iterator<NodeContainer> it = m_waitingNodes.iterator();
                 while (it.hasNext()) {
                     NodeContainer nc = it.next();
-                    if (nc.getNode().isExecutable()) {
-                        m_runningNodes.add(nc);
+                    if (nc.getNode().isExecutable()) {                        
                         it.remove();
                         
                         DefaultNodeProgressMonitor pm =
@@ -1081,6 +1084,7 @@ public class WorkflowManager implements WorkflowListener {
                                 nc.getID(), nc, pm));
                         nc.addListener(this);
                         nc.startExecution(pm);
+                        m_runningNodes.add(nc);
                     } else if (nc.isExecuted()) {
                         it.remove();
                     }
@@ -1138,8 +1142,6 @@ public class WorkflowManager implements WorkflowListener {
                     if (interesting) {
                         try {
                             m_waitingNodes.wait();
-                            // wake up all other waiting threads
-                            m_waitingNodes.notifyAll();
                         } catch (InterruptedException ex) {
                             break;
                         }
@@ -1190,11 +1192,30 @@ public class WorkflowManager implements WorkflowListener {
             }
         }
         
-        public boolean executionInProgress() {
-            System.out.println(m_runningNodes);
-            System.out.println(m_waitingNodes);
+        public boolean executionInProgress(final WorkflowManager wfm) {
             synchronized (m_waitingNodes) {
-                return (m_runningNodes.size() > 0 || m_waitingNodes.size() > 0);
+                // check if any of the nodes in the lists are from the
+                // passed WFM
+                for (NodeContainer nc : m_runningNodes) {
+                    if (wfm.m_nodeContainerByID.values().contains(nc)) {
+                        return true;
+                    }
+                }
+
+                for (NodeContainer nc : m_waitingNodes) {
+                    if (wfm.m_nodeContainerByID.values().contains(nc)) {
+                        return true;
+                    }
+                }
+                
+                for (WeakReference<WorkflowManager> wr : wfm.m_children) {
+                    if (wr.get() != null) {
+                        if (executionInProgress(wr.get())) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         }
     }
@@ -1326,7 +1347,7 @@ public class WorkflowManager implements WorkflowListener {
     
     
     public void resetAndConfigureNode(final int nodeID) {
-        if (m_executor.executionInProgress()) {
+        if (m_executor.executionInProgress(this)) {
             throw new IllegalStateException("Node cannot be reset while"
                     + " execution is in progress.");
         }
@@ -1345,7 +1366,7 @@ public class WorkflowManager implements WorkflowListener {
     
     
     public void resetAndConfigureAll() {
-        if (m_executor.executionInProgress()) {
+        if (m_executor.executionInProgress(this)) {
             throw new IllegalStateException("Node cannot be reset while"
                     + " execution is in progress.");
         }
@@ -1357,7 +1378,7 @@ public class WorkflowManager implements WorkflowListener {
 
     
     public void resetAndConfigureAfterNode(final int nodeID) {
-        if (m_executor.executionInProgress()) {
+        if (m_executor.executionInProgress(this)) {
             throw new IllegalStateException("Node cannot be reset while"
                     + " execution is in progress.");
         }

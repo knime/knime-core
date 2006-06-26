@@ -149,4 +149,6 @@ public class DataInputNodeModel extends MetaInputModel {
     public void setPredictorParams(final PredictorParams predParams) {
         // nothing to do here        
     }
+    
+    protected final DataTable dataTable() { return m_datatable; }
 }

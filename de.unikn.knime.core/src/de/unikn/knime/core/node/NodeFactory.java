@@ -459,7 +459,7 @@ public abstract class NodeFactory {
             destList.add("No description available");
         }
         if (port.getAttribute("name").length() > 0) {
-            destList.set(index, port.getAttribute("name"));
+            destList.set(index, port.getAttribute("name").trim());
         } else {
             
             Node w3cNode = port.getFirstChild();
@@ -470,7 +470,7 @@ public abstract class NodeFactory {
             if (value == null || value.length() == 0) {
                 return;
             }
-            destList.set(index, value);
+            destList.set(index, value.trim().replace('\n', ' '));
         }
     }
 
@@ -562,7 +562,7 @@ public abstract class NodeFactory {
         if ((m_views == null) || ((e = m_views.get(index)) == null)) {
             return "No description available";
         } else {
-            return e.getFirstChild().getNodeValue();
+            return e.getFirstChild().getNodeValue().trim().replace('\n', ' ');
         }
     }
 

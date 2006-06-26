@@ -1078,7 +1078,13 @@ public final class Node {
         if (isExecuted()) {
             reset();
         }
+
+        if (m_model instanceof SpecialNodeModel) {
+            ((SpecialNodeModel) m_model).inportHasNewTableSpec(
+                    m_inDataPorts[inPortID].getDataTableSpec(), inPortID);
+        }
         configure();
+        
     }
 
     /**
