@@ -17,6 +17,9 @@
 package de.unikn.knime.base.node.view.table;
 
 
+import java.io.File;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.ExecutionMonitor;
@@ -87,28 +90,31 @@ public class TableNodeModel extends NodeModel {
         assert (m_contModel.hasData());
         return new DataTable[0];
     }
-    
-//    protected void loadInternals(final File nodeDir)
-//            throws IOException {
-//        File tableFile = new File(nodeDir, "table.zip");
-//        if (tableFile.exists() && tableFile.canRead()) {
-//            DataTable table = DataContainer.readFromZip(tableFile);
-//            if (table != null) {
-//                HiLiteHandler inProp = getInHiLiteHandler(INPORT);
-//                m_contModel.setDataTable(table);
-//                m_contModel.setHiLiteHandler(inProp);
-//            }
-//        }
-//    }
-//
-//    protected void saveInternals(final File nodeDir)
-//            throws IOException, CanceledExecutionException {
-//        DataTable table = m_contModel.getDataTable();
-//        if (table != null) {
-//            File tableFile = new File(nodeDir, "table.zip"); 
-//            DataContainer.writeToZip(table, tableFile, new ExecutionMonitor());
-//        }
-//    }
+
+    /**
+     * Load internals.
+     * @param internDir The intern node directory to load table from.
+     * @return not in use.
+     * @throws IOException Always, since this method has not be implemented yet.
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(java.io.File)
+     */
+    @Override
+    protected boolean loadInternals(final File internDir)
+            throws IOException {
+        throw new IOException("Table not saved yet.");
+    }
+
+    /**
+     * Save internals.
+     * @param internDir The intern node directory to save table to.
+     * @return not in use.
+     * @throws IOException Always, since this method has not be implemented yet.
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(java.io.File)
+     */
+    protected boolean saveInternals(final File internDir)
+            throws IOException {
+        throw new IOException("Table can't be saved yet.");
+    }
 
     /** 
      * Invoked when data is reset. Removes the data from the underlying
