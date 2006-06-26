@@ -75,7 +75,7 @@ public abstract class Config extends AbstractConfigEntry
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
     
-    private static final String CFG_ARRAY_SIZE = "array_size";
+    private static final String CFG_ARRAY_SIZE = "array-size";
     private static final String CFG_IS_NULL    = "is_null";
     private static final String CFG_DATA_CELL  = "datacell";
 
