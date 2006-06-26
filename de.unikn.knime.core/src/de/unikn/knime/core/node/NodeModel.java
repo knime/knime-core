@@ -144,11 +144,12 @@ public abstract class NodeModel {
      * Load internal settings into the <code>NodeModel</code>. Read all your
      * internal structures from the given directory.
      * @param nodeInternDir The directory to read from.
+     * @return true, if internals were successfully loaded.
      * @throws IOException If an error occurs during reading from this dir.
      * @throws CanceledExecutionException If the loading has been canceled.
      * @see #saveInternals(File)
      */
-    protected void loadInternals(final File nodeInternDir)
+    protected boolean loadInternals(final File nodeInternDir)
         throws IOException, CanceledExecutionException {
         // avoid checkstyle warning  
         assert nodeInternDir == nodeInternDir;
@@ -158,20 +159,21 @@ public abstract class NodeModel {
         if (false) {
             throw new CanceledExecutionException();
         }
-        m_logger.warn("NodeModel does not overwrite loadInternals(File): "
-                + " Node will be reset");
-        // this.setExecuted(false);
+        String msg = "NodeModel does not overwrite loadInternals(File).";
+        m_logger.coding(msg);
+        return false;
     }
 
     /**
      * Save internal settings of the <code>NodeModel</code>. Save all your
      * internal structures into the given directory.
      * @param nodeInternDir The directory to write into.
+     * @return true, if internals were successfully loaded.
      * @throws IOException If an error occurs during writting to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File)
      */
-    protected void saveInternals(final File nodeInternDir)
+    protected boolean saveInternals(final File nodeInternDir)
         throws IOException, CanceledExecutionException {
         // avoid checkstyle warning  
         assert nodeInternDir == nodeInternDir;
@@ -181,7 +183,9 @@ public abstract class NodeModel {
         if (false) {
             throw new CanceledExecutionException();
         }
-        m_logger.warn("NodeModel does not overwrite saveInternals(File).");
+        String msg = "NodeModel does not overwrite saveInternals(File).";
+        m_logger.coding(msg);
+        return false;
     }
 
     /**

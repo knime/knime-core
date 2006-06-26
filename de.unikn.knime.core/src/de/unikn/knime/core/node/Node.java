@@ -237,9 +237,10 @@ public final class Node {
                     + nodeFile);
         }
 
+        // load node settings
         NodeSettings settings = 
             NodeSettings.loadFromXML(new FileInputStream(nodeFile));
-        // load node settings
+
         // read node name
         m_name = settings.getString("name");
         final NodeSettings inport = settings.getConfig("inports");
@@ -306,7 +307,18 @@ public final class Node {
             File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
             if (internDir.exists() 
                     && internDir.isDirectory() && internDir.canRead()) {
-                m_model.loadInternals(internDir);
+                try {
+                    boolean loadFlag = m_model.loadInternals(internDir);
+                    if (!loadFlag) {
+                        m_status = new NodeStatus.Warning(
+                                "loadInternals(File) not implemented!");
+                        this.notifyStateListeners(m_status);
+                    }
+                } catch (IOException ioe) {
+                    m_status = new NodeStatus.Error(
+                        "Unable to load internals: " + ioe.getMessage());
+                    this.notifyStateListeners(m_status);
+                }
             }
             // load data
             NodeSettings data = settings.getConfig("data_files");
@@ -1393,10 +1405,6 @@ public final class Node {
             m_logger.fatal("Could not save model", e);
         }
 
-        
-
-        
-        
         m_nodeDir = nodeFile.getParentFile();
         if (isConfigured()) {
             NodeSettings specs = settings.addConfig("spec_files");
@@ -1422,9 +1430,18 @@ public final class Node {
             if (isExecuted()) {
                 File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
                 if (internDir.mkdir() && internDir.canWrite()) {
-                    m_model.saveInternals(internDir);
-                    if (internDir.getCanonicalFile().listFiles().length == 0) {
-                        FileUtil.deleteRecursively(internDir);
+                    try {
+                        boolean saveFlag = m_model.saveInternals(internDir);
+                        if (!saveFlag) {
+                            m_status = new NodeStatus.Warning(
+                                "saveInternals(File) not implemented!");
+                            this.notifyStateListeners(m_status);
+                        }
+                    } catch (IOException ioe) {
+                        m_status = new NodeStatus.Error(
+                                "Unable to save internals: " 
+                                + ioe.getMessage());
+                        this.notifyStateListeners(m_status);
                     }
                 }
                 NodeSettings data = settings.addConfig("data_files");
