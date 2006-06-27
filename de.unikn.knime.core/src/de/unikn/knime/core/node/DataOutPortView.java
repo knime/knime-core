@@ -34,8 +34,8 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.def.DefaultTable;
+import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
@@ -147,7 +147,7 @@ final class DataOutPortView extends NodeOutPortView {
         // for now we just display the pointer value.
         // Otherwise we would have to register as listener and recreate
         // the datatables completely each time something changes in the handlers
-        String[] names = {"ClassName", "MemAddress", "fullString"};
+        String[] names = {"ClassName", "InstanceID", "fullString"};
         DataType[] types = {StringCell.TYPE, StringCell.TYPE,
                 StringCell.TYPE};
         DataRow[] rows = new DataRow[1];
@@ -155,13 +155,11 @@ final class DataOutPortView extends NodeOutPortView {
 
         if (hiLiteHdl != null) {
             String fullname = hiLiteHdl.toString();
-            String classname = hiLiteHdl.getClass().getName();
-            classname = classname.substring(classname.lastIndexOf('.') + 1);
-            String memAddress = hiLiteHdl.toString().substring(
-                    hiLiteHdl.toString().indexOf('@'));
+            String classname = hiLiteHdl.getClass().getSimpleName();
+            String id = "id=" + System.identityHashCode(hiLiteHdl); 
             rows[0] = new DefaultRow(rowID, new DataCell[]{
                     new StringCell(classname),
-                    new StringCell(memAddress),
+                    new StringCell(id),
                     new StringCell(fullname)});
         } else {
             rows[0] = new DefaultRow(rowID, new DataCell[]{
@@ -265,7 +263,7 @@ final class DataOutPortView extends NodeOutPortView {
             DataCell[] cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
                 cols[c] = new StringCell("<html><b>"
-                        + spec.getColumnSpec(c).getName().toString());
+                        + spec.getColumnSpec(c).getName());
             }
             rows[0] = new DefaultRow(new StringCell("<html><b>Name"),
                     cols);
@@ -284,9 +282,12 @@ final class DataOutPortView extends NodeOutPortView {
                 if (spec.getColumnSpec(c).getColorHandler() == null) {
                     cols[c] = new StringCell("");
                 } else {
+                    // Display the String repr. of the ColorHdl
                     ColorHandler cHdl = spec.getColumnSpec(c).getColorHandler();
-                    cols[c] = new StringCell(cHdl.toString().substring(
-                            cHdl.toString().indexOf('@')));
+                    String colHdlStr = cHdl.toString();
+                    // add an instance unique ID
+                    colHdlStr += " (id=" + System.identityHashCode(cHdl) + ")";
+                    cols[c] = new StringCell(colHdlStr);
                 }
             }
             rows[2] = new DefaultRow(new StringCell("ColorHandler"), cols);
@@ -297,8 +298,9 @@ final class DataOutPortView extends NodeOutPortView {
                     cols[c] = new StringCell("");
                 } else {
                     SizeHandler sHdl = spec.getColumnSpec(c).getSizeHandler();
-                    cols[c] = new StringCell(sHdl.toString().substring(
-                            sHdl.toString().indexOf('@')));
+                    String sHdlrStr = sHdl.toString();
+                    sHdlrStr += " (id=" + System.identityHashCode(sHdl) + ")";
+                    cols[c] = new StringCell(sHdlrStr);
                 }
             }
             rows[3] = new DefaultRow(new StringCell("SizeHandler"), cols);

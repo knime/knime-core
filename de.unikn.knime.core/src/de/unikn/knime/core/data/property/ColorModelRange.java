@@ -158,5 +158,15 @@ public final class ColorModelRange implements ColorModel {
         Color maxColor = new Color(max[0], max[1], min[2], min[3]);
         return new ColorModelRange(lower, minColor, upper, maxColor);
     }
+    
+    /**
+     * Returns a string representation containing the type of the model and
+     * an instance unique ID. 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "Range ColorModel"; 
+    }
 
 }

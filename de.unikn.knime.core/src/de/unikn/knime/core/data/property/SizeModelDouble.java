@@ -108,12 +108,12 @@ public class SizeModelDouble implements SizeModel {
     }
     
     /**
-     * @return String summary for this double range <code>SizeModel</code>
-     *         defined by min and may boundaries.
+     * @return String representation containing SizeModel type and min/max
+     *         boundaries.
      */
     @Override
     public String toString() {
-        return "min=" + m_min + ",max=" + m_max;
+        return "DoubleRange SizeModel (min=" + m_min + ",max=" + m_max + ")";
     }
 
 }

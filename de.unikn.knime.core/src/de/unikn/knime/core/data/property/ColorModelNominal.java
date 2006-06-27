@@ -117,8 +117,7 @@ public final class ColorModelNominal implements ColorModel {
      * @return A String for this <code>ColorModel</code> as list of 
      * <code>DataCell</code> to <code>Color</code> mapping.
      */
-    @Override
-    public String toString() {
+    public String printColorMapping() {
         StringBuffer buf = new StringBuffer();
         for (DataCell cell : m_map.keySet()) {
             Color color = m_map.get(cell).getColor();
@@ -128,6 +127,16 @@ public final class ColorModelNominal implements ColorModel {
             buf.append(cell.toString() + "->" + color.toString());
         }
         return "[" + buf.toString() + "]";
+    }
+      
+    /**
+     * Returns a string representation containing the type of the model and
+     * an instance unique ID. 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "Nominal ColorModel"; 
     }
     
 }   
