@@ -26,12 +26,17 @@ import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.PredictorParams;
 
 /**
+ * This class lets you fetch the predictor params that are passed from the only
+ * one sucessor node.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelOutputNodeModel extends NodeModel {
     private PredictorParams m_predictorParams;
     
+    /**
+     * Creates a new model output node model.
+     */
     public ModelOutputNodeModel() {
         super(0, 0, 1, 0);
     }
@@ -110,6 +115,11 @@ public class ModelOutputNodeModel extends NodeModel {
    }
 
    
+   /**
+    * Returns the predictor params from the sucessor node.
+    * 
+    * @return the predictor params
+    */
    public PredictorParams getPredictorParams() {
        return m_predictorParams;
    }

@@ -203,7 +203,11 @@ public abstract class NodeDialogPane {
      * are not identical.
      * @throws InvalidSettingsException If the settings could not be set in the
      *             <code>Node</code>.
+     * @deprecated Normally the workflow manager should be involved when
+     * resetting nodes. This method does it behind the workflow manager and
+     * should therefore not be used
      */
+    @Deprecated
     public final void doApply() throws InvalidSettingsException {
         // try to load dialog settings to the model
         m_node.loadModelSettingsFromDialog();

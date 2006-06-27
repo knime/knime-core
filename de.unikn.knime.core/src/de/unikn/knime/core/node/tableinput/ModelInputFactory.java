@@ -23,10 +23,15 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
+ * This class creates
+ * {@link de.unikn.knime.core.node.tableinput.ModelInputNodeModel}s.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelInputFactory extends NodeFactory {
+    /**
+     * Creates a new factory for model input nodes.
+     */
     public ModelInputFactory() {
         super(false);
     }
@@ -34,7 +39,8 @@ public class ModelInputFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
-    public @Override NodeModel createNodeModel() {
+    @Override
+    public NodeModel createNodeModel() {
         return new ModelInputNodeModel();
     }
 

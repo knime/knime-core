@@ -23,10 +23,15 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
+ * This factory creates
+ * {@link de.unikn.knime.core.node.tableinput.ModelOutputNodeModel}s.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelOutputFactory extends NodeFactory {
+    /**
+     * Creates a new factory for model output nodes.
+     */
     public ModelOutputFactory() {
         super(false);
     }
@@ -34,7 +39,8 @@ public class ModelOutputFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
-    public @Override NodeModel createNodeModel() {
+    @Override
+    public NodeModel createNodeModel() {
         return new ModelOutputNodeModel();
     }
 

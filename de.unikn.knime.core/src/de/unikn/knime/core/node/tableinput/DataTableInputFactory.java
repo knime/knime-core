@@ -40,7 +40,8 @@ public class DataTableInputFactory extends NodeFactory {
     /** 
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
-    public @Override NodeModel createNodeModel() {
+    @Override
+    public NodeModel createNodeModel() {
         return new DataTableInputNodeModel();
     }
 

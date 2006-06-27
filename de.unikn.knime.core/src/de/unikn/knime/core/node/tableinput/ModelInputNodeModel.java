@@ -26,19 +26,26 @@ import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.PredictorParams;
 
 /**
+ * This node model can be used to inject models into a workflow. The only
+ * interesting method is {@link #setPredictorParams(PredictorParams)} with which
+ * you can set the predictor parameters that should be passed on to the
+ * successor nodes.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelInputNodeModel extends NodeModel {
     private PredictorParams m_predictorParams;
-    
+
+    /**
+     * Creates a new model input node model.
+     */
     public ModelInputNodeModel() {
         super(0, 0, 0, 1);
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *      #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
      */
     @Override
     protected void saveSettingsTo(final NodeSettings settings) {
@@ -47,7 +54,7 @@ public class ModelInputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     *      #validateSettings(de.unikn.knime.core.node.NodeSettings)
      */
     @Override
     protected void validateSettings(final NodeSettings settings)
@@ -57,7 +64,7 @@ public class ModelInputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *      #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettings settings)
@@ -67,8 +74,8 @@ public class ModelInputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #execute(de.unikn.knime.core.data.DataTable[],
-     *  de.unikn.knime.core.node.ExecutionMonitor)
+     *      #execute(de.unikn.knime.core.data.DataTable[],
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected DataTable[] execute(final DataTable[] inData,
@@ -86,7 +93,7 @@ public class ModelInputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #configure(de.unikn.knime.core.data.DataTableSpec[])
+     *      #configure(de.unikn.knime.core.data.DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -94,17 +101,22 @@ public class ModelInputNodeModel extends NodeModel {
         return new DataTableSpec[0];
     }
 
-   public void setPredictorParams(final PredictorParams predParams) {
-       m_predictorParams = predParams;
-   }
+    /**
+     * Sets the predictor params that should be passed on.
+     * 
+     * @param predParams the predictor params
+     */
+    public void setPredictorParams(final PredictorParams predParams) {
+        m_predictorParams = predParams;
+    }
 
-   /** 
-    * @see de.unikn.knime.core.node.NodeModel
-    *  #savePredictorParams(int, de.unikn.knime.core.node.PredictorParams)
-    */
-   @Override
-   protected void savePredictorParams(final int index,
-           final PredictorParams predParams) throws InvalidSettingsException {
-       m_predictorParams.copyTo(predParams);
-   }
+    /**
+     * @see de.unikn.knime.core.node.NodeModel #savePredictorParams(int,
+     *      de.unikn.knime.core.node.PredictorParams)
+     */
+    @Override
+    protected void savePredictorParams(final int index,
+            final PredictorParams predParams) throws InvalidSettingsException {
+        m_predictorParams.copyTo(predParams);
+    }
 }

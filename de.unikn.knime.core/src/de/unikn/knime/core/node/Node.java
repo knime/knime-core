@@ -1371,9 +1371,9 @@ public final class Node {
         // write node name
         settings.addString("name", m_name);
         // write configured flag
-        settings.addBoolean("isConfigured", this.isConfigured());
+        settings.addBoolean("isConfigured", isConfigured());
         // write executed flag
-        settings.addBoolean("isExecuted", this.isExecuted());
+        settings.addBoolean("isExecuted", isExecuted());
         // write inports
         final NodeSettings inport = settings.addConfig("inports");
         for (int i = 0; i < m_inDataPorts.length; i++) {
@@ -1512,7 +1512,7 @@ public final class Node {
      * @throws InvalidSettingsException If the settings are not valid for the
      *             underlying model.
      */
-    void loadModelSettingsFromDialog() throws InvalidSettingsException {
+    public void loadModelSettingsFromDialog() throws InvalidSettingsException {
         // save new dialog's config into new object
         NodeSettings newSettings = new NodeSettings(this.getName());
         m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
