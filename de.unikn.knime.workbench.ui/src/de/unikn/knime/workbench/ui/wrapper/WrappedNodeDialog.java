@@ -53,6 +53,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NotConfigurableException;
 import de.unikn.knime.core.node.workflow.NodeContainer;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -167,6 +168,7 @@ public class WrappedNodeDialog extends Dialog {
      * @see org.eclipse.jface.dialogs.Dialog#
      *      createDialogArea(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     protected Control createDialogArea(final Composite parent) {
         Composite area = (Composite)super.createDialogArea(parent);
         Color backgroundColor = Display.getCurrent().getSystemColor(
@@ -240,6 +242,7 @@ public class WrappedNodeDialog extends Dialog {
      * @see org.eclipse.jface.dialogs.Dialog
      *      #createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     protected void createButtonsForButtonBar(final Composite parent) {
         // WORKAROUND !! We can't use IDialogConstants.OK_ID here, as this
         // always closes the dialog, regardless if the settings couldn't be
@@ -256,22 +259,26 @@ public class WrappedNodeDialog extends Dialog {
         // event.doit = false cancels the SWT selection event, so that the
         // dialog is not closed on errors.
         btnOK.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 doOK(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 this.widgetDefaultSelected(e);
             }
         });
 
         btnApply.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 doApply(e);
             }
         });
 
         btnCancel.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(final SelectionEvent e) {
 
             }
@@ -296,7 +303,7 @@ public class WrappedNodeDialog extends Dialog {
                 informNothingChanged();
                 result = true;
             } else if (confirmApply()) {
-                m_dialogPane.doApply();
+                m_nodeContainer.applyDialogSettings();
                 e.doit = true;
                 result = true;
             } else {
@@ -305,6 +312,11 @@ public class WrappedNodeDialog extends Dialog {
         } catch (InvalidSettingsException ise) {
             e.doit = false;
             showErrorMessage("Invalid Settings\n" + ise.getMessage());
+        } catch (WorkflowInExecutionException ex) {
+            e.doit = false;
+            showErrorMessage("You cannot apply node settings if the workflow"
+                    + " is executing. Please stop execution or wait until all"
+                    + " nodes have been finished.");            
         } catch (Exception exc) {
             e.doit = false;
             showErrorMessage(exc.getClass().getSimpleName() + ": "
@@ -353,9 +365,8 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     /**
-     * Show a information dialog that the settings were not changed and
-     * therefore the settings are not reset (node stays executed)
-     * 
+     * Show an information dialog that the settings were not changed and
+     * therefore the settings are not reset (node stays executed). 
      */
     protected void informNothingChanged() {
 
@@ -378,6 +389,9 @@ public class WrappedNodeDialog extends Dialog {
         mb.open();
     }
 
+    /**
+     * @see org.eclipse.jface.window.Window#close()
+     */
     @Override
     public boolean close() {
         Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
@@ -391,6 +405,7 @@ public class WrappedNodeDialog extends Dialog {
      * 
      * @see org.eclipse.jface.window.Window#getInitialSize()
      */
+    @Override
     protected Point getInitialSize() {
 
         // First we ask the dialog pane for the preferred size
@@ -422,7 +437,7 @@ public class WrappedNodeDialog extends Dialog {
                 /*
                  * + this.getTitleImageLabel().computeSize(SWT.DEFAULT,
                  * SWT.DEFAULT).y
-                 */+ 100);
+                 */ + 100);
     }
 
 }
