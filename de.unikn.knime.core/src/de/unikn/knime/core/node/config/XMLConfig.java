@@ -154,8 +154,11 @@ final class XMLConfig {
             ioe.initCause(se);
             throw ioe;
         } finally {
-            os.close();
+            // Note: When using the GZIP stream, it is also required by the 
+            // ZLIB native library in order to support certain optimizations
+            // to flush the stream.
             os.flush();
+            os.close();
         }
     }
 
