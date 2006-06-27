@@ -44,7 +44,6 @@ import de.unikn.knime.core.node.NodeProgressMonitor;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
-import de.unikn.knime.core.util.Pair;
 
 /**
  * Manager for a workflow holding Nodes and the connecting edge information. The
