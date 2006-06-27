@@ -21,10 +21,14 @@ package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.workflow.NodeContainer;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import de.unikn.knime.workbench.repository.RepositoryManager;
@@ -110,7 +114,17 @@ public class CreateNodeCommand extends Command {
     @Override
     public void undo() {
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
-        m_manager.removeNode(m_container);
+        try {
+            m_manager.removeNode(m_container);
+        } catch (WorkflowInExecutionException ex) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Operation not allowed");
+            mb.setMessage("You cannot remove a node while the workflow is in"
+                    + " execution.");
+            mb.open();            
+        }
     }
 
 }

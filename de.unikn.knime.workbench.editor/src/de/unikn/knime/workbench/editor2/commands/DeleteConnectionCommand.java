@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,8 +20,12 @@
 package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
@@ -55,22 +57,29 @@ public class DeleteConnectionCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
+    @Override
     public boolean canExecute() {
         return true;
-
     }
 
     /**
      * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
-
-        // before removing the given connection check if it still exists
-
-        // remove container from the WFM
-        m_manager.removeConnection((ConnectionContainer) m_connection
-                .getModel());
+        try {
+            m_manager.removeConnection((ConnectionContainer) m_connection
+                    .getModel());
+        } catch (WorkflowInExecutionException ex) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Operation not allowed");
+            mb.setMessage("You cannot remove a connection while the workflow"
+                    + " is in execution.");
+            mb.open();            
+        }
     }
 
 }

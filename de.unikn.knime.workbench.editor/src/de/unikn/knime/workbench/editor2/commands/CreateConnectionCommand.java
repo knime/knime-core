@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,8 +20,12 @@
 package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -144,6 +146,7 @@ public class CreateConnectionCommand extends Command {
      * current source/target node
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
+    @Override
     public boolean canExecute() {
         return (m_sourceNode != null)
                 && (m_targetNode != null)
@@ -160,6 +163,7 @@ public class CreateConnectionCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#canUndo()
      */
+    @Override
     public boolean canUndo() {
         return (m_connection != null) && (!(m_sourceNode.isLocked()))
                 && (!(m_targetNode.isLocked()));
@@ -169,21 +173,42 @@ public class CreateConnectionCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
         // Connection must be registered on workflow
-        m_connection = m_manager.addConnection(
-                  m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
-                  m_targetNode.getNodeContainer().getID(), m_targetPortID);
+        try {
+            m_connection = m_manager.addConnection(
+                      m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
+                      m_targetNode.getNodeContainer().getID(), m_targetPortID);
+        } catch (WorkflowInExecutionException ex) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Operation not allowed");
+            mb.setMessage("You cannot add a connection while the workflow is in"
+                    + " execution.");
+            mb.open();            
+        }
     }
 
     /**
      * 
      * @see org.eclipse.gef.commands.Command#undo()
      */
+    @Override
     public void undo() {
         // Connection must be de-registered on workflow
-        m_manager.removeConnection(m_connection);
-
+        try {
+            m_manager.removeConnection(m_connection);
+        } catch (WorkflowInExecutionException ex) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("operation not allowed");
+            mb.setMessage("You cannot remove a connection while the workflow"
+                    + " is in execution.");
+            mb.open();            
+        }
     }
 
 }

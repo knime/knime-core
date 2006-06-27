@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,8 +20,12 @@
 package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -59,6 +61,7 @@ public class DeleteNodeContainerCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
+    @Override
     public boolean canExecute() {
         return !m_part.isLocked();
     }
@@ -66,15 +69,24 @@ public class DeleteNodeContainerCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
-
         LOGGER.debug("Deleting node #" + m_part.getNodeContainer().getID()
                 + " from Workflow");
 
         // The WFM must removes all connections for us, before the node is
         // removed.
-        m_manager.removeNode(m_part.getNodeContainer());
-
+        try {
+            m_manager.removeNode(m_part.getNodeContainer());
+        } catch (WorkflowInExecutionException ex) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Operation not allowed");
+            mb.setMessage("You cannot remove a node while the workflow"
+                    + " is in execution.");
+            mb.open();            
+        }
     }
 
     /**
@@ -83,8 +95,8 @@ public class DeleteNodeContainerCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#canUndo()
      */
+    @Override
     public boolean canUndo() {
         return false;
     }
-
 }

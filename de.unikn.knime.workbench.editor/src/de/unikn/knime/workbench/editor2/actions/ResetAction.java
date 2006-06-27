@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -101,17 +102,26 @@ public class ResetAction extends AbstractNodeAction {
         }
 
         LOGGER.debug("Resetting " + nodeParts.length + " node(s)");
-        for (int i = 0; i < nodeParts.length; i++) {
-            // skip locked nodes
-            if (nodeParts[i].isLocked()) {
-                LOGGER.debug("Node #"
-                        + nodeParts[i].getNodeContainer().getID()
-                        + " is locked and can't be resetted now");
-                continue;
+        try {
+            for (int i = 0; i < nodeParts.length; i++) {
+                // skip locked nodes
+                if (nodeParts[i].isLocked()) {
+                    LOGGER.debug("Node #"
+                            + nodeParts[i].getNodeContainer().getID()
+                            + " is locked and can't be resetted now");
+                    continue;
+                }
+    
+                getManager().resetAndConfigureNode(
+                        nodeParts[i].getNodeContainer().getID());
             }
-
-            getManager().resetAndConfigureNode(
-                    nodeParts[i].getNodeContainer().getID());
+        } catch (WorkflowInExecutionException ex) {
+            mb = new MessageBox(Display.getDefault().getActiveShell(),
+                    SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Reset not allowed");
+            mb.setMessage("You cannot reset a node while the workflow is in"
+                    + " execution.");
+            mb.open();            
         }
     }
 
