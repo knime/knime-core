@@ -1423,7 +1423,8 @@ public final class Node {
         if (!m_isCurrentlySaved) {
             if (isExecuted()) {
                 File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
-                if (internDir.mkdir() && internDir.canWrite()) {
+                internDir.mkdir();
+                if (internDir.canWrite()) {
                     try {
                         boolean saveFlag = m_model.saveInternals(
                                 internDir, exec);
