@@ -155,6 +155,7 @@ final class XMLConfig {
             throw ioe;
         } finally {
             os.close();
+            os.flush();
         }
     }
 
