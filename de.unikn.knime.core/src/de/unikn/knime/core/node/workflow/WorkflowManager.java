@@ -92,9 +92,8 @@ public class WorkflowManager implements WorkflowListener {
      * @author Thorsten Meinl, University of Konstanz
      */
     private class WorkflowExecutor implements NodeStateListener {
-        private final List<Pair<NodeContainer, NodeProgressMonitor>>
-            m_runningNodes = 
-                new LinkedList<Pair<NodeContainer, NodeProgressMonitor>>();
+        private final Map<NodeContainer, NodeProgressMonitor>
+            m_runningNodes = new HashMap<NodeContainer, NodeProgressMonitor>();
         private final List<NodeContainer> m_waitingNodes =
             new LinkedList<NodeContainer>();
         
@@ -108,7 +107,7 @@ public class WorkflowManager implements WorkflowListener {
                 boolean change = false;
                 for (NodeContainer nc : nodes) {
                     if (!m_waitingNodes.contains(nc)
-                            && !m_runningNodes.contains(nc)) {
+                            && !m_runningNodes.containsKey(nc)) {
                         m_waitingNodes.add(nc);
                         change = true;
                     }
@@ -127,9 +126,8 @@ public class WorkflowManager implements WorkflowListener {
             synchronized (m_waitingNodes) {
                 m_waitingNodes.clear();
             }
-            for (Pair<NodeContainer, NodeProgressMonitor> nc
-                    : m_runningNodes) {
-                nc.getSecond().setExecuteCanceled();
+            for (NodeProgressMonitor pm : m_runningNodes.values()) {
+                pm.setExecuteCanceled();
             }
         }
         
@@ -148,11 +146,8 @@ public class WorkflowManager implements WorkflowListener {
                 }
             }
             
-            for (Pair<NodeContainer, NodeProgressMonitor> nc
-                    : m_runningNodes) {
-                if (m_runningNodes.contains(nc.getFirst())) {
-                    nc.getSecond().setExecuteCanceled();
-                }
+            for (NodeProgressMonitor pm : m_runningNodes.values()) {
+                pm.setExecuteCanceled();                
             }            
         }
 
@@ -170,9 +165,8 @@ public class WorkflowManager implements WorkflowListener {
             synchronized (m_waitingNodes) {
                 // check if any of the nodes in the lists are from the
                 // passed WFM
-                for (Pair<NodeContainer, NodeProgressMonitor> nc
-                        : m_runningNodes) {
-                    if (wfm.m_nodesByID.values().contains(nc.getFirst())) {
+                for (NodeContainer nc : m_runningNodes.keySet()) {
+                    if (wfm.m_nodesByID.values().contains(nc)) {
                         return true;
                     }
                 }
@@ -214,9 +208,7 @@ public class WorkflowManager implements WorkflowListener {
                                 nc.getID(), nc, pm));
                         nc.addListener(this);
                         nc.startExecution(pm);
-                        m_runningNodes.add(
-                                new Pair<NodeContainer, NodeProgressMonitor>(nc,
-                                        pm));
+                        m_runningNodes.put(nc, pm);
                     } else if (nc.isExecuted()) {
                         it.remove();
                     }
@@ -242,10 +234,10 @@ public class WorkflowManager implements WorkflowListener {
         public void stateChanged(final NodeStatus state, final int id) {
             if (state instanceof NodeStatus.EndExecute) {
                 synchronized (m_waitingNodes) {
-                    Iterator<Pair<NodeContainer, NodeProgressMonitor>> it =
-                        m_runningNodes.iterator();
+                    Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it =
+                        m_runningNodes.entrySet().iterator();
                     while (it.hasNext()) {
-                        NodeContainer nc = it.next().getFirst();
+                        NodeContainer nc = it.next().getKey();
                         if (nc.getID() == id) {
                             nc.removeListener(this);
                             it.remove();
@@ -274,9 +266,8 @@ public class WorkflowManager implements WorkflowListener {
                     // check if any of the nodes in the lists are from the
                     // passed WFM
                     boolean interesting = false;
-                    for (Pair<NodeContainer, NodeProgressMonitor> nc
-                            : m_runningNodes) {
-                        if (wfm.m_nodesByID.values().contains(nc.getFirst())) {
+                    for (NodeContainer nc : m_runningNodes.keySet()) {
+                        if (wfm.m_nodesByID.values().contains(nc)) {
                             interesting = true;
                             break;
                         }
