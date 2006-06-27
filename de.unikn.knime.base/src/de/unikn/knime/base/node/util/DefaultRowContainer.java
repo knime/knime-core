@@ -20,13 +20,11 @@
 package de.unikn.knime.base.node.util;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Vector;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
@@ -35,9 +33,11 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.StringValue;
+import de.unikn.knime.core.data.def.DefaultRowIterator;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 
@@ -51,7 +51,7 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * 
  * @author ohl, University of Konstanz
  */
-public class DefaultRowContainer implements RowContainer {
+public class DefaultRowContainer implements RowContainer  {
 
     /* this is where we store the rows. */
     private ArrayList<DataRow> m_rows;
@@ -375,14 +375,14 @@ public class DefaultRowContainer implements RowContainer {
      *         returns objects, i.e. you would have to use a typecast to
      *         <code>DataRow</code> to obtain the real type of the object.
      */
-    public Iterator<DataRow> iterator() {
-        return m_rows.iterator();
+    public RowIterator iterator() {
+        return new DefaultRowIterator(m_rows);
     }
 
     /**
-     * @see RowContainer#getTableSpec()
+     * @see RowContainer#getDataTableSpec()
      */
-    public DataTableSpec getTableSpec() {
+    public DataTableSpec getDataTableSpec() {
         return m_tSpec;
     }
 

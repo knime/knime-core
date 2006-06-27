@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,12 +19,13 @@
  */
 package de.unikn.knime.base.node.util;
 
-import java.util.Iterator;
 import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
+import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.RowIterator;
 
 /**
  * Can be used to locally store a certain number of rows. It provides random
@@ -37,7 +36,7 @@ import de.unikn.knime.core.data.DataTableSpec;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public interface RowContainer extends Iterable {
+public interface RowContainer extends DataTable, Iterable<DataRow> {
     /**
      * Returns the row from the container with index <code>idx</code>. Index
      * starts at zero and must be less than the size of the container (which
@@ -109,7 +108,7 @@ public interface RowContainer extends Iterable {
      *         returns objects, i.e. you would have to use a typecast to
      *         <code>DataRow</code> to obtain the real type of the object.
      */
-    Iterator<DataRow> iterator();
+    RowIterator iterator();
 
     /**
      * Get the table spec corresponding the the rows. The domain information is
@@ -118,5 +117,5 @@ public interface RowContainer extends Iterable {
      * contains lower and upper bounds.
      * @return the table spec belonging to the rows stored. 
      */
-    DataTableSpec getTableSpec();
+    DataTableSpec getDataTableSpec();
 }
