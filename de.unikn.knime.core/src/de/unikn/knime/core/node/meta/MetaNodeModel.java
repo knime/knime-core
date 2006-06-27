@@ -31,6 +31,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
@@ -43,10 +44,13 @@ import de.unikn.knime.core.node.SpecialNodeModel;
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
 /**
+ * 
+ * 
  * 
  * @author Thorsten Meinl, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
@@ -55,8 +59,6 @@ public class MetaNodeModel extends SpecialNodeModel
     implements WorkflowListener, NodeStateListener {
     private static final String INOUT_CONNECTIONS_KEY = "inOutConnections";
     
-    private WorkflowManager m_internalWFM;
-
     private final NodeContainer[] m_dataInContainer, m_dataOutContainer;
     private final NodeContainer[] m_modelInContainer, m_modelOutContainer;
     private final MetaInputModel[] m_dataInModels;
@@ -121,7 +123,7 @@ public class MetaNodeModel extends SpecialNodeModel
     protected MetaNodeModel(final int nrIns, final int nrOuts,
             final MetaNodeFactory f) {
         this(nrIns, nrOuts, 0, 0, createDefaultDataInputModels(nrIns),
-                new MetaInputModel[0], createDefaultDataOutputModels(nrOuts),
+                new MetaInputModel[0], createDefDataOutputModels(nrOuts),
                 new MetaOutputModel[0], f);
     }
 
@@ -135,7 +137,7 @@ public class MetaNodeModel extends SpecialNodeModel
     }
 
     
-    private static MetaOutputModel[] createDefaultDataOutputModels(final int c) {
+    private static MetaOutputModel[] createDefDataOutputModels(final int c) {
         MetaOutputModel[] m = new MetaOutputModel[c];
         for (int i = 0; i < c; i++) {
             m[i] = new DataOutputNodeModel();
@@ -158,12 +160,12 @@ public class MetaNodeModel extends SpecialNodeModel
             for (int i = 0; (i < m_dataInModels.length)
                 && (i < inSpecs.length); i++) {
                 m_dataInModels[i].setDataTableSpec(inSpecs[i]);
-                m_internalWFM.configureNode(m_dataInContainer[i].getID());
+                internalWFM().configureNode(m_dataInContainer[i].getID());
             }
                         
             for (int i = inSpecs.length; i < m_dataInModels.length; i++) {
                 m_dataInModels[i].setDataTableSpec(inSpecs[inSpecs.length - 1]);
-                m_internalWFM.configureNode(m_dataInContainer[i].getID());
+                internalWFM().configureNode(m_dataInContainer[i].getID());
             }
         }
         
@@ -191,7 +193,11 @@ public class MetaNodeModel extends SpecialNodeModel
             final ExecutionMonitor exec) throws Exception {
         exec.setMessage("Executing inner workflow");
         
-        m_internalWFM.executeAll(true);
+        KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
+            public void run() {
+                internalWFM().executeAll(true);
+            }
+        });
         exec.checkCanceled();
         
         // translate output
@@ -222,13 +228,13 @@ public class MetaNodeModel extends SpecialNodeModel
     
     
     /**
-     * Adds the input and output nodes to the workflow.
+     * Adds the input and output nodes to the workflow. 
      */
     private void addInOutNodes() {
         LOGGER.debug("Adding in- and output nodes");
         for (int i = 0; i < m_dataInContainer.length; i++) {
             final int temp = i;
-            m_dataInContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+            m_dataInContainer[i] = internalWFM().addNewNode(new NodeFactory() {
                 @Override
                 public NodeModel createNodeModel() {
                     return m_dataInModels[temp];
@@ -264,7 +270,7 @@ public class MetaNodeModel extends SpecialNodeModel
 
         for (int i = 0; i < m_dataOutContainer.length; i++) {
             final int temp = i;
-            m_dataOutContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+            m_dataOutContainer[i] = internalWFM().addNewNode(new NodeFactory() {
                 @Override
                 public NodeModel createNodeModel() {
                     return m_dataOutModels[temp];
@@ -302,7 +308,7 @@ public class MetaNodeModel extends SpecialNodeModel
 
         for (int i = 0; i < m_modelInContainer.length; i++) {
             final int temp = i;
-            m_modelInContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+            m_modelInContainer[i] = internalWFM().addNewNode(new NodeFactory() {
                 @Override
                 public NodeModel createNodeModel() {
                     return m_modelInModels[temp];
@@ -338,7 +344,7 @@ public class MetaNodeModel extends SpecialNodeModel
 
         for (int i = 0; i < m_modelOutContainer.length; i++) {
             final int temp = i;
-            m_modelOutContainer[i] = m_internalWFM.addNewNode(new NodeFactory() {
+            m_modelOutContainer[i] = internalWFM().addNewNode(new NodeFactory() {
                 @Override
                 public NodeModel createNodeModel() {
                     return m_modelOutModels[temp];
@@ -380,14 +386,15 @@ public class MetaNodeModel extends SpecialNodeModel
      * 
      * @param connections the settings in which the connections are stored
      * @throws InvalidSettingsException if one of the settings is invalid
+     * @throws WorkflowInExecutionException 
      */
     private void addInOutConnections(final NodeSettings connections)
-    throws InvalidSettingsException {
+    throws InvalidSettingsException, WorkflowInExecutionException {
         LOGGER.debug("Adding in- and output connections");
         for (String key : connections) {
             if (key.startsWith("connection_")) {
                 int[] conn = connections.getIntArray(key);
-                m_internalWFM.addConnection(conn[0], conn[1], conn[2],
+                internalWFM().addConnection(conn[0], conn[1], conn[2],
                         conn[3]);
             }
         }        
@@ -401,8 +408,12 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     @Override
     protected void reset() {        
-        if (!m_resetFromInterior && (m_internalWFM != null)) {
-            m_internalWFM.resetAndConfigureAll();
+        if (!m_resetFromInterior && (internalWFM() != null)) {
+            try {
+                internalWFM().resetAndConfigureAll();
+            } catch (WorkflowInExecutionException ex) {
+                LOGGER.error("Could not reset meta node", ex);
+            }
         }
     }
 
@@ -415,7 +426,7 @@ public class MetaNodeModel extends SpecialNodeModel
     @Override
     protected void saveSettingsTo(final File nodeFile,
             final NodeSettings settings, final ExecutionMonitor exec) {
-        if (m_internalWFM == null) { return; }
+        if (internalWFM() == null) { return; }
         
         NodeSettings connections = settings.addConfig(INOUT_CONNECTIONS_KEY);
         
@@ -424,7 +435,7 @@ public class MetaNodeModel extends SpecialNodeModel
         
         for (NodeContainer nc : m_dataInContainer) {
             List<ConnectionContainer> conncon =
-                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
+                internalWFM().getOutgoingConnectionsAt(nc, 0);
             for (ConnectionContainer cc : conncon) {
                 conn[0] = cc.getSource().getID();
                 conn[1] = cc.getSourcePortID();
@@ -437,7 +448,7 @@ public class MetaNodeModel extends SpecialNodeModel
         
         for (NodeContainer nc : m_dataOutContainer) {
             ConnectionContainer cc =
-                m_internalWFM.getIncomingConnectionAt(nc, 0);
+                internalWFM().getIncomingConnectionAt(nc, 0);
             if (cc != null) {
                 conn[0] = cc.getSource().getID();
                 conn[1] = cc.getSourcePortID();
@@ -450,7 +461,7 @@ public class MetaNodeModel extends SpecialNodeModel
 
         for (NodeContainer nc : m_modelInContainer) {
             List<ConnectionContainer> conncon =
-                m_internalWFM.getOutgoingConnectionsAt(nc, 0);
+                internalWFM().getOutgoingConnectionsAt(nc, 0);
             for (ConnectionContainer cc : conncon) {
                 conn[0] = cc.getSource().getID();
                 conn[1] = cc.getSourcePortID();
@@ -463,7 +474,7 @@ public class MetaNodeModel extends SpecialNodeModel
         
         for (NodeContainer nc : m_modelOutContainer) {
             ConnectionContainer cc =
-                m_internalWFM.getIncomingConnectionAt(nc, 0);
+                internalWFM().getIncomingConnectionAt(nc, 0);
             if (cc != null) {
                 conn[0] = cc.getSource().getID();
                 conn[1] = cc.getSourcePortID();
@@ -492,22 +503,16 @@ public class MetaNodeModel extends SpecialNodeModel
         try {
             File f = new File(nodeFile.getParentFile(), "workflow.knime");
             f.createNewFile();
-            m_internalWFM.save(f, omitNodes);
+            internalWFM().save(f, omitNodes);
         } catch (IOException ex) {
             LOGGER.error(ex);
         } catch (CanceledExecutionException ex) {
             LOGGER.error(ex);
+        } catch (WorkflowInExecutionException ex) {
+            LOGGER.error("Could not save meta node", ex);
         }
     }
 
-    /**
-     * @see de.unikn.knime.core.node.NodeModel#validateSettings(NodeSettings)
-     */
-    @Override
-    protected void validateSettings(final NodeSettings settings)
-            throws InvalidSettingsException {
-        // maybe do some sanity checks?
-    }
 
     /**
      * Returns the workflow manager representing the meta-workflow.
@@ -517,7 +522,7 @@ public class MetaNodeModel extends SpecialNodeModel
     public WorkflowManager getMetaWorkflowManager() {
         createInternalWFM();
         
-        return m_internalWFM;
+        return internalWFM();
     }
 
     /**
@@ -580,14 +585,20 @@ public class MetaNodeModel extends SpecialNodeModel
             final int inPortID) {
         createInternalWFM();
         m_dataInModels[inPortID].setDataTableSpec(spec);
-        m_internalWFM.resetAndConfigureNode(m_dataInContainer[inPortID].getID());
         
-        if (inPortID == getNrDataIns() - 1) {
-            for (int i = 0; i < m_dataInModels.length; i++) {
-                m_dataInModels[i].setDataTableSpec(spec);
-                m_internalWFM.resetAndConfigureNode(
-                        m_dataInContainer[i].getID());                
+        try {
+            internalWFM().resetAndConfigureNode(
+                    m_dataInContainer[inPortID].getID());
+            
+            if (inPortID == getNrDataIns() - 1) {
+                for (int i = 0; i < m_dataInModels.length; i++) {
+                    m_dataInModels[i].setDataTableSpec(spec);
+                    internalWFM().resetAndConfigureNode(
+                            m_dataInContainer[i].getID());                
+                }
             }
+        } catch (WorkflowInExecutionException ex) {
+            LOGGER.error("Could not reset meta input nodes", ex);
         }
     }
 
@@ -600,14 +611,20 @@ public class MetaNodeModel extends SpecialNodeModel
         createInternalWFM();
         LOGGER.debug("Resetting input node #" + inPortID);
         super.inportWasDisconnected(inPortID);
-        // m_dataInContainer[inPortID].reset();
-        if (inPortID < getNrDataIns()) {
-            m_dataInModels[inPortID].setDataTable(null);
-            m_internalWFM.resetAndConfigureNode(m_dataInContainer[inPortID].getID());
-        } else {
-            m_modelInModels[inPortID - getNrDataIns()].setPredictorParams(null);
-            m_internalWFM.resetAndConfigureNode(
-                    m_modelInContainer[inPortID - getNrDataIns()].getID());
+
+        try {
+            if (inPortID < getNrDataIns()) {
+                m_dataInModels[inPortID].setDataTable(null);
+                internalWFM().resetAndConfigureNode(
+                        m_dataInContainer[inPortID].getID());
+            } else {
+                m_modelInModels[inPortID - getNrDataIns()]
+                                .setPredictorParams(null);
+                internalWFM().resetAndConfigureNode(
+                        m_modelInContainer[inPortID - getNrDataIns()].getID());
+            }
+        } catch (WorkflowInExecutionException ex) {
+            LOGGER.error("Could not reset meta input nodes", ex);
         }
     }
 
@@ -664,21 +681,15 @@ public class MetaNodeModel extends SpecialNodeModel
     }
     
    
+    private boolean m_wfmInitialized;
     private void createInternalWFM() {
-        if (m_internalWFM == null) {
-            m_internalWFM = createSubManager();
-            m_internalWFM.addListener(this);
+        if (!m_wfmInitialized) {
+            internalWFM().addListener(this);
             addInOutNodes();
-        }        
+        }
     }
 
     
-    protected WorkflowManager internalWFM() {
-        createInternalWFM();
-        return m_internalWFM;
-    }
-
-
     /** 
      * @see de.unikn.knime.core.node.SpecialNodeModel
      *  #loadValidatedSettingsFrom(java.io.File,
@@ -691,21 +702,26 @@ public class MetaNodeModel extends SpecialNodeModel
             throws InvalidSettingsException {
         createInternalWFM();
         // load the "internal" workflow
-        File f = new File(nodeFile.getParentFile(), "workflow.knime");
+        File f = new File(nodeFile.getParentFile(),
+                WorkflowManager.WORKFLOW_FILE);
         if (f.exists() && f.isFile()) {
-            m_internalWFM.clear();
-            addInOutNodes();
-
             try {
-                m_internalWFM.load(f);
-            } catch (IOException ex) {
-                throw new InvalidSettingsException("Could not load internal"
-                        + " workflow");
-            } catch (CanceledExecutionException ex) {
-                throw new InvalidSettingsException("Loading of internal"
-                        + " workflow has been interrupted by user");
+                internalWFM().clear();
+                addInOutNodes();
+    
+                try {
+                    internalWFM().load(f);
+                } catch (IOException ex) {
+                    throw new InvalidSettingsException("Could not load internal"
+                            + " workflow");
+                } catch (CanceledExecutionException ex) {
+                    throw new InvalidSettingsException("Loading of internal"
+                            + " workflow has been interrupted by user");
+                }
+                addInOutConnections(settings.getConfig(INOUT_CONNECTIONS_KEY));
+            } catch (WorkflowInExecutionException ex) {
+                LOGGER.error("Could not load internal workflow", ex);
             }
-            addInOutConnections(settings.getConfig(INOUT_CONNECTIONS_KEY));
         }
     }
 
@@ -723,5 +739,16 @@ public class MetaNodeModel extends SpecialNodeModel
                 m_resetFromInterior = false;
             }
         }
+    }
+
+
+    /**
+     * @see de.unikn.knime.core.node.SpecialNodeModel
+     *  #validateSettings(java.io.File, de.unikn.knime.core.node.NodeSettings)
+     */
+    @Override
+    protected void validateSettings(final File nodeFile,
+            final NodeSettings settings) throws InvalidSettingsException {
+        //         
     }    
 }

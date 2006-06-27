@@ -545,8 +545,9 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * TODO Thorsten Meinl
-     * @return
+     * Returns all successor node containers of this node container.
+     * 
+     * @return a collection of all successor nodes.
      */
     public Collection<NodeContainer> getAllSuccessors() {
         ArrayList<NodeContainer> succ = new ArrayList<NodeContainer>();
@@ -780,6 +781,10 @@ public class NodeContainer implements NodeStateListener {
         m_node.resetAndConfigure();
     }
 
+    /**
+     * Configures the underlying node.
+     * @see Node#configure()
+     */
     void configure() {
         m_node.configure();
     }

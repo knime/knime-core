@@ -34,6 +34,7 @@ import de.unikn.knime.core.node.workflow.WorkflowManager;
  */
 public abstract class SpecialNodeModel extends NodeModel {
     private Node m_node;
+    private WorkflowManager m_internalWFM;
     
     /**
      * Creates a new model with the given number of data, and predictor in- and
@@ -123,6 +124,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     /**
      * This method is called, if a new data table is available at an input port.
      * 
+     * @param table the new data table
      * @param inPortID the ID of the data port
      */
     protected void inportHasNewDataTable(final DataTable table,
@@ -131,6 +133,13 @@ public abstract class SpecialNodeModel extends NodeModel {
     }
     
     
+    /**
+     * This method is called, if a new data table spec is available at an input
+     * port.
+     * 
+     * @param spec the new data table spec
+     * @param inPortID the ID of the data port
+     */
     protected void inportHasNewTableSpec(final DataTableSpec spec,
             final int inPortID) {
         // nothing to do for this class here
@@ -155,9 +164,30 @@ public abstract class SpecialNodeModel extends NodeModel {
         // nothing to do for this class here
     }
     
+    /**
+     * Sets the internal workflow manager. If it has already been set an
+     * exception is thrown.
+     * 
+     * @param wfm the internal workflow manager
+     * @throws IllegalStateException if the workflow manager has already been
+     * set
+     */
+    void setInternalWFM(final WorkflowManager wfm)
+    throws IllegalStateException {
+        if (m_internalWFM != null) {
+            throw new IllegalStateException("Internal workflow manager has"
+                    + " already been set");
+        }
+        m_internalWFM = wfm;
+    }
     
-    protected final WorkflowManager createSubManager() {
-        return m_node.getWorkflowManager().createSubManager();
+    /**
+     * Returns the internal workflow manager.
+     * 
+     * @return a workflow manager that is a child of the main manager
+     */
+    protected final WorkflowManager internalWFM() {
+        return m_internalWFM;
     }
     
     /**
@@ -171,6 +201,24 @@ public abstract class SpecialNodeModel extends NodeModel {
         return exec.getProgressMonitor();
     }
 
+    
+    /**
+     * Validates the specified settings in the model and then loads them into
+     * it.
+     * 
+     * @param nodeFile the node file
+     * @param settings The settings to read.
+     * @param exec an execution monitor
+     * @throws InvalidSettingsException If the load iof the validated settings
+     *             fails.
+     */
+    final void loadSettingsFrom(final File nodeFile,
+            final NodeSettings settings, final ExecutionMonitor exec)
+            throws InvalidSettingsException {
+        validateSettings(nodeFile, settings);
+        loadValidatedSettingsFrom(nodeFile, settings, exec);
+    }
+    
         
     /** 
      * @see de.unikn.knime.core.node.NodeModel
@@ -182,6 +230,39 @@ public abstract class SpecialNodeModel extends NodeModel {
         // nothing to do here        
     }
 
+    
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     */
+    @Override
+    protected final void validateSettings(final NodeSettings settings)
+    throws InvalidSettingsException {
+        // nothing to do here
+    }
+
+    /**
+     * Validates the settings in the passed <code>NodeSettings</code> object.
+     * The specified settings should be checked for completeness and
+     * consistencty. It must be possible to load a settings object validated
+     * here without any exception in the
+     * <code>#loadValidatedSettings(NodeSettings)</code> method. The method
+     * must not change the current settings in the model - it is supposed to
+     * just check them. If some settings are missing, invalid, inconsistent, or
+     * just not right throw an exception with a message useful to the user.
+     * 
+     * @param nodeDir the node file
+     * @param settings The settings to validate.
+     * @throws InvalidSettingsException If the validation of the settings
+     *             failed.
+     * @see #saveSettingsTo(NodeSettings)
+     * @see #loadValidatedSettingsFrom(NodeSettings)
+     */
+    protected abstract void validateSettings(final File nodeDir,
+            final NodeSettings settings)
+            throws InvalidSettingsException;
+    
+    
     /**
      * @see de.unikn.knime.core.node.NodeModel
      *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
@@ -191,15 +272,36 @@ public abstract class SpecialNodeModel extends NodeModel {
         // nothing to do here        
     }
 
-    protected abstract void saveSettingsTo(final File nodeFile,
+    /**
+     * Saves the settings of this model.
+     * 
+     * @param nodeDir the directory for the node
+     * @param settings a settings object
+     * @param exec an execution monitor to report progress for long-running
+     * saves
+     */
+    protected abstract void saveSettingsTo(final File nodeDir,
             final NodeSettings settings, final ExecutionMonitor exec);
     
     
-    protected abstract void loadValidatedSettingsFrom(final File nodeFile,
+    /**
+     * Loads the validated settings for this model.
+     * 
+     * @param nodeDir the directory of the node
+     * @param settings a settings object
+     * @param exec an execution monitor to report progress for long-running
+     * loads
+     * @throws InvalidSettingsException if the settings are invalid
+     */
+    protected abstract void loadValidatedSettingsFrom(final File nodeDir,
             final NodeSettings settings, final ExecutionMonitor exec)
             throws InvalidSettingsException;
     
     
+    /**
+     * Resets the node. If you use this method make sure that no loop is
+     * created.
+     */
     protected final void resetMyself() {
         m_node.resetAndConfigure();
     }

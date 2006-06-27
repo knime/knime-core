@@ -35,7 +35,6 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.interrupt.InterruptibleNodeModel;
 import de.unikn.knime.core.node.meta.MetaInputModel;
-import de.unikn.knime.core.node.meta.MetaNodeModel;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.core.util.FileUtil;
@@ -112,8 +111,6 @@ public final class Node {
      */
     private boolean m_isCurrentlySaved = false;
 
-    private final WorkflowManager m_workflowManager;
-
     static {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -157,8 +154,6 @@ public final class Node {
         // remember NodeFactory
         m_factory = nodeFactory;
 
-        m_workflowManager = wfm;
-        
         // keep node name
         m_name = m_factory.getNodeName().intern();
 
@@ -208,13 +203,12 @@ public final class Node {
 
         if (m_model instanceof SpecialNodeModel) {
             ((SpecialNodeModel) m_model).setNode(this);
+            ((SpecialNodeModel) m_model).setInternalWFM(wfm.createSubManager());
         }
         
         // let the model create its 'default' table specs
         configure();
-  
-
-    } // Node(NodeFactory)
+    }
     
     /**
      * Loads the node settings and internal structures from the given location,
@@ -265,10 +259,9 @@ public final class Node {
         try {
             NodeSettings modelSettings = settings.getConfig("model");
             if (m_model instanceof SpecialNodeModel) {
-                ((SpecialNodeModel) m_model).loadValidatedSettingsFrom(nodeFile,
+                ((SpecialNodeModel) m_model).loadSettingsFrom(nodeFile,
                         modelSettings, exec);
-            } else {            
-                m_model.validateSettings(modelSettings);
+            } else {
                 m_model.loadSettingsFrom(modelSettings);
             }            
         } catch (InvalidSettingsException ise) {
@@ -1774,20 +1767,10 @@ public final class Node {
      * does not represent a meta node
      */
     public WorkflowManager getEmbeddedWorkflowManager() {
-        if (m_model instanceof MetaNodeModel) {
-            return ((MetaNodeModel) m_model).getMetaWorkflowManager();
+        if (m_model instanceof SpecialNodeModel) {
+            return ((SpecialNodeModel) m_model).internalWFM();
         } else {
             return null;
         }
-    }
-    
-    
-    /**
-     * Returns the workflow manager that is responsible for this node.
-     * 
-     * @return the workflow manager or <code>null</code> if none exists
-     */
-    WorkflowManager getWorkflowManager() {
-        return m_workflowManager;
     }
 }

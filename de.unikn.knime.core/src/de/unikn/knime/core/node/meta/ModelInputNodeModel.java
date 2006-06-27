@@ -134,6 +134,7 @@ public class ModelInputNodeModel extends MetaInputModel {
         // nothing to do here
     }
     
+    @Override
     public void setPredictorParams(final PredictorParams predParams) {
         m_predictorParams = predParams;
     }

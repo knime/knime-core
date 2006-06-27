@@ -155,6 +155,13 @@ public abstract class WorkflowEvent {
 
     /** Event: node is being executed. */
     public static class NodeStarted extends WorkflowEvent {
+        /**
+         * Creates a new "node started execution" event.
+         * 
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>) 
+         */
         public NodeStarted(final int nodeID,
                 final Object oldValue, final Object newValue) {
             super(nodeID, oldValue, newValue);
@@ -164,6 +171,13 @@ public abstract class WorkflowEvent {
 
     /** Event: node execution is finished. */
     public static class NodeFinished extends WorkflowEvent {
+        /**
+         * Creates a new "node finished execution" event.
+         * 
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>) 
+         */
         public NodeFinished(final int nodeID,
                 final Object oldValue, final Object newValue) {
             super(nodeID, oldValue, newValue);
