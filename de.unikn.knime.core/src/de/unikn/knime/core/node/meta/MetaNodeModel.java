@@ -686,6 +686,7 @@ public class MetaNodeModel extends SpecialNodeModel
         if (!m_wfmInitialized) {
             internalWFM().addListener(this);
             addInOutNodes();
+            m_wfmInitialized = true;
         }
     }
 
