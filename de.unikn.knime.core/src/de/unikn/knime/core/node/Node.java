@@ -225,9 +225,10 @@ public final class Node {
         node.m_model.saveSettingsTo(modelSettings);
         try {
             this.m_model.loadSettingsFrom(modelSettings);
-            resetAndConfigure();
-        } catch (InvalidSettingsException ex) {
-            m_logger.error("Could not copy node", ex);
+        } catch (InvalidSettingsException ise) {
+            m_logger.error("Could not copy node, reason: " + ise.getMessage());
+        } finally {
+            resetAndConfigure();            
         }
     }
 
@@ -1378,6 +1379,11 @@ public final class Node {
     }
     
     
+    /**
+     * Saves node settings, name, inConfigured, isExecuted, inports, outports,
+     * and the underlying model settings.
+     * @param settings Used to write node and model settings.
+     */
     public void save(final NodeSettings settings) {
         // write node name
         settings.addString("name", m_name);
