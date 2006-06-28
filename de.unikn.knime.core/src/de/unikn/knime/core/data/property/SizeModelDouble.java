@@ -64,18 +64,28 @@ public class SizeModelDouble implements SizeModel {
      */
     public double getSize(final DataCell dc) {
         if (dc.isMissing()) {
-            return -1;   // missing value: -1
+            return SizeHandler.DEFAULT_SIZE;
         }
         if (dc.getType().isCompatible(DoubleValue.class)) {
             double d = ((DoubleValue)dc).getDoubleValue();
             if ((d < m_min) || (d > m_max)) {
-                return -1;    // out of range!
+                return SizeHandler.DEFAULT_SIZE;    // out of range
             }
             return (d - m_min) / (m_max - m_min);
         }
-        return -1;       // incomptible type: -1
+        return SizeHandler.DEFAULT_SIZE;       // incomptible type
     }
     
+    /** @return minimum double value. */
+    public double getMinValue() {
+        return m_min;
+    }
+
+    /** @return maximum double value. */
+    public double getMaxValue() {
+        return m_max;
+    }
+
     private static final String CFG_MIN = "min";
     private static final String CFG_MAX = "max";
     

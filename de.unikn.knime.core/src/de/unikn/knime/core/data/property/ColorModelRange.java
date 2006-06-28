@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,28 +29,27 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
 
 /**
- * Computes colors based on a range of minimum and maximum values
- * assigned to certain colors which are interpolated between a min and
- * maximum color.
+ * Computes colors based on a range of minimum and maximum values assigned to
+ * certain colors which are interpolated between a min and maximum color.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ColorModelRange implements ColorModel {
 
     /** Lower bound. */
-    private final double m_lower;
-    
+    private final double m_minValue;
+
     /** Upper bound. */
-    private final double m_upper;
+    private final double m_maxValue;
 
     /** Upper minus lower bound. */
     private final double m_range;
 
     /** Minimum color for lower bound. */
-    private final Color m_min;
+    private final Color m_minColor;
 
     /** Maximum color for upper bound. */
-    private final Color m_max;
+    private final Color m_maxColor;
 
     /**
      * Creates new ColorHandler based on a mapping.
@@ -70,85 +67,122 @@ public final class ColorModelRange implements ColorModel {
             throw new IllegalArgumentException("Lower and upper bound are not"
                     + " ordered: lower=" + lower + ",upper=" + upper);
         }
-        m_lower = lower;
-        m_upper = upper;
+        m_minValue = lower;
+        m_maxValue = upper;
         m_range = upper - lower;
         if (min == null || max == null) {
             throw new IllegalArgumentException();
         }
-        m_min = min;
-        m_max = max;
+        m_minColor = min;
+        m_maxColor = max;
     }
 
     /**
-     * Returns a ColorAttr for the given DataCell value, or 
+     * Returns a ColorAttr for the given DataCell value, or
      * <code>ColorAttr.DEFAULT</code> if not set. The colors red, green, and
-     * blue are merged in the same ratio from the orginal spread of the 
-     * lower and upper bounds.
+     * blue are merged in the same ratio from the orginal spread of the lower
+     * and upper bounds.
      * 
      * @param dc A DataCell value to get color for.
      * @return A ColorAttr for a DataCell value or the DEFAULT ColorAttr.
      */
     public ColorAttr getColorAttr(final DataCell dc) {
-        if (dc == null || dc.isMissing() 
+        if (dc == null || dc.isMissing()
                 || !dc.getType().isCompatible(DoubleValue.class)) {
             return ColorAttr.DEFAULT;
         }
         double ratio;
-        // if lower and upper bound are equal 
+        // if lower and upper bound are equal
         if (m_range == 0.0) {
             // take the "middle" of both colors
             ratio = 0.5;
         } else {
             double value = ((DoubleValue)dc).getDoubleValue();
-            ratio = ((value - m_lower) / m_range);
+            ratio = ((value - m_minValue) / m_range);
         }
-        int r = (int)((m_max.getRed() - m_min.getRed()) * ratio)
-                + m_min.getRed();
-        int g = (int)((m_max.getGreen() - m_min.getGreen()) * ratio)
-                + m_min.getGreen();
-        int b = (int)((m_max.getBlue() - m_min.getBlue()) * ratio)
-                + m_min.getBlue();
+        int r = (int)((m_maxColor.getRed() - m_minColor.getRed()) * ratio)
+                + m_minColor.getRed();
+        int g = (int)((m_maxColor.getGreen() - m_minColor.getGreen()) * ratio)
+                + m_minColor.getGreen();
+        int b = (int)((m_maxColor.getBlue() - m_minColor.getBlue()) * ratio)
+                + m_minColor.getBlue();
         // check color ranges first
-        if (r < 0) { r = 0; }
-        if (r > 255) { r = 255; }
-        if (g < 0) { g = 0; }
-        if (g > 255) { g = 255; }
-        if (b < 0) { b = 0; }
-        if (b > 255) { b = 255; }
+        if (r < 0) {
+            r = 0;
+        }
+        if (r > 255) {
+            r = 255;
+        }
+        if (g < 0) {
+            g = 0;
+        }
+        if (g > 255) {
+            g = 255;
+        }
+        if (b < 0) {
+            b = 0;
+        }
+        if (b > 255) {
+            b = 255;
+        }
         return ColorAttr.getInstance(new Color(r, g, b));
     }
-    
+
+    /** @return minimum double value. */
+    public double getMinValue() {
+        return m_minValue;
+    }
+
+    /** @return minimum Color value. */
+    public Color getMinColor() {
+        return m_minColor;
+    }
+
+    /** @return maximum double value. */
+    public double getMaxValue() {
+        return m_maxValue;
+    }
+
+    /** @return maximum Color value. */
+    public Color getMaxColor() {
+        return m_maxColor;
+    }
+
     private static final String CFG_LOWER_VALUE = "lower_value";
+
     private static final String CFG_UPPER_VALUE = "upper_value";
+
     private static final String CFG_LOWER_COLOR = "lower_color";
+
     private static final String CFG_UPPER_COLOR = "upper_color";
 
     /**
      * Save lower and upper, and min and max colors to the given Config.
+     * 
      * @param config to save settings to.
      * @see de.unikn.knime.core.data.property.ColorHandler.ColorModel
      *      #save(de.unikn.knime.core.node.config.Config)
      */
     public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
-        config.addDouble(CFG_LOWER_VALUE, m_lower);
-        config.addDouble(CFG_UPPER_VALUE, m_upper);
-        config.addIntArray(CFG_LOWER_COLOR, m_min.getRed(), m_min.getGreen(), 
-                m_min.getBlue(), m_min.getAlpha());
-        config.addIntArray(CFG_UPPER_COLOR, m_max.getRed(), m_max.getGreen(), 
-                m_max.getBlue(), m_max.getAlpha());
+        assert config.keySet().isEmpty() : "Subconfig must be empty: "
+                + Arrays.toString(config.keySet().toArray());
+        config.addDouble(CFG_LOWER_VALUE, m_minValue);
+        config.addDouble(CFG_UPPER_VALUE, m_maxValue);
+        config.addIntArray(CFG_LOWER_COLOR, m_minColor.getRed(), m_minColor
+                .getGreen(), m_minColor.getBlue(), m_minColor.getAlpha());
+        config.addIntArray(CFG_UPPER_COLOR, m_maxColor.getRed(), m_maxColor
+                .getGreen(), m_maxColor.getBlue(), m_maxColor.getAlpha());
     }
-    
+
     /**
-     * Load color settings from Config including lower and upper bound, and
-     * min and max colors.
+     * Load color settings from Config including lower and upper bound, and min
+     * and max colors.
+     * 
      * @param config Read settings from.
-     * @return A new <code>ColorModelRange</code> object. 
+     * @return A new <code>ColorModelRange</code> object.
      * @throws InvalidSettingsException If the settings could not be read.
      */
-    public static ColorModelRange load(final Config config) 
+    public static ColorModelRange load(final Config config)
             throws InvalidSettingsException {
         double lower = config.getDouble(CFG_LOWER_VALUE);
         double upper = config.getDouble(CFG_UPPER_VALUE);
@@ -158,15 +192,16 @@ public final class ColorModelRange implements ColorModel {
         Color maxColor = new Color(max[0], max[1], min[2], min[3]);
         return new ColorModelRange(lower, minColor, upper, maxColor);
     }
-    
+
     /**
-     * Returns a string representation containing the type of the model and
-     * an instance unique ID. 
+     * Returns a string representation containing the type of the model and an
+     * instance unique ID.
+     * 
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return "Range ColorModel"; 
+        return "Range ColorModel";
     }
 
 }
