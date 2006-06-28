@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,7 +30,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IWorkbenchPart;
 
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.core.node.workflow.NodeContainer;
@@ -60,7 +57,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @param editor The editor that is associated with this action
      */
     public AbstractNodeAction(final WorkflowEditor editor) {
-        super((IWorkbenchPart)editor);
+        super(editor);
         setLazyEnablementCalculation(true);
 
         m_editor = editor;
@@ -99,6 +96,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * 
      * @see org.eclipse.jface.action.IAction#run()
      */
+    @Override
     public final void run() {
 
         // get selected parts...
@@ -118,8 +116,8 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @return The selected <code>NodeContainerEditParts</code>, may be empty
      */
     protected NodeContainerEditPart[] getSelectedNodeParts() {
-        ArrayList<NodeContainerEditPart> objects = new ArrayList<NodeContainerEditPart>(
-                getSelectedObjects());
+        ArrayList<NodeContainerEditPart> objects =
+            new ArrayList<NodeContainerEditPart>(getSelectedObjects());
 
         // clean list, that is, remove all objects that are not edit
         // parts for a NodeContainer
@@ -131,8 +129,8 @@ public abstract class AbstractNodeAction extends SelectionAction {
             }
         }
 
-        final NodeContainerEditPart[] parts = (NodeContainerEditPart[])objects
-                .toArray(new NodeContainerEditPart[objects.size()]);
+        final NodeContainerEditPart[] parts = objects.toArray(
+                new NodeContainerEditPart[objects.size()]);
 
         return parts;
     }
@@ -140,6 +138,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
     /**
      * @see org.eclipse.gef.ui.actions.SelectionAction#getSelectedObjects()
      */
+    @Override
     protected List getSelectedObjects() {
         ISelectionProvider provider = m_editor.getEditorSite()
                 .getSelectionProvider();
@@ -157,13 +156,17 @@ public abstract class AbstractNodeAction extends SelectionAction {
     /**
      * Returns all edit parts with the given ids.
      * 
-     * @param ids the ids to retrieve the edit parts for
+     * @param nodeIds the node container ids to retrieve the edit parts for
+     * @param connectionIds the connection container ids to retrieve the edit
+     * parts for
      * @return the edit parts of the specified ids
      */
-    protected List<AbstractWorkflowEditPart> getEditPartsById(final int[] ids) {
+    protected List<AbstractWorkflowEditPart> getEditPartsById(
+            final int[] nodeIds, final int[] connectionIds) {
 
         // the result
-        ArrayList<AbstractWorkflowEditPart> parts = new ArrayList<AbstractWorkflowEditPart>();
+        ArrayList<AbstractWorkflowEditPart> parts =
+            new ArrayList<AbstractWorkflowEditPart>();
 
         // get the parent from the reference part and then the children
         List<EditPart> allParts = m_editor.getViewer().getRootEditPart()
@@ -180,16 +183,14 @@ public abstract class AbstractNodeAction extends SelectionAction {
             if (container instanceof NodeContainer) {
                 NodeContainer nodeContainer = (NodeContainer)container;
 
-                if (isIntValInArray(nodeContainer.getID(), ids)) {
-
+                if (isInArray(nodeContainer.getID(), nodeIds)) {
                     parts.add((AbstractWorkflowEditPart)part);
                 }
             } else if (container instanceof ConnectionContainer) {
+                ConnectionContainer connectionContainer =
+                    (ConnectionContainer)container;
 
-                ConnectionContainer connectionContainer = (ConnectionContainer)container;
-
-                if (isIntValInArray(connectionContainer.getID(), ids)) {
-
+                if (isInArray(connectionContainer.getID(), connectionIds)) {
                     parts.add((AbstractWorkflowEditPart)part);
                 }
             }
@@ -207,8 +208,9 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * 
      * @return true if value is included in array
      */
-    private static boolean isIntValInArray(final int value, final int[] array) {
-
+    private static boolean isInArray(final int value, final int[] array) {
+        if (array == null) { return false; }
+        
         for (int arrayValue : array) {
             if (arrayValue == value) {
                 return true;
@@ -256,6 +258,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * 
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
         return getSelectedNodeParts().length > 0;
     }
@@ -265,6 +268,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * 
      * @see org.eclipse.jface.action.IAction#getId()
      */
+    @Override
     public abstract String getId();
 
     /**

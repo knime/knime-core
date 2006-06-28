@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -27,10 +25,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ClipboardObject;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -69,6 +64,7 @@ public class CopyAction extends AbstractClipboardAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
 
         ISharedImages sharedImages = PlatformUI.getWorkbench()
@@ -79,6 +75,7 @@ public class CopyAction extends AbstractClipboardAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Copy";
     }
@@ -88,6 +85,7 @@ public class CopyAction extends AbstractClipboardAction {
      * 
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
 
@@ -99,47 +97,27 @@ public class CopyAction extends AbstractClipboardAction {
      * 
      * @return the node settings representing the selected nodes
      */
-    private NodeSettings getNodeSettings(
+    private int[][] getCopyObjects(
             final NodeContainerEditPart[] nodeParts,
             final ConnectionContainerEditPart[] connectionParts) {
-
-        // copy node setttings root
-        NodeSettings clipboardRootSettings = new NodeSettings(
-                WorkflowEditor.CLIPBOARD_ROOT_NAME);
-
-        // save nodes in an own sub-config object as a series of configs
-        NodeSettings nodes = clipboardRootSettings
-                .addConfig(WorkflowManager.KEY_NODES);
-        for (NodeContainerEditPart nodeEditPart : nodeParts) {
-
-            NodeContainer nextNode = nodeEditPart.getNodeContainer();
-            // and save it to it's own config object
-            NodeSettings nextNodeConfig = nodes.addConfig("node_"
-                    + nextNode.getID());
-            nextNode.save(nextNodeConfig);
-            // TODO notify about node settings saved ????
+        int[] nodesToCopy = new int[nodeParts.length];
+        for (int i = 0; i < nodeParts.length; i++) {
+            nodesToCopy[i] = nodeParts[i].getNodeContainer().getID();
         }
 
-        // save connections in an own sub-config object as a series of configs
-        NodeSettings connections = clipboardRootSettings
-                .addConfig(WorkflowManager.KEY_CONNECTIONS);
 
-        for (ConnectionContainerEditPart connectionEditPart : connectionParts) {
-
-            ConnectionContainer nextConnection = (ConnectionContainer)connectionEditPart
-                    .getModel();
-
-            // // and save it to it's own config object
-            NodeSettings nextConnectionConfig = connections
-                    .addConfig("connection_" + nextConnection.getID());
-            nextConnection.save(nextConnectionConfig);
+        int[] connectionsToCopy = new int[connectionParts.length];
+        for (int i = 0; i < connectionParts.length; i++) {
+            connectionsToCopy[i] = 
+                ((ConnectionContainer) connectionParts[i].getModel()).getID();
         }
 
-        return clipboardRootSettings;
+        return new int[][] {nodesToCopy, connectionsToCopy};
     }
 
     /**
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction#runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
+     *  #runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
@@ -162,7 +140,7 @@ public class CopyAction extends AbstractClipboardAction {
         // new Transfer[]{ResourceTransfer.getInstance()});
         getEditor()
                 .setClipboardContent(
-                        new ClipboardObject(getNodeSettings(nodeParts,
+                        new ClipboardObject(getCopyObjects(nodeParts,
                                 connectionParts)));
 
         // update the actions

@@ -148,4 +148,14 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         m_bounds[1] = m_bounds[1] + moveDist;
     }
 
+    /** 
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        ModellingNodeExtraInfo newObject = new ModellingNodeExtraInfo();
+        newObject.m_bounds = this.m_bounds.clone();
+        newObject.m_type = this.m_type;
+        return newObject;
+    }    
 }

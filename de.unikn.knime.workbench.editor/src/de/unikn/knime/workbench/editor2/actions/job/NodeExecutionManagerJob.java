@@ -90,7 +90,14 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
     
                 // create a monitor object
                 LOGGER.info("executing up to node #" + container.getID());
-                m_manager.executeUpToNode(container.getID(), false);
+                try {
+                    m_manager.executeUpToNode(container.getID(), false);
+                } catch (IllegalArgumentException ex) {
+                    // ignore it
+                    // if the user selects more nodes in the workflow he
+                    // can selected "red" nodes and try to execute them
+                    // this fails of course
+                }
             }
     
             m_manager.waitUntilFinished();

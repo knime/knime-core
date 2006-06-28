@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -29,9 +27,10 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.workflow.NodeContainer;
+import de.unikn.knime.core.node.workflow.NodeExtraInfo;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ClipboardObject;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
@@ -72,6 +71,7 @@ public class PasteAction extends AbstractClipboardAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
 
         ISharedImages sharedImages = PlatformUI.getWorkbench()
@@ -82,6 +82,7 @@ public class PasteAction extends AbstractClipboardAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Paste";
     }
@@ -91,21 +92,16 @@ public class PasteAction extends AbstractClipboardAction {
      * 
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
-
         ClipboardObject clipboardContent = getEditor().getClipboardContent();
-
-        if (clipboardContent != null
-                && clipboardContent.getContent() instanceof NodeSettings) {
-
-            return true;
-        }
-
-        return false;
+        return (clipboardContent != null
+                && clipboardContent.getContent() instanceof int[][]);
     }
 
     /**
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction#runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
+     * #runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
@@ -117,7 +113,7 @@ public class PasteAction extends AbstractClipboardAction {
         ClipboardObject clipboardContent = getEditor().getClipboardContent();
         // ensure there is an object of type NodeSettings
         if (!(clipboardContent != null)
-                || !(clipboardContent.getContent() instanceof NodeSettings)) {
+                || !(clipboardContent.getContent() instanceof int[][])) {
 
             return;
         }
@@ -125,41 +121,48 @@ public class PasteAction extends AbstractClipboardAction {
         LOGGER.debug("Clipboard paste action invoked ...");
 
         // cast the clipboard object representing a sub workflow
-        NodeSettings copySettings = (NodeSettings)clipboardContent.getContent();
-        int[] newPartIds = null;
-        // pass the settings to the workflow manager to create the copied nodes
+        int[][] copySettings = (int[][])clipboardContent.getContent();
+        int[][] newPartIds = null;
         try {
+            newPartIds = manager.createSubWorkflow(copySettings[0],
+                    copySettings[1]);
+            
+            for (int i = 0; i < newPartIds[0].length; i++) {
+                NodeContainer nc =
+                    manager.getNodeContainerById(newPartIds[0][i]);
+                // finaly change the extra info so that the copies are
+                // located differently (if not null)
+                NodeExtraInfo extraInfo = nc.getExtraInfo();
+                if (extraInfo != null) {
+                    extraInfo.changePosition(
+                            80 * (clipboardContent.getRetrievalCounter() + 1));
+                    nc.setExtraInfo(extraInfo);
+                    // this is a bit dirty but
+                    // needed to trigger the re-layout of the node
+                }
 
-            newPartIds = manager.createSubWorkflow(copySettings,
-                    clipboardContent.getRetrievalCounter() + 1);
-
-        } catch (InvalidSettingsException ise) {
-
-            LOGGER.error("The retrieved settings object describing the "
-                    + "clipboard content is invalid. Reason: "
-                    + ise.getMessage());
-
-            return;
+                
+            }
+        } catch (CloneNotSupportedException ex) {
+            LOGGER.error("Could not copy nodes", ex);
         }
 
         EditPartViewer partViewer = getEditor().getViewer();
 
         // deselect the current selection and select the new pasted parts
         for (NodeContainerEditPart nodePart : nodeParts) {
-
             partViewer.deselect(nodePart);
         }
 
         for (ConnectionContainerEditPart connectionPart : getSelectedConnectionParts()) {
-
             partViewer.deselect(connectionPart);
         }
 
         // get the new ediparts and select them
-        List<AbstractWorkflowEditPart> newParts = getEditPartsById(newPartIds);
+        List<AbstractWorkflowEditPart> newParts =
+            getEditPartsById(newPartIds[0], newPartIds[1]);
 
         for (AbstractWorkflowEditPart newPart : newParts) {
-
             partViewer.appendSelection(newPart);
         }
 
