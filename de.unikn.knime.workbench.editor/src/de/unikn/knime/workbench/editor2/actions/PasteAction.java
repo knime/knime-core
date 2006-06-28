@@ -28,7 +28,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.NodeExtraInfo;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
@@ -101,7 +100,7 @@ public class PasteAction extends AbstractClipboardAction {
 
     /**
      * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
-     * #runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     *      #runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
