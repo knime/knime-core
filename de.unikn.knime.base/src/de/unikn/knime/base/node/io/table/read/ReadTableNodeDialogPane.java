@@ -37,8 +37,8 @@ public class ReadTableNodeDialogPane extends DefaultNodeDialogPane {
     public ReadTableNodeDialogPane() {
         super("Read Table");
         addDialogComponent(new DialogComponentFileChooser(
-                ReadTableNodeModel.CFG_FILENAME, 
-                JFileChooser.OPEN_DIALOG, ".knime"));
+                ReadTableNodeModel.CFG_FILENAME, JFileChooser.OPEN_DIALOG, 
+                ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
     }
 
 }

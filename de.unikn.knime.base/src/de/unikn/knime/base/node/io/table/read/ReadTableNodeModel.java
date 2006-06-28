@@ -39,8 +39,13 @@ import de.unikn.knime.core.node.NodeSettings;
  */
 public class ReadTableNodeModel extends NodeModel {
     
+    
+    
     /** Identifier for the node settings object. */
     static final String CFG_FILENAME = "filename";
+    
+    /** The extension of the files to store, \".knime\". */
+    public static final String PREFERRED_FILE_EXTENSION = ".table";
     
     private String m_fileName;
 

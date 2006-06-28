@@ -23,6 +23,7 @@ package de.unikn.knime.base.node.io.table.write;
 
 import javax.swing.JFileChooser;
 
+import de.unikn.knime.base.node.io.table.read.ReadTableNodeModel;
 import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import de.unikn.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
 
@@ -40,7 +41,7 @@ public class WriteTableNodeDialogPane extends DefaultNodeDialogPane {
         super("Write Table");
         addDialogComponent(new DialogComponentFileChooser(
                 WriteTableNodeModel.CFG_FILENAME, JFileChooser.SAVE_DIALOG, 
-                ".knime"));
+                ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
     }
 
 }
