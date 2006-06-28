@@ -174,7 +174,13 @@ public class NodeContainer implements NodeStateListener {
      */
     public NodeContainer(final NodeFactory f, final WorkflowManager wfm,
             final int id) {
-        m_node = new Node(f, wfm);
+        this (new Node(f, wfm), wfm, id);
+    }
+
+    
+    private NodeContainer(final Node node, final WorkflowManager wfm,
+            final int id) {
+        m_node = node;
         m_wfm = wfm;
         m_id = id;
         m_logger = NodeLogger.getLogger(getNameWithID());
@@ -188,7 +194,30 @@ public class NodeContainer implements NodeStateListener {
         m_eventListeners = new ArrayList<NodeStateListener>();
         m_node.addStateListener(this);
     }
+
+    
+    
+    /**
+     * Creates a copy of the passed node container with a new id.
+     * 
+     * @param template the node container to copy
+     * @param id the new id
+     * @throws CloneNotSupportedException if the {@link NodeExtraInfo} of
+     * the template could not be cloned 
+     * 
+     */
+    NodeContainer(final NodeContainer template, final int id)
+    throws CloneNotSupportedException {
+        this (new Node(template.m_node, template.m_wfm), template.m_wfm, id);
         
+        setExtraInfo((NodeExtraInfo)template.getExtraInfo().clone());
+        if (template.m_customName != null) {
+            setCustomName(template.m_customName);
+        }
+        setDescription(template.m_description);
+    }
+    
+    
     /**
      * Creates a new NodeContainer and reads it's status and information from
      * the NodeSettings object. Note that the list of predecessors and
@@ -232,7 +261,6 @@ public class NodeContainer implements NodeStateListener {
                     + "> is no user description specified");
         }
     }
-    
     
     /**
      * Adds an incoming connection to a specified port. Only one incoming
@@ -853,7 +881,7 @@ public class NodeContainer implements NodeStateListener {
     }
     
     /**
-     * Write only node container settings to the settings object.
+     * Saves only the container specific settings but not the underlying node.
      * 
      * @param settings To write settings to.
      */

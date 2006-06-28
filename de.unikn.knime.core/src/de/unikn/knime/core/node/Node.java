@@ -210,6 +210,28 @@ public final class Node {
         configure();
     }
     
+    
+    
+    /**
+     * Creates a copy of the passed node.
+     * 
+     * @param node the node that should be copied
+     * @param wfm the workflow manager that is responsible for this node;
+     * maybe <code>null</code>
+     */
+    public Node(final Node node, final WorkflowManager wfm) {
+        this (node.m_factory, wfm);
+        NodeSettings modelSettings = new NodeSettings("modelSettings");
+        node.m_model.saveSettingsTo(modelSettings);
+        try {
+            this.m_model.loadSettingsFrom(modelSettings);
+            resetAndConfigure();
+        } catch (InvalidSettingsException ex) {
+            m_logger.error("Could not copy node", ex);
+        }
+    }
+
+ 
     /**
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
@@ -268,7 +290,7 @@ public final class Node {
             m_logger.warn("Unable to load settings: " + ise.getMessage());
             m_status = new NodeStatus.Warning(
                     "Unable to load settings: " + ise.getMessage());
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
         } catch (Exception e) {
             m_logger.error("Unable to load settings", e);
             throw new InvalidSettingsException(e);
@@ -1353,6 +1375,29 @@ public final class Node {
         }
         assert false : "Can't return dialog pane, node has no dialog!";
         return null;
+    }
+    
+    
+    public void save(final NodeSettings settings) {
+        // write node name
+        settings.addString("name", m_name);
+        // write configured flag
+        settings.addBoolean("isConfigured", isConfigured());
+        // write executed flag
+        settings.addBoolean("isExecuted", isExecuted());
+        // write inports
+        final NodeSettings inport = settings.addConfig("inports");
+        for (int i = 0; i < m_inDataPorts.length; i++) {
+            inport.addString("" + i, m_inDataPorts[i].getPortName());
+        }
+        // write outports
+        final NodeSettings outport = settings.addConfig("outports");
+        for (int i = 0; i < m_outDataPorts.length; i++) {
+            outport.addString("" + i, m_outDataPorts[i].getPortName());
+        }
+        // write model
+        final NodeSettings model = settings.addConfig("model");
+        m_model.saveSettingsTo(model);
     }
     
     /**

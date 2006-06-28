@@ -64,4 +64,9 @@ public interface NodeExtraInfo {
      * @param moveDist the distance to change position
      */
     public void changePosition(final int moveDist);
+    
+    /**
+     * @see Object#clone()
+     */
+    public Object clone() throws CloneNotSupportedException;
 }

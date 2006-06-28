@@ -679,120 +679,102 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /**
-     * Creates additional nodes and optional connections between those specified
-     * in the settings object.
+     * Creates copies of the node and connection containers passed as arguments.
+     * If connection should be copied whose endpoints have not been copied, they
+     * are silently ignored.
      * 
-     * @param settings the <code>NodeSettings</code> object describing the sub
-     *            workflow to add to this workflow manager
-     * @param positionChangeMultiplier factor to determine the change of the
-     *            position of a copied object
+     * @param nodeIDs the ids of the nodes that should be copied
+     * @param connectionIDs the ids of the connections that should be copied 
      * 
-     * @return the ids of the newly created containers
-     * 
-     * @throws InvalidSettingsException thrown if the passed settings are not
-     *             valid
+     * @return the ids of the newly created containers, the first array element
+     * being the array of node container ids, the second being the array of
+     * connection containers
+     * @throws CloneNotSupportedException if the {@link NodeExtraInfo} object
+     * of a node container could not be cloned 
      */
-    public synchronized int[] createSubWorkflow(final NodeSettings settings,
-            final int positionChangeMultiplier) 
-            throws InvalidSettingsException {
-        NodeSettings nodes = settings.getConfig(KEY_NODES);
-
+    public synchronized int[][] createSubWorkflow(
+            final int[] nodeIDs, final int[] connectionIDs)
+    throws CloneNotSupportedException {
         // the new ids to return
-        ArrayList<Integer> newIDs = new ArrayList<Integer>();
+        ArrayList<Integer> newNodeIDs = new ArrayList<Integer>();
+        ArrayList<Integer> newConnectionIDs = new ArrayList<Integer>();
 
         // the map is used to map the old node id to the new one
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
 
-        for (String nodeKey : nodes.keySet()) {
-            NodeSettings nodeSetting = null;
-            try {
-                // retrieve config object for each node
-                nodeSetting = nodes.getConfig(nodeKey);
-                // create NodeContainer based on NodeSettings object
-                final int newId = ++m_runningNodeID;
-                nodeSetting.addInt(NodeContainer.KEY_ID, newId);
-                final NodeContainer newNode = new NodeContainer(nodeSetting,
-                        this);
-
-                // change the id, as this id is already in use
-                // first remeber the old id "map(oldId, newId)"
-
-                // remember temporarily the old id
-                final int oldId = newNode.getID();
-
-
-                idMap.put(newNode.getID(), newId);
-                // remember the new id for the return value
-                newIDs.add(newId);
-
-                // finaly change the extra info so that the copies are
-                // located differently (if not null)
-                NodeExtraInfo extraInfo = newNode.getExtraInfo();
-                if (extraInfo != null) {
-                    extraInfo.changePosition(40 * positionChangeMultiplier);
-                }
-
-                // set the user name to the new id if the init name
-                // was set before e.g. "Node_44"
-                // get set username
-                String currentUserNodeName = newNode.getCustomName();
-
-                // create temprarily the init user name of the copied node
-                // to check wether the current name was changed
-                String oldInitName = "Node " + (oldId + 1);
-                if (oldInitName.equals(currentUserNodeName)) {
-                    newNode.setCustomName("Node " + (newId + 1));
-                }
-
-                // and add it to workflow
-                addNodeWithID(newNode);
-            } catch (InvalidSettingsException ise) {
-                LOGGER.warn("Could not create node " + nodeKey + " reason: "
-                        + ise.getMessage());
-                LOGGER.debug(nodeSetting, ise);
+        for (int nodeID : nodeIDs) {
+            final NodeContainer nc = m_nodesByID.get(nodeID);
+            if (nc == null) {
+                throw new IllegalArgumentException("A node with id " + nodeID
+                        + " is not handled by this workflow manager");
             }
+
+            // create NodeContainer based on NodeSettings object
+            final int newId = ++m_runningNodeID;
+            final NodeContainer newNode = new NodeContainer(nc, newId);
+
+            idMap.put(nc.getID(), newId);
+            // remember the new id for the return value
+            newNodeIDs.add(newId);
+
+            // set the user name to the new id if the init name
+            // was set before e.g. "Node_44"
+            // get set username
+            String currentUserNodeName = newNode.getCustomName();
+
+            // create temprarily the init user name of the copied node
+            // to check wether the current name was changed
+            String oldInitName = "Node " + nc.getID();
+            if (oldInitName.equals(currentUserNodeName)) {
+                newNode.setCustomName("Node " + newId);
+            }
+
+            // and add it to workflow
+            addNodeWithID(newNode);
         }
-        // read connections
-        NodeSettings connections = settings.getConfig(KEY_CONNECTIONS);
-        for (String connectionKey : connections.keySet()) {
-            // retrieve config object for next connection
-            NodeSettings connectionConfig = connections
-                    .getConfig(connectionKey);
-            // and add appropriate connection to workflow
-            try {
-                // get the new id from the map
-                // read ids and port indices
-                int oldSourceID = ConnectionContainer
-                        .getSourceIdFromConfig(connectionConfig);
-                int oldTargetID = ConnectionContainer
-                        .getTargetIdFromConfig(connectionConfig);
-
-                // check if both (source and target node have been selected
-                // if not, the connection is omitted
-                if (idMap.get(oldSourceID) == null
-                        || idMap.get(oldTargetID) == null) {
-                    continue;
-                }
-
-                ConnectionContainer cc = new ConnectionContainer(
-                    ++m_runningConnectionID, connectionConfig, this, idMap);
-                addConnection(cc);
-                // add the id to the new ids
-                newIDs.add(cc.getID());
-            } catch (InvalidSettingsException ise) {
-                LOGGER.warn("Could not create connection " + connectionKey
-                        + " reason: " + ise.getMessage());
-                LOGGER.debug(connectionConfig, ise);
+        
+        for (int connID : connectionIDs) {
+            final ConnectionContainer cc = m_connectionsByID.get(connID);
+            if (cc == null) {
+                throw new IllegalArgumentException("A connection with id "
+                        + connID + " is not handled by this workflow manager");
             }
+            
+            int oldSourceID = cc.getSource().getID();
+            int oldTargetID = cc.getTarget().getID();
+
+            // check if both (source and target node have been selected
+            // if not, the connection is omitted
+            if (!idMap.containsKey(oldSourceID)
+                    || !idMap.containsKey(oldTargetID)) {
+                continue;
+            }
+
+            ConnectionContainer newConn = new ConnectionContainer(
+                ++m_runningConnectionID,
+                m_nodesByID.get(idMap.get(oldSourceID)),
+                cc.getSourcePortID(),
+                m_nodesByID.get(idMap.get(oldTargetID)),
+                cc.getTargetPortID());
+            addConnection(newConn);
+            // add the id to the new ids
+            newConnectionIDs.add(newConn.getID());
         }
 
-        int[] idArray = new int[newIDs.size()];
+        int[] nids = new int[newNodeIDs.size()];
         int i = 0;
-        for (Integer newId : newIDs) {
-            idArray[i++] = newId;
+        for (Integer newId : newNodeIDs) {
+            nids[i++] = newId;
         }
 
-        return idArray;
+        int[] cids = new int[newConnectionIDs.size()];
+        i = 0;
+        for (Integer newId : newConnectionIDs) {
+            cids[i++] = newId;
+        }
+
+        
+        return new int[][] {nids, cids};
     }
     
 
@@ -885,6 +867,8 @@ public class WorkflowManager implements WorkflowListener {
      * executed
      * @param block <code>true</code> if the method should block,
      * <code>false</code> otherwise
+     * @throws IllegalArgumentException if the passed node is not configured
+     * or already executed
      */
     public void executeUpToNode(final int nodeID, final boolean block) {
         synchronized (this) {
