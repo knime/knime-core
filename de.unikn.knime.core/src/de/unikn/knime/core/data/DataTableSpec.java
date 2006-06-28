@@ -285,8 +285,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                                         + " column name \""
                                         + currentName.toString()
                                         + "\" at position " + idx + " and " + i
-                                        + ".\n" + spec1.toString() + "\n"
-                                        + spec2.toString());
+                                        + ".");
                     }
                 }
                 throw new InternalError("Bug in ColumnSpec.containsName()");
