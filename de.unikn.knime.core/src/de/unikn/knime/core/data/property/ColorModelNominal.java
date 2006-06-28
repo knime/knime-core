@@ -139,13 +139,12 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     }
       
     /**
-     * Returns a string representation containing the type of the model and
-     * an instance unique ID. 
+     * @return <i>Nominal ColorModel</i>
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return "Nominal ColorModel"; 
+        return "Nominal ColorModel";
     }
     
 }   

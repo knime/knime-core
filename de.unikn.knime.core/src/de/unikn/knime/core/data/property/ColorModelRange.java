@@ -194,14 +194,15 @@ public final class ColorModelRange implements ColorModel {
     }
 
     /**
-     * Returns a string representation containing the type of the model and an
-     * instance unique ID.
-     * 
+     * @return A string summary for this color model containing type and
+     *         min/max values and colors.
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return "Range ColorModel";
+        String min = m_minValue + "," + m_minColor;
+        String max = m_maxValue + "," + m_maxColor;
+        return "DoubleRange ColorModel (min=<" + min + ">,max=<" + max + ">)";
     }
 
 }
