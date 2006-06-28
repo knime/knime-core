@@ -22,11 +22,19 @@
  */
 package de.unikn.knime.core.node.interrupt;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataTable;
+import de.unikn.knime.core.data.container.DataContainer;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
+import de.unikn.knime.core.node.NodeSettings;
 
 /**
  * This class provides a generic implementation of a node that can be stopped
@@ -62,6 +70,12 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     private DataTable[] m_inData;
     
     private int m_delay = INITIAL_DELAY;
+    
+    private static final String FILE_NAME = "interruptibleInput";
+    
+    private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
+    private static final String INTERN_CFG_ITERATION = "iteration";
+    private static final String INTERN_CFG_FINIS = "finished";
     
     
     /**
@@ -292,6 +306,54 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         pause(true);
         setFinish(false);
         resetIterationCounter();
+    }
+    
+    
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(java.io.File, 
+     * de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected boolean loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+    throws IOException, CanceledExecutionException {
+        m_inData = new DataTable[getNrDataIns()];
+        for (int i = 0; i < getNrDataIns(); i++) {
+            File f = new File(nodeInternDir, FILE_NAME + i);
+            m_inData[i] = DataContainer.readFromZip(f);
+        }  
+        File f = new File(nodeInternDir, FILE_NAME);
+        FileInputStream fis = new FileInputStream(f);
+        NodeSettings internalSettings = NodeSettings.loadFromXML(fis);
+        try {
+        m_finished = internalSettings.getBoolean(INTERN_CFG_FINIS);
+        m_iterationCounter = internalSettings.getInt(INTERN_CFG_ITERATION);
+        } catch (InvalidSettingsException ise) {
+            LOGGER.warn(ise.getMessage());
+            throw new IOException(ise.getMessage());
+        }
+        return true;
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(
+     * java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected boolean saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+        throws IOException, CanceledExecutionException {
+        for (int i = 0; i < m_inData.length; i++) {
+            File f = new File(nodeInternDir, FILE_NAME + i);
+            DataContainer.writeToZip(m_inData[i], f, exec);
+        }
+        NodeSettings internalSettings = new NodeSettings(INTERN_CFG_KEY);
+        internalSettings.addInt(INTERN_CFG_ITERATION, m_iterationCounter);
+        internalSettings.addBoolean(INTERN_CFG_FINIS, m_finished);
+        File f = new File(nodeInternDir, FILE_NAME);
+        FileOutputStream fos = new FileOutputStream(f);
+        internalSettings.saveToXML(fos);
+        return true;
     }
     
     /**
