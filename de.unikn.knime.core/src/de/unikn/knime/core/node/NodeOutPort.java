@@ -48,8 +48,7 @@ public abstract class NodeOutPort extends NodePort {
      */
     protected NodeOutPort(final int portID, final Node node) {
         super(portID, node);
-        m_connInPorts = Collections
-                .synchronizedSet(new LinkedHashSet<NodeInPort>());
+        m_connInPorts = new LinkedHashSet<NodeInPort>();
         m_portView = null;
     }
 
@@ -126,7 +125,9 @@ public abstract class NodeOutPort extends NodePort {
                 && !(connInPort instanceof NodePort.PredictorParamsPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
-        m_connInPorts.add(connInPort);
+        synchronized (m_connInPorts) {
+            m_connInPorts.add(connInPort);
+        }
     }
 
     /**
@@ -150,19 +151,20 @@ public abstract class NodeOutPort extends NodePort {
                 && !(connInPort instanceof NodePort.PredictorParamsPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
-        m_connInPorts.remove(connInPort);
+        synchronized (m_connInPorts) {
+            m_connInPorts.remove(connInPort);
+        }
     }
 
     /**
      * Removes all connected input ports from the set of connected ports.
      */
     final void removeAllPorts() {
-        // avoid concurrent modification exception
-        // (disconnectPort removed port form m_connInPorts)
-        NodeInPort[] clone = m_connInPorts.toArray(new NodeInPort[0]);
-        for (int i = clone.length - 1; i >= 0; --i) {
-            NodeInPort inPort = clone[i];
-            inPort.disconnectPort();
+        synchronized (m_connInPorts) {
+            for (NodeInPort nip : m_connInPorts) {
+                nip.disconnectPort();
+            }
+            m_connInPorts.clear();
         }
     }
 
