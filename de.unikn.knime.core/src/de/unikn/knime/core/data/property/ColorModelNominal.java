@@ -23,7 +23,9 @@ package de.unikn.knime.core.data.property;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import de.unikn.knime.core.data.DataCell;
@@ -35,7 +37,7 @@ import de.unikn.knime.core.node.config.Config;
  * Color model which maps a set of <code>DataCell</code> objects to 
  * <code>Color</code>.
  */
-public final class ColorModelNominal implements ColorModel {
+public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     
     /** Maps DataCell values to ColorAttr. */
     private final Map<DataCell, ColorAttr> m_map;
@@ -49,7 +51,7 @@ public final class ColorModelNominal implements ColorModel {
         if (map == null)  {
             throw new IllegalArgumentException("Mapping must not be null.");
         }
-        m_map = map;
+        m_map = Collections.unmodifiableMap(map);
     }
 
     /**
@@ -64,6 +66,15 @@ public final class ColorModelNominal implements ColorModel {
             return ColorAttr.DEFAULT;
         }
         return (ColorAttr) o;
+    }
+    
+    /**
+     * Returns an iterator over the keys.
+     * @see java.lang.Iterable#iterator()
+     * @return - returns an iterator over the keys.
+     */
+    public Iterator<DataCell> iterator() {
+        return m_map.keySet().iterator();
     }
     
     private static final String CFG_KEYS = "keys";
