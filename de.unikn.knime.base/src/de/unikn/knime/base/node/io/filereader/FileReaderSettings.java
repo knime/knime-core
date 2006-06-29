@@ -294,7 +294,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * read the patterns, one for each column, that will be replaced by missing
      * cells from the configuration object.
      */
-    private void readMissingPatternsFromConfig(final NodeSettings missPattConf) {
+    private void readMissingPatternsFromConfig(
+            final NodeSettings missPattConf) {
         if (missPattConf == null) {
             throw new NullPointerException(
                     "Can't read missing patterns from null config object");
@@ -437,7 +438,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * 
      * @param dataFileLocation the URL of the data file these settings are for
      */
-    public void setDataFileLocationAndUpdateTableName(final URL dataFileLocation) {
+    public void setDataFileLocationAndUpdateTableName(
+            final URL dataFileLocation) {
         if (dataFileLocation == null) {
             setTableName("");
         } else {
@@ -732,7 +734,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
      *            for the specified column. Can be null to delete a previously
      *            set pattern.
      */
-    public void setMissingValueForColumn(final int colIdx, final String pattern) {
+    public void setMissingValueForColumn(final int colIdx, 
+            final String pattern) {
         if (m_missingPatterns.size() <= colIdx) {
             m_missingPatterns.setSize(colIdx + 1);
         }
@@ -911,7 +914,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 }
             }
         } else {
-            for (Iterator pIter = m_missingPatterns.iterator(); pIter.hasNext();) {
+            for (Iterator pIter = m_missingPatterns.iterator(); 
+                    pIter.hasNext();) {
                 if (pIter.next() == null) {
                     status.addInfo("Not all columns have patterns for missing"
                             + " values assigned.");
