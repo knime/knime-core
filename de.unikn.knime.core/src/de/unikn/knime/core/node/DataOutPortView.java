@@ -262,8 +262,7 @@ final class DataOutPortView extends NodeOutPortView {
             // Row[0]: first row displays the name of each column
             DataCell[] cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
-                cols[c] = new StringCell("<html><b>"
-                        + spec.getColumnSpec(c).getName());
+                cols[c] = new StringCell(spec.getColumnSpec(c).getName());
             }
             rows[0] = new DefaultRow(new StringCell("<html><b>Name"),
                     cols);
@@ -272,7 +271,7 @@ final class DataOutPortView extends NodeOutPortView {
             cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
                 String typename = spec.getColumnSpec(c).getType().toString();
-                cols[c] = new StringCell("<html><b>" + typename);
+                cols[c] = new StringCell(typename);
             }
             rows[1] = new DefaultRow(new StringCell("<html><b>Type"),
                     cols);
@@ -315,8 +314,7 @@ final class DataOutPortView extends NodeOutPortView {
                 }
                 cols[c] = new StringCell(boundText);
             }
-            rows[4] = new DefaultRow(new StringCell(
-                    "<html><b>lower bound"), cols);
+            rows[4] = new DefaultRow(new StringCell("lower bound"), cols);
             // Row[5]: shows the upper bound value of the domain
             cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
@@ -327,8 +325,7 @@ final class DataOutPortView extends NodeOutPortView {
                 }
                 cols[c] = new StringCell(boundText);
             }
-            rows[5] = new DefaultRow(new StringCell(
-                    "<html><b>upper bound"), cols);
+            rows[5] = new DefaultRow(new StringCell("upper bound"), cols);
 
             
             // from row 6: show the nominal values of that column. If any.
