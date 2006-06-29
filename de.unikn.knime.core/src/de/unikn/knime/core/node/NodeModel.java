@@ -685,7 +685,7 @@ public abstract class NodeModel {
     private void resetHiLiteHandlers() {
         // if we have no inputs we have created a new instance.
         // we need to reset it here then.
-        if (getNrIns() == 0) {
+        if (getNrDataIns() == 0) {
             for (int i = 0; i < m_inHiLiteHdls.length; i++) {
                 if (m_inHiLiteHdls[i] != null) {
                     m_inHiLiteHdls[i].unHiLiteAll();
