@@ -32,6 +32,9 @@ public class DataOutputNodeModel extends MetaOutputModel {
     private DataTable m_dataTable;
     private DataTableSpec m_dataTableSpec;
     
+    /**
+     * Creates a new output node model for datatables.
+     */
     public DataOutputNodeModel() {
         super(1, 0);
     }

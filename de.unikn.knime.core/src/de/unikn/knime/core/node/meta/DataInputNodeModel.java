@@ -150,5 +150,9 @@ public class DataInputNodeModel extends MetaInputModel {
         // nothing to do here        
     }
     
+    /**
+     * Returns the datatable set by {@link #setDataTable(DataTable)}.
+     * @return a datatable
+     */
     protected final DataTable dataTable() { return m_datatable; }
 }

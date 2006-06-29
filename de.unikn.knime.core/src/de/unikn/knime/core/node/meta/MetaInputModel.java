@@ -27,20 +27,60 @@ import de.unikn.knime.core.node.PredictorParams;
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class MetaInputModel extends NodeModel {
+    /**
+     * Creates a new input node for meta workflows.
+     * 
+     * @param nrDataIns the number of data input ports
+     * @param nrDataOuts the number of data output ports
+     * @param nrPredParamsIns the number of model input ports
+     * @param nrPredParamsOuts the number of model output ports
+     */
     public MetaInputModel(final int nrDataIns, final int nrDataOuts,
             final int nrPredParamsIns, final int nrPredParamsOuts) {
         super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
     }
 
+    
+    /**
+     * Creates a new input node for meta workflows.
+     * 
+     * @param nrDataIns the number of data input ports
+     * @param nrDataOuts the number of data output ports
+     */
     public MetaInputModel(final int nrDataIns, final int nrDataOuts) {
         super(nrDataIns, nrDataOuts);
     }
 
+    
+    /**
+     * Returns if this model can really be executed.
+     * 
+     * @return <code>true</code> if it can be executed, <code>false</code>
+     * otherwise
+     */
     public abstract boolean canBeExecuted();
     
+    
+    /**
+     * Sets the datatable spec that the node should just pass on.
+     *  
+     * @param spec any datatable spec
+     */
     public abstract void setDataTableSpec(final DataTableSpec spec);
     
+    
+    /**
+     * Sets the datatable that the node should just pass on.
+     *  
+     * @param table any datatable
+     */
     public abstract void setDataTable(final DataTable table);
     
+    
+    /**
+     * Sets the predictor params that this model should just pass on.
+     * 
+     * @param predParams any predictor parameters
+     */
     public abstract void setPredictorParams(final PredictorParams predParams);
 }

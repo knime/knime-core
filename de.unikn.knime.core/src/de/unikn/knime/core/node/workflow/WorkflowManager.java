@@ -1126,17 +1126,28 @@ public class WorkflowManager implements WorkflowListener {
         // get all keys in there
         for (String nodeKey : nodes.keySet()) {
             NodeSettings nodeSetting = null;
+            // retrieve config object for each node
+            nodeSetting = nodes.getConfig(nodeKey);
+            // create NodeContainer based on NodeSettings object
+            
             try {
-                // retrieve config object for each node
-                nodeSetting = nodes.getConfig(nodeKey);
-                // create NodeContainer based on NodeSettings object
                 NodeContainer newNode = new NodeContainer(nodeSetting, this);
-                // and add it to workflow
                 addNodeWithID(newNode);
-            } catch (InvalidSettingsException ise) {
-                LOGGER.warn("Could not create node " + nodeKey + " reason: "
-                        + ise.getMessage());
-                LOGGER.debug(nodeSetting, ise);
+            } catch (InstantiationException ex) {
+                LOGGER.error("Could not create factory object of type "
+                        + nodeSetting.getString(
+                                NodeContainer.KEY_FACTORY_NAME, "??")
+                        + " for node " + nodeKey, ex);
+            } catch (IllegalAccessException ex) {
+                LOGGER.error("Could not access factory class "
+                        + nodeSetting.getString(
+                                NodeContainer.KEY_FACTORY_NAME, "??")
+                        + " for node " + nodeKey, ex);
+            } catch (ClassNotFoundException ex) {
+                LOGGER.error("Could not find factory class "
+                        + nodeSetting.getString(
+                                NodeContainer.KEY_FACTORY_NAME, "??")
+                        + " for node " + nodeKey, ex);
             }
         }
 

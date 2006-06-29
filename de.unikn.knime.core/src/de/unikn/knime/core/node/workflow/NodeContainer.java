@@ -109,17 +109,13 @@ public class NodeContainer implements NodeStateListener {
     }
 
     private static NodeFactory readNodeFactory(final NodeSettings settings)
-            throws InvalidSettingsException {
+            throws InvalidSettingsException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
         // read node factory class name
         String factoryClassName = settings.getString(KEY_FACTORY_NAME);
-        try {
-            // use global Class Creator utility for Eclipse "compatibility"
-            return (NodeFactory)((GlobalClassCreator
-                    .createClass(factoryClassName)).newInstance());
-        } catch (Exception e) {
-            throw new InvalidSettingsException("NodeFactory could not be "
-                    + "loaded: " + factoryClassName, e);
-        }
+        // use global Class Creator utility for Eclipse "compatibility"
+        return (NodeFactory)((GlobalClassCreator
+                .createClass(factoryClassName)).newInstance());
     }
 
     private List<NodeInPort> m_cachedInPorts;
@@ -228,11 +224,17 @@ public class NodeContainer implements NodeStateListener {
      * @param wfm the workflowmanager that is responsible for this node
      * @throws InvalidSettingsException if the required keys are not available
      *             in the NodeSettings
+     * @throws ClassNotFoundException if the factory class in the settings could
+     * not be found 
+     * @throws IllegalAccessException if the factory class is not acessible 
+     * @throws InstantiationException if a factory object could not be created
      * 
      * @see #save(NodeSettings, File, ExecutionMonitor)
      */
     public NodeContainer(final NodeSettings settings,
-            final WorkflowManager wfm) throws InvalidSettingsException {
+            final WorkflowManager wfm) throws InvalidSettingsException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
         this(readNodeFactory(settings), wfm, settings.getInt(KEY_ID));
         
         setExtraInfo(createExtraInfo(settings));
@@ -990,7 +992,7 @@ public class NodeContainer implements NodeStateListener {
         Runnable r = new Runnable() {
             public void run() {
                 try {
-                    pm.setMessage("Running");
+                    pm.setMessage("Preparing...");
                     // executeNode() should return as soon as possible if
                     // canceled - or after it has been finished of course
                     // NOTE: the return from this call may happen AFTER
