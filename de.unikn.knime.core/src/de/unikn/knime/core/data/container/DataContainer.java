@@ -510,7 +510,7 @@ public class DataContainer implements RowAppender {
         try {
             for (DataRow row : table) {
                 rowCount++;
-                exec.setMessage("Writing row " + rowCount + " (\"" 
+                exec.setMessage("Writing row #" + (rowCount + 1) + " (\"" 
                         + row.getKey() + "\")");
                 exec.checkCanceled();
                 buf.addRow(row);
