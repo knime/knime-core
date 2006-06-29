@@ -997,7 +997,8 @@ public final class FileAnalyzer {
         assert userSettings != null;
         assert result.getDataFileLocation() != null;
 
-        if (userSettings.getAllDelimiters().size() == 0) {
+        if (!userSettings.isDelimiterUserSet()) {
+            
             //
             // Try out comma delimiter
             //

@@ -88,6 +88,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
     private static final int PANEL_WIDTH = 5000;
 
     private static final Delimiter[] DEFAULT_DELIMS = new Delimiter[]{
+            // the <none> MUST be the first one!!!
+            new Delimiter("<none>", false, false, false),
             new Delimiter(",", false, false, false),
             new Delimiter(" ", false, false, false),
             new Delimiter("\t", false, false, false),
@@ -700,8 +702,13 @@ class FileReaderNodeDialog extends NodeDialogPane {
         // now set the selected one
         String delimStr = null;
         if (m_delimField.getSelectedIndex() > -1) {
-            delimStr = ((Delimiter)m_delimField.getSelectedItem())
-                    .getDelimiter();
+            if (m_delimField.getSelectedIndex() == 0) {
+                // user selected the <none> delimiter
+                delimStr = null;
+            } else {
+                delimStr = ((Delimiter)m_delimField.getSelectedItem())
+                        .getDelimiter();
+            }
         } else {
             delimStr = (String)m_delimField.getSelectedItem();
             delimStr = FileTokenizerSettings.unescapeString(delimStr);
@@ -735,7 +742,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_delimField.removeAllItems();
 
         m_delimField.setModel(new DefaultComboBoxModel(DEFAULT_DELIMS));
-
+        // the above selects the first in the list - which is the <none>.
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
             if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
                 continue;
