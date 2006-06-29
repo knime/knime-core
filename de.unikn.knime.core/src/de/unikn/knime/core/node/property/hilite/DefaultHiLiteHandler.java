@@ -238,7 +238,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param event Contains all rows keys to hilite.
      */
-    private synchronized void fireHiLiteEvent(final KeyEvent event) {
+    protected synchronized void fireHiLiteEvent(final KeyEvent event) {
         assert (event != null);
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
@@ -260,7 +260,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param event Contains all rows keys to unhilite.
      */
-    private synchronized void fireUnHiLiteEvent(final KeyEvent event) {
+    protected synchronized void fireUnHiLiteEvent(final KeyEvent event) {
         assert (event != null);
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
@@ -279,7 +279,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /** 
      * Informs all registered hilite listener to reset all hilit rows.
      */
-    private synchronized void fireUnHiLiteAllEvent() {
+    protected synchronized void fireUnHiLiteAllEvent() {
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
             HiLiteListener l = it.next().get();
