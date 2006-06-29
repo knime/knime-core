@@ -39,10 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -51,11 +48,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
-
-import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 
 /**
  * The standard node dialog used to display the node dialog pane.
@@ -237,27 +231,27 @@ final class NodeDialog {
             }
         });
         
-        JComponent root = dialog.getRootPane();
-
-        // key stroke on ENTER
-        KeyStroke entKey = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
-        final Action entAction = new AbstractAction() {
-            public void actionPerformed(final ActionEvent e) {
-                onOK(e);
-            }
-        };
-        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(entKey, "ENTER");
-        root.getActionMap().put("ENTER", entAction);
-        
-        // key stroke on ESCAPE
-        KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
-        final Action escAction = new AbstractAction() {
-            public void actionPerformed(final ActionEvent e) {
-                onCancel(e);
-            }
-        };
-        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(escKey, "ESCAPE");
-        root.getActionMap().put("ESCAPE", escAction);
+//        JComponent root = dialog.getRootPane();
+//
+//        // key stroke on ENTER
+//        KeyStroke entKey = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+//        final Action entAction = new AbstractAction() {
+//            public void actionPerformed(final ActionEvent e) {
+//                onOK(e);
+//            }
+//        };
+//        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(entKey, "ENTER");
+//        root.getActionMap().put("ENTER", entAction);
+//        
+//        // key stroke on ESCAPE
+//        KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+//        final Action escAction = new AbstractAction() {
+//            public void actionPerformed(final ActionEvent e) {
+//                onCancel(e);
+//            }
+//        };
+//        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(escKey, "ESCAPE");
+//        root.getActionMap().put("ESCAPE", escAction);
         
         return dialog;
     }
