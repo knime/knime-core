@@ -247,6 +247,8 @@ public final class FileAnalyzer {
             }
             columnHeaders[c] = token;
         }
+        tokenizer.closeSourceStream();
+        
         Vector<ColProperty> userColProps = userSettings.getColumnProperties();
         if (userColProps == null) {
             // that saves us quite some checkings later
@@ -402,7 +404,8 @@ public final class FileAnalyzer {
             }
 
         }
-
+        tokenizer.closeSourceStream();
+        
         String[] rowHeadersWOfirstLine = new String[rowHeaders.length - 1];
         System.arraycopy(rowHeaders, 1, rowHeadersWOfirstLine, 0,
                 rowHeadersWOfirstLine.length);
@@ -580,12 +583,13 @@ public final class FileAnalyzer {
                     } else if (i > c) {
                         // compare it with the preset names
                         if ((userNames[i] != null) 
-                                && (userNames.equals(name))) {
+                                && (userNames[i].equals(name))) {
                             unique = false;
                         }
                     }
                     if (!unique) {
-                        name = colNames[c] + "(" + count + ")";
+                        name = colProp.getColumnSpec().getName().toString()
+                                    + "(" + count + ")";
                         count++;
                         // start all over, compare the new name with all others
                         break;
@@ -677,8 +681,11 @@ public final class FileAnalyzer {
             }
 
             if (!result.isRowDelimiter(token)) {
-                if (linesRead < 1) {
-                    // skip the first line - could be column headers
+                if ((linesRead < 1)
+                        && (!userSettings.isFileHasColumnHeadersUserSet() 
+                                || userSettings.getFileHasColumnHeaders())) {
+                    // skip the first line - could be column headers - unless
+                    // we know it's not
                     continue;
                 }
                 if (colIdx >= result.getNumberOfColumns()) {
@@ -716,7 +723,7 @@ public final class FileAnalyzer {
                                 if (token.indexOf('.') >= 0) {
                                     throw new NumberFormatException();
                                 }
-                                 dblData = token.replace(result
+                                dblData = token.replace(result
                                         .getDecimalSeparator(), '.');
                             }
 
@@ -743,7 +750,8 @@ public final class FileAnalyzer {
                 }
             }
         }
-
+        tokenizer.closeSourceStream();
+        
         // if there is still a type set to null we got only missig values
         // in that column: warn user
         String cols = "";
@@ -961,6 +969,8 @@ public final class FileAnalyzer {
             }
         }
 
+        tokenizer.closeSourceStream();
+        
         if (useDoubleQuotes) {
             if (escapeDoubleQuotes) {
                 settings.addQuotePattern("\"", "\"", '\\');
@@ -1147,7 +1157,7 @@ public final class FileAnalyzer {
         int linesRead = 0;
         int columns = 0; // column counter per line
         int numOfCols = -1; // num of cols with these settings
-        boolean useSettings = false; // set it true to use comma-whitespace
+        boolean useSettings = false; // set it true to use these settings.
 
         while (true) {
 
@@ -1197,7 +1207,9 @@ public final class FileAnalyzer {
             }
 
         }
-
+        
+        tokenizer.closeSourceStream();
+        
         if (useSettings) {
             settings.setNumberOfColumns(numOfCols);
         }
@@ -1265,7 +1277,8 @@ public final class FileAnalyzer {
             }
 
         }
-
+        tokenizer.closeSourceStream();
+        
         return numOfCols;
 
     }

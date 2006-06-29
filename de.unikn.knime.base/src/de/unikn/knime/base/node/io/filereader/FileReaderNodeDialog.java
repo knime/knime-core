@@ -489,10 +489,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                         StringCell.TYPE).createSpec();
                 m_firstColProp = new ColProperty();
                 m_firstColProp.setColumnSpec(firstColSpec);
-                m_firstColProp.setMissingValuePattern("?");
-                m_firstColProp.setReadPossibleValuesFromFile(true);
-                m_firstColProp.setMaxNumberOfPossibleValues(2000);
-                m_firstColProp.setReadBoundsFromFile(false);
+                // this will cause it to be ignored when re-analyzing:
                 m_firstColProp.setUserSettings(false);
             }
 
@@ -504,7 +501,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 // if it's a duplicate - even if it's set by the user.
                 recreateColNames(true);
             }
-            updatePreview();
+            analyzeDataFileAndUpdatePreview(true);
         } else if (!m_frSettings.getFileHasRowHeaders()
                 && m_hasRowHeaders.isSelected()) {
             // somebody checked the hasRowheader box - that removes one column
@@ -519,7 +516,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 // re-generate the column names
                 recreateColNames(false);
             }
-            updatePreview();
+            analyzeDataFileAndUpdatePreview(true);
         }
     }
 
@@ -530,10 +527,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
     protected void colHeadersSettingsChanged() {
         m_frSettings.setFileHasColumnHeadersUserSet(true);
         m_frSettings.setFileHasColumnHeaders(m_hasColHeaders.isSelected());
+        // recreate artificial names if file has no col headers
         if (!m_frSettings.getFileHasColumnHeaders()) {
             recreateColNames(false);
         }
-        updatePreview();
+        analyzeDataFileAndUpdatePreview(true);
 
     }
 
@@ -1053,7 +1051,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
     /*
      * from the current settings it creates a data table and displays it in the
-     * preview pane. Will read column headers if set so.
+     * preview pane. Will not analyze the file. Will not change things. 
      */
     private void updatePreview() {
         // something in the settings changed - clear warning
@@ -1072,22 +1070,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
             setErrorLabelText(status.getErrorMessage(0));
             m_previewTableView.setDataTable(null);
             return;
-        }
-        if (m_frSettings.getFileHasColumnHeaders()) {
-            try {
-                m_frSettings.readColumnHeadersFromFile();
-            } catch (IOException ioe) {
-                setErrorLabelText("I/O Error reading column headers"
-                        + " from file '"
-                        + m_frSettings.getDataFileLocation().toString() + "'.");
-                m_previewTableView.setDataTable(null);
-                return;
-            } catch (FileReaderException fre) {
-                setErrorLabelText(fre.getMessage());
-                m_previewTableView.setDataTable(null);
-                return;                
-            }
-
         }
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
         tSpec = modifyPreviewColNames(tSpec);
@@ -1194,16 +1176,17 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 // name was set by user - consider it fixed.
                 continue;
             }
-            String name;
+            String namePrefix; // the name we add a number to, to uniquify it
             if ((c == 0) && uniquifyFirstColName) {
                 // if we uniquify even the first col - we at least start with
                 // its current name as default
-                name = cProp.getColumnSpec().getName();
+                namePrefix = cProp.getColumnSpec().getName();
             } else {
-                name = "Col" + c;
+                namePrefix = "Col" + c;
             }
             // make sure the name is unique
             boolean unique = false;
+            String name = namePrefix;
             int count = 1;
             while (!unique) {
                 unique = true;
@@ -1223,7 +1206,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
                     if (compName.equals(name)) {
                         unique = false;
                         count++;
-                        name = "Col" + c + "(" + count + ")";
+                        name = namePrefix + "(" + count + ")";
                         break; // start all over again
                     }
                 }
@@ -1389,6 +1372,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_analyzeWarn.setText(text);
         getPanel().invalidate();
         getPanel().validate();
+        getPanel().repaint();
     }
     
     /** Renderer that also supports to show customized tooltip. */
