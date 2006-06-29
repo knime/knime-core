@@ -615,10 +615,7 @@ public final class FileAnalyzer {
             final FileReaderNodeSettings userSettings,
             final FileReaderNodeSettings result) throws IOException {
 
-        String token;
-        FileTokenizer tokenizer;
         BufferedReader reader;
-
         try {
             reader = result.createNewInputReader();
         } catch (NullPointerException npe) {
@@ -631,7 +628,7 @@ public final class FileAnalyzer {
                     + result.getDataFileLocation() + "'.");
         }
 
-        tokenizer = new FileTokenizer(reader);
+        FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(result);
 
         // extract user preset type - if we got any
@@ -651,7 +648,6 @@ public final class FileAnalyzer {
                 }
             }
         }
-
         DataType[] types = new DataType[result.getNumberOfColumns()];
         for (int t = 0; t < types.length; t++) {
             // set user type - if set.
@@ -663,7 +659,7 @@ public final class FileAnalyzer {
         int linesRead = 0;
         int colIdx = -1;
         while (true) {
-            token = tokenizer.nextToken();
+            String token = tokenizer.nextToken();
             if (token == null) {
                 // reached EOF
                 break;
@@ -679,7 +675,6 @@ public final class FileAnalyzer {
                     break;
                 }
             }
-
             if (!result.isRowDelimiter(token)) {
                 if ((linesRead < 1)
                         && (!userSettings.isFileHasColumnHeadersUserSet() 
@@ -751,7 +746,6 @@ public final class FileAnalyzer {
             }
         }
         tokenizer.closeSourceStream();
-        
         // if there is still a type set to null we got only missig values
         // in that column: warn user
         String cols = "";
@@ -767,9 +761,7 @@ public final class FileAnalyzer {
                     + cols.substring(0, cols.length() - 2) // cut off the comma
                     + ". Please verify column type(s).");
         }
-
         return types;
-
     }
 
     /**
