@@ -41,9 +41,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
@@ -74,7 +72,7 @@ public class WrappedNodeDialog extends Dialog {
 
     private Menu m_menuBar;
 
-    private Listener m_listener;
+//    private Listener m_listener;
 
     /**
      * Creates the (application modal) dialog for a given node.
@@ -205,24 +203,26 @@ public class WrappedNodeDialog extends Dialog {
         // is pressed. (only possible and usefull, as the dialog is modal and
         // therefore nothing else is effected by pressing enter
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        m_listener = new Listener() {
-            public void handleEvent(final Event event) {
-                if (event.keyCode == SWT.CR) { // enter
-                    doOK(new SelectionEvent(event));
-                } else if (event.keyCode == SWT.ESC) { // escape
-                    doCancel();
-                }
-            }
-        };
-
-        Display.getCurrent().addFilter(SWT.KeyDown, m_listener);
+        // (tg) finally we decided to remove the key listener, since child
+        // dialogs closed theirs parents on these events.
+//        m_listener = new Listener() {
+//            public void handleEvent(final Event event) {
+//                if (event.keyCode == SWT.CR) { // enter
+//                    doOK(new SelectionEvent(event));
+//                } else if (event.keyCode == SWT.ESC) { // escape
+//                    doCancel();
+//                }
+//            }
+//        };
+//
+//        Display.getCurrent().addFilter(SWT.KeyDown, m_listener);
 
         return area;
     }
 
-    private void doCancel() {
-        buttonPressed(IDialogConstants.CANCEL_ID);
-    }
+//    private void doCancel() {
+//        buttonPressed(IDialogConstants.CANCEL_ID);
+//    }
 
     /**
      * Linux (GTK) hack: must explicitly invoke <code>getInitialSize()</code>.
@@ -394,7 +394,7 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     public boolean close() {
-        Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
+//        Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
         return super.close();
     }
 
