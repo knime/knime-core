@@ -93,7 +93,29 @@
                menubarPath="de.unikn.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
-               tooltip="Execute selected and executable nodes"/>               
+               tooltip="Execute selected and executable nodes"/>        
+         <action
+               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
+               definitionId="knime.commands.executeall"
+               disabledIcon="icons/executeAll_disabled.gif"
+               icon="icons/executeAll.gif"
+               id="de.unikn.knime.workbench.editor.actions.executeall"
+               label="Execute all"
+               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               style="push"
+               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               tooltip="Execute all executable nodes"/>    
+         <action
+               class="de.unikn.knime.workbench.editor2.actions.delegates.CancelAllEditorAction"
+               definitionId="knime.commands.cancelall"
+               disabledIcon="icons/cancelAll_disabled.PNG"
+               icon="icons/cancelAll.PNG"
+               id="de.unikn.knime.workbench.editor.actions.cancelall"
+               label="Cancel all"
+               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               style="push"
+               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               tooltip="Cancel all running nodes"/>               
          <action
                class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
                definitionId="knime.commands.executeAndOpenView"

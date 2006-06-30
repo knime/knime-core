@@ -100,7 +100,7 @@ public class ResetAction extends AbstractNodeAction {
         if (mb.open() != SWT.YES) {
             return;
         }
-
+        
         LOGGER.debug("Resetting " + nodeParts.length + " node(s)");
         try {
             for (int i = 0; i < nodeParts.length; i++) {

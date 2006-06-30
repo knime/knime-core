@@ -179,8 +179,8 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // add meta node option if applicable
-                if (MetaNodeModel.class.isAssignableFrom(
-                        container.getModelClass())) {
+                if (MetaNodeModel.class.isAssignableFrom(container
+                        .getModelClass())) {
                     LOGGER.debug("adding 'edit meta-node' option "
                             + "to context menu...");
                     action = new EditMetaWorkflowAction(container);

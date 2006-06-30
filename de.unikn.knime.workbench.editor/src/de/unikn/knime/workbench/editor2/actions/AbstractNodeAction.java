@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.ui.actions.SelectionAction;
+import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -116,8 +117,24 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @return The selected <code>NodeContainerEditParts</code>, may be empty
      */
     protected NodeContainerEditPart[] getSelectedNodeParts() {
-        ArrayList<NodeContainerEditPart> objects =
-            new ArrayList<NodeContainerEditPart>(getSelectedObjects());
+
+        return getNodeParts(getSelectedObjects());
+    }
+
+    /**
+     * @return The all <code>NodeContainerEditParts</code>, may be empty
+     */
+    protected NodeContainerEditPart[] getAllNodeParts() {
+
+        return getNodeParts(getAllObjects());
+    }
+
+    /**
+     * @return The all <code>NodeContainerEditParts</code>, may be empty
+     */
+    private NodeContainerEditPart[] getNodeParts(final List nodeObjects) {
+        ArrayList<NodeContainerEditPart> objects = new ArrayList<NodeContainerEditPart>(
+                nodeObjects);
 
         // clean list, that is, remove all objects that are not edit
         // parts for a NodeContainer
@@ -129,8 +146,8 @@ public abstract class AbstractNodeAction extends SelectionAction {
             }
         }
 
-        final NodeContainerEditPart[] parts = objects.toArray(
-                new NodeContainerEditPart[objects.size()]);
+        final NodeContainerEditPart[] parts = objects
+                .toArray(new NodeContainerEditPart[objects.size()]);
 
         return parts;
     }
@@ -154,19 +171,36 @@ public abstract class AbstractNodeAction extends SelectionAction {
     }
 
     /**
+     * @return all objects of the selected editor site.
+     */
+    protected List getAllObjects() {
+
+        ScrollingGraphicalViewer provider = (ScrollingGraphicalViewer)m_editor
+                .getEditorSite().getSelectionProvider();
+        if (provider == null) {
+            return Collections.EMPTY_LIST;
+        }
+
+        // get parent of the node parts
+        EditPart editorPart = (EditPart)provider.getRootEditPart()
+                .getChildren().get(0);
+
+        return editorPart.getChildren();
+    }
+
+    /**
      * Returns all edit parts with the given ids.
      * 
      * @param nodeIds the node container ids to retrieve the edit parts for
      * @param connectionIds the connection container ids to retrieve the edit
-     * parts for
+     *            parts for
      * @return the edit parts of the specified ids
      */
     protected List<AbstractWorkflowEditPart> getEditPartsById(
             final int[] nodeIds, final int[] connectionIds) {
 
         // the result
-        ArrayList<AbstractWorkflowEditPart> parts =
-            new ArrayList<AbstractWorkflowEditPart>();
+        ArrayList<AbstractWorkflowEditPart> parts = new ArrayList<AbstractWorkflowEditPart>();
 
         // get the parent from the reference part and then the children
         List<EditPart> allParts = m_editor.getViewer().getRootEditPart()
@@ -187,8 +221,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
                     parts.add((AbstractWorkflowEditPart)part);
                 }
             } else if (container instanceof ConnectionContainer) {
-                ConnectionContainer connectionContainer =
-                    (ConnectionContainer)container;
+                ConnectionContainer connectionContainer = (ConnectionContainer)container;
 
                 if (isInArray(connectionContainer.getID(), connectionIds)) {
                     parts.add((AbstractWorkflowEditPart)part);
@@ -209,8 +242,10 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @return true if value is included in array
      */
     private static boolean isInArray(final int value, final int[] array) {
-        if (array == null) { return false; }
-        
+        if (array == null) {
+            return false;
+        }
+
         for (int arrayValue : array) {
             if (arrayValue == value) {
                 return true;

@@ -88,9 +88,11 @@ import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
+import de.unikn.knime.workbench.editor2.actions.CancelAllAction;
 import de.unikn.knime.workbench.editor2.actions.CopyAction;
 import de.unikn.knime.workbench.editor2.actions.CutAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAction;
+import de.unikn.knime.workbench.editor2.actions.ExecuteAllAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import de.unikn.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
@@ -463,6 +465,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction openDialog = new OpenDialogAction(this);
 
         AbstractNodeAction execute = new ExecuteAction(this);
+        AbstractNodeAction executeAll = new ExecuteAllAction(this);
+        AbstractNodeAction cancelAll = new CancelAllAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
         AbstractNodeAction setNameAndDescription =
@@ -482,6 +486,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         m_actionRegistry.registerAction(openDialog);
         m_actionRegistry.registerAction(execute);
+        m_actionRegistry.registerAction(executeAll);
+        m_actionRegistry.registerAction(cancelAll);
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
         m_actionRegistry.registerAction(setNameAndDescription);
@@ -500,6 +506,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         m_editorActions.add(openDialog.getId());
         m_editorActions.add(execute.getId());
+        m_editorActions.add(executeAll.getId());
+        m_editorActions.add(cancelAll.getId());
         m_editorActions.add(executeAndView.getId());
         m_editorActions.add(reset.getId());
         m_editorActions.add(setNameAndDescription.getId());

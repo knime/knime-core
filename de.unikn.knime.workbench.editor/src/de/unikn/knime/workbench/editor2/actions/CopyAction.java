@@ -40,7 +40,7 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 public class CopyAction extends AbstractClipboardAction {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(ExecuteAction.class);
+            .getLogger(CopyAction.class);
 
     /**
      * Constructs a new clipboard copy action.
