@@ -43,10 +43,11 @@ public class PreviewTableContentView extends TableContentView {
         JTableHeader header = getTableHeader();
         // get column in which event occured
         int column = header.columnAtPoint(e.getPoint());
-        if (column >= 0) {
-            firePropertyChange(PROPERTY_SPEC_CHANGED, null, 
-                    new Integer(column));
+        if (column < 0) {
+            return;
         }
+        int modelIndex = convertColumnIndexToModel(column);
+        firePropertyChange(PROPERTY_SPEC_CHANGED, null, modelIndex);
     }
     
 }
