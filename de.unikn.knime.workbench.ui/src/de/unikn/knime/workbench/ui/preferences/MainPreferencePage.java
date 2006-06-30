@@ -23,9 +23,14 @@ import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.activities.WorkbenchActivityHelper;
+import org.eclipse.ui.internal.Workbench;
 
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
@@ -113,7 +118,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         
         DirectoryFieldEditor tempDirEditor =
             new DirectoryFieldEditor(PreferenceConstants.P_TEMP_DIR,
-            "Directory for temporary files\n(you must restart KNIME after"
+            "Directory for temporary files\n(you should restart KNIME after"
                     + " changing this value)", parent);
         addField(tempDirEditor);
     }
@@ -125,5 +130,4 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
     public void init(final IWorkbench workbench) {
         // ignore
     }
-    
 }
