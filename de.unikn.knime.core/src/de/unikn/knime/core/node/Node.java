@@ -1389,7 +1389,7 @@ public final class Node {
     private static final String CFG_DATA_FILES = "data_files";
     private static final String DATA_FILE_PREFIX = "data_";
     private static final String CFG_MODEL_FILES = "model_files";
-    private static final String MODEL_FILE_PREFIX = "spec_";
+    private static final String MODEL_FILE_PREFIX = "model_";
     private static final String CFG_OUTPUT_PREFIX = "output_";
     
     /**
