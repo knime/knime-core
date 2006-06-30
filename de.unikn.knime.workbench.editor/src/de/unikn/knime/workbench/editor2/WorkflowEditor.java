@@ -632,12 +632,13 @@ public class WorkflowEditor extends GraphicalEditor implements
         // this fails
         // LOGGER.debug("Created new WFM object as input");
 
+        LOGGER.debug("Resource File's project: " + m_fileResource.getProject());
         File file = m_fileResource.getLocation().toFile();
         try {
             // FIXME:
             // setInput is called before the entire repository is loaded,
             // need to figure out how to do it the other way around
-            // the static block needs to be executed, access 
+            // the static block needs to be executed, access
             // RepositoryManager.INSTANCE
             if (RepositoryManager.INSTANCE == null) {
                 LOGGER.fatal("Dummy line, never printed");
@@ -652,11 +653,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.info("New workflow created.");
             } else {
                 LOGGER.error("Could not load workflow from: " + file.getName(),
-                    ioe);
+                        ioe);
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.error("Could not load workflow from: " + file.getName(),
-                    ise);
+            LOGGER
+                    .error("Could not load workflow from: " + file.getName(),
+                            ise);
         } catch (CanceledExecutionException cee) {
             LOGGER.info("Canceled loading worflow: " + file.getName());
         } finally {
@@ -668,7 +670,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         // Editor name (title)
-        setPartName(file.getName());
+        setPartName(file.getParentFile().getName());
 
         // update Actions, as now there's everything available
         updateActions();
@@ -774,7 +776,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void doSave(final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ....");
-        
+
         try {
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
@@ -782,13 +784,12 @@ public class WorkflowEditor extends GraphicalEditor implements
             m_manager.save(file);
             // mark command stack (no undo beyond this point)
             getCommandStack().markSaveLocation();
-            
+
         } catch (CanceledExecutionException cee) {
             LOGGER.debug("Saving of workflow canceled");
         } catch (Exception e) {
             LOGGER.warn("Could not save workflow", e);
         }
-        
 
         // try {
         // // try to refresh project
@@ -937,15 +938,86 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private class MyResourceDeltaVisitor implements IResourceDeltaVisitor {
 
+        private String getTypeString(IResourceDelta delta) {
+            StringBuffer buffer = new StringBuffer();
+
+            if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
+                buffer.append("ADDED|");
+            }
+            if ((delta.getKind() & IResourceDelta.ADDED_PHANTOM) != 0) {
+                buffer.append("ADDED_PHANTOM|");
+            }
+            if ((delta.getKind() & IResourceDelta.ALL_WITH_PHANTOMS) != 0) {
+                buffer.append("ALL_WITH_PHANTOMS|");
+            }
+            if ((delta.getKind() & IResourceDelta.CHANGED) != 0) {
+                buffer.append("CHANGED|");
+            }
+            if ((delta.getKind() & IResourceDelta.CONTENT) != 0) {
+                buffer.append("CONTENT|");
+            }
+            if ((delta.getFlags() & IResourceDelta.DESCRIPTION) != 0) {
+                buffer.append("DESCRIPTION|");
+            }
+            if ((delta.getKind() & IResourceDelta.ENCODING) != 0) {
+                buffer.append("ENCODING|");
+            }
+            if ((delta.getKind() & IResourceDelta.MARKERS) != 0) {
+                buffer.append("MARKERS|");
+            }
+            if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
+                buffer.append("MOVED_FROM|");
+            }
+            if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
+                buffer.append("MOVED_TO|");
+            }
+            if ((delta.getKind() & IResourceDelta.NO_CHANGE) != 0) {
+                buffer.append("NO_CHANGE|");
+            }
+            if ((delta.getKind() & IResourceDelta.OPEN) != 0) {
+                buffer.append("OPEN|");
+            }
+            if ((delta.getKind() & IResourceDelta.REMOVED) != 0) {
+                buffer.append("REMOVED|");
+            }
+            if ((delta.getKind() & IResourceDelta.REMOVED_PHANTOM) != 0) {
+                buffer.append("REMOVED_PHANTOM|");
+            }
+            if ((delta.getKind() & IResourceDelta.REPLACED) != 0) {
+                buffer.append("REPLACED|");
+            }
+            if ((delta.getKind() & IResourceDelta.SYNC) != 0) {
+                buffer.append("SYNC|");
+            }
+            if ((delta.getKind() & IResourceDelta.TYPE) != 0) {
+                buffer.append("TYPE|");
+            }
+            return buffer.toString();
+        }
+
         /**
          * @see org.eclipse.core.resources.IResourceDeltaVisitor
          *      #visit(org.eclipse.core.resources.IResourceDelta)
          */
         public boolean visit(final IResourceDelta delta) throws CoreException {
 
+            LOGGER.debug("Path: " + delta.getResource().getName() + "Parent: "
+                    + m_fileResource.getProject() + " Deltat type: "
+                    + getTypeString(delta));
             // Parent project removed? close this editor....
             if (m_fileResource.getProject().equals(delta.getResource())) {
-                if ((delta.getKind() & IResourceDelta.REMOVED) != 0) {
+
+                if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
+
+                    Display.getDefault().syncExec(new Runnable() {
+                        public void run() {
+
+                            setPartName(delta.getResource().getName());
+                        }
+                    });
+
+                } else if ((delta.getKind() & IResourceDelta.REMOVED) != 0
+                        && (delta.getFlags() & IResourceDelta.MOVED_TO) == 0) {
                     // We can't save the workflow here, so unsaved changes are
                     // definitly lost. Well, people deleting projects really
                     // should know what they're doing ;-)
@@ -957,6 +1029,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     });
                 }
             }
+
             // we're only interested in deltas that are about "our" resource
             if (!m_fileResource.equals(delta.getResource())) {
                 return true;
@@ -970,10 +1043,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                 Display.getDefault().syncExec(new Runnable() {
                     public void run() {
 
-                        // get the new name
-                        String newName = delta.getMovedToPath().lastSegment();
-                        // set the part name
-                        setPartName(newName);
+                        // // get the new name
+                        // String newName =
+                        // delta.getMovedToPath().lastSegment();
+                        // // set the part name
+                        // setPartName(newName);
 
                         // we need to update the file resource that we have
                         // currently opened in our editor, so that we now have
@@ -1000,7 +1074,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             return true;
         }
-
     }
 
     /**
@@ -1010,11 +1083,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @param settings the settings representing this workflow
      */
-//    void createWorkflowManager(final NodeSettings settings) {
-//        m_manager = RepositoryManager.INSTANCE.loadWorkflowFromConfig(settings);
-//        m_manager.addListener(this);
-//    }
-
+    // void createWorkflowManager(final NodeSettings settings) {
+    // m_manager = RepositoryManager.INSTANCE.loadWorkflowFromConfig(settings);
+    // m_manager.addListener(this);
+    // }
     /**
      * Sets the underlying workflow manager for this editor.
      * 
@@ -1043,8 +1115,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return the editor for this meta node container, null if container was
      *         not found
      */
-    public MetaWorkflowEditor getEditor(
-            final NodeContainer metaNodeContainer) {
+    public MetaWorkflowEditor getEditor(final NodeContainer metaNodeContainer) {
 
         for (MetaWorkflowEditor metaWorkflowEditor : m_childEditors) {
 
