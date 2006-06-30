@@ -355,7 +355,7 @@ final class DataOutPortView extends NodeOutPortView {
                     }
                 }
                 rows[r] = new DefaultRow(
-                        new StringCell("Val_" + (r - 3)), cols);
+                        new StringCell("Val_" + (r - 5)), cols);
             }
 
         } else {
