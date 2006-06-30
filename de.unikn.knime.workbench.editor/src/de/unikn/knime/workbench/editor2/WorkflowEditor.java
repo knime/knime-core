@@ -163,7 +163,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS =
+        new ArrayList<ConsoleViewAppender>();
 
     static {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
@@ -225,6 +226,10 @@ public class WorkflowEditor extends GraphicalEditor implements
                         LOGGER.warn("Unable to get maximum thread count "
                                 + " from preference page.", e);
                     }
+                } else if (event.getProperty().equals(
+                        PreferenceConstants.P_TEMP_DIR)) {
+                    System.setProperty("java.io.tmpdir",
+                            (String) event.getNewValue());
                 }
             }
         });
@@ -460,8 +465,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction execute = new ExecuteAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
-        AbstractNodeAction setNameAndDescription = new SetNameAndDescriptionAction(
-                this);
+        AbstractNodeAction setNameAndDescription =
+            new SetNameAndDescriptionAction(this);
 
         // copy / cut / paste action
         CopyAction copy = new CopyAction(this);
@@ -939,8 +944,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @author Florian Georg, University of Konstanz
      */
     private class MyResourceDeltaVisitor implements IResourceDeltaVisitor {
-
-        private String getTypeString(IResourceDelta delta) {
+        private String getTypeString(final IResourceDelta delta) {
             StringBuffer buffer = new StringBuffer();
 
             if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
