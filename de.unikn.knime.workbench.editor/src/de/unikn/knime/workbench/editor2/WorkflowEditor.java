@@ -194,6 +194,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(pStore
                 .getInt(PreferenceConstants.P_MAXIMUM_THREADS));
+        System.setProperty("java.io.tmpdir",
+                pStore.getString(PreferenceConstants.P_TEMP_DIR));
         pStore.addPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent event) {
                 if (event.getProperty().equals(
