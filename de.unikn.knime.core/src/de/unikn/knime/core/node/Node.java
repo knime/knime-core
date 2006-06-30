@@ -1039,14 +1039,16 @@ public final class Node {
             int realId = inPortID - getNrDataInPorts();
             try {
                 m_model.loadPredictorParams(realId, null);
-            } catch (Exception e) {
+            } catch (NullPointerException e) {
                 /*
                  * if the nodemodel implementation of the loadPredictorParams is
                  * correct we will not end up here.
                  */
-                throw new IllegalStateException("Incorrect implementation of "
-                        + "method NodeModel.loadPredictorParams. "
+                m_logger.coding("Incorrect implementation of "
+                        + "method NodeModel.loadPredictorParams: "
                         + "It must handle null parameters");
+            } catch (InvalidSettingsException ise) {
+                // ignore, since we tried to load null settings.
             }
         }
         // re-create out table specs, as incoming table specs/models are gone.
