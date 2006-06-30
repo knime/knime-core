@@ -1498,4 +1498,14 @@ public class WorkflowManager implements WorkflowListener {
             nc.resetAndConfigure();
         }
     }
+    
+    /**
+     * Checks if at least one node is executing.
+     * 
+     * @return <code>true</code> if at least one node is executing,
+     * <code>false</code> otherwise
+     */
+    public boolean executionInProgress() {
+        return m_executor.executionInProgress(this);
+    }
 }
