@@ -241,7 +241,7 @@ final class XMLConfig2 {
                         .createElement("entry"));
                 entry.setAttribute("key", key);
                 entry.setAttribute("type", e.getType().name());
-                String value = ((AbstractConfigEntry)e).toStringValue();
+                String value = e.toStringValue();
 
                 if (value == null) {
                     entry.setAttribute("isnull", "true");

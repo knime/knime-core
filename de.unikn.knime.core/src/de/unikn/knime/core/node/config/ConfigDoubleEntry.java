@@ -58,6 +58,7 @@ final class ConfigDoubleEntry extends AbstractConfigEntry {
      * @return A String representation of this double value.
      * @see Double#toString(double)
      */
+    @Override
     public String toStringValue() {
         return Double.toString(m_double);
     }

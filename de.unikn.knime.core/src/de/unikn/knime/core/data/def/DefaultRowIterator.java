@@ -57,6 +57,7 @@ public class DefaultRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
         return m_iterator.hasNext();
     }
@@ -64,6 +65,7 @@ public class DefaultRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
+    @Override
     public DataRow next() {
         return m_iterator.next();
     }

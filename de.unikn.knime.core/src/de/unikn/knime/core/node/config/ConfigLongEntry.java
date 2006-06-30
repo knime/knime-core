@@ -56,6 +56,7 @@ final class ConfigLongEntry extends AbstractConfigEntry {
      * @return A String representation of this long.
      * @see Long#toString(long)
      */
+    @Override
     public String toStringValue() {
         return Long.toString(m_long);
     }

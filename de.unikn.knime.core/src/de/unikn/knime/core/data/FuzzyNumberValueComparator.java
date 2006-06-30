@@ -34,6 +34,7 @@ public class FuzzyNumberValueComparator extends DataValueComparator {
      * @see de.unikn.knime.core.data.DataValueComparator
      *      #compareDataValues(DataValue, DataValue)
      */
+    @Override
     public int compareDataValues(final DataValue v1, final DataValue v2) {
         FuzzyNumberValue fi1 = ((FuzzyNumberValue)v1);
         FuzzyNumberValue fi2 = ((FuzzyNumberValue)v2);

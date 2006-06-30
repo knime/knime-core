@@ -95,7 +95,7 @@ abstract class AbstractConfigEntry implements Serializable {
             return false;
         }
         // because objects are equal it is safe to typecast
-        return hasIdenticalValue((AbstractConfigEntry) ace);
+        return hasIdenticalValue(ace);
     }
     
     /**

@@ -199,7 +199,7 @@ class XMLContentHandler extends DefaultHandler {
                 AttributesImpl a = new AttributesImpl();
                 a.addAttribute(null, null, "key", "CDATA", key);
                 a.addAttribute(null, null, "type", "CDATA", e.getType().name());
-                String value = ((AbstractConfigEntry)e).toStringValue();
+                String value = e.toStringValue();
 
                 if (value == null) {
                     a.addAttribute(null, null, "isnull", "CDATA", "true");

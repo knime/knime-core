@@ -150,6 +150,7 @@ final class Buffer {
     static {
         try {
             Thread hook = new Thread() {
+                @Override
                 public void run() {
                     for (WeakReference<FromFileIterator> ref : OPENSTREAMS) {
                         FromFileIterator it = ref.get();
@@ -162,7 +163,7 @@ final class Buffer {
                             }
                         }
                     }
-                };
+                }
             };
             Runtime.getRuntime().addShutdownHook(hook);
         } catch (Exception e) {
@@ -329,7 +330,7 @@ final class Buffer {
         settings.saveToXML(outStream);
     }
     
-    /**
+    /*
      * Reads the zip entry containing the spec.
      */
     @SuppressWarnings("unchecked") // cast with generics
@@ -413,20 +414,20 @@ final class Buffer {
         m_outStream.reset();
     } // writeEldestRow()
     
-    /** Writes the row key to the out stream. */
+    /* Writes the row key to the out stream. */
     private void writeRowKey(final RowKey key) throws IOException {
         DataCell id = key.getId();
         writeDataCell(id);
     }
     
-    /** Reads a row key from a string. */
+    /* Reads a row key from a string. */
     private RowKey readRowKey(final DCObjectInputStream inStream) 
         throws IOException {
         DataCell id = readDataCell(inStream);
         return new RowKey(id);
     }
     
-    /** Writes a data cell to the m_outStream. */
+    /* Writes a data cell to the m_outStream. */
     private void writeDataCell(final DataCell cell) throws IOException {
         if (cell.isMissing()) {
             m_outStream.writeByte(BYTE_TYPE_MISSING);
@@ -449,7 +450,7 @@ final class Buffer {
                 m_typeShortCuts.put(cell.getClass(), identifier);
             }
             // memorize type if it does not exist
-            m_outStream.writeByte((byte)identifier);
+            m_outStream.writeByte(identifier);
             m_outStream.writeDataCell(serializer, cell);
         } else {
             m_outStream.writeByte(BYTE_TYPE_SERIALIZATION);
@@ -457,7 +458,7 @@ final class Buffer {
         }
     }
 
-    /** Reads a datacell from a string. */
+    /* Reads a datacell from a string. */
     private DataCell readDataCell(final DCObjectInputStream inStream) 
         throws IOException {
         byte identifier = inStream.readByte();
@@ -487,7 +488,7 @@ final class Buffer {
     
     private Class<? extends DataCell> getTypeForChar(final byte identifier) 
         throws IOException {
-        int shortCutIndex = (byte)((int)identifier - BYTE_TYPE_START);
+        int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
         if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
             throw new IOException("Unknown shortcut byte '" + identifier + "'");
         }
@@ -586,6 +587,7 @@ final class Buffer {
         /**
          * @see de.unikn.knime.core.data.RowIterator#hasNext()
          */
+        @Override
         public boolean hasNext() {
             boolean hasNext = m_pointer < Buffer.this.m_size;
             if (!hasNext) {
@@ -603,6 +605,7 @@ final class Buffer {
         /**
          * @see de.unikn.knime.core.data.RowIterator#next()
          */
+        @Override
         public synchronized DataRow next() {
             if (!hasNext()) {
                 throw new NoSuchElementException("Iterator at end");
@@ -634,6 +637,7 @@ final class Buffer {
         /**
          * @see java.lang.Object#finalize()
          */
+        @Override
         protected void finalize() throws Throwable {
             /* This all relates much to bug #63: The temp files are not
              * deleted under windows. It seems that there are open streams
@@ -665,6 +669,7 @@ final class Buffer {
         /**
          * @see de.unikn.knime.core.data.RowIterator#hasNext()
          */
+        @Override
         public boolean hasNext() {
             return m_it.hasNext();
         }
@@ -672,6 +677,7 @@ final class Buffer {
         /**
          * @see de.unikn.knime.core.data.RowIterator#next()
          */
+        @Override
         public DataRow next() {
             return m_it.next();
         }

@@ -79,7 +79,7 @@ public abstract class DataValueComparator implements Comparator<DataCell> {
                 return +1;
             }
             // both cells are not missing
-            return compareDataValues((DataValue)c1, (DataValue)c2);
+            return compareDataValues(c1, c2);
         }
     }
 

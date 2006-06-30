@@ -33,6 +33,7 @@ public class IntValueComparator extends DataValueComparator {
      * @see de.unikn.knime.core.data.DataValueComparator
      *          #compareDataValues(DataValue, DataValue)
      */
+    @Override
     public int compareDataValues(final DataValue v1, final DataValue v2) {
         int i1 = ((IntValue)v1).getIntValue();
         int i2 = ((IntValue)v2).getIntValue();

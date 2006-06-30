@@ -58,6 +58,7 @@ final class ConfigShortEntry extends AbstractConfigEntry {
      * @return A Sring representation of this short value.
      * @see Short#toString(short)
      */
+    @Override
     public String toStringValue() {
         return Short.toString(m_short);
     }

@@ -364,7 +364,7 @@ public class DefaultTableTest extends TestCase {
             content.add(rowContent);
         }
         Object[][] contentAsArray = new Object[content.size()][];
-        contentAsArray = (Object[][])content.toArray(contentAsArray);
+        contentAsArray = content.toArray(contentAsArray);
         // contentAsArray.equals(CASE_4_CONTENT) does not work!!
         assertTrue(contentAsArray.length == CASE_4_CONTENT.length);
         for (int i = 0; i < contentAsArray.length; i++) {

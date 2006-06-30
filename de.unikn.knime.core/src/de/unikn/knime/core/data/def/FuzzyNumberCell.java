@@ -165,6 +165,7 @@ public final class FuzzyNumberCell extends DataCell implements
      * @see de.unikn.knime.core.data.DataCell
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
+    @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FuzzyNumberCell fc = (FuzzyNumberCell)dc;
         return (fc.m_minSupp == m_minSupp) && (fc.m_core == m_core) 
@@ -174,6 +175,7 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         long minSuppBits = Double.doubleToLongBits(m_minSupp);
         long coreBits = Double.doubleToLongBits(m_core);
@@ -185,6 +187,7 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "<" + m_minSupp + "," + m_core + "," + m_maxSupp + ">";
     }

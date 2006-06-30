@@ -115,7 +115,7 @@ final class BlockableOutputStream extends OutputStream {
         }
     }
     
-    /** Escapes the byte <code>b</code>. */
+    /* Escapes the byte <code>b</code>. */
     private void escapeAndWrite(final int b) throws IOException {
         m_buffer[0] = TC_ESCAPE;
         m_buffer[1] = (byte)b;
@@ -126,6 +126,7 @@ final class BlockableOutputStream extends OutputStream {
      * Delegates to output stream.
      * @see java.io.Closeable#close()
      */
+    @Override
     public void close() throws IOException {
         m_outStream.close();
     }
@@ -134,6 +135,7 @@ final class BlockableOutputStream extends OutputStream {
      * Delegates to output stream.
      * @see java.io.Flushable#flush()
      */
+    @Override
     public void flush() throws IOException {
         m_outStream.flush();
     }

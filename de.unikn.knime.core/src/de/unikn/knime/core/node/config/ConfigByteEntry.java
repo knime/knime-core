@@ -58,6 +58,7 @@ final class ConfigByteEntry extends AbstractConfigEntry {
      * @return The byte value as String representation.
      * @see Byte#toString(byte)
      */
+    @Override
     public String toStringValue() {
         return Byte.toString(m_byte);
     }

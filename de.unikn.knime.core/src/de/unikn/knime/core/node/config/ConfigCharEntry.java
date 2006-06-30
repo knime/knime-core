@@ -62,6 +62,7 @@ final class ConfigCharEntry extends AbstractConfigEntry {
      * @return A String representation of this char value.
      * @see Character#toString(char)
      */
+    @Override
     public String toStringValue() {
         return Character.toString(m_char);
     }

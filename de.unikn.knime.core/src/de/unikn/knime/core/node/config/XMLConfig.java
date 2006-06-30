@@ -116,7 +116,7 @@ final class XMLConfig {
         }
     }
     
-    /** Helper method to read the xml given by the inputstream to the config 
+    /* Helper method to read the xml given by the inputstream to the config 
      * object. */
     private static void internalLoad(final Config c, final InputStream in)
             throws SAXException, IOException, ParserConfigurationException {

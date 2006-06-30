@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingConstants;
 
 /**
  * A simple control panel holding the control elements necessary to control the
@@ -79,7 +80,7 @@ public class InterruptControlPanel extends JPanel {
         m_nextStepBtn = new JButton(NEXT);
         m_finishBtn = new JButton(FINISH);
 
-        m_delaySlider = new JSlider(JSlider.HORIZONTAL, 0, SLIDER_MAX,
+        m_delaySlider = new JSlider(SwingConstants.HORIZONTAL, 0, SLIDER_MAX,
                 InterruptibleNodeModel.INITIAL_DELAY);
         m_delaySlider.setMajorTickSpacing(MAJOR_TICKS);
         m_delaySlider.setMinorTickSpacing(MINOR_TICKS);

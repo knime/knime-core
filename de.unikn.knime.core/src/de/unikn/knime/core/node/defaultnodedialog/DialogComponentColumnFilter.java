@@ -460,7 +460,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
         return list;
     }
 
-    /**
+    /*
      * Finds in the list any occurence of the argument string (as substring).
      */
     private static int searchInList(final JList list, final String str,

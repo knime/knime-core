@@ -1458,7 +1458,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return The Config entry for the key.
      */
     AbstractConfigEntry getEntry(final String key) {
-        return (AbstractConfigEntry)m_map.get(key);
+        return m_map.get(key);
     }
 
     /**
@@ -1481,6 +1481,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * @see #toString()
      */
+    @Override
     public final String toStringValue() {
         return toString();
     }
@@ -1511,7 +1512,7 @@ public abstract class Config extends AbstractConfigEntry
                 Config ms = (Config)e;
                 ms.toString(++myindent, sb);
             } else {
-                String value = ((AbstractConfigEntry)e).toStringValue();
+                String value = e.toStringValue();
                 if (value == null) {
                     sb.append("->null");
                 } else {

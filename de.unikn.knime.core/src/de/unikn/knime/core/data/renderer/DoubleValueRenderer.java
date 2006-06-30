@@ -77,6 +77,7 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
      */
+    @Override
     protected void setValue(final Object value) {
         Object newValue;
         if (value instanceof DoubleValue) {
@@ -97,6 +98,7 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     /**
      * @see DefaultDataValueRenderer#getDescription()
      */
+    @Override
     public String getDescription() {
         return m_desc;
     }

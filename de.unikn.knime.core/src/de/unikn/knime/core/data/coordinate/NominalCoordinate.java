@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -86,7 +84,8 @@ public class NominalCoordinate extends Coordinate {
      * @param nominalValue the value to replace
      * @param index the position to set the value
      */
-    public void changeValuePosition(final DataCell nominalValue, final int index) {
+    public void changeValuePosition(final DataCell nominalValue,
+            final int index) {
 
         // first remove the value to relocate
         m_possibleValues.remove(nominalValue);
@@ -107,6 +106,7 @@ public class NominalCoordinate extends Coordinate {
      * 
      * @return the mapping of tick positions and coresponding domain values
      */
+    @Override
     public CoordinateMapping[] getTickPositions(final double absolutLength,
             final boolean naturalMapping) {
 
@@ -202,8 +202,7 @@ public class NominalCoordinate extends Coordinate {
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {
-
-        return absoluteLength / (double)m_numberPossibleValues;
+        return absoluteLength / m_numberPossibleValues;
     }
 
 }

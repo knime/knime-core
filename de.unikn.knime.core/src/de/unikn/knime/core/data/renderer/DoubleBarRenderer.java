@@ -78,6 +78,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
      */
+    @Override
     protected void setValue(final Object value) {
         double d = 0;
         if (value instanceof DoubleValue) {

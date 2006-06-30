@@ -102,6 +102,7 @@ public final class ComplexNumberCell extends DataCell
      * @see de.unikn.knime.core.data.DataCell
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
+    @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return ((ComplexNumberCell)dc).m_real == m_real 
                && ((ComplexNumberCell)dc).m_imag == m_imag;
@@ -110,6 +111,7 @@ public final class ComplexNumberCell extends DataCell
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         long bitsReal = Double.doubleToLongBits(m_real);
         long bitsImag = Double.doubleToLongBits(m_imag);
@@ -120,6 +122,7 @@ public final class ComplexNumberCell extends DataCell
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         String result = "" + m_real;
         if (m_imag < 0) {

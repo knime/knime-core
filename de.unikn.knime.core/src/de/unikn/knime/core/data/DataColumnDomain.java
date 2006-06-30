@@ -162,6 +162,7 @@ public final class DataColumnDomain {
      * @param obj The other domain to compare with.
      * @return true if possible values, and lower and upper bounds are equal.
      */
+    @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
@@ -198,6 +199,7 @@ public final class DataColumnDomain {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         int tempHash = 0;
         if (hasLowerBound()) {
@@ -221,6 +223,7 @@ public final class DataColumnDomain {
      * @return Summary as String.
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         String lower = 
             (m_lowerBound == null ? "null" : m_lowerBound.toString());

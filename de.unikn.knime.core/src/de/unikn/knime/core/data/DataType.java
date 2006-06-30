@@ -308,7 +308,7 @@ public final class DataType {
         return result;
     }
     
-    /** Helper method that checks if the passed Type is a parameterized
+    /* Helper method that checks if the passed Type is a parameterized
      * type (like DataCellSerializer&lt;someType&gt; and that it is assignable
      * from the given cell class. This method is used to check if the return
      * class of getCellSerializer in a DataCell has the correct signature.
@@ -359,7 +359,7 @@ public final class DataType {
         return MissingCell.INSTANCE;
     }
     
-    /**
+    /*
      * Recursive method that walks up the inheritence tree of a given class and 
      * determines all DataValue interfaces being implemented. Any such detected 
      * interface will be added to a set. Used from the constructor to determine
@@ -393,7 +393,7 @@ public final class DataType {
     /** Cell class, used, e.g. for toString() method. */
     private final Class<? extends DataCell> m_cellClass;
 
-    /**
+    /*
      * Creates a new type for the DataCell being passed. This implementation
      * determines all DataValue interfaces that the cell is implementing and
      * also retrieves their meta information. This constructor is used by
@@ -422,7 +422,8 @@ public final class DataType {
         m_cellClass = cl;
     }
     
-    /** Determines the list of compatible value interfaces as intersection of
+    /*
+     * Determines the list of compatible value interfaces as intersection of
      * the two arguments. This constructor is used by the 
      * getCommonSuperTypeOf method.
      */

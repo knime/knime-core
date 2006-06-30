@@ -70,10 +70,13 @@ public class DefaultNodeDialog extends NodeDialogPane {
     /** Load Settings for all registered components.
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
+     * @throws NotConfigurableException if the node can currently not be
+     * configured
      */
     @Override
     public final void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
+            final NodeSettings settings, final DataTableSpec[] specs)
+    throws NotConfigurableException {
         assert (settings != null && specs != null);
         try {
             for (DialogComponent comp : m_dialogComponents) {

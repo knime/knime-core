@@ -165,6 +165,7 @@ public final class FuzzyIntervalCell extends DataCell implements
      * @see de.unikn.knime.core.data.DataCell
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
+    @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FuzzyIntervalCell fc = (FuzzyIntervalCell)dc;
         return (fc.m_minSupp == m_minSupp) && (fc.m_minCore == m_minCore) 
@@ -175,6 +176,7 @@ public final class FuzzyIntervalCell extends DataCell implements
      * Computes hash code based on all private members.
      * @see DataCell#hashCode()
      */
+    @Override
     public int hashCode() {
         long minSuppBits = Double.doubleToLongBits(m_minSupp);
         long minCoreBits = Double.doubleToLongBits(m_minCore);
@@ -188,6 +190,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "<" + m_minSupp + "," + m_minCore + "," 
             + m_maxCore + "," + m_maxSupp + ">";

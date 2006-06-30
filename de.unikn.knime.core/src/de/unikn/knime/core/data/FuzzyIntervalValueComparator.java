@@ -38,6 +38,7 @@ public class FuzzyIntervalValueComparator extends DataValueComparator {
      * @see de.unikn.knime.core.data.DataValueComparator
      *      #compareDataValues(DataValue, DataValue)
      */
+    @Override
     protected int compareDataValues(final DataValue v1, final DataValue v2) {
 
         FuzzyIntervalValue f1 = (FuzzyIntervalValue)v1;

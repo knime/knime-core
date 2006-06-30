@@ -249,6 +249,7 @@ public class DefaultRow implements DataRow {
      * 
      * @return key + values of this row in a string
      */
+    @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer(getKey().toString());
         buffer.append(": (");
@@ -268,6 +269,7 @@ public class DefaultRow implements DataRow {
      * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
@@ -291,6 +293,7 @@ public class DefaultRow implements DataRow {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return getKey().hashCode();
     }

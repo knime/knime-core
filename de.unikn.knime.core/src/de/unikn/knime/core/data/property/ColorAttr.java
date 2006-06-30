@@ -211,6 +211,7 @@ public final class ColorAttr implements Serializable {
      * 
      * @see #equals(ColorAttr)
      */
+    @Override
     public boolean equals(final Object obj) {
         return obj instanceof ColorAttr && equals(((ColorAttr) obj));
     }
@@ -219,6 +220,7 @@ public final class ColorAttr implements Serializable {
      * @see Color#hashCode()
      * @return The object's color value.
      */
+    @Override
     public int hashCode() {
         return m_attrColor.hashCode();
     }
@@ -230,6 +232,7 @@ public final class ColorAttr implements Serializable {
      * 
      * @see Color#toString()
      */
+    @Override
     public String toString() {
         StringBuffer buf = new StringBuffer(getClass().getName());
         buf.append("attribute:"       + m_attrColor.toString());

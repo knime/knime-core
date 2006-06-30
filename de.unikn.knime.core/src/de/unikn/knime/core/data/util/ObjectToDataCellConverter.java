@@ -163,7 +163,7 @@ public class ObjectToDataCellConverter {
      * @see IntCell
      */
     public DataCell createDataCell(final byte b) {
-        return new IntCell((int)b);
+        return new IntCell(b);
     }
 
     /** 

@@ -454,7 +454,7 @@ public class DefaultTable implements DataTable {
             if (data == null) {
                 throw new IllegalArgumentException("Data must not be null.");
             }
-            m_rows = (Object[])data;
+            m_rows = data;
         }
 
         /**
@@ -466,7 +466,7 @@ public class DefaultTable implements DataTable {
             if (data == null) {
                 throw new IllegalArgumentException("Data must not be null.");
             }
-            m_rows = (Object[])data;
+            m_rows = data;
         }
 
         /**
@@ -478,7 +478,7 @@ public class DefaultTable implements DataTable {
             if (data == null) {
                 throw new IllegalArgumentException("Data must not be null.");
             }
-            m_rows = (Object[])data;
+            m_rows = data;
         }
 
         /**

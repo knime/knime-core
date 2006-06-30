@@ -135,6 +135,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
      * @see de.unikn.knime.core.data.DataCell
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
+    @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return ((DoubleCell)dc).m_double == m_double;
     }
@@ -142,6 +143,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         long bits = Double.doubleToLongBits(m_double);
         return (int)(bits ^ (bits >>> 32));
@@ -150,6 +152,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return Double.toString(m_double);
     }

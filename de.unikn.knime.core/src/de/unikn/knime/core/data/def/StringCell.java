@@ -96,6 +96,7 @@ public final class StringCell extends DataCell implements StringValue {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return getStringValue();
     }
@@ -104,6 +105,7 @@ public final class StringCell extends DataCell implements StringValue {
      * @see de.unikn.knime.core.data.DataCell
      *      #equalsDataCell(de.unikn.knime.core.data.DataCell)
      */
+    @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return m_string.equals(((StringCell)dc).m_string);
     }
@@ -111,6 +113,7 @@ public final class StringCell extends DataCell implements StringValue {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return m_string.hashCode();
     }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,6 +20,7 @@
 package de.unikn.knime.core.data.coordinate;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -145,7 +144,8 @@ public class NumericCoordinate extends Coordinate {
     NumericCoordinate(final DataColumnSpec dataColumnSpec,
             final double coordinatePrefix, final double coordinatePostfix,
             final double absoluteTickDistance,
-            final NumericTickPolicy tickPolicy, final int maxDomainLableLenght) {
+            final NumericTickPolicy tickPolicy,
+            final int maxDomainLableLenght) {
 
         super(dataColumnSpec);
 
@@ -231,6 +231,7 @@ public class NumericCoordinate extends Coordinate {
      * 
      * @return the mapping of tick positions and coresponding domain values
      */
+    @Override
     public CoordinateMapping[] getTickPositions(final double absolutLength,
             final boolean naturalMapping) {
 
@@ -331,8 +332,10 @@ public class NumericCoordinate extends Coordinate {
             startOfDomain = startOfDomain * Math.pow(10, exponent);
 
             // no create the tick mapping
-            ArrayList<NumericCoordinateMapping> mappingArray = new ArrayList<NumericCoordinateMapping>();
-            for (int i = 0; startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
+            ArrayList<NumericCoordinateMapping> mappingArray =
+                new ArrayList<NumericCoordinateMapping>();
+            for (int i = 0;
+                startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
 
                 double domainValue = startOfDomain + i * domainTickStep;
                 double mappingValue = (domainValue - m_minDomainValue)
@@ -340,7 +343,7 @@ public class NumericCoordinate extends Coordinate {
 
                 // if natural mappings (natural numbers) are needed
                 if (naturalMapping) {
-                    mappingValue = (double)Math.round(mappingValue);
+                    mappingValue = Math.round(mappingValue);
                 }
 
                 mappingArray.add(new NumericCoordinateMapping(
@@ -350,7 +353,7 @@ public class NumericCoordinate extends Coordinate {
             // convert the array list to an mapping array
             mapping = new NumericCoordinateMapping[mappingArray.size()];
 
-            mapping = (NumericCoordinateMapping[])mappingArray.toArray(mapping);
+            mapping = mappingArray.toArray(mapping);
         }
 
         /**
@@ -359,7 +362,8 @@ public class NumericCoordinate extends Coordinate {
          * 
          * @see NumericTickPolicy#START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE
          */
-        if (m_tickPolicy == NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
+        if (m_tickPolicy == 
+            NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
 
             // add one for the last tick
             numberTicks++;
@@ -462,7 +466,7 @@ public class NumericCoordinate extends Coordinate {
         }
 
         // format the number according to the pattern
-        DecimalFormat format = (DecimalFormat)DecimalFormat
+        DecimalFormat format = (DecimalFormat)NumberFormat
                 .getInstance(new Locale("en"));
         format.applyPattern(formatPattern);
         return format.format(number);
@@ -498,8 +502,8 @@ public class NumericCoordinate extends Coordinate {
     /**
      * Calculates a numeric mapping assuming a <code>DoubleDataCell</code>.
      * 
-     * @see de.unikn.knime.core.data.coordinate.Coordinate#calculateMappedValue(de.unikn.knime.core.data.DataCell,
-     *      double, boolean)
+     * @see de.unikn.knime.core.data.coordinate.Coordinate
+     *  #calculateMappedValue(de.unikn.knime.core.data.DataCell,double, boolean)
      */
     @Override
     public double calculateMappedValue(final DataCell domainValueCell,
@@ -541,7 +545,8 @@ public class NumericCoordinate extends Coordinate {
     /**
      * A numeric coordinate does not has a unused distance range.
      * 
-     * @see de.unikn.knime.core.data.coordinate.Coordinate#getUnusedDistBetweenTicks(double)
+     * @see de.unikn.knime.core.data.coordinate.Coordinate
+     *  #getUnusedDistBetweenTicks(double)
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {

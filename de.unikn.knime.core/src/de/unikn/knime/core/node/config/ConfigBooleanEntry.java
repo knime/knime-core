@@ -58,6 +58,7 @@ final class ConfigBooleanEntry extends AbstractConfigEntry {
      * @return A String representation of this boolean.
      * @see java.lang.Boolean#toString(boolean)
      */
+    @Override
     public String toStringValue() {
         return Boolean.toString(m_boolean);
     }

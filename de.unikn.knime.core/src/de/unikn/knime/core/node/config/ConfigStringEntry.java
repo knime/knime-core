@@ -49,6 +49,7 @@ public class ConfigStringEntry extends AbstractConfigEntry {
     /**
      * @return The String value.
      */
+    @Override
     public String toStringValue() {
         return m_string;
     }

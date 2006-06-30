@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -50,6 +48,7 @@ public class NumericCoordinateMapping extends CoordinateMapping {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return (super.toString() + " double value: " + m_domainValue);
     }

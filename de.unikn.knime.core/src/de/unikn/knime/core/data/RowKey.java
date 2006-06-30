@@ -70,6 +70,7 @@ public final class RowKey implements Serializable {
      * 
      * @see Object#toString()
      */
+    @Override
     public String toString() {
         return m_id.toString();
     }
@@ -78,6 +79,7 @@ public final class RowKey implements Serializable {
      * Compares two row keys.
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
@@ -91,6 +93,7 @@ public final class RowKey implements Serializable {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return m_id.hashCode();
     }

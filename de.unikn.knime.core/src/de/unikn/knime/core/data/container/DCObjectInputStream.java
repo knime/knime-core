@@ -94,6 +94,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#available()
      */
+    @Override
     public int available() throws IOException {
         return m_inObject.available();
     }
@@ -101,6 +102,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#close()
      */
+    @Override
     public void close() throws IOException {
         m_inObject.close();
     }
@@ -108,6 +110,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#defaultReadObject()
      */
+    @Override
     public void defaultReadObject() throws IOException, ClassNotFoundException {
         m_inObject.defaultReadObject();
     }
@@ -115,6 +118,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.InputStream#mark(int)
      */
+    @Override
     public void mark(final int readlimit) {
         m_inObject.mark(readlimit);
     }
@@ -122,6 +126,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.InputStream#markSupported()
      */
+    @Override
     public boolean markSupported() {
         return m_inObject.markSupported();
     }
@@ -129,6 +134,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#read()
      */
+    @Override
     public int read() throws IOException {
         return m_inObject.read();
     }
@@ -136,6 +142,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#read(byte[], int, int)
      */
+    @Override
     public int read(final byte[] buf, final int off, final int len) 
         throws IOException {
         return m_inObject.read(buf, off, len);
@@ -144,6 +151,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.InputStream#read(byte[])
      */
+    @Override
     public int read(final byte[] b) throws IOException {
         return m_inObject.read(b);
     }
@@ -151,6 +159,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readBoolean()
      */
+    @Override
     public boolean readBoolean() throws IOException {
         return m_inObject.readBoolean();
     }
@@ -158,6 +167,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readByte()
      */
+    @Override
     public byte readByte() throws IOException {
         return m_inObject.readByte();
     }
@@ -165,6 +175,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readChar()
      */
+    @Override
     public char readChar() throws IOException {
         return m_inObject.readChar();
     }
@@ -172,6 +183,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readDouble()
      */
+    @Override
     public double readDouble() throws IOException {
         return m_inObject.readDouble();
     }
@@ -179,6 +191,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readFields()
      */
+    @Override
     public GetField readFields() throws IOException, ClassNotFoundException {
         return m_inObject.readFields();
     }
@@ -186,6 +199,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readFloat()
      */
+    @Override
     public float readFloat() throws IOException {
         return m_inObject.readFloat();
     }
@@ -193,6 +207,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readFully(byte[], int, int)
      */
+    @Override
     public void readFully(final byte[] buf, final int off, final int len)
         throws IOException {
         m_inObject.readFully(buf, off, len);
@@ -201,6 +216,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readFully(byte[])
      */
+    @Override
     public void readFully(final byte[] buf) throws IOException {
         m_inObject.readFully(buf);
     }
@@ -208,6 +224,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readInt()
      */
+    @Override
     public int readInt() throws IOException {
         return m_inObject.readInt();
     }
@@ -215,6 +232,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readLong()
      */
+    @Override
     public long readLong() throws IOException {
         return m_inObject.readLong();
     }
@@ -230,6 +248,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readShort()
      */
+    @Override
     public short readShort() throws IOException {
         return m_inObject.readShort();
     }
@@ -237,6 +256,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readUnshared()
      */
+    @Override
     public Object readUnshared() throws IOException, ClassNotFoundException {
         return m_inObject.readUnshared();
     }
@@ -244,6 +264,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readUnsignedByte()
      */
+    @Override
     public int readUnsignedByte() throws IOException {
         return m_inObject.readUnsignedByte();
     }
@@ -251,6 +272,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readUnsignedShort()
      */
+    @Override
     public int readUnsignedShort() throws IOException {
         return m_inObject.readUnsignedShort();
     }
@@ -258,6 +280,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#readUTF()
      */
+    @Override
     public String readUTF() throws IOException {
         return m_inObject.readUTF();
     }
@@ -265,6 +288,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see ObjectInputStream#registerValidation(ObjectInputValidation, int)
      */
+    @Override
     public void registerValidation(
             final ObjectInputValidation obj, final int prio) 
         throws NotActiveException, InvalidObjectException {
@@ -274,6 +298,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.InputStream#reset()
      */
+    @Override
     public void reset() throws IOException {
         m_inObject.reset();
     }
@@ -281,6 +306,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.InputStream#skip(long)
      */
+    @Override
     public long skip(final long n) throws IOException {
         return m_inObject.skip(n);
     }
@@ -288,6 +314,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.io.ObjectInputStream#skipBytes(int)
      */
+    @Override
     public int skipBytes(final int len) throws IOException {
         return m_inObject.skipBytes(len);
     }
@@ -295,8 +322,8 @@ final class DCObjectInputStream extends ObjectInputStream {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return m_inObject.toString();
     }
-
 }

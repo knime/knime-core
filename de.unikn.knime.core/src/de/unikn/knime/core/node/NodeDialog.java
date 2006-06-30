@@ -231,28 +231,6 @@ final class NodeDialog {
             }
         });
         
-//        JComponent root = dialog.getRootPane();
-//
-//        // key stroke on ENTER
-//        KeyStroke entKey = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
-//        final Action entAction = new AbstractAction() {
-//            public void actionPerformed(final ActionEvent e) {
-//                onOK(e);
-//            }
-//        };
-//        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(entKey, "ENTER");
-//        root.getActionMap().put("ENTER", entAction);
-//        
-//        // key stroke on ESCAPE
-//        KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
-//        final Action escAction = new AbstractAction() {
-//            public void actionPerformed(final ActionEvent e) {
-//                onCancel(e);
-//            }
-//        };
-//        root.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(escKey, "ESCAPE");
-//        root.getActionMap().put("ESCAPE", escAction);
-        
         return dialog;
     }
 

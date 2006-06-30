@@ -155,14 +155,14 @@ public abstract class InterruptibleNodeView extends NodeView implements
         } else if (e.getActionCommand().equals(InterruptControlPanel.BREAK)) {
             LOGGER.debug("break");
             ((InterruptibleNodeModel)getNodeModel()).pause(true);
-            updateModel((InterruptibleNodeModel)getNodeModel());
+            updateModel(getNodeModel());
         } else if (e.getActionCommand().equals(InterruptControlPanel.NEXT)) {
             assert ((InterruptibleNodeModel)getNodeModel()).isPaused();
             LOGGER.debug("next step");
             ((InterruptibleNodeModel)getNodeModel()).executeOneIteration();
             ((InterruptibleNodeModel)getNodeModel())
                     .incrementIterationCounter();
-            updateModel((InterruptibleNodeModel)getNodeModel());
+            updateModel(getNodeModel());
         } else if (e.getActionCommand().equals(InterruptControlPanel.FINISH)) {
             LOGGER.debug("finish");
             ((InterruptibleNodeModel)getNodeModel()).finish();
@@ -221,6 +221,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * 
      * @see de.unikn.knime.core.node.NodeView#onClose()
      */
+    @Override
     public void onClose() {
         ((InterruptibleNodeModel)getNodeModel()).pause(true);
         ((InterruptibleNodeModel)getNodeModel()).finish();
@@ -237,6 +238,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      *            all view components necessary for the underlying model have to
      *            be packed in one component.
      */
+    @Override
     public void setComponent(final Component toBeSet) {
         JPanel packPanel = new JPanel();
         packPanel.setLayout(new BorderLayout());
@@ -277,6 +279,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
          * 
          * @see java.awt.event.MouseListener#mouseReleased(MouseEvent)
          */
+        @Override
         public void mouseReleased(final MouseEvent arg0) {
             LOGGER.debug("Mouse released from: " + arg0.getSource());
             getControlPanel().getDelaySlider().setToolTipText(

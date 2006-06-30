@@ -58,6 +58,7 @@ final class ConfigIntEntry extends AbstractConfigEntry {
      * @return A String representation of this int.
      * @see Integer#toString(int)
      */
+    @Override
     public String toStringValue() {
         return Integer.toString(m_int);
     }

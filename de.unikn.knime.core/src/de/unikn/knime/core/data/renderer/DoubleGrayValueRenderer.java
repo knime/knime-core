@@ -78,6 +78,7 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
      */
+    @Override
     protected void setValue(final Object value) {
         Color c;
         if (value instanceof DoubleValue) {
