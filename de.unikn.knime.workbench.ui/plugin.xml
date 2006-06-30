@@ -19,7 +19,7 @@
       <perspectiveExtension
             targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
          <view
-               id="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator"
+               id="de.unikn.knime.workbench.navigator.view.KnimeResourceNavigator"
                ratio="0.2"
                relationship="left"
                relative="org.eclipse.ui.editorss"/>
@@ -27,7 +27,7 @@
                id="de.unikn.knime.workbench.repository.view.RepositoryView"
                ratio="0.3"
                relationship="bottom"
-               relative="de.unikn.knime.workbench.repository.view.KnimeResourceNavigator"/>
+               relative="de.unikn.knime.workbench.navigator.view.KnimeResourceNavigator"/>
          <view
                closeable="false"
                visible="true"
@@ -77,9 +77,9 @@
          <newWizardShortcut
                id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard">
          </newWizardShortcut>
-         <newWizardShortcut
+         <!--newWizardShortcut
                id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard">
-         </newWizardShortcut>
+         </newWizardShortcut-->
       </perspectiveExtension>
    </extension>
    <extension
@@ -87,7 +87,7 @@
       <primaryWizard
             id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard">
       </primaryWizard>
-      <primaryWizard id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"/>
+      <!--primaryWizard id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"/-->
       <category
             name="Konstanz Information Miner"
             id="de.unikn.knime.workbench.ui.wizards.category">
@@ -106,7 +106,7 @@
             This wizard creates a new KNIME project that can contain several Workflows.
          </description>
       </wizard>
-      <wizard
+      <!--wizard
             name="New KNIME Workflow"
             id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"
             category="de.unikn.knime.workbench.ui.wizards.category"
@@ -119,7 +119,7 @@
          <description>
             This wizard creates a new KNIME workflow file (*.knime) inside a given project.
          </description>
-      </wizard>
+      </wizard-->
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
