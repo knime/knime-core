@@ -37,6 +37,17 @@ public class PreviewTableContentView extends TableContentView {
     static final String PROPERTY_SPEC_CHANGED = "TableSpecChanged";
 
     /**
+     * Disallows reordering.
+     * @see javax.swing.JTable#setTableHeader(javax.swing.table.JTableHeader)
+     */
+    @Override
+    public void setTableHeader(final JTableHeader newTableHeader) {
+        if (newTableHeader != null) {
+            newTableHeader.setReorderingAllowed(false);
+        }
+        super.setTableHeader(newTableHeader);
+    }
+    /**
      * @see TableContentView#onMouseClickInHeader(MouseEvent)
      */
     protected void onMouseClickInHeader(final MouseEvent e) {
