@@ -50,6 +50,9 @@ public class PreferenceConstants {
     /** Preference constant: maximum threads to use. */
     public static final String P_MAXIMUM_THREADS = "knime.maxThreads";
     
+    /** Preference constant: directory for temporary files. */
+    public static final String P_TEMP_DIR = "knime.tempDir";
+    
     /** Choice: log >= debug events. */
     public static final String P_LOGLEVEL_DEBUG = LEVEL.DEBUG.toString();
 

@@ -19,6 +19,7 @@
  */
 package de.unikn.knime.workbench.ui.preferences;
 
+import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
@@ -108,6 +109,13 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
                 Math.max(100, Runtime.getRuntime().availableProcessors() * 4));
         maxThreadEditor.setTextLimit(3);
         addField(maxThreadEditor);
+        
+        
+        DirectoryFieldEditor tempDirEditor =
+            new DirectoryFieldEditor(PreferenceConstants.P_TEMP_DIR,
+            "Directory for temporary files\n(you must restart KNIME after"
+                    + " changing this value)", parent);
+        addField(tempDirEditor);
     }
 
     /**

@@ -36,6 +36,7 @@ public class PreferenceInitializer extends
      * @see org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
      *      #initializeDefaultPreferences()
      */
+    @Override
     public void initializeDefaultPreferences() {
         // get the preference store for the UI plugin
         IPreferenceStore store = KNIMEUIPlugin.getDefault()
@@ -53,7 +54,9 @@ public class PreferenceInitializer extends
         
         store.setDefault(PreferenceConstants.P_MAXIMUM_THREADS, 
                 2 * Runtime.getRuntime().availableProcessors());
-                
+
+        store.setDefault(PreferenceConstants.P_TEMP_DIR,
+                System.getProperty("java.io.tmpdir"));
     }
 
 }
