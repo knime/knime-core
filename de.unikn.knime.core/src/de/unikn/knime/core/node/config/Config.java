@@ -354,7 +354,7 @@ public abstract class Config extends AbstractConfigEntry
     protected Config(final String key) {
         super(ConfigEntries.config);
         m_key = checkKey(key);
-        m_map = new LinkedHashMap<String, AbstractConfigEntry>();
+        m_map = new LinkedHashMap<String, AbstractConfigEntry>(1, 0.8f);
     }
 
     /**
@@ -1493,35 +1493,51 @@ public abstract class Config extends AbstractConfigEntry
      */
     @Override
     public final String toString() {
-        return toString(0, new StringBuffer());
+        StringBuffer buf = new StringBuffer();
+        toString(0, buf);
+        buf.trimToSize();
+        return buf.toString();
     }
 
     private static final int TAB_SIZE = 2;
+    
+    private static final String SPACE = " ".intern();
+    private static final String KEYEQ = "key=".intern();
+    private static final String COMMA_TYPEEQ = ",type=".intern();
+    private static final String LINE_BREAK = "\n".intern();
+    private static final String DOT_LINE_BREAK = ":\n".intern();
+    private static final String ARROW_NULL = "->null".intern();
+    private static final String ARROW = "->".intern();
 
-    private String toString(final int indent, final StringBuffer sb) {
+    private void toString(final int indent, final StringBuffer sb) {
         assert (indent >= 0);
+        sb.ensureCapacity(1000);
+        LOGGER.info(m_key + " " + sb.capacity());
         for (String key : m_map.keySet()) {
             for (int t = 0; t < indent * TAB_SIZE; t++) {
-                sb.append(" ");
+                sb.append(SPACE);
             }
             AbstractConfigEntry e = getEntry(key);
-            sb.append("key=" + key + ",type=" + e.getType());
+            sb.append(KEYEQ);
+            sb.append(key);
+            sb.append(COMMA_TYPEEQ);
+            sb.append(e.getType());
             if (e instanceof Config) {
                 int myindent = indent;
-                sb.append(":\n");
+                sb.append(DOT_LINE_BREAK);
                 Config ms = (Config)e;
                 ms.toString(++myindent, sb);
             } else {
                 String value = e.toStringValue();
                 if (value == null) {
-                    sb.append("->null");
+                    sb.append(ARROW_NULL);
                 } else {
-                    sb.append("->" + value);
+                    sb.append(ARROW);
+                    sb.append(value);
                 }
-                sb.append("\n");
+                sb.append(LINE_BREAK);
             }
         }
-        return sb.toString();
     }
 
     /* --- write and read from file --- */
