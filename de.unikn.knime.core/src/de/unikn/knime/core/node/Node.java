@@ -188,8 +188,7 @@ public final class Node {
         for (int i = 0; i < m_outDataPorts.length; i++) {
             m_outDataPorts[i] = new DataOutPort(i, this);
             m_outDataPorts[i].setDataTable(null);
-            m_outDataPorts[i].setHiLiteHandler(m_model
-                    .getOutHiLiteHandler(i));
+            m_outDataPorts[i].setHiLiteHandler(m_model.getOutHiLiteHandler(i));
             // DataTableSpecs will be set later through 'configureNode()'
         }
 
@@ -259,28 +258,29 @@ public final class Node {
             NodeSettings.loadFromXML(new FileInputStream(nodeFile));
 
         // read node name
-        m_name = settings.getString("name");
-        final NodeSettings inport = settings.getConfig("inports");
+        m_name = settings.getString(CFG_NAME);
+        final NodeSettings inport = settings.getConfig(CFG_INPORTS);
         // read inports
         for (int i = 0; i < m_inDataPorts.length; i++) {
-            m_inDataPorts[i].setPortName(inport.getString("" + i));
+            m_inDataPorts[i].setPortName(inport.getString(Integer.toString(i)));
         }
         // read outports
-        final NodeSettings outport = settings.getConfig("outports");
+        final NodeSettings outport = settings.getConfig(CFG_OUTPORTS);
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            m_outDataPorts[i].setPortName(outport.getString("" + i));
+            m_outDataPorts[i].setPortName(
+                    outport.getString(Integer.toString(i)));
         }
         
         // read configured flag
-        boolean wasConfigured = settings.getBoolean("isConfigured");
+        boolean wasConfigured = settings.getBoolean(CFG_ISCONFIGURED);
         m_model.setConfigured(wasConfigured);
         // read executed flag
-        boolean wasExecuted = settings.getBoolean("isExecuted");
+        boolean wasExecuted = settings.getBoolean(CFG_ISEXECUTED);
         m_model.setExecuted(wasExecuted);
 
         // read model and load settings
         try {
-            NodeSettings modelSettings = settings.getConfig("model");
+            NodeSettings modelSettings = settings.getConfig(CFG_MODEL);
             if (m_model instanceof SpecialNodeModel) {
                 ((SpecialNodeModel) m_model).loadSettingsFrom(nodeFile,
                         modelSettings, exec);
@@ -304,9 +304,9 @@ public final class Node {
         
         // if node was configured
         if (isConfigured()) {
-            NodeSettings spec = settings.getConfig("spec_files");
+            NodeSettings spec = settings.getConfig(CFG_SPEC_FILES);
             for (int i = 0; i < m_outDataPorts.length; i++) {
-                String specName = spec.getString("outport_" + i);
+                String specName = spec.getString(CFG_OUTPUT_PREFIX + i);
                 File targetFile = new File(m_nodeDir, specName);
                 DataTableSpec outSpec = null;
                 if (targetFile.exists()) {
@@ -338,9 +338,9 @@ public final class Node {
                 }
             }
             // load data
-            NodeSettings data = settings.getConfig("data_files");
+            NodeSettings data = settings.getConfig(CFG_DATA_FILES);
             for (int i = 0; i < m_outDataPorts.length; i++) {
-                String dataName = data.getString("outport_" + i);
+                String dataName = data.getString(CFG_OUTPUT_PREFIX + i);
                 File targetFile = new File(m_nodeDir, dataName);
                 File dest = DataContainer.createTempFile();
                 dest.deleteOnExit();
@@ -349,9 +349,9 @@ public final class Node {
                 m_outDataPorts[i].setDataTable(outTable);
             }
             // load models
-            NodeSettings model = settings.getConfig("model_files");
+            NodeSettings model = settings.getConfig(CFG_MODEL_FILES);
             for (int i = 0; i < m_outModelPorts.length; i++) {
-                String modelName = model.getString("outport_" + i);
+                String modelName = model.getString(CFG_OUTPUT_PREFIX + i);
                 File targetFile = new File(m_nodeDir, modelName);
                 BufferedInputStream in = 
                     new BufferedInputStream(new FileInputStream(targetFile));
@@ -1378,33 +1378,19 @@ public final class Node {
         return null;
     }
     
-    
-    /**
-     * Saves node settings, name, inConfigured, isExecuted, inports, outports,
-     * and the underlying model settings.
-     * @param settings Used to write node and model settings.
-     */
-    public void save(final NodeSettings settings) {
-        // write node name
-        settings.addString("name", m_name);
-        // write configured flag
-        settings.addBoolean("isConfigured", isConfigured());
-        // write executed flag
-        settings.addBoolean("isExecuted", isExecuted());
-        // write inports
-        final NodeSettings inport = settings.addConfig("inports");
-        for (int i = 0; i < m_inDataPorts.length; i++) {
-            inport.addString("" + i, m_inDataPorts[i].getPortName());
-        }
-        // write outports
-        final NodeSettings outport = settings.addConfig("outports");
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            outport.addString("" + i, m_outDataPorts[i].getPortName());
-        }
-        // write model
-        final NodeSettings model = settings.addConfig("model");
-        m_model.saveSettingsTo(model);
-    }
+    private static final String CFG_NAME = "name";
+    private static final String CFG_ISCONFIGURED = "isConfigured";
+    private static final String CFG_ISEXECUTED = "isExecuted";
+    private static final String CFG_INPORTS = "inports";
+    private static final String CFG_OUTPORTS = "outports";
+    private static final String CFG_MODEL = "model";
+    private static final String CFG_SPEC_FILES = "spec_files";
+    private static final String SPEC_FILE_PREFIX = "spec_";
+    private static final String CFG_DATA_FILES = "data_files";
+    private static final String DATA_FILE_PREFIX = "data_";
+    private static final String CFG_MODEL_FILES = "model_files";
+    private static final String MODEL_FILE_PREFIX = "spec_";
+    private static final String CFG_OUTPUT_PREFIX = "output_";
     
     /**
      * Saves the node, node settings, and all internal structures, spec, data,
@@ -1420,23 +1406,25 @@ public final class Node {
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         
         // write node name
-        settings.addString("name", m_name);
+        settings.addString(CFG_NAME, m_name);
         // write configured flag
-        settings.addBoolean("isConfigured", isConfigured());
+        settings.addBoolean(CFG_ISCONFIGURED, isConfigured());
         // write executed flag
-        settings.addBoolean("isExecuted", isExecuted());
+        settings.addBoolean(CFG_ISEXECUTED, isExecuted());
         // write inports
-        final NodeSettings inport = settings.addConfig("inports");
+        final NodeSettings inport = settings.addConfig(CFG_INPORTS);
         for (int i = 0; i < m_inDataPorts.length; i++) {
-            inport.addString("" + i, m_inDataPorts[i].getPortName());
+            inport.addString(
+                    Integer.toString(i), m_inDataPorts[i].getPortName());
         }
         // write outports
-        final NodeSettings outport = settings.addConfig("outports");
+        final NodeSettings outport = settings.addConfig(CFG_OUTPORTS);
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            outport.addString("" + i, m_outDataPorts[i].getPortName());
+            outport.addString(
+                    Integer.toString(i), m_outDataPorts[i].getPortName());
         }
         // write model
-        final NodeSettings model = settings.addConfig("model");
+        final NodeSettings model = settings.addConfig(CFG_MODEL);
         try {
             if (m_model instanceof SpecialNodeModel) {
                 ((SpecialNodeModel) m_model).saveSettingsTo(nodeFile, model,
@@ -1452,13 +1440,14 @@ public final class Node {
 
         m_nodeDir = nodeFile.getParentFile();
         if (isConfigured()) {
-            NodeSettings specs = settings.addConfig("spec_files");
+            NodeSettings specs = settings.addConfig(CFG_SPEC_FILES);
             for (int i = 0; i < m_outDataPorts.length; i++) {
-                String specName = "spec_" + i + ".xml";
-                specs.addString("outport_" + i, specName);
+                String specName = SPEC_FILE_PREFIX + i + ".xml";
+                specs.addString(CFG_OUTPUT_PREFIX + i, specName);
                 DataTableSpec outSpec = m_outDataPorts[i].getDataTableSpec();
                 if (outSpec != null) {
-                    NodeSettings specSettings = new NodeSettings("spec_" + i);
+                    NodeSettings specSettings = 
+                        new NodeSettings(SPEC_FILE_PREFIX + i);
                     outSpec.save(specSettings);
                     File targetFile = new File(m_nodeDir, specName);
                     specSettings.saveToXML(new BufferedOutputStream(
@@ -1467,7 +1456,8 @@ public final class Node {
             }
         } else {
             for (int i = 0; i < m_outDataPorts.length; i++) {
-                File specFile = new File(m_nodeDir, "spec_" + i + ".xml");
+                File specFile = 
+                    new File(m_nodeDir, SPEC_FILE_PREFIX + i + ".xml");
                 specFile.delete();
             }
         }
@@ -1485,24 +1475,23 @@ public final class Node {
                             this.notifyStateListeners(m_status);
                         }
                     } catch (IOException ioe) {
-                        m_status = new NodeStatus.Error(
-                                "Unable to save internals: " 
-                                + ioe.getMessage());
+                        m_status = new NodeStatus.Error("Unable to save " 
+                                + "internals: " + ioe.getMessage());
                         this.notifyStateListeners(m_status);
                     }
                 }
-                NodeSettings data = settings.addConfig("data_files");
+                NodeSettings data = settings.addConfig(CFG_DATA_FILES);
                 for (int i = 0; i < m_outDataPorts.length; i++) {
-                    String specName = "data_" + i + ".zip";
-                    data.addString("outport_" + i, specName);
+                    String specName = DATA_FILE_PREFIX + i + ".zip";
+                    data.addString(CFG_OUTPUT_PREFIX + i, specName);
                     DataTable outTable = m_outDataPorts[i].getDataTable();
                     File targetFile = new File(m_nodeDir, specName);
                     DataContainer.writeToZip(outTable, targetFile, exec);
                 }
-                NodeSettings models = settings.addConfig("model_files");
+                NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                 for (int i = 0; i < m_outModelPorts.length; i++) {
-                    String specName = "model_" + i + ".xml";
-                    models.addString("outport_" + i, specName);
+                    String specName = MODEL_FILE_PREFIX + i + ".xml";
+                    models.addString(CFG_OUTPUT_PREFIX + i, specName);
                     PredictorParams pred = 
                         m_outModelPorts[i].getPredictorParams();
                     File targetFile = new File(m_nodeDir, specName);
@@ -1515,26 +1504,27 @@ public final class Node {
                 File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
                 FileUtil.deleteRecursively(internDir);
                 for (int i = 0; i < m_outDataPorts.length; i++) {
-                    File dataFile = new File(m_nodeDir, "data_" + i + ".zip");
+                    File dataFile = 
+                        new File(m_nodeDir, DATA_FILE_PREFIX + i + ".zip");
                     dataFile.delete();
                 }
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     File targetFile = 
-                        new File(m_nodeDir, "model_" + i + ".xml");
+                        new File(m_nodeDir, MODEL_FILE_PREFIX + i + ".xml");
                     targetFile.delete();            
                 }
             }
         } else {
              if (isExecuted()) {
-                 NodeSettings data = settings.addConfig("data_files");
+                 NodeSettings data = settings.addConfig(CFG_DATA_FILES);
                  for (int i = 0; i < m_outDataPorts.length; i++) {
-                     String specName = "data_" + i + ".zip";
-                     data.addString("outport_" + i, specName);
+                     String specName = DATA_FILE_PREFIX + i + ".zip";
+                     data.addString(CFG_OUTPUT_PREFIX + i, specName);
                  }
-                 NodeSettings models = settings.addConfig("model_files");
+                 NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                  for (int i = 0; i < m_outModelPorts.length; i++) {
-                     String specName = "model_" + i + ".xml";
-                     models.addString("outport_" + i, specName);
+                     String specName = MODEL_FILE_PREFIX + i + ".xml";
+                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
                  }
              } else {
                  m_logger.assertLog(
