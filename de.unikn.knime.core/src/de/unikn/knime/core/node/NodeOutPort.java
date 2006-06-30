@@ -18,6 +18,7 @@
  */
 package de.unikn.knime.core.node;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -161,7 +162,13 @@ public abstract class NodeOutPort extends NodePort {
      */
     final void removeAllPorts() {
         synchronized (m_connInPorts) {
-            for (NodeInPort nip : m_connInPorts) {
+            // disconnectPort removes the port from m_connInPorts
+            // and thus causes a ConcurrentModificationException if
+            // the iterator is used directly on m_connInPorts
+            // see bug 521
+            ArrayList<NodeInPort> temp =
+                new ArrayList<NodeInPort>(m_connInPorts); 
+            for (NodeInPort nip : temp) {
                 nip.disconnectPort();
             }
             m_connInPorts.clear();
