@@ -56,5 +56,12 @@ public interface DataTable extends Iterable<DataRow> {
      * @see de.unikn.knime.core.data.DataRow
      */
     RowIterator iterator();
+    
+    /**
+     * Returns number of rows in this table.
+     * 
+     * @return number of rows.
+     */
+    int getRowCount();
 
 }

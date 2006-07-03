@@ -61,6 +61,13 @@ class BufferedTable implements DataTable {
         return m_buffer.iterator();
     }
     
+    /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        return m_buffer.size();
+    }
+
     /** Get reference to buffer.
      * @return The buffer backing this object.
      */

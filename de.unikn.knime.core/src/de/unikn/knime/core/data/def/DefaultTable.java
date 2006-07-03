@@ -428,6 +428,13 @@ public class DefaultTable implements DataTable {
     protected final List<DataRow> getRowsInList() {
         return Collections.unmodifiableList(m_rowList);
     }
+    
+    /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        return m_rowList.size();
+    }
 
     /**
      * This class serves as some kind of template. It is used in the different
