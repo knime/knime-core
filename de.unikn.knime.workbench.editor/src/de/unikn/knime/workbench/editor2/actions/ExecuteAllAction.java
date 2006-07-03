@@ -27,7 +27,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.internal.Workbench;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.actions.job.NodeExecutionManagerJob;
@@ -103,7 +102,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     /**
      * This starts an execution job for all executable nodes. Note that this is
      * all controlled by the WorkflowManager object of the currently open
-     * editor. The passed nodeParts are not needed here, as not only the 
+     * editor. The passed nodeParts are not needed here, as not only the
      * selected parts are executed but all executable nodes.
      * 
      * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
@@ -111,16 +110,13 @@ public class ExecuteAllAction extends AbstractNodeAction {
      *      editparts.NodeContainerEditPart[])
      */
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        
-        NodeContainerEditPart[] allNodeParts = getAllNodeParts();
-        LOGGER.debug("(Exec all) Creating execution job for " + allNodeParts.length
-                + " node(s)...");
-        WorkflowManager manager = getManager();
 
-        // this jobs starts sub-jobs every time new nodes become available for
-        // execution
-        NodeExecutionManagerJob job = new NodeExecutionManagerJob(manager,
-                allNodeParts);
+        NodeContainerEditPart[] allNodeParts = getAllNodeParts();
+        LOGGER.debug("(Exec all) Creating execution job for "
+                + allNodeParts.length + " node(s)...");
+
+        // create a job that executes all nodes
+        NodeExecutionManagerJob job = new NodeExecutionManagerJob(getManager());
 
         try {
             Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()

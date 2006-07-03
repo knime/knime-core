@@ -19,8 +19,6 @@
  */
 package de.unikn.knime.workbench.editor2.actions.job;
 
-import java.util.ArrayList;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -49,8 +47,6 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
 
     private NodeContainerEditPart[] m_parts;
 
-    private final ArrayList<Job> m_scheduledJobs = new ArrayList<Job>();
-
     /**
      * @param manager The manager that hosts the nodes
      * @param nodeParts Controller edit parts that manage the nodes that should
@@ -61,6 +57,16 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
         super("Execution Manager");
         m_manager = manager;
         m_parts = nodeParts;
+    }
+
+    /**
+     * Creates a job that executes all nodes.
+     * 
+     * @param manager The manager that hosts the nodes
+     */
+    public NodeExecutionManagerJob(final WorkflowManager manager) {
+        super("Execution Manager");
+        m_manager = manager;
     }
 
     /**
@@ -75,47 +81,40 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
         try {
             // we must register on the manager to get lifecycle events
             m_manager.addListener(this);
-            
-            // list to remember the sub jobs
-            m_scheduledJobs.clear();    
-    
-            for (int i = 0; i < m_parts.length; i++) {
-                // This is the node up to which the flow should be executed.
-                NodeContainer container = m_parts[i].getNodeContainer();
-                // check if the part is already locked execution
-                if (m_parts[i].isLocked()) {
-                    LOGGER.warn("Node is (already?) locked, skipping...");
-                    continue;
-                }
-    
-                // create a monitor object
-                LOGGER.info("executing up to node #" + container.getID());
-                try {
-                    m_manager.executeUpToNode(container.getID(), false);
-                } catch (IllegalArgumentException ex) {
-                    // ignore it
-                    // if the user selects more nodes in the workflow he
-                    // can selected "red" nodes and try to execute them
-                    // this fails of course
+
+            // if there are no specified parts, execute all nodes
+            if (m_parts == null) {
+                LOGGER.debug("Execute all nodes.");
+                m_manager.executeAll(false);
+            } else {
+
+                for (int i = 0; i < m_parts.length; i++) {
+                    // This is the node up to which the flow should be executed.
+                    NodeContainer container = m_parts[i].getNodeContainer();
+                    // check if the part is already locked execution
+                    if (m_parts[i].isLocked()) {
+                        LOGGER.warn("Node is (already?) locked, skipping...");
+                        continue;
+                    }
+
+                    // create a monitor object
+                    LOGGER.info("executing up to node #" + container.getID());
+                    try {
+                        m_manager.executeUpToNode(container.getID(), false);
+                    } catch (IllegalArgumentException ex) {
+                        // ignore it
+                        // if the user selects more nodes in the workflow he
+                        // can selected "red" nodes and try to execute them
+                        // this fails of course
+                    }
                 }
             }
-    
+
             m_manager.waitUntilFinished();
-            
-            // We must wait for all jobs to end
-            for (int i = 0; i < m_scheduledJobs.size(); i++) {
-                Job job = m_scheduledJobs.get(i);
-                LOGGER.debug("Waiting for remaining job to finish: "
-                        + job.getName());
-                try {
-                    job.join();
-                } catch (InterruptedException e) {
-                    LOGGER.error("Could not join job: " + job.getName(), e);
-                }
-            }
-        } finally {    
+
+        } finally {
             LOGGER.info("Execution finished");
-            m_manager.removeListener(this);    
+            m_manager.removeListener(this);
         }
 
         return state;
@@ -130,9 +129,9 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
      */
     public void workflowChanged(final WorkflowEvent event) {
         if (event instanceof WorkflowEvent.NodeStarted) {
-            NodeContainer nc = (NodeContainer) event.getOldValue();
-            NodeProgressMonitor pm = (NodeProgressMonitor) event.getNewValue();
-            
+            NodeContainer nc = (NodeContainer)event.getOldValue();
+            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
+
             DummyNodeJob job = new DummyNodeJob(nc.getNameWithID(), pm, nc);
             job.schedule();
         }
