@@ -183,8 +183,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
         m_description = null;
 
-        setOpaque(true);
-        setFill(true);
+        setOpaque(false);
+        setFill(false);
         setOutline(false);
 
         // no border
