@@ -74,6 +74,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
+import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
@@ -165,8 +166,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS =
-        new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
 
     static {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
@@ -197,8 +197,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(pStore
                 .getInt(PreferenceConstants.P_MAXIMUM_THREADS));
-        System.setProperty("java.io.tmpdir",
-                pStore.getString(PreferenceConstants.P_TEMP_DIR));
+        System.setProperty("java.io.tmpdir", pStore
+                .getString(PreferenceConstants.P_TEMP_DIR));
         pStore.addPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent event) {
                 if (event.getProperty().equals(
@@ -230,8 +230,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     }
                 } else if (event.getProperty().equals(
                         PreferenceConstants.P_TEMP_DIR)) {
-                    System.setProperty("java.io.tmpdir",
-                            (String) event.getNewValue());
+                    System.setProperty("java.io.tmpdir", (String)event
+                            .getNewValue());
                 }
             }
         });
@@ -469,8 +469,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction cancelAll = new CancelAllAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
-        AbstractNodeAction setNameAndDescription =
-            new SetNameAndDescriptionAction(this);
+        AbstractNodeAction setNameAndDescription = new SetNameAndDescriptionAction(
+                this);
 
         // copy / cut / paste action
         CopyAction copy = new CopyAction(this);
@@ -917,7 +917,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (!m_isDirty) {
             m_isDirty = true;
 
-            Display.getDefault().syncExec(new Runnable() {
+            Display.getDefault().asyncExec(new Runnable() {
                 public void run() {
                     firePropertyChange(IEditorPart.PROP_DIRTY);
                 }
@@ -1021,12 +1021,13 @@ public class WorkflowEditor extends GraphicalEditor implements
             // Parent project removed? close this editor....
             if (m_fileResource.getProject().equals(delta.getResource())) {
 
-                if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
+                if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
 
                     Display.getDefault().syncExec(new Runnable() {
                         public void run() {
 
-                            setPartName(delta.getResource().getName());
+                            setPartName(delta.getMovedToPath().segment(0));
+
                         }
                     });
 
@@ -1068,6 +1069,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         // the "new" file
                         m_fileResource = ResourcesPlugin.getWorkspace()
                                 .getRoot().getFile(delta.getMovedToPath());
+                        setDefaultInput(new FileEditorInput(m_fileResource));
 
                     }
                 });
