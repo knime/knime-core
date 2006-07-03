@@ -75,8 +75,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     static {
         KNIME_BUILDER = new BuildCommand();
         KNIME_BUILDER.setBuilderName(KNIMEProjectBuilder.BUILDER_ID);
-        KNIME_NATURES = new String[] {KNIMEProjectNature.class.getName()};
-        KNIME_BUILDSPECS = new ICommand[] {KNIME_BUILDER};
+        KNIME_NATURES = new String[]{KNIMEProjectNature.class.getName()};
+        KNIME_BUILDSPECS = new ICommand[]{KNIME_BUILDER};
     }
 
     private NewProjectWizardPage m_page;
@@ -114,8 +114,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     public boolean performFinish() {
 
         final String projectName = m_page.getProjectName();
-        final boolean addWorkflowFile = m_page.getCreateWorkflowFile();
-        //final boolean addDataset = m_page.getAddDataset();
+        // final boolean addDataset = m_page.getAddDataset();
 
         // Create new runnable
         IRunnableWithProgress op = new IRunnableWithProgress() {
@@ -123,7 +122,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     throws InvocationTargetException {
                 try {
                     // call the worker method
-                    doFinish(projectName, addWorkflowFile, monitor);
+                    doFinish(projectName, monitor);
                 } catch (CoreException e) {
                     throw new InvocationTargetException(e);
                 } finally {
@@ -150,14 +149,11 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * Worker method, creates the project using the given options.
      * 
      * @param projectName Name of the project to create in workspace
-     * @param addWorkflowFile flag, indicating that a default.knime should be
-     *            created
      * @param monitor Progress monitor
      * @throws CoreException if error while creating the project
      */
     protected void doFinish(final String projectName,
-            final boolean addWorkflowFile, final IProgressMonitor monitor) 
-        throws CoreException {
+            final IProgressMonitor monitor) throws CoreException {
 
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 
@@ -182,28 +178,26 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         //
         // 2. Create the optional files, if wanted
         //
-        final IFile defaultFile = 
-            project.getFile(WorkflowManager.WORKFLOW_FILE);
-        if (addWorkflowFile) {
-            InputStream is = new ByteArrayInputStream("".getBytes());
-            defaultFile.create(is, true, monitor);
-        }
+        final IFile defaultFile = project
+                .getFile(WorkflowManager.WORKFLOW_FILE);
+
+        InputStream is = new ByteArrayInputStream("".getBytes());
+        defaultFile.create(is, true, monitor);
 
         // open the default file, if it was created
-        if (addWorkflowFile) {
-            // open the model file in the editor
-            monitor.setTaskName("Opening file for editing...");
-            getShell().getDisplay().asyncExec(new Runnable() {
-                public void run() {
-                    IWorkbenchPage page = PlatformUI.getWorkbench()
-                            .getActiveWorkbenchWindow().getActivePage();
-                    try {
-                        IDE.openEditor(page, defaultFile, true);
-                    } catch (PartInitException e) {
-                    }
+
+        // open the model file in the editor
+        monitor.setTaskName("Opening file for editing...");
+        getShell().getDisplay().asyncExec(new Runnable() {
+            public void run() {
+                IWorkbenchPage page = PlatformUI.getWorkbench()
+                        .getActiveWorkbenchWindow().getActivePage();
+                try {
+                    IDE.openEditor(page, defaultFile, true);
+                } catch (PartInitException e) {
                 }
-            });
-        }
+            }
+        });
 
         // just to make sure: refresh the new project
         project.refreshLocal(IResource.DEPTH_INFINITE, monitor);

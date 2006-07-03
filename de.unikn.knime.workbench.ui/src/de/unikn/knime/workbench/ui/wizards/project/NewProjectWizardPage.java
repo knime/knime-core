@@ -32,7 +32,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -49,8 +48,6 @@ public class NewProjectWizardPage extends WizardPage {
 
     private final static String INITIAL_PROJECT_NAME = "Knime_project";
 
-    private Button m_checkCreateWorkflow;
-
     private Button m_checkAddDataset;
 
     private Text m_projectName;
@@ -62,8 +59,7 @@ public class NewProjectWizardPage extends WizardPage {
     public NewProjectWizardPage() {
         super("wizardPage");
         setTitle("New KNIME Project Wizard");
-        setDescription("Create a new project layout for data analysis."
-                + "\r\nThis may serve as container for KNIME workflows.");
+        setDescription("Create a new project for Knime data analysis workflows.");
         setImageDescriptor(ResourceManager.getPluginImageDescriptor(
                 KNIMEUIPlugin.getDefault(), "icons/logo32x32.png"));
     }
@@ -92,17 +88,8 @@ public class NewProjectWizardPage extends WizardPage {
         });
         m_projectName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        final Group group = new Group(container, SWT.NONE);
-        final GridLayout gridLayout1 = new GridLayout();
-        group.setLayout(gridLayout1);
-        group.setText("Options");
-        final GridData gridData = new GridData(GridData.FILL_BOTH);
-        gridData.horizontalSpan = 2;
-        group.setLayoutData(gridData);
+       
 
-        m_checkCreateWorkflow = new Button(group, SWT.CHECK);
-        m_checkCreateWorkflow.setSelection(true);
-        m_checkCreateWorkflow.setText("Create (empty) workflow file");
 
         // initialize the new project name field
         // set a default file name which is not already available
@@ -158,13 +145,6 @@ public class NewProjectWizardPage extends WizardPage {
      */
     public String getProjectName() {
         return m_projectName.getText();
-    }
-
-    /**
-     * @return The state of the "create workflow" checkbox
-     */
-    public boolean getCreateWorkflowFile() {
-        return m_checkCreateWorkflow.getSelection();
     }
 
     /**
