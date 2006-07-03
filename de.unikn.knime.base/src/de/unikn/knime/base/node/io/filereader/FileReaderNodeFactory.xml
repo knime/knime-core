@@ -13,39 +13,36 @@
 		It can be configured to read in various formats.<br />
 		When you open the node's configuration dialog and provide a filename, 
 		it will try to guess
-		the reader's settings by analyzing the beginning of the file 
-		(after a filename was provided).
+		the reader's settings by analyzing the beginning of the file.
 		Check the results of these settings in the preview table. If the 
 		data showing is not correct or an error is reported, you can adjust the
 		settings manually (see below).<br />
 		When the node is executed it reads in the entire file and caches it in a
 		temporary file for faster access by the connected successor nodes. It 
-		also stores all possibles values it came accross for each column (if not
-		manually set in the node's dialog).
+		also stores all possibles values it came accross for each column.
 		</intro>
 		
 		<option name="ASCII file location">Enter a valid file name or URL. When
 			you press ENTER, the file gets analyzed and the settings pre-set.
-			You can also choose previously read file from the drop-down list,
+			You can also choose a previously read file from the drop-down list,
 			or select a file from the "Browse..." dialog.
 			</option>		
-		<option name="read row headers">if checked, the first column in the file
+		<option name="Read row headers">if checked, the first column in the file
 			will be used as row IDs. If not checked, default row headers will be
 			created.</option>
-		<option name="read column headers">if checked, the items in the first 
+		<option name="Read column headers">if checked, the items in the first 
 			line of the file will be used as column names. Otherwise default 
 			column names will be created.</option>
 	    <option name="Column delimiter">Enter the character(s) that separate
 	    	the data tokens in the file, or select a delimiter from the list.
 			</option>
-	    <option name="ignore spaces and tabs">If checked, spaces and the TAB
-		    characters are ignored (not in quoted strings though). Not useful 
-		    when space or TAB is a delimiter.
+	    <option name="Ignore spaces and tabs">If checked, spaces and the TAB
+		    characters are ignored (not in quoted strings though).
 		    </option>
 	    <option name="Java style comment">Everything between '/*' and '*/' is
 	    	ignored. Also everything after '//' until the end of the line.
 			</option>
-	    <option name="single line comment">Enter one or more characters that
+	    <option name="Single line comment">Enter one or more characters that
 	    	will indicate the start of a comment (ended by a new line).
 			</option>
 	    <option name="Advanced...">Opens a new dialog with advanced settings.
@@ -56,9 +53,7 @@
 	        preview table is clicked, a new dialog opens where some column
 	        properties can be set: The name and type can be changed (and will
 	        be fix then). A pattern can be entered that will cause a "missing
-	        cell" to be created when it's read for this column. Also, the
-	        domain for this column can be entered, that is, possible values or
-	        the range of the values.
+	        cell" to be created when it's read for this column.
 		    </option>	      	
 	</fullDescription>
 	

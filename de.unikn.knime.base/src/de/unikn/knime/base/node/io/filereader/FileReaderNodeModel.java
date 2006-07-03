@@ -16,6 +16,7 @@
 package de.unikn.knime.base.node.io.filereader;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
@@ -245,6 +246,50 @@ public class FileReaderNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettings settings)
             throws InvalidSettingsException {
         readSettingsFromConfiguration(settings, /* validateOnly = */true);
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected boolean loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        /*
+         * This is a special "deal" for the file reader: The file reader, if
+         * previously executed, has data at it's output - even if the file that
+         * was read doesn't exist anymore. In order to warn the user that the
+         * data ca not be recreated we check here if the file exists and set a
+         * warning message if it doesn't.
+         */
+        if (m_frSettings == null) {
+            // no settings - no checking.
+            return true;
+        }
+
+        URL location = m_frSettings.getDataFileLocation();
+        try {
+            if ((location == null)
+                    || !location.toString().startsWith("file://")) {
+                // We can only check files. Other protocols are ignored.
+                return true;
+            }
+
+            if (location.openStream() == null) {
+                setWarningMessage("The file '" + location.toString()
+                        + "' can't be accessed anymore!");
+            }
+        } catch (IOException ioe) {
+            setWarningMessage("The file '" + location.toString()
+                    + "' can't be accessed anymore!");
+        } catch (NullPointerException npe) {
+            // thats a bug in the windows open stream
+            // a path like c:\blah\ \ (space as dir) causes a NPE.
+            setWarningMessage("The file '" + location.toString()
+                    + "' can't be accessed anymore!");
+        }
+        return true;
     }
 
     /**
