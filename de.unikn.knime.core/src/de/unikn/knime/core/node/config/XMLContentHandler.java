@@ -149,8 +149,8 @@ class XMLContentHandler extends DefaultHandler {
             if (isNull) {
                 value = null;
             }
-            AbstractConfigEntry ab = configEntryType.createEntry(value);
-            peek.addEntry(key, ab);
+            AbstractConfigEntry ab = configEntryType.createEntry(key, value);
+            peek.addEntry(ab);
         } else {
             // only "config" and "entry" are valid tag names 
             throw new SAXException("\"" + qName 

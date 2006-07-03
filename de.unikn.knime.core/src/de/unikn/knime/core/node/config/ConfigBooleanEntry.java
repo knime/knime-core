@@ -31,19 +31,21 @@ final class ConfigBooleanEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new entry for boolean objects. 
+     * @param key The key for this value.
      * @param b The boolean value.
      */
-    ConfigBooleanEntry(final boolean b) {
-        super(ConfigEntries.xboolean);
+    ConfigBooleanEntry(final String key, final boolean b) {
+        super(ConfigEntries.xboolean, key);
         m_boolean = b;
     }
 
     /**
      * Creates a new entry for boolean objects. 
+     * @param key The key for this value.
      * @param b The boolean value as String.
      */
-    ConfigBooleanEntry(final String b) {
-        super(ConfigEntries.xboolean);
+    ConfigBooleanEntry(final String key, final String b) {
+        super(ConfigEntries.xboolean, key);
         m_boolean = Boolean.parseBoolean(b);
     }
     

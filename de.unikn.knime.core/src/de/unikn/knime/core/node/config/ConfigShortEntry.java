@@ -31,19 +31,21 @@ final class ConfigShortEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new short entry.
+     * @param key The key for this value.
      * @param s The short value.
      */
-    ConfigShortEntry(final short s) {
-        super(ConfigEntries.xshort);
+    ConfigShortEntry(final String key, final short s) {
+        super(ConfigEntries.xshort, key);
         m_short = s;
     }
 
     /**
      * Creates a new short entry.
+     * @param key The key for this value.
      * @param s The short value as String.
      */
-    ConfigShortEntry(final String s) {
-        super(ConfigEntries.xshort);
+    ConfigShortEntry(final String key, final String s) {
+        super(ConfigEntries.xshort, key);
         m_short = Short.parseShort(s);
     }
     

@@ -32,10 +32,11 @@ public class ConfigStringEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new String entry. "null" is interpreted as null pointer.
+     * @param key The key for this value.
      * @param value The String value or null.
      */
-    ConfigStringEntry(final String value) {
-        super(ConfigEntries.xstring);
+    ConfigStringEntry(final String key, final String value) {
+        super(ConfigEntries.xstring, key);
         m_string = (value == null ? null : value.intern());   
     }
     

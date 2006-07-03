@@ -31,19 +31,21 @@ final class ConfigDoubleEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new Config entry for type double.
+     * @param key The key for this value.
      * @param d The double value.
      */
-    ConfigDoubleEntry(final double d) {
-        super(ConfigEntries.xdouble);
+    ConfigDoubleEntry(final String key, final double d) {
+        super(ConfigEntries.xdouble, key);
         m_double = d;
     }
 
     /**
      * Creates a new Config entry for type double.
+     * @param key The key for this value.
      * @param d The double value as String.
      */
-    ConfigDoubleEntry(final String d) {
-        super(ConfigEntries.xdouble);
+    ConfigDoubleEntry(final String key, final String d) {
+        super(ConfigEntries.xdouble, key);
         m_double = Double.parseDouble(d);
     }
     

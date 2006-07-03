@@ -29,19 +29,21 @@ final class ConfigLongEntry extends AbstractConfigEntry {
 
     /**
      * Creates a new Config entry for an long value.
+     * @param key The key for this value.
      * @param l The long value.
      */
-    ConfigLongEntry(final long l) {
-        super(ConfigEntries.xlong);
+    ConfigLongEntry(final String key, final long l) {
+        super(ConfigEntries.xlong, key);
         m_long = l;
     }
 
     /**
      * Creates a new Config entry for a long value.
+     * @param key The key for this value.
      * @param l The long value as String.
      */
-    ConfigLongEntry(final String l) {
-        super(ConfigEntries.xlong);
+    ConfigLongEntry(final String key, final String l) {
+        super(ConfigEntries.xlong, key);
         m_long = Long.parseLong(l);
     }
 

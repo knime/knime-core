@@ -24,7 +24,10 @@ import java.awt.Container;
 import java.awt.Font;
 
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 
 /**
  * A port view showing the port's PredictorParams description.
@@ -33,11 +36,12 @@ import javax.swing.JTextArea;
  */
 final class PredictorOutPortView extends NodeOutPortView {
 
-    /** Shows the PredictorParams. */
-    private final JTextArea m_predParamsText;
+    /** Shows the PredictorParams as JTree. */
+    private final JTree m_tree;
 
     /** If no PredictorParams available. */
-    private static final String NO_TEXT = "<No Predictor Parameters>";
+    private static final TreeNode NO_TEXT 
+        = new DefaultMutableTreeNode("<No Model>", false);
 
     /**
      * A view showing the data model stored in the specified PredictorParams
@@ -51,13 +55,13 @@ final class PredictorOutPortView extends NodeOutPortView {
      */
     PredictorOutPortView(final String nodeName, final String portName) {
         super(nodeName + ", " + portName);
-        m_predParamsText = new JTextArea(NO_TEXT);
-        m_predParamsText.setEditable(false);
-        m_predParamsText.setFont(new Font("Courier", Font.PLAIN, 12));
+        m_tree = new JTree();
+        m_tree.setEditable(false);
+        m_tree.setFont(new Font("Courier", Font.PLAIN, 12));
         Container cont = getContentPane();
         cont.setLayout(new BorderLayout());
         cont.setBackground(NodeView.COLOR_BACKGROUND);
-        cont.add(new JScrollPane(m_predParamsText), BorderLayout.CENTER);
+        cont.add(new JScrollPane(m_tree), BorderLayout.CENTER);
     }
 
     /**
@@ -66,11 +70,12 @@ final class PredictorOutPortView extends NodeOutPortView {
      * @param predParams The new content can be null.
      */
     void updatePredictorParams(final PredictorParams predParams) {
-        m_predParamsText.removeAll();
+        m_tree.removeAll();
         if (predParams == null) {
-            m_predParamsText.setText(NO_TEXT);
+            m_tree.setModel(new DefaultTreeModel(NO_TEXT));
         } else {
-            m_predParamsText.setText(predParams.toString());
+            //String text = predParams.toString();
+            m_tree.setModel(new DefaultTreeModel(predParams));
         }
         super.updatePortView();
     }

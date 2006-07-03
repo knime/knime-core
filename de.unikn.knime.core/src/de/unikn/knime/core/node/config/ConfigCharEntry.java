@@ -31,19 +31,21 @@ final class ConfigCharEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new char entry.
+     * @param key The key for this value.
      * @param c The char value.
      */
-    ConfigCharEntry(final char c) {
-        super(ConfigEntries.xchar);
+    ConfigCharEntry(final String key, final char c) {
+        super(ConfigEntries.xchar, key);
         m_char = c;
     }
 
     /**
      * Creates a new char entry.
+     * @param key The key for this value.
      * @param c The char value as String.
      */
-    ConfigCharEntry(final String c) {
-        super(ConfigEntries.xchar);
+    ConfigCharEntry(final String key, final String c) {
+        super(ConfigEntries.xchar, key);
         if (c.length() > 1) {
             throw new IllegalArgumentException("ConfigCharEntry only takes " 
                     + "strings of length one.");

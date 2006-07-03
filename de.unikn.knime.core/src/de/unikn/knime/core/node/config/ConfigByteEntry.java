@@ -31,19 +31,21 @@ final class ConfigByteEntry extends AbstractConfigEntry {
     
     /**
      * Creates a new config entry for bytes.
+     * @param key The key for this value.
      * @param b The byte value.
      */
-    ConfigByteEntry(final byte b) {
-        super(ConfigEntries.xbyte);
+    ConfigByteEntry(final String key, final byte b) {
+        super(ConfigEntries.xbyte, key);
         m_byte = b;
     }
 
     /**
      * Creates a new config entry for bytes.
+     * @param key The key for this value.
      * @param b The byte value as String.
      */
-    ConfigByteEntry(final String b) {
-        super(ConfigEntries.xbyte);
+    ConfigByteEntry(final String key, final String b) {
+        super(ConfigEntries.xbyte, key);
         m_byte = Byte.parseByte(b);
     }
 

@@ -28,29 +28,34 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
+
+import javax.swing.tree.TreeNode;
 
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.ComplexNumberCell;
+import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.FuzzyIntervalCell;
 import de.unikn.knime.core.data.def.FuzzyNumberCell;
-import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.eclipseUtil.GlobalObjectInputStream;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.ComplexNumberCellEntry;
+import de.unikn.knime.core.node.config.Config.DataCellEntry.DoubleCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.FuzzyIntervalCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.FuzzyNumberCellEntry;
-import de.unikn.knime.core.node.config.Config.DataCellEntry.DoubleCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.IntCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.MissingCellEntry;
 import de.unikn.knime.core.node.config.Config.DataCellEntry.StringCellEntry;
@@ -81,8 +86,9 @@ public abstract class Config extends AbstractConfigEntry
 
     private final LinkedHashMap<String, AbstractConfigEntry> m_map;
     
-    private void put(final String key, final AbstractConfigEntry e) {
-        m_map.put(checkKey(key), e);
+    private void put(final AbstractConfigEntry e) {
+        m_map.put(e.getKey(), e);
+        e.setParent(this); // (tg)
     }
 
     /**
@@ -324,36 +330,12 @@ public abstract class Config extends AbstractConfigEntry
     }
     
     /**
-     * @return This config's identifier.
-     */
-    public String getKey() {
-        return m_key;
-      }
-    
-    /**
-     * Check key on null and if empty.
-     * @param key The key to check.
-     * @return The original key.
-     */
-    private static final String checkKey(final String key) {
-        if (key == null || key.trim().length() == 0) {
-            throw new IllegalArgumentException("Key must not be empty: " + key);
-        }
-        return key;
-    }
-    
-    /** The key for this Config used inside the parent Config to access this
-     * Config by key. */
-    private final String m_key;
-        
-    /**
      * Creates a new, empty config object with the given key.
      * 
      * @param key The key for this Config.
      */
     protected Config(final String key) {
-        super(ConfigEntries.config);
-        m_key = checkKey(key);
+        super(ConfigEntries.config, key);
         m_map = new LinkedHashMap<String, AbstractConfigEntry>(1, 0.8f);
     }
 
@@ -374,7 +356,7 @@ public abstract class Config extends AbstractConfigEntry
      */
     public Config addConfig(final String key) {
         final Config config = getInstance(key);
-        put(key, config);
+        put(config);
         return config;
     }
 
@@ -401,7 +383,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The int value.
      */
     public void addInt(final String key, final int value) {
-        put(key, new ConfigIntEntry(value));
+        put(new ConfigIntEntry(key, value));
     }
 
     /**
@@ -427,7 +409,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The double value to add.
      */
     public void addDouble(final String key, final double value) {
-        put(key, new ConfigDoubleEntry(value));
+        put(new ConfigDoubleEntry(key, value));
     }
 
     /**
@@ -453,7 +435,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The char to add.
      */
     public void addChar(final String key, final char value) {
-        put(key, new ConfigCharEntry(value));
+        put(new ConfigCharEntry(key, value));
     }
 
     /**
@@ -479,7 +461,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The short to add.
      */
     public void addShort(final String key, final short value) {
-        put(key, new ConfigShortEntry(value));
+        put(new ConfigShortEntry(key, value));
     }
 
     /**
@@ -505,7 +487,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The long to add.
      */
     public void addLong(final String key, final long value) {
-        put(key, new ConfigLongEntry(value));
+        put(new ConfigLongEntry(key, value));
     }
 
     /**
@@ -532,7 +514,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The byte to add.
      */
     public void addByte(final String key, final byte value) {
-        put(key, new ConfigByteEntry(value));
+        put(new ConfigByteEntry(key, value));
     }
 
     /**
@@ -559,7 +541,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The boolean to add.
      */
     public void addString(final String key, final String value) {
-        put(key, new ConfigStringEntry(value));
+        put(new ConfigStringEntry(key, value));
     }
 
     /**
@@ -755,7 +737,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param value The boolean to add.
      */
     public void addBoolean(final String key, final boolean value) {
-        put(key, new ConfigBooleanEntry(value));
+        put(new ConfigBooleanEntry(key, value));
     }
 
     /**
@@ -1464,11 +1446,10 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds the given Config entry to this Config.
      * 
-     * @param key The key.
      * @param entry The Config entry to add.
      */
-    void addEntry(final String key, final AbstractConfigEntry entry) {
-        put(key, entry);
+    void addEntry(final AbstractConfigEntry entry) {
+        put(entry);
     }
 
     /**
@@ -1483,22 +1464,26 @@ public abstract class Config extends AbstractConfigEntry
      */
     @Override
     public final String toStringValue() {
-        return toString();
+        return super.getKey();
     }
 
     /**
-     * Returns a small summary of this config as String.
-     * 
-     * @return String representation.
+     * Adds this and all children String representations to the given buffer.
+     * @param buf The string buffer to which this Config's String all all 
+     *        children String representation is added.
      */
-    @Override
-    public final String toString() {
-        StringBuffer buf = new StringBuffer();
+    public final void toString(final StringBuffer buf) {
         toString(0, buf);
         buf.trimToSize();
-        return buf.toString();
     }
-
+    
+    /**
+     * @see AbstractConfigEntry#getKey()
+     */
+    public String toString() {
+        return super.getKey();
+    }
+    
     private static final int TAB_SIZE = 2;
     
     private static final String SPACE = " ".intern();
@@ -1512,7 +1497,6 @@ public abstract class Config extends AbstractConfigEntry
     private void toString(final int indent, final StringBuffer sb) {
         assert (indent >= 0);
         sb.ensureCapacity(1000);
-        LOGGER.info(m_key + " " + sb.capacity());
         for (String key : m_map.keySet()) {
             for (int t = 0; t < indent * TAB_SIZE; t++) {
                 sb.append(SPACE);
@@ -1662,6 +1646,64 @@ public abstract class Config extends AbstractConfigEntry
      */
     public void copyTo(final Config dest) {
         dest.m_map.putAll(this.m_map);
+    }
+    
+    // tree node methods
+    
+    /**
+     * The TreeNode for the given index.
+     * @param childIndex The index to retrieve the TreeNode for.
+     * @return The associated TreeNode.
+     */
+    public TreeNode getChildAt(final int childIndex) {
+        Iterator<String> it = m_map.keySet().iterator();
+        for (int i = 0; i < childIndex; i++) {
+            it.next();
+        }
+        TreeNode node = m_map.get(it.next());
+        return node;
+    }
+
+    /**
+     * @return The number of entries in this Config.
+     * @see javax.swing.tree.TreeNode#getChildCount()
+     */
+    public int getChildCount() {
+        return m_map.size();
+    }
+
+    /**
+     * Returns the index for a given TreeNode.
+     * @param node The TreeNode to get the index for.
+     * @return The index of the given node.
+     * @see javax.swing.tree.TreeNode#getIndex(javax.swing.tree.TreeNode)
+     */
+    public int getIndex(final TreeNode node) {
+        int i = 0;
+        for (Map.Entry<String, AbstractConfigEntry> e : m_map.entrySet()) {
+            if (e.getValue().equals(node)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    /**
+     * @return true, only if the map is empty.
+     * @see javax.swing.tree.TreeNode#isLeaf()
+     */
+    public final boolean isLeaf() {
+        return m_map.isEmpty();
+    }
+    
+    /**
+     * An enumeration of a values.
+     * @return All elements of this Config.
+     * @see javax.swing.tree.TreeNode#children()
+     */
+    public final Enumeration<TreeNode> children() {
+        return new Vector<TreeNode>(m_map.values()).elements();
     }
     
 } // Config

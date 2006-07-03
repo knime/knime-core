@@ -189,8 +189,9 @@ final class XMLConfig2 {
                     }
                 }
 
-                AbstractConfigEntry ab = configEntryType.createEntry(value);
-                config.addEntry(key, ab);
+                AbstractConfigEntry ab = 
+                    configEntryType.createEntry(key, value);
+                config.addEntry(ab);
             }
         }
     }

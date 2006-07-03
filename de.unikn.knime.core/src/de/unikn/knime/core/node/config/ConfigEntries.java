@@ -30,13 +30,14 @@ enum ConfigEntries {
      */
     xstring {
         /**
-         * Returns a new entry for String objects. 
+         * Returns a new entry for String objects.
+         * @param key The key for this value. 
          * @param value The String value.
          * @return A new Config entry.
          */
         @Override
-        ConfigStringEntry createEntry(final String value) {
-            return new ConfigStringEntry(value);
+        ConfigStringEntry createEntry(final String key, final String value) {
+            return new ConfigStringEntry(key, value);
         }
     },
     
@@ -45,13 +46,14 @@ enum ConfigEntries {
      */
     xint {
         /**
-         * Returns a new entry for int objects. 
+         * Returns a new entry for int objects.
+         * @param key The key for this value. 
          * @param value The String value as int.
          * @return A new Config entry.
          */
         @Override
-        ConfigIntEntry createEntry(final String value) {
-            return new ConfigIntEntry(value);
+        ConfigIntEntry createEntry(final String key, final String value) {
+            return new ConfigIntEntry(key, value);
         }
     },
     
@@ -60,13 +62,14 @@ enum ConfigEntries {
      */
     xdouble {
         /**
-         * Returns a new entry for double objects. 
+         * Returns a new entry for double objects.
+         * @param key The key for this value. 
          * @param value The String value as double.
          * @return A new Config entry.
          */
         @Override
-        ConfigDoubleEntry createEntry(final String value) {
-            return new ConfigDoubleEntry(value);
+        ConfigDoubleEntry createEntry(final String key, final String value) {
+            return new ConfigDoubleEntry(key, value);
         }
     },
     
@@ -75,13 +78,14 @@ enum ConfigEntries {
      */
     xlong {
         /**
-         * Returns a new entry for long objects. 
+         * Returns a new entry for long objects.
+         * @param key The key for this value. 
          * @param value The String value as long.
          * @return A new Config entry.
          */
         @Override
-        ConfigLongEntry createEntry(final String value) {
-            return new ConfigLongEntry(value);
+        ConfigLongEntry createEntry(final String key, final String value) {
+            return new ConfigLongEntry(key, value);
         }
     },
 
@@ -90,13 +94,14 @@ enum ConfigEntries {
      */
     xshort {
         /**
-         * Returns a new entry for short objects. 
+         * Returns a new entry for short objects.
+         * @param key The key for this value. 
          * @param value The String value as short.
          * @return A new Config entry.
          */
         @Override
-        ConfigShortEntry createEntry(final String value) {
-            return new ConfigShortEntry(value);
+        ConfigShortEntry createEntry(final String key, final String value) {
+            return new ConfigShortEntry(key, value);
         }
     },
     
@@ -105,13 +110,14 @@ enum ConfigEntries {
      */
     xbyte {
         /**
-         * Returns a new entry for byte objects. 
+         * Returns a new entry for byte objects.
+         * @param key The key for this value. 
          * @param value The String value as byte.
          * @return A new Config entry.
          */
         @Override
-        ConfigByteEntry createEntry(final String value) {
-            return new ConfigByteEntry(value);
+        ConfigByteEntry createEntry(final String key, final String value) {
+            return new ConfigByteEntry(key, value);
         }
     },
     
@@ -120,13 +126,14 @@ enum ConfigEntries {
      */
     xchar {
         /**
-         * Returns a new entry for char objects. 
+         * Returns a new entry for char objects.
+         * @param key The key for this value. 
          * @param value The String value as char.
          * @return A new Config entry.
          */
         @Override
-        ConfigCharEntry createEntry(final String value) {
-            return new ConfigCharEntry(value);
+        ConfigCharEntry createEntry(final String key, final String value) {
+            return new ConfigCharEntry(key, value);
         }
     },
     
@@ -135,13 +142,14 @@ enum ConfigEntries {
      */
     xboolean {
         /**
-         * Returns a new entry for boolean objects. 
+         * Returns a new entry for boolean objects.
+         * @param key The key for this value. 
          * @param value The String value as boolean.
          * @return A new Config entry.
          */
         @Override
-        ConfigBooleanEntry createEntry(final String value) {
-            return new ConfigBooleanEntry(value);
+        ConfigBooleanEntry createEntry(final String key, final String value) {
+            return new ConfigBooleanEntry(key, value);
         }
     },
     
@@ -152,13 +160,14 @@ enum ConfigEntries {
         /**
          * Do not create a new entry through this object. Rather use the 
          * parent's config <code>addConfig</code> method.
-         * @see Config#addConfig(String)
+         * @param key The key for this value.
          * @param value The String value as boolean.
+         * @see Config#addConfig(String)
          * @return nothing, as it throws an exception
          * @throws UnsupportedOperationException always.
          */
         @Override
-        Config createEntry(final String value) {
+        Config createEntry(final String key, final String value) {
             throw new UnsupportedOperationException("Do not call this method" 
                     + " on sub config entries"); 
         }
@@ -166,8 +175,9 @@ enum ConfigEntries {
 
     /**
      * Creates a new Config entry from String.
+     * @param key The key for this value.
      * @param value The value.
      * @return A new Config entry.
      */
-    abstract AbstractConfigEntry createEntry(final String value);
+    abstract AbstractConfigEntry createEntry(String key, String value);
 }

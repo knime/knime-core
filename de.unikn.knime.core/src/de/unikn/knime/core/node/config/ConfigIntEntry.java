@@ -31,19 +31,21 @@ final class ConfigIntEntry extends AbstractConfigEntry {
 
     /**
      * Creates a new Config entry for an int value.
+     * @param key The key for this value.
      * @param i The int value.
      */
-    ConfigIntEntry(final int i) {
-        super(ConfigEntries.xint);
+    ConfigIntEntry(final String key, final int i) {
+        super(ConfigEntries.xint, key);
         m_int = i;
     }
 
     /**
      * Creates a new Config entry for an int value.
+     * @param key The key for this value.
      * @param i The int value as String.
      */
-    ConfigIntEntry(final String i) {
-        super(ConfigEntries.xint);
+    ConfigIntEntry(final String key, final String i) {
+        super(ConfigEntries.xint, key);
         m_int = Integer.parseInt(i);
     }
 
