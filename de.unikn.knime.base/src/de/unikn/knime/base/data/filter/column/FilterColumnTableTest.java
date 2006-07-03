@@ -60,6 +60,14 @@ public final class FilterColumnTableTest extends TestCase {
         public RowIterator iterator() {
             return new MyTestRowIterator(m_spec.getNumColumns());
         }
+
+        /**
+         * @see de.unikn.knime.core.data.DataTable#getRowCount()
+         */
+        public int getRowCount() {
+            throw new UnsupportedOperationException("No RowCount available!");
+        }
+        
     } // MyTestTable
 
     /**

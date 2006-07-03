@@ -72,4 +72,11 @@ public class RowFilterTable implements DataTable {
                 (RowFilter)m_filter.clone());
     }
 
+    /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        throw new UnsupportedOperationException("No RowCount available!");
+    }
+    
 }

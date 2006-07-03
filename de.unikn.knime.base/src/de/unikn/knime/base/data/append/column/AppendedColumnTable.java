@@ -101,6 +101,13 @@ public class AppendedColumnTable implements DataTable {
     }
     
     /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        return m_table.getRowCount();
+    }
+    
+    /**
      * Get new iterator over the underlying table. 
      * @return A new iterator.
      */

@@ -357,4 +357,12 @@ public final class FilterColumnTable implements DataTable {
         return new FilterColumnRowIterator(m_data.iterator(), m_columns);
     }
 
+    /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        return m_data.getRowCount();
+    }
+    
+    
 } // FilterColumnTable

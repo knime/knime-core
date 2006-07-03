@@ -100,7 +100,14 @@ public class ARFFTable implements DataTable {
             return null;
         }
     }
-
+    
+    /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        throw new UnsupportedOperationException("No RowCount available!");
+    }
+    
     /**
      * reads in the header of the specified ARFF file and returns a
      * corresponding <code>DataTableSpec</code> object.

@@ -89,6 +89,13 @@ public class FileTable implements DataTable {
     }
 
     /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        throw new UnsupportedOperationException("No RowCount available!");
+    }
+        
+    /**
      * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {

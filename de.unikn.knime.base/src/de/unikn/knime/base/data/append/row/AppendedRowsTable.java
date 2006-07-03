@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpec;
@@ -31,6 +30,7 @@ import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.node.NodeLogger;
 
@@ -120,6 +120,13 @@ public class AppendedRowsTable implements DataTable {
         return new AppendedRowsIterator(m_tables, m_spec, m_suffix);
     }
 
+    /**
+     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     */
+    public int getRowCount() {
+        throw new UnsupportedOperationException("No RowCount available!");
+    }
+    
     /**
      * Factory method that determines the final DataTableSpec given the tables.
      * 
