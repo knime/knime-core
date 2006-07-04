@@ -817,7 +817,7 @@ public class NodeContainer implements NodeStateListener {
      */
     public void openPortView(final int index) {
         NodeOutPort port = m_node.getOutPort(index);
-        port.openPortView(m_node.getName() + " (#" + index + ")");
+        port.openPortView(getNameWithID());
     }
 
     /**
