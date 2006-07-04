@@ -553,4 +553,14 @@ public class DataContainer implements RowAppender {
         f.deleteOnExit();
         return f;
     }
+    
+    /** Returns <code>true</code> if the given argument table has been created
+     * by the DataContainer, <code>false</code> otherwise.
+     * @param table The table to check.
+     * @return If the given table was created by a DataContainer.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     */
+    public static final boolean isContainerTable(final DataTable table) {
+        return table instanceof BufferedTable;
+    }
 }
