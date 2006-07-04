@@ -25,7 +25,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0">Datatable to filter columns out</dataIn>
-		<dataOut index="0">Datatable with only the specified columns</dataOut>
+		<dataIn index="0" name="Table to filter">Datatable to filter columns out</dataIn>
+		<dataOut index="0" name"Filtered table>Datatable with only the specified columns</dataOut>
 	</ports>	
 </knimeNode>
