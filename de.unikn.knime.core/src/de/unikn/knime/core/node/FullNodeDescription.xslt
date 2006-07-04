@@ -50,7 +50,7 @@
 		<xsl:for-each select="dataIn">
 			<xsl:sort select="@index" />
 			<div>
-    			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
+    			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
@@ -60,7 +60,7 @@
 		<xsl:for-each select="dataOut">
 			<xsl:sort select="@index" />
 			<div>
-				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
@@ -70,7 +70,7 @@
 		<xsl:for-each select="predParamIn">
 			<xsl:sort select="@index" />
 			<div>			
-				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
@@ -80,7 +80,7 @@
 		<xsl:for-each select="predParamOut">
 			<xsl:sort select="@index" />
 			<div>
-				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
