@@ -46,41 +46,41 @@
 	<hr width="90%" />
 	<h3>Ports</h3>
 	<xsl:if test="dataIn">
-		<h4>Input ports</h4>
+		<h4>Data Input</h4>
 		<xsl:for-each select="dataIn">
 			<xsl:sort select="@index" />
 			<div>
-				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+    			<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
 	</xsl:if>					
 	<xsl:if test="dataOut">
-		<h4>Output ports</h4>
+		<h4>Data Output</h4>
 		<xsl:for-each select="dataOut">
 			<xsl:sort select="@index" />
 			<div>
-				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
 	</xsl:if>					
 	<xsl:if test="predParamIn">
-		<h4>Model input ports</h4>
+		<h4>Model Input</h4>
 		<xsl:for-each select="predParamIn">
 			<xsl:sort select="@index" />
 			<div>			
-				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
 	</xsl:if>					
 	<xsl:if test="predParamOut">
-		<h4>Model output ports</h4>
+		<h4>Model Output</h4>
 		<xsl:for-each select="predParamOut">
 			<xsl:sort select="@index" />
 			<div>
-				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
+				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index+1" /></span>
 				<xsl:apply-templates />
 			</div>
 		</xsl:for-each>
