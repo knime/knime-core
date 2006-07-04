@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -85,7 +83,7 @@ public class OpenPortViewAction extends Action {
 
         // the text will be displayed in the context menu
         // it consists of the specific port type and index and its description
-        String description = m_nodeContainer.getOutportDescription(m_index);
+        String description = m_nodeContainer.getOutportName(m_index);
 
         return name + ": " + description;
     }
