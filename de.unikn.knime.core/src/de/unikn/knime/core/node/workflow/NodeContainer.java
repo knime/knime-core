@@ -71,7 +71,7 @@ public class NodeContainer implements NodeStateListener {
 
     /** Key for the factory class name, used to load nodes. */
     protected static final String KEY_FACTORY_NAME = "factory";
-    
+
     /** Key for this node's internal ID. */
     protected static final String KEY_ID = "id";
 
@@ -114,14 +114,14 @@ public class NodeContainer implements NodeStateListener {
         // read node factory class name
         String factoryClassName = settings.getString(KEY_FACTORY_NAME);
         // use global Class Creator utility for Eclipse "compatibility"
-        return (NodeFactory)((GlobalClassCreator
-                .createClass(factoryClassName)).newInstance());
+        return (NodeFactory)((GlobalClassCreator.createClass(factoryClassName))
+                .newInstance());
     }
 
     private List<NodeInPort> m_cachedInPorts;
 
     private List<NodeOutPort> m_cachedOutPorts;
-    
+
     // A user-specified name for this node
     private String m_customName;
 
@@ -150,17 +150,17 @@ public class NodeContainer implements NodeStateListener {
     // The node logger for the underlying node is used here.
     private final NodeLogger m_logger;
 
-    
     // remember node itself...
     private final Node m_node;
+
     // ...and an array of predecessors (only one per port!)
-    private final Vector<NodeContainer> m_pred; 
-    
+    private final Vector<NodeContainer> m_pred;
+
     // ...for each port a list of successors...
     private final Vector<List<NodeContainer>> m_succ;
-    
+
     private final WorkflowManager m_wfm;
-    
+
     /**
      * Create new container using a node factory and a predefined ID.
      * 
@@ -170,10 +170,9 @@ public class NodeContainer implements NodeStateListener {
      */
     public NodeContainer(final NodeFactory f, final WorkflowManager wfm,
             final int id) {
-        this (new Node(f, wfm), wfm, id);
+        this(new Node(f, wfm), wfm, id);
     }
 
-    
     private NodeContainer(final Node node, final WorkflowManager wfm,
             final int id) {
         m_node = node;
@@ -191,29 +190,26 @@ public class NodeContainer implements NodeStateListener {
         m_node.addStateListener(this);
     }
 
-    
-    
     /**
      * Creates a copy of the passed node container with a new id.
      * 
      * @param template the node container to copy
      * @param id the new id
-     * @throws CloneNotSupportedException if the {@link NodeExtraInfo} of
-     * the template could not be cloned 
+     * @throws CloneNotSupportedException if the {@link NodeExtraInfo} of the
+     *             template could not be cloned
      * 
      */
     NodeContainer(final NodeContainer template, final int id)
-    throws CloneNotSupportedException {
-        this (new Node(template.m_node, template.m_wfm), template.m_wfm, id);
-        
+            throws CloneNotSupportedException {
+        this(new Node(template.m_node, template.m_wfm), template.m_wfm, id);
+
         setExtraInfo((NodeExtraInfo)template.getExtraInfo().clone());
         if (template.m_customName != null) {
             setCustomName(template.m_customName);
         }
         setDescription(template.m_description);
     }
-    
-    
+
     /**
      * Creates a new NodeContainer and reads it's status and information from
      * the NodeSettings object. Note that the list of predecessors and
@@ -225,18 +221,17 @@ public class NodeContainer implements NodeStateListener {
      * @throws InvalidSettingsException if the required keys are not available
      *             in the NodeSettings
      * @throws ClassNotFoundException if the factory class in the settings could
-     * not be found 
-     * @throws IllegalAccessException if the factory class is not acessible 
+     *             not be found
+     * @throws IllegalAccessException if the factory class is not acessible
      * @throws InstantiationException if a factory object could not be created
      * 
      * @see #save(NodeSettings, File, ExecutionMonitor)
      */
-    public NodeContainer(final NodeSettings settings,
-            final WorkflowManager wfm) throws InvalidSettingsException,
-            InstantiationException, IllegalAccessException,
-            ClassNotFoundException {
+    public NodeContainer(final NodeSettings settings, final WorkflowManager wfm)
+            throws InvalidSettingsException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
         this(readNodeFactory(settings), wfm, settings.getInt(KEY_ID));
-        
+
         setExtraInfo(createExtraInfo(settings));
 
         try {
@@ -248,9 +243,8 @@ public class NodeContainer implements NodeStateListener {
                 setCustomName(name);
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.warn("In the settings of node <id:" + getID()
-                    + "|type:" + getName()
-                    + "> is no user name specified");
+            LOGGER.warn("In the settings of node <id:" + getID() + "|type:"
+                    + getName() + "> is no user name specified");
         }
 
         try {
@@ -258,12 +252,11 @@ public class NodeContainer implements NodeStateListener {
             String description = settings.getString(KEY_CUSTOM_DESCRIPTION);
             setDescription(description);
         } catch (InvalidSettingsException ise) {
-            LOGGER.warn("In the settings of node <id:" + getID()
-                    + "|type:" + getName()
-                    + "> is no user description specified");
+            LOGGER.warn("In the settings of node <id:" + getID() + "|type:"
+                    + getName() + "> is no user description specified");
         }
     }
-    
+
     /**
      * Adds an incoming connection to a specified port. Only one incoming
      * connection is allowed per port - if this port is already connected it
@@ -290,7 +283,7 @@ public class NodeContainer implements NodeStateListener {
         // add connection only on this side.
         m_pred.set(port, nc);
     }
-    
+
     /**
      * Adds a listener, has no effect if the listener is already registered.
      * 
@@ -327,7 +320,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#closeAllViews()     
+     * @see Node#closeAllViews()
      */
     public void closeAllViews() {
         m_node.closeAllViews();
@@ -340,7 +333,6 @@ public class NodeContainer implements NodeStateListener {
         m_node.configure();
     }
 
-    
     /**
      * Connects an inport of this noe with an outport of another node.
      * 
@@ -350,22 +342,20 @@ public class NodeContainer implements NodeStateListener {
      */
     void connectPorts(final int inPort, final NodeContainer outNode,
             final int outPort) {
-        m_node.getInPort(inPort).connectPort(
-                outNode.m_node.getOutPort(outPort));        
+        m_node.getInPort(inPort)
+                .connectPort(outNode.m_node.getOutPort(outPort));
     }
 
-    
     /**
      * @see Node#detach()
      */
     void detach() {
-        m_node.detach();        
+        m_node.detach();
     }
 
-    
     /**
      * Disconnets the inport with the given id from its predecessor.
-     *  
+     * 
      * @param inPort the index of the inport
      */
     void disconnectPort(final int inPort) {
@@ -382,25 +372,28 @@ public class NodeContainer implements NodeStateListener {
         for (List<NodeContainer> ncl : m_succ) {
             if (ncl != null) {
                 for (NodeContainer nc : ncl) {
-                    if (!succ.contains(nc)) { succ.add(nc); }
+                    if (!succ.contains(nc)) {
+                        succ.add(nc);
+                    }
                 }
             }
         }
-        
+
         for (int i = 0; i < succ.size(); i++) {
             for (List<NodeContainer> ncl : succ.get(i).m_succ) {
                 if (ncl != null) {
                     for (NodeContainer nc : ncl) {
-                        if (!succ.contains(nc)) { succ.add(nc); }
+                        if (!succ.contains(nc)) {
+                            succ.add(nc);
+                        }
                     }
                 }
-            }            
+            }
         }
-        
+
         return succ;
     }
 
-    
     /**
      * Returns the custom name for this node container.
      * 
@@ -410,7 +403,6 @@ public class NodeContainer implements NodeStateListener {
         return m_customName;
     }
 
-    
     /**
      * Returns the user-specified description for this node container.
      * 
@@ -420,7 +412,6 @@ public class NodeContainer implements NodeStateListener {
         return m_description;
     }
 
-    
     /**
      * @see Node#getDialogPane()
      */
@@ -428,12 +419,12 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getDialogPane();
     }
 
-    /** 
-     * Returns the embedded workflow manager, if the underlying node contains
-     * a meta node model.
+    /**
+     * Returns the embedded workflow manager, if the underlying node contains a
+     * meta node model.
      * 
      * @return the embedded workflow manager or <code>null</code> if the
-     * underlying node model is not a meta node model
+     *         underlying node model is not a meta node model
      */
     public WorkflowManager getEmbeddedWorkflowManager() {
         return m_node.getEmbeddedWorkflowManager();
@@ -485,7 +476,6 @@ public class NodeContainer implements NodeStateListener {
         return m_cachedInPorts;
     }
 
-    
     /**
      * @see Node#getInputPortDescription(int)
      */
@@ -493,7 +483,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getInputPortDescription(port);
     }
 
-    
     /**
      * @see Node#getModelClass()
      */
@@ -501,7 +490,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getModelClass();
     }
 
-    
     /**
      * @see Node#getName()
      */
@@ -516,7 +504,6 @@ public class NodeContainer implements NodeStateListener {
         return getName() + " (#" + getID() + ")";
     }
 
-    
     /**
      * @see Node#getNrDataInPorts()
      */
@@ -559,7 +546,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getNrPredictorOutPorts();
     }
 
-    
     /**
      * @see Node#getNumViews()
      */
@@ -567,7 +553,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getNumViews();
     }
 
-    
     /**
      * @see Node#getOneLineDescription()
      */
@@ -575,7 +560,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getOneLineDescription();
     }
 
-    
     /**
      * Returns all out ports of this node.
      * 
@@ -591,16 +575,25 @@ public class NodeContainer implements NodeStateListener {
         }
         return m_cachedOutPorts;
     }
-    
-    
+
     /**
-     * @see Node#getOutputPortDescription(int)
+     * @param port the port index to retrieve the description for.
+     * 
+     * @return the description of the specified outport.
      */
-    public String getOutputDescription(final int port) {
+    public String getOutportDescription(final int port) {
         return m_node.getOutputPortDescription(port);
     }
 
-    
+    /**
+     * @param port the port index to retrieve the name for.
+     * 
+     * @return the name of the specified outport.
+     */
+    public String getOutportName(final int port) {
+        return m_node.getOutPort(port).getPortName();
+    }
+
     /**
      * Returns an array of direct predecessors of this node.
      * 
@@ -635,7 +628,6 @@ public class NodeContainer implements NodeStateListener {
         return result;
     }
 
-    
     /**
      * @see Node#getView(int)
      */
@@ -643,14 +635,12 @@ public class NodeContainer implements NodeStateListener {
         return m_node.getView(viewIndex);
     }
 
-    
     /**
      * @see Node#getViewName(int)
      */
     public String getViewName(final int viewIndex) {
         return m_node.getViewName(viewIndex);
     }
-
 
     /**
      * @see Node#hasDialog()
@@ -659,7 +649,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.hasDialog();
     }
 
-    
     /**
      * @see Node#isAutoExecutable()
      */
@@ -667,7 +656,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isAutoExecutable();
     }
 
-    
     /**
      * @see Node#isConfigured()
      */
@@ -675,7 +663,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isConfigured();
     }
 
-    
     /**
      * @see Node#isDataInPort(int)
      */
@@ -683,22 +670,19 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isDataInPort(inPort);
     }
 
-    
     /**
-     * @see Node#isDataOutPort(int) 
+     * @see Node#isDataOutPort(int)
      */
     public boolean isDataOutPort(final int outPort) {
         return m_node.isDataOutPort(outPort);
     }
 
-    
     /**
-     * @see Node#isExecutable() 
+     * @see Node#isExecutable()
      */
     public boolean isExecutable() {
         return m_node.isExecutable();
     }
-
 
     /**
      * Check if node can be executed - this is also true if all nodes leading up
@@ -789,7 +773,6 @@ public class NodeContainer implements NodeStateListener {
     public boolean isPredictorOutPort(final int portNumber) {
         return m_node.isPredictorOutPort(portNumber);
     }
-    
 
     /**
      * Loads the node settings and internal structures from the given location,
@@ -797,10 +780,10 @@ public class NodeContainer implements NodeStateListener {
      * 
      * @param nodeFile The node settings location.
      * @param exec The execution monitor reporting progress during reading
-     *        structure.
+     *            structure.
      * @throws IOException If the node settings file can't be found or read.
      * @throws InvalidSettingsException If the settings are wrong.
-     * @throws CanceledExecutionException If loading was canceled. 
+     * @throws CanceledExecutionException If loading was canceled.
      */
     public void load(final File nodeFile, final ExecutionMonitor exec)
             throws IOException, InvalidSettingsException,
@@ -808,7 +791,6 @@ public class NodeContainer implements NodeStateListener {
         m_node.load(nodeFile, exec);
     }
 
-    
     /**
      * @return the node's <code>toString</code> description
      */
@@ -816,7 +798,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.toString();
     }
 
-    
     /**
      * Notifies all state listeners that the state of this
      * <code>NodeContainer</code> has changed.
@@ -863,7 +844,7 @@ public class NodeContainer implements NodeStateListener {
     public void removeListener(final NodeStateListener listener) {
         m_eventListeners.remove(listener);
     }
-    
+
     /**
      * Remove an outgoing connection.
      * 
@@ -874,14 +855,14 @@ public class NodeContainer implements NodeStateListener {
         List<NodeContainer> list = m_succ.get(port);
         list.remove(node);
     }
-    
+
     /**
      * @see Node#resetAndConfigure()
      */
     void resetAndConfigure() {
         m_node.resetAndConfigure();
     }
-    
+
     /**
      * Saves only the container specific settings but not the underlying node.
      * 
@@ -889,8 +870,8 @@ public class NodeContainer implements NodeStateListener {
      */
     public void save(final NodeSettings settings) {
         // save node factory
-        settings.addString(KEY_FACTORY_NAME, 
-                m_node.getFactory().getClass().getName());
+        settings.addString(KEY_FACTORY_NAME, m_node.getFactory().getClass()
+                .getName());
         // save id
         settings.addInt(KEY_ID, m_id);
         // save name
@@ -906,7 +887,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * Write node container and node settings. 
+     * Write node container and node settings.
      * 
      * @param settings To write settings to.
      * @param nodeFile To write node settings to.
@@ -917,10 +898,10 @@ public class NodeContainer implements NodeStateListener {
     public void save(final NodeSettings settings, final File nodeFile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        save(settings);        
+        save(settings);
         m_node.save(nodeFile, exec);
     }
-    
+
     /**
      * Sets a user name for this node.
      * 
@@ -930,8 +911,7 @@ public class NodeContainer implements NodeStateListener {
         m_customName = name;
         notifyStateListeners(new NodeStatus.CustomName());
     }
-    
-    
+
     /**
      * Sets a user description for this node.
      * 
@@ -941,7 +921,7 @@ public class NodeContainer implements NodeStateListener {
         m_description = description;
         notifyStateListeners(new NodeStatus.CustomDescription());
     }
-    
+
     /**
      * Overwrite <code>ExtraInfo</code> object of this node.
      * 
@@ -952,7 +932,6 @@ public class NodeContainer implements NodeStateListener {
         notifyStateListeners(new NodeStatus.ExtrainfoChanged());
     }
 
-    
     /**
      * @see Node#showDialog()
      */
@@ -960,7 +939,6 @@ public class NodeContainer implements NodeStateListener {
         m_node.showDialog();
     }
 
-    
     /**
      * @see Node#showView(int)
      */
@@ -968,7 +946,6 @@ public class NodeContainer implements NodeStateListener {
         m_node.showView(viewIndex);
     }
 
-    
     /**
      * Starts the execution. The node must not be already started and has to be
      * in executable state.
@@ -1056,8 +1033,7 @@ public class NodeContainer implements NodeStateListener {
     public String toString() {
         return m_node.getName() + "(#" + m_id + ")";
     }
-    
-    
+
     /**
      * Loads the settings from the dialog into the model.
      * 
@@ -1066,18 +1042,17 @@ public class NodeContainer implements NodeStateListener {
     void loadModelSettingsFromDialog() throws InvalidSettingsException {
         m_node.loadModelSettingsFromDialog();
     }
-    
-    
+
     /**
      * Loads the dialog settings into the model, resets and configures the node
      * and configures all its sucessor nodes.
      * 
      * @throws WorkflowInExecutionException if settings cannot be applied
-     * because the workflow is currently executed
+     *             because the workflow is currently executed
      * @throws InvalidSettingsException if the settings are invalid
      */
-    public void applyDialogSettings()
-    throws WorkflowInExecutionException, InvalidSettingsException {
-        m_wfm.applyDialogSettings(this);        
-    }    
+    public void applyDialogSettings() throws WorkflowInExecutionException,
+            InvalidSettingsException {
+        m_wfm.applyDialogSettings(this);
+    }
 }
