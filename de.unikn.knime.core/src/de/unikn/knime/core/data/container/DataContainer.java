@@ -457,12 +457,23 @@ public class DataContainer implements RowAppender {
         throws CanceledExecutionException {
         DataContainer buf = new DataContainer(maxCellsInMemory);
         buf.open(table.getDataTableSpec(), true);
+        double finalCount = -1.0; // floating point operation later on
+        try {
+            finalCount = table.getRowCount();
+        } catch (UnsupportedOperationException uoe) {
+            // no row count available, ignore.
+        }
         int row = 0;
         try {
             for (RowIterator it = table.iterator(); it.hasNext(); row++) {
                 DataRow next = it.next();
-                exec.setMessage("Caching row #" + (row + 1) + " (\"" 
-                        + next.getKey() + "\")");
+                String message = "Caching row #" + (row + 1) + " (\"" 
+                + next.getKey() + "\")";
+                if (finalCount > 0.0) {
+                    exec.setProgress(row / finalCount, message);
+                } else {
+                    exec.setMessage(message);
+                }
                 exec.checkCanceled();
                 buf.addRowToTable(next);
             }
