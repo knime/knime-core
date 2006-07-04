@@ -55,7 +55,7 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
         boolean isModelPort = container.isPredictorInPort(getId());
         NodeInPortFigure portFigure = new NodeInPortFigure(getId(), container
                 .getNrPredictorInPorts(), container.getNrDataInPorts(),
-                container.getInputDescription(getId()), isModelPort);
+                container.getInportName(getId()), isModelPort);
 
         return portFigure;
     }
