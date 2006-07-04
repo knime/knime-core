@@ -37,6 +37,8 @@ import de.unikn.knime.core.data.def.StringCell;
  */
 public final class FilterColumnTableTest extends TestCase {
 
+    private static final int ROWS = 42;
+    
     /**
      * Test table class used for column filtering.
      */
@@ -65,7 +67,7 @@ public final class FilterColumnTableTest extends TestCase {
          * @see de.unikn.knime.core.data.DataTable#getRowCount()
          */
         public int getRowCount() {
-            throw new UnsupportedOperationException("No RowCount available!");
+            return ROWS;
         }
         
     } // MyTestTable
@@ -75,10 +77,7 @@ public final class FilterColumnTableTest extends TestCase {
      * number of column retrieved from the <code>DataTableSpec</code>.
      */
     private final class MyTestRowIterator extends RowIterator {
-        private static final int ROWS = 42;
-
         private final DataRow[] m_rows = new DataRow[ROWS];
-
         private int m_index;
 
         /**
