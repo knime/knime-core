@@ -25,6 +25,7 @@ import javax.swing.JPanel;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Abstract (=empty) implementation of a component handling a standard type in a
@@ -47,9 +48,13 @@ public abstract class DialogComponent extends JPanel {
      * @param settings the <code>NodeSettings</code> to read from
      * @param specs the input specs
      * @throws InvalidSettingsException if load fails.
+     * @throws NotConfigurableException If there is no chance for the dialog 
+     * component to be valid (i.e. the settings are valid), e.g. if the given
+     * specs lack some important columns or column types. 
      */
     public abstract void loadSettingsFrom(final NodeSettings settings,
-            final DataTableSpec[] specs) throws InvalidSettingsException;
+            final DataTableSpec[] specs) 
+        throws InvalidSettingsException, NotConfigurableException;
 
     /**
      * Write value(s) of this dialog component to configuration object.

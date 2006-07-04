@@ -32,6 +32,7 @@ import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DataValue;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Class implements a panel to choose a column of a certain type retrieved from
@@ -133,9 +134,11 @@ public class ColumnSelectionPanel extends JPanel {
      * 
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
+     * @throws NotConfigurableException If the spec does not contain at least
+     * one compatible type.
      */
     public final void update(final DataTableSpec spec, 
-            final String selColName) {
+            final String selColName) throws NotConfigurableException {
         m_chooser.removeAllItems();
         if (spec != null) {
             DataColumnSpec selectMe = null;
@@ -161,6 +164,26 @@ public class ColumnSelectionPanel extends JPanel {
                     m_chooser.setSelectedIndex(size - 1);
                 }
             }
+        }
+        if (m_chooser.getItemCount() == 0) {
+            StringBuffer error = new StringBuffer(
+                    "No column in spec compatible to");
+            if (m_filterClasses.length == 1) {
+                error.append(" \"");
+                error.append(m_filterClasses[0].getSimpleName());
+                error.append('"');
+            } else {
+                for (int i = 0; i < m_filterClasses.length; i++) {
+                    error.append(" \"");
+                    error.append(m_filterClasses[0].getSimpleName());
+                    error.append('"');
+                    if (i == m_filterClasses.length - 2) { // second last
+                        error.append(" or");
+                    }
+                }
+            }
+            error.append('.');
+            throw new NotConfigurableException(error.toString());
         }
     }
 

@@ -30,6 +30,7 @@ import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DataValue;
+import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Class extends a JComboxBox to choose a column of a certain type retrieved
@@ -127,8 +128,11 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * 
      * @param sp To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
+     * @throws NotConfigurableException If the spec does not contain any column
+     * compatible to the target value class(es) as given in constructor.       
      */
-    public final void update(final DataTableSpec sp, final String selColName) {
+    public final void update(final DataTableSpec sp, final String selColName) 
+        throws NotConfigurableException {
         update(sp, selColName, false);
     }
     
@@ -143,9 +147,12 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * @param suppressEvents <code>true</code> if events caused by adding items 
      *        to the combo box should be suppressed, <code>false</code> 
      *        otherwise.
+     * @throws NotConfigurableException If the spec does not contain any column
+     * compatible to the target value class(es) as given in constructor.       
      */
     public final void update(final DataTableSpec spec, 
-            final String selColName, final boolean suppressEvents) {
+            final String selColName, final boolean suppressEvents) 
+        throws NotConfigurableException {
         ItemListener[] itemListeners = null;
         ActionListener[] actionListeners = null;
         
@@ -199,6 +206,26 @@ public class ColumnSelectionComboxBox extends JComboBox {
             if (size > 0) {
                 setSelectedIndex(size - 1);
             }
+        }
+        if (getItemCount() == 0) {
+            StringBuffer error = new StringBuffer(
+                    "No column in spec compatible to");
+            if (m_filterClasses.length == 1) {
+                error.append(" \"");
+                error.append(m_filterClasses[0].getSimpleName());
+                error.append('"');
+            } else {
+                for (int i = 0; i < m_filterClasses.length; i++) {
+                    error.append(" \"");
+                    error.append(m_filterClasses[0].getSimpleName());
+                    error.append('"');
+                    if (i == m_filterClasses.length - 2) { // second last
+                        error.append(" or");
+                    }
+                }
+            }
+            error.append('.');
+            throw new NotConfigurableException(error.toString());
         }
     }
 
