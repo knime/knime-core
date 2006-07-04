@@ -253,7 +253,7 @@ public class FileReaderNodeModel extends NodeModel {
      *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected boolean loadInternals(final File nodeInternDir,
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         /*
@@ -265,7 +265,7 @@ public class FileReaderNodeModel extends NodeModel {
          */
         if (m_frSettings == null) {
             // no settings - no checking.
-            return true;
+            throw new IOException("No settings available.");
         }
 
         URL location = m_frSettings.getDataFileLocation();
@@ -273,7 +273,7 @@ public class FileReaderNodeModel extends NodeModel {
             if ((location == null)
                     || !location.toString().startsWith("file://")) {
                 // We can only check files. Other protocols are ignored.
-                return true;
+                throw new IOException("No or wrong protocol.");
             }
 
             if (location.openStream() == null) {
@@ -289,7 +289,6 @@ public class FileReaderNodeModel extends NodeModel {
             setWarningMessage("The file '" + location.toString()
                     + "' can't be accessed anymore!");
         }
-        return true;
     }
 
     /**

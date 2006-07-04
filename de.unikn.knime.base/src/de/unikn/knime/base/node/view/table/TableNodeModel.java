@@ -95,14 +95,13 @@ public class TableNodeModel extends NodeModel {
      * Load internals.
      * @param internDir The intern node directory to load table from.
      * @param exec Used to report progress or cancel loading.
-     * @return not in use.
      * @throws IOException Always, since this method has not been implemented 
      *         yet.
      * @see de.unikn.knime.core.node.NodeModel
      *          #loadInternals(java.io.File,ExecutionMonitor)
      */
     @Override
-    protected boolean loadInternals(final File internDir,
+    protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
         throw new IOException("Table not saved yet.");
     }
@@ -111,13 +110,12 @@ public class TableNodeModel extends NodeModel {
      * Save internals.
      * @param internDir The intern node directory to save table to.
      * @param exec Used to report progress or cancel loading.
-     * @return not in use.
      * @throws IOException Always, since this method has not been implemented 
      *         yet.
      * @see de.unikn.knime.core.node.NodeModel
      *          #saveInternals(java.io.File, ExecutionMonitor)
      */
-    protected boolean saveInternals(final File internDir, 
+    protected void saveInternals(final File internDir, 
             final ExecutionMonitor exec) throws IOException {
         throw new IOException("Table can't be saved yet.");
     }
