@@ -202,7 +202,7 @@ public final class FilterColumnPanel extends JPanel {
         jspIncl.setMinimumSize(new Dimension(150, 155));
 
         final JTextField searchFieldIncl = new JTextField(8);
-        JButton searchButtonIncl = new JButton("...");
+        JButton searchButtonIncl = new JButton("Search");
         ActionListener actionListenerIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 onSearch(m_inclList, m_inclMdl, searchFieldIncl, 
@@ -212,7 +212,7 @@ public final class FilterColumnPanel extends JPanel {
         searchFieldIncl.addActionListener(actionListenerIncl);
         searchButtonIncl.addActionListener(actionListenerIncl);
         JPanel inclSearchPanel = new JPanel(new BorderLayout());
-        inclSearchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
+        inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         inclSearchPanel.setBorder(
                 BorderFactory.createEmptyBorder(15, 15, 15, 15));
         inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
@@ -237,7 +237,7 @@ public final class FilterColumnPanel extends JPanel {
         jspExcl.setMinimumSize(new Dimension(150, 155));
 
         final JTextField searchFieldExcl = new JTextField(8);
-        JButton searchButtonExcl = new JButton("...");
+        JButton searchButtonExcl = new JButton("Search");
         ActionListener actionListenerExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 onSearch(m_exclList, m_exclMdl, searchFieldExcl, 
@@ -249,7 +249,7 @@ public final class FilterColumnPanel extends JPanel {
         JPanel exclSearchPanel = new JPanel(new BorderLayout());
         exclSearchPanel.setBorder(
                 BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        exclSearchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
+        exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Mark all search hits");

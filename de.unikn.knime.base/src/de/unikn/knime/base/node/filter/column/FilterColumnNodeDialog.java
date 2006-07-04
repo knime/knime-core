@@ -53,13 +53,17 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      *  
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
+     * @throws NotConfigurableException If no columns are available for
+     *         filtering.
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
+            final NodeSettings settings, final DataTableSpec[] specs) 
+            throws NotConfigurableException {
         assert (settings != null && specs.length == 1);
-        if (specs[FilterColumnNodeModel.INPORT] == null) {
-            // settings can't be evaluated against the spec
-            return;
+        if (specs[FilterColumnNodeModel.INPORT] == null
+                || specs[FilterColumnNodeModel.INPORT].getNumColumns() == 0) {
+            throw new NotConfigurableException("No columns available for "
+                    + "selection.");
         }
         String[] columns = settings.getStringArray(
                 FilterColumnNodeModel.KEY, new String[0]); 
