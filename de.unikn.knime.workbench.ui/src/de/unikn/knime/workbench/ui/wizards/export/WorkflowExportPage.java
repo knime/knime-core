@@ -17,7 +17,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   12.01.2005 (Florian Georg): created
+ *   02.07.2006 (sieb): created
  */
 package de.unikn.knime.workbench.ui.wizards.export;
 
@@ -38,25 +38,28 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 
 /**
- * Page to enter the settings for the creation of a new workflow file.
+ * Page to enter the settings for the export of a workflow project.
  * 
- * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
-public class NewWorkflowPage extends WizardPage {
+public class WorkflowExportPage extends WizardPage {
 
-    private static final String INITIAL_FILE_NAME_PREFIX = "workflow";
+    private static final String KNIME_WORKFLOW_FILE_NAME = "workflow.knime";
 
-    private static final String INITIAL_FILE_NAME_EXTENSION = ".knime";
+    private static final String[] FILTER_EXTENSION = {"*.zip"};
 
     private Text m_containerText;
 
     private Text m_fileText;
+
+    private Button m_excludeData;
 
     private ISelection m_selection;
 
@@ -65,10 +68,10 @@ public class NewWorkflowPage extends WizardPage {
      * 
      * @param selection The initial selection
      */
-    public NewWorkflowPage(final ISelection selection) {
+    public WorkflowExportPage(final ISelection selection) {
         super("wizardPage");
-        setTitle("New KNIME Workflow File");
-        setDescription("This wizard creates a new KNIME workflow file.");
+        setTitle("Export KNIME Workflow project");
+        setDescription("This wizard exports a KNIME workflow project.");
         this.m_selection = selection;
     }
 
@@ -83,7 +86,7 @@ public class NewWorkflowPage extends WizardPage {
         layout.numColumns = 3;
         layout.verticalSpacing = 9;
         Label label = new Label(container, SWT.NULL);
-        label.setText("Select the &containing project:");
+        label.setText("Select project to export:");
 
         m_containerText = new Text(container, SWT.BORDER | SWT.SINGLE);
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
@@ -94,15 +97,16 @@ public class NewWorkflowPage extends WizardPage {
             }
         });
 
-        Button button = new Button(container, SWT.PUSH);
-        button.setText("Select...");
-        button.addSelectionListener(new SelectionAdapter() {
+        Button selectProjectButton = new Button(container, SWT.PUSH);
+        selectProjectButton.setText("Select...");
+        selectProjectButton.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(final SelectionEvent e) {
                 handleBrowse();
             }
         });
+
         label = new Label(container, SWT.NULL);
-        label.setText("&File name for the new workflow (*.knime):");
+        label.setText("Export file name (zip):");
 
         m_fileText = new Text(container, SWT.BORDER | SWT.SINGLE);
         gd = new GridData(GridData.FILL_HORIZONTAL);
@@ -112,6 +116,27 @@ public class NewWorkflowPage extends WizardPage {
                 dialogChanged();
             }
         });
+
+        Button selectExportFilebutton = new Button(container, SWT.PUSH);
+        selectExportFilebutton.setText("Select...");
+        selectExportFilebutton.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(final SelectionEvent e) {
+                handleExportFileBrowse();
+            }
+        });
+
+        final Group group = new Group(container, SWT.NONE);
+        final GridLayout gridLayout1 = new GridLayout();
+        group.setLayout(gridLayout1);
+        group.setText("Options");
+        final GridData gridData = new GridData(GridData.FILL_BOTH);
+        gridData.horizontalSpan = 2;
+        group.setLayoutData(gridData);
+
+        m_excludeData = new Button(group, SWT.CHECK);
+        m_excludeData.setSelection(false);
+        m_excludeData.setText("Exclude data from export.");
+
         initialize();
         dialogChanged();
         setControl(container);
@@ -141,22 +166,6 @@ public class NewWorkflowPage extends WizardPage {
                 m_containerText.setText(container.getFullPath().toString());
             }
         }
-
-        // set a default file name which is not already available
-        String fileNameToSet = INITIAL_FILE_NAME_PREFIX
-                + INITIAL_FILE_NAME_EXTENSION;
-        if (container != null) {
-            // if the default initial file name is already set, the name is
-            // appended by numbers until a new name has been found
-            IResource file = container.findMember(new Path(fileNameToSet));
-            for (int i = 2; file != null; i++) {
-                fileNameToSet = INITIAL_FILE_NAME_PREFIX + i
-                        + INITIAL_FILE_NAME_EXTENSION;
-                file = container.findMember(new Path(fileNameToSet));
-            }
-        }
-
-        m_fileText.setText(fileNameToSet);
     }
 
     /**
@@ -177,6 +186,43 @@ public class NewWorkflowPage extends WizardPage {
     }
 
     /**
+     * @return true if the check box for excluding data is checked
+     */
+    boolean excludeData() {
+
+        return m_excludeData.getSelection();
+    }
+
+    /**
+     * Uses the standard file selection dialog to choose the export file name.
+     */
+
+    private void handleExportFileBrowse() {
+
+        FileDialog fileDialog = new FileDialog(getShell());
+        fileDialog.setFilterExtensions(FILTER_EXTENSION);
+        fileDialog.setText("Specify export file.");
+
+        String filePath = fileDialog.open();
+
+        if (filePath == null) {
+
+            filePath = "";
+        } else if (filePath.trim().length() > 0) {
+
+            // append "zip" extension if not there.
+            String extension = filePath.substring(filePath.length() - 4,
+                    filePath.length());
+
+            if (!extension.equals(".zip")) {
+                filePath = filePath + ".zip";
+            }
+        }
+
+        m_fileText.setText(filePath);
+    }
+
+    /**
      * Ensures that both text fields are set.
      */
 
@@ -186,12 +232,18 @@ public class NewWorkflowPage extends WizardPage {
         String fileName = getFileName();
 
         if (getContainerName().length() == 0) {
-            updateStatus("File container must be specified");
+            updateStatus("Knime project must be specified");
             return;
         }
 
         if (container == null) {
-            updateStatus("File container must exist");
+            updateStatus("Knime project must exist");
+            return;
+        }
+
+        if (container.findMember(KNIME_WORKFLOW_FILE_NAME) == null) {
+
+            updateStatus("Project does not contain a workflow file.");
             return;
         }
 
@@ -201,20 +253,9 @@ public class NewWorkflowPage extends WizardPage {
             updateStatus("File container must exist");
             return;
         }
-        if (!container.isAccessible()) {
-            updateStatus("Project must be writable");
-            return;
-        }
+
         if (fileName.length() == 0) {
             updateStatus("File name must be specified");
-            return;
-        }
-        if (fileName.replace('\\', '/').indexOf('/', 1) > 0) {
-            updateStatus("File name must be valid");
-            return;
-        }
-        if (container.findMember(fileName) != null) {
-            updateStatus("File already exists.");
             return;
         }
 
@@ -222,8 +263,8 @@ public class NewWorkflowPage extends WizardPage {
         if (dotLoc != -1) {
             String prefix = fileName.substring(0, dotLoc);
             String ext = fileName.substring(dotLoc + 1);
-            if (!ext.equalsIgnoreCase("knime")) {
-                updateStatus("File extension must be \"knime\"");
+            if (!ext.equalsIgnoreCase("zip")) {
+                updateStatus("File extension must be \"zip\"");
                 return;
             }
 

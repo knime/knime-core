@@ -182,9 +182,10 @@
    <extension
          point="org.eclipse.ui.exportWizards">
       <wizard
-            class="de.unikn.knime.workbench.ui.ExportWizard1"
+            class="de.unikn.knime.workbench.ui.wizards.export.WorkflowExportWizard"
+            icon="icons/projectWizard16x16.png"
             id="de.unikn.knime.workbench.ui.wizards.export.WorkflowExportWizard"
-            name="de.unikn.knime.workbench.ui.wizard1"/>
+            name="Export Knime Workflow"/>
    </extension>
 
 </plugin>

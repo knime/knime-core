@@ -17,6 +17,5 @@ Eclipse-AutoStart: true
 Provide-Package: de.unikn.knime.workbench.ui,
  de.unikn.knime.workbench.ui.preferences,
  de.unikn.knime.workbench.ui.views,
- de.unikn.knime.workbench.ui.wizards.file,
  de.unikn.knime.workbench.ui.wizards.project,
  de.unikn.knime.workbench.ui.wrapper
