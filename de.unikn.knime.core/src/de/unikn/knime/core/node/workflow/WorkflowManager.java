@@ -438,7 +438,7 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized ConnectionContainer addConnection(final int idOut,
             final int portOut, final int idIn, final int portIn)
             throws WorkflowInExecutionException {
-        checkForRunningNodes();
+        // checkForRunningNodes();
 
         NodeContainer nodeOut = m_nodesByID.get(idOut);
         NodeContainer nodeIn = m_nodesByID.get(idIn);
