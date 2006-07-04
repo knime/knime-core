@@ -16,6 +16,7 @@
 <!ELEMENT i (#PCDATA) >
 <!ELEMENT u (#PCDATA) >
 <!ELEMENT a (#PCDATA) >
+<!ELEMENT br EMPTY >
 <!ATTLIST a href CDATA #REQUIRED>
 
 <!ELEMENT ports (dataIn*, dataOut*, predParamIn*, predParamOut*) >
