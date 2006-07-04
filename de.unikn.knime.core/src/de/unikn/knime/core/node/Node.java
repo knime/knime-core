@@ -324,13 +324,8 @@ public final class Node {
             if (internDir.exists() 
                     && internDir.isDirectory() && internDir.canRead()) {
                 try {
-                    boolean loadFlag = m_model.loadInternals(
-                            internDir, exec);
-                    if (!loadFlag) {
-                        m_status = new NodeStatus.Warning(
-                                "loadInternals(File) not implemented!");
-                        this.notifyStateListeners(m_status);
-                    }
+                    m_model.loadInternals(internDir, exec);
+                    processModelWarnings();
                 } catch (IOException ioe) {
                     m_status = new NodeStatus.Error(
                         "Unable to load internals: " + ioe.getMessage());
@@ -1470,13 +1465,8 @@ public final class Node {
                 internDir.mkdir();
                 if (internDir.canWrite()) {
                     try {
-                        boolean saveFlag = m_model.saveInternals(
-                                internDir, exec);
-                        if (!saveFlag) {
-                            m_status = new NodeStatus.Warning(
-                                "saveInternals(File) not implemented!");
-                            this.notifyStateListeners(m_status);
-                        }
+                        m_model.saveInternals(internDir, exec);
+                        processModelWarnings();
                     } catch (IOException ioe) {
                         m_status = new NodeStatus.Error("Unable to save " 
                                 + "internals: " + ioe.getMessage());

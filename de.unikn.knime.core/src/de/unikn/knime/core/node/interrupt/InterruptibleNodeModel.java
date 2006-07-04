@@ -314,7 +314,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected boolean loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) 
     throws IOException, CanceledExecutionException {
         m_inData = new DataTable[getNrDataIns()];
@@ -332,7 +332,6 @@ public abstract class InterruptibleNodeModel extends NodeModel {
             LOGGER.warn(ise.getMessage());
             throw new IOException(ise.getMessage());
         }
-        return true;
     }
 
     /**
@@ -340,7 +339,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected boolean saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
         for (int i = 0; i < m_inData.length; i++) {
@@ -353,7 +352,6 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         File f = new File(nodeInternDir, FILE_NAME);
         FileOutputStream fos = new FileOutputStream(f);
         internalSettings.saveToXML(fos);
-        return true;
     }
     
     /**

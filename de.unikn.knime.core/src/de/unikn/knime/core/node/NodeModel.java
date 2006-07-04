@@ -145,12 +145,11 @@ public abstract class NodeModel {
      * internal structures from the given directory.
      * @param nodeInternDir The directory to read from.
      * @param exec Used to report progress and to cancecl loading process.
-     * @return true, if internals were successfully loaded.
      * @throws IOException If an error occurs during reading from this dir.
      * @throws CanceledExecutionException If the loading has been canceled.
      * @see #saveInternals(File,ExecutionMonitor)
      */
-    protected boolean loadInternals(final File nodeInternDir,
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // avoid checkstyle warning  
@@ -164,7 +163,7 @@ public abstract class NodeModel {
         }
         String msg = "NodeModel does not overwrite loadInternals(File).";
         m_logger.coding(msg);
-        return false;
+        setWarningMessage(msg);
     }
 
     /**
@@ -172,12 +171,11 @@ public abstract class NodeModel {
      * internal structures into the given directory.
      * @param nodeInternDir The directory to write into.
      * @param exec Used to report progress and to cancecl loading process.
-     * @return true, if internals were successfully saved.
      * @throws IOException If an error occurs during writting to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File,ExecutionMonitor)
      */
-    protected boolean saveInternals(final File nodeInternDir,
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // avoid checkstyle warning  
@@ -191,7 +189,7 @@ public abstract class NodeModel {
         }
         String msg = "NodeModel does not overwrite saveInternals(File).";
         m_logger.coding(msg);
-        return false;
+        setWarningMessage(msg);
     }
 
     /**
