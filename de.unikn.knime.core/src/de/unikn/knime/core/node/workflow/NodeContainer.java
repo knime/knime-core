@@ -477,10 +477,10 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getInputPortDescription(int)
+     * @see Node#getInportName(int)
      */
-    public String getInputDescription(final int port) {
-        return m_node.getInputPortDescription(port);
+    public String getInportName(final int port) {
+        return m_node.getInportName(port);
     }
 
     /**
@@ -582,7 +582,7 @@ public class NodeContainer implements NodeStateListener {
      * @return the description of the specified outport.
      */
     public String getOutportDescription(final int port) {
-        return m_node.getOutputPortDescription(port);
+        return m_node.getOutportName(port);
     }
 
     /**
@@ -591,7 +591,7 @@ public class NodeContainer implements NodeStateListener {
      * @return the name of the specified outport.
      */
     public String getOutportName(final int port) {
-        return m_node.getOutPort(port).getPortName();
+        return m_node.getOutportName(port);
     }
 
     /**

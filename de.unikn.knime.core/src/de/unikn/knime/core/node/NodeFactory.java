@@ -61,13 +61,18 @@ public abstract class NodeFactory {
 
     private final String m_nodeName, m_shortDescription;
 
-    private List<String> m_inPorts;
-
-    private List<String> m_outPorts;
-
+    /* port names */
+    private List<String> m_inDataPorts;
+    private List<String> m_outDataPorts;
     private List<String> m_predParamIns;
-
     private List<String> m_predParamOuts;
+    
+    /* port descriptions */    
+//    private List<String> m_inDataPortsDesc;
+//    private List<String> m_outDataPortsDesc;
+//    private List<String> m_predParamInsDesc;
+//    private List<String> m_predParamOutsDesc;
+
 
     private List<Element> m_views;
 
@@ -356,15 +361,15 @@ public abstract class NodeFactory {
                 continue;
             }
             if (port.getNodeName().equals("dataIn")) {
-                if (m_inPorts == null) {
-                    m_inPorts = new ArrayList<String>(4);
+                if (m_inDataPorts == null) {
+                    m_inDataPorts = new ArrayList<String>(4);
                 }
-                addToPortDescription(m_inPorts, port);
+                addToPortDescription(m_inDataPorts, port);
             } else if (port.getNodeName().equals("dataOut")) {
-                if (m_outPorts == null) {
-                    m_outPorts = new ArrayList<String>(4);
+                if (m_outDataPorts == null) {
+                    m_outDataPorts = new ArrayList<String>(4);
                 }
-                addToPortDescription(m_outPorts, port);
+                addToPortDescription(m_outDataPorts, port);
             } else if (port.getNodeName().equals("predParamIn")) {
                 if (m_predParamIns == null) {
                     m_predParamIns = new ArrayList<String>(4);
@@ -379,17 +384,17 @@ public abstract class NodeFactory {
         }
 
         int nullIndex;
-        if (m_inPorts != null) {
+        if (m_inDataPorts != null) {
             // look for null descriptions and print error if found
-            nullIndex = m_inPorts.indexOf(null);
+            nullIndex = m_inDataPorts.indexOf(null);
             if (nullIndex >= 0) {
                 m_logger.coding("No description for input port " + nullIndex
                         + ".");
             }
         }
 
-        if (m_outPorts != null) {
-            nullIndex = m_outPorts.indexOf(null);
+        if (m_outDataPorts != null) {
+            nullIndex = m_outDataPorts.indexOf(null);
             if (nullIndex >= 0) {
                 m_logger.coding("No description for output port " + nullIndex
                         + ".");
@@ -501,11 +506,11 @@ public abstract class NodeFactory {
      * @param index the index of the input port, starting at 0
      * @return an input port description
      */
-    public String getInportName(final int index) {
-        if (m_inPorts == null) {
-            return "No description available";
+    public String getInportDataName(final int index) {
+        if (m_inDataPorts == null) {
+            return "Data Inport " + index;
         } else {
-            return m_inPorts.get(index);
+            return m_inDataPorts.get(index);
         }
     }
 
@@ -515,11 +520,11 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an output port description
      */
-    public String getOutportName(final int index) {
-        if (m_outPorts == null) {
-            return "No description available";
+    public String getOutportDataName(final int index) {
+        if (m_outDataPorts == null) {
+            return "Data Outport " + index;
         } else {
-            return m_outPorts.get(index);
+            return m_outDataPorts.get(index);
         }
     }
 
@@ -529,9 +534,9 @@ public abstract class NodeFactory {
      * @param index the index of the input port, starting at 0
      * @return an predictor parameter input port description
      */
-    public String getPredParamInName(final int index) {
+    public String getInportModelName(final int index) {
         if (m_predParamIns == null) {
-            return "No description available";
+            return "Model Inport " + index;
         } else {
             return m_predParamIns.get(index);
         }
@@ -543,9 +548,9 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an predictor parameter output port description
      */
-    public String getPredParamOutName(final int index) {
+    public String getOutportModelName(final int index) {
         if (m_predParamOuts == null) {
-            return "No description available";
+            return "Model Outport " + index;
         } else {
             return m_predParamOuts.get(index);
         }
@@ -687,44 +692,41 @@ public abstract class NodeFactory {
      */
     private void checkConsistency(final NodeModel m) {
         if ((m.getNrDataIns() > 0)
-                && ((m_inPorts == null) || (m.getNrDataIns() != m_inPorts
-                        .size()))) {
-            m_logger.coding("Missing or surplus input port description");
+                && ((m_inDataPorts == null) 
+                        || (m.getNrDataIns() != m_inDataPorts.size()))) {
+            m_logger.coding("Missing or surplus input port name");
         }
         if ((m.getNrDataOuts() > 0)
-                && ((m_outPorts == null) || (m.getNrDataOuts() != m_outPorts
-                        .size()))) {
-            m_logger.coding("Missing or surplus output port description");
+                && ((m_outDataPorts == null) 
+                        || (m.getNrDataOuts() != m_outDataPorts.size()))) {
+            m_logger.coding("Missing or surplus output port name");
         }
         if ((m.getNrModelIns() > 0)
                 && ((m_predParamIns == null)
                         || (m.getNrModelIns() != m_predParamIns.size()))) {
-            m_logger.coding("Missing or surplus predictor input port"
-                    + " description");
+            m_logger.coding("Missing or surplus predictor input port name");
         }
         if ((m.getNrModelOuts() > 0)
                 && ((m_predParamOuts == null)
                         || m.getNrModelOuts() != m_predParamOuts.size())) {
-            m_logger
-                    .coding("Missing or surplus predictor output port"
-                            + " description");
+            m_logger.coding("Missing or surplus predictor output port name");
         }
         if ((getNrNodeViews() > 0)
                 && ((m_views == null) || getNrNodeViews() != m_views.size())) {
             m_logger.coding("Missing or surplus view description");
         }
 
-        if (m_inPorts != null) {
-            for (int i = 0; i < m_inPorts.size(); i++) {
-                if (m_inPorts.get(i) == null) {
+        if (m_inDataPorts != null) {
+            for (int i = 0; i < m_inDataPorts.size(); i++) {
+                if (m_inDataPorts.get(i) == null) {
                     m_logger.coding("Missing description for input port " + i);
                 }
             }
         }
 
-        if (m_outPorts != null) {
-            for (int i = 0; i < m_outPorts.size(); i++) {
-                if (m_outPorts.get(i) == null) {
+        if (m_outDataPorts != null) {
+            for (int i = 0; i < m_outDataPorts.size(); i++) {
+                if (m_outDataPorts.get(i) == null) {
                     m_logger.coding("Missing description for output port " + i);
                 }
             }

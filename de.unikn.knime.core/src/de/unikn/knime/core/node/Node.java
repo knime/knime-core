@@ -174,6 +174,7 @@ public final class Node {
         m_inDataPorts = new DataInPort[m_model.getNrDataIns()];
         for (int i = 0; i < m_inDataPorts.length; i++) {
             m_inDataPorts[i] = new DataInPort(i, this);
+            m_inDataPorts[i].setPortName(m_factory.getInportDataName(i));
         }
 
         // init model input ports
@@ -181,15 +182,17 @@ public final class Node {
         for (int i = 0; i < m_inModelPorts.length; i++) {
             m_inModelPorts[i] = new PredictorInPort(i + getNrDataInPorts(),
                     this);
+            m_inModelPorts[i].setPortName(m_factory.getInportModelName(i));
         }
 
         // init data output ports
         m_outDataPorts = new DataOutPort[m_model.getNrDataOuts()];
         for (int i = 0; i < m_outDataPorts.length; i++) {
             m_outDataPorts[i] = new DataOutPort(i, this);
+            m_outDataPorts[i].setPortName(m_factory.getOutportDataName(i));
             m_outDataPorts[i].setDataTable(null);
             m_outDataPorts[i].setHiLiteHandler(m_model.getOutHiLiteHandler(i));
-            // DataTableSpecs will be set later through 'configureNode()'
+            // DataTableSpecs will be set later through #configure()
         }
 
         // init model output ports
@@ -197,6 +200,7 @@ public final class Node {
         for (int i = 0; i < m_outModelPorts.length; i++) {
             m_outModelPorts[i] = new PredictorOutPort(i + getNrDataOutPorts(),
                     this);
+            m_outModelPorts[i].setPortName(m_factory.getOutportModelName(i));
             m_outModelPorts[i].setPredictorParams(null);
         }
 
@@ -529,38 +533,38 @@ public final class Node {
     }
 
     /**
-     * Delegation method to the factory's
-     * {@link NodeFactory#getInportName(int)} method.
+     * Delegation method to the inport.
+     * {@link NodePort#getPortName()} method.
      * 
      * @param portID The port id of interest
      * @return The description to that port
      * @throws IndexOutOfBoundsException If argument is out of range.
      */
-    public String getInputPortDescription(final int portID) {
+    public String getInportName(final int portID) {
         boundInPort(portID);
         if (isDataInPort(portID)) {
-            return m_factory.getInportName(portID);
+            return m_inDataPorts[portID].getPortName();
         } else {
-            return m_factory.getPredParamInName(portID
-                    - getNrDataInPorts());
+            int newPortID = portID - getNrDataInPorts();
+            return m_inModelPorts[newPortID].getPortName();
         }
     }
 
     /**
-     * Delegation method to the factory's
-     * {@link NodeFactory#getOutportName(int)} method.
+     * Delegation method to the outport.
+     * {@link NodePort#getPortName()} method.
      * 
      * @param portID The port id of interest.
      * @return The description to that port.
      * @throws IndexOutOfBoundsException If argument is out of range.
      */
-    public String getOutputPortDescription(final int portID) {
+    public String getOutportName(final int portID) {
         boundOutPort(portID);
         if (isDataOutPort(portID)) {
-            return m_factory.getOutportName(portID);
+            return m_outDataPorts[portID].getPortName();
         } else {
-            return m_factory.getPredParamOutName(portID
-                    - getNrDataOutPorts());
+            int newPortID = portID - getNrDataOutPorts();
+            return m_outModelPorts[newPortID].getPortName();
         }
     }
 

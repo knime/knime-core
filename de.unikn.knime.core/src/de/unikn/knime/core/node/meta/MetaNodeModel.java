@@ -209,21 +209,21 @@ public class MetaNodeModel extends SpecialNodeModel
         return out;
     }
 
-    protected String getOutportDescription(final int inputNodeIndex) {
-        return m_myFactory.getInportName(inputNodeIndex);
+    protected String getOutportDataName(final int inputNodeIndex) {
+        return m_myFactory.getInportDataName(inputNodeIndex);
     }
     
-    protected String getPredParamOutDescription(final int inputNodeIndex) {
-        return m_myFactory.getPredParamInName(inputNodeIndex);
+    protected String getOutportModelName(final int inputNodeIndex) {
+        return m_myFactory.getInportModelName(inputNodeIndex);
     }
     
 
-    protected String getPredParamInDescription(final int outputNodeIndex) {
-        return m_myFactory.getPredParamOutName(outputNodeIndex);
+    protected String getInportModelName(final int outputNodeIndex) {
+        return m_myFactory.getOutportModelName(outputNodeIndex);
     }
         
-    protected String getInportDescription(final int outputNodeIndex) {
-        return m_myFactory.getOutportName(outputNodeIndex);
+    protected String getInportDataName(final int outputNodeIndex) {
+        return m_myFactory.getOutportDataName(outputNodeIndex);
     }
     
     
@@ -262,8 +262,8 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
 
                 @Override
-                public String getOutportName(final int index) {
-                    return MetaNodeModel.this.getOutportDescription(temp);
+                public String getOutportDataName(final int index) {
+                    return MetaNodeModel.this.getOutportDataName(temp);
                 }                
             });
         }
@@ -298,8 +298,8 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
 
                 @Override
-                public String getInportName(final int index) {
-                    return MetaNodeModel.this.getInportDescription(temp);
+                public String getInportDataName(final int index) {
+                    return MetaNodeModel.this.getInportDataName(temp);
                 }
 
             });
@@ -336,8 +336,8 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
 
                 @Override
-                public String getPredParamOutName(final int index) {
-                    return MetaNodeModel.this.getPredParamOutDescription(temp);
+                public String getOutportModelName(final int index) {
+                    return MetaNodeModel.this.getOutportModelName(temp);
                 }
             });
         }
@@ -372,8 +372,8 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
                 
                 @Override
-                public String getPredParamInName(final int index) {
-                    return MetaNodeModel.this.getPredParamInDescription(temp);
+                public String getInportDataName(final int index) {
+                    return MetaNodeModel.this.getInportModelName(temp);
                 }
             });
             m_modelOutContainer[i].addListener(this);
