@@ -1607,7 +1607,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return The serialized String.
      * @throws IOException if an I/O error occurs during serializing the object
      */
-    private static String writeObject(final Object o) throws IOException {
+    public static final String writeObject(final Object o) throws IOException {
         // print unsupported Object message
         if (o != null && !UNSUPPORTED.contains(o.getClass())) {
             UNSUPPORTED.add(o.getClass());
@@ -1631,8 +1631,8 @@ public abstract class Config extends AbstractConfigEntry
      * @throws ClassNotFoundException if the class of the serialized object
      *  cannot be found. 
      */
-    private static Object readObject(final String string) throws IOException,
-        ClassNotFoundException {
+    public static final Object readObject(final String string) 
+        throws IOException, ClassNotFoundException {
         byte[] bytes = new BASE64Decoder().decodeBuffer(string);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         GlobalObjectInputStream ois = new GlobalObjectInputStream(bais);
