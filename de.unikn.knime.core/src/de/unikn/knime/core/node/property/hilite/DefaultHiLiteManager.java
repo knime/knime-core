@@ -139,7 +139,9 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      */
     @Override
     public synchronized void hiLite(final DataCell... ids) {
-        this.hiLite(new KeyEvent(this, ids));
+        if (ids.length > 0) {
+            this.hiLite(new KeyEvent(this, ids));
+        }
     }
 
     /**
@@ -151,7 +153,9 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      */
     @Override
     public synchronized void hiLite(final Set<DataCell> ids) {
-        this.hiLite(new KeyEvent(this, ids));
+        if (ids.size() > 0) {
+            this.hiLite(new KeyEvent(this, ids));
+        }
     }
 
     /**
@@ -163,7 +167,9 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      */
     @Override
     public synchronized void unHiLite(final DataCell... ids) {
-        this.unHiLite(new KeyEvent(this, ids));
+        if (ids.length > 0) {
+            this.unHiLite(new KeyEvent(this, ids));
+        }
     }
 
     /**
@@ -175,7 +181,9 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      */
     @Override
     public synchronized void unHiLite(final Set<DataCell> ids) {
-        this.unHiLite(new KeyEvent(this, ids));
+        if (ids.size() > 0) {
+            this.unHiLite(new KeyEvent(this, ids));
+        }
     }
 
     /**
@@ -184,7 +192,9 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      */
     @Override
     public synchronized void unHiLiteAll() {
-        this.unHiLite(new KeyEvent(this, getHiLitKeys()));
+        if (getHiLitKeys().size() > 0) {
+            this.unHiLite(new KeyEvent(this, getHiLitKeys()));
+        }
     }
     
     
