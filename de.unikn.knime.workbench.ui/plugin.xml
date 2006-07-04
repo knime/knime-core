@@ -179,5 +179,12 @@
                label="View2"/>
       </actionSet>
    </extension>
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <wizard
+            class="de.unikn.knime.workbench.ui.ExportWizard1"
+            id="de.unikn.knime.workbench.ui.wizards.export.WorkflowExportWizard"
+            name="de.unikn.knime.workbench.ui.wizard1"/>
+   </extension>
 
 </plugin>

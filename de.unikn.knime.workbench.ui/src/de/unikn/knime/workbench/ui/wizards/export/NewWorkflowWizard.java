@@ -19,7 +19,7 @@
  * History
  *   12.01.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.ui.wizards.file;
+package de.unikn.knime.workbench.ui.wizards.export;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
