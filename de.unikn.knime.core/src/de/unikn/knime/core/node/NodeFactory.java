@@ -515,7 +515,7 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an output port description
      */
-    public String getOutportDescription(final int index) {
+    public String getOutportName(final int index) {
         if (m_outPorts == null) {
             return "No description available";
         } else {

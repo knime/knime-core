@@ -223,7 +223,7 @@ public class MetaNodeModel extends SpecialNodeModel
     }
         
     protected String getInportDescription(final int outputNodeIndex) {
-        return m_myFactory.getOutportDescription(outputNodeIndex);
+        return m_myFactory.getOutportName(outputNodeIndex);
     }
     
     
