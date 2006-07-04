@@ -699,35 +699,28 @@ public final class Node {
      * @see NodeModel#execute(DataTable[],ExecutionMonitor)
      */
     public boolean execute(final ExecutionMonitor exec) {
-
         // start message and keep start time
         final long time = System.currentTimeMillis();
         m_logger.info("Start execute");
-
         // reset the status object
         m_status = null;
-
         // notify state listeners
         notifyStateListeners(new NodeStatus.StartExecute());
-
         //
         // CHECK PRECONDITIONS
         //
-
         // if this node has already been executed
         if (isExecuted()) {
             m_logger.assertLog(false, "Is executed");
             notifyStateListeners(new NodeStatus.EndExecute());
             return true;
         }
-
         // if NOT fully connected to predecessors
         if (!isFullyConnected()) {
             m_logger.assertLog(false, "Is not fully connected");
             notifyStateListeners(new NodeStatus.EndExecute());
             return false;
         }
-
         // if not configured
         if (!isConfigured()) {
             m_logger.assertLog(false, "Is not correctly configured");
@@ -738,7 +731,6 @@ public final class Node {
         // 
         // EXECUTE the underlying node's model
         //
-
         // retrieve all input tables
         DataTable[] inData = new DataTable[getNrDataInPorts()];
         for (int i = 0; i < inData.length; i++) {
@@ -750,30 +742,45 @@ public final class Node {
                                 + "). Is it not executed?!?");
                 m_logger.error("failed execute");
                 m_status = new NodeStatus.Error(
-                        "Couldn't get data from predecessor (Port No." + i
-                                + "). Is it not executed?!?");
+                        "Couldn't get data from predecessor (Port No." + i 
+                        + "). Is it not executed?!?");
                 notifyStateListeners(m_status);
                 notifyStateListeners(
                         new NodeStatus.EndExecute());
                 return false;
             }
         }
-
         DataTable[] newOutData; // the new DTs from the model
         PredictorParams[] predParams; // the new output models
         try {
             // INVOKE MODEL'S EXECUTE
-            newOutData = m_model.executeModel(inData, exec);
-
+            DataTable[] fromModelData = m_model.executeModel(inData, exec);
+            if (fromModelData != null) {
+                // The implementor should not memorize the returned DataTable
+                // array. It "should" be perfectly ok to change the elements
+                // in the array. However, to be sure that we don't mess with
+                // one of the implementations, we copy the references here
+                // and change the content of that copy instead of the returned
+                // array
+                newOutData = new DataTable[fromModelData.length];
+                for (int i = 0; i < fromModelData.length; i++) {
+                    DataTable asReturned = fromModelData[i];
+                    if (DataContainer.isContainerTable(asReturned)) {
+                        newOutData[i] = asReturned;
+                    } else {
+                        newOutData[i] = DataContainer.cache(asReturned, exec);
+                    }
+                }
+            } else {
+                newOutData = null;
+            }
             processModelWarnings();
-
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
-            m_status = new NodeStatus.Warning(
-                    "Execution canceled!");
+            m_status = new NodeStatus.Warning("Execution canceled!");
             notifyStateListeners(new NodeStatus.EndExecute());
-            // TODO must call reset here!
+            m_model.reset();
             return false;
         } catch (Exception e) {
             // execution failed
@@ -782,14 +789,13 @@ public final class Node {
                     "Execute failed: " + e.getMessage());
             this.notifyStateListeners(m_status);
             notifyStateListeners(new NodeStatus.EndExecute());
-            // TODO must call reset here
+            m_model.reset();
             return false;
         }
 
         //
         // CHECK EXECUTION RESULTS
         //
-
         // check the returned DataTables
         if (newOutData == null) {
             m_logger.error("Does not return data");
@@ -808,7 +814,6 @@ public final class Node {
                 return false;
             }
         }
-
         // check created predictor models (if any)
         predParams = new PredictorParams[getNrPredictorOutPorts()];
         for (int p = 0; p < predParams.length; p++) {
@@ -819,30 +824,26 @@ public final class Node {
             } catch (InvalidSettingsException ise) {
                 m_logger.error("Predictor model couldn't be saved at port #"
                         + p, ise);
-                m_status = new NodeStatus.Error(
-                        "Predictor model couldn't be saved at port #" + p
-                                + ise.getMessage());
+                m_status = new NodeStatus.Error("Predictor model couldn't " 
+                        + "be saved at port #" + p + ise.getMessage());
                 notifyStateListeners(m_status);
                 notifyStateListeners(
                         new NodeStatus.EndExecute());
                 return false;
             }
         }
-
-        // print some success information
-        m_logger.info("End execute (" + (System.currentTimeMillis() - time)
-                / 100 / 10.0 + " sec)");
-
         // spread the newly available DataTable, Specs, and prediction models
         // to the successors
         for (int p = 0; p < getNrDataOutPorts(); p++) {
             m_outDataPorts[p].setDataTable(newOutData[p]);
-            m_outDataPorts[p]
-                    .setDataTableSpec(newOutData[p].getDataTableSpec());
+            m_outDataPorts[p].setDataTableSpec(
+                    newOutData[p].getDataTableSpec());
         }
         for (int p = 0; p < getNrPredictorOutPorts(); p++) {
             m_outModelPorts[p].setPredictorParams(predParams[p]);
         }
+        m_logger.info("End execute (" + (System.currentTimeMillis() - time)
+                / 100 / 10.0 + " sec)");
         m_isCurrentlySaved = false;
         notifyStateListeners(new NodeStatus.EndExecute());
         return true;
