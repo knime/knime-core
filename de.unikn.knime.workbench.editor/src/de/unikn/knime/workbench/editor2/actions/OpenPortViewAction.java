@@ -77,9 +77,9 @@ public class OpenPortViewAction extends Action {
         String name;
 
         if (m_nodeContainer.isDataOutPort(m_index)) {
-            name = "Data outport " + m_index;
+            name = "Data Outport " + m_index;
         } else {
-            name = "Model outport "
+            name = "Model Outport "
                     + (m_index - m_nodeContainer.getNrDataOutPorts());
         }
 
