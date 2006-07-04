@@ -19,7 +19,6 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -28,7 +27,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.text.ParseException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -38,31 +36,20 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.WindowConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnDomainCreator;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.IntValue;
 import de.unikn.knime.core.data.StringValue;
-import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
 
@@ -71,15 +58,6 @@ import de.unikn.knime.core.data.def.StringCell;
  * @author ohl, University of Konstanz
  */
 public class DomainDialog extends JDialog {
-
-    // the range min/max values. Only two of them will be not null.
-    private JSpinner m_minDblValue;
-
-    private JSpinner m_maxDblValue;
-
-    private JSpinner m_minIntValue;
-
-    private JSpinner m_maxIntValue;
 
     // the user edit panel for poss. values inside the section
     // checkbox for nominal int columns
@@ -95,12 +73,6 @@ public class DomainDialog extends JDialog {
     private JButton m_addButton;
 
     private JButton m_remButton;
-
-    // checkbox to let filereader analyze domain
-    private JCheckBox m_readFromFile;
-
-    // checkbox for no domain settings at all
-    private JCheckBox m_noDomain;
 
     // the default values
     private ColProperty m_colProp;
@@ -124,17 +96,6 @@ public class DomainDialog extends JDialog {
 
         m_colProp = colProp;
         m_result = null;
-
-        // Create the panels of the dialog
-        JPanel noDomainPanel = 
-            new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 3));
-        m_noDomain = new JCheckBox("No domain settings.");
-        m_noDomain.addItemListener(new ItemListener() {
-            public void itemStateChanged(final ItemEvent e) {
-                noDomainChanged();
-            }
-        });
-        noDomainPanel.add(m_noDomain);
 
         JPanel domainPanel = createDomainPanel();
 
@@ -160,8 +121,6 @@ public class DomainDialog extends JDialog {
         // add dialog and control panel to the content pane
         Container cont = getContentPane();
         cont.setLayout(new BoxLayout(cont, BoxLayout.Y_AXIS));
-        cont.add(noDomainPanel);
-        cont.add(Box.createVerticalStrut(3));
         cont.add(domainPanel);
         cont.add(control);
 
@@ -174,35 +133,23 @@ public class DomainDialog extends JDialog {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Domain Settings"));
-
-        // checkbox to let the file reader analyze the domain.
-        m_readFromFile = new JCheckBox("fill values during file "
-                + "reader execute");
-        m_readFromFile.setToolTipText("if checked, the entire file will be "
-                + "examined. To avoid this, uncheck in each column.");
-        m_readFromFile.addItemListener(new ItemListener() {
-            public void itemStateChanged(final ItemEvent e) {
-                readFromFileChanged();
-            }
-        });
-        Box fileBox = Box.createHorizontalBox();
-        fileBox.add(m_readFromFile);
-        fileBox.add(Box.createHorizontalGlue());
-        panel.add(fileBox);
-        panel.add(Box.createVerticalStrut(10));
+                .createEtchedBorder(), "domain values for nominal data"));
 
         if (m_colProp.getColumnSpec().getType().isCompatible(IntValue.class)) {
 
-            // panel for min/max values
-            JPanel intRangePanel = createIntRangePanel();
-            Box rangeBox = Box.createHorizontalBox();
-            rangeBox.add(intRangePanel);
-            rangeBox.add(Box.createHorizontalGlue());
-            rangeBox.add(Box.createHorizontalGlue());
-            panel.add(rangeBox);
-            panel.add(Box.createVerticalStrut(10));
+            // Integer column domain panel
 
+            Box nomBox = Box.createHorizontalBox();
+            m_containsVals = new JCheckBox("Integer column contains "
+                    + "nominal values");
+            m_containsVals.addItemListener(new ItemListener() {
+                public void itemStateChanged(final ItemEvent e) {
+                    containsValsChanged();
+                }
+            });
+            nomBox.add(m_containsVals);
+            nomBox.add(Box.createHorizontalGlue());
+            
             // part for the nominal values
             Box valueBox = Box.createHorizontalBox();
             valueBox.add(createIntValuesPanel());
@@ -210,15 +157,10 @@ public class DomainDialog extends JDialog {
             panel.add(valueBox);
 
         } else if (m_colProp.getColumnSpec().getType().isCompatible(
-                DoubleValue.class)) {
-            // panel for min/max values
-            Box rangeBox = Box.createHorizontalBox();
-            rangeBox.add(createDoubleRangePanel());
-            rangeBox.add(Box.createHorizontalGlue());
-            panel.add(rangeBox);
-
-        } else if (m_colProp.getColumnSpec().getType().isCompatible(
                 StringValue.class)) {
+
+            // String column domain panel
+
             Box valueBox = Box.createHorizontalBox();
             valueBox.add(createStringValuesPanel());
             valueBox.add(Box.createHorizontalGlue());
@@ -228,100 +170,15 @@ public class DomainDialog extends JDialog {
             assert false : "unsupported type";
         }
 
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(new JLabel("Values found in the table will be added "
+                + "automatically."));
+        panel.add(new JLabel("Enter values you want additional in the list "
+                + "here only"));
+        
         return panel;
     }
 
-    private JPanel createDoubleRangePanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Range"));
-
-        // the min value of the range
-        m_minDblValue = new JSpinner(new SpinnerNumberModel(new Double(0.0),
-                null, null, new Double(0.1)));
-        m_minDblValue.setMaximumSize(new Dimension(65, 25));
-        m_minDblValue.setMinimumSize(new Dimension(65, 25));
-        m_minDblValue.setPreferredSize(new Dimension(65, 25));
-        m_minDblValue.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                setDblRangeColor();
-            }
-        });
-        // max value of the range
-        m_maxDblValue = new JSpinner(new SpinnerNumberModel(new Double(1.0),
-                null, null, new Double(0.1)));
-        m_maxDblValue.setMaximumSize(new Dimension(65, 25));
-        m_maxDblValue.setMinimumSize(new Dimension(65, 25));
-        m_maxDblValue.setPreferredSize(new Dimension(65, 25));
-        m_maxDblValue.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                setDblRangeColor();
-            }
-        });
-
-        Box minBox = Box.createHorizontalBox();
-        minBox.add(Box.createHorizontalGlue());
-        minBox.add(new JLabel("min. value:"));
-        minBox.add(Box.createHorizontalStrut(3));
-        minBox.add(m_minDblValue);
-        panel.add(minBox);
-
-        Box maxBox = Box.createHorizontalBox();
-        maxBox.add(Box.createHorizontalGlue());
-        maxBox.add(new JLabel("max. value:"));
-        maxBox.add(Box.createHorizontalStrut(3));
-        maxBox.add(m_maxDblValue);
-        panel.add(maxBox);
-
-        return panel;
-    }
-
-    private JPanel createIntRangePanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Range"));
-
-        // the min value of the range
-        m_minIntValue = new JSpinner(new SpinnerNumberModel(new Integer(0),
-                null, null, new Integer(1)));
-        m_minIntValue.setMaximumSize(new Dimension(65, 25));
-        m_minIntValue.setMinimumSize(new Dimension(65, 25));
-        m_minIntValue.setPreferredSize(new Dimension(65, 25));
-        m_minIntValue.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                setIntRangeColor();
-            }
-        });
-        // max value of the range
-        m_maxIntValue = new JSpinner(new SpinnerNumberModel(new Integer(1),
-                null, null, new Integer(1)));
-        m_maxIntValue.setMaximumSize(new Dimension(65, 25));
-        m_maxIntValue.setMinimumSize(new Dimension(65, 25));
-        m_maxIntValue.setPreferredSize(new Dimension(65, 25));
-        m_maxIntValue.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                setIntRangeColor();
-            }
-        });
-
-        Box minBox = Box.createHorizontalBox();
-        minBox.add(Box.createHorizontalGlue());
-        minBox.add(new JLabel("min. value:"));
-        minBox.add(Box.createHorizontalStrut(3));
-        minBox.add(m_minIntValue);
-        panel.add(minBox);
-
-        Box maxBox = Box.createHorizontalBox();
-        maxBox.add(Box.createHorizontalGlue());
-        maxBox.add(new JLabel("max. value:"));
-        maxBox.add(Box.createHorizontalStrut(3));
-        maxBox.add(m_maxIntValue);
-        panel.add(maxBox);
-
-        return panel;
-    }
 
     /*
      * returns the bordered possible values box. It contains a box with the edit
@@ -454,94 +311,9 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * sets the foreground color of the min/max spinners for the double range
-     * values. Depending on their value to red (if max val is less than min val)
-     * or black (if values are valid).
-     */
-    protected void setDblRangeColor() {
-        JComponent editor;
-        JFormattedTextField minField;
-        JFormattedTextField maxField;
-
-        editor = m_minDblValue.getEditor();
-        assert editor instanceof JSpinner.DefaultEditor;
-        minField = ((JSpinner.DefaultEditor)editor).getTextField();
-
-        editor = m_maxDblValue.getEditor();
-        assert editor instanceof JSpinner.DefaultEditor;
-        maxField = ((JSpinner.DefaultEditor)editor).getTextField();
-
-        try {
-            double min = readDblSpinner(m_minDblValue);
-            double max = readDblSpinner(m_maxDblValue);
-            if (min <= max) {
-                minField.setForeground(Color.BLACK);
-                maxField.setForeground(Color.BLACK);
-                return;
-            }
-        } catch (Exception e) {
-            // if user entered invalid number format: fall through
-        }
-
-        minField.setForeground(Color.RED);
-        maxField.setForeground(Color.RED);
-    }
-
-    /**
-     * sets the foreground color of the min/max spinners for the integer range
-     * values. Depending on their value to red (if max val is less than min val)
-     * or black (if values are valid).
-     */
-    protected void setIntRangeColor() {
-        JComponent editor;
-        JFormattedTextField minField;
-        JFormattedTextField maxField;
-
-        editor = m_minIntValue.getEditor();
-        assert editor instanceof JSpinner.DefaultEditor;
-        minField = ((JSpinner.DefaultEditor)editor).getTextField();
-
-        editor = m_maxIntValue.getEditor();
-        assert editor instanceof JSpinner.DefaultEditor;
-        maxField = ((JSpinner.DefaultEditor)editor).getTextField();
-
-        try {
-            int min = readIntSpinner(m_minIntValue);
-            int max = readIntSpinner(m_maxIntValue);
-            if (min <= max) {
-                minField.setForeground(Color.BLACK);
-                maxField.setForeground(Color.BLACK);
-                return;
-            }
-        } catch (Exception e) {
-            // if user entered invalid number format: fall through
-        }
-        minField.setForeground(Color.RED);
-        maxField.setForeground(Color.RED);
-    }
-
-    /**
-     * called when the 'read domain from file' checkbox changes. Will enable or
-     * disable the corresponding edit fields, depending in the state of the
-     * checkbox.
-     */
-    protected void readFromFileChanged() {
-        setEnableStatus();
-    }
-
-    /**
      * called when the state of the "contains nominal values" box changes.
      */
     void containsValsChanged() {
-        setEnableStatus();
-    }
-
-    /**
-     * called when the state of the 'no domain settings' checkbox changes.
-     * En/disables all other components in the dialog, depending on the new
-     * state
-     */
-    void noDomainChanged() {
         setEnableStatus();
     }
 
@@ -604,33 +376,9 @@ public class DomainDialog extends JDialog {
 
         IntCell newIntCell = new IntCell(newInt);
 
-        boolean added = addDataCellPossValue(newIntCell);
+        addDataCellPossValue(newIntCell);
 
         m_editField.setText("");
-
-        // check the range and adjust it to include the new value.
-        if (added) {
-            IntCell min = null; // current range
-            IntCell max = null;
-            // get the currently set min/max values
-            try {
-                min = new IntCell(readIntSpinner(m_minIntValue));
-                max = new IntCell(readIntSpinner(m_maxIntValue));
-                DataValueComparator intComp = IntCell.TYPE.getComparator();
-
-                // adjust the range (if we have any) to include the new value
-                if (intComp.compare(min, newIntCell) > 0) {
-                    m_minIntValue.setValue(new Integer(newInt));
-                    m_errorLabel.setText("Info: range adjusted.");
-                }
-                if (intComp.compare(max, newIntCell) < 0) {
-                    m_maxIntValue.setValue(new Integer(newInt));
-                    m_errorLabel.setText("Info: range adjusted.");
-                }
-            } catch (ParseException pe) {
-                // silently ignore range settings with errors
-            }
-        }
 
     }
 
@@ -688,84 +436,34 @@ public class DomainDialog extends JDialog {
 
     /**
      * Shows the dialog with the passed default settings (passed to the
-     * constructor). It will return true if user pressed "Ok", or false if the
-     * dialog was canceled. After a "true" result the settings can be obtained
-     * by calling the getDomainSettings method.
+     * constructor). It will not return until the user closes the dialog.
+     * If the dialog was canceled, null will be returned as result, otherwise
+     * the column property passed to the constructor with a modified domain and 
+     * nominal value flag will be returned.
      * 
-     * @return true if user pressed Ok and settings were stored, otherwise (if
-     *         dialog was canceled) false.
+     * @return a modified col property object, or null if user canceled.
      */
     public ColProperty showDialog() {
 
-        DataColumnDomain domain = m_colProp.getColumnSpec().getDomain();
-
-        // the no domain info is set, if no range, no possible values, and none
-        // of the read from file flags are set.
-        m_noDomain.setSelected(false);
-        if (!m_colProp.getReadBoundsFromFile()
-                && !m_colProp.getReadPossibleValuesFromFile()) {
-
-            if (domain == null) {
-                m_noDomain.setSelected(true);
-            } else {
-                if (((domain.getLowerBound() == null) || (domain
-                        .getUpperBound() == null))
-                        && (domain.getValues() == null)) {
-                    m_noDomain.setSelected(true);
-                }
-            }
-        }
-
-        // read stuff from file??
-        if (m_colProp.getReadBoundsFromFile()
-                || m_colProp.getReadPossibleValuesFromFile()) {
-            m_readFromFile.setSelected(true);
-        } else {
-            m_readFromFile.setSelected(false);
-        }
-
-        // set the range's values - if specified
-        if ((domain != null) && (domain.getUpperBound() != null)
-                && (domain.getLowerBound() != null)) {
-            DataCell min = domain.getLowerBound();
-            DataCell max = domain.getUpperBound();
-
-            if ((m_minDblValue != null) && (min instanceof DoubleValue)) {
-                DoubleValue dblMin = (DoubleValue)min;
-                m_minDblValue.setValue(new Double(dblMin.getDoubleValue()));
-            }
-            if ((m_maxDblValue != null) && (max instanceof DoubleValue)) {
-                DoubleValue dblMax = (DoubleValue)max;
-                m_maxDblValue.setValue(new Double(dblMax.getDoubleValue()));
-            }
-            if ((m_minIntValue != null) && (min instanceof IntValue)) {
-                IntValue intMin = (IntValue)min;
-                m_minIntValue.setValue(new Integer(intMin.getIntValue()));
-            }
-            if ((m_maxIntValue != null) && (max instanceof IntValue)) {
-                IntValue intMax = (IntValue)max;
-                m_maxIntValue.setValue(new Integer(intMax.getIntValue()));
-            }
+        // fill in the values from the passed col property object
+        
+        if (m_colProp.getColumnSpec().getType().isCompatible(IntValue.class)) {
+            m_containsVals.setSelected(
+                    m_colProp.getReadPossibleValuesFromFile());
         }
 
         // and the possible values - if set
+        DataColumnDomain domain = m_colProp.getColumnSpec().getDomain();
         if ((domain != null) && (domain.getValues() != null)) {
             Set<DataCell> valList = domain.getValues();
             if (m_valueList != null) {
                 m_valueList.setListData(valList.toArray());
             }
-            if (m_containsVals != null) {
-                m_containsVals.setSelected(true);
-            }
-        } else {
-            if (m_containsVals != null) {
-                m_containsVals.setSelected(false);
-            }
         }
 
         // now show the dialog, show it and wait until it comes back.
 
-        setTitle("New settings for column '"
+        setTitle("New domain settings for column '"
                 + m_colProp.getColumnSpec().getName().toString() + "'");
 
         pack();
@@ -829,130 +527,32 @@ public class DomainDialog extends JDialog {
                 m_colProp.getColumnSpec().getName(), 
                 m_colProp.getColumnSpec().getType());
         
-        if (m_noDomain.isSelected()) {
-            // create a colProp without domain - and don't read from file
-            result.setReadBoundsFromFile(false);
-            result.setReadPossibleValuesFromFile(false);
-            result.setColumnSpec(dcsc.createSpec());
-        } else {
-            result.setReadBoundsFromFile(false);
-            result.setReadPossibleValuesFromFile(false);
-            if (((m_minDblValue != null) && (m_maxDblValue != null))
-                    || ((m_minIntValue != null) && (m_maxIntValue != null))) {
-                // If we have a range edit field, check the read range from file
-                result.setReadBoundsFromFile(m_readFromFile.isSelected());
-            }
-            if (m_valueList != null) {
-                // if we have a list of poss vals, also check the from file
-                result.setReadPossibleValuesFromFile(m_readFromFile
-                        .isSelected());
-            }
-            if ((m_containsVals != null) && (!m_containsVals.isSelected())) {
-                // set it back to false if user said no values!
-                result.setReadPossibleValuesFromFile(false);
-            }
 
-            DataCell min = null;
-            DataCell max = null;
+        if (m_containsVals != null) {
+            result.setReadPossibleValuesFromFile(m_containsVals.isSelected());
+        }
+
+        if ((m_containsVals == null) || m_containsVals.isSelected()) {
+            // if it's null we have a string column
+
             Set<DataCell> pVals = null;
-            // transfer range settings - if not supposed to read from file
-            if (!result.getReadBoundsFromFile()) {
-                if ((m_minDblValue != null) && (m_maxDblValue != null)) {
-                    try {
-                        min = new DoubleCell(
-                                readDblSpinner(m_minDblValue));
-                        max = new DoubleCell(
-                                readDblSpinner(m_maxDblValue));
-                    } catch (ParseException pe) {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "The specified range is invalid. "
-                                + "Enter valid numbers or press cancel.",
-                                "Invalid range numbers",
-                                JOptionPane.ERROR_MESSAGE);
-                        return null;
-                    }
-                }
-                if ((m_minIntValue != null) && (m_maxIntValue != null)) {
-                    try {
-                        min = new IntCell(readIntSpinner(m_minIntValue));
-                        max = new IntCell(readIntSpinner(m_maxIntValue));
-                    } catch (ParseException pe) {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "The specified range is invalid. "
-                                + "Enter valid numbers or press cancel.",
-                                "Invalid range numbers",
-                                JOptionPane.ERROR_MESSAGE);
-                        return null;
-                    }
-                }
-                if ((min != null) && (max != null)) {
-                    DataValueComparator comp = DataType.getCommonSuperType(
-                            min.getType(), max.getType()).getComparator();
-                    if (comp.compare(min, max) > 0) {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "The maximum value is smaller than the mini"
-                                + "mum. Enter a valid range or press cancel.",
-                                "Invalid range",
-                                JOptionPane.ERROR_MESSAGE);
-                        return null;
-                    }
-                }
+            // tranfser possible values
+            int valCount = m_valueList.getModel().getSize();
+            pVals = new LinkedHashSet<DataCell>();
+            for (int i = 0; i < valCount; i++) {
+                DataCell val = (DataCell)m_valueList.getModel().getElementAt(i);
+                pVals.add(val);
             }
-            // tranfser possible values - if not supposed to read them from file
-            if (!result.getReadPossibleValuesFromFile()) {
-                if (m_valueList != null) {
-                    if ((m_containsVals == null) 
-                            || m_containsVals.isSelected()) {
-                        int valCount = m_valueList.getModel().getSize();
-                        pVals = new LinkedHashSet<DataCell>();
-                        for (int i = 0; i < valCount; i++) {
-                            DataCell val = (DataCell)m_valueList.getModel()
-                                    .getElementAt(i);
-                            pVals.add(val);
-                            // if we also have a range it must be inside
-                            if ((min != null) && (max != null)) {
-                                DataValueComparator minComp = DataType
-                                        .getCommonSuperType(min.getType(),
-                                                val.getType()).getComparator();
-                                DataValueComparator maxComp = DataType
-                                        .getCommonSuperType(max.getType(),
-                                                val.getType()).getComparator();
-                                if ((minComp.compare(min, val) > 0)
-                                        || (maxComp.compare(max, val) < 0)) {
-                                    JOptionPane.showMessageDialog(
-                                            this,
-                                            "A possible value is outside the "
-                                            + "specified range. Adjust range or"
-                                            + " press cancel.",
-                                            "Incompatible range and possible"
-                                            + " value",
-                                            JOptionPane.ERROR_MESSAGE);
-                                    return null;
-
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // if we got range or values create domain now
-            if (((min != null) && (max != null))
-                    || ((pVals != null) && (pVals.size() > 0))) {
-
-                // all or some of these values could be null, which is okay.
+        
+            if (pVals.size() > 0) {
                 DataColumnDomainCreator domainCreator = 
-                    new DataColumnDomainCreator(pVals, min, max);
+                    new DataColumnDomainCreator(pVals);
                 dcsc.setDomain(domainCreator.createDomain());
             }
+        }
+        
+        result.setColumnSpec(dcsc.createSpec());
             
-            result.setColumnSpec(dcsc.createSpec());
-            
-        } // end of else of if (m_noDomain.isSelected())
-
         return result;
 
     }
@@ -965,62 +565,11 @@ public class DomainDialog extends JDialog {
      */
     private void setEnableStatus() {
 
-        // if the "no domain settings" is checked _everything_ is disabled
-        if (m_noDomain.isSelected()) {
-            m_readFromFile.setEnabled(false);
-            enableAllFields(false);
+        if (m_containsVals == null) {
+            // we have a string column, poss values can always be edited
+            enableAllValueFields(true);
         } else {
-            m_readFromFile.setEnabled(true);
-            if (m_readFromFile.isSelected()) {
-                // every thing is disabled - except the "contains nominal
-                // values" box for integer values
-                enableAllFields(false);
-                if (m_containsVals != null) {
-                    // enable it again
-                    m_containsVals.setEnabled(true);
-                }
-            } else {
-                // here we want domain settings and not reading them from file
-                enableAllRangeFields(true);
-                if (m_containsVals != null) {
-                    m_containsVals.setEnabled(true);
-                    enableAllValueFields(m_containsVals.isSelected());
-                } else {
-                    enableAllValueFields(true);
-                }
-            }
-        }
-    }
-
-    /*
-     * enables or disables all user editable fields related to domain values,
-     * depending on the value of the passed parameter
-     */
-    private void enableAllFields(final boolean enable) {
-
-        enableAllRangeFields(enable);
-
-        if (m_containsVals != null) {
-            m_containsVals.setEnabled(enable);
-        }
-
-        enableAllValueFields(enable);
-
-    }
-
-    private void enableAllRangeFields(final boolean enable) {
-        // components for the range
-        if (m_minDblValue != null) {
-            m_minDblValue.setEnabled(enable);
-        }
-        if (m_maxDblValue != null) {
-            m_maxDblValue.setEnabled(enable);
-        }
-        if (m_minIntValue != null) {
-            m_minIntValue.setEnabled(enable);
-        }
-        if (m_maxIntValue != null) {
-            m_maxIntValue.setEnabled(enable);
+            enableAllValueFields(m_containsVals.isSelected());
         }
     }
 
@@ -1041,32 +590,6 @@ public class DomainDialog extends JDialog {
         if (m_errorLabel != null) {
             m_errorLabel.setEnabled(enable);
         }
-    }
-
-    /*
-     * read the current value from the spinner assuming it contains Integers.
-     * Commits user changes before reading it.
-     */
-    private int readIntSpinner(final JSpinner integerSpinner)
-            throws ParseException {
-        integerSpinner.commitEdit();
-        // if the spinner has the focus, the currently edited value
-        // might not be commited. Now it is!
-        SpinnerNumberModel snm = (SpinnerNumberModel)integerSpinner.getModel();
-        return snm.getNumber().intValue();
-    }
-
-    /*
-     * read the current value from the spinner assuming it contains Doubles
-     * Commits user changes before reading it.
-     */
-    private double readDblSpinner(final JSpinner dblSpinner)
-            throws ParseException {
-        dblSpinner.commitEdit();
-        // if the spinner has the focus, the currently edited value
-        // might not be commited. Now it is!
-        SpinnerNumberModel snm = (SpinnerNumberModel)dblSpinner.getModel();
-        return snm.getNumber().doubleValue();
     }
 
 }

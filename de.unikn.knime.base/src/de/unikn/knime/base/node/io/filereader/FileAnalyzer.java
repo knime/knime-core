@@ -117,17 +117,16 @@ public final class FileAnalyzer {
             result.setQuoteUserSet(true);
         }
 
-        // if user provided whitespace characters, copy them - otherwise
-        // we always ignore spaces and tabs
-        if (!userSettings.isWhiteSpaceUserSet()) {
-            result.addWhiteSpaceCharacter(" ");
-            result.addWhiteSpaceCharacter("\t");
-            result.setWhiteSpaceUserSet(false);
-        } else {
+        // if user provided whitespace characters, we need to add them.
+        if (userSettings.isWhiteSpaceUserSet()) {
             for (String ws : userSettings.getAllWhiteSpaces()) {
                 result.addWhiteSpaceCharacter(ws);
             }
             result.setWhiteSpaceUserSet(true);
+        } else {
+            result.addWhiteSpaceCharacter(" ");
+            result.addWhiteSpaceCharacter("\t");
+            result.setWhiteSpaceUserSet(false);
         }
 
         // sets delimiter and column numbers (as many columns as it gets with
@@ -552,14 +551,11 @@ public final class FileAnalyzer {
                 colProp.setColumnSpec(dcsc.createSpec());
                 // set the missing value pattern
                 colProp.setMissingValuePattern("?");
-                // read values if this is a string cell
-                if (colTypes[c].equals(StringCell.TYPE)) {
-                    colProp.setReadPossibleValuesFromFile(true);
-                    colProp.setMaxNumberOfPossibleValues(2000);
-                    colProp.setReadBoundsFromFile(false);
-                } else {
+                // With IntValues we give the user the choice of reading nominal
+                // values (in the domain dialog). Default is: don't
+                if (colTypes[c].equals(IntCell.TYPE)) {
+                    // flag is used/read for int types only
                     colProp.setReadPossibleValuesFromFile(false);
-                    colProp.setReadBoundsFromFile(true);
                 }
             }
 
@@ -614,7 +610,6 @@ public final class FileAnalyzer {
     private static DataType[] createColumnTypes(
             final FileReaderNodeSettings userSettings,
             final FileReaderNodeSettings result) throws IOException {
-
         BufferedReader reader;
         try {
             reader = result.createNewInputReader();
@@ -627,10 +622,8 @@ public final class FileAnalyzer {
             throw new IOException("Can't access '"
                     + result.getDataFileLocation() + "'.");
         }
-
         FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(result);
-
         // extract user preset type - if we got any
         DataType[] userTypes = new DataType[result.getNumberOfColumns()];
         Vector<ColProperty> userColProps = userSettings.getColumnProperties();
@@ -655,7 +648,6 @@ public final class FileAnalyzer {
                 types[t] = userTypes[t];
             }
         }
-
         int linesRead = 0;
         int colIdx = -1;
         while (true) {
@@ -664,7 +656,6 @@ public final class FileAnalyzer {
                 // reached EOF
                 break;
             }
-
             colIdx++;
 
             if (result.getFileHasRowHeaders() && (colIdx == 0)
@@ -693,12 +684,12 @@ public final class FileAnalyzer {
                     continue;
                 }
                 if (userTypes[colIdx] == null) {
+                    // no user preset type - figure out the right type
                     if (types[colIdx] == null) {
                         // we come accross this columns for the first time:
                         // start with INT type
                         types[colIdx] = IntCell.TYPE;
                     }
-                    // no user preset type - figure out the right type
                     if (types[colIdx].isCompatible(IntValue.class)) {
                         // first try integer as "most restrictive" type
                         try {
@@ -721,7 +712,11 @@ public final class FileAnalyzer {
                                 dblData = token.replace(result
                                         .getDecimalSeparator(), '.');
                             }
-
+                            /* weird thing: parseDouble accepts strings with
+                             * leading spaces. We don't. */
+                            if (dblData.indexOf(' ') >= 0) {
+                                throw new NumberFormatException();
+                            }
                             Double.parseDouble(dblData);
                             continue;
                         } catch (NumberFormatException nfe) {
@@ -741,6 +736,7 @@ public final class FileAnalyzer {
                 colIdx = -1;
                 if (linesRead == NUMOFLINES) {
                     // we've seen enough
+                    result.setAnalyzeUsedAllRows(false);
                     break;
                 }
             }
@@ -1010,11 +1006,6 @@ public final class FileAnalyzer {
                 result.addDelimiterPattern(",", false, false, false);
 
                 if (testDelimiterSettingsSetColNum(result)) {
-                    if (userSettings.getNumberOfColumns() > 0) {
-                        // take over user set num of cols
-                        result.setNumberOfColumns(userSettings
-                                .getNumberOfColumns());
-                    }
                     return;
                 }
             } catch (IllegalArgumentException iae) {
@@ -1028,14 +1019,10 @@ public final class FileAnalyzer {
                 result.removeAllDelimiters();
                 // make sure '\n' is a row delimiter. Always.
                 result.addRowDelimiter("\n", true);
+                
                 result.addDelimiterPattern("\t", true, false, false);
 
                 if (testDelimiterSettingsSetColNum(result)) {
-                    if (userSettings.getNumberOfColumns() > 0) {
-                        // take over user set num of cols
-                        result.setNumberOfColumns(userSettings
-                                .getNumberOfColumns());
-                    }
                     return;
                 }
             } catch (IllegalArgumentException iae) {
@@ -1052,11 +1039,6 @@ public final class FileAnalyzer {
                 result.addDelimiterPattern(" ", true, false, false);
 
                 if (testDelimiterSettingsSetColNum(result)) {
-                    if (userSettings.getNumberOfColumns() > 0) {
-                        // take over user set num of cols
-                        result.setNumberOfColumns(userSettings
-                                .getNumberOfColumns());
-                    }
                     return;
                 }
             } catch (IllegalArgumentException iae) {
@@ -1074,11 +1056,6 @@ public final class FileAnalyzer {
                 result.addDelimiterPattern(";", false, false, false);
 
                 if (testDelimiterSettingsSetColNum(result)) {
-                    if (userSettings.getNumberOfColumns() > 0) {
-                        // take over user set num of cols
-                        result.setNumberOfColumns(userSettings
-                                .getNumberOfColumns());
-                    }
                     return;
                 }
             } catch (IllegalArgumentException iae) {
@@ -1091,10 +1068,6 @@ public final class FileAnalyzer {
             // but always have one row per line
             result.addRowDelimiter("\n", true);
             result.setNumberOfColumns(1);
-            if (userSettings.getNumberOfColumns() > 0) {
-                // take over user set num of cols
-                result.setNumberOfColumns(userSettings.getNumberOfColumns());
-            }
             return;
 
         } else {
@@ -1109,15 +1082,12 @@ public final class FileAnalyzer {
                             delim.includeInToken());
                 }
             }
-            // see if we need to determine the number of columns
-            if (userSettings.getNumberOfColumns() > 0) {
-                // take over user set num of cols
-                result.setNumberOfColumns(userSettings.getNumberOfColumns());
-            } else {
-                // set the number of cols that we read in with user presets.
-                // take the maximum if rows have different num of cols.
-                result.setNumberOfColumns(getMaximumNumberOfColumns(result));
-            }
+
+            result.setDelimiterUserSet(true);
+                        
+            // set the number of cols that we read in with user presets.
+            // take the maximum if rows have different num of cols.
+            result.setNumberOfColumns(getMaximumNumberOfColumns(result));
         }
 
         return;

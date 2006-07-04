@@ -260,12 +260,12 @@ public class FileReaderNodeModel extends NodeModel {
          * This is a special "deal" for the file reader: The file reader, if
          * previously executed, has data at it's output - even if the file that
          * was read doesn't exist anymore. In order to warn the user that the
-         * data ca not be recreated we check here if the file exists and set a
+         * data cannot be recreated we check here if the file exists and set a
          * warning message if it doesn't.
          */
         if (m_frSettings == null) {
             // no settings - no checking.
-            throw new IOException("No settings available.");
+            return;
         }
 
         URL location = m_frSettings.getDataFileLocation();
@@ -273,7 +273,7 @@ public class FileReaderNodeModel extends NodeModel {
             if ((location == null)
                     || !location.toString().startsWith("file://")) {
                 // We can only check files. Other protocols are ignored.
-                throw new IOException("No or wrong protocol.");
+                return;
             }
 
             if (location.openStream() == null) {
@@ -291,6 +291,18 @@ public class FileReaderNodeModel extends NodeModel {
         }
     }
 
+    /**
+     * @see de.unikn.knime.core.node.NodeModel
+     * #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // noo internals to save.
+        return;
+    }
+    
     /**
      * @return the current file history associated with the file reader.
      */

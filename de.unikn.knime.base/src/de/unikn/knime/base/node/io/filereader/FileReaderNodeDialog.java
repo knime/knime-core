@@ -67,7 +67,6 @@ import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
@@ -91,8 +90,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
             // the <none> MUST be the first one!!!
             new Delimiter("<none>", false, false, false),
             new Delimiter(",", false, false, false),
-            new Delimiter(" ", false, false, false),
-            new Delimiter("\t", false, false, false),
+            new Delimiter(" ", true, false, false),
+            new Delimiter("\t", true, false, false),
             new Delimiter(";", false, false, false)};
 
     /*
@@ -135,10 +134,16 @@ class FileReaderNodeDialog extends NodeDialogPane {
     private boolean m_insideWSChange;
 
     private boolean m_insideLoadWS;
+    
+    private boolean m_insideRowHdrChange;
+    
+    private boolean m_insideLoadRowHdr;
+    
+    private boolean m_insideColHdrChange;
+    
+    private boolean m_insideLoadColHdr;
 
     private JPanel m_dialogPanel;
-
-    private JCheckBox m_readPosValues;
 
     private JCheckBox m_ignoreWS;
 
@@ -162,6 +167,10 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_insideDelimChange = false;
         m_insideLoadComment = false;
         m_insideCommentChange = false;
+        m_insideLoadColHdr = false;
+        m_insideColHdrChange = false;
+        m_insideLoadRowHdr = false;
+        m_insideRowHdrChange = false;
 
         m_prevWhiteSpaces = null;
 
@@ -347,8 +356,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_singleLineComment.setMinimumSize(new Dimension(55, buttonHeight));
         m_singleLineComment.setPreferredSize(new Dimension(55, buttonHeight));
         JLabel commentLabel = new JLabel("Single line comment:");
-        m_readPosValues = new JCheckBox("read all poss. values");
-        m_readPosValues.setVisible(false); // supposed to always read values!
         m_ignoreWS = new JCheckBox("ignore spaces and tabs");
         m_ignoreWS.setToolTipText("If checked, whitespaces (spaces and tabs)"
                 + " will be discarded (if not quoted)");
@@ -379,7 +386,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         wsBox.add(Box.createGlue());
         // bottom row
         Box pValBox = Box.createHorizontalBox();
-        pValBox.add(m_readPosValues);
+        pValBox.add(new JLabel("")); // placeholder
         pValBox.add(Box.createGlue());
         Box cCmtBox = Box.createHorizontalBox();
         cCmtBox.add(m_cStyleComment);
@@ -429,11 +436,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 delimSettingsChanged();
             }
         });
-        m_readPosValues.addItemListener(new ItemListener() {
-            public void itemStateChanged(final ItemEvent e) {
-                readPosValuesChanged();
-            }
-        });
         m_ignoreWS.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 ignoreWSChanged();
@@ -468,12 +470,30 @@ class FileReaderNodeDialog extends NodeDialogPane {
         return result;
     }
 
+    
+    private void loadRowHdrSettings() {
+        if (m_insideRowHdrChange) {
+            return;
+        }
+        
+        m_insideLoadRowHdr = true;
+        
+        m_hasRowHeaders.setSelected(m_frSettings.getFileHasRowHeaders());
+   
+        m_insideLoadRowHdr = false;
+    }
     /**
      * reads the settings of the 'fileHasRowHeaders' checkbox and transfers them
      * into the internal settings object.
      */
     protected void rowHeadersSettingsChanged() {
 
+        if (m_insideLoadRowHdr) {
+            return;
+        }
+        
+        m_insideRowHdrChange = true;
+        
         m_frSettings.setFileHasRowHeadersUserSet(true);
 
         if (m_frSettings.getFileHasRowHeaders()
@@ -518,13 +538,34 @@ class FileReaderNodeDialog extends NodeDialogPane {
             }
             analyzeDataFileAndUpdatePreview(true);
         }
+        
+        m_insideRowHdrChange = false;
     }
 
+    private void loadColHdrSettings() {
+        
+        if (m_insideColHdrChange) {
+            return;
+        }
+        m_insideLoadColHdr = true;
+        
+        m_hasColHeaders.setSelected(m_frSettings.getFileHasColumnHeaders());
+    
+        m_insideLoadColHdr = false;
+    }
+    
     /**
      * reads the settings of the 'fileHasColHeaders' checkbox and transfers them
      * into the internal settings object.
      */
     protected void colHeadersSettingsChanged() {
+        
+        if (m_insideLoadColHdr) {
+            return;
+        }
+        
+        m_insideColHdrChange = true;
+        
         m_frSettings.setFileHasColumnHeadersUserSet(true);
         m_frSettings.setFileHasColumnHeaders(m_hasColHeaders.isSelected());
         // recreate artificial names if file has no col headers
@@ -533,44 +574,10 @@ class FileReaderNodeDialog extends NodeDialogPane {
         }
         analyzeDataFileAndUpdatePreview(true);
 
+        m_insideColHdrChange = false;
     }
 
-    /**
-     * called whenever the state of the "read possible Values" checkbox changes.
-     * Transfers the current state into the global settings object. Sets the
-     * readRange flag for double and int cols, and the readPossValues flag for
-     * String columns.
-     */
-    protected void readPosValuesChanged() {
-
-        boolean readPosVals = m_readPosValues.isSelected();
-        m_readPosValues.setText("read all poss. values");
-
-        for (int c = 0; c < m_frSettings.getNumberOfColumns(); c++) {
-            ColProperty cProp = m_frSettings.getColumnProperties()
-                    .get(c);
-
-            if (cProp.getColumnSpec().getType().equals(StringCell.TYPE)) {
-                // read nominal values for string columns
-                cProp.setReadPossibleValuesFromFile(readPosVals);
-                cProp.setMaxNumberOfPossibleValues(2000);
-                cProp.setReadBoundsFromFile(false);
-            } else if (cProp.getColumnSpec().getType().isCompatible(
-                    DoubleValue.class)) {
-                // read ranges for numerical cells (this should cover IntCells)
-                cProp.setReadPossibleValuesFromFile(false);
-                cProp.setReadBoundsFromFile(readPosVals);
-            } else {
-                // Int, Double, and StringCells is all the FileReader supports.
-                assert false : "Unsupported column type";
-                cProp.setReadPossibleValuesFromFile(false);
-                cProp.setReadBoundsFromFile(false);
-            }
-        }
-
-    }
-
-    /**
+     /**
      * the item changed listener to the 'ignore whitespaces' check box.
      */
     protected void ignoreWSChanged() {
@@ -629,51 +636,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * loads the settings from the global settings object into the panel's
-     * checkbox.
-     * 
-     */
-    private void loadReadPosValuesSettings() {
-
-        // count the number of cols we should read vals or range for
-        int readPosValsCols = 0;
-        int userSpecified = 0;
-
-        for (int c = 0; c < m_frSettings.getNumberOfColumns(); c++) {
-            ColProperty cProp = m_frSettings.getColumnProperties().get(c);
-            if (cProp.getReadPossibleValuesFromFile()
-                    || cProp.getReadBoundsFromFile()) {
-                readPosValsCols++;
-            }
-            if (cProp.getUserSettings()) {
-                userSpecified++;
-            }
-        }
-        // now set the checkbox accordingly
-        m_readPosValues.setText("read all poss. values");
-        if (readPosValsCols == 0) {
-            m_readPosValues.setSelected(false);
-        } else if (readPosValsCols == m_frSettings.getNumberOfColumns()) {
-            m_readPosValues.setSelected(true);
-        } else {
-            m_readPosValues.setSelected(true);
-            m_readPosValues.setText("read values of some cols");
-        }
-
-        // as soon as we have some user specified settings, we disable this box
-        if (userSpecified > 0) {
-            m_readPosValues.setEnabled(false);
-            m_readPosValues.setToolTipText("Disable due to user domain "
-                    + "settings. Click on preview header to change.");
-        } else {
-            m_readPosValues.setEnabled(true);
-            m_readPosValues.setToolTipText("Check to analyze the entire file "
-                    + "for possible values and ranges of all attributes");
-        }
-
-    }
-
-    /**
      * reads the settings of the column delimiter box and transfers them into
      * the internal settings object.
      */
@@ -700,24 +662,41 @@ class FileReaderNodeDialog extends NodeDialogPane {
         // now set the selected one
         String delimStr = null;
         if (m_delimField.getSelectedIndex() > -1) {
-            if (m_delimField.getSelectedIndex() == 0) {
-                // user selected the <none> delimiter
-                delimStr = null;
-            } else {
-                delimStr = ((Delimiter)m_delimField.getSelectedItem())
-                        .getDelimiter();
+            // user selected one from the list (didn't edit a new one)
+            if (m_delimField.getSelectedIndex() >= 0) {
+                // index 0 is the <none> placeholder
+                try {
+                    // add that delimiter:
+                    Delimiter selDelim = 
+                        (Delimiter)m_delimField.getSelectedItem();
+                    // here comes the trick: if user choses space or tab from 
+                    // the list we use it as defined in the DEFAULT_DELIMS (i.e.
+                    // ignoring consecutive spaces). If he enteres a space in
+                    // the combobox, we create a new delimiter (in the else
+                    // branch down there) and do not combine consecutives!)
+                    m_frSettings.addDelimiterPattern(selDelim.getDelimiter(),
+                            selDelim.combineConsecutiveDelims(), 
+                            selDelim.returnAsToken(), 
+                            selDelim.includeInToken());
+                } catch (IllegalArgumentException iae) {
+                    setErrorLabelText(iae.getMessage());
+                    m_insideDelimChange = false;
+                    return;
+                }
             }
         } else {
             delimStr = (String)m_delimField.getSelectedItem();
             delimStr = FileTokenizerSettings.unescapeString(delimStr);
-        }
-        if ((delimStr != null) && (!delimStr.equals(""))) {
-            try {
-                m_frSettings.addDelimiterPattern(delimStr, false, false, false);
-            } catch (IllegalArgumentException iae) {
-                setErrorLabelText(iae.getMessage());
-                m_insideDelimChange = false;
-                return;
+
+            if ((delimStr != null) && (!delimStr.equals(""))) {
+                try {
+                    m_frSettings.addDelimiterPattern(delimStr, false, false,
+                            false);
+                } catch (IllegalArgumentException iae) {
+                    setErrorLabelText(iae.getMessage());
+                    m_insideDelimChange = false;
+                    return;
+                }
             }
         }
 
@@ -872,7 +851,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
         if (newColProps != null) {
             // user pressed okay for new settings
             m_frSettings.setColumnProperties(newColProps);
-            loadReadPosValuesSettings();
+            // user changed column type/name, we can clear that warning
+            setAnalWarningText("");  
             updatePreview();
         }
 
@@ -934,7 +914,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
             // load settings and analyze file
             loadSettings(true);
         }
-
+        // after loading settings we can clear the analyze warning
+        setAnalWarningText("");
         updatePreview();
     }
 
@@ -988,8 +969,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
             return;
         }
 
-        boolean displayAnalWarning = false;
-
         if (forceAnalyze 
                 || !newURL.equals(m_frSettings.getDataFileLocation())) {
 
@@ -1001,7 +980,13 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 newFRNS.setDataFileLocationAndUpdateTableName(newURL);
                 try {
                     m_frSettings = FileAnalyzer.analyze(newFRNS);
-                    displayAnalWarning = !m_frSettings.analyzeUsedAllRows();
+                    if (!m_frSettings.analyzeUsedAllRows()) {
+                        setAnalWarningText("WARNING: suggested settings are "
+                                + "based on a partial file analysis only! "
+                                + "Please verify.");   
+                    } else {
+                        setAnalWarningText("");
+                    }
                 } catch (IOException ioe) {
                     setErrorLabelText("Can't access '" + newURL + "'");
                     return;
@@ -1029,7 +1014,13 @@ class FileReaderNodeDialog extends NodeDialogPane {
                 m_frSettings.setDataFileLocationAndUpdateTableName(newURL);
                 try {
                     m_frSettings = FileAnalyzer.analyze(m_frSettings);
-                    displayAnalWarning = !m_frSettings.analyzeUsedAllRows();
+                    if (!m_frSettings.analyzeUsedAllRows()) {
+                        setAnalWarningText("WARNING: suggested settings are "
+                                + "based on a partial file analysis only! "
+                                + "Please verify.");   
+                    } else {
+                        setAnalWarningText("");
+                    }
                 } catch (IOException ioe) {
                     m_frSettings.setColumnProperties(oldColProps);
                     setErrorLabelText("Can't access '" + newURL + "'");
@@ -1042,11 +1033,6 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         updatePreview();
 
-        // updatePreview clears the analWarning
-        if (displayAnalWarning) {
-            setAnalWarningText("WARNING: suggested settings are based on "
-                    + "a partial file analysis only! Please verify.");
-        }
     }
 
     /*
@@ -1054,8 +1040,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
      * preview pane. Will not analyze the file. Will not change things. 
      */
     private void updatePreview() {
-        // something in the settings changed - clear warning
-        setAnalWarningText("");
+        // the settings changed - clear error message first
         setErrorLabelText("");
         
         // update preview
@@ -1134,12 +1119,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
             }
             analyzeDataFileAndUpdatePreview(true);
         }
-        m_hasRowHeaders.setSelected(m_frSettings.getFileHasRowHeaders());
-        m_hasColHeaders.setSelected(m_frSettings.getFileHasColumnHeaders());
+        loadRowHdrSettings();
+        loadColHdrSettings();
         // dis/enable the select recent files button
         loadDelimSettings();
         loadCommentSettings();
-        loadReadPosValuesSettings();
         loadWhiteSpaceSettings();
 
     }
@@ -1279,6 +1263,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
         loadSettings(false); // don't trigger file analysis
         m_urlCombo.setSelectedItem(m_frSettings.getDataFileLocation()
                 .toString());
+        
+        // clear analyze warning after loading settings from XML file
+        setAnalWarningText("");
         updatePreview();
     }
 

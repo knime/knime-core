@@ -1,5 +1,4 @@
-/* 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -42,6 +41,7 @@ import javax.swing.WindowConstants;
 
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.StringValue;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
@@ -85,6 +85,8 @@ public final class ColPropertyDialog extends JDialog {
     private Vector<ColProperty> m_result;
 
     private JLabel m_warnLabel;
+
+    private JButton m_domainButton;
 
     private ColPropertyDialog() {
         // don't call me.
@@ -136,9 +138,9 @@ public final class ColPropertyDialog extends JDialog {
 
         // the domain button
         JPanel domainPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 2));
-        JButton domainButton = new JButton("Domain...");
-        domainPanel.add(domainButton);
-        domainButton.addActionListener(new ActionListener() {
+        m_domainButton = new JButton("Domain...");
+        domainPanel.add(m_domainButton);
+        m_domainButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 openDomainDialog();
                 m_warnLabel.setText("");
@@ -207,8 +209,6 @@ public final class ColPropertyDialog extends JDialog {
             // calling this dialog for the 2nd time. Use vals from first call.
             domainProperty.changeDomain(m_userDomainSettings.getColumnSpec().
                     getDomain());
-            domainProperty.setReadBoundsFromFile(m_userDomainSettings.
-                    getReadBoundsFromFile());
             domainProperty.setReadPossibleValuesFromFile(m_userDomainSettings.
                     getReadPossibleValuesFromFile());
 
@@ -230,6 +230,27 @@ public final class ColPropertyDialog extends JDialog {
             m_userDomainSettings = null;
             m_warnLabel.setText("Domain settings were reset!!");
         }
+
+        DataType selectedType = getTypeFromComboIndex(m_typeChooser
+                .getSelectedIndex());
+        if (selectedType == null) {
+            m_domainButton.setEnabled(false);
+        } else {
+//            if (selectedType.isCompatible(StringValue.class)
+//                    || selectedType.isCompatible(IntValue.class)) {
+            /* TODO: The DataContainer doesn't support nominal values for 
+             *       integer columns yet. If it does, replace the if stmt below
+             *       with the one above (the domain dialog already supports
+             *       int types). Also, somehow, tell the data container about
+             *       the user's decision.
+             */
+            if (selectedType.isCompatible(StringValue.class)) {
+                m_domainButton.setEnabled(true);
+            } else {
+                m_domainButton.setEnabled(false);
+            }
+        }
+
     }
 
     /**
@@ -403,16 +424,6 @@ public final class ColPropertyDialog extends JDialog {
              * and change domain/poss.value settings as they are of the old type
              */
             newColProp.changeDomain(null);
-            if (type.equals(StringCell.TYPE)) {
-                // for String cols we read all possible values from file
-                newColProp.setReadPossibleValuesFromFile(true);
-                newColProp.setMaxNumberOfPossibleValues(2000);
-                newColProp.setReadBoundsFromFile(false);
-            } else {
-                // all others we just store lower and upper bounds.
-                newColProp.setReadPossibleValuesFromFile(false);
-                newColProp.setReadBoundsFromFile(true);
-            }
         }
 
         if (!newMissVal.equals(theColProp.getMissingValuePattern())) {
@@ -427,11 +438,8 @@ public final class ColPropertyDialog extends JDialog {
             // user changed domain. take it over
             newColProp.changeDomain(m_userDomainSettings.getColumnSpec().
                     getDomain());
-            newColProp.setReadBoundsFromFile(m_userDomainSettings.
-                    getReadBoundsFromFile());
             newColProp.setReadPossibleValuesFromFile(m_userDomainSettings.
                     getReadPossibleValuesFromFile());
-            newColProp.setMaxNumberOfPossibleValues(-1);
         }
 
         // construct the result vector - which is a copy of the colProperties

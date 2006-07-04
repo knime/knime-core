@@ -38,6 +38,7 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
@@ -470,15 +471,12 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                 cProp.setUserSettings(true);
                 name = xmlReader.getColumnName(c);
                 cProp.setMissingValuePattern(missVal);
-
-                if (type.equals(StringCell.TYPE)) {
-                    cProp.setReadPossibleValuesFromFile(true);
-                    cProp.setMaxNumberOfPossibleValues(2000);
-                    cProp.setReadBoundsFromFile(false);
-                } else {
+                
+                if (type.equals(IntCell.TYPE)) {
+                    // we could read possible values for int column. 
+                    // Default is false though.
                     cProp.setReadPossibleValuesFromFile(false);
-                    cProp.setReadBoundsFromFile(true);
-                }
+                } 
                 DataColumnSpecCreator dcsc = 
                     new DataColumnSpecCreator(name, type);
                 cProp.setColumnSpec(dcsc.createSpec());

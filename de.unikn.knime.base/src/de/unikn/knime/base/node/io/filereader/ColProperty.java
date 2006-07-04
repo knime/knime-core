@@ -46,20 +46,13 @@ class ColProperty {
     /* the pattern causing a missing cell to be created */
     private String m_missValuePattern;
 
-    /*
-     * if true the object contains values set by the user - otherwise its all
-     * default settings.
-     */
+    /* if true the object contains values set by the user - otherwise its all
+     * default settings. */
     private boolean m_userSettings;
 
-    /* indicates if we should read possible values from the file */
+    /* indicates if we should read possible values from the file (used for
+     * integer columns only) */
     private boolean m_readPossValsFromFile;
-
-    /* indicates if we should read upper and lower bounds from the file */
-    private boolean m_readBoundsFromFile;
-
-    /* if more possible vals as this number show up we ignore all of them */
-    private int m_maxPossVals;
 
     private static final String CFGKEY_USERSETTINGS = "UserSetValues";
 
@@ -75,10 +68,6 @@ class ColProperty {
 
     private static final String CFGKEY_READVALS = "ReadPossValsFromFile";
 
-    private static final String CFGKEY_MAXPOSSVALS = "MaxNumOfPossVals";
-
-    private static final String CFGKEY_READBOUNDS = "ReadBoundsFromFile";
-
     private static final String CFGKEY_UPPERBOUND = "UpperBound";
 
     private static final String CFGKEY_LOWERBOUND = "LowerBound";
@@ -91,8 +80,6 @@ class ColProperty {
         m_missValuePattern = null;
         m_userSettings = false;
         m_readPossValsFromFile = false;
-        m_readBoundsFromFile = false;
-        m_maxPossVals = -1;
     }
 
     /**
@@ -112,8 +99,6 @@ class ColProperty {
         m_userSettings = cfg.getBoolean(CFGKEY_USERSETTINGS);
         m_missValuePattern = cfg.getString(CFGKEY_MISSVALUE, null);
         m_readPossValsFromFile = cfg.getBoolean(CFGKEY_READVALS);
-        m_maxPossVals = cfg.getInt(CFGKEY_MAXPOSSVALS, -1);
-        m_readBoundsFromFile = cfg.getBoolean(CFGKEY_READBOUNDS);
 
         // read the stuff for the ColumnSpec
         String colName = cfg.getString(CFGKEY_COLNAME);
@@ -180,8 +165,6 @@ class ColProperty {
         cfg.addBoolean(CFGKEY_USERSETTINGS, m_userSettings);
         cfg.addString(CFGKEY_MISSVALUE, m_missValuePattern);
         cfg.addBoolean(CFGKEY_READVALS, m_readPossValsFromFile);
-        cfg.addInt(CFGKEY_MAXPOSSVALS, m_maxPossVals);
-        cfg.addBoolean(CFGKEY_READBOUNDS, m_readBoundsFromFile);
 
         // add the stuff from the ColumnSpec
         cfg.addString(CFGKEY_COLNAME, m_colSpec.getName());
@@ -250,63 +233,22 @@ class ColProperty {
     }
 
     /**
-     * @return a number greater than 0 if the possible values for this column
-     *         should be read from file. The number returned is the maximum
-     *         number of rows to extract the values from.
+     * @return true if the possible values should be read from file. This is set
+     *         only for integer columns.
      */
     boolean getReadPossibleValuesFromFile() {
         return m_readPossValsFromFile;
     }
 
     /**
-     * Determines if the possible values of this column will be read from file.
+     * Determines if the possible values of this column will be read from file
+     * (used only with integer columns).
      * 
-     * @param readThem the new value of the flag. True (the default) if possible
-     *            values should be read. False otherwise.
+     * @param readThem the new value of the flag. True if possible values should
+     *            be read. False otherwise.
      */
     void setReadPossibleValuesFromFile(final boolean readThem) {
         m_readPossValsFromFile = readThem;
-    }
-
-    /**
-     * @return the maximum number of possible values for this column. If more
-     *         values than this are read this column is not considered being
-     *         nominal and all values are discarded. If -1 is returned then
-     *         there is no maximum specified.
-     */
-    int getMaxNumberOfPossibleValues() {
-        return m_maxPossVals;
-    }
-
-    /**
-     * Sets the maximum number of possible values allowed for this column. If
-     * more values than this are read this column is not considered being
-     * nominal and all values are discarded. If set to -1 no maximum is
-     * specified. The default value is -1.
-     * 
-     * @param maxPosVals the maximum number of values allowed.
-     */
-    void setMaxNumberOfPossibleValues(final int maxPosVals) {
-        m_maxPossVals = maxPosVals;
-    }
-
-    /**
-     * Determines if all values of this column should be examined and lower and
-     * upper bounds should be stored.
-     * 
-     * @param readThem set true if the data should be read and lower and upper
-     *            bounds should be stored for this column, otherwise false.
-     */
-    void setReadBoundsFromFile(final boolean readThem) {
-        m_readBoundsFromFile = readThem;
-    }
-
-    /**
-     * @return true if the data will be read and lower and upper bounds will be
-     *         stored for this column, otherwise false.
-     */
-    boolean getReadBoundsFromFile() {
-        return m_readBoundsFromFile;
     }
 
     /**
@@ -359,10 +301,6 @@ class ColProperty {
         sb.append(", MissVal: " + m_missValuePattern);
         sb.append(", userSetSettings: " + m_userSettings);
         sb.append(", readVals: " + m_readPossValsFromFile);
-        if (m_readPossValsFromFile) {
-            sb.append(" (max. " + m_maxPossVals + " Vals)");
-        }
-        sb.append(", readBounds: " + m_readBoundsFromFile);
         return sb.toString();
     }
 
@@ -380,8 +318,6 @@ class ColProperty {
         
         result.m_userSettings = m_userSettings;
         result.m_readPossValsFromFile = m_readPossValsFromFile;
-        result.m_readBoundsFromFile = m_readBoundsFromFile;
-        result.m_maxPossVals = m_maxPossVals;
 
         return result;
     }
