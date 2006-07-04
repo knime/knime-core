@@ -15,11 +15,14 @@
  */
 package de.unikn.knime.base.node.filter.column;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import de.unikn.knime.base.data.filter.column.FilterColumnTable;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -92,7 +95,29 @@ final class FilterColumnNodeModel extends NodeModel {
         for (int c = 0; c < cols.length; c++) {
             cols[c] = outSpec.getColumnSpec(c).getName();
         }
-        return new DataTable[] {new FilterColumnTable(data[INPORT], cols)};
+        return new DataTable[]{new FilterColumnTable(data[INPORT], cols)};
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel# saveInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
+        // nothing to be done
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel# loadInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
+        // nothing to be done
     }
 
     /**
@@ -109,14 +134,14 @@ final class FilterColumnNodeModel extends NodeModel {
             throws InvalidSettingsException {
         assert (inSpecs != null);
 
-        return new DataTableSpec[] {createOutDataTableSpec(inSpecs[INPORT])};
+        return new DataTableSpec[]{createOutDataTableSpec(inSpecs[INPORT])};
 
     }
 
     /*
      * Creates the output data table spec according to the current settings.
      * Throws an InvalidSettingsException if colums are specified that don't
-     * exist in the input table spec. 
+     * exist in the input table spec.
      */
     private DataTableSpec createOutDataTableSpec(final DataTableSpec inSpec)
             throws InvalidSettingsException {
@@ -172,8 +197,8 @@ final class FilterColumnNodeModel extends NodeModel {
         // clear exclude column list
         m_list.clear();
         // get list of excluded columns
-        String[] columns = settings.getStringArray(KEY, 
-                m_list.toArray(new String[0]));
+        String[] columns = settings.getStringArray(KEY, m_list
+                .toArray(new String[0]));
         for (int i = 0; i < columns.length; i++) {
             m_list.add(columns[i]);
         }
