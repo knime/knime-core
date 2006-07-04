@@ -74,7 +74,7 @@ public class OpenViewAction extends Action {
      * @see org.eclipse.jface.action.IAction#getText()
      */
     public String getText() {
-        return "View " + (m_index + 1) + ": "
+        return "View: "
                 + m_nodeContainer.getViewName(m_index);
     }
 

@@ -72,8 +72,22 @@ public class OpenPortViewAction extends Action {
      * @see org.eclipse.jface.action.IAction#getText()
      */
     public String getText() {
-        return "Outport " + (m_index + 1) + ": "
-                + m_nodeContainer.getOutputDescription(m_index);
+
+        // the name is constructed like "Model outport <specificIndex>"
+        String name;
+
+        if (m_nodeContainer.isDataOutPort(m_index)) {
+            name = "Data outport " + m_index;
+        } else {
+            name = "Model outport "
+                    + (m_index - m_nodeContainer.getNrPredictorOutPorts() + 1);
+        }
+
+        // the text will be displayed in the context menu
+        // it consists of the specific port type and index and its description
+        String description = m_nodeContainer.getOutportDescription(m_index);
+
+        return name + ": " + description;
     }
 
     /**
