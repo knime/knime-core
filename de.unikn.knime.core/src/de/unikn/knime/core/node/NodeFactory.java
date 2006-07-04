@@ -59,7 +59,8 @@ public abstract class NodeFactory {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainer.class);
 
-    private final String m_nodeName, m_shortDescription;
+    private final String m_nodeName;
+    private final String m_shortDescription;
 
     /* port names */
     private List<String> m_inDataPorts;
@@ -68,10 +69,10 @@ public abstract class NodeFactory {
     private List<String> m_predParamOuts;
     
     /* port descriptions */    
-//    private List<String> m_inDataPortsDesc;
-//    private List<String> m_outDataPortsDesc;
-//    private List<String> m_predParamInsDesc;
-//    private List<String> m_predParamOutsDesc;
+    private List<String> m_inDataPortsDesc;
+    private List<String> m_outDataPortsDesc;
+    private List<String> m_predParamInsDesc;
+    private List<String> m_predParamOutsDesc;
 
 
     private List<Element> m_views;
@@ -177,7 +178,7 @@ public abstract class NodeFactory {
      * Creates a new <code>NodeFactory</code> and tries to read to properties
      * file named <code>Node.xml</code> in the same package as the factory.
      */
-    public NodeFactory() {
+    protected NodeFactory() {
         if (parser == null) {
             instantiateParser();
         }
@@ -364,22 +365,34 @@ public abstract class NodeFactory {
                 if (m_inDataPorts == null) {
                     m_inDataPorts = new ArrayList<String>(4);
                 }
-                addToPortDescription(m_inDataPorts, port);
+                if (m_inDataPortsDesc == null) {
+                    m_inDataPortsDesc = new ArrayList<String>(4);
+                }
+                addToPort(m_inDataPorts, m_inDataPortsDesc, port);
             } else if (port.getNodeName().equals("dataOut")) {
                 if (m_outDataPorts == null) {
                     m_outDataPorts = new ArrayList<String>(4);
                 }
-                addToPortDescription(m_outDataPorts, port);
+                if (m_outDataPortsDesc == null) {
+                    m_outDataPortsDesc = new ArrayList<String>(4);
+                }
+                addToPort(m_outDataPorts, m_outDataPortsDesc, port);
             } else if (port.getNodeName().equals("predParamIn")) {
                 if (m_predParamIns == null) {
                     m_predParamIns = new ArrayList<String>(4);
                 }
-                addToPortDescription(m_predParamIns, port);
+                if (m_predParamInsDesc == null) {
+                    m_predParamInsDesc = new ArrayList<String>(4);
+                }
+                addToPort(m_predParamIns, m_predParamInsDesc, port);
             } else if (port.getNodeName().equals("predParamOut")) {
                 if (m_predParamOuts == null) {
                     m_predParamOuts = new ArrayList<String>(4);
                 }
-                addToPortDescription(m_predParamOuts, port);
+                if (m_predParamOutsDesc == null) {
+                    m_predParamOutsDesc = new ArrayList<String>(4);
+                }
+                addToPort(m_predParamOuts, m_predParamOutsDesc, port);
             }
         }
 
@@ -457,26 +470,27 @@ public abstract class NodeFactory {
         }
     }
 
-    private void addToPortDescription(final List<String> destList,
-            final Element port) {
+    private void addToPort(final List<String> nameList, 
+            final List<String> descList, final Element port) {
         int index = Integer.parseInt(port.getAttribute("index"));
-        for (int k = destList.size(); k <= index; k++) {
-            destList.add("No description available");
+        for (int k = nameList.size(); k <= index; k++) {
+            nameList.add("");
         }
         if (port.getAttribute("name").length() > 0) {
-            destList.set(index, port.getAttribute("name").trim());
-        } else {
-            
-            Node w3cNode = port.getFirstChild();
-            if (w3cNode == null) {
-                return;
-            }
-            String value = w3cNode.getNodeValue();
-            if (value == null || value.length() == 0) {
-                return;
-            }
-            destList.set(index, value.trim().replaceAll("(?:\\s+|\n)", " "));
+            nameList.set(index, port.getAttribute("name").trim());
         }
+        for (int k = descList.size(); k <= index; k++) {
+            descList.add(nameList.get(k));
+        }
+        Node w3cNode = port.getFirstChild();
+        if (w3cNode == null) {
+            return;
+        }
+        String value = w3cNode.getNodeValue();
+        if (value == null || value.length() == 0) {
+            return;
+        }
+        descList.set(index, value.trim().replaceAll("(?:\\s+|\n)", " "));
     }
 
     private String readFullDescription() {
@@ -496,21 +510,77 @@ public abstract class NodeFactory {
      * 
      * @return the node's name.
      */
-    public String getNodeName() {
+    public final String getNodeName() {
         return m_nodeName;
     }
 
     /**
-     * Returns a description for an input port.
+     * Returns a name for an input port.
      * 
      * @param index the index of the input port, starting at 0
      * @return an input port description
      */
     public String getInportDataName(final int index) {
         if (m_inDataPorts == null) {
-            return "Data Inport " + index;
+            return "";
         } else {
             return m_inDataPorts.get(index);
+        }
+    }
+
+    /**
+     * Returns a name for an output port.
+     * 
+     * @param index the index of the output port, starting at 0
+     * @return an output port description
+     */
+    public String getOutportDataName(final int index) {
+        if (m_outDataPorts == null) {
+            return "";
+        } else {
+            return m_outDataPorts.get(index);
+        }
+    }
+
+    /**
+     * Returns a name for an predictor parameter input port.
+     * 
+     * @param index the index of the input port, starting at 0
+     * @return an predictor parameter input port description
+     */
+    public String getInportModelName(final int index) {
+        if (m_predParamIns == null) {
+            return "";
+        } else {
+            return m_predParamIns.get(index);
+        }
+    }
+
+    /**
+     * Returns a name for an predictor parameter output port.
+     * 
+     * @param index the index of the output port, starting at 0
+     * @return an predictor parameter output port description
+     */
+    public String getOutportModelName(final int index) {
+        if (m_predParamOuts == null) {
+            return "";
+        } else {
+            return m_predParamOuts.get(index);
+        }
+    }
+    
+    /**
+     * Returns a description for an input port.
+     * 
+     * @param index the index of the input port, starting at 0
+     * @return an input port description
+     */
+    public final String getInportDataDescription(final int index) {
+        if (m_inDataPortsDesc == null) {
+            return "No description available";
+        } else {
+            return m_inDataPortsDesc.get(index);
         }
     }
 
@@ -520,11 +590,11 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an output port description
      */
-    public String getOutportDataName(final int index) {
-        if (m_outDataPorts == null) {
-            return "Data Outport " + index;
+    public final String getOutportDataDescription(final int index) {
+        if (m_outDataPortsDesc == null) {
+            return "No description available";
         } else {
-            return m_outDataPorts.get(index);
+            return m_outDataPortsDesc.get(index);
         }
     }
 
@@ -534,11 +604,11 @@ public abstract class NodeFactory {
      * @param index the index of the input port, starting at 0
      * @return an predictor parameter input port description
      */
-    public String getInportModelName(final int index) {
-        if (m_predParamIns == null) {
-            return "Model Inport " + index;
+    public final String getInportModelDescription(final int index) {
+        if (m_predParamInsDesc == null) {
+            return "No description available";
         } else {
-            return m_predParamIns.get(index);
+            return m_predParamInsDesc.get(index);
         }
     }
 
@@ -548,11 +618,11 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an predictor parameter output port description
      */
-    public String getOutportModelName(final int index) {
-        if (m_predParamOuts == null) {
-            return "Model Outport " + index;
+    public final String getOutportModelDescription(final int index) {
+        if (m_predParamOutsDesc == null) {
+            return "No description available";
         } else {
-            return m_predParamOuts.get(index);
+            return m_predParamOutsDesc.get(index);
         }
     }
 

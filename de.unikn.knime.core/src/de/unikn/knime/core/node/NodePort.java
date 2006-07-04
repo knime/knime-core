@@ -78,7 +78,11 @@ public abstract class NodePort {
      */
     final void setPortName(final String portName) {
         if (portName == null || portName.trim().length() == 0) {
-            m_portName = "Port [" + m_portID + "]";
+            if (this instanceof NodeInPort) {
+                m_portName = "Inport " + m_portID;
+            } else {
+                m_portName = "Outport " + m_portID;
+            }
         } else {
             m_portName = portName.trim();
         }

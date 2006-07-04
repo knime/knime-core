@@ -577,15 +577,6 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @param port the port index to retrieve the description for.
-     * 
-     * @return the description of the specified outport.
-     */
-    public String getOutportDescription(final int port) {
-        return m_node.getOutportName(port);
-    }
-
-    /**
      * @param port the port index to retrieve the name for.
      * 
      * @return the name of the specified outport.

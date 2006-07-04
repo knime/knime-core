@@ -263,18 +263,7 @@ public final class Node {
 
         // read node name
         m_name = settings.getString(CFG_NAME);
-        final NodeSettings inport = settings.getConfig(CFG_INPORTS);
-        // read inports
-        for (int i = 0; i < m_inDataPorts.length; i++) {
-            m_inDataPorts[i].setPortName(inport.getString(Integer.toString(i)));
-        }
-        // read outports
-        final NodeSettings outport = settings.getConfig(CFG_OUTPORTS);
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            m_outDataPorts[i].setPortName(
-                    outport.getString(Integer.toString(i)));
-        }
-        
+
         // read configured flag
         boolean wasConfigured = settings.getBoolean(CFG_ISCONFIGURED);
         m_model.setConfigured(wasConfigured);
@@ -1383,8 +1372,6 @@ public final class Node {
     private static final String CFG_NAME = "name";
     private static final String CFG_ISCONFIGURED = "isConfigured";
     private static final String CFG_ISEXECUTED = "isExecuted";
-    private static final String CFG_INPORTS = "inports";
-    private static final String CFG_OUTPORTS = "outports";
     private static final String CFG_MODEL = "model";
     private static final String CFG_SPEC_FILES = "spec_files";
     private static final String SPEC_FILE_PREFIX = "spec_";
@@ -1413,18 +1400,7 @@ public final class Node {
         settings.addBoolean(CFG_ISCONFIGURED, isConfigured());
         // write executed flag
         settings.addBoolean(CFG_ISEXECUTED, isExecuted());
-        // write inports
-        final NodeSettings inport = settings.addConfig(CFG_INPORTS);
-        for (int i = 0; i < m_inDataPorts.length; i++) {
-            inport.addString(
-                    Integer.toString(i), m_inDataPorts[i].getPortName());
-        }
-        // write outports
-        final NodeSettings outport = settings.addConfig(CFG_OUTPORTS);
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            outport.addString(
-                    Integer.toString(i), m_outDataPorts[i].getPortName());
-        }
+     
         // write model
         final NodeSettings model = settings.addConfig(CFG_MODEL);
         try {
