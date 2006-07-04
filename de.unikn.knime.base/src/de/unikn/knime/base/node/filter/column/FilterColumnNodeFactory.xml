@@ -18,7 +18,10 @@
 		contained in the output	table.</option>
 		
 		<option name="Search">The search field allows for finding column names 
-			in either the include or exclude list.</option>
+			in either the include or exclude list. Repeated pressing of the
+			search button marks the next column matching the search text.
+			The check box 'Mark all search hits' causes all matching columns
+			to be selected.</option>
 		
 	    <option name="Exclude">Contains the names of columns of the input table 
 	    	that are excluded from the output table.</option>
