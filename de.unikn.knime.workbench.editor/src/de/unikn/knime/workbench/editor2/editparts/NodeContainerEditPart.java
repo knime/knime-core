@@ -333,7 +333,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED,
                                 state.getMessage());
                     }
-                } else if (state instanceof  NodeStatus.StartExecute) {
+                } else if (state instanceof NodeStatus.StartExecute) {
                     fig.setState(NodeContainerFigure.STATE_EXECUTING, state
                             .getMessage());
 
@@ -367,7 +367,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 } else if (state instanceof NodeStatus.CustomName) {
                     fig.setCustomName(getNodeContainer().getCustomName());
                 } else if (state instanceof NodeStatus.CustomDescription) {
-                    fig.setCustomDescription(getNodeContainer().getDescription());
+                    fig.setCustomDescription(getNodeContainer()
+                            .getDescription());
                 }
                 updateNodeStatus();
 
@@ -396,7 +397,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         int[] b = ei.getBounds();
         f.setBounds(new Rectangle(b[0], b[1], b[2], b[3]));
 
-        //String plugin = ei.getPluginID();
+        // String plugin = ei.getPluginID();
         // String iconPath = ei.getIconPath();
         String type = ei.getType();
         String name = getNodeContainer().getName();
@@ -492,8 +493,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public void mousePressed(final MouseEvent me) {
 
+        // only left click matters
+        if (me.button != 1) {
+            return;
+        }
+
         if (System.currentTimeMillis() - m_lastClick < DOUBLE_CLICK_TIME) {
-            
 
             NodeContainer container = (NodeContainer)getModel();
 
@@ -513,17 +518,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // This is embedded in a special JFace wrapper dialog
             //
             try {
-                WrappedNodeDialog dlg = new WrappedNodeDialog(
-                        Display.getCurrent().getActiveShell(), container);
+                WrappedNodeDialog dlg = new WrappedNodeDialog(Display
+                        .getCurrent().getActiveShell(), container);
                 dlg.open();
             } catch (NotConfigurableException ex) {
-                MessageBox mb = new MessageBox(
-                        Display.getDefault().getActiveShell(),
-                        SWT.ICON_WARNING | SWT.OK);
+                MessageBox mb = new MessageBox(Display.getDefault()
+                        .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
                 mb.setText("Dialog cannot be opened");
                 mb.setMessage("The dialog cannot be opened for the following"
                         + " reason:\n" + ex.getMessage());
-                mb.open();                
+                mb.open();
             }
 
         }
