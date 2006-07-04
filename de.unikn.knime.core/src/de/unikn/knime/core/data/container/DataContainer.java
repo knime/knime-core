@@ -437,7 +437,7 @@ public class DataContainer implements RowAppender {
             specCreator.setDomain(domainCreator.createDomain());
             colSpec[i] = specCreator.createSpec();
         }
-        return new DataTableSpec(colSpec);
+        return new DataTableSpec(m_spec.getName(), colSpec);
     }
     
     /** Convenience method that will buffer the entire argument table. This is
