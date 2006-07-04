@@ -530,7 +530,7 @@ public final class Node {
 
     /**
      * Delegation method to the factory's
-     * {@link NodeFactory#getInportDescription(int)} method.
+     * {@link NodeFactory#getInportName(int)} method.
      * 
      * @param portID The port id of interest
      * @return The description to that port
@@ -539,9 +539,9 @@ public final class Node {
     public String getInputPortDescription(final int portID) {
         boundInPort(portID);
         if (isDataInPort(portID)) {
-            return m_factory.getInportDescription(portID);
+            return m_factory.getInportName(portID);
         } else {
-            return m_factory.getPredParamInDescription(portID
+            return m_factory.getPredParamInName(portID
                     - getNrDataInPorts());
         }
     }
@@ -559,7 +559,7 @@ public final class Node {
         if (isDataOutPort(portID)) {
             return m_factory.getOutportName(portID);
         } else {
-            return m_factory.getPredParamOutDescription(portID
+            return m_factory.getPredParamOutName(portID
                     - getNrDataOutPorts());
         }
     }

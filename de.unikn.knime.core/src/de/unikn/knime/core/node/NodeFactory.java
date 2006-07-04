@@ -501,7 +501,7 @@ public abstract class NodeFactory {
      * @param index the index of the input port, starting at 0
      * @return an input port description
      */
-    public String getInportDescription(final int index) {
+    public String getInportName(final int index) {
         if (m_inPorts == null) {
             return "No description available";
         } else {
@@ -529,7 +529,7 @@ public abstract class NodeFactory {
      * @param index the index of the input port, starting at 0
      * @return an predictor parameter input port description
      */
-    public String getPredParamInDescription(final int index) {
+    public String getPredParamInName(final int index) {
         if (m_predParamIns == null) {
             return "No description available";
         } else {
@@ -543,7 +543,7 @@ public abstract class NodeFactory {
      * @param index the index of the output port, starting at 0
      * @return an predictor parameter output port description
      */
-    public String getPredParamOutDescription(final int index) {
+    public String getPredParamOutName(final int index) {
         if (m_predParamOuts == null) {
             return "No description available";
         } else {

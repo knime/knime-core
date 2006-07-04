@@ -210,16 +210,16 @@ public class MetaNodeModel extends SpecialNodeModel
     }
 
     protected String getOutportDescription(final int inputNodeIndex) {
-        return m_myFactory.getInportDescription(inputNodeIndex);
+        return m_myFactory.getInportName(inputNodeIndex);
     }
     
     protected String getPredParamOutDescription(final int inputNodeIndex) {
-        return m_myFactory.getPredParamInDescription(inputNodeIndex);
+        return m_myFactory.getPredParamInName(inputNodeIndex);
     }
     
 
     protected String getPredParamInDescription(final int outputNodeIndex) {
-        return m_myFactory.getPredParamOutDescription(outputNodeIndex);
+        return m_myFactory.getPredParamOutName(outputNodeIndex);
     }
         
     protected String getInportDescription(final int outputNodeIndex) {
@@ -262,7 +262,7 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
 
                 @Override
-                public String getOutportDescription(final int index) {
+                public String getOutportName(final int index) {
                     return MetaNodeModel.this.getOutportDescription(temp);
                 }                
             });
@@ -298,7 +298,7 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
 
                 @Override
-                public String getInportDescription(final int index) {
+                public String getInportName(final int index) {
                     return MetaNodeModel.this.getInportDescription(temp);
                 }
 
@@ -336,7 +336,7 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
 
                 @Override
-                public String getPredParamOutDescription(final int index) {
+                public String getPredParamOutName(final int index) {
                     return MetaNodeModel.this.getPredParamOutDescription(temp);
                 }
             });
@@ -372,7 +372,7 @@ public class MetaNodeModel extends SpecialNodeModel
                 }
                 
                 @Override
-                public String getPredParamInDescription(final int index) {
+                public String getPredParamInName(final int index) {
                     return MetaNodeModel.this.getPredParamInDescription(temp);
                 }
             });
