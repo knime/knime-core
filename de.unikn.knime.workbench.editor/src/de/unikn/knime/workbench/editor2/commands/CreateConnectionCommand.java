@@ -175,20 +175,9 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public void execute() {
-        // Connection must be registered on workflow
-        try {
-            m_connection = m_manager.addConnection(
-                      m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
-                      m_targetNode.getNodeContainer().getID(), m_targetPortID);
-        } catch (WorkflowInExecutionException ex) {
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_INFORMATION | SWT.OK);
-            mb.setText("Operation not allowed");
-            mb.setMessage("You cannot add a connection while the workflow is in"
-                    + " execution.");
-            mb.open();            
-        }
+        m_connection = m_manager.addConnection(
+                  m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
+                  m_targetNode.getNodeContainer().getID(), m_targetPortID);
     }
 
     /**
