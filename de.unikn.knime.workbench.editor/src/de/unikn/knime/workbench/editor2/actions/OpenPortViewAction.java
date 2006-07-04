@@ -80,7 +80,7 @@ public class OpenPortViewAction extends Action {
             name = "Data outport " + m_index;
         } else {
             name = "Model outport "
-                    + (m_index - m_nodeContainer.getNrPredictorOutPorts() + 1);
+                    + (m_index - m_nodeContainer.getNrDataOutPorts());
         }
 
         // the text will be displayed in the context menu
