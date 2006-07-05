@@ -6,7 +6,10 @@ import de.unikn.knime.base.node.filter.row.rowfilter.EndOfTableException;
 import de.unikn.knime.base.node.filter.row.rowfilter.IncludeFromNowOn;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.core.data.DataRow;
+import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionMonitor;
 
 /**
  * Row iterator of the row filter table. Wraps a given row iterator and forwards
@@ -22,6 +25,11 @@ import de.unikn.knime.core.data.RowIterator;
  * restrictions. (This should speed up the atEnd() check as we don't have to
  * traverse through the entire input table - which is actually the reason we
  * handle the row number range not in a filter.)
+ * 
+ * <p>Note: Iterating may be slow as the iterator must potentially skip many
+ * rows until it encounters a row to be returned. This iterator does also 
+ * support cancelation/progress information using an ExecutionMonitor. This 
+ * iterator may throw a
  * 
  * @author ohl, University of Konstanz
  */
@@ -43,20 +51,35 @@ public class RowFilterIterator extends RowIterator {
     // If true the filter will not be asked - every row will be included in the
     // result.
     private boolean m_includeRest;
-
+    
+    // the exec mon for cancel/progress, may use default one
+    private final ExecutionMonitor m_exec;
+    
+    // the row count in the original table
+    private final int m_totalCountInOrig;
+    
     /**
      * Creates a new row iterator wrapping an existing one and delivering only
      * rows that match the specified conditions.
      * 
-     * @param origIterator the original row iterator to wrap.
+     * @param origTable the original table from which we get the iterator and
+     * the row count, if any.
      * @param filter a filter object that will decide whether rows are included
      *            in the result or filtered out.
+     * @param exec To report progress to and to check for cancel status.
      */
-    public RowFilterIterator(final RowIterator origIterator, 
-            final RowFilter filter) {
-
+    public RowFilterIterator(final DataTable origTable, 
+            final RowFilter filter, final ExecutionMonitor exec) {
         m_filter = filter;
-        m_orig = origIterator;
+        m_orig = origTable.iterator();
+        int count = -1;
+        try {
+            count = origTable.getRowCount();
+        } catch (UnsupportedOperationException uoe) {
+            // no progress available.
+        }
+        m_totalCountInOrig = count;
+        m_exec = exec == null ? new ExecutionMonitor() : exec;
 
         m_rowNumber = 0;
         m_nextRow = null;
@@ -68,6 +91,22 @@ public class RowFilterIterator extends RowIterator {
     }
 
     /**
+     * Creates a new row iterator wrapping an existing one and delivering only
+     * rows that match the specified conditions. No progress info or canceled
+     * status is available.
+     * 
+     * @param origTable the original table from which we get the iterator and
+     * the row count, if any.
+     * @param filter a filter object that will decide whether rows are included
+     *            in the result or filtered out.
+     */
+    public RowFilterIterator(final DataTable origTable, 
+            final RowFilter filter) {
+        this(origTable, filter, null);
+        
+    }
+    
+    /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
     public boolean hasNext() {
@@ -78,12 +117,10 @@ public class RowFilterIterator extends RowIterator {
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
     public DataRow next() {
-
         if (m_nextRow == null) {
             throw new NoSuchElementException(
                     "The row filter iterator proceeded beyond the last row.");
         }
-
         DataRow tmp = m_nextRow;
         // always keep the next row in m_nextRow.
         m_nextRow = getNextMatch();
@@ -96,16 +133,21 @@ public class RowFilterIterator extends RowIterator {
      * the end of it before.
      */
     private DataRow getNextMatch() {
-
         while (true) {
-
+            try {
+                m_exec.checkCanceled();
+            } catch (CanceledExecutionException cee) {
+                throw new RuntimeCanceledExecutionException(cee);
+            }
             // we must not cause any trouble.
             if (!m_orig.hasNext()) {
                 return null;
             }
+            m_exec.setProgress(m_rowNumber / (double)m_totalCountInOrig);
 
             DataRow next = m_orig.next();
             if (m_includeRest) {
+                m_rowNumber++;
                 return next;
             } else {
                 // consult the filter whether to include this row
@@ -130,7 +172,28 @@ public class RowFilterIterator extends RowIterator {
             }
 
         }
-
+    }
+    
+    /** Runtime exception that's thrown when the execution monitor's 
+     * <code>checkCanceled</code> method throws an CanceledExecutionException.
+     */ 
+    public static final class RuntimeCanceledExecutionException 
+        extends RuntimeException {
+        
+        /** Inits object.
+         * @param cee The exception to wrap.
+         */
+        private RuntimeCanceledExecutionException(
+                final CanceledExecutionException cee) {
+            super(cee.getMessage(), cee);
+        }
+        
+        /** Get reference to causing exception.
+         * @see java.lang.Throwable#getCause()
+         */ 
+        public CanceledExecutionException getCause() {
+            return (CanceledExecutionException)super.getCause();
+        }
     }
 
 }

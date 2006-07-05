@@ -68,7 +68,7 @@ public class RowFilterTable implements DataTable {
      * @see de.unikn.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
-        return new RowFilterIterator(m_table.iterator(), 
+        return new RowFilterIterator(m_table, 
                 (RowFilter)m_filter.clone());
     }
 
