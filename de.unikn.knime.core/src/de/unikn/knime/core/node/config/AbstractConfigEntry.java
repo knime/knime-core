@@ -68,7 +68,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
     /**
      * @return The key for this value.
      */
-    final String getKey() {
+    public final String getKey() {
         return m_key;
     }
     
