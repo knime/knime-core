@@ -742,26 +742,7 @@ public final class Node {
         PredictorParams[] predParams; // the new output models
         try {
             // INVOKE MODEL'S EXECUTE
-            DataTable[] fromModelData = m_model.executeModel(inData, exec);
-            if (fromModelData != null) {
-                // The implementor should not memorize the returned DataTable
-                // array. It "should" be perfectly ok to change the elements
-                // in the array. However, to be sure that we don't mess with
-                // one of the implementations, we copy the references here
-                // and change the content of that copy instead of the returned
-                // array
-                newOutData = new DataTable[fromModelData.length];
-                for (int i = 0; i < fromModelData.length; i++) {
-                    DataTable asReturned = fromModelData[i];
-                    if (DataContainer.isContainerTable(asReturned)) {
-                        newOutData[i] = asReturned;
-                    } else {
-                        newOutData[i] = DataContainer.cache(asReturned, exec);
-                    }
-                }
-            } else {
-                newOutData = null;
-            }
+            newOutData = m_model.executeModel(inData, exec);
             processModelWarnings();
         } catch (CanceledExecutionException cee) {
             // execution was canceled
@@ -781,27 +762,6 @@ public final class Node {
             return false;
         }
 
-        //
-        // CHECK EXECUTION RESULTS
-        //
-        // check the returned DataTables
-        if (newOutData == null) {
-            m_logger.error("Does not return data");
-            m_status = new NodeStatus.Error("Does not return data");
-            notifyStateListeners(m_status);
-            notifyStateListeners(new NodeStatus.EndExecute());
-            return false;
-        }
-        for (int p = 0; p < getNrDataOutPorts(); p++) {
-            if (newOutData[p] == null) {
-                m_logger.error("Does not return data at port #" + p);
-                m_status = new NodeStatus.Error(
-                        "Does not return data at port #" + p);
-                notifyStateListeners(m_status);
-                notifyStateListeners(new NodeStatus.EndExecute());
-                return false;
-            }
-        }
         // check created predictor models (if any)
         predParams = new PredictorParams[getNrPredictorOutPorts()];
         for (int p = 0; p < predParams.length; p++) {

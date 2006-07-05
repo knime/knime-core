@@ -26,6 +26,7 @@ import java.util.Set;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -469,11 +470,26 @@ public abstract class NodeModel {
                         + " is null.");
             }
         }
+        // The implementor should not memorize the returned DataTable
+        // array. It "should" be perfectly ok to change the elements
+        // in the array. However, to be sure that we don't mess with
+        // one of the implementations, we copy the references here
+        // and change the content of that copy instead of the returned
+        // array
+        DataTable[] result = new DataTable[outData.length];
+        for (int i = 0; i < result.length; i++) {
+            DataTable asReturned = outData[i];
+            if (DataContainer.isContainerTable(asReturned)) {
+                result[i] = asReturned;
+            } else {
+                result[i] = DataContainer.cache(asReturned, exec);
+            }
+        }
 
         setExecuted(true);
 
         // return array of output DataTable
-        return outData;
+        return result;
 
     } // executeModel(DataTable[],ExecutionMonitor)
     
