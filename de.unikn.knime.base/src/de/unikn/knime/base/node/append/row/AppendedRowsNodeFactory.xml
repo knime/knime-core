@@ -5,22 +5,24 @@
     <shortDescription>Concatenates two tables row-wise.</shortDescription>         
             
     <fullDescription>
-        <intro> Concatenates two tables. The top of the output table is given as the first
-            input table (top input port), the bottom as the second table, resp. If both tables
-            contain the same column names, they are concatenated (the column type is the
+        <intro> Concatenates two tables. The table at inport 0 is given as the first
+            input table (top input port), the table at inport 1 is the second table, resp. 
+			Columns with equal names are concatenated (in case the column type differs 
+			the column type is the
             common base type of both input column types). If one input table contains a column
-            name that the other table doesn't, this column will be in output table as well but
-            it will contain missing values for those row that are given by the table lacking
+            name that the other table doesn't, this column will be included in 
+			the output table as well but it will contain missing values for 
+			those rows that are given by the input table which is missing
             this column. The dialog allows to treat duplicate row keys, two options are
             available: </intro>
-        <option name="Skip Rows"> Duplicate row keys in the second table are not in the
-            output table. </option>
+        <option name="Skip Rows"> Duplicate row keys occuring in the second 
+			table are not appended to the output table. </option>
         <option name="Append Suffix"> The output table will contain all rows, but
             duplicate row keys are labeled with a suffix. </option>
 		</fullDescription>                  
     <ports>                 
-        <dataIn index="0">Table contributing first rows of the output table.</dataIn>
-        <dataIn index="1">Table contributing last rows of the output table.</dataIn>
-        <dataOut index="0">Table with rows from both tables.</dataOut>
+        <dataIn index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</dataIn>
+        <dataIn index="1" name="Second table to concatenate">Table contributing the rows of the second part of the output table.</dataIn>
+        <dataOut index="0" name="Concatenated table">Table with rows from both tables.</dataOut>
 	</ports>
 </knimeNode>

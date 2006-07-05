@@ -54,7 +54,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
      * Constructor to init the gui and set a title. 
      */
     public AppendedRowsNodeDialog() {
-        super("Table Appender");
+        super("Row concatenator properties");
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_suffixField.setEnabled(m_appendSuffixButton.isSelected());
@@ -73,7 +73,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         m_appendSuffixButton.addActionListener(actionListener);
         buttonGroup.add(m_appendSuffixButton);
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel helpLabel = new JLabel("Please specify how to deal with " 
+        JLabel helpLabel = new JLabel("\n  Please specify how to deal with " 
                 + "duplicate row keys");
         panel.add(helpLabel, BorderLayout.NORTH);
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
