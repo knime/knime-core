@@ -58,7 +58,7 @@ import de.unikn.knime.core.node.tableview.TableView;
  * <code>JTable</code> to display a <code>DataTable</code>. If the node has
  * not been executed or is reset, the view will print "&lt;no data&gt;". The
  * view adds also a menu entry to the menu bar where the user can synchronize
- * the selection with a global highlight handler.
+ * the selection with a global hilite handler.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -87,7 +87,7 @@ public class TableNodeView extends NodeView {
                 updateTitle();
             }
         });
-        getJMenuBar().add(m_tableView.createHighlightMenu());
+        getJMenuBar().add(m_tableView.createHiLiteMenu());
         getJMenuBar().add(m_tableView.createNavigationMenu());
         getJMenuBar().add(m_tableView.createViewMenu());
         getJMenuBar().add(createWriteCSVMenu());
@@ -129,25 +129,25 @@ public class TableNodeView extends NodeView {
     }
 
     /**
-     * Control behaviour to show only highlighted rows.
+     * Control behaviour to show only hilited rows.
      * 
      * @param showOnlyHilit <code>true</code> Filter and display only rows
-     *            whose highlight status is set.
-     * @see TableContentModel#showHighlightedOnly(boolean)
+     *            whose hiLite status is set.
+     * @see TableContentModel#showHiLitedOnly(boolean)
      */
-    public final void showHighlightedOnly(final boolean showOnlyHilit) {
-        m_tableView.showHighlightedOnly(showOnlyHilit);
+    public final void showHiLitedOnly(final boolean showOnlyHilit) {
+        m_tableView.showHiLitedOnly(showOnlyHilit);
     }
 
     /**
-     * Get status of filtering for highlighted rows.
+     * Get status of filtering for hilited rows.
      * 
-     * @return <code>true</code> only highlighted rows are shown,
+     * @return <code>true</code> only hilited rows are shown,
      *         <code>false</code> all rows are shown.
-     * @see TableContentModel#showsHighlightedOnly()
+     * @see TableContentModel#showsHiLitedOnly()
      */
-    public boolean showsHighlightedOnly() {
-        return m_tableView.showsHighlightedOnly();
+    public boolean showsHiLitedOnly() {
+        return m_tableView.showsHiLitedOnly();
     }
 
     /**
@@ -192,7 +192,7 @@ public class TableNodeView extends NodeView {
     }
 
     /**
-     * Highlights selected rows in the highlight handler.
+     * Hilites selected rows in the hilite handler.
      * 
      * @see TableView#hiliteSelected()
      */
@@ -201,7 +201,7 @@ public class TableNodeView extends NodeView {
     }
 
     /**
-     * Unhighlights selected rows in the highlight handler.
+     * Unhilites selected rows in the hilite handler.
      * 
      * @see TableView#unHiliteSelected()
      */
@@ -210,7 +210,7 @@ public class TableNodeView extends NodeView {
     }
 
     /**
-     * Resets highlighting in the highlight handler.
+     * Resets hiliting in the hilite handler.
      * 
      * @see TableView#resetHilite()
      */
@@ -252,7 +252,7 @@ public class TableNodeView extends NodeView {
      * @see de.unikn.knime.core.node.NodeView#onClose()
      */
     protected void onClose() {
-        // unregister from highlight handler
+        // unregister from hilite handler
         m_tableView.cancelRowCountingInBackground();
     }
 
@@ -356,7 +356,7 @@ public class TableNodeView extends NodeView {
         public void run() {
             DataTable table = m_tableView.getContentModel().getDataTable();
             boolean writeHilightedOnly = 
-                m_tableView.getContentModel().showsHighlightedOnly(); 
+                m_tableView.getContentModel().showsHiLitedOnly(); 
             HiLiteHandler hdl = 
                 m_tableView.getContentModel().getHiLiteHandler();
             Object mutex = writeHilightedOnly ? hdl : new Object();
@@ -389,8 +389,8 @@ public class TableNodeView extends NodeView {
         }
     }
     
-    /** RowFilter that filters non-highlighted rows - it's the most 
-     * convenient way to write only the highlighted rows.
+    /** RowFilter that filters non-hilited rows - it's the most 
+     * convenient way to write only the hilited rows.
      * 
      * @author wiswedel, University of Konstanz
      */

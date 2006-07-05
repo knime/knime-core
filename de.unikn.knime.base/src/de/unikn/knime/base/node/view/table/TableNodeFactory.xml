@@ -6,7 +6,7 @@
     <fullDescription>
         <intro> Displays data in a table view. If the number of rows is 
         unknown, the view counts the number of rows when opened. Furthermore
-            rows can be selected and highlighted.</intro>
+            rows can be selected and hilited.</intro>
     </fullDescription>                  
     <ports>                 
         <dataIn index="0" name="Input to display">
