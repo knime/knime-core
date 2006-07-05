@@ -1,4 +1,4 @@
-/* Created on Jun 9, 2006 4:36:38 PM by thor
+/* Created on Jul 5, 2006 2:32:58 PM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.core.node.tableinput;
+package de.unikn.knime.core.node.meta;
 
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeFactory;
@@ -23,11 +23,18 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * This is a factory for the datatable input node model.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DataTableOutputFactory extends NodeFactory {
+public class ModelOutputNodeFactory extends NodeFactory {
+    /**
+     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
+     */
+    @Override
+    public NodeModel createNodeModel() {
+        return new ModelOutputNodeModel();
+    }
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
@@ -36,16 +43,6 @@ public class DataTableOutputFactory extends NodeFactory {
         return 0;
     }
 
-    
-    /** 
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
-     */
-    @Override
-    public NodeModel createNodeModel() {
-        return new DataTableOutputNodeModel();
-    }
-
-    
     /**
      * @see de.unikn.knime.core.node.NodeFactory
      *  #createNodeView(int, de.unikn.knime.core.node.NodeModel)
@@ -56,7 +53,6 @@ public class DataTableOutputFactory extends NodeFactory {
         return null;
     }
 
-    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
@@ -65,7 +61,6 @@ public class DataTableOutputFactory extends NodeFactory {
         return false;
     }
 
-    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
      */

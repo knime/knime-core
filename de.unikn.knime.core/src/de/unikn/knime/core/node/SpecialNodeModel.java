@@ -186,7 +186,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * 
      * @return a workflow manager that is a child of the main manager
      */
-    protected final WorkflowManager internalWFM() {
+    protected WorkflowManager internalWFM() {
         return m_internalWFM;
     }
     

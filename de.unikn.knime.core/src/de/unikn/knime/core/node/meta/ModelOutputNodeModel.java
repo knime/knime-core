@@ -32,7 +32,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     private PredictorParams m_predictorParams;
 
     public ModelOutputNodeModel() {
-        super(0, 0, 1, 0);
+        super(0, 1);
     }
 
     /**
@@ -106,24 +106,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
         m_predictorParams = predParams;
     }
 
-    @Override
     public PredictorParams getPredictorParams() {
         return m_predictorParams;
-    }
-
-    /**
-     * @see de.unikn.knime.core.node.meta.MetaOutputModel#getDataTable()
-     */
-    @Override
-    public DataTable getDataTable() {
-        return null;
-    }
-
-    /**
-     * @see de.unikn.knime.core.node.meta.MetaOutputModel#getDataTableSpec()
-     */
-    @Override
-    public DataTableSpec getDataTableSpec() {
-        return null;
     }
 }

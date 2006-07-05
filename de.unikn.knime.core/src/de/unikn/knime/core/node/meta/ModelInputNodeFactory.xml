@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
 <knimeNode icon="">
-	<name>Meta Input Node</name>
+	<name>Meta Model Input Node</name>
 	
 	<shortDescription>
-		translates inputs from the MetaNode to the inner workflow.
+		transfers models into the meta workflow
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>The MetaInputNode translates inputs from the MetaNode to the inner
-			workflow. DO NOT USE THIS NODE!
+		<intro>The Meta Model Input Node transfers models from the outer workflow
+			into the inner workflow without chaning anything.
 		</intro>
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0">Datatable from the connected successor outside</dataOut>
+		<modelOut name="transfered model" index="0">Model from the connected successor outside</modelOut>
 	</ports>	
 </knimeNode>

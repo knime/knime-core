@@ -35,6 +35,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.interrupt.InterruptibleNodeModel;
 import de.unikn.knime.core.node.meta.MetaInputModel;
+import de.unikn.knime.core.node.meta.MetaNodeModel;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.core.util.FileUtil;
@@ -1751,5 +1752,16 @@ public final class Node {
         } else {
             return null;
         }
+    }
+    
+    
+    /**
+     * Transfers the model of this node into the meta node model by calling
+     * {@link MetaNodeModel#receiveModel(NodeModel)} with the model as argument.
+     * 
+     * @param metaModel a meta node model
+     */
+    public void retrieveModel(final MetaNodeModel metaModel) {
+        metaModel.receiveModel(m_model);        
     }
 }

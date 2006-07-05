@@ -1,4 +1,4 @@
-/* Created on Jun 19, 2006 5:04:05 PM by thor
+/* Created on Jul 5, 2006 2:21:50 PM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.core.node.tableinput;
+package de.unikn.knime.core.node.meta;
 
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeFactory;
@@ -23,25 +23,16 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * This factory creates
- * {@link de.unikn.knime.core.node.tableinput.ModelOutputNodeModel}s.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ModelOutputFactory extends NodeFactory {
-    /**
-     * Creates a new factory for model output nodes.
-     */
-    public ModelOutputFactory() {
-        super(false);
-    }
-
+public class DataInputNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ModelOutputNodeModel();
+        return new DataInputNodeModel();
     }
 
     /**

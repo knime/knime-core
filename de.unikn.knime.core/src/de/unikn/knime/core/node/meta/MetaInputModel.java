@@ -17,10 +17,12 @@
  */
 package de.unikn.knime.core.node.meta;
 
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
+import java.io.File;
+import java.io.IOException;
+
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.PredictorParams;
 
 /**
  * 
@@ -30,25 +32,11 @@ public abstract class MetaInputModel extends NodeModel {
     /**
      * Creates a new input node for meta workflows.
      * 
-     * @param nrDataIns the number of data input ports
      * @param nrDataOuts the number of data output ports
-     * @param nrPredParamsIns the number of model input ports
      * @param nrPredParamsOuts the number of model output ports
      */
-    public MetaInputModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns, final int nrPredParamsOuts) {
-        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
-    }
-
-    
-    /**
-     * Creates a new input node for meta workflows.
-     * 
-     * @param nrDataIns the number of data input ports
-     * @param nrDataOuts the number of data output ports
-     */
-    public MetaInputModel(final int nrDataIns, final int nrDataOuts) {
-        super(nrDataIns, nrDataOuts);
+    public MetaInputModel(final int nrDataOuts, final int nrPredParamsOuts) {
+        super(0, nrDataOuts, 0, nrPredParamsOuts);
     }
 
     
@@ -59,28 +47,26 @@ public abstract class MetaInputModel extends NodeModel {
      * otherwise
      */
     public abstract boolean canBeExecuted();
-    
-    
-    /**
-     * Sets the datatable spec that the node should just pass on.
-     *  
-     * @param spec any datatable spec
+
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
      */
-    public abstract void setDataTableSpec(final DataTableSpec spec);
-    
-    
-    /**
-     * Sets the datatable that the node should just pass on.
-     *  
-     * @param table any datatable
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do here
+    }
+
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
      */
-    public abstract void setDataTable(final DataTable table);
-    
-    
-    /**
-     * Sets the predictor params that this model should just pass on.
-     * 
-     * @param predParams any predictor parameters
-     */
-    public abstract void setPredictorParams(final PredictorParams predParams);
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do here
+    }
 }

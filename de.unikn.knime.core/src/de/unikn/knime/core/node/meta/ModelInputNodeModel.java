@@ -28,7 +28,7 @@ import de.unikn.knime.core.node.PredictorParams;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ModelInputNodeModel extends MetaInputModel {
+class ModelInputNodeModel extends MetaInputModel {
     private PredictorParams m_predictorParams;
     
     /**
@@ -67,26 +67,6 @@ public class ModelInputNodeModel extends MetaInputModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return new DataTableSpec[0];
-    }
-
-
-    /** 
-     * @see de.unikn.knime.core.node.meta.MetaInputModel
-     *  #setDataTableSpec(de.unikn.knime.core.data.DataTableSpec)
-     */
-    @Override
-    public void setDataTableSpec(final DataTableSpec spec) {
-        // nothing to do here
-    }
-    
-
-    /** 
-     * @see de.unikn.knime.core.node.meta.MetaInputModel
-     *  #setDataTable(de.unikn.knime.core.data.DataTable)
-     */
-    @Override
-    public void setDataTable(final DataTable table) {
-        // nothing to do here
     }
 
     /**
@@ -134,7 +114,12 @@ public class ModelInputNodeModel extends MetaInputModel {
         // nothing to do here
     }
     
-    @Override
+    /**
+     * Sets the predictor params that should be passed on in
+     * {@link #savePredictorParams(int, PredictorParams)}.
+     * 
+     * @param predParams the predictor parameters
+     */
     public void setPredictorParams(final PredictorParams predParams) {
         m_predictorParams = predParams;
     }

@@ -17,10 +17,12 @@
  */
 package de.unikn.knime.core.node.meta;
 
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
+import java.io.File;
+import java.io.IOException;
+
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.PredictorParams;
 
 /**
  * 
@@ -33,22 +35,29 @@ public abstract class MetaOutputModel extends NodeModel {
      * @param nrPredParamsIns
      * @param nrPredParamsOuts
      */
-    public MetaOutputModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns, final int nrPredParamsOuts) {
-        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
+    public MetaOutputModel(final int nrDataIns, final int nrPredParamsIns) {
+        super(nrDataIns, 0, nrPredParamsIns, 0);
+    }
+    
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do here
     }
 
-    /**
-     * @param nrDataIns
-     * @param nrDataOuts
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
      */
-    public MetaOutputModel(final int nrDataIns, final int nrDataOuts) {
-        super(nrDataIns, nrDataOuts);
-    }
-    
-    public abstract PredictorParams getPredictorParams();
-    
-    public abstract DataTable getDataTable();
-    
-    public abstract DataTableSpec getDataTableSpec();
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do here
+    }    
 }

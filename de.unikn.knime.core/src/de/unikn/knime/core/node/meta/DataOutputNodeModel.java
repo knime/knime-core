@@ -22,7 +22,6 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
 
 /**
  * 
@@ -98,27 +97,10 @@ public class DataOutputNodeModel extends MetaOutputModel {
         return new DataTableSpec[0];
     }
     
-    /**
-     * 
-     * @return - the datatable.
-     */
-    @Override
     public DataTable getDataTable() {
         return m_dataTable;
     }
 
-    /**
-     * @see de.unikn.knime.core.node.meta.MetaOutputModel#getPredictorParams()
-     */
-    @Override
-    public PredictorParams getPredictorParams() {
-        return null;
-    }
-
-    /**
-     * @see de.unikn.knime.core.node.meta.MetaOutputModel#getDataTableSpec()
-     */
-    @Override
     public DataTableSpec getDataTableSpec() {
         return m_dataTableSpec;
     }

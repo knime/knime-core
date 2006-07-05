@@ -48,6 +48,7 @@ import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.NodeView;
 import de.unikn.knime.core.node.NotConfigurableException;
+import de.unikn.knime.core.node.meta.MetaNodeModel;
 
 /**
  * Wrapper for a Node and the surrounding graph information, i.e. successors and
@@ -61,19 +62,21 @@ import de.unikn.knime.core.node.NotConfigurableException;
  */
 public class NodeContainer implements NodeStateListener {
     /** Key for this node's user description. */
-    protected static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
+    private static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
 
     /** Key for this node's user name. */
-    protected static final String KEY_CUSTOM_NAME = "customName";
+    private static final String KEY_CUSTOM_NAME = "customName";
 
     /** Key for extra info's class name. */
-    protected static final String KEY_EXTRAINFOCLASS = "extraInfoClassName";
+    private static final String KEY_EXTRAINFOCLASS = "extraInfoClassName";
 
     /** Key for the factory class name, used to load nodes. */
-    protected static final String KEY_FACTORY_NAME = "factory";
+    static final String KEY_FACTORY_NAME = "factory";
 
     /** Key for this node's internal ID. */
-    protected static final String KEY_ID = "id";
+    private static final String KEY_ID = "id";
+    
+    private static final String KEY_IS_DELETABLE = "isDeletable";
 
     // The logger for static methods
     private static final NodeLogger LOGGER = NodeLogger
@@ -159,6 +162,8 @@ public class NodeContainer implements NodeStateListener {
     // ...for each port a list of successors...
     private final Vector<List<NodeContainer>> m_succ;
 
+    private boolean m_deletable = true;
+    
     private final WorkflowManager m_wfm;
 
     /**
@@ -255,6 +260,8 @@ public class NodeContainer implements NodeStateListener {
             LOGGER.warn("In the settings of node <id:" + getID() + "|type:"
                     + getName() + "> is no user description specified");
         }
+        
+        m_deletable = settings.getBoolean(KEY_IS_DELETABLE, true);
     }
 
     /**
@@ -860,16 +867,13 @@ public class NodeContainer implements NodeStateListener {
      * @param settings To write settings to.
      */
     public void save(final NodeSettings settings) {
-        // save node factory
         settings.addString(KEY_FACTORY_NAME, m_node.getFactory().getClass()
                 .getName());
-        // save id
         settings.addInt(KEY_ID, m_id);
-        // save name
         settings.addString(KEY_CUSTOM_NAME, m_customName);
-        // save description
         settings.addString(KEY_CUSTOM_DESCRIPTION, m_description);
-        // save type of extrainfo and also it's content - but only if it exists
+        settings.addBoolean(KEY_IS_DELETABLE, m_deletable);
+        
         if (m_extraInfo != null) {
             settings.addString(KEY_EXTRAINFOCLASS, m_extraInfo.getClass()
                     .getName());
@@ -1046,5 +1050,33 @@ public class NodeContainer implements NodeStateListener {
     public void applyDialogSettings() throws WorkflowInExecutionException,
             InvalidSettingsException {
         m_wfm.applyDialogSettings(this);
+    }
+
+    /**
+     * Returns if this node can be delete or not.
+     * 
+     * @return <code>true</code> if it can be deleted, <code>false</code>
+     * otherwise
+     */
+    public boolean isDeletable() {
+        return m_deletable;
+    }
+
+    
+    /**
+     * Sets if this node can be deleted or not.
+     * 
+     * @param deletable <code>true</code> if it can be deleted,
+     * <code>false</code> otherwise
+     */
+    public void setDeletable(final boolean deletable) {
+        m_deletable = deletable;
+    }
+    
+    /**
+     * @see Node#retrieveModel(MetaNodeModel) 
+     */
+    public void retrieveModel(final MetaNodeModel metaModel) {
+        m_node.retrieveModel(metaModel);        
     }
 }

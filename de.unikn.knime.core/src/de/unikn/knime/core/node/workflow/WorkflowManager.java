@@ -1221,12 +1221,14 @@ public class WorkflowManager implements WorkflowListener {
         Integer id = m_idsByNode.get(container);
         if (id != null) {
             // tell node that it has been disconnected (close views...)
-            container.detach();
-
-            resetAndConfigureAfterNode(id);
-
-            disconnectNodeContainer(container);
-
+            try {
+                container.detach();
+                resetAndConfigureAfterNode(id);
+                disconnectNodeContainer(container);
+            } catch (Exception ex) {                
+                LOGGER.error("Error while removing node", ex);
+            }
+            
             container.removeAllListeners();
 
             m_nodesByID.remove(id);
@@ -1308,28 +1310,6 @@ public class WorkflowManager implements WorkflowListener {
      */
     public synchronized void save(final File workflowFile) throws IOException,
             CanceledExecutionException, WorkflowInExecutionException {
-        save(workflowFile, null);
-    }
-
-    /**
-     * Saves this workflow manager settings including nodes and connections into
-     * the given file. In additon, all nodes' internal structures are stored -
-     * if available, depending on the current node state, reset, configured, or
-     * executed. For each node a directory is created (at the workflow file's
-     * parent path) to save the node internals.
-     * 
-     * @param workflowFile To write workflow manager settings to.
-     * @param omitNodes an optional collection of node containers that shall
-     *            <b>not</b> be saved; maybe <code>null</code>
-     * @throws IOException If the workflow file can't be found.
-     * @throws CanceledExecutionException If the saving process has been
-     *             canceled.
-     * @throws WorkflowInExecutionException if the workflow is currently being
-     *             executed
-     */
-    public synchronized void save(final File workflowFile,
-            final Collection<NodeContainer> omitNodes) throws IOException,
-            CanceledExecutionException, WorkflowInExecutionException {
         checkForRunningNodes("Workflow cannot be saved");
 
         if (!workflowFile.isFile()
@@ -1350,9 +1330,6 @@ public class WorkflowManager implements WorkflowListener {
         // save nodes in an own sub-config object as a series of configs
         NodeSettings nodes = settings.addConfig(KEY_NODES);
         for (NodeContainer nextNode : m_nodesByID.values()) {
-            if ((omitNodes != null) && omitNodes.contains(nextNode)) {
-                continue;
-            }
             // create node directory based on the nodes name and id
             // all chars which are not letter or number are replaced by '_'
             String nodeDirID = nextNode.getName().replaceAll("[^a-zA-Z0-9 ]",
@@ -1373,12 +1350,6 @@ public class WorkflowManager implements WorkflowListener {
 
         NodeSettings connections = settings.addConfig(KEY_CONNECTIONS);
         for (ConnectionContainer cc : m_connectionsByID.values()) {
-            if ((omitNodes != null)
-                    && (omitNodes.contains(cc.getTarget()) || omitNodes
-                            .contains(cc.getSource()))) {
-                continue;
-            }
-
             // and save it to it's own config object
             NodeSettings nextConnectionConfig = connections
                     .addConfig("connection_" + cc.getID());

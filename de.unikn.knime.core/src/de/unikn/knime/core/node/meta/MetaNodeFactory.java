@@ -68,7 +68,7 @@ public class MetaNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new MetaNodeModel(m_nrIns, m_nrOuts, this);
+        return new MetaNodeModel(m_nrIns, m_nrOuts, 0, 0);
     }
     
     /**

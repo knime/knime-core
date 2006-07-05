@@ -22,18 +22,9 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
 
 
-/**
- * This model is a subclass of
- * {@link de.unikn.knime.core.node.tableinput.DataTableInputNodeModel} that adds
- * no special behaviour but is just used to "tag" the model as an input node
- * model.
- * 
- * @author Thorsten Meinl, University of Konstanz
- */
-public class DataInputNodeModel extends MetaInputModel {
+class DataInputNodeModel extends MetaInputModel {
     private DataTableSpec m_spec;
     private DataTable m_datatable;
 
@@ -43,7 +34,7 @@ public class DataInputNodeModel extends MetaInputModel {
      * data output node. 
      */
     public DataInputNodeModel() {
-        super(0, 1);
+        super(1, 0);
     }
 
     /**
@@ -77,21 +68,23 @@ public class DataInputNodeModel extends MetaInputModel {
     }
 
 
-    /** 
-     * @see de.unikn.knime.core.node.meta.MetaInputModel
-     *  #setDataTableSpec(de.unikn.knime.core.data.DataTableSpec)
+    /**
+     * Sets the datatable spec that should be passed on in
+     * {@link #configure(DataTableSpec[])}.
+     * 
+     * @param spec the data table spec
      */
-    @Override
     public void setDataTableSpec(final DataTableSpec spec) {
         m_spec = spec;
     }
     
 
-    /** 
-     * @see de.unikn.knime.core.node.meta.MetaInputModel
-     *  #setDataTable(de.unikn.knime.core.data.DataTable)
+    /**
+     * Sets the datatable that should be passed on in
+     * {@link #execute(DataTable[], ExecutionMonitor)}.
+     * 
+     * @param table the data table
      */
-    @Override
     public void setDataTable(final DataTable table) {
         m_datatable = table;
     }
@@ -140,19 +133,12 @@ public class DataInputNodeModel extends MetaInputModel {
     protected void reset() {
         // nothing to do here
     }
-
-    /**
-     * @see de.unikn.knime.core.node.meta.MetaInputModel
-     *  #setPredictorParams(de.unikn.knime.core.node.PredictorParams)
-     */
-    @Override
-    public void setPredictorParams(final PredictorParams predParams) {
-        // nothing to do here        
+    
+    DataTable getDataTable() {
+        return m_datatable;
     }
     
-    /**
-     * Returns the datatable set by {@link #setDataTable(DataTable)}.
-     * @return a datatable
-     */
-    protected final DataTable dataTable() { return m_datatable; }
+    DataTableSpec getDataTableSpec() {
+        return m_spec;
+    }
 }
