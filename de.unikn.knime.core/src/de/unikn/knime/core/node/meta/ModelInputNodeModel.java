@@ -146,7 +146,6 @@ public class ModelInputNodeModel extends MetaInputModel {
     @Override
     protected void savePredictorParams(final int index,
             final PredictorParams predParams) throws InvalidSettingsException {
-        //m_predictorParams.copyTo(predParams);
-        predParams.addConfig(m_predictorParams);
+        m_predictorParams.copyTo(predParams);
     }    
 }
