@@ -201,7 +201,6 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         // just to make sure: refresh the new project
         project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-
     }
 
     private void throwCoreException(final String message) throws CoreException {

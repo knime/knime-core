@@ -142,6 +142,12 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             return true;
         }
 
+        if (resource.getType() == IResource.FILE) {
+            if (name.startsWith("model_")) {
+                return true;
+            }
+        }
+
         // get extension to check if this resource is a zip file
         String fileExt = name.substring(name.length() - 3, name.length());
 

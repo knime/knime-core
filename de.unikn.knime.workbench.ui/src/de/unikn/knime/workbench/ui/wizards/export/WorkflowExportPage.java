@@ -44,14 +44,14 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 
+import de.unikn.knime.core.node.workflow.WorkflowManager;
+
 /**
  * Page to enter the settings for the export of a workflow project.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowExportPage extends WizardPage {
-
-    private static final String KNIME_WORKFLOW_FILE_NAME = "workflow.knime";
 
     private static final String[] FILTER_EXTENSION = {"*.zip"};
 
@@ -251,7 +251,7 @@ public class WorkflowExportPage extends WizardPage {
             return;
         }
 
-        if (container.findMember(KNIME_WORKFLOW_FILE_NAME) == null) {
+        if (container.findMember(WorkflowManager.WORKFLOW_FILE) == null) {
 
             updateStatus("Project does not contain a workflow file.");
             return;
