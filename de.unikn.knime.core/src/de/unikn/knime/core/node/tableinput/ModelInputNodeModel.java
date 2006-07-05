@@ -117,6 +117,7 @@ public class ModelInputNodeModel extends NodeModel {
     @Override
     protected void savePredictorParams(final int index,
             final PredictorParams predParams) throws InvalidSettingsException {
-        m_predictorParams.copyTo(predParams);
+        //m_predictorParams.copyTo(predParams);
+        predParams.addConfig(m_predictorParams);
     }
 }

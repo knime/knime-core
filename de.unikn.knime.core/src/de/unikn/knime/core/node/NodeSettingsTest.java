@@ -504,6 +504,26 @@ public final class NodeSettingsTest extends TestCase {
         c.containsKey("kString_plus");
         assertTrue(c.getString("kString_plus", "-1").equals("6"));
     }
+    
+    /**
+     * Test add Configs.
+     * 
+     * @throws Exception Should not happen.
+     */
+    public void testConfigAdd() throws Exception {
+        NodeSettings settings = new NodeSettings("node_settings");
+        SETT.addConfig(settings);
+        try {
+            PredictorParams predParams = new PredictorParams("pred_params");
+            SETT.addConfig(predParams);
+            SETT.addConfig(predParams);
+            fail();
+        } catch (IllegalArgumentException iae) {
+            assertTrue(true);
+        } catch (NullPointerException npe) {
+            assertTrue(true);
+        }
+    }
 
     /**
      * Tests <code>getKeySet()</code> and <code>getKeySet(String)</code>.

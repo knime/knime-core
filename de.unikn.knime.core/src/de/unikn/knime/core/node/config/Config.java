@@ -359,6 +359,23 @@ public abstract class Config extends AbstractConfigEntry
         put(config);
         return config;
     }
+    
+    /**
+     * Appends the given Config to this Config which has to directly derived 
+     * from this class.
+     * 
+     * @param config The Config to append.
+     * @throws NullPointerException If <code>config</code> is null. 
+     * @throws IllegalArgumentException If <code>config</code> is not instance
+     *         of this class.
+     */
+    public void addConfig(final Config config) {
+        if (getClass() != config.getClass()) {
+            throw new IllegalArgumentException("This " + getClass() 
+                    + " is not equal to " + config.getClass());
+        }
+        put(config);
+    }
 
     /**
      * Retrieves Config by key.
