@@ -203,8 +203,7 @@ public class DefaultRowContainer implements RowContainer  {
                 // will throw an exception if we are supposed to cancel
                 execMon.checkCanceled();
                 execMon.setProgress((double)m_rows.size() / (double)numOfRows,
-                        "reading rows " + m_firstRow + " to "
-                                + (numOfRows + firstRow) + "(max.) ...");
+                        "read row " + m_rows.size() + " of max. " + numOfRows);
             }
 
         } // while ((!rIter.atEnd()) && (numOfRowsRead < numOfRows))
