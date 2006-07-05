@@ -1,4 +1,4 @@
-/* Created on Jun 9, 2006 4:31:45 PM by thor
+/* Created on Jun 9, 2006 4:36:38 PM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.core.node.tableinput;
+package de.unikn.knime.base.node.tableinput;
 
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeFactory;
@@ -24,10 +24,10 @@ import de.unikn.knime.core.node.NodeView;
 
 /**
  * This is a factory for the datatable input node model.
- *  
+ * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DataTableInputFactory extends NodeFactory {
+public class DataTableOutputFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
@@ -42,7 +42,7 @@ public class DataTableInputFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new DataTableInputNodeModel();
+        return new DataTableOutputNodeModel();
     }
 
     

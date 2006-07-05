@@ -1,4 +1,4 @@
-/* Created on Jun 19, 2006 5:04:05 PM by thor
+/* Created on Jun 9, 2006 4:31:45 PM by thor
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package de.unikn.knime.core.node.tableinput;
+package de.unikn.knime.base.node.tableinput;
 
 import de.unikn.knime.core.node.NodeDialogPane;
 import de.unikn.knime.core.node.NodeFactory;
@@ -23,27 +23,11 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * This factory creates
- * {@link de.unikn.knime.core.node.tableinput.ModelOutputNodeModel}s.
- * 
+ * This is a factory for the datatable input node model.
+ *  
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ModelOutputFactory extends NodeFactory {
-    /**
-     * Creates a new factory for model output nodes.
-     */
-    public ModelOutputFactory() {
-        super(false);
-    }
-
-    /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
-     */
-    @Override
-    public NodeModel createNodeModel() {
-        return new ModelOutputNodeModel();
-    }
-
+public class DataTableInputFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
@@ -52,6 +36,16 @@ public class ModelOutputFactory extends NodeFactory {
         return 0;
     }
 
+    
+    /** 
+     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
+     */
+    @Override
+    public NodeModel createNodeModel() {
+        return new DataTableInputNodeModel();
+    }
+
+    
     /**
      * @see de.unikn.knime.core.node.NodeFactory
      *  #createNodeView(int, de.unikn.knime.core.node.NodeModel)
@@ -62,6 +56,7 @@ public class ModelOutputFactory extends NodeFactory {
         return null;
     }
 
+    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
@@ -70,6 +65,7 @@ public class ModelOutputFactory extends NodeFactory {
         return false;
     }
 
+    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
      */
