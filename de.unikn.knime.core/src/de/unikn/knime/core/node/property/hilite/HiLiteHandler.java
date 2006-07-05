@@ -23,7 +23,7 @@ import java.util.Set;
 import de.unikn.knime.core.data.DataCell;
 
 /**
- * Interface for all highlight handlers supporting set/reset of highlight status
+ * Interface for all hilite handlers supporting set/reset of hilite status
  * and un/registering of listeners.
  * 
  * All methods are public, allowing for objects being manager and listener at
@@ -44,6 +44,27 @@ import de.unikn.knime.core.data.DataCell;
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface HiLiteHandler {
+    
+    /**
+     * Constant for the Menu entry 'HiLite'.
+     */
+    public static final String HILITE = "HiLite";
+    
+    /**
+     * Constant for the menu entry 'HiLite Selected'.
+     */
+    public static final String HILITE_SELECTED = "HiLite Selected";
+    
+    /**
+     * Constant for the menu entry 'UnHiLite Selected'.
+     */
+    public static final String UNHILITE_SELECTED = "UnHiLite Selected";
+    
+    /**
+     * Constant for the menu entry 'Clear HiLite'.
+     */
+    public static final String CLEAR_HILITE = "Clear HiLite";
+    
     /**
      * Adds a new <code>HiLiteListener</code> to the list of registered
      * listener objects that will then in turn recieve (un)hilite events.

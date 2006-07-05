@@ -1109,7 +1109,7 @@ public final class Node {
      * @return The hilite handler for the given output port.
      */
     HiLiteHandler getOutHiLiteHandler(final int outPortID) {
-        // highlight handler propagate through data ports only.
+        // hilite handler propagate through data ports only.
         boundDataOutPort(outPortID);
         return m_model.getOutHiLiteHandler(outPortID);
     }
@@ -1124,7 +1124,7 @@ public final class Node {
      * @param hiLiteHdl The hilite handler.
      */
     void setHiLiteHandler(final int inPortID, final HiLiteHandler hiLiteHdl) {
-        // highlight handler are propagated through data ports only.
+        // hilite handler are propagated through data ports only.
         boundDataInPort(inPortID);
         m_model.setInHiLiteHandler(hiLiteHdl, inPortID);
         for (int i = 0; i < m_outDataPorts.length; i++) {

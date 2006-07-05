@@ -127,7 +127,7 @@ public final class TableRowHeaderView extends JTable {
 
     /**
      * Overridden in order to set the correct selection color (depending on
-     * highlight status).
+     * hilite status).
      * 
      * @see JTable#prepareRenderer(TableCellRenderer, int, int)
      */

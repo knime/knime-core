@@ -62,13 +62,13 @@ public interface TableContentInterface {
     ColorAttr getColorAttr(final int row);
 
     /** 
-     * Is the Row <code>row</code> highlighted? The row with the index will
-     * be cached (if it hasn't been in there) and the highlight status of the
+     * Is the Row <code>row</code> hilited? The row with the index will
+     * be cached (if it hasn't been in there) and the hilite status of the
      * row is returned. This method may change the current cache content since
      * it ensures <code>row</code> is in the cache.
      * 
      * @param row The row index of interest
-     * @return <code>true</code> If that index is currently highlighted
+     * @return <code>true</code> If that index is currently hilited
      */
     boolean isHiLit(final int row);
 

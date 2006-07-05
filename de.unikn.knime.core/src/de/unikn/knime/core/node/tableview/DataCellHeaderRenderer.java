@@ -30,9 +30,9 @@ import javax.swing.table.DefaultTableCellRenderer;
  * Class to render a <code>DataCell</code> in a row header of a
  * <code>JTable</code>. The layout of the component being returned is the same
  * as a TableHeader in a <code>JTable</code>, i.e. it uses the look and feel
- * of a table header. This renderer component allows to encode the highlight
- * status of the row being displayed: Highlighted rows have a different
- * background color than non-highlighted rows. This implementation also allows
+ * of a table header. This renderer component allows to encode the hilite
+ * status of the row being displayed: Hilited rows have a different
+ * background color than non-hilited rows. This implementation also allows
  * to encode the color information for a data cell (i.e. from the 
  * <code>ColorHandler</code>) in a small icon.
  * 
@@ -146,7 +146,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
     
     
     /**
-     * Private icon that is shown in front of the value to encode the highlight
+     * Private icon that is shown in front of the value to encode the hilite
      * status. This icon is a simple bubble. The code is mainly copied from
      * {@link javax.swing.plaf.basic.BasicIconFactory} and altered accordingly.
      */
@@ -184,7 +184,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         }
         
         /** 
-         * Setting a color the icon should have. Used to encode the highlight 
+         * Setting a color the icon should have. Used to encode the hilite 
          * status.
          * 
          * @param color New color for the icon.

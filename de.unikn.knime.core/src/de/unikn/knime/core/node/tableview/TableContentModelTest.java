@@ -548,7 +548,7 @@ public class TableContentModelTest extends TestCase {
         int lucky = (int)(Math.random() * OBJECT_DATA.length);
         listModel.setSelectionInterval(lucky, lucky);
         m.requestHiLite(listModel);
-        m.showHighlightedOnly(true);
+        m.showHiLitedOnly(true);
         
         // 0 should be ok, it returns the lucky row
         m.getRow(0); 
@@ -676,9 +676,9 @@ public class TableContentModelTest extends TestCase {
     } // testCachingStrategy()
     
     /**
-     * Tests the correctness of the model when only highlighted are shown.
+     * Tests the correctness of the model when only hilited are shown.
      */
-    public final void testShowOnlyHighlighted() {
+    public final void testShowOnlyHiLited() {
         final String[] colnames = new String[]{"C1"};
         final DataType[] colclasses = new DataType[]{DoubleCell.TYPE};
         final DataRow[] data = new DefaultRow[500];
@@ -694,7 +694,7 @@ public class TableContentModelTest extends TestCase {
         assertEquals(model.getChunkSize(), chunkSize);
         model.setCacheSize(cacheSize);
         assertEquals(model.getCacheSize(), cacheSize);
-        model.showHighlightedOnly(true);
+        model.showHiLitedOnly(true);
         assertEquals(model.getRowCount(), 0);
         assertTrue(model.isRowCountFinal());
         final HiLiteHandler hiliter = new DefaultHiLiteHandler();

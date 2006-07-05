@@ -148,7 +148,7 @@ public class TableContentView extends JTable {
     
     /**
      * Overridden in order to set the correct selection color (depending on
-     * highlight status).
+     * hilite status).
      * 
      * @see JTable#prepareRenderer(TableCellRenderer, int, int)
      */
@@ -198,31 +198,31 @@ public class TableContentView extends JTable {
     } // setHiLiteHandler(HiLiteHandler)
     
     /**
-     * Control behaviour to show only highlighted rows.
+     * Control behaviour to show only hilited rows.
      * 
-     * @param showOnlyHilit <code>true</code>: filter and display only
-     *        rows whose highlight status is set
-     * @see TableContentModel#showHighlightedOnly(boolean)
+     * @param showOnlyHilite <code>true</code>: filter and display only
+     *        rows whose hilite status is set
+     * @see TableContentModel#showHiLitedOnly(boolean)
      */
-    public final void showHighlightedOnly(final boolean showOnlyHilit) {
-        getContentModel().showHighlightedOnly(showOnlyHilit);
+    public final void showHiLitedOnly(final boolean showOnlyHilite) {
+        getContentModel().showHiLitedOnly(showOnlyHilite);
     }
     
     /**
-     * Get status of filtering for highlighted rows.
+     * Get status of filtering for hilited rows.
      * 
-     * @return <code>true</code> if only highlighted rows are shown, 
+     * @return <code>true</code> if only hilited rows are shown, 
      *         <code>false</code> if all rows are shown.
-     * @see TableContentModel#showsHighlightedOnly() 
+     * @see TableContentModel#showsHiLitedOnly() 
      */
-    public boolean showsHighlightedOnly() {
-        return getContentModel().showsHighlightedOnly();
+    public boolean showsHiLitedOnly() {
+        return getContentModel().showsHiLitedOnly();
     }
 
     /** 
      * Is there a HiLiteHandler connected?
      * 
-     * @return <code>true</code> if global highlighting is possible
+     * @return <code>true</code> if global hiliting is possible
      * @see TableContentModel#hasHiLiteHandler()
      */
     public final boolean hasHiLiteHandler() {
@@ -262,7 +262,7 @@ public class TableContentView extends JTable {
     
     /** 
      * Requests to the <code>HiLiteHandler</code> that all rows that are 
-     * currently selected are added to the set of highlighted patterns. This 
+     * currently selected are added to the set of hilited patterns. This 
      * method does nothing if the view is not connected to any 
      * <code>HiLiteHandler</code>.
      */
@@ -272,7 +272,7 @@ public class TableContentView extends JTable {
     
     /** 
      * Requests to the <code>HiLiteHandler</code> that all rows that are 
-     * currently selected are removed from the set of highlighted patterns. This
+     * currently selected are removed from the set of hilited patterns. This
      * method does nothing if the view is not connected to any 
      * <code>HiLiteHandler</code>.
      */
@@ -281,7 +281,7 @@ public class TableContentView extends JTable {
     } // hiliteSelected()
     
     /** 
-     * Requests to the <code>HiLiteHandler</code> that the highlight status of
+     * Requests to the <code>HiLiteHandler</code> that the hilite status of
      * all rows is reset. This method does nothing if the view is not connected
      * to any <code>HiLiteHandler</code>.
      */

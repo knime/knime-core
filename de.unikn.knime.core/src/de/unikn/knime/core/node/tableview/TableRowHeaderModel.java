@@ -221,7 +221,7 @@ public class TableRowHeaderModel extends AbstractTableModel {
      * Delegating method to {@link TableContentModel}.
      * 
      * @param row row index of interest
-     * @return Highlight status of <code>row</code>.
+     * @return Hilite status of <code>row</code>.
      * @see TableContentModel#isHiLit(int)
      */
     public boolean isHiLit(final int row) {

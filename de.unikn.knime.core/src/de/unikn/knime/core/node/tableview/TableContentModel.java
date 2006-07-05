@@ -57,8 +57,8 @@ import de.unikn.knime.core.node.property.hilite.KeyEvent;
  * have some performance problems when the user scrolls up in the table view. 
  * However, when scrolling down, the data flow is somewhat "fluent".</p>
  * 
- * <p>This class also supports highlighting of rows (even though it is a view
- * property). We do store the highlight status of the rows in here as it 
+ * <p>This class also supports hiliting of rows (even though it is a view
+ * property). We do store the hilite status of the rows in here as it 
  * complies nicely with the caching strategy.</p>
  * 
  * @see de.unikn.knime.core.data.DataTable
@@ -79,7 +79,7 @@ public class TableContentModel extends AbstractTableModel
     public static final String PROPERTY_DATA = "data changed";
     
     /** Property name of the event when hilite handler changes. */
-    public static final String PROPERTY_HIGHLIGHT = "highlight changed";
+    public static final String PROPERTY_HILITE = "hilite changed";
     
     /** 
      * Default size of the ring buffer (500).
@@ -112,13 +112,13 @@ public class TableContentModel extends AbstractTableModel
      */
     private DataRow[] m_cachedRows;
     
-    /** storing for each row in the cache if it has been highlighted,
+    /** storing for each row in the cache if it has been hilited,
      * using the same ring buffer strategy as {@link #m_cachedRows}. */
     private BitSet m_hilitSet;
 
     /** 
      * Number of rows seen in current iterator that are of interest, i.e.
-     * highlighted rows when {@link #m_showOnlyHiLit} is <code>true</code>, all
+     * hilited rows when {@link #m_showOnlyHiLit} is <code>true</code>, all
      * rows otherwise. This field is set to 0 when a new iterator is
      * instantiated. 
      */
@@ -159,7 +159,7 @@ public class TableContentModel extends AbstractTableModel
     private boolean m_isMaxRowCountFinal;
     
     /**
-     * Switch to show only highlighted rows.
+     * Switch to show only hilited rows.
      */
     private boolean m_showOnlyHiLit;
 
@@ -171,13 +171,13 @@ public class TableContentModel extends AbstractTableModel
      * (if m_cachedRows not <code>null</code>). */
     private int m_cacheSize;
     
-    /** Handler to get the highlight status of the rows from and to send 
-     * highlight requests to. Is <code>null</code> when no hilite available.
+    /** Handler to get the hilite status of the rows from and to send 
+     * hilite requests to. Is <code>null</code> when no hilite available.
      */
     private HiLiteHandler m_hiLiteHdl;
     
     /** property handler that is used for events when data or 
-     * highlight handler has changed.
+     * hilite handler has changed.
      */
     private final PropertyChangeSupport m_propertySupport;
     
@@ -190,7 +190,7 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Creates a new TableContentModel with empty content. Call 
      * {@link #setDataTable(DataTable)} to set a valid data table. No 
-     * highlighting is available.
+     * HiLiting is available.
      * 
      * @see #setDataTable(DataTable)
      * @see #setHiLiteHandler(HiLiteHandler)
@@ -205,7 +205,7 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Creates a new TableContentModel displaying <code>data</code>.
-     * No Highlighting is available.
+     * No HiLiting is available.
      * 
      * @param data the table to be displayed. May be <code>null</code> to 
      *        indicate that there is no data available. 
@@ -218,12 +218,12 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Creates a new TableContentModel displaying <code>data</code>.
      * If <code>prop</code> is not <code>null</code>, its 
-     * <code>HiLiteHandler</code> is used to do highlight synchronization.
+     * <code>HiLiteHandler</code> is used to do hilite synchronization.
      * 
      * @param data the table to be displayed. May be <code>null</code> to 
      *        indicate that there is no data available.
      * @param prop the <code>HiLiteHandler</code> However, may
-     *        also be <code>null</code> to disable any highlighting 
+     *        also be <code>null</code> to disable any hiliting. 
      */
     public TableContentModel(final DataTable data, final HiLiteHandler prop) {
         this(data);
@@ -299,7 +299,7 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Set a new <code>HiLiteHandler</code>. If the argument is 
-     * <code>null</code> highlighting is disabled.
+     * <code>null</code> hiliting is disabled.
      * 
      * @param hiliter the new handler to use.
      */
@@ -317,9 +317,9 @@ public class TableContentModel extends AbstractTableModel
             hiliter.addHiLiteListener(this);
         }
         
-        // check for rows whose highlight status has changed
+        // check for rows whose hilite status has changed
         if (hasData()) {
-            if (showsHighlightedOnly()) {
+            if (showsHiLitedOnly()) {
                 m_isRowCountOfInterestFinal = false;
                 m_rowCountOfInterest = 0;
                 clearCache();
@@ -335,7 +335,7 @@ public class TableContentModel extends AbstractTableModel
                         break;             // everything after is also null
                     }
                     final DataCell key = current.getKey().getId();
-                    // do the highlight sync
+                    // do the hilite sync
                     final boolean wasHiLit = m_hilitSet.get(i);
                     final boolean isHiLit = (hiliter != null
                         ? hiliter.isHiLit(key) : false);
@@ -352,7 +352,7 @@ public class TableContentModel extends AbstractTableModel
             }
         }
         m_propertySupport.firePropertyChange(
-                PROPERTY_HIGHLIGHT, oldHandler, m_hiLiteHdl);
+                PROPERTY_HILITE, oldHandler, m_hiLiteHdl);
     } // setHiLiteHandler(HiLiteHandler)
     
     /** 
@@ -377,23 +377,23 @@ public class TableContentModel extends AbstractTableModel
     /** 
      * Is there a HiLiteHandler connected?
      * 
-     * @return <code>true</code> if global highlighting is possible
+     * @return <code>true</code> if global hiliting is possible
      */
     public final boolean hasHiLiteHandler() {
         return m_hiLiteHdl != null;
     } // hasHiLiteHandler()
 
     /**
-     * Control behaviour to show only highlighted rows.
+     * Control behaviour to show only hilited rows.
      * 
-     * @param showOnlyHilit <code>true</code> Filter and display only rows
-     *            whose highlight status is set.
+     * @param showOnlyHilite <code>true</code> Filter and display only rows
+     *            whose hilite status is set.
      */
-    public final void showHighlightedOnly(final boolean showOnlyHilit) {
-        if (showOnlyHilit == m_showOnlyHiLit) {
+    public final void showHiLitedOnly(final boolean showOnlyHilite) {
+        if (showOnlyHilite == m_showOnlyHiLit) {
             return;
         }
-        m_showOnlyHiLit = showOnlyHilit;
+        m_showOnlyHiLit = showOnlyHilite;
         if (m_showOnlyHiLit) {
             // don't know how many rows are hilit
             m_rowCountOfInterest = 0;
@@ -411,12 +411,12 @@ public class TableContentModel extends AbstractTableModel
     }
 
     /**
-     * Get status of filtering for highlighted rows.
+     * Get status of filtering for hilited rows.
      * 
-     * @return <code>true</code> if only highlighted rows are shown,
+     * @return <code>true</code> if only hilited rows are shown,
      *         <code>false</code> if all rows are shown.
      */
-    public boolean showsHighlightedOnly() {
+    public boolean showsHiLitedOnly() {
         return m_showOnlyHiLit;
     }
 
@@ -653,7 +653,7 @@ public class TableContentModel extends AbstractTableModel
     }
     
     /** 
-     * Highlights all rows that are selected according to the given 
+     * HiLites all rows that are selected according to the given 
      * selection model. This method does nothing if no handler is connected.
      * 
      * @param selModel To get selection status from
@@ -665,7 +665,7 @@ public class TableContentModel extends AbstractTableModel
     } // hilite(ListSelectionModel)
     
     /** 
-     * "Unhighlights" all rows that are selected according to the given 
+     * "Unhilites" all rows that are selected according to the given 
      * selection model. This method does nothing if no handler is connected.
      * 
      * @param selModel To get selection status from
@@ -677,7 +677,7 @@ public class TableContentModel extends AbstractTableModel
     } // unHilite(ListSelectionModel)
     
     /** 
-     * Resets the highlighting of all keys by invoking the reset method in
+     * Resets the hiliting of all keys by invoking the reset method in
      * the <code>HiLiteHandler</code>. This method does nothing if no handler
      * is connected.
      * 
@@ -712,8 +712,8 @@ public class TableContentModel extends AbstractTableModel
         }
         final int cacheSize = getCacheSize();
         final int oldRowCount = getRowCount();
-        // if it shows only the highlighted ones, remove all rows.
-        if (showsHighlightedOnly()) {
+        // if it shows only the hilited ones, remove all rows.
+        if (showsHiLitedOnly()) {
             m_rowCountOfInterest = 0;
             clearCache(); // clears also hilite
             fireTableRowsDeleted(0, oldRowCount);
@@ -920,7 +920,7 @@ public class TableContentModel extends AbstractTableModel
         final int cacheSize = getCacheSize();
         final int oldRowCount = getRowCount();
         final boolean wasRowCountFinal = isRowCountFinal();
-        if (showsHighlightedOnly()) {
+        if (showsHiLitedOnly()) {
             /* what follows: run through the DataTable to the last 
              * cached row, count the number of rows that have been 
              * changed and add (or subtract, resp.) them from the global 
@@ -1040,7 +1040,7 @@ public class TableContentModel extends AbstractTableModel
                 }
             }
         } else { // iteration necessary: use new (private) iterator
-            // TODO: check for correctness when m_showOnlyHighlighted is set
+            // TODO: check for correctness when m_showOnlyHilited is set
             final RowIterator it = m_data.iterator();
             for (int i = 0; it.hasNext() && i < lastSelected; i++) {
                 DataCell key = it.next().getKey().getId();
@@ -1096,7 +1096,7 @@ public class TableContentModel extends AbstractTableModel
         }
         m_isMaxRowCountFinal = isFinal;
         m_maxRowCount = newCount;
-        if (!showsHighlightedOnly()) {
+        if (!showsHiLitedOnly()) {
             m_rowCountOfInterest = m_maxRowCount;
         }
         SwingUtilities.invokeLater(new Runnable() {

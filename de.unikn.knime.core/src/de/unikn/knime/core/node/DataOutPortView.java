@@ -94,7 +94,7 @@ final class DataOutPortView extends NodeOutPortView {
         m_tabs.addTab("Data", m_dataView);
         m_tabs.addTab("DataTableSpec", m_specView);
         m_tabs.addTab("Annotated Props", m_propsView);
-        m_tabs.addTab("HighLightHdlr", m_hiliteView);
+        m_tabs.addTab("HiLiteHandler", m_hiliteView);
 
         m_tabs.setBackground(NodeView.COLOR_BACKGROUND);
         cont.add(m_tabs, BorderLayout.CENTER);

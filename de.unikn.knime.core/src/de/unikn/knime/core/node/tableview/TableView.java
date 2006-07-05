@@ -218,7 +218,7 @@ public class TableView extends JScrollPane {
     /** 
      * Checks if a property handler is registered.
      * 
-     * @return <code>true</code> if global highlighting is possible (property
+     * @return <code>true</code> if global hiliting is possible (property
      *         handler is available).
      * @see TableContentModel#hasHiLiteHandler()
      */
@@ -292,25 +292,25 @@ public class TableView extends JScrollPane {
     }
     
     /**
-     * Control behaviour to show only highlighted rows.
+     * Control behaviour to show only hilited rows.
      * 
-     * @param showOnlyHilit <code>true</code> Filter and display only
-     *        rows whose highlight status is set.
-     * @see TableContentModel#showHighlightedOnly(boolean)
+     * @param showOnlyHilite <code>true</code> Filter and display only
+     *        rows whose hilite status is set.
+     * @see TableContentModel#showHiLitedOnly(boolean)
      */
-    public final void showHighlightedOnly(final boolean showOnlyHilit) {
-        getContentTable().showHighlightedOnly(showOnlyHilit);
+    public final void showHiLitedOnly(final boolean showOnlyHilite) {
+        getContentTable().showHiLitedOnly(showOnlyHilite);
     }
 
     /**
-     * Get status of filtering for highlighted rows.
+     * Get status of filtering for hilited rows.
      * 
-     * @return <code>true</code>: only highlighted rows are shown, 
+     * @return <code>true</code>: only hilited rows are shown, 
      *         <code>false</code>: all rows are shown.
-     * @see TableContentModel#showsHighlightedOnly() 
+     * @see TableContentModel#showsHiLitedOnly() 
      */
-    public boolean showsHighlightedOnly() {
-        return getContentTable().showsHighlightedOnly();
+    public boolean showsHiLitedOnly() {
+        return getContentTable().showsHiLitedOnly();
     }
     
     /**
@@ -460,7 +460,7 @@ public class TableView extends JScrollPane {
     protected void showPopup(final Point p) {
         if (m_popup == null) {
             m_popup = new JPopupMenu();
-            for (JMenuItem item : createHighlightMenuItems()) {
+            for (JMenuItem item : createHiLiteMenuItems()) {
                 m_popup.add(item);
             }
         }
@@ -519,27 +519,27 @@ public class TableView extends JScrollPane {
     } // createNavigationMenu()
     
     /**
-     * Get a new menu to control highlighting for this view.
+     * Get a new menu to control hiliting for this view.
      * 
-     * @return a new JMenu with highlighting buttons
+     * @return a new JMenu with hiliting buttons
      */
-    public JMenu createHighlightMenu() {
-        final JMenu result = new JMenu("Highlight");
+    public JMenu createHiLiteMenu() {
+        final JMenu result = new JMenu("Hilite");
         result.setMnemonic('H');
-        for (JMenuItem item : createHighlightMenuItems()) {
+        for (JMenuItem item : createHiLiteMenuItems()) {
             result.add(item);
         }
         return result;
-    } // createHighlightMenu()
+    } // createHiLiteMenu()
     
     /**
      * Helper function to create new JMenuItems that are in the hilite menu.
      * 
      * @return all those items in an array
      */
-    Collection<JMenuItem> createHighlightMenuItems() {
+    Collection<JMenuItem> createHiLiteMenuItems() {
         ArrayList<JMenuItem> result = new ArrayList<JMenuItem>();
-        JMenuItem hsitem = new JMenuItem("Highlight Selected");
+        JMenuItem hsitem = new JMenuItem("Hilite Selected");
         hsitem.setMnemonic('S');
         hsitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -550,7 +550,7 @@ public class TableView extends JScrollPane {
         hsitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(hsitem);
         
-        JMenuItem usitem = new JMenuItem("Unhighlight Selected");
+        JMenuItem usitem = new JMenuItem("Unhilite Selected");
         usitem.setMnemonic('U');
         usitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -561,7 +561,7 @@ public class TableView extends JScrollPane {
         usitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(usitem);
         
-        JMenuItem chitem = new JMenuItem("Clear Highlight");
+        JMenuItem chitem = new JMenuItem("Clear Hilite");
         chitem.setMnemonic('C');
         chitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -572,19 +572,19 @@ public class TableView extends JScrollPane {
         chitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(chitem);
         
-        JMenuItem shoitem = new JCheckBoxMenuItem("Show Highlighted Only");
+        JMenuItem shoitem = new JCheckBoxMenuItem("Show Hilited Only");
         shoitem.setMnemonic('O');
         shoitem.addPropertyChangeListener(
                 "ancestor", new PropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent evt) {
                 JCheckBoxMenuItem source = (JCheckBoxMenuItem)evt.getSource();
-                source.setSelected(showsHighlightedOnly());
+                source.setSelected(showsHiLitedOnly());
             }
         });
         shoitem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 boolean i = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-                showHighlightedOnly(i);
+                showHiLitedOnly(i);
             }
         });
         shoitem.addPropertyChangeListener(new EnableListener(this, true, true));

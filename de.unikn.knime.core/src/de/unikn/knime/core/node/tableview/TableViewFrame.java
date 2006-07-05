@@ -105,7 +105,7 @@ public class TableViewFrame extends JFrame {
             }
         });
         
-        getJMenuBar().add(m_scroller.createHighlightMenu());
+        getJMenuBar().add(m_scroller.createHiLiteMenu());
         getJMenuBar().add(m_scroller.createNavigationMenu());
         getJMenuBar().add(m_scroller.createViewMenu());
         
@@ -149,7 +149,7 @@ public class TableViewFrame extends JFrame {
     /**
      * Delegating method to internal table view.
      * 
-     * @return if highlight handler has been set
+     * @return if hilite handler has been set
      */
     public boolean hasHiLiteHandler() {
         return m_scroller.hasHiLiteHandler();
@@ -167,7 +167,7 @@ public class TableViewFrame extends JFrame {
     /**
      * Delegating method to internal table view.
      * 
-     * @param hiLiteHdl A new highlight handler.
+     * @param hiLiteHdl A new hilite handler.
      */
     public void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
         m_scroller.setHiLiteHandler(hiLiteHdl);

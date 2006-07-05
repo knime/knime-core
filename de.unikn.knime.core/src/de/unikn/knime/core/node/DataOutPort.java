@@ -48,7 +48,7 @@ public final class DataOutPort extends NodeOutPort
     private DataTableSpec m_tableSpec;
     
     /**
-     * The highlight handler of this port.
+     * The hilite handler of this port.
      */
     private HiLiteHandler m_hiliteHdl;
 
