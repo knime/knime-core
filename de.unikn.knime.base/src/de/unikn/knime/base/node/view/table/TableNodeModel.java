@@ -103,7 +103,6 @@ public class TableNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
-        throw new IOException("Table not saved yet.");
     }
 
     /**
@@ -117,7 +116,6 @@ public class TableNodeModel extends NodeModel {
      */
     protected void saveInternals(final File internDir, 
             final ExecutionMonitor exec) throws IOException {
-        throw new IOException("Table can't be saved yet.");
     }
 
     /** 

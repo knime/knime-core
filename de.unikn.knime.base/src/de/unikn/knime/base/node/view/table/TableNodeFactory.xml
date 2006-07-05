@@ -5,10 +5,12 @@
     <shortDescription>Displays data in a table view.</shortDescription>
     <fullDescription>
         <intro> Displays data in a table view. If the number of rows is 
-        unknown, the view counts the number of rows when opened.  </intro>
+        unknown, the view counts the number of rows when opened. Furthermore
+            rows can be selected and highlighted.</intro>
     </fullDescription>                  
     <ports>                 
-        <dataIn index="0">Input table to display.</dataIn>
+        <dataIn index="0" name="Input to display">
+                Input table to display.</dataIn>
     </ports>
     <views>
     	<view index="0" name="Table View">
