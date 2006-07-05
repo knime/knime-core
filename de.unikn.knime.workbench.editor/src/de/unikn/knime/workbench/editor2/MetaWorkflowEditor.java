@@ -25,6 +25,8 @@ import org.eclipse.ui.IEditorInput;
 
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
+import de.unikn.knime.core.node.NodeStateListener;
+import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.meta.MetaInputModel;
 import de.unikn.knime.core.node.meta.MetaOutputModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
@@ -37,7 +39,8 @@ import de.unikn.knime.workbench.repository.model.NodeTemplate;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class MetaWorkflowEditor extends WorkflowEditor {
+public class MetaWorkflowEditor extends WorkflowEditor implements
+        NodeStateListener {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MetaWorkflowEditor.class);
@@ -46,6 +49,11 @@ public class MetaWorkflowEditor extends WorkflowEditor {
      * The key used to save meta-workflow settings.
      */
     public static final String SETTING_ID = "meta-workflow";
+
+    /**
+     * The name prefix for editor titles.
+     */
+    public static final String EDITOR_TITLE = "Meta-workflow";
 
     /**
      * The <code>NodeContainer</code> representing this meta-workflow.
@@ -80,8 +88,10 @@ public class MetaWorkflowEditor extends WorkflowEditor {
         m_metaNodeContainer = ((MetaWorkflowEditorInput)input)
                 .getNodeContainer();
 
-        name = "Meta-workflow";
-        
+        m_metaNodeContainer.addListener(this);
+
+        name = EDITOR_TITLE + ": " + m_metaNodeContainer.getCustomName();
+
         setWorkflowManager(m_metaNodeContainer.getEmbeddedWorkflowManager());
 
         setUpMetaPortNodeExtrainfos();
@@ -149,8 +159,8 @@ public class MetaWorkflowEditor extends WorkflowEditor {
      * @param xPos the x position to set the node in the editor
      * 
      */
-    private void setUpSingleInfo(final NodeContainer container,
-            final int yPos, final int xPos) {
+    private void setUpSingleInfo(final NodeContainer container, final int yPos,
+            final int xPos) {
         // check if the extraninfo has been set already
         if (container.getExtraInfo() != null
                 && container.getExtraInfo().isFilledProperly()) {
@@ -182,5 +192,19 @@ public class MetaWorkflowEditor extends WorkflowEditor {
      */
     public boolean representsNodeContainer(final NodeContainer container) {
         return m_metaNodeContainer == container;
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeStateListener#
+     *      stateChanged(de.unikn.knime.core.node.NodeStatus, int)
+     */
+    public void stateChanged(final NodeStatus state, final int id) {
+
+        if (state instanceof NodeStatus.CustomName) {
+            // Editor name (title)
+            setPartName(EDITOR_TITLE + ": "
+                    + m_metaNodeContainer.getCustomName());
+        }
+
     }
 }
