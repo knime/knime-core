@@ -8,20 +8,20 @@
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Allows to filter certain columns from the input table that
-		are	then excluded from the output table. Use the buttons to move columns 
-		from one list (Include or Exclude) to the other. To briefly 
-		describe the dialog settings:
+		<intro>Allows you to filter certain columns from the input table that 
+		are then excluded from the output table. Use the buttons to 
+		move columns from one list (include or exclude) to the other.
 		</intro>
 		
 		<option name="Include">This list contains the column names that are 
 		contained in the output	table.</option>
 		
-		<option name="Search">The search field allows for finding column names 
-			in either the include or exclude list. Repeated pressing of the
-			search button marks the next column matching the search text.
-			The check box 'Mark all search hits' causes all matching columns
-			to be selected.</option>
+		<option name="Search">The search field enables you to search for 
+		column names in either the include or exclude list. 
+		Repeated clicking of the search 
+		button marks the next column that matches the search text. The check box 
+		'Mark all search hits' causes all matching columns to be selected.
+		</option>
 		
 	    <option name="Exclude">Contains the names of columns of the input table 
 	    	that are excluded from the output table.</option>
