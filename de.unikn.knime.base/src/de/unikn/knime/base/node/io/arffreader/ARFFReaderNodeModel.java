@@ -143,6 +143,20 @@ public class ARFFReaderNodeModel extends NodeModel {
         // nothing to do.
     }
 
+    @Override
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+        throws IOException, CanceledExecutionException {
+     
+    }
+    
+    @Override
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+     
+    }
+    
     /**
      * @see NodeModel#saveSettingsTo(NodeSettings)
      */
