@@ -106,8 +106,7 @@ public final class Node {
     private File m_nodeDir = null;
 
     /** Store when the current output data has been stored (to avoid 
-     * uneccesary re-save). Will be set when saved, will be unset upon  
-     * reset.
+     * uneccesary re-save). Will be set when saved, will be unset upon reset.
      */
     private boolean m_isCurrentlySaved = false;
 
@@ -269,7 +268,11 @@ public final class Node {
         m_model.setConfigured(wasConfigured);
         // read executed flag
         boolean wasExecuted = settings.getBoolean(CFG_ISEXECUTED);
-        m_model.setExecuted(wasExecuted);
+        if (m_model.isAutoExecutable()) {
+            m_model.setExecuted(false);
+        } else {
+            m_model.setExecuted(wasExecuted);
+        }
 
         // read model and load settings
         try {
@@ -286,10 +289,8 @@ public final class Node {
                     "Unable to load settings: " + ise.getMessage());
             notifyStateListeners(m_status);
         } catch (Exception e) {
-            m_logger.error("Unable to load settings", e);
             throw new InvalidSettingsException(e);
         } catch (Error e) {
-            m_logger.fatal("Unable to load settings", e);
             throw new InvalidSettingsException(e);
         }
 
@@ -314,16 +315,13 @@ public final class Node {
         // load data if node was executed
         if (isExecuted()) {
             File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
-            if (internDir.exists() 
-                    && internDir.isDirectory() && internDir.canRead()) {
-                try {
-                    m_model.loadInternals(internDir, exec);
-                    processModelWarnings();
-                } catch (IOException ioe) {
-                    m_status = new NodeStatus.Error(
-                        "Unable to load internals: " + ioe.getMessage());
-                    this.notifyStateListeners(m_status);
-                }
+            try {
+                m_model.loadInternals(internDir, exec);
+                processModelWarnings();
+            } catch (IOException ioe) {
+                m_status = new NodeStatus.Error(
+                    "Unable to load internals: " + ioe.getMessage());
+                this.notifyStateListeners(m_status);
             }
             // load data
             NodeSettings data = settings.getConfig(CFG_DATA_FILES);
@@ -347,6 +345,10 @@ public final class Node {
                 m_outModelPorts[i].setPredictorParams(pred);
             }
             m_isCurrentlySaved = true;
+        } else {
+            if (wasExecuted && m_model.isAutoExecutable()) {
+                execute(exec);
+            }
         }
     }
 
@@ -1401,16 +1403,18 @@ public final class Node {
         }
         if (!m_isCurrentlySaved) {
             if (isExecuted()) {
-                File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
-                internDir.mkdir();
-                if (internDir.canWrite()) {
-                    try {
-                        m_model.saveInternals(internDir, exec);
-                        processModelWarnings();
-                    } catch (IOException ioe) {
-                        m_status = new NodeStatus.Error("Unable to save " 
-                                + "internals: " + ioe.getMessage());
-                        this.notifyStateListeners(m_status);
+                if (!isAutoExecutable()) {
+                    File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
+                    internDir.mkdir();
+                    if (internDir.canWrite()) {
+                        try {
+                            m_model.saveInternals(internDir, exec);
+                            processModelWarnings();
+                        } catch (IOException ioe) {
+                            m_status = new NodeStatus.Error("Unable to save " 
+                                    + "internals: " + ioe.getMessage());
+                            this.notifyStateListeners(m_status);
+                        }
                     }
                 }
                 NodeSettings data = settings.addConfig(CFG_DATA_FILES);
@@ -1423,7 +1427,7 @@ public final class Node {
                 }
                 NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                 for (int i = 0; i < m_outModelPorts.length; i++) {
-                    String specName = MODEL_FILE_PREFIX + i + ".xml";
+                    String specName = MODEL_FILE_PREFIX + i + ".pmml.gz";
                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
                     PredictorParams pred = 
                         m_outModelPorts[i].getPredictorParams();
@@ -1443,7 +1447,7 @@ public final class Node {
                 }
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     File targetFile = 
-                        new File(m_nodeDir, MODEL_FILE_PREFIX + i + ".xml");
+                        new File(m_nodeDir, MODEL_FILE_PREFIX + i + ".pmml.gz");
                     targetFile.delete();            
                 }
             }
@@ -1456,7 +1460,7 @@ public final class Node {
                  }
                  NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                  for (int i = 0; i < m_outModelPorts.length; i++) {
-                     String specName = MODEL_FILE_PREFIX + i + ".xml";
+                     String specName = MODEL_FILE_PREFIX + i + "pmml.gz";
                      models.addString(CFG_OUTPUT_PREFIX + i, specName);
                  }
              } else {

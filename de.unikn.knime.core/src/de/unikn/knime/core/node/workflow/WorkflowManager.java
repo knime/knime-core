@@ -1068,6 +1068,7 @@ public class WorkflowManager implements WorkflowListener {
 
         File parentDir = workflowFile.getParentFile();
 
+        ArrayList<NodeContainer> failedNodes = new ArrayList<NodeContainer>();
         // get all keys in there
         for (NodeContainer newNode : topSortNodes()) {
             try {
@@ -1078,14 +1079,21 @@ public class WorkflowManager implements WorkflowListener {
                 File nodeFile = new File(parentDir, nodeFileName);
                 newNode.load(nodeFile, exec);
             } catch (IOException ioe) {
-                LOGGER.warn("Unable to load node internals for: "
-                        + newNode.getNameWithID(), ioe);
-                newNode.resetAndConfigure();
+                String msg = "Unable to load node: " + newNode.getNameWithID()
+                    + " -> reset and configure.";
+                LOGGER.error(msg);
+                LOGGER.debug("", ioe);
+                failedNodes.add(newNode);
             } catch (InvalidSettingsException ise) {
-                LOGGER.warn("Unable to load settings for: "
-                        + newNode.getNameWithID(), ise);
-                newNode.resetAndConfigure();
+                String msg = "Unable to load node: " + newNode.getNameWithID()
+                    + " -> reset and configure.";
+                LOGGER.error(msg);
+                LOGGER.debug("", ise);
+                failedNodes.add(newNode);
             }
+        }
+        for (NodeContainer newNode : failedNodes) {
+            resetAndConfigureNode(newNode.getID());
         }
     }
 

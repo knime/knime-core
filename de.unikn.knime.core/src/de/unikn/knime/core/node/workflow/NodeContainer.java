@@ -1005,6 +1005,7 @@ public class NodeContainer implements NodeStateListener {
      *            NodeContainer ID
      */
     public synchronized void stateChanged(final NodeStatus st, final int id) {
+        // TODO (tg) id is never used?
         if (st instanceof NodeStatus.EndExecute) {
             // do not immediately forward this event. We will generate a
             // new event after we have actually set all internal flags
