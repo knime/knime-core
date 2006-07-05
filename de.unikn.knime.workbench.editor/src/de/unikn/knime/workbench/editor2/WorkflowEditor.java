@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
@@ -806,6 +807,14 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.warn("Could not save workflow", e);
         }
 
+        try {
+            
+            m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
+                    monitor);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // try {
         // // try to refresh project
         // // m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
