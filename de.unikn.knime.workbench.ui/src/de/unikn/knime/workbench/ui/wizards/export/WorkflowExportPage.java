@@ -55,6 +55,8 @@ public class WorkflowExportPage extends WizardPage {
 
     private static final String[] FILTER_EXTENSION = {"*.zip"};
 
+    private static String exportPath;
+
     private Text m_containerText;
 
     private Text m_fileText;
@@ -134,7 +136,7 @@ public class WorkflowExportPage extends WizardPage {
         group.setLayoutData(gridData);
 
         m_excludeData = new Button(group, SWT.CHECK);
-        m_excludeData.setSelection(false);
+        m_excludeData.setSelection(true);
         m_excludeData.setText("Exclude data from export.");
 
         initialize();
@@ -165,6 +167,10 @@ public class WorkflowExportPage extends WizardPage {
 
                 m_containerText.setText(container.getFullPath().toString());
             }
+        }
+
+        if (exportPath != null) {
+            m_fileText.setText(exportPath);
         }
     }
 
@@ -203,12 +209,16 @@ public class WorkflowExportPage extends WizardPage {
         fileDialog.setFilterExtensions(FILTER_EXTENSION);
         fileDialog.setText("Specify export file.");
 
+        if (exportPath != null) {
+            fileDialog.setFileName(exportPath);
+        }
+
         String filePath = fileDialog.open();
 
-        if (filePath == null) {
+        if (filePath.trim().length() > 0) {
 
-            filePath = "";
-        } else if (filePath.trim().length() > 0) {
+            // remember the selected path
+            exportPath = filePath;
 
             // append "zip" extension if not there.
             String extension = filePath.substring(filePath.length() - 4,
