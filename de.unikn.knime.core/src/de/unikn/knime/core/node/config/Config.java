@@ -1596,17 +1596,15 @@ public abstract class Config extends AbstractConfigEntry
      * @param config Depending on the readRoot, we write into this Config and
      *            return it.
      * @param in The stream to read XML Config from.
-     * @param readRoot If the root XML element should be used to init the root
-     *            Config.
      * @return A new Config filled with the content read from XML.
      * @throws IOException If the Config could not be load from stream.
      */
     protected static synchronized Config loadFromXML(final Config config,
-            final InputStream in, final boolean readRoot) throws IOException {
+            final InputStream in) throws IOException {
         if (in == null) {
             throw new NullPointerException();
         }
-        return XMLConfig.load(config, in, readRoot);
+        return XMLConfig.load(config, in);
     }
 
     /* --- serialize objects --- */

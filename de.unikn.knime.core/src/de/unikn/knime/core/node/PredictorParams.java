@@ -78,8 +78,7 @@ public final class PredictorParams extends NodeSettings {
     
     /**
      * Reads <code>PredictorParams</code> settings from the given XML stream 
-     * and returns a new <code>PredictorParams</code> object. The root will be
-     * read.
+     * and returns a new <code>PredictorParams</code> object.
      * 
      * @param in XML input stream to read settings from.
      * @return A new settings object.
@@ -89,24 +88,8 @@ public final class PredictorParams extends NodeSettings {
      */
     public static synchronized PredictorParams loadFromXML(
             final InputStream in) throws IOException {
-        return PredictorParams.loadFromXML(in, true);
-    }
-    
-    /**
-     * Reads <code>PredictorParams</code> settings from the given XML stream 
-     * and returns a new <code>PredictorParams</code> object.
-     * 
-     * @param in XML input stream to read settings from.
-     * @param readRoot If the root element should be read from XML.
-     * @return A new settings object.
-     * @throws IOException If the stream could not be read.
-     * @throws NullPointerException If one of the arguments is 
-     *         <code>null</code>.
-     */
-    public static synchronized PredictorParams loadFromXML(
-            final InputStream in, final boolean readRoot) throws IOException {
         PredictorParams tmpSettings = new PredictorParams("ignored");
-        return (PredictorParams) Config.loadFromXML(tmpSettings, in, readRoot);
+        return (PredictorParams) Config.loadFromXML(tmpSettings, in);
     }
 
 }

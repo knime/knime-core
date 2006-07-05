@@ -57,35 +57,18 @@ final class XMLConfig {
 
 
     /**
-     * Read config entries from an XML file. Depending on the readRoot flag, the
-     * entries read are either stored in the passed config parameter, or stored
-     * in a newly created <code>Config</code> object. The only difference is
-     * the name of the resulting config object. With readRoot set to true the
-     * name will be the one stored in the root of the XML file, if set to false,
-     * the name will remain unchanged. If a new config object is created the
-     * passed config parameter is used as factory to create a new instance.
+     * Read config entries from an XML file. The entries being read are stored 
+     * in a newly created <code>Config</code> object. 
      * 
-     * @param config The Config to save settings into if <code>readRoot</code>
-     *            is set to false. Otherwise it's used as factory to create a
+     * @param config The Config, which is used as factory to create a
      *            new instance from (representing the root from the XML file).
      * @param is The XML inputstream storing the configuration to read
-     * @param readRoot if <code>true</code> the root element from the stream
-     *            is used to init a new Config object, which will be returned
-     *            then; otherwise the content of the root element will be stored
-     *            in the passed config object (and null will be returned).
-     * @return The root Config (if <code>readRoot</code> is set to
-     *         <code>true</code>) or null (if <code>readRoot</code> is
-     *         <code>false</code>).
+     * @return The root Config.
      * @throws IOException If the stream could not be read.
      */
-    static Config load(final Config config, final InputStream is,
-            final boolean readRoot) throws IOException {
-        Config cfg;
-        if (readRoot) {
-            cfg = config.getInstance("ignored");
-        } else {
-            cfg = config;
-        }
+    static Config load(final Config config, final InputStream is)
+        throws IOException {
+        Config cfg = config.getInstance("ignored");
         try {
             internalLoad(cfg, is);
         } catch (SAXException se) {
@@ -99,21 +82,17 @@ final class XMLConfig {
         } finally {
             is.close();
         }
-        if (readRoot) {   
-            // return first child of cfg
-            for (String s : cfg.keySet()) {
-                try {
-                    return cfg.getConfig(s);
-                } catch (InvalidSettingsException ise) {
-                    throw new IOException("Reading from \"" + is.toString() 
-                            + "\" failed; does not start with config.");
-                }
+        // return first child of cfg
+        for (String s : cfg.keySet()) {
+            try {
+                return cfg.getConfig(s);
+            } catch (InvalidSettingsException ise) {
+                throw new IOException("Reading from \"" + is.toString() 
+                        + "\" failed; does not start with config.");
             }
-            throw new IOException("Reading from \"" + is.toString() 
-                    + "\" failed; no tags defined.");
-        } else {
-            return null;
         }
+        throw new IOException("Reading from \"" + is.toString() 
+                + "\" failed; no tags defined.");
     }
     
     /* Helper method to read the xml given by the inputstream to the config 
