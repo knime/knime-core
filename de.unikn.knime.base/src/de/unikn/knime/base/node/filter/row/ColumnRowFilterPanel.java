@@ -22,7 +22,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.text.ParseException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -32,29 +31,30 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JSpinner;
 import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
+import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import de.unikn.knime.base.node.filter.row.rowfilter.ColValRowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DataValue;
+import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.IntValue;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.NotConfigurableException;
+import de.unikn.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * 
@@ -64,10 +64,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
     /** object version for serialization. */
     static final long serialVersionUID = 1;
-    
-    private JSpinner m_colIdx;
 
-    private JComboBox m_colCombo;
+    private ColumnSelectionComboxBox m_colCombo;
 
     private JRadioButton m_useRange;
 
@@ -97,23 +95,25 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * Craetes a new panel for column content filter settings.
      * 
      * @param tSpec table spec containing column specs to select from
+     * @throws NotConfigurableException it tspec is null or emtpy
      */
-    ColumnRowFilterPanel(final DataTableSpec tSpec) {
+    ColumnRowFilterPanel(final DataTableSpec tSpec)
+            throws NotConfigurableException {
 
         super(400, 350);
 
-        m_tSpec = null;
-        if ((tSpec != null) && (tSpec.getNumColumns() > 0)) {
-            // we keep only non-empty table specs
-            m_tSpec = tSpec;
+        if ((tSpec == null) || (tSpec.getNumColumns() <= 0)) {
+            throw new IllegalArgumentException("Don't instantiate with "
+                    + "useless table spec");
         }
+        m_tSpec = tSpec;
 
         instantiateComponents(m_tSpec);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.
-                createEtchedBorder(), "Column value matching"));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Column value matching"));
 
         /* stuff for column selection */
         panel.add(Box.createVerticalStrut(10));
@@ -123,28 +123,18 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         panel.add(textBox);
         Box idxBox = Box.createHorizontalBox();
         idxBox.add(Box.createHorizontalGlue());
-        if (m_colIdx != null) {
-            idxBox.add(new JLabel("Column index:"));
-            idxBox.add(Box.createHorizontalStrut(3));
-            idxBox.add(m_colIdx);
-            m_colIdx.setPreferredSize(new Dimension(75, 20));
-            m_colIdx.setMaximumSize(new Dimension(75, 20));        
-            m_colIdx.setPreferredSize(new Dimension(75, 20));
-
-        } else {
-            idxBox.add(m_colCombo);
-            m_colCombo.setPreferredSize(new Dimension(150, 20));
-            m_colCombo.setMaximumSize(new Dimension(150, 20));        
-            m_colCombo.setPreferredSize(new Dimension(150, 20));
-        }
+        idxBox.add(m_colCombo);
+        m_colCombo.setPreferredSize(new Dimension(150, 20));
+        m_colCombo.setMaximumSize(new Dimension(150, 20));
+        m_colCombo.setPreferredSize(new Dimension(150, 20));
         idxBox.add(Box.createHorizontalGlue());
         panel.add(idxBox);
 
         /* the panel for range/regExpr matching */
         JPanel matchPanel = new JPanel();
         matchPanel.setLayout(new BoxLayout(matchPanel, BoxLayout.Y_AXIS));
-        matchPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.
-                createEtchedBorder(), "matching criteria:"));
+        matchPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "matching criteria:"));
         Box regBox = Box.createHorizontalBox(); // regExpr radio
         regBox.add(m_useRegExpr);
         regBox.add(Box.createHorizontalGlue());
@@ -155,7 +145,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         exprBox.add(Box.createHorizontalStrut(3));
         exprBox.add(m_regExpr);
         m_regExpr.setPreferredSize(new Dimension(100, 20));
-        m_regExpr.setMaximumSize(new Dimension(100, 20));        
+        m_regExpr.setMaximumSize(new Dimension(100, 20));
         m_regExpr.setPreferredSize(new Dimension(100, 20));
         matchPanel.add(exprBox);
         Box caseBox = Box.createHorizontalBox(); // case sensitive checkbox
@@ -172,7 +162,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         lbBox.add(Box.createHorizontalStrut(3));
         lbBox.add(m_lowerBound);
         m_lowerBound.setPreferredSize(new Dimension(75, 20));
-        m_lowerBound.setMaximumSize(new Dimension(75, 20));        
+        m_lowerBound.setMaximumSize(new Dimension(75, 20));
         m_lowerBound.setPreferredSize(new Dimension(75, 20));
         matchPanel.add(lbBox);
         Box ubBox = Box.createHorizontalBox(); // upper bound
@@ -181,7 +171,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         ubBox.add(Box.createHorizontalStrut(3));
         ubBox.add(m_upperBound);
         m_upperBound.setPreferredSize(new Dimension(75, 20));
-        m_upperBound.setMaximumSize(new Dimension(75, 20));        
+        m_upperBound.setMaximumSize(new Dimension(75, 20));
         m_upperBound.setPreferredSize(new Dimension(75, 20));
         matchPanel.add(ubBox);
 
@@ -189,41 +179,44 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         panel.add(matchPanel);
 
         /* error display */
-        panel.add(Box.createVerticalStrut(7));
         Box errBox = Box.createHorizontalBox();
-        errBox.add(Box.createHorizontalGlue());
         Box errLblBox = Box.createVerticalBox();
         errLblBox.add(m_errText);
-        m_errText.setMaximumSize(new Dimension(395, 30));
+        m_errText.setMaximumSize(new Dimension(350, 30));
+        m_errText.setMinimumSize(new Dimension(350, 30));
+        m_errText.setPreferredSize(new Dimension(350, 30));
+        errBox.add(Box.createHorizontalGlue());
         errBox.add(errLblBox);
         errBox.add(Box.createHorizontalGlue());
+        //errBox.add(Box.createHorizontalGlue());
+        panel.add(Box.createHorizontalStrut(300));
         panel.add(errBox);
         panel.add(Box.createVerticalStrut(7));
 
         panel.add(Box.createVerticalGlue()); // do we need some glue here?!?
+        panel.invalidate();
         this.add(panel);
     }
 
-    private void instantiateComponents(final DataTableSpec tSpec) {
+    private void instantiateComponents(final DataTableSpec tSpec)
+            throws NotConfigurableException {
 
         /* instantiate the col idx selector, depending on the table spec */
-        if ((tSpec != null) && (tSpec.getNumColumns() > 0)) {
-            Vector<String> colNames = new Vector<String>();
-            for (int c = 0; c < tSpec.getNumColumns(); c++) {
-                colNames.add(tSpec.getColumnSpec(c).getName());
-            }
-            m_colCombo = new JComboBox(colNames);
-            m_colCombo.addItemListener(new ItemListener() {
-                public void itemStateChanged(final ItemEvent e) {
-                    selectedColChanged();
-                }
-            });
-            m_colIdx = null;
-        } else {
-            m_colIdx = new JSpinner(new SpinnerNumberModel(1, 1,
-                    Integer.MAX_VALUE, 1));
-            m_colCombo = null;
+        assert ((tSpec != null) && (tSpec.getNumColumns() > 0));
+
+        Vector<String> colNames = new Vector<String>();
+        for (int c = 0; c < tSpec.getNumColumns(); c++) {
+            colNames.add(tSpec.getColumnSpec(c).getName());
         }
+        m_colCombo = new ColumnSelectionComboxBox((Border)null, 
+                DataValue.class);
+        m_colCombo.update(tSpec, null);
+        m_colCombo.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                selectedColChanged();
+            }
+        });
+
         /* the selectors for what kind of checking will be done */
         m_useRange = new JRadioButton("use range checking");
         m_useRegExpr = new JRadioButton("use regular expr. pattern matching");
@@ -291,6 +284,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
         /* and a label to display errors/warnings */
         m_errText = new JLabel("");
+        setErrMsg("");
         m_errText.setForeground(Color.RED);
 
         /* set the default values */
@@ -300,11 +294,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             m_useRange.setEnabled(false);
             m_upperBound.setEnabled(false);
             m_lowerBound.setEnabled(false);
-            m_errText.setText("configure (or execute) predecessor node"
+            setErrMsg("configure (or execute) predecessor node"
                     + " to enable range checking");
-        }
-        if ((m_colCombo != null) && (m_colCombo.getModel().getSize() > 0)) {
-            m_colCombo.setSelectedIndex(0);
         }
     }
 
@@ -336,13 +327,12 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      */
     protected void boundsChanged() {
         // check if the entered value somehow goes along with the selected col.
-        m_errText.setText("");
+        setErrMsg("");
         validate();
         if (m_tSpec == null) {
             return;
         }
-        int colIdx = getSelectedColumnIndex();
-        if (colIdx < 0) {
+        if (getSelectedColumnName() == null) {
             return;
         }
         if (!m_useRange.isSelected()) {
@@ -354,12 +344,12 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             lowBound = getLowerBoundCell();
             hiBound = getUpperBoundCell();
         } catch (InvalidSettingsException ise) {
-            m_errText.setText(ise.getMessage());
+            setErrMsg(ise.getMessage());
             validate();
             return;
         }
         if ((lowBound == null) && (hiBound == null)) {
-            m_errText.setText("Specify at least one range boundary");
+            setErrMsg("Specify at least one range boundary");
             validate();
             return;
         }
@@ -368,7 +358,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             comp = DataType.getCommonSuperType(lowBound.getType(),
                     hiBound.getType()).getComparator();
             if (comp.compare(hiBound, lowBound) == -1) {
-                m_errText.setText("The lower bound must be smaller than the"
+                setErrMsg("The lower bound must be smaller than the"
                         + " upper bound");
                 validate();
                 return;
@@ -376,9 +366,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         }
 
         if (((lowBound != null) && (lowBound instanceof StringCell))
-                || ((hiBound != null) 
-                        && (hiBound instanceof StringCell))) {
-            m_errText.setText("Warning: String comparison is used for "
+                || ((hiBound != null) && (hiBound instanceof StringCell))) {
+            setErrMsg("Warning: String comparison is used for "
                     + "range checking. May not work as expected!");
             validate();
         }
@@ -389,26 +378,24 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      */
     protected void selectedColChanged() {
         // we trigger 'boundsChanged' to get bounds checked against the new
-        // column type - and only if we have a table spec
-        if (m_colCombo != null) {
-            boundsChanged();
-        }
+        // column type
+        boundsChanged();
     }
 
     /**
      * called when the user changes the regular expresion.
      */
     protected void regExprChanged() {
-        m_errText.setText("");
+        setErrMsg("");
         if (m_regExpr.getText().length() <= 0) {
-            m_errText.setText("Enter valid regular expression");
+            setErrMsg("Enter valid regular expression");
             validate();
             return;
         }
         try {
             Pattern.compile(m_regExpr.getText());
         } catch (PatternSyntaxException pse) {
-            m_errText.setText("Error in regular expression. ('"
+            setErrMsg("Error in regular expression. ('"
                     + pse.getMessage() + "')");
             validate();
         }
@@ -427,13 +414,10 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         }
 
         ColValRowFilter colFilter = (ColValRowFilter)filter;
-        int colIdx = colFilter.getColumnIndex();
-        if (m_colIdx != null) {
-            m_colIdx.setValue(colIdx);
-        } else {
-            if ((colIdx >= 0) && (colIdx < m_colCombo.getModel().getSize())) {
-                m_colCombo.setSelectedIndex(colFilter.getColumnIndex());
-            }        }
+        String colName = colFilter.getColumnName();
+        if (colName != null) {
+            m_colCombo.setSelectedItem(colName);
+        }
         if (colFilter.rangeSet()) {
             String upper = "";
             String lower = "";
@@ -462,36 +446,36 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     public RowFilter createFilter(final boolean include)
             throws InvalidSettingsException {
         if (hasErrors()) {
-            throw new InvalidSettingsException(m_errText.getText());
+            throw new InvalidSettingsException(getErrMsg());
         }
 
-        int colIdx = getSelectedColumnIndex();
-        if (colIdx < 0) {
-            m_errText.setText("Select a valid column");
+        String colName = getSelectedColumnName();
+        if ((colName == null) || (colName.length() == 0)) {
+            setErrMsg("Select a valid column");
             validate();
-            throw new InvalidSettingsException(m_errText.getText());
+            throw new InvalidSettingsException(getErrMsg());
         }
 
         if (m_useRange.isSelected()) {
             DataCell loBound = getLowerBoundCell();
             DataCell hiBound = getUpperBoundCell();
             if ((loBound == null) && (hiBound == null)) {
-                m_errText.setText("Enter at least one valid range boundary");
+                setErrMsg("Enter at least one valid range boundary");
                 validate();
-                throw new InvalidSettingsException(m_errText.getText());
+                throw new InvalidSettingsException(getErrMsg());
             }
 
-            return new ColValRowFilter(m_tSpec.getColumnSpec(colIdx).getType().
-                    getComparator(), loBound, hiBound, colIdx, include);
+            return new ColValRowFilter(m_tSpec.getColumnSpec(colName).getType()
+                    .getComparator(), loBound, hiBound, colName, include);
         }
 
         if (m_useRegExpr.isSelected()) {
             if (m_regExpr.getText().length() <= 0) {
-                m_errText.setText("Enter a valid regular expression");
+                setErrMsg("Enter a valid regular expression");
                 validate();
-                throw new InvalidSettingsException(m_errText.getText());
+                throw new InvalidSettingsException(getErrMsg());
             }
-            return new ColValRowFilter(m_regExpr.getText(), colIdx, include,
+            return new ColValRowFilter(m_regExpr.getText(), colName, include,
                     m_caseSensitive.isSelected(), false);
 
         }
@@ -501,22 +485,11 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * returns the index selected. Either by reading it from the combo box or by
-     * reading it from the colIdx spinner. Depending on which is not null.
-     * 
-     * @return the selected index of the column to test.
+     * @return the selected name of the column to test.
      */
-    public int getSelectedColumnIndex() {
-        if (m_colCombo != null) {
-            return m_colCombo.getSelectedIndex();
-        }
-
-        if (m_colIdx != null) {
-            return readIntSpinner(m_colIdx);
-        }
-
-        return -1;
-
+    private String getSelectedColumnName() {
+        
+        return m_colCombo.getSelectedColumn();
     }
 
     /*
@@ -557,13 +530,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         if (editField.getText().length() <= 0) {
             return null;
         }
-        int colIdx = getSelectedColumnIndex();
-        if (colIdx < 0) {
+        String colName = getSelectedColumnName();
+        if ((colName == null) || (colName.length() == 0)) {
             throw new InvalidSettingsException("Invalid columns selection");
         }
 
         if (m_tSpec != null) {
-            DataColumnSpec cSpec = m_tSpec.getColumnSpec(colIdx);
+            DataColumnSpec cSpec = m_tSpec.getColumnSpec(colName);
             DataType cType = cSpec.getType();
 
             if (cType.isCompatible(IntValue.class)) {
@@ -583,8 +556,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                     return new DoubleCell(lb);
                 } catch (NumberFormatException nfe) {
                     throw new InvalidSettingsException("Number format error in "
-                            + name
-                            + " bound number: enter a valid float number");
+                                    + name + " bound number: enter a valid "
+                                    + "float number");
                 }
             } else {
                 return new StringCell(editField.getText());
@@ -616,19 +589,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     public String getErrMsg() {
         return m_errText.getText();
     }
-
-    /*
-     * read the current value from the spinner assuming it contains Integers
-     */
-    private int readIntSpinner(final JSpinner intSpinner) {
-        try {
-            intSpinner.commitEdit();
-        } catch (ParseException e) {
-            // if the spinner has the focus, the currently edited value
-            // might not be commited. Now it is!
-        }
-        SpinnerNumberModel snm = (SpinnerNumberModel)intSpinner.getModel();
-        return snm.getNumber().intValue();
+    
+    private void setErrMsg(final String msg) {
+        m_errText.setText(msg);
+        m_errText.setToolTipText(msg);
     }
-
 }

@@ -184,6 +184,10 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettings settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 
+        if ((specs[0] == null) || (specs[0].getNumColumns() < 1)) {
+            throw new NotConfigurableException("Cannot be configured without"
+                    + " input table");
+        }
         // remove the old filter panels, if any
         if (m_rangePanel != null) {
             m_filterPanel.remove(m_rangePanel);

@@ -18,10 +18,14 @@
  */
 package de.unikn.knime.base.node.filter.row;
 
+import java.io.File;
+import java.io.IOException;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilterFactory;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -120,7 +124,7 @@ public class RowFilterNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws Exception {
         if (m_rowFilter != null) {
             m_rowFilter.configure(inData[0].getDataTableSpec());
-            return new DataTable[] {new RowFilterTable(inData[0], m_rowFilter)};
+            return new DataTable[]{new RowFilterTable(inData[0], m_rowFilter)};
         } else {
             throw new InvalidSettingsException(
                     "No row filter set in RowFilter table");
@@ -135,6 +139,30 @@ public class RowFilterNodeModel extends NodeModel {
     }
 
     /**
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to load
+        return;
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to save
+        return;
+    }
+
+    /**
      * @see NodeModel#configure(DataTableSpec[])
      */
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -143,7 +171,7 @@ public class RowFilterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No row filter specified");
         }
         DataTableSpec newSpec = m_rowFilter.configure(inSpecs[0]);
-        if (newSpec == null) {            
+        if (newSpec == null) {
             // we are not changing the structure of the table.
             return inSpecs;
         } else {

@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -44,7 +41,7 @@ import de.unikn.knime.core.node.NodeSettings;
  */
 public class ColValRowFilter extends RowFilter {
 
-    private static final String CFG_COLINDEX = "ColValRowFilterColIndex";
+    private static final String CFG_COLNAME = "ColValRowFilterColName";
 
     private static final String CFG_INCLUDE = "ColValRowFilterInclude";
 
@@ -61,6 +58,8 @@ public class ColValRowFilter extends RowFilter {
     private boolean m_include;
 
     private int m_colIndex;
+    
+    private String m_colName;
 
     /*
      * variables for the regExpr matching
@@ -87,7 +86,7 @@ public class ColValRowFilter extends RowFilter {
      * 
      * @param regExpr a valid regular expression. Causes an exception to fly if
      *            its not a valid reg expr.
-     * @param colIndex the index of the cell to test in the row
+     * @param colName the name of the column to test in the row
      * @param include flag indicating whether to include or exclude rows with a
      *            matching value
      * @param caseSensitive if true the match will be done case sensitive, or if
@@ -97,13 +96,14 @@ public class ColValRowFilter extends RowFilter {
      * @throws IllegalArgumentException if the pattern passed as regular
      *             epression is not a valid regExpr
      */
-    public ColValRowFilter(final String regExpr, final int colIndex,
+    public ColValRowFilter(final String regExpr, final String colName,
             final boolean include, final boolean caseSensitive,
             final boolean startsWith) {
         // clear all variables
         this();
 
-        m_colIndex = colIndex;
+        m_colIndex = -1;
+        m_colName = colName;
         m_include = include;
         m_startsWith = startsWith;
         m_caseSensitive = caseSensitive;
@@ -118,9 +118,9 @@ public class ColValRowFilter extends RowFilter {
             throw new IllegalArgumentException("Error in regular expression ('"
                     + pse.getMessage() + "')");
         }
-        if (colIndex < 0) {
+        if ((colName == null) || (colName.length() == 0)) {
             throw new IllegalArgumentException("Column value filter: "
-                    + "the column index must be a positive number");
+                    + "the column name must be provided and not emtpy.");
         }
 
     }
@@ -137,18 +137,19 @@ public class ColValRowFilter extends RowFilter {
      * @param upperBound if the comparator doesn't return a positive number when
      *            the cell is compared with this value, the cell is below the
      *            upper bound. If null, no maximum is set.
-     * @param colIndex the index of the cell to test in the row
+     * @param colName the name of the column to test in the row
      * @param include determines whether to include or exclude rows with a value
      *            inside the range
      */
     public ColValRowFilter(final DataValueComparator comp,
             final DataCell lowerBound, final DataCell upperBound,
-            final int colIndex, final boolean include) {
+            final String colName, final boolean include) {
         // clear all variables
         this();
 
         m_include = include;
-        m_colIndex = colIndex;
+        m_colIndex = -1;
+        m_colName = colName;
 
         m_dcComp = comp;
         m_lowerBound = lowerBound;
@@ -169,9 +170,9 @@ public class ColValRowFilter extends RowFilter {
                                 + "must not be larger than the upper bound");
             }
         }
-        if (colIndex < 0) {
+        if ((colName == null) || (colName.length() == 0)) {
             throw new IllegalArgumentException("Column value filter: "
-                    + "the column index must be a positive number");
+                    + "the column name must provided and not emtpy");
         }
     }
 
@@ -181,6 +182,7 @@ public class ColValRowFilter extends RowFilter {
     public ColValRowFilter() {
         m_include = false;
         m_colIndex = -1;
+        m_colName = null;
         m_pattern = null;
         m_caseSensitive = false;
         m_startsWith = false;
@@ -213,8 +215,8 @@ public class ColValRowFilter extends RowFilter {
     /**
      * @return the index of the column whose value is tested.
      */
-    public int getColumnIndex() {
-        return m_colIndex;
+    public String getColumnName() {
+        return m_colName;
     }
 
     /**
@@ -341,10 +343,11 @@ public class ColValRowFilter extends RowFilter {
     public void loadSettingsFrom(final NodeSettings cfg)
             throws InvalidSettingsException {
 
-        m_colIndex = cfg.getInt(CFG_COLINDEX);
-        if (m_colIndex < 0) {
+        m_colName = cfg.getString(CFG_COLNAME);
+        m_colIndex = -1;
+        if ((m_colName == null) || (m_colName.length() < 1)) {
             throw new InvalidSettingsException("Column value filter: "
-                    + "NodeSettings object contains invalid column index");
+                    + "NodeSettings object contains invalid column name");
         }
         m_include = cfg.getBoolean(CFG_INCLUDE);
 
@@ -391,7 +394,7 @@ public class ColValRowFilter extends RowFilter {
      */
     protected void saveSettings(final NodeSettings cfg) {
         cfg.addBoolean(CFG_INCLUDE, m_include);
-        cfg.addInt(CFG_COLINDEX, m_colIndex);
+        cfg.addString(CFG_COLNAME, m_colName);
         if (m_pattern == null) {
             cfg.addString(CFG_PATTERN, null);
         } else {
@@ -421,6 +424,17 @@ public class ColValRowFilter extends RowFilter {
             throw new InvalidSettingsException("Column value filter: Selected"
                     + " column index out of range.");
         }
+        if ((m_colName == null) || (m_colName.length() < 1)) {
+            throw new InvalidSettingsException("Column value filter: "
+                    + "No column specified");
+        }
+        if (!inSpec.containsName(m_colName)) {
+            throw new InvalidSettingsException("Column value filter: "
+                    + "Input table doesn't contain specified column name");
+        }
+        
+        m_colIndex = inSpec.findColumnIndex(m_colName);
+        
         DataType colType = inSpec.getColumnSpec(m_colIndex).getType();
         if (m_lowerBound != null) {
             if (!colType.isASuperTypeOf(m_lowerBound.getType())) {
