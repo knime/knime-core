@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./pmmlWriter.gif">
+<knimeNode icon="./pmmlWriter.gif" type="Sink">
 	<name>Model Writer</name>
 	
 	<shortDescription>
@@ -14,9 +14,10 @@
 	 	executed, the node saves the incoming model as XML description in the
 	 	specified file.
 		</intro>
+        <option name="Selected File">The file the model is written to.</option>
 	</fullDescription>
 	
 	<ports>
-		<predParamIn index="0">The model to write out.</predParamIn>
+		<predParamIn index="0" name="Model">The model to write out.</predParamIn>
 	</ports>	
 </knimeNode>

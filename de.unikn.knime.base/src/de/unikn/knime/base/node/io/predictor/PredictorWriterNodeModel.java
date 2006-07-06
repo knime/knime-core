@@ -121,6 +121,7 @@ public class PredictorWriterNodeModel extends NodeModel {
             if (m_fileName.endsWith(".gz")) {
                 os = new GZIPOutputStream(os);
             }
+            exec.setProgress(-1, "Writing to file: " + m_fileName);
             // and write PredictorParams object as XML
             m_predParams.saveToXML(os);
             // and finally rename temp file to real file name
@@ -186,4 +187,28 @@ public class PredictorWriterNodeModel extends NodeModel {
 
         return newFileName;
     }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(java.io.File, 
+     * de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) throws IOException, 
+            CanceledExecutionException {
+        // nothing to do here
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(java.io.File, 
+     * de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) throws IOException, 
+            CanceledExecutionException {
+        // nothing to do here
+    }
+    
+    
 }

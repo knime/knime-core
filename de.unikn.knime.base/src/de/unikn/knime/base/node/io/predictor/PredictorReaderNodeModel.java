@@ -115,6 +115,7 @@ public class PredictorReaderNodeModel extends NodeModel {
         if (m_fileName.endsWith(".gz")) {
             is = new GZIPInputStream(is);
         }
+        exec.setProgress(-1, "Reading from file: " + m_fileName);
         m_predParams = PredictorParams.loadFromXML(is);
         return new DataTable[0];
     }
@@ -170,4 +171,28 @@ public class PredictorReaderNodeModel extends NodeModel {
         }
         return newFileName;
     }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(java.io.File, 
+     * de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) throws IOException, 
+            CanceledExecutionException {
+         // nothing to do here
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(java.io.File, 
+     * de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) throws IOException, 
+            CanceledExecutionException {
+        // nothing to do here
+    }
+    
+    
 }

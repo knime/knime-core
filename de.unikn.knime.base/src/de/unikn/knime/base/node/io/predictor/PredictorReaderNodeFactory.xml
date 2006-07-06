@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./pmmlReader.gif">
+<knimeNode icon="./pmmlReader.gif" type="Source">
 	<name>Model Reader</name>
 	
 	<shortDescription>
@@ -14,9 +14,10 @@
 	 	executed, the node reads the model from the XML description in 
 	 	the specified file and provides it at its output port.
 		</intro>
+        <option name="Selected File">The file representing the model.</option>
 	</fullDescription>
 	
 	<ports>
-		<predParamOut index="0">The model just read.</predParamOut>
+		<predParamOut index="0" name="Model">The model just read.</predParamOut>
 	</ports>	
 </knimeNode>
