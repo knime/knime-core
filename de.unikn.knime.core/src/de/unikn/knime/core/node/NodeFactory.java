@@ -54,6 +54,32 @@ import de.unikn.knime.core.node.workflow.NodeContainer;
  * @author Michael Berthold, University of Konstanz
  */
 public abstract class NodeFactory {
+    /**
+     * Enum for all node types.
+     * 
+     * @author Thorsten Meinl, University of Konstanz
+     */
+    public static enum NodeType {
+        /** A data producing node. */
+        Source,
+        /** A data consuming node. */
+        Sink,
+        /** A learning node. */
+        Learner,
+        /** A predicting node. */
+        Predictor,
+        /** A data transforming node. */
+        Transformer,
+        /** A data manipulating node. */
+        Manipulator,
+        /** A visualizing node. */
+        Visualizer,
+        /** A meta node. */
+        Meta,
+        /** All other nodes. */
+        Other
+    }
+    
 
     // The logger for static methods
     private static final NodeLogger LOGGER = NodeLogger
@@ -79,6 +105,8 @@ public abstract class NodeFactory {
 
     private final URL m_icon;
 
+    private NodeType m_type;
+    
     private final Element m_knimeNode;
 
     private final String m_fullAsHTML;
@@ -243,6 +271,15 @@ public abstract class NodeFactory {
             }
             m_knimeNode = doc.getDocumentElement();
             m_icon = readIconFromXML();
+            
+            try {
+                m_type = NodeType.valueOf(m_knimeNode.getAttribute("type"));
+            } catch (IllegalArgumentException ex) {
+                LOGGER.coding("Unknown node type '"
+                        + m_knimeNode.getAttribute("type") + "'");
+                m_type = null;
+            }
+            
             String nodeName = readNameFromXML();
             if (nodeName == null || nodeName.length() == 0) {
                 m_logger.coding("Unable to read \"name\" tag from XML");
@@ -830,6 +867,15 @@ public abstract class NodeFactory {
         }
     }
 
+    /**
+     * Returns the type of the node.
+     * 
+     * @return the node's type
+     */
+    public NodeType getType() {
+        return m_type;
+    }
+    
     /**
      * Returns the default icon for nodes that do not define their own.
      * 
