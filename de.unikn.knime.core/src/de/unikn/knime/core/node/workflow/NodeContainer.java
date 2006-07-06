@@ -48,6 +48,7 @@ import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.NodeView;
 import de.unikn.knime.core.node.NotConfigurableException;
+import de.unikn.knime.core.node.NodeFactory.NodeType;
 import de.unikn.knime.core.node.meta.MetaNodeModel;
 
 /**
@@ -75,7 +76,7 @@ public class NodeContainer implements NodeStateListener {
 
     /** Key for this node's internal ID. */
     private static final String KEY_ID = "id";
-    
+
     private static final String KEY_IS_DELETABLE = "isDeletable";
 
     // The logger for static methods
@@ -163,7 +164,7 @@ public class NodeContainer implements NodeStateListener {
     private final Vector<List<NodeContainer>> m_succ;
 
     private boolean m_deletable = true;
-    
+
     private final WorkflowManager m_wfm;
 
     /**
@@ -260,7 +261,7 @@ public class NodeContainer implements NodeStateListener {
             LOGGER.warn("In the settings of node <id:" + getID() + "|type:"
                     + getName() + "> is no user description specified");
         }
-        
+
         m_deletable = settings.getBoolean(KEY_IS_DELETABLE, true);
     }
 
@@ -502,6 +503,13 @@ public class NodeContainer implements NodeStateListener {
      */
     public String getName() {
         return m_node.getName();
+    }
+
+    /**
+     * @see Node#getType()
+     */
+    public NodeType getType() {
+        return m_node.getType();
     }
 
     /**
@@ -873,7 +881,7 @@ public class NodeContainer implements NodeStateListener {
         settings.addString(KEY_CUSTOM_NAME, m_customName);
         settings.addString(KEY_CUSTOM_DESCRIPTION, m_description);
         settings.addBoolean(KEY_IS_DELETABLE, m_deletable);
-        
+
         if (m_extraInfo != null) {
             settings.addString(KEY_EXTRAINFOCLASS, m_extraInfo.getClass()
                     .getName());
@@ -1056,27 +1064,26 @@ public class NodeContainer implements NodeStateListener {
      * Returns if this node can be delete or not.
      * 
      * @return <code>true</code> if it can be deleted, <code>false</code>
-     * otherwise
+     *         otherwise
      */
     public boolean isDeletable() {
         return m_deletable;
     }
 
-    
     /**
      * Sets if this node can be deleted or not.
      * 
      * @param deletable <code>true</code> if it can be deleted,
-     * <code>false</code> otherwise
+     *            <code>false</code> otherwise
      */
     public void setDeletable(final boolean deletable) {
         m_deletable = deletable;
     }
-    
+
     /**
-     * @see Node#retrieveModel(MetaNodeModel) 
+     * @see Node#retrieveModel(MetaNodeModel)
      */
     public void retrieveModel(final MetaNodeModel metaModel) {
-        m_node.retrieveModel(metaModel);        
+        m_node.retrieveModel(metaModel);
     }
 }

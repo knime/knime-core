@@ -75,7 +75,9 @@ public abstract class NodeFactory {
         /** A meta node. */
         Meta,
         /** All other nodes. */
-        Other
+        Other,
+        /** If not specified */
+        Unknown
     }
     
 
@@ -275,7 +277,7 @@ public abstract class NodeFactory {
             } catch (IllegalArgumentException ex) {
                 m_logger.coding("Unknown node type '"
                         + m_knimeNode.getAttribute("type") + "'");
-                m_type = null;
+                m_type = NodeType.Unknown;
             }
             
             String nodeName = readNameFromXML();

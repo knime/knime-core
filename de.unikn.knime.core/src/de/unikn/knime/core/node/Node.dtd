@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!ELEMENT knimeNode ( name, shortDescription, fullDescription, ports, views? ) >
 <!ATTLIST knimeNode icon CDATA #IMPLIED>
-<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Transformer|Manipulator|Visualizer|Meta|Other) "Other">
+<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Transformer|Manipulator|Visualizer|Meta|Other|Unkown) "Unknown">
 
 <!ELEMENT name (#PCDATA) >
 <!ELEMENT shortDescription (#PCDATA) >
