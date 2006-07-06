@@ -96,8 +96,8 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         m_rangeExclRadio.setActionCommand("range");
         addActionListener(m_rangeInclRadio);
         addActionListener(m_rangeExclRadio);
-        m_rowIDInclRadio = new JRadioButton("include rows by row key");
-        m_rowIDExclRadio = new JRadioButton("exclude rows by row key");
+        m_rowIDInclRadio = new JRadioButton("include rows by row ID");
+        m_rowIDExclRadio = new JRadioButton("exclude rows by row ID");
         m_rowIDInclRadio.setActionCommand("id");
         m_rowIDExclRadio.setActionCommand("id");
         addActionListener(m_rowIDInclRadio);
