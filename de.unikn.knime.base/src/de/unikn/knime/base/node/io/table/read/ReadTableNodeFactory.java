@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -36,7 +34,8 @@ public class ReadTableNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeModel()
      */
-    public @Override NodeModel createNodeModel() {
+    @Override
+    public NodeModel createNodeModel() {
         return new ReadTableNodeModel();
     }
 
