@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -175,6 +172,28 @@ public class CSVWriterNodeModel extends NodeModel {
     }
 
     /**
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // no internals to save
+    }
+    
+    /**
+     * @see de.unikn.knime.core.node.NodeModel
+     * #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to save.
+    }
+    
+    /**
      * @see NodeModel#configure(DataTableSpec[])
      */
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -203,7 +222,7 @@ public class CSVWriterNodeModel extends NodeModel {
      * @param fileName The file to check
      * @throws InvalidSettingsException If that fails.
      */
-    private static void checkFileAccess(final String fileName) 
+    private void checkFileAccess(final String fileName) 
         throws InvalidSettingsException {
         if (fileName == null) {
             throw new InvalidSettingsException("No file set.");
@@ -223,6 +242,9 @@ public class CSVWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("Cannot write to file \""
                     + file.getAbsolutePath() + "\".");
         }
+        // here it exists and we can write it: warn user!
+        setWarningMessage("Selected output file exists and will be "
+                + "overwritten!");
 
     }
 

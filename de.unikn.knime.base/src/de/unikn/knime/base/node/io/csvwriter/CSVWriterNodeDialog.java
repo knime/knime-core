@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -22,6 +19,7 @@ package de.unikn.knime.base.node.io.csvwriter;
 import java.awt.Dimension;
 import java.io.File;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -56,15 +54,26 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
      */
     public CSVWriterNodeDialog() {
         super("CSV File Writer");
+        
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Output file location:")); 
         m_textBox = new CSVFilesHistoryPanel();
+        filePanel.add(m_textBox);
+        filePanel.add(Box.createHorizontalGlue());
+        
+        final JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Writer options:")); 
+        
         m_colHeaderChecker = new JCheckBox("Write column header");
         m_rowHeaderChecker = new JCheckBox("Write row header");
         m_missingField = new JTextField(3);
         m_missingField.setMaximumSize(new Dimension(40, 20));
         m_missingField.setToolTipText(
                 "Pattern for missing values. If unsure, simply leave empty");
-        final JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         final JPanel missingPanel = new JPanel();
         missingPanel.setLayout(new BoxLayout(missingPanel, BoxLayout.X_AXIS));
         missingPanel.add(m_missingField);
@@ -79,24 +88,28 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         rowHeaderPane.setLayout(new BoxLayout(rowHeaderPane, BoxLayout.X_AXIS));
         rowHeaderPane.add(m_rowHeaderChecker);
         rowHeaderPane.add(Box.createHorizontalGlue());
+
+        optionsPanel.add(missingPanel);
+        optionsPanel.add(Box.createVerticalStrut(5));
+        optionsPanel.add(colHeaderPane);
+        optionsPanel.add(Box.createVerticalStrut(5));
+        optionsPanel.add(rowHeaderPane);
+        optionsPanel.add(Box.createVerticalStrut(5));
         
-        panel.add(m_textBox);
+        final JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
         panel.add(Box.createVerticalStrut(5));
-        panel.add(missingPanel);
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(colHeaderPane);
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(rowHeaderPane);
-        panel.add(Box.createVerticalStrut(5));
+        panel.add(optionsPanel);
         panel.add(Box.createVerticalGlue());
-        addTab("File Chooser", panel);
+        addTab("Settings", panel);
     }
 
     /**
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
-    protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettings settings, 
+            final DataTableSpec[] specs) throws NotConfigurableException {
         String fileName = 
             settings.getString(CSVWriterNodeModel.CFGKEY_FILE, null);
         boolean writeColHeader = 

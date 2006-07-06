@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -37,6 +34,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
@@ -62,24 +60,14 @@ public final class CSVFilesHistoryPanel extends JPanel {
         m_textBox = new JComboBox(new DefaultComboBoxModel());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        m_textBox.setPreferredSize(new Dimension(300, 25));
         m_textBox.setRenderer(new MyComboBoxRenderer());
-        m_chooseButton = new JButton("...");
+        m_chooseButton = new JButton("Browse...");
         m_chooseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                // file chooser triggered by choose button 
-                final JFileChooser fileChooser = new JFileChooser();
-                String f = m_textBox.getEditor().getItem().toString();
-                File dirOrFile = getFile(f);
-                if (dirOrFile.isDirectory()) {
-                    fileChooser.setCurrentDirectory(dirOrFile);
-                } else {
-                    fileChooser.setSelectedFile(dirOrFile);
-                }
-                int r = fileChooser.showDialog(
-                        CSVFilesHistoryPanel.this, "Apply");
-                if (r == JFileChooser.APPROVE_OPTION) {
-                    File file = fileChooser.getSelectedFile();
-                    m_textBox.setSelectedItem(file.getAbsoluteFile());
+                String newFile = getOutputFileName(); 
+                if (newFile != null) {
+                    m_textBox.setSelectedItem(newFile);
                 }
             }
         });
@@ -88,7 +76,30 @@ public final class CSVFilesHistoryPanel extends JPanel {
         add(m_chooseButton);
         updateHistory();
     }
-    
+        
+    private String getOutputFileName() {
+        // file chooser triggered by choose button
+        final JFileChooser fileChooser = new JFileChooser();
+        String f = m_textBox.getEditor().getItem().toString();
+        File dirOrFile = getFile(f);
+        if (dirOrFile.isDirectory()) {
+            fileChooser.setCurrentDirectory(dirOrFile);
+        } else {
+            fileChooser.setSelectedFile(dirOrFile);
+        }
+        int r = fileChooser.showDialog(CSVFilesHistoryPanel.this, "Save");
+        if (r == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (file.exists() && file.isDirectory()) {
+                    JOptionPane.showMessageDialog(this, "Error: Please specify "
+                            + "a file, not a directory.");
+                    return null;
+            }
+            return file.getAbsolutePath();
+        }
+        return null;
+    }
+        
     /**
      * Get currently selected file.
      * @return The current file url.

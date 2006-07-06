@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./csvwriter.ico">
+<knimeNode type="Sink" icon="./csvwriter.ico">
 	<name>CSV Writer</name>
 	
 	<shortDescription>
@@ -9,17 +9,26 @@
 	
 	<fullDescription>
 		<intro>
- 		This node writes out the datatable, entering via its input port,
- 		into a file. The attribute values are separated by commas. In the
- 		configuration dialog of the node, enter a valid destination filename
- 		and set a checkmark if you want the column headers to be written out (in the
- 		first line) and each line to be preceeded by the row ID. It is also possible to specify a
- 		pattern that can be written out when an attribute
- 		value is missing.
+ 		This node writes out the datatable coming through its input port
+ 		into a file. The attribute values are separated by commas.
  		</intro>
+ 		<option name="Output file location">Enter a valid file name or URL. 
+			You can also choose a previously selected file from the drop-down list,
+			or select a file from the "Browse..." dialog.
+			</option>		
+ 		<option name="Missing Pattern">Enter a pattern that will be written out
+ 		    for missing values.
+			</option>		
+ 		<option name="Write Column Header">If checked, the column names will be
+ 			written out in the first line of the output file.
+			</option>		
+ 		<option name="Write Row Header">If checked, the row headers will be
+ 			added to the output, as first item in each row.
+			</option>		
+ 		
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0">The Datatable to write out.</dataIn>
+		<dataIn index="0" name="Input table">The Datatable to write out.</dataIn>
 	</ports>	
 </knimeNode>

@@ -113,12 +113,13 @@ public class CSVWriter extends BufferedWriter {
 
         // write data
         int i = 0;
+        long rowCnt = table.getRowCount();
         for (RowIterator it = table.iterator(); it.hasNext(); i++) {
             final DataRow next = it.next();
             String rowKey = next.getKey().toString();
             String debugMessage = "Writing row " + (i + 1) 
-                + " (\"" + rowKey + "\")"; 
-            exec.setProgress(-1, debugMessage);
+                + " (\"" + rowKey + "\") of " + rowCnt; 
+            exec.setProgress(i / (double)rowCnt, debugMessage);
             // Check if execution was canceled !
             exec.checkCanceled();
 
