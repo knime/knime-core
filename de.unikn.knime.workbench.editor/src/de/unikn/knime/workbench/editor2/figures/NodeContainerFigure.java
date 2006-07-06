@@ -21,6 +21,7 @@ package de.unikn.knime.workbench.editor2.figures;
 
 import java.util.List;
 
+import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
 import org.eclipse.draw2d.Figure;
@@ -33,7 +34,6 @@ import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.internal.ui.palette.editparts.RaisedBorder;
 import org.eclipse.jface.resource.CompositeImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -44,6 +44,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 
+import de.unikn.knime.core.node.NodeFactory.NodeType;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -124,7 +125,7 @@ public class NodeContainerFigure extends RectangleFigure {
     private static final Font FONT_EXECUTING;
 
     private static final Font FONT_EXECUTED;
-    
+
     static {
         // I (Bernd) had problem using the hardcoded font "Arial" -
         // this static block derives the fonts from the system font.
@@ -244,7 +245,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * 
      * @param type the type
      */
-    public void setType(final String type) {
+    public void setType(final NodeType type) {
         m_contentFigure.setType(type);
 
     }
@@ -455,6 +456,38 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private Label m_iconFigure;
 
+        private static final String BACKGROUND_OTHER = "icons/node/"
+                + "background_other.png";
+
+        private static final String BACKGROUND_SOURCE = "icons/node/"
+                + "background_source.png";
+        
+        private static final String BACKGROUND_SINK = "icons/node/"
+            + "background_sink.png";
+
+        private static final String BACKGROUND_LEARNER = "icons/node/"
+                + "background_learner.png";
+        
+        private static final String BACKGROUND_PREDICTOR = "icons/node/"
+            + "background_precictor.png";
+
+        private static final String BACKGROUND_TRANSFORMER = "icons/node/"
+                + "background_transformer.png";
+        
+        private static final String BACKGROUND_MANIPULATOR = "icons/node/"
+            + "background_manipulator.png";
+        
+        private static final String BACKGROUND_META = "icons/node/"
+            + "background_meta.png";
+
+        private static final String BACKGROUND_VIEWER = "icons/node/"
+                + "background_viewer.png";
+        
+        private static final String BACKGROUND_UNKNOWN = "icons/node/"
+            + "background_unknown.png";
+
+        private Label m_backgroundIcon;
+
         /**
          * The base icon without overlays.
          * 
@@ -472,31 +505,73 @@ public class NodeContainerFigure extends RectangleFigure {
             setLayoutManager(layout);
             setOpaque(false);
 
+            // setLayoutManager(new BorderLayout());
+
+            // the "frame", that indicates the node type
+            m_backgroundIcon = new Label();
+            // m_backgroundIcon.setIconAlignment(PositionConstants.CENTER);
+
             // create a label that shows the nodes' icon
             m_iconFigure = new Label();
-            m_iconFigure.setBorder(new RaisedBorder(2, 2, 2, 2));
-            m_iconFigure.setOpaque(true);
+            // m_iconFigure.setBorder(new RaisedBorder(2, 2, 2, 2));
+            m_iconFigure.setOpaque(false);
 
             // center the icon figure
-            add(m_iconFigure);
-            setConstraint(m_iconFigure, new RelativeLocator(this, 0.5, 0.5));
+            add(m_backgroundIcon);
+            m_backgroundIcon.setLayoutManager(new BorderLayout());
+            m_backgroundIcon.add(m_iconFigure, BorderLayout.CENTER);
+            setConstraint(m_backgroundIcon, new RelativeLocator(this, 0.5, 0.5));
 
         }
 
         /**
-         * TODO make this nice !
+         * This determines the background image according to the "type" of the
+         * node as stored in the repository model.
          * 
-         * @param type The node type, results in a different color
+         * @param type The Type
+         * @return Image that should be uses as background for this node
+         */
+        private Image getBackgroundForType(final NodeType type) {
+
+            String str = null;
+            if (type == null) {
+                str = BACKGROUND_UNKNOWN;
+            } else if (type.equals(NodeType.Source)) {
+                str = BACKGROUND_SOURCE;
+            } else if (type.equals(NodeType.Sink)) {
+                str = BACKGROUND_SINK;
+            } else if (type.equals(NodeType.Transformer)) {
+                str = BACKGROUND_TRANSFORMER;
+            } else if (type.equals(NodeType.Manipulator)) {
+                str = BACKGROUND_MANIPULATOR;
+            } else if (type.equals(NodeType.Learner)) {
+                str = BACKGROUND_LEARNER;
+            } else if (type.equals(NodeType.Predictor)) {
+                str = BACKGROUND_PREDICTOR;
+            } else if (type.equals(NodeType.Meta)) {
+                str = BACKGROUND_META;
+            } else if (type.equals(NodeType.Other)) {
+                str = BACKGROUND_OTHER;
+            } else if (type.equals(NodeType.Visualizer)) {
+                str = BACKGROUND_VIEWER;
+            } else {
+                str = BACKGROUND_UNKNOWN;
+            }
+            Image img = ImageRepository.getImage(str);
+
+            return img == null ? ImageRepository.getImage(BACKGROUND_OTHER)
+                    : img;
+        }
+
+        /**
+         * Sets a type specific background image.
+         * 
+         * @param type The node type, results in a different background
          * @see de.unikn.knime.workbench.repository.model.NodeTemplate
          */
-        void setType(final String type) {
-            assert type == type;
-            // if (NodeTemplate.TYPE_DATA_READER.equals(type)) {
-            // m_iconFigure.setBackgroundColor(ColorConstants.blue);
-            // } else {
-            m_iconFigure.setBackgroundColor(ColorConstants.white);
+        void setType(final NodeType type) {
 
-            // }
+            m_backgroundIcon.setIcon(getBackgroundForType(type));
         }
 
         /**

@@ -85,13 +85,13 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
         } else {
             PointList points = new PointList(4);
             points.addPoint(r.getLeft().getCopy().translate(WIDTH,
-                    -(HEIGHT / 2)));
+                    -(HEIGHT / 2 - 0)));
             points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2,
-                    -(HEIGHT / 2)));
+                    -(HEIGHT / 2 - 0)));
             points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2,
-                    (HEIGHT / 2)));
+                    (HEIGHT / 2 + 0)));
             points.addPoint(r.getLeft().getCopy()
-                    .translate(WIDTH, (HEIGHT / 2)));
+                    .translate(WIDTH, (HEIGHT / 2 + 0)));
             return points;
 
         }

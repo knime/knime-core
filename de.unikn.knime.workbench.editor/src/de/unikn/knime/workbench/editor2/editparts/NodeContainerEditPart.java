@@ -41,6 +41,7 @@ import de.unikn.knime.core.node.NodePort;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.NotConfigurableException;
+import de.unikn.knime.core.node.NodeFactory.NodeType;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ImageRepository;
@@ -399,7 +400,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // String plugin = ei.getPluginID();
         // String iconPath = ei.getIconPath();
-        String type = ei.getType();
+        NodeType type = getNodeContainer().getType();
         String name = getNodeContainer().getName();
         String userName = getNodeContainer().getCustomName();
         String description = getNodeContainer().getDescription();

@@ -89,7 +89,7 @@ public class PortLocator implements Locator {
         int y = 0;
         if (m_type == TYPE_INPORT) {
 
-            x = parentBounds.getLeft().x;
+            x = parentBounds.getLeft().x - 1;
 
             int position = 0;
             if (m_modelPort) {
@@ -103,7 +103,7 @@ public class PortLocator implements Locator {
 
         } else {
 
-            x = parentBounds.getCenter().x;
+            x = parentBounds.getCenter().x + 4;
 
             y = parentBounds.getTopRight().y + (m_portIndex * portHeight);
         }
