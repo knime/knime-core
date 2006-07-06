@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./rowfilter.gif">
+<knimeNode icon="./rowfilter.gif" type="Manipulator">
 	<name>Row Filter</name>
-	<type>Transformer</type>
 	<shortDescription>
 		Allows filtering of datarows by certain criteria, like row ID, 
 		attribute value, and row number range.  

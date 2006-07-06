@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./table.png">         
+<knimeNode icon="./table.png" type="Visualizer">         
     <name>Interactive Table</name>
-    <type>Visualizer</type>
     <shortDescription>Displays data in a table view.</shortDescription>
     <fullDescription>
         <intro> Displays data in a table view. If the number of rows is 
