@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./append.png">         
-    <name>Concatenate</name>         
+<knimeNode icon="./append.png" type="Transformer">         
+    <name>Concatenate</name>  
     <shortDescription>Concatenates two tables row-wise.</shortDescription>         
             
     <fullDescription>
