@@ -1386,19 +1386,23 @@ public final class Node {
         }
 
         m_nodeDir = nodeFile.getParentFile();
+        
         if (isConfigured()) {
-            NodeSettings specs = settings.addConfig(CFG_SPEC_FILES);
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                String specName = SPEC_FILE_PREFIX + i + ".xml";
-                specs.addString(CFG_OUTPUT_PREFIX + i, specName);
-                DataTableSpec outSpec = m_outDataPorts[i].getDataTableSpec();
-                if (outSpec != null) {
-                    NodeSettings specSettings = 
-                        new NodeSettings(SPEC_FILE_PREFIX + i);
-                    outSpec.save(specSettings);
-                    File targetFile = new File(m_nodeDir, specName);
-                    specSettings.saveToXML(new BufferedOutputStream(
-                            new FileOutputStream(targetFile)));
+            if (!(m_isCurrentlySaved && isExecuted())) {
+                NodeSettings specs = settings.addConfig(CFG_SPEC_FILES);
+                for (int i = 0; i < m_outDataPorts.length; i++) {
+                    String specName = SPEC_FILE_PREFIX + i + ".xml";
+                    specs.addString(CFG_OUTPUT_PREFIX + i, specName);
+                    DataTableSpec outSpec = 
+                        m_outDataPorts[i].getDataTableSpec();
+                    if (outSpec != null) {
+                        NodeSettings specSettings = 
+                            new NodeSettings(SPEC_FILE_PREFIX + i);
+                        outSpec.save(specSettings);
+                        File targetFile = new File(m_nodeDir, specName);
+                        specSettings.saveToXML(new BufferedOutputStream(
+                                new FileOutputStream(targetFile)));
+                    }
                 }
             }
         } else {
@@ -1408,6 +1412,7 @@ public final class Node {
                 specFile.delete();
             }
         }
+        
         if (!m_isCurrentlySaved) {
             if (isExecuted()) {
                 if (!isAutoExecutable()) {
