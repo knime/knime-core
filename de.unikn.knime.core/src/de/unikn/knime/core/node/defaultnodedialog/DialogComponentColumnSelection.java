@@ -46,7 +46,6 @@ public class DialogComponentColumnSelection extends DialogComponent {
 
     private final int m_specIndex;
     
-    private final boolean m_isRequired;
 
     /**
      * Constructor that puts label and checkbox into panel.
@@ -64,7 +63,6 @@ public class DialogComponentColumnSelection extends DialogComponent {
         this.add(m_chooser);
         m_configName = configName;
         m_specIndex = specIndex;
-        m_isRequired = true;
     }
     
     
@@ -83,10 +81,10 @@ public class DialogComponentColumnSelection extends DialogComponent {
             final Class<? extends DataValue>... classFilter) {
         this.add(new JLabel(label));
         m_chooser = new ColumnSelectionPanel((Border)null, classFilter);
+        m_chooser.setRequired(isRequired);
         this.add(m_chooser);
         m_configName = configName;
         m_specIndex = specIndex;
-        m_isRequired = isRequired;
     }
 
     /**
@@ -109,7 +107,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
         } finally {
             // update JComboBox with list of column names
             DataTableSpec spec = specs[m_specIndex];
-            m_chooser.update(spec, classCol, m_isRequired);
+            m_chooser.update(spec, classCol);
         }
     }
 

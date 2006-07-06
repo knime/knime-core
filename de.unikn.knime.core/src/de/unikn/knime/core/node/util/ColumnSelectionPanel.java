@@ -51,6 +51,8 @@ public class ColumnSelectionPanel extends JPanel {
      * to one of theses classes. */
     private final Class<? extends DataValue>[] m_filterClasses;
     
+    private boolean m_isRequired;
+    
     /**
      * Creates new Panel that will filter columns for particular value classes.
      * The panel will have a titled border with name "Column Selection".
@@ -64,6 +66,7 @@ public class ColumnSelectionPanel extends JPanel {
     public ColumnSelectionPanel(
             final Class<? extends DataValue>... filterValueClasses) {
             this(" Column Selection ", filterValueClasses);
+            
     }
 
     /**
@@ -121,7 +124,30 @@ public class ColumnSelectionPanel extends JPanel {
         m_chooser = new JComboBox();
         m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
         m_chooser.setMinimumSize(new Dimension(100, 25));
+        m_isRequired = true;
         add(m_chooser);
+    }
+    
+    /**
+     * True, if a compatible type is required, false otherwise.
+     * If required an excpetion is thrown in the update method +
+     * if no compatible type was found in the input spec. If it is not required
+     * this exception is suppressed.
+     * @param isRequired True, if at least one compatible type is required, 
+     *  false otherwise.
+     */
+    public final void setRequired(final boolean isRequired) {
+        m_isRequired = isRequired;
+    }
+    
+    /**
+     * Indicates whether in the current configuration at least one compatible 
+     * type is required or not.
+     * @return True, if at least one compatible type is required, false 
+     * otherwise.
+     */
+    public final boolean isRequired() {
+        return m_isRequired;
     }
     
     
@@ -133,13 +159,11 @@ public class ColumnSelectionPanel extends JPanel {
      * 
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
-     * @param isRequired True, if an exception should be thrown in case of no 
-     *      available compatible type, false otherwise.
      * @throws NotConfigurableException If the spec does not contain at least
      * one compatible type.
      */
-    public final void update(final DataTableSpec spec, final String selColName,
-            final boolean isRequired) throws NotConfigurableException {
+    public final void update(final DataTableSpec spec, final String selColName) 
+    throws NotConfigurableException {
         m_chooser.removeAllItems();
         if (spec != null) {
             DataColumnSpec selectMe = null;
@@ -166,7 +190,7 @@ public class ColumnSelectionPanel extends JPanel {
                 }
             }
         }
-        if (m_chooser.getItemCount() == 0 && isRequired) {
+        if (m_chooser.getItemCount() == 0 && m_isRequired) {
             StringBuffer error = new StringBuffer(
                     "No column in spec compatible to");
             if (m_filterClasses.length == 1) {
@@ -186,22 +210,6 @@ public class ColumnSelectionPanel extends JPanel {
             error.append('.');
             throw new NotConfigurableException(error.toString());
         }
-    }
-    
-    /**
-     * Updates this filter panel by removing all current items and adding the
-     * columns according to the content of the argument <code>spec</code>. If
-     * a column name is provided and it is not filtered out the corresponding
-     * item in the combo box will be selected.
-     * 
-     * @param spec To get the column names, types and the current index from.
-     * @param selColName The column name to be set as chosen.
-     * @throws NotConfigurableException If the spec does not contain at least
-     * one compatible type.
-     */
-    public final void update(final DataTableSpec spec, 
-            final String selColName) throws NotConfigurableException {
-        this.update(spec, selColName, true);
     }
 
     /**
