@@ -45,6 +45,8 @@ public class DialogComponentColumnSelection extends DialogComponent {
     private final String m_configName;
 
     private final int m_specIndex;
+    
+    private final boolean m_isRequired;
 
     /**
      * Constructor that puts label and checkbox into panel.
@@ -62,6 +64,29 @@ public class DialogComponentColumnSelection extends DialogComponent {
         this.add(m_chooser);
         m_configName = configName;
         m_specIndex = specIndex;
+        m_isRequired = true;
+    }
+    
+    
+    /**
+     * Constructor that puts label and checkbox into panel.
+     * 
+     * @param configName name used in configuration file
+     * @param label label for dialog in front of checkbox
+     * @param specIndex index of (input) port listing available columns
+     * @param isRequired True, if the component should throw an exception in 
+     * case of no available compatible type, false otherwise.
+     * @param classFilter which classes are available for selection
+     */
+    public DialogComponentColumnSelection(final String configName,
+            final String label, final int specIndex, final boolean isRequired,
+            final Class<? extends DataValue>... classFilter) {
+        this.add(new JLabel(label));
+        m_chooser = new ColumnSelectionPanel((Border)null, classFilter);
+        this.add(m_chooser);
+        m_configName = configName;
+        m_specIndex = specIndex;
+        m_isRequired = isRequired;
     }
 
     /**
@@ -84,7 +109,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
         } finally {
             // update JComboBox with list of column names
             DataTableSpec spec = specs[m_specIndex];
-            m_chooser.update(spec, classCol);
+            m_chooser.update(spec, classCol, m_isRequired);
         }
     }
 

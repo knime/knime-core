@@ -125,7 +125,6 @@ public class ColumnSelectionPanel extends JPanel {
     }
     
     
-    
     /**
      * Updates this filter panel by removing all current items and adding the
      * columns according to the content of the argument <code>spec</code>. If
@@ -134,11 +133,13 @@ public class ColumnSelectionPanel extends JPanel {
      * 
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
+     * @param isRequired True, if an exception should be thrown in case of no 
+     *      available compatible type, false otherwise.
      * @throws NotConfigurableException If the spec does not contain at least
      * one compatible type.
      */
-    public final void update(final DataTableSpec spec, 
-            final String selColName) throws NotConfigurableException {
+    public final void update(final DataTableSpec spec, final String selColName,
+            final boolean isRequired) throws NotConfigurableException {
         m_chooser.removeAllItems();
         if (spec != null) {
             DataColumnSpec selectMe = null;
@@ -165,7 +166,7 @@ public class ColumnSelectionPanel extends JPanel {
                 }
             }
         }
-        if (m_chooser.getItemCount() == 0) {
+        if (m_chooser.getItemCount() == 0 && isRequired) {
             StringBuffer error = new StringBuffer(
                     "No column in spec compatible to");
             if (m_filterClasses.length == 1) {
@@ -185,6 +186,22 @@ public class ColumnSelectionPanel extends JPanel {
             error.append('.');
             throw new NotConfigurableException(error.toString());
         }
+    }
+    
+    /**
+     * Updates this filter panel by removing all current items and adding the
+     * columns according to the content of the argument <code>spec</code>. If
+     * a column name is provided and it is not filtered out the corresponding
+     * item in the combo box will be selected.
+     * 
+     * @param spec To get the column names, types and the current index from.
+     * @param selColName The column name to be set as chosen.
+     * @throws NotConfigurableException If the spec does not contain at least
+     * one compatible type.
+     */
+    public final void update(final DataTableSpec spec, 
+            final String selColName) throws NotConfigurableException {
+        this.update(spec, selColName, true);
     }
 
     /**
