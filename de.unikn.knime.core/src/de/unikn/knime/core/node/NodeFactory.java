@@ -44,8 +44,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import de.unikn.knime.core.node.workflow.NodeContainer;
-
 /**
  * Interface for factories summarizing <code>NodeModel</code>,
  * <code>NodeView</code>, and <code>NodeDialogPane</code> for a specific
@@ -83,7 +81,7 @@ public abstract class NodeFactory {
 
     // The logger for static methods
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeContainer.class);
+            .getLogger(NodeFactory.class);
 
     private final String m_nodeName;
     private final String m_shortDescription;
@@ -275,7 +273,7 @@ public abstract class NodeFactory {
             try {
                 m_type = NodeType.valueOf(m_knimeNode.getAttribute("type"));
             } catch (IllegalArgumentException ex) {
-                LOGGER.coding("Unknown node type '"
+                m_logger.coding("Unknown node type '"
                         + m_knimeNode.getAttribute("type") + "'");
                 m_type = null;
             }
