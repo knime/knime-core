@@ -162,7 +162,9 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                 } catch (InterruptedException ex) {
                     // nothing to do here
                 }
-                nodeParts[0].getNodeContainer().showView(0);
+                if (nodeParts[0].getNodeContainer().isExecuted()) {
+                    nodeParts[0].getNodeContainer().showView(0);
+                }
             }
         }).start();
 
