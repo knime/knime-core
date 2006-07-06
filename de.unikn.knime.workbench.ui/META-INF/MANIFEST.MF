@@ -12,7 +12,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.ide,
  de.unikn.knime.workbench.core,
  de.unikn.knime.base,
- de.unikn.knime.workbench.repository
+ de.unikn.knime.workbench.repository,
+ de.unikn.knime.workbench.navigator
 Eclipse-AutoStart: true
 Provide-Package: de.unikn.knime.workbench.ui,
  de.unikn.knime.workbench.ui.preferences,

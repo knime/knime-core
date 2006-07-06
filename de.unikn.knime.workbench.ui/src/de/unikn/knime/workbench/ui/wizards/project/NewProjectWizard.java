@@ -41,15 +41,21 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.internal.Workbench;
 
 import de.unikn.knime.core.node.workflow.WorkflowManager;
+import de.unikn.knime.workbench.navigator.view.KnimeResourceNavigator;
 import de.unikn.knime.workbench.ui.builder.KNIMEProjectBuilder;
 import de.unikn.knime.workbench.ui.nature.KNIMEProjectNature;
 
@@ -130,6 +136,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 }
             }
         };
+
         try {
             getContainer().run(true, false, op);
         } catch (InterruptedException e) {
@@ -141,8 +148,38 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     .getMessage());
             return false;
         }
-        return true;
 
+        // workaround to redraw the knime navigation tree
+        // TODO: try to find a better solution
+        // update knime resource navigator
+        updateResourceNavigator();
+
+        return true;
+    }
+
+    private void updateResourceNavigator() {
+
+        // workaround to redraw the knime navigation tree
+        // TODO: try to find a better solution
+        // update knime resource navigator
+
+        // find all resource navigators and refresh them
+        // aditionally exampd all items to remove the + signs
+        for (IWorkbenchWindow window : Workbench.getInstance()
+                .getWorkbenchWindows()) {
+            for (IWorkbenchPage page : window.getPages()) {
+                for (IViewReference reference : page.getViewReferences()) {
+                    IViewPart viewPart = reference.getView(true);
+                    if (viewPart instanceof KnimeResourceNavigator) {
+                        TreeViewer viewer = ((KnimeResourceNavigator)viewPart)
+                                .getViewer();
+                        viewer.refresh();
+                        viewer.expandAll();
+
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -200,7 +237,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         });
 
         // just to make sure: refresh the new project
-        project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+        project.getProject().refreshLocal(IResource.DEPTH_INFINITE, monitor);
     }
 
     private void throwCoreException(final String message) throws CoreException {
