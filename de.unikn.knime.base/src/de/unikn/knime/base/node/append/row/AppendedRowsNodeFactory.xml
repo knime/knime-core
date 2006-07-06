@@ -5,19 +5,19 @@
     <shortDescription>Concatenates two tables row-wise.</shortDescription>         
             
     <fullDescription>
-        <intro> Concatenates two tables. The table at inport 0 is given as the first
+        <intro> This node concatenates two tables. The table at inport 0 is given as the first
             input table (top input port), the table at inport 1 is the second table, resp. 
-			Columns with equal names are concatenated (in case the column type differs 
+			Columns with equal names are concatenated (if the column type differs 
 			the column type is the
             common base type of both input column types). If one input table contains a column
-            name that the other table doesn't, this column will be included in 
-			the output table as well but it will contain missing values for 
-			those rows that are given by the input table which is missing
-            this column. The dialog allows to treat duplicate row keys, two options are
+            name that is not included in the other table, this column will also be included in 
+			the output table;  it will contain missing values for 
+			those rows that are provided by the input table that does not have 
+            this column. The dialog enables dupplicate row keys to be treated: two options are
             available: </intro>
-        <option name="Skip Rows"> Duplicate row keys occuring in the second 
+        <option name="Skip rows"> Duplicate row keys occuring in the second 
 			table are not appended to the output table. </option>
-        <option name="Append Suffix"> The output table will contain all rows, but
+        <option name="Append suffix"> The output table will contain all rows, but
             duplicate row keys are labeled with a suffix. </option>
 		</fullDescription>                  
     <ports>                 

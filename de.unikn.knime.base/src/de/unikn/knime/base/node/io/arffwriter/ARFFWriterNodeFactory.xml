@@ -4,19 +4,19 @@
 	<name>ARFF Writer</name>
 	
 	<shortDescription>
-		Writes data into a file, in ARFF format.
+		Writes data into a file in ARFF format.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
- 		This node saves data in ARFF format to a file. In the configuration dialog
-		specify a valid destination file. When executed the node writes the 
-		data coming through its input port into the specified location.
-		It writes not-sparse ARFF files only at this time.
+ 		This node saves data to a file in ARFF format. In the configuration dialog,
+		specify a valid destination file. When executed, the node writes the 
+		data, entering through its input port, into the specified location.
+		At this point in time, it only writes not-sparse ARFF files.
 		</intro>
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0">The datatable to write to the file</dataIn>
+		<dataIn index="0">The datatable to be written to the file</dataIn>
 	</ports>	
 </knimeNode>
