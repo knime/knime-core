@@ -631,14 +631,21 @@ public abstract class NodeModel {
      * This method is called by the corresponding <code>Node</code> in order
      * to set the <code>HiLiteHandler</code> for the given input port.
      * 
+     * <p>This implementation is empty. Subclasses may override this method
+     * in order to be informed when the hilite handler changes at the inport,
+     * e.g. when the node (or an preceding node) is newly connected.
+     * 
      * @param inIndex The index of the input.
-     * @param hiLiteHdl The <code>HiLiteHandler</code> at input index.
+     * @param hiLiteHdl The <code>HiLiteHandler</code> at input index. 
+     *         May be <code>null</code> when not available, i.e. not properly
+     *         connected.
      * @throws IndexOutOfBoundsException If the <code>inIndex</code> is not in
-     *             the range of inputs.
+     *          the range of inputs.
      */
     protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
-        m_inHiLiteHdls[inIndex] = hiLiteHdl;
+        assert inIndex >= 0;
+        assert hiLiteHdl == hiLiteHdl;
     }
 
     /**
@@ -650,6 +657,7 @@ public abstract class NodeModel {
      * @see #setInHiLiteHandler(int, HiLiteHandler)
      */
     final void setInHiLiteHandler(final HiLiteHandler hdl, final int in) {
+        m_inHiLiteHdls[in] = hdl;
         setInHiLiteHandler(in, hdl);
         stateChanged();
     }
