@@ -55,32 +55,6 @@
                </documentation>
             </annotation>
          </attribute>
-         
-         <attribute name="type" use="required">
-            <annotation>
-               <documentation>
-                  Specifies the logical &quot;type&quot; (or &quot;role&quot;) of this node.
-               </documentation>
-            </annotation>
-            <simpleType>
-               <restriction base="string">
-                  <enumeration value="data reader">
-                  </enumeration>
-                  <enumeration value="data transformer">
-                  </enumeration>
-                  <enumeration value="learner">
-                  </enumeration>
-                  <enumeration value="predictor">
-                  </enumeration>
-                  <enumeration value="visualizer">
-                  </enumeration>
-                  <enumeration value="evaluator">
-                  </enumeration>
-                  <enumeration value="other">
-                  </enumeration>
-               </restriction>
-            </simpleType>
-         </attribute>
          <attribute name="factory-class" type="string" use="required">
             <annotation>
                <documentation>
