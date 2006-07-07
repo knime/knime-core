@@ -76,7 +76,7 @@ public abstract class NodeFactory {
         Meta,
         /** All other nodes. */
         Other,
-        /** If not specified */
+        /** If not specified. */
         Unknown
     }
     
