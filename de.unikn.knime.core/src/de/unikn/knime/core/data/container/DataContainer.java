@@ -138,6 +138,15 @@ public class DataContainer implements RowAppender {
         m_maxPossibleValues = MAX_POSSIBLE_VALUES;
     }
     
+    /** Creates a new buffer to be used when writing to a file. 
+     * This method is called from the open method.
+     * @param rowsInMemory Argument for the buffer.
+     * @return A new buffer for writing into.
+     */
+    protected Buffer newBuffer(final int rowsInMemory) {
+        return new Buffer(rowsInMemory);
+    }
+    
     /** Get the number of possible values that are being kept.
      * @return This number.
      */
@@ -244,7 +253,7 @@ public class DataContainer implements RowAppender {
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         int rowsInMemory = m_maxCellsInMemory / ((colCount > 0) ? colCount : 1);
-        m_buffer = new Buffer(rowsInMemory);
+        m_buffer = newBuffer(rowsInMemory);
     }
 
     /**
