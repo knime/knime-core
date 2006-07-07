@@ -20,6 +20,7 @@
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -27,7 +28,9 @@ import java.io.File;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 import javax.swing.filechooser.FileFilter;
 
 import de.unikn.knime.core.data.DataTableSpec;
@@ -103,10 +106,14 @@ public class DialogComponentFileChooser extends DialogComponent {
     public DialogComponentFileChooser(final String configName,
             final int dialogType, final boolean directoryOnly,
             final String... validExtensions) {
+        setLayout(new FlowLayout());
         m_configName = configName;
+        JPanel p = new JPanel();
         m_fileURL = new JTextField("n/a");
-        m_fileURL.setBorder(BorderFactory.createTitledBorder(
-                " Selected File "));
+        Border b = BorderFactory.createTitledBorder(" Selected File ");
+        p.setBorder(b);
+        p.add(m_fileURL);
+        
         m_fileURL.setColumns(40);
         m_fileURL.setEditable(true);
         m_browseButton = new JButton("Browse...");
@@ -149,7 +156,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             }
         });
 
-        super.add(m_fileURL);
+        super.add(p);
         super.add(m_browseButton);
     }
 
