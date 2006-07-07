@@ -469,7 +469,7 @@ public class NodeContainerFigure extends RectangleFigure {
                 + "background_learner.png";
         
         private static final String BACKGROUND_PREDICTOR = "icons/node/"
-            + "background_precictor.png";
+            + "background_predictor.png";
 
         private static final String BACKGROUND_TRANSFORMER = "icons/node/"
                 + "background_transformer.png";
