@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -24,6 +21,7 @@ package de.unikn.knime.base.node.io.arffwriter;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Date;
 
 import de.unikn.knime.core.data.DataCell;
@@ -179,7 +177,14 @@ public class ARFFWriterNodeModel extends NodeModel {
 
         // finally add the data
         writer.write("\n@DATA\n");
+        long rowCnt = inData[0].getRowCount();
+        long rowNr = 0;
         for (DataRow row : inData[0]) {
+            
+            rowNr++;
+            exec.setProgress(rowNr / (double)rowCnt, "Writing row " + rowNr 
+                    + " ('" + row.getKey().getId() + "') of " + rowCnt);
+            
             if (m_sparse) {
                 writer.write("{");
             }
@@ -341,15 +346,37 @@ public class ARFFWriterNodeModel extends NodeModel {
     protected void reset() {
         // doodledoom.
     }
+    
+    /**
+     * @see de.unikn.knime.core.node.NodeModel
+     * #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // no internals.
+    }
 
+    /**
+     * @see de.unikn.knime.core.node.NodeModel
+     * #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // no internals to save.
+    }
+    
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_file == null) {
-            throw new InvalidSettingsException("File not specified.");
-        }
+
+        checkFileAccess(m_file);
+        
         for (int c = 0; c < inSpecs[0].getNumColumns(); c++) {
             DataType colType = inSpecs[0].getColumnSpec(c).getType();
 
@@ -362,4 +389,36 @@ public class ARFFWriterNodeModel extends NodeModel {
         }
         return new DataTableSpec[0];
     }
+    
+    /**
+     * Helper that checks some properties for the file argument.
+     * @param fileName The file to check
+     * @throws InvalidSettingsException If that fails.
+     */
+    private void checkFileAccess(final File file) 
+        throws InvalidSettingsException {
+
+        if (m_file == null) {
+            throw new InvalidSettingsException("Output file not specified.");
+        }
+        
+        if (file.isDirectory()) {
+            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
+                    + "\" is a directory.");
+        }
+        if (!file.exists()) {
+            // dunno how to check the write access to the directory. If we can't
+            // create the file the execute of the node will fail. Well, too bad.
+            return;
+        }
+        if (!file.canWrite()) {
+            throw new InvalidSettingsException("Cannot write to file \""
+                    + file.getAbsolutePath() + "\".");
+        }
+        // here it exists and we can write it: warn user!
+        setWarningMessage("Selected output file exists and will be "
+                + "overwritten!");
+
+    }
+
 }
