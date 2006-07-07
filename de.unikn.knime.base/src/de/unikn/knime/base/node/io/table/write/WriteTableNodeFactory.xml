@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./tablewrite.png">
+<knimeNode icon="./tablewrite.png" type="Sink">
 	<name>Table Writer</name>
 	
 	<shortDescription>
@@ -18,6 +18,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0">The table to write.</dataIn>
+		<dataIn name="Table to be saved" index="0">The table to write to a file</dataIn>
 	</ports>	
 </knimeNode>

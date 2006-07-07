@@ -20,10 +20,12 @@
 package de.unikn.knime.base.node.io.table.write;
 
 import java.io.File;
+import java.io.IOException;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -105,4 +107,27 @@ public class WriteTableNodeModel extends NodeModel {
         return new DataTableSpec[0];
     }
 
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // no internals to load
+    }
+
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // no internals to save
+    }
+
+    
 }

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="./tableread.png">
+<knimeNode icon="./tableread.png" type="Source">
 	<name>Table Reader</name>
 	
 	<shortDescription>
-		Reads table as written by the Write Table Node.
+		Reads table written by the Table Writer node.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
-			This node reads files that have been written using the Write Table node 
+			This node reads files that have been written using the Table Writer node 
 			(which uses an internal format). It will retain all meta information such as 
 			domain, properties, colors, size.
 		</intro>
@@ -19,6 +19,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0">The table as contained in the selected file.</dataOut>
+		<dataOut name="Read table" index="0">The table contained in the selected file.</dataOut>
 	</ports>	
 </knimeNode>

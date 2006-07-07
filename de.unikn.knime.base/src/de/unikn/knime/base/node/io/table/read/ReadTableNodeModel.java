@@ -25,6 +25,7 @@ import java.io.IOException;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -36,9 +37,6 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author wiswedel, University of Konstanz
  */
 public class ReadTableNodeModel extends NodeModel {
-    
-    
-    
     /** Identifier for the node settings object. */
     static final String CFG_FILENAME = "filename";
     
@@ -127,4 +125,26 @@ public class ReadTableNodeModel extends NodeModel {
         }
     }
 
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // no internals to load
+    }
+
+    
+    /** 
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // not internals to save
+    }
 }
