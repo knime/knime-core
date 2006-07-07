@@ -1360,6 +1360,18 @@ public final class Node {
     private static final String MODEL_FILE_PREFIX = "model_";
     private static final String CFG_OUTPUT_PREFIX = "output_";
     
+    private static String createSpecFileName(final int index) {
+        return SPEC_FILE_PREFIX + index + ".xml";
+    }
+    
+    private static String createDataFileName(final int index) {
+        return DATA_FILE_PREFIX + index + ".zip";
+    }
+    
+    private static String createModelFileName(final int index) {
+        return MODEL_FILE_PREFIX + index + ".pmml.gz";
+    }
+    
     /**
      * Saves the node, node settings, and all internal structures, spec, data,
      * and models, to the given node directory (located at the node file).
@@ -1398,16 +1410,15 @@ public final class Node {
         m_nodeDir = nodeFile.getParentFile();
         
         if (isConfigured()) {
-            if (!(m_isCurrentlySaved && isExecuted())) {
-                NodeSettings specs = settings.addConfig(CFG_SPEC_FILES);
-                for (int i = 0; i < m_outDataPorts.length; i++) {
-                    String specName = SPEC_FILE_PREFIX + i + ".xml";
-                    specs.addString(CFG_OUTPUT_PREFIX + i, specName);
+            NodeSettings specs = settings.addConfig(CFG_SPEC_FILES);
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                String specName = createSpecFileName(i);
+                specs.addString(CFG_OUTPUT_PREFIX + i, specName);
+                if (!(m_isCurrentlySaved && isExecuted())) {
                     DataTableSpec outSpec = 
                         m_outDataPorts[i].getDataTableSpec();
                     if (outSpec != null) {
-                        NodeSettings specSettings = 
-                            new NodeSettings(SPEC_FILE_PREFIX + i);
+                        NodeSettings specSettings = new NodeSettings(specName);
                         outSpec.save(specSettings);
                         File targetFile = new File(m_nodeDir, specName);
                         specSettings.saveToXML(new BufferedOutputStream(
@@ -1418,7 +1429,7 @@ public final class Node {
         } else {
             for (int i = 0; i < m_outDataPorts.length; i++) {
                 File specFile = 
-                    new File(m_nodeDir, SPEC_FILE_PREFIX + i + ".xml");
+                    new File(m_nodeDir, createSpecFileName(i));
                 specFile.delete();
             }
         }
@@ -1441,7 +1452,7 @@ public final class Node {
                 }
                 NodeSettings data = settings.addConfig(CFG_DATA_FILES);
                 for (int i = 0; i < m_outDataPorts.length; i++) {
-                    String specName = DATA_FILE_PREFIX + i + ".zip";
+                    String specName = createDataFileName(i);
                     data.addString(CFG_OUTPUT_PREFIX + i, specName);
                     DataTable outTable = m_outDataPorts[i].getDataTable();
                     File targetFile = new File(m_nodeDir, specName);
@@ -1449,7 +1460,7 @@ public final class Node {
                 }
                 NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                 for (int i = 0; i < m_outModelPorts.length; i++) {
-                    String specName = MODEL_FILE_PREFIX + i + ".pmml.gz";
+                    String specName = createModelFileName(i);
                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
                     PredictorParams pred = 
                         m_outModelPorts[i].getPredictorParams();
@@ -1464,12 +1475,12 @@ public final class Node {
                 FileUtil.deleteRecursively(internDir);
                 for (int i = 0; i < m_outDataPorts.length; i++) {
                     File dataFile = 
-                        new File(m_nodeDir, DATA_FILE_PREFIX + i + ".zip");
+                        new File(m_nodeDir, createDataFileName(i));
                     dataFile.delete();
                 }
                 for (int i = 0; i < m_outModelPorts.length; i++) {
-                    File targetFile = 
-                        new File(m_nodeDir, MODEL_FILE_PREFIX + i + ".pmml.gz");
+                    String modelFile = createModelFileName(i);
+                    File targetFile = new File(m_nodeDir, modelFile);
                     targetFile.delete();            
                 }
             }
@@ -1477,12 +1488,12 @@ public final class Node {
              if (isExecuted()) {
                  NodeSettings data = settings.addConfig(CFG_DATA_FILES);
                  for (int i = 0; i < m_outDataPorts.length; i++) {
-                     String specName = DATA_FILE_PREFIX + i + ".zip";
+                     String specName = createDataFileName(i);
                      data.addString(CFG_OUTPUT_PREFIX + i, specName);
                  }
                  NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                  for (int i = 0; i < m_outModelPorts.length; i++) {
-                     String specName = MODEL_FILE_PREFIX + i + ".pmml.gz";
+                     String specName = createModelFileName(i);
                      models.addString(CFG_OUTPUT_PREFIX + i, specName);
                  }
              } else {
