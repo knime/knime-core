@@ -23,7 +23,6 @@ package de.unikn.knime.core.node.defaultnodedialog;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -31,11 +30,12 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
-import javax.swing.filechooser.FileFilter;
+
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.util.SimpleFileFilter;
 
 /**
  * A standard component allowing to choose a location (directory) and file name.
@@ -158,54 +158,6 @@ public class DialogComponentFileChooser extends DialogComponent {
 
         super.add(p);
         super.add(m_browseButton);
-    }
-
-    /**
-     * Internal helper class filtering out all files not matching extensions.
-     */
-    public class SimpleFileFilter extends FileFilter {
-        private String[] m_validExtensions;
-
-        /**
-         * Creates a new simple file filter that filters out all files not
-         * mathcing the given extensions.
-         * 
-         * @param exts allowed extensions
-         */
-        public SimpleFileFilter(final String[] exts) {
-            m_validExtensions = exts;
-        }
-
-        /**
-         * @see java.io.FileFilter#accept(java.io.File)
-         */
-        @Override
-        public boolean accept(final File f) {
-            if (f != null) {
-                if (f.isDirectory()) {
-                    return true;
-                }
-                String fileName = f.getName();
-                for (String ext : m_validExtensions) {
-                    if (fileName.endsWith(ext)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        /**
-         * @see javax.swing.filechooser.FileFilter#getDescription()
-         */
-        @Override
-        public String getDescription() {
-            String descr = "";
-            for (String ext : m_validExtensions) {
-                descr = descr + " " + ext.toString();
-            }
-            return descr;
-        }
     }
 
     /**
