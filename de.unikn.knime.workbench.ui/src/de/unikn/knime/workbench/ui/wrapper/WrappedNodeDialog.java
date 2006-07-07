@@ -19,7 +19,6 @@
  */
 package de.unikn.knime.workbench.ui.wrapper;
 
-import java.awt.Dimension;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -398,6 +397,11 @@ public class WrappedNodeDialog extends Dialog {
         return super.close();
     }
 
+    // add border width to final dialog size
+    private static final int EXTRA_WIDTH  = 10;
+    // remove height for menu and title
+    private static final int EXTRA_HEIGHT = -40;
+
     /**
      * This calculates the initial size of the dialog. As the wrapped AWT-Panel
      * ("NodeDialogPane") sometimes just won't return any useful preferred sizes
@@ -407,37 +411,34 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     protected Point getInitialSize() {
-
-        // First we ask the dialog pane for the preferred size
+        
+        // get underlying panel and do layout it
         JPanel panel = m_dialogPane.getPanel();
-        panel.validate();
-        int width = panel.getPreferredSize().width;
-        int height = panel.getPreferredSize().height;
-
+        panel.doLayout();
+        
+        // underlying pane sizes
+        int width = panel.getWidth();
+        int height = panel.getHeight();
+        
+        // button bar sizes
+        int widthButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
+        int heightButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+        
+        // init dialog sizes
+        int widthDialog = super.getInitialSize().x;
+        int heightDialog = super.getInitialSize().y;
+        
         // we need to make sure that we have at least enough space for
         // the button bar (+ some extra space)
-        width = Math.max(this.getButtonBar().computeSize(SWT.DEFAULT,
-                SWT.DEFAULT).x + 30, width);
-        // TODO FIXME: Some panes are very, very nasty and simply won't
-        // return useful preferred sizes - so we give this a minimum height of
-        // 150 pixels :-(
-        height = Math.max(height, 150);
-
+        width = Math.max(Math.max(widthButtonBar, widthDialog), 
+                width + widthDialog - widthButtonBar + EXTRA_WIDTH); 
+        height = Math.max(Math.max(heightButtonBar, heightDialog), 
+                height + heightDialog - heightButtonBar + EXTRA_HEIGHT);
+        
         // set the size of the container composite
-        m_container.setSize(width, height);
-
-        // The wrapped dialog pane (AWT Panel) should grab all the available
-        // space
-        panel.setSize(new Dimension(width, height));
-
-        // The dialog needs to add the height of the insets
-        // (title area, button bar)
-        return new Point(width, height
-                + this.getButtonBar().computeSize(SWT.DEFAULT, SWT.DEFAULT).y
-                /*
-                 * + this.getTitleImageLabel().computeSize(SWT.DEFAULT,
-                 * SWT.DEFAULT).y
-                 */ + 100);
+        Point size = new Point(width, height);
+        m_container.setSize(size);
+        return size;
     }
 
 }
