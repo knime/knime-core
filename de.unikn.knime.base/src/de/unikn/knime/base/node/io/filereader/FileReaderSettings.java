@@ -66,6 +66,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private char m_decimalSeparator;
 
     /*
+     * if set, the reader will eat all surplus empty tokens at the end of a row.
+     */
+    private boolean m_ignoreEmptyTokensAtEOR;
+    
+    /*
      * if set, the first row in the file will be considered column names - and
      * discarded (we read rows, not column headers!)
      */
@@ -111,6 +116,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     private static final String CFGKEY_IGNOREEMPTY = "ignoreEmptyLines";
 
+    private static final String CFGKEY_IGNOREATEOR = "ignEmtpyTokensAtEOR";
+    
     private static final String CFGKEY_ROWDELIMS = "RowDelims";
 
     private static final String CFGKEY_ROWDELIM = "RDelim";
@@ -145,7 +152,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_fileHasColumnHeaders = false;
         m_fileHasRowHeaders = false;
         m_ignoreEmptyLines = false;
-
+        m_ignoreEmptyTokensAtEOR = false;
+        
         m_rowHeaderPrefix = null;
 
         m_rowDelimiters = new HashSet<String>();
@@ -251,7 +259,12 @@ public class FileReaderSettings extends FileTokenizerSettings {
             // get the decimal separator.
             // It's optional for backward compatibility and defaults to '.'
             m_decimalSeparator = cfg.getChar(CFGKEY_DECIMALSEP, '.');
-
+            
+            // ignore empty tokens at end of row? 
+            // It'S optional and default to false, for backward compatibility.
+            m_ignoreEmptyTokensAtEOR = cfg.getBoolean(CFGKEY_IGNOREATEOR, 
+                    false);
+            
             readRowDelimitersFromConfig(rowDelimConf);
 
         } // if (cfg != null)
@@ -288,6 +301,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         saveRowDelimitersToConfig(cfg.addConfig(CFGKEY_ROWDELIMS));
         saveMissingPatternsToConfig(cfg.addConfig(CFGKEY_MISSINGS));
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
+        cfg.addBoolean(CFGKEY_IGNOREATEOR, m_ignoreEmptyTokensAtEOR);
     }
 
     /*
@@ -778,6 +792,24 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
+     * @return true if additional empty tokens should be ignored at the end of a
+     *         row (if they are not needed to build the row).
+     */
+    public boolean ignoreEmptyTokensAtEndOfRow() {
+        return m_ignoreEmptyTokensAtEOR;
+    }
+
+    /**
+     * Sets this flag.
+     * 
+     * @param ignoreThem if true, additional empty tokens will be ignored at the
+     *            end of a row (if they are not needed to build the row).
+     */
+    public void setIgnoreEmptyTokensAtEndOfRow(final boolean ignoreThem) {
+        m_ignoreEmptyTokensAtEOR = ignoreThem;
+    }
+    
+    /**
      * Method to check consistency and completeness of the current settings. It
      * will return a <code>SettingsStatus</code> object which contains info,
      * warning and error messages. Or if the settings are alright it will return
@@ -947,6 +979,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
             res.append(m_decimalSeparator);
             res.append("'\n");
         }
+        res.append("Ignore empty tokens at the end of row: "
+                + m_ignoreEmptyTokensAtEOR + "\n");
         res.append("RowPrefix:");
         res.append(m_rowHeaderPrefix + "\n");
         res.append("RowHeaders:" + m_fileHasRowHeaders);

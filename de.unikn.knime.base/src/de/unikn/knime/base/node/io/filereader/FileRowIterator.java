@@ -163,7 +163,7 @@ final class FileRowIterator extends RowIterator {
      */
     public DataRow next() {
         int noOfCols = m_tableSpec.getNumColumns();
-        String token;
+        String token = null;
         boolean isMissingCell;
         DataCell rowHeader;
         DataCell[] row = new DataCell[noOfCols];
@@ -229,20 +229,37 @@ final class FileRowIterator extends RowIterator {
 
         // In case we've seen a row delimiter before the row was complete:
         // puke and die
-        if (createdCols < noOfCols) {
+        int lineNr = m_tokenizer.getLineNumber();
+        if (token.equals("\n") && (lineNr > 0)) {
+            lineNr--;
+        }  
+        if (createdCols < noOfCols) {     
             throw prepareForException("Too few data elements in row "
                     + "(Source: '" + m_frSettings.getDataFileLocation()
-                    + "' line: " + m_tokenizer.getLineNumber() + ")",
-                    m_tokenizer.getLineNumber(), rowHeader, row);
+                    + "' line: " + lineNr + ")", lineNr, rowHeader, row);
+        }
+        
+        token = m_tokenizer.nextToken();
+
+        // eat all empty tokens til the end of the row, if we're supposed to
+        while (m_frSettings.ignoreEmptyTokensAtEndOfRow()
+                && !m_frSettings.isRowDelimiter(token) 
+                && token.equals("") 
+                && (!m_tokenizer.lastTokenWasQuoted())) {
+            try {
+                token = m_tokenizer.nextToken();
+            } catch (FileTokenizerException fte) {
+                throw prepareForException(fte.getMessage() + " (Source: "
+                        + m_frSettings.getDataFileLocation() + ", line "
+                        + lineNr + ")", lineNr, rowHeader, row);
+            }
         }
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
-        token = m_tokenizer.nextToken();
         if (!m_frSettings.isRowDelimiter(token)) {
             throw prepareForException("Too many data elements in row "
                     + "(Source: '" + m_frSettings.getDataFileLocation()
-                    + "' line: " + m_tokenizer.getLineNumber() + ")",
-                    m_tokenizer.getLineNumber(), rowHeader, row);
+                    + "' line: " + lineNr + ")", lineNr, rowHeader, row);
         }
         m_rowNumber++;
 
