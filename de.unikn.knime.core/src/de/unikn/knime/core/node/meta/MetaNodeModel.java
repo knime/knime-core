@@ -262,7 +262,7 @@ public class MetaNodeModel extends SpecialNodeModel
 
             File f = new File(nodeFile.getParentFile(), "workflow.knime");
             f.createNewFile();
-            internalWFM().save(f);
+            internalWFM().save(f, exec);
         } catch (IOException ex) {
             LOGGER.error(ex);
         } catch (CanceledExecutionException ex) {
