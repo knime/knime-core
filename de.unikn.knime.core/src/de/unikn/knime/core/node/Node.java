@@ -885,12 +885,12 @@ public final class Node {
      */
     private void reset() {
         m_logger.info("reset");
+        // if reset had no exception, reset node status
+        m_status = null;
+        // after reset, the node is not saved anymore
+        m_isCurrentlySaved = false;
         // reset the model
-        try {
-            m_model.resetModel();
-        } finally {
-            m_isCurrentlySaved = false;
-        }
+        m_model.resetModel();
 
         // blow away our data tables in the port
         for (int p = 0; p < getNrDataOutPorts(); p++) {
@@ -898,9 +898,16 @@ public final class Node {
             m_outDataPorts[p].setDataTable(null);
         }
 
-        // blow away our pred models in the port
+        // blow away our pred models in the out ports
         for (int p = 0; p < getNrPredictorOutPorts(); p++) {
-            m_outModelPorts[p].setPredictorParams(null);
+            try {
+                m_outModelPorts[p].setPredictorParams(null);
+            } catch (NullPointerException npe) {
+                m_logger.coding("loadPredictorParams() does not check for null"
+                        + " argument.");
+                m_status = new NodeStatus.Warning("Node does not check for "
+                        + "null argument in loadPreddictorParams().");
+            }
         }
 
         // load PredictorParams from all available InPorts again
@@ -908,14 +915,23 @@ public final class Node {
             try {
                 m_model.loadPredictorParams(p, m_inModelPorts[p]
                         .getPredictorParams());
+            } catch (NullPointerException npe) {
+                m_logger.coding("loadPredictorParams() does not check for null"
+                        + " argument.");
+                m_status = new NodeStatus.Warning("Node does not check for "
+                        + "null argument in loadPreddictorParams().");
             } catch (InvalidSettingsException ise) {
-                // (tg) do nothing
+                m_status = new NodeStatus.Warning("Could not load model"
+                        + " settings into the node.");
             }
         }
-
-        // if reset had no exception reset also the node status
-        m_status = null;
-        notifyStateListeners(new NodeStatus.StatusChanged());
+        
+        // notify about the new status or send warning if something failed 
+        if (m_status == null) {
+            notifyStateListeners(new NodeStatus.StatusChanged());
+        } else {
+            notifyStateListeners(m_status);
+        }
     }
 
     /**
