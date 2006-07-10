@@ -397,10 +397,10 @@ public class WrappedNodeDialog extends Dialog {
         return super.close();
     }
 
-    // add border width to final dialog size
-    private static final int EXTRA_WIDTH  = 10;
-    // remove height for menu and title
-    private static final int EXTRA_HEIGHT = -40;
+    // (tg) these are extra height and width value since the parent dialog
+    // does not return the right sizes for the underlying dialog pane
+    private static final int EXTRA_WIDTH  = 25;
+    private static final int EXTRA_HEIGHT = 0;
 
     /**
      * This calculates the initial size of the dialog. As the wrapped AWT-Panel
