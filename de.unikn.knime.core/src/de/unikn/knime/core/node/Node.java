@@ -1129,6 +1129,11 @@ public final class Node {
             m_status = new NodeStatus.Error(
                     "Could not load PredictorParams: " + ise.getMessage());
             this.notifyStateListeners(m_status);
+        } catch (NullPointerException npe) {
+            m_logger.coding("Model need to check for null argument.");
+            m_status = new NodeStatus.Error(
+                    "Could not load PredictorParams due to null argument.");
+            this.notifyStateListeners(m_status);
         }
         configure();
 
