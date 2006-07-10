@@ -13,7 +13,7 @@
 		</p>
 		
 		<xsl:if test="fullDescription/option">
-			<h3>Dialog options</h3>
+			<h3>Dialog Options</h3>
 			<xsl:for-each select="fullDescription/option">
 				<div style="font-weight: bold;"><xsl:value-of select="@name" /></div>
 				<div style="margin-left: 5mm; margin-top: 1mm; margin-bottom: 3mm;">
