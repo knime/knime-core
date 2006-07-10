@@ -31,7 +31,7 @@ import de.unikn.knime.core.node.config.Config;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class PredictorParams extends NodeSettings {
+public final class PredictorParams extends Config {
 
     /**
      * Hides public default constructor.

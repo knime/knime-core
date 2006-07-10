@@ -1655,12 +1655,20 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * Copies all contents of this config object to the given config object.
+     * Makes a deep copy of this Config and all sub-configs.
      * 
-     * @param dest the destination config object
+     * @param dest the destination this Config object is copied to.
      */
     public void copyTo(final Config dest) {
-        dest.m_map.putAll(this.m_map);
+        for (Map.Entry<String, AbstractConfigEntry> e : m_map.entrySet()) {
+            AbstractConfigEntry ace = e.getValue();
+            if (ace instanceof Config) {
+                Config config = dest.addConfig(ace.getKey());
+                ((Config) ace).copyTo(config);
+            } else {
+                dest.addEntry(ace);
+            }
+        }
     }
     
     // tree node methods
