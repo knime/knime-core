@@ -81,9 +81,12 @@ import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NodeProgressListener;
 import de.unikn.knime.core.node.NodeLogger.LEVEL;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
@@ -785,6 +788,37 @@ public class WorkflowEditor extends GraphicalEditor implements
         return super.getAdapter(adapter);
     }
 
+    private class ProgressHandler implements NodeProgressListener {
+
+        private IProgressMonitor m_progressMonitor;
+
+        private int m_totalWork;
+
+        /**
+         * Handles progress changes during saving the workflow.
+         * 
+         * @param monitor the eclipse progressmonitor
+         */
+        public ProgressHandler(final IProgressMonitor monitor,
+                final int totalWork) {
+            monitor.beginTask("Saving workflow...", totalWork);
+            m_progressMonitor = monitor;
+            m_totalWork = totalWork;
+        }
+
+        /**
+         * @see de.unikn.knime.core.node.NodeProgressListener#
+         *      progressChanged(double, java.lang.String)
+         */
+        public void progressChanged(final double progress, final String message) {
+
+            m_progressMonitor.worked((int)(progress * m_totalWork));
+            if (message != null) {
+                m_progressMonitor.subTask(message);
+            }
+        }
+    }
+
     /**
      * @see org.eclipse.ui.part.EditorPart
      *      #doSave(org.eclipse.core.runtime.IProgressMonitor)
@@ -793,11 +827,19 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void doSave(final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ....");
 
+        // create progress monitor
+        ProgressHandler progressHandler = new ProgressHandler(monitor,
+                m_manager.getNodes().size());
+        DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
+        progressMonitor.addProgressListener(progressHandler);
+        ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
+
         try {
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
             File file = m_fileResource.getLocation().toFile();
-            m_manager.save(file);
+            m_manager.save(file, exec);
+            monitor.worked(8);
             // mark command stack (no undo beyond this point)
             getCommandStack().markSaveLocation();
 
@@ -808,7 +850,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         try {
-            
+
             m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
                     monitor);
 
@@ -826,6 +868,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // LOGGER.debug("", e);
         // }
 
+        monitor.done();
     }
 
     /**
