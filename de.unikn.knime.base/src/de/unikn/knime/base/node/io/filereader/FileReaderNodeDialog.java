@@ -77,8 +77,11 @@ import de.unikn.knime.core.node.tableview.TableView;
 /**
  * 
  * @author ohl, University of Konstanz
+ * 
+ * Implements the ItemListener for the file location ComboBox (because we
+ * need to remove it and add it again from time to time.
  */
-class FileReaderNodeDialog extends NodeDialogPane {
+class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private static final int HORIZ_SPACE = 10;
 
@@ -224,18 +227,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
         panel.add(fileBox);
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, 70));
         panel.setMinimumSize(new Dimension(PANEL_WIDTH, 70));
-        m_urlCombo.addItemListener(new ItemListener() {
-            public void itemStateChanged(final ItemEvent e) {
-                analyzeDataFileAndUpdatePreview(false);
-            }
-        });
+
+        m_urlCombo.addItemListener(this);
+        
         /* install action listeners */
         // set stuff to update preview when file location changes
-        m_urlCombo.getEditor().addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                analyzeDataFileAndUpdatePreview(false);
-            }
-        });
         m_urlCombo.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(final FocusEvent e) {
@@ -264,8 +260,8 @@ class FileReaderNodeDialog extends NodeDialogPane {
         browse.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 // sets the path in the file text field.
-                String newFile = popupFileChooser(m_urlCombo.getSelectedItem()
-                        .toString(), false);
+                String newFile = popupFileChooser(m_urlCombo.getEditor()
+                        .getItem().toString(), false);
                 if (newFile != null) {
                     m_urlCombo.setSelectedItem(newFile);
                     analyzeDataFileAndUpdatePreview(false);
@@ -275,6 +271,22 @@ class FileReaderNodeDialog extends NodeDialogPane {
         return panel;
     }
 
+    /**
+     * this dialog implements the ItemListener for the file selection combo box.
+     * This way we can remove it when we load the file history in the drop down
+     * list (because this triggers a useless event), and add it afterwards
+     * again.
+     * 
+     * @see java.awt.event.ItemListener
+     *      #itemStateChanged(java.awt.event.ItemEvent)
+     */
+    public void itemStateChanged(final ItemEvent e) {
+        if ((e.getSource() == m_urlCombo)
+                && (e.getStateChange() == ItemEvent.SELECTED)) {
+            analyzeDataFileAndUpdatePreview(false);
+        }
+    }
+    
     private JPanel createPreviewPanel() {
 
         JPanel panel = new JPanel();
@@ -867,10 +879,16 @@ class FileReaderNodeDialog extends NodeDialogPane {
         assert (settings != null && specs != null);
 
         String[] history = FileReaderNodeModel.getFileHistory();
+        // loading the history would trigger an item changed event. 
+        m_urlCombo.removeItemListener(this);
+        
         m_urlCombo.removeAllItems();
         for (String str : history) {
             m_urlCombo.addItem(str);
         }
+        
+        m_urlCombo.addItemListener(this);
+
         try {
             // this will fail if the settings are invalid (which will be the
             // case when they come from an uninitialized model). We create
@@ -961,11 +979,11 @@ class FileReaderNodeDialog extends NodeDialogPane {
         m_previewTableView.setDataTable(null);
 
         try {
-            newURL = textToURL(m_urlCombo.getSelectedItem().toString());
+            newURL = textToURL(m_urlCombo.getEditor().getItem().toString());
         } catch (Exception e) {
             // leave settings unchanged.
             setErrorLabelText("Malformed URL '"
-                    + m_urlCombo.getSelectedItem() + "'.");
+                    + m_urlCombo.getEditor().getItem() + "'.");
             return;
         }
 
@@ -1136,7 +1154,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
      */
     private void saveSettings() throws InvalidSettingsException {
         try {
-            URL dataURL = textToURL(m_urlCombo.getSelectedItem().toString());
+            
+            URL dataURL = textToURL(m_urlCombo.getEditor().getItem()
+                    .toString());
             m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
         } catch (MalformedURLException mfue) {
             throw new InvalidSettingsException("Invalid (malformed) URL for "
@@ -1238,7 +1258,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
      * xml file.
      */
     protected void readXMLSettings() {
-        String xmlPath = popupFileChooser(m_urlCombo.getSelectedItem()
+        String xmlPath = popupFileChooser(m_urlCombo.getEditor().getItem()
                 .toString(), true);
 
         if (xmlPath == null) {
