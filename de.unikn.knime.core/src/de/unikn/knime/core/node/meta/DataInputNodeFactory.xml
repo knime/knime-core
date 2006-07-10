@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
-<knimeNode icon="">
+<knimeNode icon="" type="Source">
 	<name>Meta Data Input Node</name>
 	
 	<shortDescription>
-		transfers data tables into the meta workflow
+		Transfers data tables into the meta workflow
 	</shortDescription>
 	
 	<fullDescription>
@@ -14,6 +14,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut name="transfered data table" index="0">Datatable from the connected successor outside</dataOut>
+		<dataOut name="Transfered data table" index="0">Datatable from the connected successor outside</dataOut>
 	</ports>	
 </knimeNode>
