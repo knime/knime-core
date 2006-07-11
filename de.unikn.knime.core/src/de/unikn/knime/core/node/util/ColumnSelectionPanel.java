@@ -53,6 +53,8 @@ public class ColumnSelectionPanel extends JPanel {
     
     private boolean m_isRequired;
     
+    private DataTableSpec m_spec;
+    
     /**
      * Creates new Panel that will filter columns for particular value classes.
      * The panel will have a titled border with name "Column Selection".
@@ -164,6 +166,7 @@ public class ColumnSelectionPanel extends JPanel {
      */
     public final void update(final DataTableSpec spec, final String selColName) 
     throws NotConfigurableException {
+        m_spec = spec;
         m_chooser.removeAllItems();
         if (spec != null) {
             DataColumnSpec selectMe = null;
@@ -225,12 +228,30 @@ public class ColumnSelectionPanel extends JPanel {
         return null;
     }
     
+    
+    /**
+     * 
+     * @return the selected index. 
+     */
+    public final int getSelectedIndex() {
+        return m_chooser.getSelectedIndex();
+    }
+    
     /**
      * Selects the given index in the combo box.
      * @param index Select this item.
      */
     public final void setSelectedIndex(final int index) {
         m_chooser.setSelectedIndex(index);
+    }
+    
+    /**
+     * 
+     * @param columnName - the name of the column to select.
+     */
+    public final void setSelectedColumn(final String columnName) {
+        DataColumnSpec colSpec = m_spec.getColumnSpec(columnName);
+        m_chooser.setSelectedItem(colSpec);
     }
     
     /**
