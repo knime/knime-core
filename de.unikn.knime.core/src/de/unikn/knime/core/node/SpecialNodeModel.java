@@ -227,7 +227,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     @Override
     protected final void loadValidatedSettingsFrom(final NodeSettings settings)
     throws InvalidSettingsException {
-        // nothing to do here        
+        loadValidatedSettingsFrom(null, settings, null);        
     }
 
     
@@ -238,7 +238,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     @Override
     protected final void validateSettings(final NodeSettings settings)
     throws InvalidSettingsException {
-        // nothing to do here
+        validateSettings(null, settings);
     }
 
     /**
@@ -269,7 +269,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      */
     @Override
     protected final void saveSettingsTo(final NodeSettings settings) {
-        // nothing to do here        
+        saveSettingsTo(null, settings, null);
     }
 
     /**

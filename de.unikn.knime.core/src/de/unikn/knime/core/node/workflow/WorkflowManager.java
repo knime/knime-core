@@ -205,8 +205,9 @@ public class WorkflowManager implements WorkflowListener {
                         m_runningNodes.put(nc, pm);
 
                         try {
-                            fireWorkflowEvent(new WorkflowEvent.NodeStarted(nc
-                                    .getID(), nc, pm));
+                            fireWorkflowEvent(
+                                    new WorkflowEvent.NodeStarted(
+                                            nc.getID(), nc, pm));
                             nc.addListener(this);
                             nc.startExecution(pm);
                         } catch (Exception e) {
@@ -328,7 +329,7 @@ public class WorkflowManager implements WorkflowListener {
     private final Map<Integer, ConnectionContainer> m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
 
     // change listener support (transient) <= why? (tm)
-    private final transient ArrayList<WorkflowListener> m_eventListeners = new ArrayList<WorkflowListener>();
+    private final transient ArrayList<WorkflowListener> m_eventListeners;
 
     private final WorkflowExecutor m_executor;
 
@@ -353,6 +354,7 @@ public class WorkflowManager implements WorkflowListener {
     public WorkflowManager() {
         m_parent = null;
         m_executor = new WorkflowExecutor();
+        m_eventListeners = new ArrayList<WorkflowListener>();
     }
 
     /**
@@ -389,6 +391,7 @@ public class WorkflowManager implements WorkflowListener {
         m_parent = parent;
         m_parent.m_children.add(new WeakReference<WorkflowManager>(this));
         m_executor = m_parent.m_executor;
+        m_eventListeners = m_parent.m_eventListeners;
     }
 
     private void addConnection(final ConnectionContainer cc) {
@@ -1304,8 +1307,6 @@ public class WorkflowManager implements WorkflowListener {
                     + "\": " + workflowFile);
         }
 
-        
-
         File parentDir = workflowFile.getParentFile();
         // workflow settings
         NodeSettings settings = new NodeSettings(WORKFLOW_FILE);
@@ -1317,10 +1318,10 @@ public class WorkflowManager implements WorkflowListener {
         NodeSettings nodes = settings.addConfig(KEY_NODES);
         int nodeNum = 0;
         for (NodeContainer nextNode : m_nodesByID.values()) {
-            
+
             nodeNum++;
             exec.setProgress((double)nodeNum / m_nodesByID.size());
-            
+
             // create node directory based on the nodes name and id
             // all chars which are not letter or number are replaced by '_'
             String nodeDirID = nextNode.getName().replaceAll("[^a-zA-Z0-9 ]",

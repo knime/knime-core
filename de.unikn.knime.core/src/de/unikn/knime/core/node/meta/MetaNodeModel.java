@@ -76,7 +76,6 @@ public class MetaNodeModel extends SpecialNodeModel
      * @param dataOuts the number of data output ports
      * @param predParamsIns the number of predictor param input ports
      * @param predParamsOuts the number of predictor param output ports
-     * @param factory the factory that created this model
      */
     protected MetaNodeModel(final int dataIns, final int dataOuts,
             final int predParamsIns, final int predParamsOuts) {
@@ -234,41 +233,43 @@ public class MetaNodeModel extends SpecialNodeModel
     protected void saveSettingsTo(final File nodeFile,
             final NodeSettings settings, final ExecutionMonitor exec) {
         if (internalWFM() == null) { return; }
-        try {
-            int[] ids = new int[m_dataInContainer.length];
-            for (int i = 0; i < m_dataInContainer.length; i++) {
-                ids[i] = m_dataInContainer[i].getID();
+        if (nodeFile != null) {
+            try {
+                int[] ids = new int[m_dataInContainer.length];
+                for (int i = 0; i < m_dataInContainer.length; i++) {
+                    ids[i] = m_dataInContainer[i].getID();
+                }
+                settings.addIntArray("dataInContainerIDs", ids);
+                
+                ids = new int[m_dataOutContainer.length];
+                for (int i = 0; i < m_dataOutContainer.length; i++) {
+                    ids[i] = m_dataOutContainer[i].getID();
+                }
+                settings.addIntArray("dataOutContainerIDs", ids);
+                
+                
+                ids = new int[m_modelInContainer.length];
+                for (int i = 0; i < m_modelInContainer.length; i++) {
+                    ids[i] = m_modelInContainer[i].getID();
+                }
+                settings.addIntArray("modelInContainerIDs", ids);
+                
+                ids = new int[m_modelOutContainer.length];
+                for (int i = 0; i < m_modelOutContainer.length; i++) {
+                    ids[i] = m_modelOutContainer[i].getID();
+                }
+                settings.addIntArray("modelOutContainerIDs", ids);
+    
+                File f = new File(nodeFile.getParentFile(), "workflow.knime");
+                f.createNewFile();
+                internalWFM().save(f, exec);
+            } catch (IOException ex) {
+                LOGGER.error(ex);
+            } catch (CanceledExecutionException ex) {
+                LOGGER.error(ex);
+            } catch (WorkflowInExecutionException ex) {
+                LOGGER.error("Could not save meta node", ex);
             }
-            settings.addIntArray("dataInContainerIDs", ids);
-            
-            ids = new int[m_dataOutContainer.length];
-            for (int i = 0; i < m_dataOutContainer.length; i++) {
-                ids[i] = m_dataOutContainer[i].getID();
-            }
-            settings.addIntArray("dataOutContainerIDs", ids);
-            
-            
-            ids = new int[m_modelInContainer.length];
-            for (int i = 0; i < m_modelInContainer.length; i++) {
-                ids[i] = m_modelInContainer[i].getID();
-            }
-            settings.addIntArray("modelInContainerIDs", ids);
-            
-            ids = new int[m_modelOutContainer.length];
-            for (int i = 0; i < m_modelOutContainer.length; i++) {
-                ids[i] = m_modelOutContainer[i].getID();
-            }
-            settings.addIntArray("modelOutContainerIDs", ids);
-
-            File f = new File(nodeFile.getParentFile(), "workflow.knime");
-            f.createNewFile();
-            internalWFM().save(f, exec);
-        } catch (IOException ex) {
-            LOGGER.error(ex);
-        } catch (CanceledExecutionException ex) {
-            LOGGER.error(ex);
-        } catch (WorkflowInExecutionException ex) {
-            LOGGER.error("Could not save meta node", ex);
         }
     }
 
@@ -381,54 +382,57 @@ public class MetaNodeModel extends SpecialNodeModel
     protected void loadValidatedSettingsFrom(final File nodeFile,
             final NodeSettings settings, final ExecutionMonitor exec)
             throws InvalidSettingsException {
-        File f = new File(nodeFile.getParentFile(),
-                WorkflowManager.WORKFLOW_FILE);
-        if (f.exists() && f.isFile()) {
-            try {
-                internalWFM().clear();
-                    
+        if (nodeFile != null) {
+            File f = new File(nodeFile.getParentFile(),
+                    WorkflowManager.WORKFLOW_FILE);
+            if (f.exists() && f.isFile()) {
                 try {
-                    internalWFM().load(f);
-                } catch (IOException ex) {
-                    throw new InvalidSettingsException("Could not load internal"
-                            + " workflow");
-                } catch (CanceledExecutionException ex) {
-                    throw new InvalidSettingsException("Loading of internal"
-                            + " workflow has been interrupted by user");
+                    internalWFM().clear();
+                        
+                    try {
+                        internalWFM().load(f);
+                    } catch (IOException ex) {
+                        throw new InvalidSettingsException(
+                                "Could not load internal workflow");
+                    } catch (CanceledExecutionException ex) {
+                        throw new InvalidSettingsException("Loading of internal"
+                                + " workflow has been interrupted by user");
+                    }
+                    
+                } catch (WorkflowInExecutionException ex) {
+                    LOGGER.error("Could not load internal workflow", ex);
+                }
+                int[] ids = settings.getIntArray("dataInContainerIDs",
+                        new int[0]);
+                for (int i = 0; i < ids.length; i++) {
+                    m_dataInContainer[i] =
+                        internalWFM().getNodeContainerById(ids[i]);
+                }
+                            
+                ids = settings.getIntArray("dataOutContainerIDs", new int[0]);
+                for (int i = 0; i < ids.length; i++) {
+                    m_dataOutContainer[i] =
+                        internalWFM().getNodeContainerById(ids[i]);
                 }
                 
-            } catch (WorkflowInExecutionException ex) {
-                LOGGER.error("Could not load internal workflow", ex);
+                ids = settings.getIntArray("modelInContainerIDs", new int[0]);
+                for (int i = 0; i < ids.length; i++) {
+                    m_modelInContainer[i] =
+                        internalWFM().getNodeContainerById(ids[i]);
+                }
+    
+                ids = settings.getIntArray("modelOutContainerIDs", new int[0]);
+                for (int i = 0; i < ids.length; i++) {
+                    m_modelOutContainer[i] =
+                        internalWFM().getNodeContainerById(ids[i]);
+                }
+                
+                for (NodeContainer cont : internalWFM().getNodes()) {
+                    cont.addListener(this);
+                }
             }
-            int[] ids = settings.getIntArray("dataInContainerIDs", new int[0]);
-            for (int i = 0; i < ids.length; i++) {
-                m_dataInContainer[i] =
-                    internalWFM().getNodeContainerById(ids[i]);
-            }
-                        
-            ids = settings.getIntArray("dataOutContainerIDs", new int[0]);
-            for (int i = 0; i < ids.length; i++) {
-                m_dataOutContainer[i] =
-                    internalWFM().getNodeContainerById(ids[i]);
-            }
-            
-            ids = settings.getIntArray("modelInContainerIDs", new int[0]);
-            for (int i = 0; i < ids.length; i++) {
-                m_modelInContainer[i] =
-                    internalWFM().getNodeContainerById(ids[i]);
-            }
-
-            ids = settings.getIntArray("modelOutContainerIDs", new int[0]);
-            for (int i = 0; i < ids.length; i++) {
-                m_modelOutContainer[i] =
-                    internalWFM().getNodeContainerById(ids[i]);
-            }
-            
-            for (NodeContainer cont : internalWFM().getNodes()) {
-                cont.addListener(this);
-            }
+            retrieveInOutModels();
         }
-        retrieveInOutModels();
     }
 
 
@@ -492,7 +496,7 @@ public class MetaNodeModel extends SpecialNodeModel
     }
     
     
-    protected NodeModel m_receivedModel;
+    private NodeModel m_receivedModel;
     
     /**
      * Receives a node model. This method is called from the node upon calling
