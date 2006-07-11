@@ -23,6 +23,7 @@ package de.unikn.knime.workbench.editor2.editparts.anchor;
 
 import org.eclipse.draw2d.ChopboxAnchor;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 
 /**
@@ -53,6 +54,22 @@ public class OutPortConnectionAnchor extends ChopboxAnchor {
         b.shrink(0, Math.max(0, (b.height / 2) - 5));
 
         return b;
+    }
+
+    /**
+     * The point where the connection is starting at the input port is the
+     * middle right point of the output port.
+     * 
+     * @param reference The reference point
+     * @return The anchor location
+     */
+    public Point getLocation(final Point reference) {
+
+        Point point = getBox().getRight().getCopy().getTranslated(-2, 0);
+        getOwner().translateToAbsolute(point);
+        // get the box of the input port and get the left middle point
+        // translate it one pixel to the left to better see the arrow
+        return point;
     }
 
 }

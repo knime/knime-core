@@ -24,7 +24,6 @@ package de.unikn.knime.workbench.editor2.editparts;
 import java.util.ArrayList;
 
 import org.eclipse.draw2d.AbsoluteBendpoint;
-import org.eclipse.draw2d.BendpointConnectionRouter;
 import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolygonDecoration;
@@ -128,7 +127,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         PolylineConnection conn = (PolylineConnection)super.createFigure();
 
         // Bendpoints
-        BendpointConnectionRouter router = new BendpointConnectionRouter();
+        SnapOffBendPointConnectionRouter router = new SnapOffBendPointConnectionRouter();
         conn.setConnectionRouter(router);
         conn.setRoutingConstraint(new ArrayList());
 
