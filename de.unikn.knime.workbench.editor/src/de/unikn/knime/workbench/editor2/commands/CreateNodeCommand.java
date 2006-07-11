@@ -31,8 +31,6 @@ import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
-import de.unikn.knime.workbench.repository.RepositoryManager;
-import de.unikn.knime.workbench.repository.model.NodeTemplate;
 
 /**
  * GEF command for adding a <code>Node</code> to the
@@ -86,14 +84,10 @@ public class CreateNodeCommand extends Command {
         // Add node to workflow and get the container
         m_container = m_manager.addNewNode(m_factory);
 
-        // lookup extra info from node repository and store it in the instance
-        NodeTemplate template = RepositoryManager.INSTANCE.getRoot()
-                .findTemplateByFactory(m_factory.getClass().getName());
-
         // create extra info and set it
         ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
         info.setNodeLocation(m_location.x, m_location.y, -1, -1);
-        info.setType(template.getType());
+        info.setType(m_factory.getType().toString());
         m_container.setExtraInfo(info);
 
     }
