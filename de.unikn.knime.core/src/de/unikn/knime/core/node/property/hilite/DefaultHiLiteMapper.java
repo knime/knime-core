@@ -20,6 +20,7 @@
  */
 package de.unikn.knime.core.node.property.hilite;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,5 +57,12 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
      */
     public Set<DataCell> getKeys(final DataCell key) {
         return m_map.get(key);
+    }
+
+    /**
+     * @see java.lang.Iterable#iterator()
+     */
+    public Set<DataCell> keySet() {
+        return Collections.unmodifiableSet(m_map.keySet());
     }
 }

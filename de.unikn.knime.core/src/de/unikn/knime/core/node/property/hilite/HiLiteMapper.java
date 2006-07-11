@@ -29,6 +29,7 @@ import de.unikn.knime.core.data.DataCell;
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface HiLiteMapper {
+    
     /**
      * Returns a set of <code>DataCell</code> elements which are associated
      * by the specified <b>key</b> or <code>null</code> if no mapping
@@ -37,5 +38,11 @@ public interface HiLiteMapper {
      * @param key the key to get the mapping for
      * @return a set of mapped <code>DataCell</code> elements
      */
-    Set<DataCell> getKeys(final DataCell key);
+    Set<DataCell> getKeys(DataCell key);
+    
+    /**
+     * Returns an unmodifiable set of key (source) for hiliting. 
+     * @return A set of keys to hilite.
+     */
+    Set<DataCell> keySet();
 }
