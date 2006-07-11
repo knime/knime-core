@@ -42,7 +42,6 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
@@ -180,9 +179,10 @@ public class WorkflowExportPage extends WizardPage {
      */
 
     private void handleBrowse() {
+
         ContainerSelectionDialog dialog = new ContainerSelectionDialog(
                 getShell(), ResourcesPlugin.getWorkspace().getRoot(), false,
-                "Select container project");
+                "Select Knime project");
         if (dialog.open() == Window.OK) {
             Object[] result = dialog.getResult();
             if (result.length == 1) {
