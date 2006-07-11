@@ -122,7 +122,7 @@ public abstract class NodeModel {
             m_inHiLiteHdls = new HiLiteHandler[1];
         } else {
             // otherwise create a spot handlers - one for each input.
-            m_inHiLiteHdls = new HiLiteHandler[getNrIns()];
+            m_inHiLiteHdls = new HiLiteHandler[getNrDataIns()];
         }
 
         // keeps set of registered views in the order they are added
