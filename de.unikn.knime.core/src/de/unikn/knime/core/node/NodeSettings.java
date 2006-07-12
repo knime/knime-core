@@ -30,7 +30,7 @@ import de.unikn.knime.core.node.config.Config;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class NodeSettings extends Config {
+public final class NodeSettings extends Config {
 
     /**
      * Creates a new instance of this object with the given key.
