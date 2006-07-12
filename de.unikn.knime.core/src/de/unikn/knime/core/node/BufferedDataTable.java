@@ -104,6 +104,17 @@ public final class BufferedDataTable implements DataTable {
         this((KnowsRowCountTable)table);
     }
     
+    
+    public static BufferedDataTable[] createBufferedDataTables(
+            final DataTable[] tables, final ExecutionMonitor exec)
+    throws CanceledExecutionException {
+        BufferedDataTable[] temp = new BufferedDataTable[tables.length];
+        for (int i = 0; i < tables.length; i++) {
+            createBufferedDataTable(tables[i], exec);
+        }
+        return temp;
+    }
+    
     public static BufferedDataTable createBufferedDataTable(
             final DataTable table, final ExecutionMonitor exec)
             throws CanceledExecutionException {
