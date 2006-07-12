@@ -79,7 +79,7 @@ public class DataTableOutputNodeModel extends NodeModel {
             throws Exception {
         assert inData.length == 1;
         m_dataTable = inData[0];
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     }
 
     /**

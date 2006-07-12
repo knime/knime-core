@@ -89,7 +89,7 @@ public class TableNodeModel extends NodeModel {
         m_contModel.setDataTable(in);
         m_contModel.setHiLiteHandler(inProp);
         assert (m_contModel.hasData());
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     }
 
     /**

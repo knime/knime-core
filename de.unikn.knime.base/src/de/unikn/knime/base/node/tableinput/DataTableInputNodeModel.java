@@ -17,7 +17,6 @@
  */
 package de.unikn.knime.base.node.tableinput;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
@@ -33,7 +32,7 @@ import de.unikn.knime.core.node.NoSettingsNodeModel;
  */
 public class DataTableInputNodeModel extends NoSettingsNodeModel {
     private DataTableSpec m_spec;
-    private DataTable m_datatable;
+    private BufferedDataTable m_datatable;
 
     
     /**
@@ -46,17 +45,18 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
 
     /**
      * Does nothing but return the data table set by
-     * {@link #setDataTable(DataTable)}.
+     * {@link #setBufferedDataTable(BufferedDataTable)}.
      * 
      * @param inData the input data table array
      * @param exec the execution monitor
-     * @return the datatable set by {@link #setDataTable(DataTable)}
+     * @return the datatable set by 
+     *  {@link #setBufferedDataTable(BufferedDataTable)}
      * @throws Exception actually, no exception is thrown
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
-        return new DataTable[] {m_datatable};
+        return new BufferedDataTable[] {m_datatable};
     }
 
     /**
@@ -92,7 +92,7 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
      *  
      * @param table the data table
      */
-    public void setDataTable(final DataTable table) {
+    public void setBufferedDataTable(final BufferedDataTable table) {
         m_datatable = table;
     }
 }
