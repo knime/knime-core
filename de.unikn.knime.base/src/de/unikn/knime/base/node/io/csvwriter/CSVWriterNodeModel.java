@@ -161,7 +161,7 @@ public class CSVWriterNodeModel extends NodeModel {
         }
         writer.close();
         // execution succefull return empty array
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     } // execute(DataTable[])
 
     /**

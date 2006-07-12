@@ -80,7 +80,9 @@ public class DefaultTableNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(
             final BufferedDataTable[] data, final ExecutionMonitor exec) 
             throws Exception {
-        return new DataTable[]{m_table};
+        BufferedDataTable out = 
+            BufferedDataTable.createBufferedDataTable(m_table, exec);
+        return new BufferedDataTable[]{out};
     }
 
     /**

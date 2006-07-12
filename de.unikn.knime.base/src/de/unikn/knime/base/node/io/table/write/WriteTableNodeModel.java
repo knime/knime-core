@@ -22,7 +22,6 @@ package de.unikn.knime.base.node.io.table.write;
 import java.io.File;
 import java.io.IOException;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
@@ -83,9 +82,9 @@ public class WriteTableNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
             final ExecutionMonitor exec) throws Exception {
-        DataTable in = inData[0];
+        BufferedDataTable in = inData[0];
         DataContainer.writeToZip(in, new File(m_fileName), exec);
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     }
 
     /**

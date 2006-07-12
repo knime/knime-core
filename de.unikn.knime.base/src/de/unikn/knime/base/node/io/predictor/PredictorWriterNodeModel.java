@@ -26,15 +26,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.ModelContent;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.ModelContent;
 
 /**
  * Write ModelContent object into file.
@@ -132,8 +131,8 @@ public class PredictorWriterNodeModel extends NodeModel {
         } catch (Exception e) {
             throw new IOException("write to file failed: " + e);
         }
-        // execution succeful return empty array
-        return new DataTable[0];
+        // execution successful return empty array
+        return new BufferedDataTable[0];
     }
 
     /**

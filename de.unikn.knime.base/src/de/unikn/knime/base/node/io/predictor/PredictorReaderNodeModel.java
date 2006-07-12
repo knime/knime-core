@@ -26,15 +26,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.ModelContent;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.ModelContent;
 
 /**
  * Read ModelContent object from file.
@@ -118,7 +117,7 @@ public class PredictorReaderNodeModel extends NodeModel {
         }
         exec.setProgress(-1, "Reading from file: " + m_fileName);
         m_predParams = ModelContent.loadFromXML(is);
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     }
 
     /**

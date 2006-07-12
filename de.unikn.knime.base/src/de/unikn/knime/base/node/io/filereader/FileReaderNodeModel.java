@@ -21,7 +21,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
@@ -134,8 +133,8 @@ public class FileReaderNodeModel extends NodeModel {
         // the error message is printed during filereader execution (were it
         // belongs to) and not some time later when a node uses the row 
         // iterator from the file table.
-        DataTable cacheTable = DataContainer.cache(fTable, exec);
-        return new DataTable[] {cacheTable};
+        BufferedDataTable cacheTable = DataContainer.cache(fTable, exec);
+        return new BufferedDataTable[] {cacheTable};
     }
 
     /**

@@ -27,7 +27,6 @@ import java.util.Date;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
@@ -263,7 +262,7 @@ public class ARFFWriterNodeModel extends NodeModel {
         writer.close();
 
         // execution successful return empty array
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     }
 
     /*

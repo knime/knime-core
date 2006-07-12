@@ -30,6 +30,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.IntValue;
+import de.unikn.knime.core.data.KnowsRowCount;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.StringValue;
 import de.unikn.knime.core.node.CanceledExecutionException;
@@ -113,13 +114,20 @@ public class CSVWriter extends BufferedWriter {
 
         // write data
         int i = 0;
-        long rowCnt = table.getRowCount();
+        int rowCnt = -1;
+        if (table instanceof KnowsRowCount) {
+            rowCnt = ((KnowsRowCount)table).getRowCount();
+        }
         for (RowIterator it = table.iterator(); it.hasNext(); i++) {
             final DataRow next = it.next();
             String rowKey = next.getKey().toString();
             String debugMessage = "Writing row " + (i + 1) 
                 + " (\"" + rowKey + "\") of " + rowCnt; 
-            exec.setProgress(i / (double)rowCnt, debugMessage);
+            if (rowCnt > 0) {
+                exec.setProgress(i / (double)rowCnt, debugMessage);
+            } else {
+                exec.setMessage(debugMessage);
+            }
             // Check if execution was canceled !
             exec.checkCanceled();
 

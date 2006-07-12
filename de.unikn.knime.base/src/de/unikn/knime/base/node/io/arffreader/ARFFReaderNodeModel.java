@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
@@ -117,9 +116,11 @@ public class ARFFReaderNodeModel extends NodeModel {
                     + " execute it.");
         }
 
-        return new DataTable[]{new ARFFTable(m_file, ARFFTable.
-                createDataTableSpecFromARFFfile(m_file, exec), m_rowPrefix)};
-
+        BufferedDataTable out = BufferedDataTable.createBufferedDataTable(
+                new ARFFTable(m_file, 
+                        ARFFTable.createDataTableSpecFromARFFfile(m_file, exec),
+                        m_rowPrefix), exec);
+        return new BufferedDataTable[]{out};
     }
 
     /**
