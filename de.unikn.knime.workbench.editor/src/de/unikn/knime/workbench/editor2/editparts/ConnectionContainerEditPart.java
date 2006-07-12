@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.PolygonDecoration;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPolicy;
@@ -132,7 +131,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         conn.setRoutingConstraint(new ArrayList());
 
         // Decorations
-        PolygonDecoration pD = new PolygonDecoration();
+        //PolygonDecoration pD = new PolygonDecoration();
         if (m_isModelPortConnection) {
             // pD.setScale(9, 5);
             conn.setForegroundColor(Display.getCurrent().getSystemColor(
@@ -140,7 +139,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
             conn.setLineWidth(1);
         }
 
-        conn.setTargetDecoration(pD);
+        //conn.setTargetDecoration(pD);
 
         return conn;
     }

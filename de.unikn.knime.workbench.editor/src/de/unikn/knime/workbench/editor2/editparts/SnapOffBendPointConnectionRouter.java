@@ -86,7 +86,7 @@ public class SnapOffBendPointConnectionRouter extends BendpointConnectionRouter 
 
         // add a point that forces the arrow to get into the anchor
         // in a horizontal way
-        points.addPoint(A_POINT.translate(-17, 0));
+        points.addPoint(A_POINT.translate(-8, 0));
 
         A_POINT.setLocation(conn.getTargetAnchor().getLocation(ref2));
         conn.translateToRelative(A_POINT);

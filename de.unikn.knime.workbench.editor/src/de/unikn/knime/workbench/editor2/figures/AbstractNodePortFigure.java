@@ -132,7 +132,14 @@ public abstract class AbstractNodePortFigure extends Shape {
         // graphics.setBackgroundColor(getBackgroundColor());
         Rectangle r = getBounds().getCopy().shrink(3, 3);
         PointList points = createShapePoints(r);
-        graphics.fillPolygon(points);
+
+        // data ports are not filled, model ports are filled
+        if (isModelPort()) {
+            graphics.fillPolygon(points);
+        } else {
+            graphics.drawPolygon(points);
+        }
+
         // graphics.fillRectangle(getBounds());
     }
 

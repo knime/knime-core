@@ -75,16 +75,27 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
      * @return the pointlist (size=3)
      */
     protected PointList createShapePoints(final Rectangle r) {
-        PointList points = new PointList(4);
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                -((HEIGHT - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
-                -((HEIGHT - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
-                ((HEIGHT - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                ((HEIGHT - 1) / 2 - 1)));
-        return points;
+        if (!m_isModelPort) {
+            PointList points = new PointList(3);
+            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
+                    -(HEIGHT / 2)));
+            points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3, 0));
+            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
+                    (HEIGHT / 2)));
+            return points;
+        } else {
+            PointList points = new PointList(4);
+            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
+                    -((HEIGHT - 1) / 2)));
+            points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
+                    -((HEIGHT - 1) / 2)));
+            points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
+                    ((HEIGHT - 1) / 2)));
+            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
+                    ((HEIGHT - 1) / 2 - 1)));
+            return points;
+
+        }
     }
 
     /**
