@@ -479,11 +479,11 @@ public class DataContainer implements RowAppender {
         DataContainer buf = new DataContainer(
                 table.getDataTableSpec(), true, maxCellsInMemory);
         double finalCount = -1.0; // floating point operation later on
-        try {
-            finalCount = table.getRowCount();
-        } catch (UnsupportedOperationException uoe) {
-            // no row count available, ignore.
-        }
+//        try {
+//            finalCount = table.getRowCount();
+//        } catch (UnsupportedOperationException uoe) {
+//            // no row count available, ignore.
+//        }
         int row = 0;
         try {
             for (RowIterator it = table.iterator(); it.hasNext(); row++) {
