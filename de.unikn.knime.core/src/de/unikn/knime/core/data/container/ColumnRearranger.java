@@ -83,6 +83,7 @@ public final class ColumnRearranger {
             }
         }
         assert m_includes.size() == colIndices.length;
+        assert hash.isEmpty();
     }
     
     public void keepOnly(final String... colNames) {
@@ -90,7 +91,7 @@ public final class ColumnRearranger {
         for (Iterator<SpecAndFactoryObject> it = m_includes.iterator(); 
             it.hasNext();) {
             SpecAndFactoryObject cur = it.next();
-            if (found.remove(cur.getColSpec().getName())) {
+            if (!found.remove(cur.getColSpec().getName())) {
                 it.remove();
             }
         }
@@ -99,10 +100,56 @@ public final class ColumnRearranger {
                     "No such column name(s) in " + getClass().getSimpleName()
                     + ": " + Arrays.toString(found.toArray()));
         }
+        assert m_includes.size() == colNames.length;
     }
     
     public void remove(final int... colIndices) {
-        
+        int[] copy = new int[colIndices.length];
+        System.arraycopy(colIndices, 0, copy, 0, copy.length);
+        Arrays.sort(copy);
+        for (int i = copy.length - 1; i >= 0; i--) {
+            m_includes.remove(copy[i]);
+        }
+    }
+    
+    public void remove(final String... colNames) {
+        HashSet<String> found = new HashSet<String>(Arrays.asList(colNames));
+        for (Iterator<SpecAndFactoryObject> it = m_includes.iterator(); 
+            it.hasNext();) {
+                SpecAndFactoryObject cur = it.next();
+                if (found.remove(cur.getColSpec().getName())) {
+                    it.remove();
+                }
+            }
+        if (!found.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "No such column name(s) in " + getClass().getSimpleName()
+                    + ": " + Arrays.toString(found.toArray()));
+        }
+    }
+    
+    public int indexOf(final String colName) {
+        if (colName == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        for (int i = 0; i < m_includes.size(); i++) {
+            SpecAndFactoryObject cur = m_includes.get(i);
+            if (cur.getColSpec().getName().equals(colName)) {
+                return i; 
+            }
+        }
+        return -1;
+    }
+    
+    public void insertAt(final int position, final CellFactory fac) {
+        DataColumnSpec[] colSpecs = fac.getColumnSpecs();
+        SpecAndFactoryObject[] ins = new SpecAndFactoryObject[colSpecs.length];
+        for (int i = 0; i < ins.length; i++) {
+            ins[i] = new SpecAndFactoryObject(fac, i, colSpecs[i]);
+        }
+        for (int i = ins.length - 1; i >= 0; i--) {
+            m_includes.insertElementAt(ins[i], position);
+        }
     }
     
     static DataTableSpec createSpec(final DataTableSpec reference,
