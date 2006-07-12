@@ -28,6 +28,7 @@ import java.util.HashMap;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.KnowsRowCount;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.container.BufferedTable;
 import de.unikn.knime.core.data.container.DataContainer;
@@ -38,7 +39,7 @@ import de.unikn.knime.core.util.FileUtil;
  * 
  * @author wiswedel, University of Konstanz
  */
-public final class BufferedDataTable implements DataTable {
+public final class BufferedDataTable implements DataTable, KnowsRowCount {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(BufferedDataTable.class);
@@ -274,7 +275,7 @@ public final class BufferedDataTable implements DataTable {
         }
     }
 
-    public static interface KnowsRowCountTable extends DataTable {
+    public static interface KnowsRowCountTable extends DataTable, KnowsRowCount {
         int getRowCount();
         void saveToFile(final File f, final NodeSettings settings, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException;
