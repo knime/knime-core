@@ -12,7 +12,7 @@
 	 	port to a model input port of any model requiring node. Enter
 	 	the source location in the configuration dialog of the node. When
 	 	executed, the node reads the model from the XML description in 
-	 	the specified file and provides it at its output port.
+	 	to the specified file and provides it at its output port.
 		</intro>
         <option name="Selected File">The file representing the model.</option>
 	</fullDescription>

@@ -5,7 +5,7 @@
     <shortDescription>Displays data in a table view.</shortDescription>
     <fullDescription>
         <intro> Displays data in a table view. If the number of rows is 
-        unknown, the view counts the number of rows when opened. Furthermore
+        unknown, the view counts the number of rows when opened. Furthermore,
             rows can be selected and hilited.</intro>
     </fullDescription>                  
     <ports>                 

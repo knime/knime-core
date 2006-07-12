@@ -11,7 +11,7 @@
 		<intro>This node saves any model into a file. Connect the input port
 	 	to a model output port of any model generating node. Enter
 	 	the destination location in the configuration dialog of the node. When
-	 	executed, the node saves the incoming model as XML description in the
+	 	executed, the node saves the incoming model as an XML description in the
 	 	specified file.
 		</intro>
         <option name="Selected File">The file the model is written to.</option>
