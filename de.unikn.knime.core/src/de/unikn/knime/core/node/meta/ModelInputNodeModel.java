@@ -22,14 +22,14 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
+import de.unikn.knime.core.node.ModelContent;
 
 /**
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 class ModelInputNodeModel extends MetaInputModel {
-    private PredictorParams m_predictorParams;
+    private ModelContent m_predictorParams;
     
     /**
      * Creates a new data table input model with no input ports and one 
@@ -116,21 +116,21 @@ class ModelInputNodeModel extends MetaInputModel {
     
     /**
      * Sets the predictor params that should be passed on in
-     * {@link #savePredictorParams(int, PredictorParams)}.
+     * {@link #savePredictorParams(int, ModelContent)}.
      * 
      * @param predParams the predictor parameters
      */
-    public void setPredictorParams(final PredictorParams predParams) {
+    public void setPredictorParams(final ModelContent predParams) {
         m_predictorParams = predParams;
     }
 
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #savePredictorParams(int, de.unikn.knime.core.node.PredictorParams)
+     *  #savePredictorParams(int, de.unikn.knime.core.node.ModelContent)
      */
     @Override
     protected void savePredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
+            final ModelContent predParams) throws InvalidSettingsException {
         m_predictorParams.copyTo(predParams);
     }    
 }

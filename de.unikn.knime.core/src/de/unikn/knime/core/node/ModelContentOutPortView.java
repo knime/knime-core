@@ -30,30 +30,30 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 
 /**
- * A port view showing the port's PredictorParams description.
+ * A port view showing the port's ModelContent description.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class PredictorOutPortView extends NodeOutPortView {
+final class ModelContentOutPortView extends NodeOutPortView {
 
-    /** Shows the PredictorParams as JTree. */
+    /** Shows the ModelContent as JTree. */
     private final JTree m_tree;
 
-    /** If no PredictorParams available. */
+    /** If no ModelContent available. */
     private static final TreeNode NO_TEXT 
         = new DefaultMutableTreeNode("<No Model>", false);
 
     /**
-     * A view showing the data model stored in the specified PredictorParams
+     * A view showing the data model stored in the specified ModelContent
      * ouput port.
      * 
      * @param nodeName Name of the node the inspected port belongs to. Will
      *            be part of the frame's title.
-     * @param portName Name of the port to view the PredictorParams from. Will
+     * @param portName Name of the port to view the ModelContent from. Will
      *            be part of the frame's title.
      * 
      */
-    PredictorOutPortView(final String nodeName, final String portName) {
+    ModelContentOutPortView(final String nodeName, final String portName) {
         super(nodeName + ", " + portName);
         m_tree = new JTree();
         m_tree.setEditable(false);
@@ -65,11 +65,11 @@ final class PredictorOutPortView extends NodeOutPortView {
     }
 
     /**
-     * Updates the view's content with new PredictorParams object.
+     * Updates the view's content with new ModelContent object.
      * 
      * @param predParams The new content can be null.
      */
-    void updatePredictorParams(final PredictorParams predParams) {
+    void updatePredictorParams(final ModelContent predParams) {
         m_tree.removeAll();
         if (predParams == null) {
             m_tree.setModel(new DefaultTreeModel(NO_TEXT));

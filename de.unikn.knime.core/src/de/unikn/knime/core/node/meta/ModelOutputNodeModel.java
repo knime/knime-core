@@ -22,14 +22,14 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
+import de.unikn.knime.core.node.ModelContent;
 
 /**
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelOutputNodeModel extends MetaOutputModel {
-    private PredictorParams m_predictorParams;
+    private ModelContent m_predictorParams;
 
     public ModelOutputNodeModel() {
         super(0, 1);
@@ -98,15 +98,15 @@ public class ModelOutputNodeModel extends MetaOutputModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel #loadPredictorParams(int,
-     *      de.unikn.knime.core.node.PredictorParams)
+     *      de.unikn.knime.core.node.ModelContent)
      */
     @Override
     protected void loadPredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
+            final ModelContent predParams) throws InvalidSettingsException {
         m_predictorParams = predParams;
     }
 
-    public PredictorParams getPredictorParams() {
+    public ModelContent getPredictorParams() {
         return m_predictorParams;
     }
 }

@@ -18,44 +18,44 @@
 package de.unikn.knime.core.node;
 
 /**
- * Input port used to transfere <code>PredictorParams</code> objects between
+ * Input port used to transfere <code>ModelContent</code> objects between
  * nodes.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class PredictorInPort extends NodeInPort implements
+public final class ModelContentInPort extends NodeInPort implements
         NodePort.PredictorParamsPort {
 
     /**
-     * Creates a new PredictorParams port.
+     * Creates a new ModelContent port.
      * 
      * @param portId Unique ID for this port.
-     * @param node This PredictorParams port's underlying node.
+     * @param node This ModelContent port's underlying node.
      */
-    PredictorInPort(final int portId, final Node node) {
+    ModelContentInPort(final int portId, final Node node) {
         super(portId, node);
     }
 
     /**
-     * Returns the <code>PredictorParams</code> for this port by retrieving it
-     * from the connected PredictorParams output port or returns null if this
+     * Returns the <code>ModelContent</code> for this port by retrieving it
+     * from the connected ModelContent output port or returns null if this
      * port is not connected.
      * 
-     * @return PredictorParams from the connected output port.
+     * @return ModelContent from the connected output port.
      * 
      * @see #isConnected()
      */
-    public PredictorParams getPredictorParams() {
+    public ModelContent getPredictorParams() {
         if (!isConnected()) {
             return null;
         }
-        return ((PredictorOutPort)super.getConnectedPort())
+        return ((ModelContentOutPort)super.getConnectedPort())
                 .getPredictorParams();
     }
 
     /**
      * Called by the connected output port to notify its counterparts of a new
-     * PredictorParams available.
+     * ModelContent available.
      */
     void newPredictorParamsAvailable() {
         getNode().inportHasNewPredictorParams(super.getPortID());

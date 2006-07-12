@@ -44,9 +44,9 @@ public abstract class SpecialNodeModel extends NodeModel {
      *            as inputs.
      * @param nrDataOuts The number of <code>DataTable</code> objects expected
      *            at the output.
-     * @param nrPredParamsIns The number of <code>PredictorParams</code>
+     * @param nrPredParamsIns The number of <code>ModelContent</code>
      *            elements available as inputs.
-     * @param nrPredParamsOuts The number of <code>PredictorParams</code>
+     * @param nrPredParamsOuts The number of <code>ModelContent</code>
      *            objects available at the output.
      * @throws NegativeArraySizeException If the number of in- or outputs is
      *             smaller than zero.
@@ -105,8 +105,8 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param index the index of the predictor input port
      * @return a predictor input port
      */
-    protected final PredictorInPort getPredictorInPort(final int index) {
-        return (PredictorInPort)m_node.getInPort(index + getNrDataIns());
+    protected final ModelContentInPort getPredictorInPort(final int index) {
+        return (ModelContentInPort)m_node.getInPort(index + getNrDataIns());
     }
 
     
@@ -116,8 +116,8 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param index the index of the predictor output port
      * @return a predictor output port
      */
-    protected final PredictorOutPort getPredictorOutPort(final int index) {
-        return (PredictorOutPort)m_node.getOutPort(index + getNrDataOuts());
+    protected final ModelContentOutPort getPredictorOutPort(final int index) {
+        return (ModelContentOutPort)m_node.getOutPort(index + getNrDataOuts());
     }
     
     

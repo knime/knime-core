@@ -514,7 +514,7 @@ public final class NodeSettingsTest extends TestCase {
         NodeSettings settings = new NodeSettings("node_settings");
         SETT.addConfig(settings);
         try {
-            PredictorParams predParams = new PredictorParams("pred_params");
+            ModelContent predParams = new ModelContent("pred_params");
             SETT.addConfig(predParams);
             SETT.addConfig(predParams);
             fail();

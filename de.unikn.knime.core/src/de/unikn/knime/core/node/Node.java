@@ -89,10 +89,10 @@ public final class Node {
     private final DataOutPort[] m_outDataPorts;
 
     /** Keeps fixed array of input ports for models. */
-    private final PredictorInPort[] m_inModelPorts;
+    private final ModelContentInPort[] m_inModelPorts;
 
     /** Keeps fixed array of output ports for models. */
-    private final PredictorOutPort[] m_outModelPorts;
+    private final ModelContentOutPort[] m_outModelPorts;
 
     /** The listeners that are interested in node state changes. */
     private final Set<NodeStateListener> m_stateListeners;
@@ -183,9 +183,9 @@ public final class Node {
         }
 
         // init model input ports
-        m_inModelPorts = new PredictorInPort[m_model.getNrModelIns()];
+        m_inModelPorts = new ModelContentInPort[m_model.getNrModelIns()];
         for (int i = 0; i < m_inModelPorts.length; i++) {
-            m_inModelPorts[i] = new PredictorInPort(i + getNrDataInPorts(),
+            m_inModelPorts[i] = new ModelContentInPort(i + getNrDataInPorts(),
                     this);
             m_inModelPorts[i].setPortName(m_factory.getInportModelName(i));
         }
@@ -201,9 +201,9 @@ public final class Node {
         }
 
         // init model output ports
-        m_outModelPorts = new PredictorOutPort[m_model.getNrModelOuts()];
+        m_outModelPorts = new ModelContentOutPort[m_model.getNrModelOuts()];
         for (int i = 0; i < m_outModelPorts.length; i++) {
-            m_outModelPorts[i] = new PredictorOutPort(i + getNrDataOutPorts(),
+            m_outModelPorts[i] = new ModelContentOutPort(i + getNrDataOutPorts(),
                     this);
             m_outModelPorts[i].setPortName(m_factory.getOutportModelName(i));
             m_outModelPorts[i].setPredictorParams(null);
@@ -347,7 +347,7 @@ public final class Node {
                 File targetFile = new File(m_nodeDir, modelName);
                 BufferedInputStream in = 
                     new BufferedInputStream(new FileInputStream(targetFile));
-                PredictorParams pred = PredictorParams.loadFromXML(in);
+                ModelContent pred = ModelContent.loadFromXML(in);
                 m_outModelPorts[i].setPredictorParams(pred);
             }
             m_isCurrentlySaved = true;
@@ -428,7 +428,7 @@ public final class Node {
     }
 
     /**
-     * @return The number of input ports for <code>PredictorParams</code>.
+     * @return The number of input ports for <code>ModelContent</code>.
      */
     public int getNrPredictorInPorts() {
         return m_inModelPorts.length;
@@ -458,7 +458,7 @@ public final class Node {
     }
 
     /**
-     * @return The number of <code>PredictorParams</code> output ports.
+     * @return The number of <code>ModelContent</code> output ports.
      */
     public int getNrPredictorOutPorts() {
         return m_outModelPorts.length;
@@ -493,11 +493,11 @@ public final class Node {
     }
 
     /**
-     * Checks if the port with the specified ID is a PredictorParams port.
+     * Checks if the port with the specified ID is a ModelContent port.
      * 
      * @param id Port ID.
      * @return <code>true</code> if the port with the specified ID is a
-     *         PredictorParams port.
+     *         ModelContent port.
      */
     public boolean isPredictorInPort(final int id) {
         if ((getNrDataInPorts() <= id) && (id < getNrInPorts())) {
@@ -507,11 +507,11 @@ public final class Node {
     }
 
     /**
-     * Checks if the port with the specified ID is a PredictorParams port.
+     * Checks if the port with the specified ID is a ModelContent port.
      * 
      * @param id Port ID.
      * @return <code>true</code> if the port with the specified ID is a
-     *         PredictorParams port.
+     *         ModelContent port.
      */
     public boolean isPredictorOutPort(final int id) {
         if ((getNrDataOutPorts() <= id) && (id < getNrOutPorts())) {
@@ -523,7 +523,7 @@ public final class Node {
     /**
      * Returns the output port for the given <code>outPortID</code>. The
      * first ports are by definition for data the following ports
-     * <code>PredictorParams</code>.
+     * <code>ModelContent</code>.
      * 
      * @param outPortID The output port's ID.
      * @return Output port with the specified ID.
@@ -619,7 +619,7 @@ public final class Node {
                 return false;
             }
         }
-        for (PredictorInPort inPort : m_inModelPorts) {
+        for (ModelContentInPort inPort : m_inModelPorts) {
             if (!inPort.isConnected()) {
                 return false;
             }
@@ -756,7 +756,7 @@ public final class Node {
             }
         }
         BufferedDataTable[] newOutData; // the new DTs from the model
-        PredictorParams[] predParams; // the new output models
+        ModelContent[] predParams; // the new output models
         try {
             // INVOKE MODEL'S EXECUTE
             newOutData = m_model.executeModel(inData, exec);
@@ -780,10 +780,10 @@ public final class Node {
         }
 
         // check created predictor models (if any)
-        predParams = new PredictorParams[getNrPredictorOutPorts()];
+        predParams = new ModelContent[getNrPredictorOutPorts()];
         for (int p = 0; p < predParams.length; p++) {
-            // create PredictorParams to write into
-            predParams[p] = new PredictorParams("predictor");
+            // create ModelContent to write into
+            predParams[p] = new ModelContent("predictor");
             try {
                 m_model.savePredictorParams(p, predParams[p]);
             } catch (InvalidSettingsException ise) {
@@ -916,7 +916,7 @@ public final class Node {
             }
         }
 
-        // load PredictorParams from all available InPorts again
+        // load ModelContent from all available InPorts again
         for (int p = 0; p < getNrPredictorInPorts(); p++) {
             try {
                 m_model.loadPredictorParams(p, m_inModelPorts[p]
@@ -1021,9 +1021,9 @@ public final class Node {
             // reset hilite handler in this node.
             // This triggers hilite handler propagation through the output ports
             setHiLiteHandler(inPortID, null);
-        } else { // then this is a PredictorParams port
+        } else { // then this is a ModelContent port
             /*
-             * reset the PredictorParams of this inport, previously pushed in
+             * reset the ModelContent of this inport, previously pushed in
              * and stored in this node.
              */
             int realId = inPortID - getNrDataInPorts();
@@ -1126,19 +1126,19 @@ public final class Node {
         }
         try {
             int realId = inPortID - getNrDataInPorts();
-            PredictorParams params = m_inModelPorts[realId]
+            ModelContent params = m_inModelPorts[realId]
                     .getPredictorParams();
             m_model.loadPredictorParams(realId, params);
         } catch (InvalidSettingsException ise) {
-            m_logger.warn("Unable to load PredictorParams: "
+            m_logger.warn("Unable to load ModelContent: "
                     + ise.getMessage());
             m_status = new NodeStatus.Error(
-                    "Could not load PredictorParams: " + ise.getMessage());
+                    "Could not load ModelContent: " + ise.getMessage());
             this.notifyStateListeners(m_status);
         } catch (NullPointerException npe) {
             m_logger.coding("Model need to check for null argument.");
             m_status = new NodeStatus.Error(
-                    "Could not load PredictorParams due to null argument.");
+                    "Could not load ModelContent due to null argument.");
             this.notifyStateListeners(m_status);
         }
         configure();
@@ -1488,7 +1488,7 @@ public final class Node {
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     String specName = createModelFileName(i);
                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
-                    PredictorParams pred = 
+                    ModelContent pred = 
                         m_outModelPorts[i].getPredictorParams();
                     File targetFile = new File(m_nodeDir, specName);
                     BufferedOutputStream out = new BufferedOutputStream(

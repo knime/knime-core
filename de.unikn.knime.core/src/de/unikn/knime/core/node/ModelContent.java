@@ -26,19 +26,20 @@ import de.unikn.knime.core.node.config.Config;
 
 
 /**
- * This PredictorParams is used to stored models. This class needs to be
+ * This ModelContent is used to stored models. This class needs to be
  * modified to provide more functions to store model parts PMML like.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class PredictorParams extends Config {
+public final class ModelContent extends Config 
+        implements ModelContentRO, ModelContentWO {
 
     /**
      * Hides public default constructor.
      * 
-     * @param key The key for this PredictorParams.
+     * @param key The key for this ModelContent.
      */
-    public PredictorParams(final String key) {
+    public ModelContent(final String key) {
         super(key);
     }
 
@@ -46,39 +47,39 @@ public final class PredictorParams extends Config {
      * @see de.unikn.knime.core.node.config.Config#getInstance(java.lang.String)
      */
     @Override
-    public PredictorParams getInstance(final String key) {
-        return new PredictorParams(key);
+    public ModelContent getInstance(final String key) {
+        return new ModelContent(key);
     }
 
     /**
-     * Creates and returns a new PredictorParams with the given key.
+     * Creates and returns a new ModelContent with the given key.
      * 
-     * @param key The key for the new PredictorParams.
-     * @return A <code>PredictorParams</code> object.
+     * @param key The key for the new ModelContent.
+     * @return A <code>ModelContent</code> object.
      * 
      * @see de.unikn.knime.core.node.NodeSettings#getConfig(String)
      */
-    @Override
-    public PredictorParams addConfig(final String key) {
-        return (PredictorParams)super.addConfig(key);
+    @Deprecated
+    public ModelContent addConfig(final String key) {
+        return (ModelContent)super.addConfig(key);
     }
 
     /**
-     * Returns the PredictorParams for the given key.
+     * Returns the ModelContent for the given key.
      * 
-     * @param key The key to retrieve the PredictorParams for.
-     * @return The PredictorParams object.
-     * @throws InvalidSettingsException The PredictorParams could not be found.
+     * @param key The key to retrieve the ModelContent for.
+     * @return The ModelContent object.
+     * @throws InvalidSettingsException The ModelContent could not be found.
      */
-    @Override
-    public PredictorParams getConfig(final String key)
+    @Deprecated
+    public ModelContent getConfig(final String key)
             throws InvalidSettingsException {
-        return (PredictorParams)super.getConfig(key);
+        return (ModelContent)super.getConfig(key);
     }
     
     /**
-     * Reads <code>PredictorParams</code> settings from the given XML stream 
-     * and returns a new <code>PredictorParams</code> object.
+     * Reads <code>ModelContent</code> settings from the given XML stream 
+     * and returns a new <code>ModelContent</code> object.
      * 
      * @param in XML input stream to read settings from.
      * @return A new settings object.
@@ -86,10 +87,23 @@ public final class PredictorParams extends Config {
      * @throws NullPointerException If one of the arguments is 
      *         <code>null</code>.
      */
-    public static synchronized PredictorParams loadFromXML(
+    public static synchronized ModelContent loadFromXML(
             final InputStream in) throws IOException {
-        PredictorParams tmpSettings = new PredictorParams("ignored");
-        return (PredictorParams) Config.loadFromXML(tmpSettings, in);
+        ModelContent tmpSettings = new ModelContent("ignored");
+        return (ModelContent) Config.loadFromXML(tmpSettings, in);
     }
+    
+    public void addModelContent(final ModelContent modelContent) {
+        super.addConfig(modelContent);
+    }
+
+    /**
+     * @see Config#getConfig(java.lang.String)
+     */
+    public ModelContent getModelContent(final String key)
+            throws InvalidSettingsException {
+        return (ModelContent)super.getConfig(key);
+    }
+    
 
 }

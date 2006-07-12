@@ -34,7 +34,7 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
-import de.unikn.knime.core.node.PredictorParams;
+import de.unikn.knime.core.node.ModelContent;
 import de.unikn.knime.core.node.SpecialNodeModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
@@ -511,22 +511,22 @@ public class MetaNodeModel extends SpecialNodeModel
 
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadPredictorParams(int, de.unikn.knime.core.node.PredictorParams)
+     *  #loadPredictorParams(int, de.unikn.knime.core.node.ModelContent)
      */
     @Override
     protected void loadPredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
+            final ModelContent predParams) throws InvalidSettingsException {
         m_modelInModels[index].setPredictorParams(predParams);
     }
 
     
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #savePredictorParams(int, de.unikn.knime.core.node.PredictorParams)
+     *  #savePredictorParams(int, de.unikn.knime.core.node.ModelContent)
      */
     @Override
     protected void savePredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
+            final ModelContent predParams) throws InvalidSettingsException {
         m_modelOutModels[index].getPredictorParams().copyTo(predParams);
     }
 

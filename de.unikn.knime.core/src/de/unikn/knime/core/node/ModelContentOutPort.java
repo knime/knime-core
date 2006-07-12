@@ -18,61 +18,61 @@
 package de.unikn.knime.core.node;
 
 /**
- * Output port used to transfere PredictorParams objects between nodes.
+ * Output port used to transfere ModelContent objects between nodes.
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-public final class PredictorOutPort extends NodeOutPort implements
+public final class ModelContentOutPort extends NodeOutPort implements
         NodePort.PredictorParamsPort {
 
     /**
-     * The PredictorParams of this port or null if not set..
+     * The ModelContent of this port or null if not set..
      */
-    private PredictorParams m_predParams;
+    private ModelContent m_predParams;
 
     /**
-     * Creates a new output port for PredictorParams objects. The predictive
+     * Creates a new output port for ModelContent objects. The predictive
      * params object is set to null.
      * 
      * @param portId An unique port ID.
      * @param node the node this port belongs to
      */
-    PredictorOutPort(final int portId, final Node node) {
+    ModelContentOutPort(final int portId, final Node node) {
         super(portId, node);
         m_predParams = null;
     }
 
     /**
-     * Sets a <code>PredictorParams</code> object in this port. The port will
+     * Sets a <code>ModelContent</code> object in this port. The port will
      * notify all connected input ports and its view.
      * 
-     * @param predParams The new <code>PredictorParams</code> object or null.
+     * @param predParams The new <code>ModelContent</code> object or null.
      */
-    void setPredictorParams(final PredictorParams predParams) {
+    void setPredictorParams(final ModelContent predParams) {
         m_predParams = predParams;
         for (NodeInPort inPort : super.getConnectedInPorts()) {
-            if (inPort instanceof PredictorInPort) {
-                ((PredictorInPort)inPort).newPredictorParamsAvailable();
+            if (inPort instanceof ModelContentInPort) {
+                ((ModelContentInPort)inPort).newPredictorParamsAvailable();
             }
         }
         if (getPortView() != null) {
-            ((PredictorOutPortView)getPortView())
+            ((ModelContentOutPortView)getPortView())
                     .updatePredictorParams(m_predParams);
         }
     }
 
     /**
-     * Returns the <code>PredictorParams</code> object for this port, as set
+     * Returns the <code>ModelContent</code> object for this port, as set
      * by the node this port is output for.
      * 
-     * @return PredictorParams of this port which can be null.
+     * @return ModelContent of this port which can be null.
      */
-    public PredictorParams getPredictorParams() {
+    public ModelContent getPredictorParams() {
         return m_predParams;
     }
 
     /**
-     * Opens this port's view and updates the PredictorParams object
+     * Opens this port's view and updates the ModelContent object
      * representation inside this view.
      * 
      * @param name The view's name.
@@ -81,8 +81,8 @@ public final class PredictorOutPort extends NodeOutPort implements
     @Override
     public void openPortView(final String name) {
         if (getPortView() == null) {
-            super.setPortView(new PredictorOutPortView(name, getPortName()));
-            ((PredictorOutPortView)getPortView())
+            super.setPortView(new ModelContentOutPortView(name, getPortName()));
+            ((ModelContentOutPortView)getPortView())
                     .updatePredictorParams(m_predParams);
         }
         getPortView().openView();

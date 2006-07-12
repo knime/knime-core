@@ -30,7 +30,8 @@ import de.unikn.knime.core.node.config.Config;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class NodeSettings extends Config {
+public final class NodeSettings extends Config 
+        implements NodeSettingsRO, NodeSettingsWO {
 
     /**
      * Creates a new instance of this object with the given key.
@@ -40,12 +41,9 @@ public final class NodeSettings extends Config {
     public NodeSettings(final String key) {
         super(key);
     }
-
-    /**
-     * @see Config#getInstance(java.lang.String)
-     */
+    
     @Override
-    protected NodeSettings getInstance(final String key) {
+    protected Config getInstance(String key) {
         return new NodeSettings(key);
     }
 
@@ -76,18 +74,38 @@ public final class NodeSettings extends Config {
     /**
      * @see Config#addConfig(java.lang.String)
      */
-    @Override
-    public NodeSettings addConfig(final String key) {
+    public NodeSettings addNodeSettings(final String key) {
         return (NodeSettings)super.addConfig(key);
+    }
+    
+    public void addNodeSettings(final NodeSettings settings) {
+        super.addConfig(settings);
     }
 
     /**
      * @see Config#getConfig(java.lang.String)
      */
-    @Override
+    public NodeSettings getNodeSettings(final String key)
+            throws InvalidSettingsException {
+        return (NodeSettings)super.getConfig(key);
+    }
+    
+    /**
+     * @see Config#addConfig(java.lang.String)
+     */
+    @Deprecated
+    public NodeSettings addConfig(final String key) {
+        return (NodeSettings)super.addConfig(key);
+    }
+    
+    /**
+     * @see Config#getConfig(java.lang.String)
+     */
+    @Deprecated
     public NodeSettings getConfig(final String key)
             throws InvalidSettingsException {
         return (NodeSettings)super.getConfig(key);
     }
+    
 
 }

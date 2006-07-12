@@ -384,7 +384,8 @@ public abstract class Config extends AbstractConfigEntry
      * @return A Config object.
      * @throws InvalidSettingsException If the key is not available.
      */
-    public Config getConfig(final String key) throws InvalidSettingsException {
+    public Config getConfig(final String key) 
+        throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof Config)) {
             throw new InvalidSettingsException(

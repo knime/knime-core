@@ -92,9 +92,9 @@ public abstract class NodeModel {
      *            as inputs.
      * @param nrDataOuts The number of <code>DataTable</code> objects expected
      *            at the output.
-     * @param nrPredParamsIns The number of <code>PredictorParams</code>
+     * @param nrPredParamsIns The number of <code>ModelContent</code>
      *            elements available as inputs.
-     * @param nrPredParamsOuts The number of <code>PredictorParams</code>
+     * @param nrPredParamsOuts The number of <code>ModelContent</code>
      *            objects available at the output.
      * @throws NegativeArraySizeException If the number of in- or outputs is
      *             smaller than zero.
@@ -194,9 +194,9 @@ public abstract class NodeModel {
     }
 
     /**
-     * Override this methode if <code>PredictorParams</code> input(s) have
-     * been set. This methode is then called for each PredictorParams input to
-     * load the <code>PredictorParams</code> after the previous node has been
+     * Override this methode if <code>ModelContent</code> input(s) have
+     * been set. This methode is then called for each ModelContent input to
+     * load the <code>ModelContent</code> after the previous node has been
      * executed successfully or is reset.
      * 
      * <p>This implementation throws a InvalidSettingsException as it should 
@@ -204,23 +204,23 @@ public abstract class NodeModel {
      * must override this method.
      * 
      * @param index The input index, starting from 0.
-     * @param predParams The PredictorParams to load, which can be null to
-     *            indicate that no PredictorParams model is available.
+     * @param predParams The ModelContent to load, which can be null to
+     *            indicate that no ModelContent model is available.
      * @throws InvalidSettingsException If the predictive parameters could not
      *             be loaded.
      */
     protected void loadPredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
+            final ModelContent predParams) throws InvalidSettingsException {
         assert predParams == predParams;
         throw new InvalidSettingsException(
                 "loadPredictorParams() not overridden: " + index);
     }
 
     /**
-     * Override this methode if <code>PredictorParams</code> output(s) have
+     * Override this methode if <code>ModelContent</code> output(s) have
      * been set. This methode is then called for each
-     * <code>PredictorParams</code> output to save the
-     * <code>PredictorParams</code> after this node has been successfully
+     * <code>ModelContent</code> output to save the
+     * <code>ModelContent</code> after this node has been successfully
      * executed.
      * 
      * <p>This implementation throws a InvalidSettingsException as it should 
@@ -228,11 +228,11 @@ public abstract class NodeModel {
      * must override this method.
 
      * @param index The output index, starting from 0.
-     * @param predParams The PredictorParams to save to.
+     * @param predParams The ModelContent to save to.
      * @throws InvalidSettingsException If the model could not be saved.
      */
     protected void savePredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
+            final ModelContent predParams) throws InvalidSettingsException {
         assert predParams == predParams;
         throw new InvalidSettingsException(
                 "savePredictorParams() not overridden: " + index);

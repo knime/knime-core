@@ -128,13 +128,13 @@ public abstract class NodePort {
 
     /**
      * Interface to identify <code>PredcitorParamsPort</code> objects which
-     * returns <code>PredictorParams</code> objects.
+     * returns <code>ModelContent</code> objects.
      */
     interface PredictorParamsPort {
         /**
-         * @return The node port's <code>PredictorParams</code> object.
+         * @return The node port's <code>ModelContent</code> object.
          */
-        PredictorParams getPredictorParams();
+        ModelContent getPredictorParams();
     }
 
     /**

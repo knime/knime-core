@@ -46,9 +46,9 @@ public abstract class NoSettingsNodeModel extends NodeModel {
      *            as inputs.
      * @param nrDataOuts The number of <code>DataTable</code> objects expected
      *            at the output.
-     * @param nrPredParamsIns The number of <code>PredictorParams</code>
+     * @param nrPredParamsIns The number of <code>ModelContent</code>
      *            elements available as inputs.
-     * @param nrPredParamsOuts The number of <code>PredictorParams</code>
+     * @param nrPredParamsOuts The number of <code>ModelContent</code>
      *            objects available at the output.
      * @throws NegativeArraySizeException If the number of in- or outputs is
      *             smaller than zero.
