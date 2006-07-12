@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import de.unikn.knime.base.data.filter.column.FilterColumnTable;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.container.ColumnRearranger;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -92,10 +94,9 @@ final class FilterColumnNodeModel extends NodeModel {
         final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
         final DataTableSpec outSpec = createOutDataTableSpec(inSpec);
         final String[] cols = new String[outSpec.getNumColumns()];
-        for (int c = 0; c < cols.length; c++) {
-            cols[c] = outSpec.getColumnSpec(c).getName();
-        }
-        return new DataTable[]{new FilterColumnTable(data[INPORT], cols)};
+        BufferedDataTable outTable = 
+            ColumnRearranger.filterInclude((BufferedDataTable)data[0], cols);
+        return new DataTable[]{outTable};
     }
 
     /**

@@ -17,9 +17,16 @@
  */
 package de.unikn.knime.core.data.container;
 
+import java.io.File;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionMonitor;
+import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
  * Class implementing the <code>DataTable</code> interface and using a buffer
@@ -31,7 +38,7 @@ import de.unikn.knime.core.data.RowIterator;
  * fixed.
  * @author Bernd Wiswedel, University of Konstanz
  */
-class BufferedTable implements DataTable {
+public class BufferedTable implements DataTable, KnowsRowCountTable {
     
     /** To read the data from. */
     private final Buffer m_buffer;
@@ -73,6 +80,15 @@ class BufferedTable implements DataTable {
      */
     Buffer getBuffer() {
         return m_buffer;
+    }
+
+    /**
+     * @see KnowsRowCountTable#saveToFile(File, NodeSettings, ExecutionMonitor)
+     */
+    public void saveToFile(final File f, final NodeSettings settings, 
+            final ExecutionMonitor exec) throws IOException, 
+            CanceledExecutionException {
+        m_buffer.saveToFile(f, exec);
     }
 
 }

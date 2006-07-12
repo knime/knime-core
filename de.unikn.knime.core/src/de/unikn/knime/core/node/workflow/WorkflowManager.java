@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
 import de.unikn.knime.core.node.ExecutionMonitor;
@@ -1056,29 +1057,39 @@ public class WorkflowManager implements WorkflowListener {
 
         File parentDir = workflowFile.getParentFile();
 
+        // data files are loaded using a repository of reference tables;
+        // these lines serves to init the repository so nodes can put their data
+        // into this map, the repository is deleted when the loading is done
+        int loadID = System.identityHashCode(this);
+        BufferedDataTable.initRepository(loadID);
         ArrayList<NodeContainer> failedNodes = new ArrayList<NodeContainer>();
         // get all keys in there
-        for (NodeContainer newNode : topSortNodes()) {
-            try {
-                NodeSettings nodeSetting = settings.getConfig(KEY_NODES)
-                        .getConfig("node_" + newNode.getID());
-                String nodeFileName = nodeSetting
-                        .getString(KEY_NODE_SETTINGS_FILE);
-                File nodeFile = new File(parentDir, nodeFileName);
-                newNode.load(nodeFile, exec);
-            } catch (IOException ioe) {
-                String msg = "Unable to load node: " + newNode.getNameWithID()
-                        + " -> reset and configure.";
-                LOGGER.error(msg);
-                LOGGER.debug("", ioe);
-                failedNodes.add(newNode);
-            } catch (InvalidSettingsException ise) {
-                String msg = "Unable to load node: " + newNode.getNameWithID()
-                        + " -> reset and configure.";
-                LOGGER.error(msg);
-                LOGGER.debug("", ise);
-                failedNodes.add(newNode);
+        try {
+            for (NodeContainer newNode : topSortNodes()) {
+                try {
+                    NodeSettings nodeSetting = settings.getConfig(KEY_NODES)
+                            .getConfig("node_" + newNode.getID());
+                    String nodeFileName = nodeSetting
+                            .getString(KEY_NODE_SETTINGS_FILE);
+                    File nodeFile = new File(parentDir, nodeFileName);
+                    newNode.load(loadID, nodeFile, exec);
+                } catch (IOException ioe) {
+                    String msg = "Unable to load node: " 
+                        + newNode.getNameWithID() + " -> reset and configure.";
+                    LOGGER.error(msg);
+                    LOGGER.debug("", ioe);
+                    failedNodes.add(newNode);
+                } catch (InvalidSettingsException ise) {
+                    String msg = "Unable to load node: " 
+                        + newNode.getNameWithID() + " -> reset and configure.";
+                    LOGGER.error(msg);
+                    LOGGER.debug("", ise);
+                    failedNodes.add(newNode);
+                }
             }
+        } finally {
+            // put into a finally block because that may release much of memory
+            BufferedDataTable.clearRepository(loadID);
         }
         for (NodeContainer newNode : failedNodes) {
             resetAndConfigureNode(newNode.getID());

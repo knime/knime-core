@@ -49,9 +49,12 @@ import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.util.FileUtil;
 
 /**
  * A buffer writes the rows from a <code>DataContainer</code> to a file. 
@@ -60,7 +63,7 @@ import de.unikn.knime.core.node.NodeSettings;
  * "centralizes" the IO operations.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class Buffer {
+class Buffer {
     
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = 
@@ -83,6 +86,25 @@ final class Buffer {
     
     /** Name of the zip entry containing the spec. */
     private static final String ZIP_ENTRY_SPEC = "spec.xml";
+
+    /** Name of the zip entry containing the meta information (e.g. #rows). */
+    private static final String ZIP_ENTRY_META = "meta.xml";
+    
+    /** Config entries when writing the meta information to the file,
+     * this is a subconfig in meta.xml.
+     */
+    private static final String CFG_INTERNAL_META = "table.meta.internal";
+
+    /** Config entries when writing the meta information to the file,
+     * this is a subconfig in meta.xml for overridden classes.
+     */
+    private static final String CFG_ADDITIONAL_META = "table.meta.additional";
+    
+    /** Config entries when writing the meta info to the file (uses NodeSettings
+     * object, which uses key-value pairs. Here: the version of the writing 
+     * method.
+     */
+    private static final String CFG_VERSION = "container.version";
     
     /** Config entries when writing the spec to the file (uses NodeSettings
      * object, which uses key-value pairs. Here: size of the table (#rows).
@@ -96,6 +118,9 @@ final class Buffer {
     /** Config entry: The spec of the table. */
     private static final String CFG_TABLESPEC = "table.spec";
     
+    /** The version this container is able to read, may be an array in the 
+     * future. */
+    private static final String VERSION = "container_1.0.0";
 
     /** Contains weak references to file iterators that have ever been created
      * but not (yet) garbage collected. We will add a shutdown hook 
@@ -188,6 +213,9 @@ final class Buffer {
     }
     
     /** Creates new buffer that will immediately write to the given file.
+     * 
+     * <p>This constructor is used when data will be added using the addRow
+     * method.
      * @param outFile The file to write to, will be created (or overwritten).
      * @throws IOException If opening file fails.
      * @throws NullPointerException If the argument is <code>null</code>.
@@ -202,44 +230,63 @@ final class Buffer {
     
     /** Creates new buffer for <strong>reading</strong>. The file is
      * assumed to be a zip file as written by this class.
+     * 
+     * <p>This constructor is used when data will be read from a zip file.
      * @param inFile The file to read from.
      * @param ignored This argument is ignored. It serves to distinguish
      * from the other constructor.
      * @throws IOException If the header (the spec information) can't be read.
      */
     Buffer(final File inFile, final boolean ignored) throws IOException {
-        m_maxRowsInMem = 0;
-        // please checkstyle
         assert ignored == ignored;
+        m_maxRowsInMem = 0;
         ZipFile zipFile = new ZipFile(inFile);
-        InputStream specInput = zipFile.getInputStream(
-                new ZipEntry(ZIP_ENTRY_SPEC));
-        if (specInput == null) {
-            throw new IOException("Invalid file: No spec information");
-        }
-        InputStream inStream = new BufferedInputStream(specInput);
+        String errorFile = "";
         try {
-            readSpecFromFile(inStream);
+            errorFile = "spec";
+            m_spec = readSpecFromFile(zipFile);
+            errorFile = "meta";
+            readMetaFromFile(zipFile);
         } catch (ClassNotFoundException cnfe) {
             IOException ioe = new IOException(
-                    "Unable to read spec from zip file \""
+                    "Unable to read " + errorFile + "from zip file \""
                     + inFile.getAbsolutePath() + "\"");
             ioe.initCause(cnfe);
             throw ioe;
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException(
-                    "Unable to read spec from zip file \""
+                    "Unable to read " + errorFile + "from zip file \""
                     + inFile.getAbsolutePath() + "\"");
             ioe.initCause(ise);
             throw ioe;
         }
+        // just check if data is present!
         InputStream dataInput = zipFile.getInputStream(
                 new ZipEntry(ZIP_ENTRY_DATA));
         if (dataInput == null) {
             throw new IOException("Invalid file: No data entry");
         }
-        inStream.close();
         m_outFile = inFile;
+    }
+    
+    /** Get the version string to write to the meta file, may be overridden.
+     * @return The version string.
+     */
+    public String getVersion() {
+        return VERSION;
+    }
+    
+    /**
+     * Validate the version as read from the file if it can be parsed by
+     * this implementation.
+     * @param version As read from file.
+     * @throws IOException If it can't be parsed.
+     */
+    public void validateVersion(final String version) throws IOException {
+        if (!VERSION.equals(version)) {
+            throw new IOException("Unsupported version: \"" + version 
+                    + "\" (expected \"" + VERSION + "\")");
+        }
     }
     
     /** 
@@ -250,7 +297,7 @@ final class Buffer {
      */
     public void addRow(final DataRow row) {
         m_list.add(row);
-        m_size++;
+        incrementSize();
         if (m_list.size() > m_maxRowsInMem) { // if size is violated
             try {
                 if (m_outStream == null) {
@@ -266,6 +313,11 @@ final class Buffer {
         }
         assert (m_list.size() <= m_maxRowsInMem);
     } // addRow(DataRow)
+    
+    /** Increments the row counter by one, used in addRow. */
+    void incrementSize() {
+        m_size++;
+    }
     
     /**
      * Flushes and closes the stream. If no file has been created and therefore
@@ -296,8 +348,10 @@ final class Buffer {
             ZipOutputStream zipOut = 
                 (ZipOutputStream)m_outStream.getUnderylingStream();
             zipOut.closeEntry();
-            zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
+            // both method will create their own zip entry and close 
+            // it afterwards
             writeSpecToFile(zipOut);
+            writeMetaToFile(zipOut);
             zipOut.close();
             double sizeInMB = m_outFile.length() / (double)(1 << 20);
             String size = NumberFormat.getInstance().format(sizeInMB);
@@ -310,49 +364,137 @@ final class Buffer {
     } // close()
     
     /** Called when buffer is closed and we are writing to a customized
-     * file. This method will add a zip entry containing the (serialized)
-     * spec.
+     * file. This method will add a zip entry containing the spec.
      * @param outStream The stream to write to.
      * @throws IOException If that fails.
      */
-    private void writeSpecToFile(final OutputStream outStream)
-            throws IOException {
+    void writeSpecToFile(final ZipOutputStream outStream) throws IOException {
+        outStream.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
+        NodeSettings settings = new NodeSettings("Table Spec");
+        NodeSettings specSettings = settings.addConfig(CFG_TABLESPEC);
+        m_spec.save(specSettings);
+        // will only close the zip entry, not the entire stream.
+        NonClosableZipOutputStream nonClosable = 
+            new NonClosableZipOutputStream(outStream);
+        // calls close (and hence closeEntry)
+        settings.saveToXML(nonClosable);
+    }
+    
+    /** Writes internals to the zip output stream by adding a zip entry and 
+     * writing to it.
+     * @param zipOut To write to.
+     * @throws IOException If that fails.
+     */
+    void writeMetaToFile(final ZipOutputStream zipOut) throws IOException {
+        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
         NodeSettings settings = new NodeSettings("Table Meta Information");
-        settings.addInt(CFG_SIZE, m_size);
+        NodeSettings subSettings = settings.addConfig(CFG_INTERNAL_META);
+        subSettings.addString(CFG_VERSION, getVersion());
+        subSettings.addInt(CFG_SIZE, size());
         // m_shortCutsLookup to string array, saved in config
         String[] cellClasses = new String[m_shortCutsLookup.length];
         for (int i = 0; i < m_shortCutsLookup.length; i++) {
             cellClasses[i] = m_shortCutsLookup[i].getName();
         }
-        settings.addStringArray(CFG_CELL_CLASSES, cellClasses);
-        NodeSettings specSettings = settings.addConfig(CFG_TABLESPEC);
-        m_spec.save(specSettings);
-        settings.saveToXML(outStream);
+        subSettings.addStringArray(CFG_CELL_CLASSES, cellClasses);
+        NodeSettings addSubSettings = settings.addConfig(CFG_ADDITIONAL_META); 
+        // allow subclasses to do private savings.
+        addMetaForSaving(addSubSettings);
+        // will only close the zip entry, not the entire stream.
+        NonClosableZipOutputStream nonClosable = 
+            new NonClosableZipOutputStream(zipOut);
+        // calls close (and hence closeEntry)
+        settings.saveToXML(nonClosable);
     }
     
-    /*
+    /** Intended for subclass NoKeyBuffer to add its private information.
+     * @param settings Where to add meta information.
+     */
+    void addMetaForSaving(final NodeSettings settings) {
+        // checkstyle complains otherwise.
+        assert settings == settings;
+    }
+    
+    /**
      * Reads the zip entry containing the spec.
+     * @param zipFile To read from.
+     * @return The spec as read from file.
+     * @throws IOException If reading fails.
+     * @throws InvalidSettingsException If the internal structure is broken. 
      */
     @SuppressWarnings("unchecked") // cast with generics
-    private void readSpecFromFile(final InputStream inStream) 
-        throws IOException, ClassNotFoundException, InvalidSettingsException {
-        NodeSettings settings = NodeSettings.loadFromXML(inStream);
-        m_size = settings.getInt(CFG_SIZE);
-        if (m_size < 0) {
-            throw new IOException("Table size must not be < 0: " + m_size);
+    DataTableSpec readSpecFromFile(final ZipFile zipFile) 
+            throws IOException, InvalidSettingsException {
+        InputStream specInput = zipFile.getInputStream(
+                new ZipEntry(ZIP_ENTRY_SPEC));
+        if (specInput == null) {
+            throw new IOException("Invalid file: No spec information");
         }
-        String[] cellClasses = settings.getStringArray(CFG_CELL_CLASSES);
-        m_shortCutsLookup = new Class[cellClasses.length];
-        for (int i = 0; i < cellClasses.length; i++) {
-            Class cl = GlobalClassCreator.createClass(cellClasses[i]);
-            if (!DataCell.class.isAssignableFrom(cl)) {
-                throw new InvalidSettingsException("No data cell class: \"" 
-                        + cellClasses[i] + "\"");
+        InputStream inStream = new BufferedInputStream(specInput);
+        try {
+            NodeSettings settings = NodeSettings.loadFromXML(inStream);
+            NodeSettings specSettings = settings.getConfig(CFG_TABLESPEC);
+            return DataTableSpec.load(specSettings);
+        } finally {
+            inStream.close();
+        }
+    }
+    
+    /**
+     * Reads the zip entry containing the meta information.
+     * @param zipFile To read from.
+     * @throws IOException If reading fails.
+     * @throws ClassNotFoundException If any of the classes can't be loaded.
+     * @throws InvalidSettingsException If the internal structure is broken. 
+     */
+    @SuppressWarnings("unchecked") // cast with generics
+    void readMetaFromFile(final ZipFile zipFile) 
+    throws IOException, ClassNotFoundException, InvalidSettingsException {
+        InputStream metaIn = zipFile.getInputStream(
+                new ZipEntry(ZIP_ENTRY_META));
+        if (metaIn == null) {
+            throw new IOException("Invalid file: No meta information");
+        }
+        InputStream inStream = new BufferedInputStream(metaIn);
+        try {
+            NodeSettings settings = NodeSettings.loadFromXML(inStream);
+            NodeSettings subSettings = settings.getConfig(CFG_INTERNAL_META);
+            String version = subSettings.getString(CFG_VERSION);
+            validateVersion(version);
+            m_size = subSettings.getInt(CFG_SIZE);
+            if (m_size < 0) {
+                throw new IOException("Table size must not be < 0: " + m_size);
             }
-            m_shortCutsLookup[i] = cl;
+            String[] cellClasses = subSettings.getStringArray(CFG_CELL_CLASSES);
+            m_shortCutsLookup = new Class[cellClasses.length];
+            for (int i = 0; i < cellClasses.length; i++) {
+                Class cl = GlobalClassCreator.createClass(cellClasses[i]);
+                if (!DataCell.class.isAssignableFrom(cl)) {
+                    throw new InvalidSettingsException("No data cell class: \"" 
+                            + cellClasses[i] + "\"");
+                }
+                m_shortCutsLookup[i] = cl;
+            }
+            readMetaFromSaving(settings.getConfig(CFG_ADDITIONAL_META));
+        } finally {
+            inStream.close();
         }
-        NodeSettings specSettings = settings.getConfig(CFG_TABLESPEC);
-        m_spec = DataTableSpec.load(specSettings);
+    }
+    
+    /** Subclasses will override this and read the internals. This method
+     * is called in the constructor (not advisable in general, but hard to 
+     * avoid here.)
+     * @param settings To read from.
+     * @throws InvalidSettingsException If that fails.
+     */
+    void readMetaFromSaving(final NodeSettings settings) 
+        throws InvalidSettingsException {
+        // Checksyle is really rigid with regard to unused variables. This
+        // is dirty, yes.
+        assert settings == settings;
+        if (false) {
+            throw new InvalidSettingsException("");
+        }
     }
     
     /** Create the shortcut table. */
@@ -414,14 +556,23 @@ final class Buffer {
         m_outStream.reset();
     } // writeEldestRow()
     
-    /* Writes the row key to the out stream. */
-    private void writeRowKey(final RowKey key) throws IOException {
+    /** Writes the row key to the out stream. This method is overridden in
+     * NoKeyBuffer in order to skip the row key. 
+     * @param key The key to write.
+     * @throws IOException If that fails.
+     */
+    void writeRowKey(final RowKey key) throws IOException {
         DataCell id = key.getId();
         writeDataCell(id);
     }
     
-    /* Reads a row key from a string. */
-    private RowKey readRowKey(final DCObjectInputStream inStream) 
+    /** Reads a row key from a string. Is overridden in NoKeyBuffer to return
+     * always the same key.
+     * @param inStream To read from
+     * @return The row key as read right from the stream.
+     * @throws IOException If that fails.
+     */
+    RowKey readRowKey(final DCObjectInputStream inStream) 
         throws IOException {
         DataCell id = readDataCell(inStream);
         return new RowKey(id);
@@ -527,6 +678,18 @@ final class Buffer {
             return new FromFileIterator();
         } else {
             return new FromListIterator();
+        }
+    }
+    /**
+     * @see de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable#
+     *  saveToFile(File, ExecutionMonitor)
+     */
+    public void saveToFile(final File f, final ExecutionMonitor exec) 
+        throws IOException, CanceledExecutionException {
+        if (!usesOutFile()) {
+            close(m_spec); // will also use this file for subsequent iterations
+        } else {
+            FileUtil.copy(m_outFile, f, exec);
         }
     }
     
@@ -683,4 +846,55 @@ final class Buffer {
         }
         
     }
+    
+    /** Class that overrides the close method and just calls closeEntry on the
+     * reference zip output. All other methods delegate directly.
+     */
+    private static class NonClosableZipOutputStream extends OutputStream {
+        private final ZipOutputStream m_zipOut;
+        
+        /** Inits object, references argument.
+         * @param zipOut The reference.
+         */
+        public NonClosableZipOutputStream(final ZipOutputStream zipOut) {
+            m_zipOut = zipOut;
+        }
+        /**
+         * @see java.io.OutputStream#close()
+         */
+        @Override
+        public void close() throws IOException {
+            m_zipOut.closeEntry();
+        }
+        /**
+         * @see java.io.OutputStream#flush()
+         */
+        @Override
+        public void flush() throws IOException {
+            m_zipOut.flush();
+        }
+        /**
+         * @see java.io.OutputStream#write(byte[], int, int)
+         */
+        @Override
+        public void write(final byte[] b, final int off, final int len) 
+            throws IOException {
+            m_zipOut.write(b, off, len);
+        }
+        /**
+         * @see java.io.OutputStream#write(byte[])
+         */
+        @Override
+        public void write(final byte[] b) throws IOException {
+            m_zipOut.write(b);
+        }
+        /**
+         * @see java.io.OutputStream#write(int)
+         */
+        @Override
+        public void write(final int b) throws IOException {
+            m_zipOut.write(b);
+        }
+    }
+
 }

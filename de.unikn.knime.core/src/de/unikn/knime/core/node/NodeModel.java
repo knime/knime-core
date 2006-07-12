@@ -437,7 +437,7 @@ public abstract class NodeModel {
      *             not match the number of outputs. Or if any of them is null.
      * @see #execute(DataTable[],ExecutionMonitor)
      */
-    protected final DataTable[] executeModel(final DataTable[] data,
+    protected final BufferedDataTable[] executeModel(final DataTable[] data,
             final ExecutionMonitor exec) throws Exception {
 
         assert (data != null && data.length == m_nrDataIns);
@@ -476,11 +476,11 @@ public abstract class NodeModel {
         // one of the implementations, we copy the references here
         // and change the content of that copy instead of the returned
         // array
-        DataTable[] result = new DataTable[outData.length];
+        BufferedDataTable[] result = new BufferedDataTable[outData.length];
         for (int i = 0; i < result.length; i++) {
             DataTable asReturned = outData[i];
-            if (DataContainer.isContainerTable(asReturned)) {
-                result[i] = asReturned;
+            if (asReturned instanceof BufferedDataTable) {
+                result[i] = (BufferedDataTable)asReturned;
             } else {
                 result[i] = DataContainer.cache(asReturned, exec);
             }

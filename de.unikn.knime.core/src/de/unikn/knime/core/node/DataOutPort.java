@@ -19,7 +19,6 @@
  */
 package de.unikn.knime.core.node;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -40,7 +39,7 @@ public final class DataOutPort extends NodeOutPort
     /**
      * The data table for this port - if any.
      */
-    private DataTable m_dataTable;
+    private BufferedDataTable m_dataTable;
 
     /**
      * The table spec for this port.
@@ -95,7 +94,7 @@ public final class DataOutPort extends NodeOutPort
      * 
      * @param dataTable The new data table for this port or null.
      */
-    void setDataTable(final DataTable dataTable) {
+    void setDataTable(final BufferedDataTable dataTable) {
         //  (tg) also set the new spec here
         if (dataTable != null) {
             setDataTableSpec(dataTable.getDataTableSpec());
@@ -115,7 +114,7 @@ public final class DataOutPort extends NodeOutPort
      * 
      * @return DataTable the DataTable for this port. Could be null.
      */
-    public DataTable getDataTable() {
+    public BufferedDataTable getDataTable() {
         return m_dataTable;
     }
     

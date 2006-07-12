@@ -37,6 +37,7 @@ import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.StringValue;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.util.FileUtil;
@@ -93,7 +94,7 @@ public class DataContainer implements RowAppender {
     private DataTableSpec m_spec;
     
     /** Table to return. Not null when close() is called. */
-    private DataTable m_table;
+    private BufferedTable m_table;
     
     /** The number of possible values to be memorized. */
     private int m_maxPossibleValues;
@@ -326,6 +327,16 @@ public class DataContainer implements RowAppender {
         return m_table;
     }
     
+    /** Get reference to underlying buffer.
+     * @return The buffer used to keep/write rows.
+     */
+    Buffer getBuffer() {
+        if (isClosed()) {
+            return m_table.getBuffer();
+        }
+        return m_buffer;
+    }
+    
     /** 
      * Get the currently set DataTableSpec.
      * @return The current spec.
@@ -461,7 +472,7 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If the argument is <code>null</code>.
      * @throws CanceledExecutionException If the process has been canceled.
      */
-    public static DataTable cache(final DataTable table, 
+    public static BufferedDataTable cache(final DataTable table, 
             final ExecutionMonitor exec, final int maxCellsInMemory) 
         throws CanceledExecutionException {
         DataContainer buf = new DataContainer(maxCellsInMemory);
@@ -489,7 +500,8 @@ public class DataContainer implements RowAppender {
         } finally {
             buf.close();
         }
-        return buf.getTable();
+        BufferedTable t = (BufferedTable)buf.getTable();
+        return new BufferedDataTable(t);
     }
     
     /** Convenience method that will buffer the entire argument table. This is
@@ -502,7 +514,7 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If the argument is <code>null</code>.
      * @throws CanceledExecutionException If the process has been canceled.
      */
-    public static DataTable cache(final DataTable table, 
+    public static BufferedDataTable cache(final DataTable table, 
             final ExecutionMonitor exec) throws CanceledExecutionException {
         return cache(table, exec, MAX_CELLS_IN_MEMORY);
     }
@@ -547,9 +559,10 @@ public class DataContainer implements RowAppender {
      * @return The table contained in the zip file.
      * @throws IOException If that fails.
      */
-    public static DataTable readFromZip(final File zipFile) throws IOException {
+    public static BufferedDataTable readFromZip(
+            final File zipFile) throws IOException {
         Buffer buffer = new Buffer(zipFile, /*ignoreMe*/false);
-        return new BufferedTable(buffer);
+        return new BufferedDataTable(new BufferedTable(buffer));
     }
     
     /** the temp file will have a time stamp in its name. */

@@ -32,7 +32,6 @@ import javax.swing.UIManager;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.NodeFactory.NodeType;
 import de.unikn.knime.core.node.interrupt.InterruptibleNodeModel;
 import de.unikn.knime.core.node.meta.MetaInputModel;
@@ -43,10 +42,9 @@ import de.unikn.knime.core.util.FileUtil;
 
 /**
  * Implementation of a node as basic processing unit within the workflow. A
- * {@link Node} object is the place where the data flow starts, ends, or
- * intersects. Thus a {@link Node} can be connected with predecessors and
- * successors through its input and output ports,
- * {@link de.unikn.knime.core.node.NodeInPort} and
+ * Node object is the place where the data flow starts, ends, or intersects. 
+ * Thus a Node can be connected with predecessors and successors through its 
+ * input and output ports, {@link de.unikn.knime.core.node.NodeInPort} and
  * {@link de.unikn.knime.core.node.NodeOutPort}, respectively. There are data
  * ports for exchanging data tables, and prediction model ports for transfering
  * computed data models. <br />
@@ -101,9 +99,15 @@ public final class Node {
     
     /** Node settings XML file name. */
     public static final String SETTINGS_FILE_NAME = "settings.xml";
+
+    /** Data config files, it contains the paths to the data files. */
+    public static final String DATA_FILE_NAME = "data.xml";
     
     /** Directory name to save and load node internals. */
-    private static final String INTERN_FILE_DIR = "intern";
+    private static final String INTERN_FILE_DIR = "internal";
+    
+    /** Directory name to save and load the data. */
+    private static final String DATA_FILE_DIR = "data";
     
     private File m_nodeDir = null;
 
@@ -240,6 +244,11 @@ public final class Node {
     /**
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
+     * @param loadID Forwared to the node. This id serves as loading id, 
+     * it helps to distinguish between two workflows being loaded at the same
+     * time. This id is passed on to the 
+     * {@link de.unikn.knime.core.node.BufferedDataTable#getDataTable(
+     * int, Integer)}.
      * @param nodeFile The node settings location.
      * @param exec The execution monitor reporting progress during reading
      *        structure.
@@ -247,9 +256,9 @@ public final class Node {
      * @throws InvalidSettingsException If the settings are wrong.
      * @throws CanceledExecutionException If loading was canceled. 
      */
-    public void load(final File nodeFile, final ExecutionMonitor exec)
-            throws IOException, InvalidSettingsException,
-            CanceledExecutionException {
+    public void load(final int loadID, final File nodeFile, 
+            final ExecutionMonitor exec) throws IOException, 
+            InvalidSettingsException, CanceledExecutionException {
         assert exec != null;
         m_status = null;
         if (!nodeFile.isFile() || !nodeFile.canRead()) {
@@ -326,15 +335,10 @@ public final class Node {
                 this.notifyStateListeners(m_status);
             }
             // load data
-            NodeSettings data = settings.getConfig(CFG_DATA_FILES);
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                String dataName = data.getString(CFG_OUTPUT_PREFIX + i);
-                File targetFile = new File(m_nodeDir, dataName);
-                File dest = DataContainer.createTempFile();
-                dest.deleteOnExit();
-                FileUtil.copy(targetFile, dest, exec);
-                DataTable outTable = DataContainer.readFromZip(dest);
-                m_outDataPorts[i].setDataTable(outTable);
+            if (getNrDataOutPorts() > 0) {
+                String dataConfigFileName = settings.getString(CFG_DATA_FILE);
+                File dataConfigFile = new File(m_nodeDir, dataConfigFileName);
+                loadData(loadID, dataConfigFile, exec);
             }
             // load models
             NodeSettings model = settings.getConfig(CFG_MODEL_FILES);
@@ -751,7 +755,7 @@ public final class Node {
                 return false;
             }
         }
-        DataTable[] newOutData; // the new DTs from the model
+        BufferedDataTable[] newOutData; // the new DTs from the model
         PredictorParams[] predParams; // the new output models
         try {
             // INVOKE MODEL'S EXECUTE
@@ -804,7 +808,9 @@ public final class Node {
                             + " match spec after execution.");
                 }
             }
-            m_outDataPorts[p].setDataTable(newOutData[p]);
+            BufferedDataTable t = newOutData[p];
+            t.setOwnerRecursively(this);
+            m_outDataPorts[p].setDataTable(t);
         }
         for (int p = 0; p < getNrPredictorOutPorts(); p++) {
             m_outModelPorts[p].setPredictorParams(predParams[p]);
@@ -1375,7 +1381,9 @@ public final class Node {
     private static final String CFG_MODEL = "model";
     private static final String CFG_SPEC_FILES = "spec_files";
     private static final String SPEC_FILE_PREFIX = "spec_";
-    private static final String CFG_DATA_FILES = "data_files";
+    private static final String CFG_DATA_FILE = "data_meta_file";
+    private static final String CFG_DATA_FILE_DIR = "data_files_directory";
+    
     private static final String DATA_FILE_PREFIX = "data_";
     private static final String CFG_MODEL_FILES = "model_files";
     private static final String MODEL_FILE_PREFIX = "model_";
@@ -1385,8 +1393,8 @@ public final class Node {
         return SPEC_FILE_PREFIX + index + ".xml";
     }
     
-    private static String createDataFileName(final int index) {
-        return DATA_FILE_PREFIX + index + ".zip";
+    private static String createDataFileDirName(final int index) {
+        return DATA_FILE_PREFIX + index;
     }
     
     private static String createModelFileName(final int index) {
@@ -1401,11 +1409,9 @@ public final class Node {
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
-    public void save(
-            final File nodeFile, final ExecutionMonitor exec)
+    public void save(final File nodeFile, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        
         // write node name
         settings.addString(CFG_NAME, m_name);
         // write configured flag
@@ -1449,16 +1455,18 @@ public final class Node {
             }
         } else {
             for (int i = 0; i < m_outDataPorts.length; i++) {
-                File specFile = 
-                    new File(m_nodeDir, createSpecFileName(i));
+                File specFile = new File(m_nodeDir, createSpecFileName(i));
                 specFile.delete();
             }
         }
-        
         if (!m_isCurrentlySaved) {
             if (isExecuted()) {
                 if (!isAutoExecutable()) {
                     File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
+                    // may exist from previous savings, clean up
+                    if (internDir.exists()) {
+                        FileUtil.deleteRecursively(internDir);
+                    }
                     internDir.mkdir();
                     if (internDir.canWrite()) {
                         try {
@@ -1471,13 +1479,10 @@ public final class Node {
                         }
                     }
                 }
-                NodeSettings data = settings.addConfig(CFG_DATA_FILES);
-                for (int i = 0; i < m_outDataPorts.length; i++) {
-                    String specName = createDataFileName(i);
-                    data.addString(CFG_OUTPUT_PREFIX + i, specName);
-                    DataTable outTable = m_outDataPorts[i].getDataTable();
-                    File targetFile = new File(m_nodeDir, specName);
-                    DataContainer.writeToZip(outTable, targetFile, exec);
+                if (getNrDataOutPorts() > 0) {
+                    settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
+                    File dataSettingsFile = new File(m_nodeDir, DATA_FILE_NAME);
+                    saveData(dataSettingsFile, exec);
                 }
                 NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                 for (int i = 0; i < m_outModelPorts.length; i++) {
@@ -1494,11 +1499,9 @@ public final class Node {
             } else {
                 File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
                 FileUtil.deleteRecursively(internDir);
-                for (int i = 0; i < m_outDataPorts.length; i++) {
-                    File dataFile = 
-                        new File(m_nodeDir, createDataFileName(i));
-                    dataFile.delete();
-                }
+                File dataDir = new File(m_nodeDir, DATA_FILE_DIR);
+                FileUtil.deleteRecursively(dataDir);
+                new File(m_nodeDir, DATA_FILE_NAME).delete();
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     String modelFile = createModelFileName(i);
                     File targetFile = new File(m_nodeDir, modelFile);
@@ -1507,10 +1510,8 @@ public final class Node {
             }
         } else {
              if (isExecuted()) {
-                 NodeSettings data = settings.addConfig(CFG_DATA_FILES);
-                 for (int i = 0; i < m_outDataPorts.length; i++) {
-                     String specName = createDataFileName(i);
-                     data.addString(CFG_OUTPUT_PREFIX + i, specName);
+                 if (getNrDataOutPorts() > 0) {
+                     settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
                  }
                  NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
                  for (int i = 0; i < m_outModelPorts.length; i++) {
@@ -1522,7 +1523,69 @@ public final class Node {
                          false, "Saved flag is set but node is not executed.");
              }
         }
-        settings.saveToXML(new FileOutputStream(nodeFile));    
+        settings.saveToXML(new BufferedOutputStream(
+                new FileOutputStream(nodeFile)));
+    } // save(File, ExecutionMonitor)
+
+    private void saveData(final File configFile, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        NodeSettings settings = new NodeSettings("data_files_information");
+        File dataDir = new File(configFile.getParentFile(), DATA_FILE_DIR);
+        if (dataDir.exists()) {
+            FileUtil.deleteRecursively(dataDir);
+        }
+        dataDir.mkdir();
+        if (!dataDir.isDirectory() || !dataDir.canWrite()) {
+            throw new IOException("Can not write directory " 
+                    + dataDir.getAbsolutePath());
+        }
+        settings.addString(CFG_DATA_FILE_DIR, DATA_FILE_DIR);
+        for (int i = 0; i < m_outDataPorts.length; i++) {
+            NodeSettings portSettings = 
+                settings.addConfig(CFG_OUTPUT_PREFIX + i);
+            String dataName = createDataFileDirName(i);
+            File dir = new File(dataDir, dataName);
+            dir.mkdir();
+            if (!(dir.isDirectory() && dir.canWrite())) {
+                throw new IOException("Can not write directory " 
+                        + dir.getAbsolutePath());
+            }
+            portSettings.addString(CFG_DATA_FILE_DIR, dataName);
+            BufferedDataTable outTable = m_outDataPorts[i].getDataTable();
+            outTable.save(dir, portSettings, exec);
+        }
+        settings.saveToXML(new BufferedOutputStream(
+                new FileOutputStream(configFile)));
+    }
+    
+    private void loadData(final int loadID, final File configfile, 
+            final ExecutionMonitor exec) throws IOException, 
+            CanceledExecutionException, InvalidSettingsException {
+        NodeSettings settings = NodeSettings.loadFromXML(
+                new BufferedInputStream(new FileInputStream(configfile)));
+        String dataPath = settings.getString(CFG_DATA_FILE_DIR);
+        File dataDir = new File(m_nodeDir, dataPath);
+        if (!dataDir.exists() || !dataDir.canRead()) {
+            throw new IOException("Can not read directory " 
+                    + dataDir.getAbsolutePath());
+        }
+        for (int i = 0; i < m_outDataPorts.length; i++) {
+            NodeSettings portSettings = 
+                settings.getConfig(CFG_OUTPUT_PREFIX + i);
+            String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
+            File dir = new File(dataDir, dataName);
+            if (!dir.isDirectory() || !dir.canRead()) {
+                throw new IOException("Can not read directory " 
+                        + dir.getAbsolutePath());
+            }
+            BufferedDataTable t = 
+                BufferedDataTable.loadFromFile(dir, portSettings, exec, loadID);
+            // take ownership for any newly created files (successor nodes
+            // don't store this table, they just reference on us.)
+            t.setOwnerRecursively(this);
+            assert (t != null);
+            m_outDataPorts[i].setDataTable(t);
+        }
     }
     
     /**
@@ -1567,7 +1630,6 @@ public final class Node {
             m_model.saveSettingsTo(modelSettings);
             // check for equality
             return dialogSettings.isIdentical(modelSettings);
-
         } catch (InvalidSettingsException ise) {
             // if there are invalid settings it is assumed that the settings
             // are not equal

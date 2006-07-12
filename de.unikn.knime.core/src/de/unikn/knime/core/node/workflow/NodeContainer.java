@@ -784,6 +784,11 @@ public class NodeContainer implements NodeStateListener {
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
      * 
+     * @param loadID Forwared to the node. This id serves as loading id, 
+     * it helps to distinguish between two workflows being loaded at the same
+     * time. This id is passed on to the 
+     * {@link de.unikn.knime.core.node.BufferedDataTable#getDataTable(
+     * int, Integer)}.
      * @param nodeFile The node settings location.
      * @param exec The execution monitor reporting progress during reading
      *            structure.
@@ -791,10 +796,11 @@ public class NodeContainer implements NodeStateListener {
      * @throws InvalidSettingsException If the settings are wrong.
      * @throws CanceledExecutionException If loading was canceled.
      */
-    public void load(final File nodeFile, final ExecutionMonitor exec)
+    public void load(final int loadID, final File nodeFile, 
+            final ExecutionMonitor exec)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
-        m_node.load(nodeFile, exec);
+        m_node.load(loadID, nodeFile, exec);
     }
 
     /**
