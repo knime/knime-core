@@ -84,9 +84,9 @@ final class FilterColumnNodeModel extends NodeModel {
      * @return The filtered table.
      * @throws Exception if current settings are invalid
      * 
-     * @see NodeModel#execute(DataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
      */
-    protected DataTable[] execute(final DataTable[] data,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionMonitor exec) throws Exception {
 
         assert (data != null && data.length == 1 && data[INPORT] != null);

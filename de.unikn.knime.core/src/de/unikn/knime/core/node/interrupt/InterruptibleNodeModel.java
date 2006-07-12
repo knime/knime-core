@@ -29,6 +29,7 @@ import java.io.IOException;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.container.DataContainer;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -240,11 +241,11 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * output data is set to the output.
      * 
      * @see de.unikn.knime.core.node.NodeModel#execute(
-     *  de.unikn.knime.core.data.DataTable[],
+     *  BufferedDataTable[],
      *  de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    public final DataTable[] execute(final DataTable[] inData,
+    public final BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
         m_inData = inData;
         init(inData);
@@ -385,11 +386,11 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * returned from the execute method, so mind the restrictions on the
      * DataTable[] as for the execute method.
      * 
-     * @see de.unikn.knime.core.node.NodeModel#execute(DataTable[],
+     * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
      *      ExecutionMonitor)
-     * @return - an DataTable[] as should be returned from the NodeModel's
-     *         execute method.
+     * @return - an BufferedDataTable[] as should be returned from the 
+     *      NodeModel's execute method.
      */
-    public abstract DataTable[] getOutput();
+    public abstract BufferedDataTable[] getOutput();
     
 }

@@ -114,7 +114,7 @@ public final class BufferedDataTable implements DataTable {
             isKnown = true;
         }
         if (isKnown) {
-            LOGGER.coding("Attempted to create a BufferedDataTable with "
+            LOGGER.coding("Attempted to create a BufferedDataTable "
                     + "with a known table implemenation (" 
                     + table.getClass().getSimpleName() + "), keeping only " 
                     + "reference. Use one of the constructors in the future!");

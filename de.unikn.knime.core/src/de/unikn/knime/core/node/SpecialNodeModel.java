@@ -19,7 +19,6 @@ package de.unikn.knime.core.node;
 
 import java.io.File;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
@@ -127,7 +126,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param table the new data table
      * @param inPortID the ID of the data port
      */
-    protected void inportHasNewDataTable(final DataTable table,
+    protected void inportHasNewDataTable(final BufferedDataTable table,
             final int inPortID) {
         // nothing to do for this class here
     }

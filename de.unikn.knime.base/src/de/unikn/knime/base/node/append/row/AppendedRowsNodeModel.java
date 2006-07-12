@@ -20,6 +20,7 @@ package de.unikn.knime.base.node.append.row;
 import de.unikn.knime.base.data.append.row.AppendedRowsTable;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -53,11 +54,11 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#execute( DataTable[],
+     * @see de.unikn.knime.core.node.NodeModel#execute( BufferedDataTable[],
      *      ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(final DataTable[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
         DataTable out = new AppendedRowsTable(
                 (m_appendSuffix ? m_suffix : null), inData);

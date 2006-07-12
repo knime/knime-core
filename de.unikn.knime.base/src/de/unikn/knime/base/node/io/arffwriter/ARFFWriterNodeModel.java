@@ -33,6 +33,7 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.IntValue;
 import de.unikn.knime.core.data.StringValue;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -123,9 +124,9 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(DataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
      */
-    protected DataTable[] execute(final DataTable[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
 
         DataTableSpec inSpec = inData[0].getDataTableSpec();

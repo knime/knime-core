@@ -30,7 +30,6 @@ import java.util.Set;
 
 import javax.swing.UIManager;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.NodeFactory.NodeType;
 import de.unikn.knime.core.node.interrupt.InterruptibleNodeModel;
@@ -615,7 +614,7 @@ public final class Node {
             if (!inPort.isConnected()) {
                 return false;
             }
-            if (inPort.getDataTable() == null) {
+            if (inPort.getBufferedDataTable() == null) {
                 return false;
             }
         }
@@ -701,7 +700,7 @@ public final class Node {
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
      * @see NodeModel#isConfigured()
-     * @see NodeModel#execute(DataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
      */
     public boolean execute(final ExecutionMonitor exec) {
         // start message and keep start time
@@ -737,10 +736,10 @@ public final class Node {
         // EXECUTE the underlying node's model
         //
         // retrieve all input tables
-        DataTable[] inData = new DataTable[getNrDataInPorts()];
+        BufferedDataTable[] inData = new BufferedDataTable[getNrDataInPorts()];
         for (int i = 0; i < inData.length; i++) {
             DataInPort inPort = m_inDataPorts[i];
-            inData[i] = inPort.getDataTable();
+            inData[i] = inPort.getBufferedDataTable();
             if (inData[i] == null) {
                 m_logger.assertLog(false,
                         "Couldn't get data from predecessor (Port No." + i
@@ -1079,7 +1078,7 @@ public final class Node {
         boundDataInPort(inPortID);
         if (m_model instanceof SpecialNodeModel) {
             ((SpecialNodeModel) m_model).inportHasNewDataTable(
-                    m_inDataPorts[inPortID].getDataTable(), inPortID);
+                    m_inDataPorts[inPortID].getBufferedDataTable(), inPortID);
         }
     }
 
@@ -1547,7 +1546,7 @@ public final class Node {
                         + dir.getAbsolutePath());
             }
             portSettings.addString(CFG_DATA_FILE_DIR, dataName);
-            BufferedDataTable outTable = m_outDataPorts[i].getDataTable();
+            BufferedDataTable outTable = m_outDataPorts[i].getBufferedDataTable();
             outTable.save(dir, portSettings, exec);
         }
         settings.saveToXML(new BufferedOutputStream(

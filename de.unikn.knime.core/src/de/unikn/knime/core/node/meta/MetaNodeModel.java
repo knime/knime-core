@@ -23,18 +23,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
+import de.unikn.knime.core.node.ModelContent;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
-import de.unikn.knime.core.node.ModelContent;
 import de.unikn.knime.core.node.SpecialNodeModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
@@ -142,10 +142,10 @@ public class MetaNodeModel extends SpecialNodeModel
      * The inner workflow gets executed and the output <code>DataTable</code>s 
      * from the <code>MetaOutputNode</code>s are returned.
      * @see de.unikn.knime.core.node.NodeModel
-     *  #execute(DataTable[], ExecutionMonitor)
+     *  #execute(BufferedDataTable[], ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(final DataTable[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
         exec.setMessage("Executing inner workflow");
         
@@ -158,9 +158,10 @@ public class MetaNodeModel extends SpecialNodeModel
         
         // translate output
         exec.setMessage("Collecting output");
-        DataTable[] out = new DataTable[m_dataOutContainer.length];
+        BufferedDataTable[] out = 
+            new BufferedDataTable[m_dataOutContainer.length];
         for (int i = 0; i < out.length; i++) {
-            out[i] = m_dataOutModels[i].getDataTable();
+            out[i] = m_dataOutModels[i].getBufferedDataTable();
         }
         return out;
     }
@@ -315,12 +316,12 @@ public class MetaNodeModel extends SpecialNodeModel
 
     /** 
      * @see de.unikn.knime.core.node.SpecialNodeModel
-     *  #inportHasNewDataTable(DataTable, int)
+     *  #inportHasNewDataTable(BufferedDataTable, int)
      */
     @Override
-    protected void inportHasNewDataTable(final DataTable table,
+    protected void inportHasNewDataTable(final BufferedDataTable table,
             final int inPortID) {
-        m_dataInModels[inPortID].setDataTable(table);
+        m_dataInModels[inPortID].setBufferedDataTable(table);
     }
 
 
@@ -351,7 +352,7 @@ public class MetaNodeModel extends SpecialNodeModel
         super.inportWasDisconnected(inPortID);
 
         try {
-            m_dataInModels[inPortID].setDataTable(null);
+            m_dataInModels[inPortID].setBufferedDataTable(null);
             internalWFM().resetAndConfigureNode(
                     m_dataInContainer[inPortID].getID());
         } catch (WorkflowInExecutionException ex) {
@@ -452,8 +453,8 @@ public class MetaNodeModel extends SpecialNodeModel
             // node is written into the wrong model. Therefore we copy the
             // tables and specs from the "old" model into the new model
             if (m_dataInModels[i] != null) {
-                ((DataInputNodeModel)m_receivedModel)
-                    .setDataTable(m_dataInModels[i].getDataTable()); 
+                ((DataInputNodeModel)m_receivedModel).setBufferedDataTable(
+                        m_dataInModels[i].getBufferedDataTable()); 
                 ((DataInputNodeModel)m_receivedModel)
                     .setDataTableSpec(m_dataInModels[i].getDataTableSpec()); 
             }

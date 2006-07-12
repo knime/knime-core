@@ -18,7 +18,6 @@
  */
 package de.unikn.knime.core.node;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -113,7 +112,7 @@ public abstract class NodePort {
         /**
          * @return The node port's <code>DataTable</code>.
          */
-        DataTable getDataTable();
+        BufferedDataTable getBufferedDataTable();
 
         /**
          * @return The node port's <code>DataTableSpec</code>.

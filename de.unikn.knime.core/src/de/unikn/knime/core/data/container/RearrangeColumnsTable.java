@@ -87,12 +87,12 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             hasNewColumns |= !isFromRefTable[i];
         }
         if (hasNewColumns) {
-            DataContainer container = new DataContainer() {
+            DataContainer container = new DataContainer(
+                    new DataTableSpec(newSpecs), true) {
                 protected Buffer newBuffer(final int rowsInMemory) {
                     return new NoKeyBuffer(rowsInMemory);
                 }
             };
-            container.open(new DataTableSpec(newSpecs), true);
             double finalRowCount = reference.getRowCount();
             int r = 0;
             try {

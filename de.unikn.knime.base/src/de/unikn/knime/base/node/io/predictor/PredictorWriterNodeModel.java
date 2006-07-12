@@ -28,6 +28,7 @@ import java.util.zip.GZIPOutputStream;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -98,10 +99,10 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * Writes model as ModelContent to file.
      * 
-     * @see NodeModel#execute(DataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(final DataTable[] data,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
         OutputStream os = null;

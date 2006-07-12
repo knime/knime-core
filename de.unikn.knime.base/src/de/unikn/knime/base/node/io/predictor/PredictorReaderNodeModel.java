@@ -28,6 +28,7 @@ import java.util.zip.GZIPInputStream;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -103,10 +104,10 @@ public class PredictorReaderNodeModel extends NodeModel {
      * Execute does nothing - the reading of the file and writing to the
      * NodeSettings object has already happened during savePredictorParams.
      * 
-     * @see NodeModel#execute(DataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(final DataTable[] data,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             IOException {
         m_predParams = null;

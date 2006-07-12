@@ -47,8 +47,8 @@ import de.unikn.knime.core.util.FileUtil;
  * <code>DataTable</code> on request. This data structure is useful if the 
  * number of rows is not known in advance. 
  * 
- * <p>Usage: Once created, the container needs to be initialized by calling
- * <code>open(DataTableSpec)</code>. Add the data using the 
+ * <p>Usage: Create a container with a given spec (matching the rows being added
+ * later on, add the data using the 
  * <code>addRowToTable(DataRow)</code> method and finally close it with
  * <code>close()</code>. You can access the table by <code>getTable()</code>.
  * 
@@ -115,71 +115,6 @@ public class DataContainer implements RowAppender {
      */
     private DataCell[] m_maxCells;
     
-    
-    /** Creates a new container with at most 2000000 cells that 
-     * are kept in memory. If more cells are added, rows are buffered to disk.
-     */
-    public DataContainer() {
-        this(MAX_CELLS_IN_MEMORY);
-    }
-    
-    /** 
-     * Creates a new container with at most <code>maxCellsInMemory</code> 
-     * cells that are kept in memory. If more cells are added, 
-     * rows are buffered to disk.
-     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
-     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
-     */
-    public DataContainer(final int maxCellsInMemory) {
-        if (maxCellsInMemory < 0) {
-            throw new IllegalArgumentException(
-                    "Cell count must be positive: " + maxCellsInMemory); 
-        }
-        m_maxCellsInMemory = maxCellsInMemory;
-        m_maxPossibleValues = MAX_POSSIBLE_VALUES;
-    }
-    
-    /** Creates a new buffer to be used when writing to a file. 
-     * This method is called from the open method.
-     * @param rowsInMemory Argument for the buffer.
-     * @return A new buffer for writing into.
-     */
-    protected Buffer newBuffer(final int rowsInMemory) {
-        return new Buffer(rowsInMemory);
-    }
-    
-    /** Get the number of possible values that are being kept.
-     * @return This number.
-     */
-    public int getMaxPossibleValues() {
-        return m_maxPossibleValues;
-    }
-    
-    /** Define a new threshold for number of possible values to memorize.
-     * It makes sense to call this method before any rows are added.
-     * @param maxPossibleValues The new number.
-     * @throws IllegalArgumentException If the value < 0
-     */
-    public void setMaxPossibleValues(final int maxPossibleValues) {
-        if (maxPossibleValues < 0) {
-            throw new IllegalArgumentException(
-                    "number < 0: " + maxPossibleValues);
-        }
-        m_maxPossibleValues = maxPossibleValues;
-    }
-    
-    /**
-     * Returns <code>true</code> if the container has been initialized with 
-     * <code>DataTableSpec</code> and is ready to accept rows.
-     * 
-     * <p>This is <code>true</code> after <code>open</code> an there was
-     * no <code>close</code> invocation.
-     * @return <code>true</code> if container is accepting rows.
-     */
-    public boolean isOpen() {
-        return m_buffer != null && m_table == null;
-    }
-
     /**
      * Opens the container so that rows can be added by
      * <code>addRowToTable(DataRow)</code>. The table spec of the resulting
@@ -188,16 +123,17 @@ public class DataContainer implements RowAppender {
      * the domain of each column is adjusted.
      * <p>
      * If you prefer to stick with the domain as passed in the argument, use the
-     * method <code>open(DataTableSpec, true)</code> instead.
+     * constructor <code>DataContainer(DataTableSpec, true, 
+     * DataContainer.MAX_CELLS_IN_MEMORY)</code> instead.
      * 
      * @param spec Table spec of the final table. Rows that are added to the
      *            container must comply with this spec.
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
-    public void open(final DataTableSpec spec) {
-        open(spec, false);
+    public DataContainer(final DataTableSpec spec) {
+        this(spec, false);
     }
-
+    
     /**
      * Opens the container so that rows can be added by 
      * <code>addRowToTable(DataRow)</code>. 
@@ -208,7 +144,31 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     @SuppressWarnings ("unchecked")
-    public void open(final DataTableSpec spec, final boolean initDomain) {
+    public DataContainer(final DataTableSpec spec, 
+            final boolean initDomain) {
+        this(spec, initDomain, MAX_CELLS_IN_MEMORY);
+    }
+    
+    /**
+     * Opens the container so that rows can be added by 
+     * <code>addRowToTable(DataRow)</code>. 
+     * @param spec Table spec of the final table. Rows that are added to the
+     *        container must comply with this spec.
+     * @param initDomain if set to true, the column domains in the 
+     *        container are initialized with the domains from spec. 
+     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
+     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
+     * @throws NullPointerException If <code>spec</code> is <code>null</code>.
+     */
+    @SuppressWarnings ("unchecked")
+    public DataContainer(final DataTableSpec spec, final boolean initDomain,
+            final int maxCellsInMemory) {
+        if (maxCellsInMemory < 0) {
+            throw new IllegalArgumentException(
+                    "Cell count must be positive: " + maxCellsInMemory); 
+        }
+        m_maxCellsInMemory = maxCellsInMemory;
+        m_maxPossibleValues = MAX_POSSIBLE_VALUES;
         if (spec == null) {
             throw new NullPointerException("Spec must not be null!");
         }
@@ -255,6 +215,47 @@ public class DataContainer implements RowAppender {
         final int colCount = spec.getNumColumns();
         int rowsInMemory = m_maxCellsInMemory / ((colCount > 0) ? colCount : 1);
         m_buffer = newBuffer(rowsInMemory);
+    }
+    
+    /** Creates a new buffer to be used when writing to a file. 
+     * This method is called from the open method.
+     * @param rowsInMemory Argument for the buffer.
+     * @return A new buffer for writing into.
+     */
+    protected Buffer newBuffer(final int rowsInMemory) {
+        return new Buffer(rowsInMemory);
+    }
+    
+    /** Get the number of possible values that are being kept.
+     * @return This number.
+     */
+    public int getMaxPossibleValues() {
+        return m_maxPossibleValues;
+    }
+    
+    /** Define a new threshold for number of possible values to memorize.
+     * It makes sense to call this method before any rows are added.
+     * @param maxPossibleValues The new number.
+     * @throws IllegalArgumentException If the value < 0
+     */
+    public void setMaxPossibleValues(final int maxPossibleValues) {
+        if (maxPossibleValues < 0) {
+            throw new IllegalArgumentException(
+                    "number < 0: " + maxPossibleValues);
+        }
+        m_maxPossibleValues = maxPossibleValues;
+    }
+    
+    /**
+     * Returns <code>true</code> if the container has been initialized with 
+     * <code>DataTableSpec</code> and is ready to accept rows.
+     * 
+     * <p>This is <code>true</code> after <code>open</code> an there was
+     * no <code>close</code> invocation.
+     * @return <code>true</code> if container is accepting rows.
+     */
+    public boolean isOpen() {
+        return m_buffer != null && m_table == null;
     }
 
     /**
@@ -475,8 +476,8 @@ public class DataContainer implements RowAppender {
     public static BufferedDataTable cache(final DataTable table, 
             final ExecutionMonitor exec, final int maxCellsInMemory) 
         throws CanceledExecutionException {
-        DataContainer buf = new DataContainer(maxCellsInMemory);
-        buf.open(table.getDataTableSpec(), true);
+        DataContainer buf = new DataContainer(
+                table.getDataTableSpec(), true, maxCellsInMemory);
         double finalCount = -1.0; // floating point operation later on
         try {
             finalCount = table.getRowCount();

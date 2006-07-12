@@ -435,11 +435,11 @@ public abstract class NodeModel {
      * @throws IllegalStateException If the number of <code>DataTable</code>
      *             objects returned by the derived <code>NodeModel</code> does
      *             not match the number of outputs. Or if any of them is null.
-     * @see #execute(DataTable[],ExecutionMonitor)
+     * @see #execute(BufferedDataTable[],ExecutionMonitor)
      */
-    protected final BufferedDataTable[] executeModel(final DataTable[] data,
-            final ExecutionMonitor exec) throws Exception {
-
+    protected final BufferedDataTable[] executeModel(
+            final BufferedDataTable[] data, final ExecutionMonitor exec) 
+            throws Exception {
         assert (data != null && data.length == m_nrDataIns);
         assert (exec != null);
 
@@ -527,7 +527,7 @@ public abstract class NodeModel {
      * @return <code>true</code> if the node was execute otherwise
      *         <code>false</code>.
      * 
-     * @see #executeModel(DataTable[],ExecutionMonitor)
+     * @see #executeModel(BufferedDataTable[],ExecutionMonitor)
      * @see #resetModel()
      */
     final boolean isExecuted() {
@@ -564,8 +564,9 @@ public abstract class NodeModel {
      *             throw an <code>CanceledExcecutionException</code> and abort
      *             the execution.
      */
-    protected abstract DataTable[] execute(final DataTable[] inData,
-            final ExecutionMonitor exec) throws Exception;
+    protected abstract BufferedDataTable[] execute(
+            final BufferedDataTable[] inData, final ExecutionMonitor exec) 
+            throws Exception;
 
     /**
      * Invokes the abstract <code>#reset()</code> method of the derived model.

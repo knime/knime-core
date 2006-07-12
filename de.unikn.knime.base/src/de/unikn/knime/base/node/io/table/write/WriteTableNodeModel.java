@@ -25,6 +25,7 @@ import java.io.IOException;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -77,10 +78,10 @@ public class WriteTableNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(DataTable[], ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[], ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(final DataTable[] inData, 
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
             final ExecutionMonitor exec) throws Exception {
         DataTable in = inData[0];
         DataContainer.writeToZip(in, new File(m_fileName), exec);

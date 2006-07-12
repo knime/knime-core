@@ -17,8 +17,8 @@
  */
 package de.unikn.knime.core.node.meta;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
@@ -30,7 +30,7 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class DataOutputNodeModel extends MetaOutputModel {
-    private DataTable m_dataTable;
+    private BufferedDataTable m_dataTable;
     private DataTableSpec m_dataTableSpec;
     
     /**
@@ -68,16 +68,16 @@ public class DataOutputNodeModel extends MetaOutputModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel#execute(
-     * de.unikn.knime.core.data.DataTable[], 
+     * BufferedDataTable[], 
      * de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(final DataTable[] inData, 
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
             final ExecutionMonitor exec)
             throws Exception {
         assert inData.length == 1;
         m_dataTable = inData[0];
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     }
 
     /**
@@ -100,13 +100,12 @@ public class DataOutputNodeModel extends MetaOutputModel {
         return new DataTableSpec[0];
     }
     
-    
     /**
      * Returns the datatable at the input port.
      * 
      * @return a data table
      */
-    public DataTable getDataTable() {
+     public BufferedDataTable getBufferedDataTable() {
         return m_dataTable;
     }
 

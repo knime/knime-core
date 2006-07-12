@@ -114,7 +114,7 @@ public final class DataOutPort extends NodeOutPort
      * 
      * @return DataTable the DataTable for this port. Could be null.
      */
-    public BufferedDataTable getDataTable() {
+    public BufferedDataTable getBufferedDataTable() {
         return m_dataTable;
     }
     

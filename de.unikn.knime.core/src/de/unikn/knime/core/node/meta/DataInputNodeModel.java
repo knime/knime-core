@@ -17,8 +17,8 @@
  */
 package de.unikn.knime.core.node.meta;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
@@ -31,7 +31,7 @@ import de.unikn.knime.core.node.NodeSettings;
  */
 class DataInputNodeModel extends MetaInputModel {
     private DataTableSpec m_spec;
-    private DataTable m_datatable;
+    private BufferedDataTable m_datatable;
 
     
     /**
@@ -44,17 +44,18 @@ class DataInputNodeModel extends MetaInputModel {
 
     /**
      * Does nothing but return the data table set by
-     * {@link #setDataTable(DataTable)}.
+     * {@link #setBufferedDataTable(BufferedDataTable)}.
      * 
      * @param inData the input data table array
      * @param exec the execution monitor
-     * @return the datatable set by {@link #setDataTable(DataTable)}
+     * @return the datatable set by 
+     * {@link #setBufferedDataTable(BufferedDataTable)}
      * @throws Exception actually, no exception is thrown
      */
     @Override
-    protected DataTable[] execute(final DataTable[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
-        return new DataTable[] {m_datatable};
+        return new BufferedDataTable[] {m_datatable};
     }
 
     /**
@@ -86,11 +87,11 @@ class DataInputNodeModel extends MetaInputModel {
 
     /**
      * Sets the datatable that should be passed on in
-     * {@link #execute(DataTable[], ExecutionMonitor)}.
+     * {@link #execute(BufferedDataTable[], ExecutionMonitor)}.
      * 
      * @param table the data table
      */
-    public void setDataTable(final DataTable table) {
+    public void setBufferedDataTable(final BufferedDataTable table) {
         m_datatable = table;
     }
 
@@ -139,13 +140,12 @@ class DataInputNodeModel extends MetaInputModel {
         // nothing to do here
     }
     
-    
     /**
      * Returns the set datatable.
      * 
      * @return a datatable
-     */
-    DataTable getDataTable() {
+     */    
+    BufferedDataTable getBufferedDataTable() {
         return m_datatable;
     }
     

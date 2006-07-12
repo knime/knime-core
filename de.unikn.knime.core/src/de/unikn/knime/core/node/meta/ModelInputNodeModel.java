@@ -17,12 +17,12 @@
  */
 package de.unikn.knime.core.node.meta;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.NodeSettings;
 
 /**
  * This model is for injecting models into a meta workflow. It should not be
@@ -50,9 +50,9 @@ class ModelInputNodeModel extends MetaInputModel {
      * @throws Exception actually, no exception is thrown
      */
     @Override
-    protected DataTable[] execute(final DataTable[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
-        return new DataTable[0];
+        return new BufferedDataTable[0];
     }
 
     /**

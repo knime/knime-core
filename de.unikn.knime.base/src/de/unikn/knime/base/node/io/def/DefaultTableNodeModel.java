@@ -21,6 +21,7 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.DefaultTable;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -74,10 +75,10 @@ public class DefaultTableNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(DataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
      */
-    protected DataTable[] execute(
-            final DataTable[] data, final ExecutionMonitor exec) 
+    protected BufferedDataTable[] execute(
+            final BufferedDataTable[] data, final ExecutionMonitor exec) 
             throws Exception {
         return new DataTable[]{m_table};
     }

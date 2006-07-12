@@ -18,7 +18,6 @@
  */
 package de.unikn.knime.core.node;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -30,7 +29,8 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DataInPort extends NodeInPort implements NodePort.DataPort {
+public final class DataInPort extends NodeInPort 
+    implements NodePort.DataPort {
 
     /**
      * Creates new input data port.
@@ -52,12 +52,12 @@ public final class DataInPort extends NodeInPort implements NodePort.DataPort {
      * @throws IllegalStateException If the port is not connected.
      * @see #isConnected()
      */
-    public DataTable getDataTable() {
+    public BufferedDataTable getBufferedDataTable() {
         if (!isConnected()) {
             throw new IllegalStateException("Cannot get DataTable from "
                     + "unconnected input port (" + getPortID() + ")");
         }
-        return ((DataOutPort)super.getConnectedPort()).getDataTable();
+        return ((DataOutPort)super.getConnectedPort()).getBufferedDataTable();
     }
 
     /**

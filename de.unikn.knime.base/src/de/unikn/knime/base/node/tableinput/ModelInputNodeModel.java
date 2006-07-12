@@ -17,8 +17,8 @@
  */
 package de.unikn.knime.base.node.tableinput;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -74,11 +74,11 @@ public class ModelInputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *      #execute(de.unikn.knime.core.data.DataTable[],
+     *      #execute(BufferedDataTable[],
      *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected DataTable[] execute(final DataTable[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionMonitor exec) throws Exception {
         return inData;
     }

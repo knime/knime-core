@@ -56,60 +56,33 @@ public class DataContainerTest extends TestCase {
     }
 
     /**
-     * method being tested: isOpen().
-     */
-    public final void testIsOpen() {
-        DataContainer c = new DataContainer();
-        assertFalse(c.isOpen());
-        c.open(EMPTY_SPEC);
-        assertTrue(c.isOpen());
-        c.close();
-        assertFalse(c.isOpen());
-    }
-
-    /**
      * method being tested: open().
      */
     public final void testOpen() {
-        DataContainer c = new DataContainer();
-        assertFalse(c.isOpen());
-        c.open(EMPTY_SPEC);
+        DataContainer c = new DataContainer(EMPTY_SPEC);
         c.addRowToTable(new DefaultRow(new StringCell(
                 "no one is going to read me"), new DataCell[] {}));
         assertTrue(c.isOpen());
-        // "reopen" it: drops the data, continues from scratch. Hopefully.
-        c.open(EMPTY_SPEC);
-        c.close();
-        DataTable table = c.getTable();
-        for (RowIterator it = table.iterator(); it.hasNext();) {
-            fail("There shouldn't be content");
-        }
     }
 
     /**
      * method being tested: isClosed().
      */
     public final void testIsClosed() {
-        DataContainer c = new DataContainer();
-        assertFalse(c.isClosed());
-        c.open(EMPTY_SPEC);
+        DataContainer c = new DataContainer(EMPTY_SPEC);
         assertFalse(c.isClosed());
         c.close();
         assertTrue(c.isClosed());
+        for (DataRow row : c.getTable()) {
+            fail("No data should be in the table: " + row);
+        }
     }
 
     /**
      * method being tested: close().
      */
     public final void testClose() {
-        DataContainer c = new DataContainer();
-        try {
-            c.close();
-            fail();
-        } catch (IllegalStateException e) {
-            System.out.println(e.getMessage());
-        }
-        c.open(EMPTY_SPEC);
+        DataContainer c = new DataContainer(EMPTY_SPEC);
         c.close();
         // hm, does it work again?
         c.close(); // should ignore it
@@ -119,14 +92,7 @@ public class DataContainerTest extends TestCase {
      * method being tested: getTable().
      */
     public final void testGetTable() {
-        DataContainer c = new DataContainer();
-        try {
-            c.getTable();
-            fail();
-        } catch (IllegalStateException e) {
-            System.out.println(e.getMessage());
-        }
-        c.open(EMPTY_SPEC);
+        DataContainer c = new DataContainer(EMPTY_SPEC);
         try {
             c.getTable();
             fail();
@@ -141,7 +107,14 @@ public class DataContainerTest extends TestCase {
      * method being tested: addRowToTable().
      */
     public final void testAddRowToTable() {
-        DataContainer c = new DataContainer();
+        
+        String[] colNames = new String[]{"Column 1", "Column 2"};
+        DataType[] colTypes = new DataType[] {
+                StringCell.TYPE,
+                IntCell.TYPE
+        };
+        DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
+        DataContainer c = new DataContainer(spec1);
         DataCell r1Key = new StringCell("row 1");
         DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
         DataCell r1Cell2 = new IntCell(12);
@@ -154,21 +127,6 @@ public class DataContainerTest extends TestCase {
         DataCell r3Cell1 = new StringCell("Row 3, Cell 1");
         DataCell r3Cell2 = new IntCell(32);
         DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
-
-        // add row to non open table
-        try {
-            c.addRowToTable(r1);
-            fail();
-        } catch (IllegalStateException e) {
-            System.out.println(e.getMessage());
-        }
-        String[] colNames = new String[]{"Column 1", "Column 2"};
-        DataType[] colTypes = new DataType[] {
-                StringCell.TYPE,
-                IntCell.TYPE
-        };
-        DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
-        c.open(spec1);
         c.addRowToTable(r1);
         c.addRowToTable(r2);
 
@@ -227,8 +185,7 @@ public class DataContainerTest extends TestCase {
         }
         // shuffle it - that should screw it up
         Collections.shuffle(order);
-        // empty the container
-        c.open(EMPTY_SPEC);
+        c = new DataContainer(EMPTY_SPEC);
         for (DataCell key : order) {
             c.addRowToTable(new DefaultRow(key, values));
         }
@@ -265,8 +222,7 @@ public class DataContainerTest extends TestCase {
         DataTableSpec spec = new DataTableSpec(names, types);
         names = null;
         types = null;
-        DataContainer container = new DataContainer();
-        container.open(spec);
+        DataContainer container = new DataContainer(spec);
         final ObjectToDataCellConverter conv = new ObjectToDataCellConverter();
         final long seed = System.currentTimeMillis();
         Random rand = new Random(seed);
@@ -366,7 +322,6 @@ public class DataContainerTest extends TestCase {
     
     /** Test if the domain is retained. */
     public void testTableDomain() {
-        DataContainer c = new DataContainer();
         DataCell r1Key = new StringCell("row 1");
         DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
         DataCell r1Cell2 = new IntCell(12);
@@ -386,7 +341,7 @@ public class DataContainerTest extends TestCase {
                 IntCell.TYPE
         };
         DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
-        c.open(spec1);
+        DataContainer c = new DataContainer(spec1);
         // add in different order
         c.addRowToTable(r2);
         c.addRowToTable(r1);
