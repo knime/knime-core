@@ -84,18 +84,18 @@ public abstract class NodeInPort extends NodePort {
 
     /**
      * Diconnects this port. It will return the currently connected port, or
-     * null, if not connected.
+     * <code>null</code>, if not connected.
      * 
      * @return The currently connected port which can be <code>null</code> if
      *         this port is not connected.
      */
     public final NodeOutPort disconnectPort() {
         // see if we are connected
-        if (m_connOutPort != null) {
-            getNode().inportWasDisconnected(getPortID());
+        if (m_connOutPort != null) {            
             m_connOutPort.removePort(this);
             NodeOutPort tmp = m_connOutPort;
             m_connOutPort = null;
+            getNode().inportWasDisconnected(getPortID());
             return tmp;
         } else {
             // nothing to do - we are not connected
