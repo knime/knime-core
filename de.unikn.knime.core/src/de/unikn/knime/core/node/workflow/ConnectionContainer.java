@@ -83,6 +83,12 @@ public class ConnectionContainer {
     ConnectionContainer(final int id, final NodeContainer sourceNode,
             final int sourcePort, final NodeContainer targetNode,
             final int targetPort) {
+        if (sourceNode == null) {
+            throw new NullPointerException("source node must not be null");
+        }
+        if (targetNode == null) {
+            throw new NullPointerException("target node must not be null");
+        }
         m_id = id;
         m_sourceNode = sourceNode;
         m_sourcePort = sourcePort;
