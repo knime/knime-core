@@ -30,7 +30,7 @@ import de.unikn.knime.core.node.ModelContent;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-class ModelOutputNodeModel extends MetaOutputModel {
+public class ModelOutputNodeModel extends MetaOutputModel {
     private ModelContent m_predictorParams;
 
     /**

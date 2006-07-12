@@ -28,7 +28,7 @@ import de.unikn.knime.core.node.NodeView;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-class DataOutputNodeFactory extends NodeFactory {
+public class DataOutputNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */

@@ -29,7 +29,7 @@ import de.unikn.knime.core.node.NodeSettings;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-class DataInputNodeModel extends MetaInputModel {
+public class DataInputNodeModel extends MetaInputModel {
     private DataTableSpec m_spec;
     private BufferedDataTable m_datatable;
 

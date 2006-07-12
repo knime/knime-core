@@ -30,7 +30,7 @@ import de.unikn.knime.core.node.NodeSettings;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-class ModelInputNodeModel extends MetaInputModel {
+public class ModelInputNodeModel extends MetaInputModel {
     private ModelContent m_predictorParams;
     
     /**
