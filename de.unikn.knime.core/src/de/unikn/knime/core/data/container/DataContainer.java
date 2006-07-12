@@ -33,10 +33,10 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
+import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.StringCell;
+import de.unikn.knime.core.data.StringValue;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.util.FileUtil;
@@ -226,7 +226,7 @@ public class DataContainer implements RowAppender {
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = m_spec.getColumnSpec(i);
             DataType colType = colSpec.getType();
-            if (StringCell.TYPE.isASuperTypeOf(colType)) {
+            if (colType.isCompatible(StringValue.class)) {
                 m_possibleValues[i] = new LinkedHashSet<DataCell>();
                 if (initDomain) {
                     Set<DataCell> values = colSpec.getDomain().getValues();
@@ -235,7 +235,7 @@ public class DataContainer implements RowAppender {
                     }
                 }
             }
-            if (DoubleCell.TYPE.isASuperTypeOf(colType)) {
+            if (colType.isCompatible(DoubleValue.class)) {
                 if (initDomain) {
                     DataCell min = colSpec.getDomain().getLowerBound();
                     DataCell max = colSpec.getDomain().getLowerBound();
