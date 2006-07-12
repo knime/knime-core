@@ -120,10 +120,15 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
             final DataTable table, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         boolean isKnown = false;
-        if (table instanceof BufferedDataTable) {
+        if (table instanceof BufferedTable) {
             isKnown = true;
         } else if (table instanceof RearrangeColumnsTable) {
             isKnown = true;
+        } else if (table instanceof BufferedDataTable) {
+            LOGGER.coding("No need to create a BufferedDataTable based " 
+                    + "on a BufferedDataTable; you can use the object at hand "
+                    + "directly.");
+            return (BufferedDataTable)table;
         }
         if (isKnown) {
             LOGGER.coding("Attempted to create a BufferedDataTable "
