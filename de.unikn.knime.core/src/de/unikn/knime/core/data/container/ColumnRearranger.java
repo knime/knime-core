@@ -152,6 +152,23 @@ public final class ColumnRearranger {
         }
     }
     
+    public void append(final CellFactory fac) {
+        insertAt(m_includes.size(), fac);
+    }
+    
+    public void replace(final String colName, final CellFactory newCol) {
+        int index = indexOf(colName);
+        if (index < 0) {
+            throw new IllegalArgumentException("No such column: " + colName);
+        }
+        replace(index, newCol);
+    }
+    
+    public void replace(final int colIndex, final CellFactory newCol) {
+        remove(colIndex);
+        insertAt(colIndex, newCol);
+    }
+    
     static DataTableSpec createSpec(final DataTableSpec reference,
             final int[] map, final boolean[] isFromRefTable, 
             final DataColumnSpec[] newSpecs) {
