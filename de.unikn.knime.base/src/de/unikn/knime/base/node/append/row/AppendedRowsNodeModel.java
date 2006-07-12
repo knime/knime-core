@@ -62,7 +62,8 @@ public class AppendedRowsNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws Exception {
         DataTable out = new AppendedRowsTable(
                 (m_appendSuffix ? m_suffix : null), inData);
-        return new DataTable[] {out};
+        return new BufferedDataTable[] {
+                BufferedDataTable.createBufferedDataTable(out, exec)};
     }
 
     /**

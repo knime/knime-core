@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilterFactory;
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
@@ -125,7 +124,9 @@ public class RowFilterNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws Exception {
         if (m_rowFilter != null) {
             m_rowFilter.configure(inData[0].getDataTableSpec());
-            return new DataTable[]{new RowFilterTable(inData[0], m_rowFilter)};
+            return new BufferedDataTable[]{
+                    BufferedDataTable.createBufferedDataTable(
+                            new RowFilterTable(inData[0], m_rowFilter), exec)};
         } else {
             throw new InvalidSettingsException(
                     "No row filter set in RowFilter table");

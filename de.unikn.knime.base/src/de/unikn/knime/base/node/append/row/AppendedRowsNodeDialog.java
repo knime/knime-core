@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -93,7 +91,8 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) throws NotConfigurableException {
+            final NodeSettings settings, final DataTableSpec[] specs) 
+            throws NotConfigurableException {
         boolean appendSuffix = 
             settings.getBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, false);
         String suffix = 

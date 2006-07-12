@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import de.unikn.knime.base.data.filter.column.FilterColumnTable;
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.ColumnRearranger;
 import de.unikn.knime.core.node.BufferedDataTable;
@@ -96,7 +95,7 @@ final class FilterColumnNodeModel extends NodeModel {
         final String[] cols = new String[outSpec.getNumColumns()];
         BufferedDataTable outTable = 
             ColumnRearranger.filterInclude((BufferedDataTable)data[0], cols);
-        return new DataTable[]{outTable};
+        return new BufferedDataTable[]{outTable};
     }
 
     /**
