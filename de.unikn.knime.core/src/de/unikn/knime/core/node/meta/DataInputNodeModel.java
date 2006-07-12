@@ -23,7 +23,12 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
 
-
+/**
+ * This model is for injecting data into a meta workflow. It should not be
+ * used for anything else.
+ * 
+ * @author Thorsten Meinl, University of Konstanz
+ */
 class DataInputNodeModel extends MetaInputModel {
     private DataTableSpec m_spec;
     private DataTable m_datatable;
@@ -134,10 +139,21 @@ class DataInputNodeModel extends MetaInputModel {
         // nothing to do here
     }
     
+    
+    /**
+     * Returns the set datatable.
+     * 
+     * @return a datatable
+     */
     DataTable getDataTable() {
         return m_datatable;
     }
     
+    /**
+     * Returns the set datatable spec.
+     * 
+     * @return a datatable spec
+     */
     DataTableSpec getDataTableSpec() {
         return m_spec;
     }

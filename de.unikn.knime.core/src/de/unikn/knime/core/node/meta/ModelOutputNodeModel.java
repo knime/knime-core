@@ -25,12 +25,17 @@ import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.ModelContent;
 
 /**
+ * This model is for collecting the models that are produced by the meta
+ * workflow.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ModelOutputNodeModel extends MetaOutputModel {
+class ModelOutputNodeModel extends MetaOutputModel {
     private ModelContent m_predictorParams;
 
+    /**
+     * Creates a new node ModelOutputNodeModel.
+     */
     public ModelOutputNodeModel() {
         super(0, 1);
     }
@@ -106,6 +111,12 @@ public class ModelOutputNodeModel extends MetaOutputModel {
         m_predictorParams = predParams;
     }
 
+    /**
+     * Returns the model content loaded by
+     * {@link #loadPredictorParams(int, ModelContent)}.
+     * 
+     * @return the loaded predictor params
+     */
     public ModelContent getPredictorParams() {
         return m_predictorParams;
     }

@@ -23,6 +23,8 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
+ * This factory creates
+ * {@link de.unikn.knime.core.node.meta.DataInputNodeModel}s.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */

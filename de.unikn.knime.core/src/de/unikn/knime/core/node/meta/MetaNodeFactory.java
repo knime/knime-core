@@ -32,16 +32,7 @@ import de.unikn.knime.core.node.NodeView;
  * @author cebron, University of Konstanz
  */
 public class MetaNodeFactory extends NodeFactory {
-    
-    /*
-     * Number of inputs.
-     */
-    private int m_nrIns;
-
-    /*
-     * Number of outputs.
-     */
-    private int m_nrOuts;
+    private int m_nrIns, m_nrOuts;
     
     /**
      * Produces a MetaNode with the given number of inputs and outputs.

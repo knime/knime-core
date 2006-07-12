@@ -23,10 +23,12 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
+ * This factory creates
+ * {@link de.unikn.knime.core.node.meta.DataOutputNodeModel}s.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DataOutputNodeFactory extends NodeFactory {
+class DataOutputNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */

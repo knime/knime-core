@@ -933,9 +933,8 @@ public final class Node {
         }
         
         // notify about the new status or send warning if something failed 
-        if (m_status == null) {
-            notifyStateListeners(new NodeStatus.StatusChanged());
-        } else {
+        notifyStateListeners(new NodeStatus.Reset());
+        if (m_status != null) {
             notifyStateListeners(m_status);
         }
     }
@@ -1224,9 +1223,6 @@ public final class Node {
                 // update data table spec
                 m_outDataPorts[p].setDataTableSpec(newSpecs[p]);
             }
-
-            // check for model warnings
-            processModelWarnings();
         } catch (InvalidSettingsException ise) {
             m_logger.warn("Configure failed: " + ise.getMessage());
             reset();

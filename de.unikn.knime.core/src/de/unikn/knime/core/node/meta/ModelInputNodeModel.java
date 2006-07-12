@@ -25,6 +25,8 @@ import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.ModelContent;
 
 /**
+ * This model is for injecting models into a meta workflow. It should not be
+ * used for anything else.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -40,12 +42,11 @@ class ModelInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * Does nothing but return the data table set by
-     * {@link #setDataTable(DataTable)}.
+     * Does nothing but return an empty datatable array.
      * 
      * @param inData the input data table array
      * @param exec the execution monitor
-     * @return the datatable set by {@link #setDataTable(DataTable)}
+     * @return an empty (zero-length) array
      * @throws Exception actually, no exception is thrown
      */
     @Override
@@ -55,12 +56,10 @@ class ModelInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * Does nothing but return the data table spec set by
-     * {@link #setDataTableSpec(DataTableSpec)}.
+     * Does nothing but return an empty datatable spec array.
      * 
      * @param inSpecs the input specs
-     * @return the datatable spec set by
-     * {@link #setDataTableSpec(DataTableSpec)}
+     * @return an empty (zero-length) array
      * @throws InvalidSettingsException actually, no exception is thrown
      */
     @Override

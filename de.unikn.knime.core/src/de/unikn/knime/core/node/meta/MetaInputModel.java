@@ -25,6 +25,8 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeModel;
 
 /**
+ * This model is an abstract model for meta input nodes. It is only intended
+ * for use inside meta workflows and only by meta nodes and not by the user.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */

@@ -43,11 +43,15 @@ import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
 /**
- * 
- * 
+ * This model is the heart of all meta workflows. It is reposnsible for
+ * executing the inner workflow, for collecting its results and for the
+ * communication with the outer flow. Therefore it needs some special
+ * functionality and is therefore derived from
+ * {@link de.unikn.knime.core.node.SpecialNodeModel}. This model is intended
+ * to be subclassed by other nodes that execute some inner workflow, like
+ * cross validation or boosting.
  * 
  * @author Thorsten Meinl, University of Konstanz
- * @author Nicolas Cebron, University of Konstanz
  */
 public class MetaNodeModel extends SpecialNodeModel
     implements WorkflowListener, NodeStateListener {
@@ -122,7 +126,8 @@ public class MetaNodeModel extends SpecialNodeModel
         for (int i = 0; i < min; i++) {
             if (m_dataOutContainer[i] != null) {
                 outspecs[i] = m_dataOutModels[i].getDataTableSpec();
-                if (outspecs[i] == null) {
+                if ((outspecs[i] == null)
+                        || (outspecs[i].getNumColumns() == 0)) {
                     throw new InvalidSettingsException("Inner workflow is not"
                             + " fully connected yet");
                 }
@@ -177,6 +182,7 @@ public class MetaNodeModel extends SpecialNodeModel
                 internalWFM().addNewNode(new DataOutputNodeFactory());
             m_dataOutContainer[i].addListener(this);
             m_dataOutContainer[i].setCustomName("Data collector " + i);
+            m_dataOutContainer[i].addListener(this);
         }
 
         for (int i = 0; i < m_modelInContainer.length; i++) {
@@ -190,6 +196,7 @@ public class MetaNodeModel extends SpecialNodeModel
                 internalWFM().addNewNode(new ModelOutputNodeFactory());
             m_modelOutContainer[i].addListener(this);
             m_modelOutContainer[i].setCustomName("Model collector " + i);
+            m_modelOutContainer[i].addListener(this);
         }
         
         for (NodeContainer cont : internalWFM().getNodes()) {
@@ -474,7 +481,23 @@ public class MetaNodeModel extends SpecialNodeModel
      *  #stateChanged(de.unikn.knime.core.node.NodeStatus, int)
      */
     public void stateChanged(final NodeStatus state, final int id) {
-        if (state instanceof NodeStatus.Reset) {
+        boolean outNode = false;
+        for (NodeContainer nc : m_dataOutContainer) {
+            if (nc.getID() == id) {
+                outNode = true;
+                break;
+            }
+        }
+        
+        for (NodeContainer nc : m_modelOutContainer) {
+            if (nc.getID() == id) {
+                outNode = true;
+                break;
+            }
+        }
+
+        if (((state instanceof NodeStatus.Reset)
+                || (state instanceof NodeStatus.Configured)) && outNode) {
             m_resetFromInterior = true;
             try {
                 resetMyself();
@@ -554,6 +577,12 @@ public class MetaNodeModel extends SpecialNodeModel
         // no internals to save
     }
     
+    /**
+     * Returns the data output model at the given index.
+     * 
+     * @param index the index
+     * @return a data ouput model
+     */
     protected final DataOutputNodeModel dataOutModel(final int index) {
         return m_dataOutModels[index];
     }

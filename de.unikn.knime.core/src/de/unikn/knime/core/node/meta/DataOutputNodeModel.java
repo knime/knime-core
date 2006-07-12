@@ -24,6 +24,8 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
 
 /**
+ * This model is for collecting the data tables that are produced by the meta
+ * workflow.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -84,6 +86,7 @@ public class DataOutputNodeModel extends MetaOutputModel {
     @Override
     protected void reset() {
         m_dataTable = null;
+        m_dataTableSpec = null;
     }
 
     /**
@@ -97,10 +100,22 @@ public class DataOutputNodeModel extends MetaOutputModel {
         return new DataTableSpec[0];
     }
     
+    
+    /**
+     * Returns the datatable at the input port.
+     * 
+     * @return a data table
+     */
     public DataTable getDataTable() {
         return m_dataTable;
     }
 
+    
+    /**
+     * Returns the data table specs at the input port.
+     * 
+     * @return a data table spec
+     */
     public DataTableSpec getDataTableSpec() {
         return m_dataTableSpec;
     }

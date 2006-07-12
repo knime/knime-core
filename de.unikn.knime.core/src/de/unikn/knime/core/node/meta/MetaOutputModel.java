@@ -25,15 +25,17 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeModel;
 
 /**
+ * This model is an abstract model for meta output nodes. It is only intended
+ * for use inside meta workflows and only by meta nodes and not by the user.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class MetaOutputModel extends NodeModel {
     /**
-     * @param nrDataIns
-     * @param nrDataOuts
-     * @param nrPredParamsIns
-     * @param nrPredParamsOuts
+     * Create a new MetaOuputModel.
+     * 
+     * @param nrDataIns the number of data input ports (usually 1)
+     * @param nrPredParamsIns the number of model input ports (usually 1)
      */
     public MetaOutputModel(final int nrDataIns, final int nrPredParamsIns) {
         super(nrDataIns, 0, nrPredParamsIns, 0);
