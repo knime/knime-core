@@ -119,13 +119,6 @@ public class AppendedRowsTable implements DataTable {
     public RowIterator iterator() {
         return new AppendedRowsIterator(m_tables, m_spec, m_suffix);
     }
-
-    /**
-     * @see de.unikn.knime.core.data.DataTable#getRowCount()
-     */
-    public int getRowCount() {
-        throw new UnsupportedOperationException("No RowCount available!");
-    }
     
     /**
      * Factory method that determines the final DataTableSpec given the tables.

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -98,13 +96,6 @@ public class AppendedColumnTable implements DataTable {
      */
     public RowIterator iterator() {
         return new AppendedColumnRowIterator(this);
-    }
-    
-    /**
-     * @see de.unikn.knime.core.data.DataTable#getRowCount()
-     */
-    public int getRowCount() {
-        return m_table.getRowCount();
     }
     
     /**
