@@ -320,12 +320,12 @@ public class DataContainer implements RowAppender {
      * @throws IllegalStateException If <code>isClosed()</code> returns
      *         <code>false</code>
      */
-    public DataTable getTable() {
+    public BufferedDataTable getTable() {
         if (!isClosed()) {
             throw new IllegalStateException("Cannot get table: container is"
                     + " not closed.");
         }
-        return m_table;
+        return new BufferedDataTable((BufferedTable)m_table);
     }
     
     /** Get reference to underlying buffer.
@@ -501,8 +501,7 @@ public class DataContainer implements RowAppender {
         } finally {
             buf.close();
         }
-        BufferedTable t = (BufferedTable)buf.getTable();
-        return new BufferedDataTable(t);
+        return buf.getTable();
     }
     
     /** Convenience method that will buffer the entire argument table. This is
