@@ -24,7 +24,7 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /** Node that connects to arbitrary model ports and writes the model as
- * PredictorParams to a chosen file.
+ * ModelContent to a chosen file.
  * 
  * @author M. Berthold, University of Konstanz
  */

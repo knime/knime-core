@@ -33,10 +33,10 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
+import de.unikn.knime.core.node.ModelContent;
 
 /**
- * Write PredictorParams object into file.
+ * Write ModelContent object into file.
  * 
  * @author M. Berthold, University of Konstanz
  */
@@ -47,7 +47,7 @@ public class PredictorWriterNodeModel extends NodeModel {
 
     private String m_fileName = null; // "<no file>";
 
-    private PredictorParams m_predParams;
+    private ModelContent m_predParams;
 
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
@@ -83,20 +83,20 @@ public class PredictorWriterNodeModel extends NodeModel {
     }
 
     /**
-     * Load PredictorParams from input port.
+     * Load ModelContent from input port.
      * 
      * @see de.unikn.knime.core.node.NodeModel#loadPredictorParams(int,
-     *      PredictorParams)
+     *      ModelContent)
      */
     @Override
     protected void loadPredictorParams(final int index,
-            final PredictorParams pConf) {
+            final ModelContent pConf) {
         assert index == 0 : index;
         m_predParams = pConf;
     }
 
     /**
-     * Writes model as PredictorParams to file.
+     * Writes model as ModelContent to file.
      * 
      * @see NodeModel#execute(DataTable[],ExecutionMonitor)
      */
@@ -122,7 +122,7 @@ public class PredictorWriterNodeModel extends NodeModel {
                 os = new GZIPOutputStream(os);
             }
             exec.setProgress(-1, "Writing to file: " + m_fileName);
-            // and write PredictorParams object as XML
+            // and write ModelContent object as XML
             m_predParams.saveToXML(os);
             // and finally rename temp file to real file name
             if (!tempFile.renameTo(realFile)) {

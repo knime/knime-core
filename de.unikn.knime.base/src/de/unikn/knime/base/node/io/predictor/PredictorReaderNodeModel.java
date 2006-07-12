@@ -33,10 +33,10 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
+import de.unikn.knime.core.node.ModelContent;
 
 /**
- * Read PredictorParams object from file.
+ * Read ModelContent object from file.
  * 
  * @author M. Berthold, University of Konstanz
  */
@@ -47,7 +47,7 @@ public class PredictorReaderNodeModel extends NodeModel {
 
     private String m_fileName = null; // "<no file>";
 
-    private PredictorParams m_predParams;
+    private ModelContent m_predParams;
 
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
@@ -83,16 +83,16 @@ public class PredictorReaderNodeModel extends NodeModel {
     }
 
     /**
-     * Save model into PredictorParams for a specific output port.
+     * Save model into ModelContent for a specific output port.
      * 
-     * @param index of the PredictorParams's ouput port.
+     * @param index of the ModelContent's ouput port.
      * @param predParam The object to write the model into.
      * @throws InvalidSettingsException If the model could not be written to
      *             file.
      */
     @Override
     protected void savePredictorParams(final int index,
-            final PredictorParams predParam) throws InvalidSettingsException {
+            final ModelContent predParam) throws InvalidSettingsException {
         assert index == 0 : index;
         if (predParam != null && m_predParams != null) {
             m_predParams.copyTo(predParam);
@@ -116,7 +116,7 @@ public class PredictorReaderNodeModel extends NodeModel {
             is = new GZIPInputStream(is);
         }
         exec.setProgress(-1, "Reading from file: " + m_fileName);
-        m_predParams = PredictorParams.loadFromXML(is);
+        m_predParams = ModelContent.loadFromXML(is);
         return new DataTable[0];
     }
 

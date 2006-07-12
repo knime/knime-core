@@ -23,18 +23,18 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
+import de.unikn.knime.core.node.ModelContent;
 
 /**
  * This node model can be used to inject models into a workflow. The only
- * interesting method is {@link #setPredictorParams(PredictorParams)} with which
+ * interesting method is {@link #setPredictorParams(ModelContent)} with which
  * you can set the predictor parameters that should be passed on to the
  * successor nodes.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelInputNodeModel extends NodeModel {
-    private PredictorParams m_predictorParams;
+    private ModelContent m_predictorParams;
 
     /**
      * Creates a new model input node model.
@@ -106,17 +106,17 @@ public class ModelInputNodeModel extends NodeModel {
      * 
      * @param predParams the predictor params
      */
-    public void setPredictorParams(final PredictorParams predParams) {
+    public void setPredictorParams(final ModelContent predParams) {
         m_predictorParams = predParams;
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel #savePredictorParams(int,
-     *      de.unikn.knime.core.node.PredictorParams)
+     *      de.unikn.knime.core.node.ModelContent)
      */
     @Override
     protected void savePredictorParams(final int index,
-            final PredictorParams predParams) throws InvalidSettingsException {
+            final ModelContent predParams) throws InvalidSettingsException {
         m_predictorParams.copyTo(predParams);
     }
 }

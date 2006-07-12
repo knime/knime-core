@@ -23,7 +23,7 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.PredictorParams;
+import de.unikn.knime.core.node.ModelContent;
 
 /**
  * This class lets you fetch the predictor params that are passed from the only
@@ -32,7 +32,7 @@ import de.unikn.knime.core.node.PredictorParams;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelOutputNodeModel extends NodeModel {
-    private PredictorParams m_predictorParams;
+    private ModelContent m_predictorParams;
     
     /**
      * Creates a new model output node model.
@@ -106,11 +106,11 @@ public class ModelOutputNodeModel extends NodeModel {
 
    /**
     * @see de.unikn.knime.core.node.NodeModel
-    *  #loadPredictorParams(int, de.unikn.knime.core.node.PredictorParams)
+    *  #loadPredictorParams(int, de.unikn.knime.core.node.ModelContent)
     */
    @Override
    protected void loadPredictorParams(final int index,
-           final PredictorParams predParams) throws InvalidSettingsException {
+           final ModelContent predParams) throws InvalidSettingsException {
        m_predictorParams = predParams;
    }
 
@@ -120,7 +120,7 @@ public class ModelOutputNodeModel extends NodeModel {
     * 
     * @return the predictor params
     */
-   public PredictorParams getPredictorParams() {
+   public ModelContent getPredictorParams() {
        return m_predictorParams;
    }
 }
