@@ -69,7 +69,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     
     private int m_iterationCounter = 0;
     
-    private DataTable[] m_inData;
+    private BufferedDataTable[] m_inData;
     
     private int m_delay = INITIAL_DELAY;
     
@@ -232,7 +232,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @return - the input data as a whole.
      */
-    public DataTable[] getInputData() {
+    public BufferedDataTable[] getInputData() {
         return m_inData;
     }
     
@@ -294,7 +294,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         }
         LOGGER.debug(this.getClass().getSimpleName()
                 + " says: 'I'm down and out...'");
-        return getOutput();
+        return getOutput(exec);
     }
     
     /**
@@ -319,7 +319,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) 
     throws IOException, CanceledExecutionException {
-        m_inData = new DataTable[getNrDataIns()];
+        m_inData = new BufferedDataTable[getNrDataIns()];
         for (int i = 0; i < getNrDataIns(); i++) {
             File f = new File(nodeInternDir, FILE_NAME + i);
             m_inData[i] = DataContainer.readFromZip(f);
@@ -378,7 +378,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * @throws InvalidSettingsException - if the inData doesn't fit the expected
      *             configuration.
      */
-    public abstract void init(final DataTable[] inData)
+    public abstract void init(final BufferedDataTable[] inData)
     throws InvalidSettingsException;
     
     /**
@@ -387,11 +387,13 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * returned from the execute method, so mind the restrictions on the
      * DataTable[] as for the execute method.
      * 
+     * @param exec The execution monitor to show the progress.
      * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
      *      ExecutionMonitor)
      * @return - an BufferedDataTable[] as should be returned from the 
      *      NodeModel's execute method.
+     *      
      */
-    public abstract BufferedDataTable[] getOutput();
+    public abstract BufferedDataTable[] getOutput(final ExecutionMonitor exec);
     
 }
