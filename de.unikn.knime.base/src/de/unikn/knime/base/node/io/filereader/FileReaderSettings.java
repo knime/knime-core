@@ -33,7 +33,8 @@ import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Contains all settings needed to read in a ASCII data file. This includes the
@@ -169,7 +170,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * @throws InvalidSettingsException if the passed conf object contains
      *             invalid or insufficient settings.
      */
-    public FileReaderSettings(final NodeSettings cfg)
+    public FileReaderSettings(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
         // set the tokenizer settings first. The rowDelimiter reader depends
@@ -234,7 +235,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
             }
 
             if (cfg.containsKey(CFGKEY_MISSINGS)) {
-                NodeSettings missPattConf;
+                NodeSettingsRO missPattConf;
                 try {
                     missPattConf = cfg.getNodeSettings(CFGKEY_MISSINGS);
                 } catch (InvalidSettingsException ice) {
@@ -246,7 +247,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 readMissingPatternsFromConfig(missPattConf);
             }
 
-            NodeSettings rowDelimConf = null;
+            NodeSettingsRO rowDelimConf = null;
             try {
                 rowDelimConf = cfg.getNodeSettings(CFGKEY_ROWDELIMS);
             } catch (InvalidSettingsException ice) {
@@ -278,7 +279,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * 
      * @param cfg the config object the settings are stored into.
      */
-    public void saveToConfiguration(final NodeSettings cfg) {
+    public void saveToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'file "
                     + "reader settings' to null config!");
@@ -309,7 +310,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * cells from the configuration object.
      */
     private void readMissingPatternsFromConfig(
-            final NodeSettings missPattConf) {
+            final NodeSettingsRO missPattConf) {
         if (missPattConf == null) {
             throw new NullPointerException(
                     "Can't read missing patterns from null config object");
@@ -339,7 +340,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * saves all currently set missing patterns for each column to a config
      * object
      */
-    private void saveMissingPatternsToConfig(final NodeSettings cfg) {
+    private void saveMissingPatternsToConfig(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException(
                     "Can't save missing patterns to null config object");
@@ -359,7 +360,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * saved before we save our row delimiters. So, we need to be a bit careful
      * here.
      */
-    private void readRowDelimitersFromConfig(final NodeSettings rowDelims)
+    private void readRowDelimitersFromConfig(final NodeSettingsRO rowDelims)
             throws InvalidSettingsException {
 
         for (int rowDelIdx = 0; rowDelims.containsKey(CFGKEY_ROWDELIM
@@ -414,7 +415,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     /*
      * See comment above previous method
      */
-    private void saveRowDelimitersToConfig(final NodeSettings cfg) {
+    private void saveRowDelimitersToConfig(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'row delimiters' "
                     + "to null config!");

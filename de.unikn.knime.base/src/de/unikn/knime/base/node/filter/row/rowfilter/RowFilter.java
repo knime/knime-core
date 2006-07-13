@@ -21,7 +21,8 @@ package de.unikn.knime.base.node.filter.row.rowfilter;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Used by the RowFilterIterator to determine whether a row should be filtered
@@ -63,7 +64,7 @@ public abstract class RowFilter implements Cloneable {
      * @throws InvalidSettingsException if cfg contains
      *             invalid/incorrect/inconsistent settings
      */
-    public abstract void loadSettingsFrom(final NodeSettings cfg)
+    public abstract void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException;
 
     /**
@@ -73,7 +74,7 @@ public abstract class RowFilter implements Cloneable {
      * 
      * @param cfg the object to add the current internal settings to.
      */
-    public final void saveSettingsTo(final NodeSettings cfg) {
+    public final void saveSettingsTo(final NodeSettingsWO cfg) {
         RowFilterFactory.prepareConfigFor(cfg, this);
         saveSettings(cfg);
     }
@@ -86,7 +87,7 @@ public abstract class RowFilter implements Cloneable {
      * 
      * @param cfg object to add the current internal settings to.
      */
-    protected abstract void saveSettings(final NodeSettings cfg);
+    protected abstract void saveSettings(final NodeSettingsWO cfg);
 
     /**
      * called when a new <code>DataTableSpec</code> is available. The filters

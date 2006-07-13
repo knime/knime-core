@@ -29,7 +29,6 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.util.StringHistory;
@@ -171,7 +170,7 @@ public class FileReaderNodeModel extends NodeModel {
      * validates the settings object, or reads its settings from it. Depending
      * on the specified value of the 'validateOnly' parameter.
      */
-    private void readSettingsFromConfiguration(final NodeSettings settings,
+    private void readSettingsFromConfiguration(final NodeSettingsRO settings,
             final boolean validateOnly) throws InvalidSettingsException {
         if (settings == null) {
             throw new NullPointerException(

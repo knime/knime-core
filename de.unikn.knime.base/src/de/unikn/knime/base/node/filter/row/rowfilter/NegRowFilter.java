@@ -21,7 +21,8 @@ package de.unikn.knime.base.node.filter.row.rowfilter;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Negates the match results from the filter passed. Unfortunately EndOfTable
@@ -89,23 +90,23 @@ public class NegRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#loadSettingsFrom(NodeSettings)
+     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
-    public void loadSettingsFrom(final NodeSettings cfg)
+    public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
-        NodeSettings inCfg = cfg.getNodeSettings(CFG_INFILTER);
+        NodeSettingsRO inCfg = cfg.getNodeSettings(CFG_INFILTER);
 
         m_inFilter = RowFilterFactory.createRowFilter(inCfg);
  
     }
 
     /**
-     * @see RowFilter#saveSettings(NodeSettings)
+     * @see RowFilter#saveSettings(NodeSettingsWO)
      */
-    protected void saveSettings(final NodeSettings cfg) {
+    protected void saveSettings(final NodeSettingsWO cfg) {
         if (m_inFilter != null) {
-            NodeSettings inCfg = cfg.addNodeSettings(CFG_INFILTER);
+            NodeSettingsWO inCfg = cfg.addNodeSettings(CFG_INFILTER);
             m_inFilter.saveSettingsTo(inCfg);
         }
     }

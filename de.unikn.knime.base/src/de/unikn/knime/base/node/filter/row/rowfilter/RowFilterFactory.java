@@ -19,7 +19,8 @@
 package de.unikn.knime.base.node.filter.row.rowfilter;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Used to create RowFilterObjects from NodeSettings settings objects. 
@@ -71,7 +72,7 @@ public final class RowFilterFactory {
      *         the filter. If null is returned the row filter type was not
      *         properly added to this factory - which should not happen.
      */
-    public static NodeSettings prepareConfigFor(final NodeSettings cfg,
+    public static NodeSettingsWO prepareConfigFor(final NodeSettingsWO cfg,
             final RowFilter filter) {
 
         /*
@@ -121,7 +122,7 @@ public final class RowFilterFactory {
      *             the method above but not to this method, of if it contains
      *             invalid/inconsistent settings.
      */
-    public static RowFilter createRowFilter(final NodeSettings cfg)
+    public static RowFilter createRowFilter(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         /*
          * CHANGE HERE: Add a new "else if" branch testing the type ID to be

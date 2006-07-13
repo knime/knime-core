@@ -23,7 +23,6 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.ModelContentRO;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.ModelContent;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
@@ -34,7 +33,7 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelOutputNodeModel extends NodeModel {
-    private ModelContent m_predictorParams;
+    private ModelContentRO m_predictorParams;
     
     /**
      * Creates a new model output node model.
@@ -122,7 +121,7 @@ public class ModelOutputNodeModel extends NodeModel {
     * 
     * @return the predictor params
     */
-   public ModelContent getPredictorParams() {
+   public ModelContentRO getModelContent() {
        return m_predictorParams;
    }
 }

@@ -21,7 +21,8 @@ package de.unikn.knime.base.node.filter.row.rowfilter;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Row Filter that includes or excludes a certain range of rows. It will throw a
@@ -160,9 +161,9 @@ public class RowNoRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#loadSettingsFrom(NodeSettings)
+     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
-    public void loadSettingsFrom(final NodeSettings cfg)
+    public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         m_start = cfg.getInt(CFG_START);
         m_end = cfg.getInt(CFG_END);
@@ -170,9 +171,9 @@ public class RowNoRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#saveSettings(NodeSettings)
+     * @see RowFilter#saveSettings(NodeSettingsWO)
      */
-    protected void saveSettings(final NodeSettings cfg) {
+    protected void saveSettings(final NodeSettingsWO cfg) {
         cfg.addInt(CFG_START, m_start);
         cfg.addInt(CFG_END, m_end);
         cfg.addBoolean(CFG_INCL, m_include);

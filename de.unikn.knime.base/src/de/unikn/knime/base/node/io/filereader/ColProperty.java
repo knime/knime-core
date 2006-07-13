@@ -29,7 +29,8 @@ import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataColumnSpecCreator;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * 
@@ -90,7 +91,7 @@ class ColProperty {
      * @throws InvalidSettingsException if the config object did not contain the
      *             expected settings
      */
-    ColProperty(final NodeSettings cfg) throws InvalidSettingsException {
+    ColProperty(final NodeSettingsRO cfg) throws InvalidSettingsException {
         if (cfg == null) {
             throw new NullPointerException("Can't init column property from"
                     + " a null config.");
@@ -105,7 +106,7 @@ class ColProperty {
         DataType colType = cfg.getDataType(CFGKEY_COLTYPE);
         // try reading the possible values - if there are any
         HashSet<DataCell> posValues = null;
-        NodeSettings posVcfg = null;
+        NodeSettingsRO posVcfg = null;
         try {
             posVcfg = cfg.getNodeSettings(CFGKEY_POSVALUES);
         } catch (InvalidSettingsException ice) {
@@ -155,7 +156,7 @@ class ColProperty {
      * 
      * @param cfg the configuration object to write the settings into.
      */
-    void saveToConfiguration(final NodeSettings cfg) {
+    void saveToConfiguration(final NodeSettingsWO cfg) {
 
         if (cfg == null) {
             throw new NullPointerException("Can't save column property into"
@@ -171,7 +172,7 @@ class ColProperty {
         cfg.addDataType(CFGKEY_COLTYPE, m_colSpec.getType());
         Set<DataCell> posValues = m_colSpec.getDomain().getValues();
         if ((posValues != null) && (posValues.size() > 0)) {
-            NodeSettings pVCfg = cfg.addNodeSettings(CFGKEY_POSVALUES);
+            NodeSettingsWO pVCfg = cfg.addNodeSettings(CFGKEY_POSVALUES);
             int count = 0;
             for (DataCell cell : posValues) {
                 pVCfg.addDataCell(CFGKEY_POSSVAL + count, cell);

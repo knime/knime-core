@@ -46,7 +46,8 @@ import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeProgressMonitorView;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NodeView;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.tableview.TableContentModel;
@@ -411,13 +412,13 @@ public class TableNodeView extends NodeView {
         }
         
         @Override
-        public void loadSettingsFrom(final NodeSettings cfg) 
+        public void loadSettingsFrom(final NodeSettingsRO cfg) 
             throws InvalidSettingsException {
             throw new IllegalStateException("Not intended for permanent usage");
         }
         
         @Override
-        protected void saveSettings(final NodeSettings cfg) {
+        protected void saveSettings(final NodeSettingsWO cfg) {
             throw new IllegalStateException("Not intended for permanent usage");
         }
         

@@ -25,7 +25,8 @@ import java.util.regex.PatternSyntaxException;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * A RowFilter that matches the row ID against a regular expression. It allows
@@ -141,9 +142,9 @@ public class RowIDRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#loadSettingsFrom(NodeSettings)
+     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
-    public void loadSettingsFrom(final NodeSettings cfg)
+    public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         m_include = cfg.getBoolean(CFG_INCLUDE);
         m_startsWith = cfg.getBoolean(CFG_STARTSWITH);
@@ -165,9 +166,9 @@ public class RowIDRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#saveSettings(NodeSettings)
+     * @see RowFilter#saveSettings(NodeSettingsWO)
      */
-    protected void saveSettings(final NodeSettings cfg) {
+    protected void saveSettings(final NodeSettingsWO cfg) {
         cfg.addBoolean(CFG_INCLUDE, m_include);
         cfg.addBoolean(CFG_STARTSWITH, m_startsWith);
         cfg.addString(CFG_PATTERN, m_pattern.pattern());

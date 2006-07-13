@@ -21,7 +21,8 @@ package de.unikn.knime.base.node.filter.row.rowfilter;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * A row filter for the row filter data table ANDing two other row filters.
@@ -133,28 +134,28 @@ public class AndRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#loadSettingsFrom(NodeSettings)
+     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
-    public void loadSettingsFrom(final NodeSettings cfg)
+    public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
-        NodeSettings cfg1 = cfg.getNodeSettings(CFG_FILTER1);
-        NodeSettings cfg2 = cfg.getNodeSettings(CFG_FILTER2);
+        NodeSettingsRO cfg1 = cfg.getNodeSettings(CFG_FILTER1);
+        NodeSettingsRO cfg2 = cfg.getNodeSettings(CFG_FILTER2);
 
         m_in1 = RowFilterFactory.createRowFilter(cfg1);
         m_in2 = RowFilterFactory.createRowFilter(cfg2);
     }
 
     /**
-     * @see RowFilter#saveSettings(NodeSettings)
+     * @see RowFilter#saveSettings(NodeSettingsWO)
      */
-    protected void saveSettings(final NodeSettings cfg) {
+    protected void saveSettings(final NodeSettingsWO cfg) {
         if (m_in1 != null) {
-            NodeSettings cfg1 = cfg.addNodeSettings(CFG_FILTER1);
+            NodeSettingsWO cfg1 = cfg.addNodeSettings(CFG_FILTER1);
             m_in1.saveSettingsTo(cfg1);
         }
         if (m_in2 != null) {
-            NodeSettings cfg2 = cfg.addNodeSettings(CFG_FILTER2);
+            NodeSettingsWO cfg2 = cfg.addNodeSettings(CFG_FILTER2);
             m_in2.saveSettingsTo(cfg2);
         }
     }

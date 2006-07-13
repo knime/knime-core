@@ -43,6 +43,8 @@ import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * 
@@ -94,7 +96,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * @throws InvalidSettingsException if the settings in the config object are
      *             incomplete, inconsistent or in any other was invalid.
      */
-    FileReaderNodeSettings(final NodeSettings cfg)
+    FileReaderNodeSettings(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         super(cfg);
         m_columnProperties = new Vector<ColProperty>();
@@ -151,7 +153,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * @see de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings
      *      #saveToConfiguration(NodeSettings)
      */
-    public void saveToConfiguration(final NodeSettings cfg) {
+    public void saveToConfiguration(final NodeSettingsWO cfg) {
         super.saveToConfiguration(cfg);
         cfg.addInt(CFGKEY_NUMOFCOLS, m_numOfColumns);
         saveColumnPropsToConfig(cfg.addNodeSettings(CFGKEY_COLPROPS));
@@ -163,7 +165,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * for) the key the properties are associated with is the (string
      * representation) of the column index.
      */
-    private void saveColumnPropsToConfig(final NodeSettings cfg) {
+    private void saveColumnPropsToConfig(final NodeSettingsWO cfg) {
 
         if (cfg == null) {
             throw new NullPointerException("Can't store column properties in"
@@ -179,7 +181,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     }
 
-    private void readColumnPropsFromConfig(final NodeSettings cfg)
+    private void readColumnPropsFromConfig(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
         if (cfg == null) {

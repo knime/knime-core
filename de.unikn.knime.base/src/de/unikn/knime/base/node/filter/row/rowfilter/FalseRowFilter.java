@@ -21,7 +21,8 @@ package de.unikn.knime.base.node.filter.row.rowfilter;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Row filter that doesn't match any row. Not really usefull - but used if the
@@ -41,17 +42,17 @@ public class FalseRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#loadSettingsFrom(NodeSettings)
+     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
-    public void loadSettingsFrom(final NodeSettings cfg)
+    public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         // no settings to load.
     }
 
     /**
-     * @see RowFilter#saveSettings(NodeSettings)
+     * @see RowFilter#saveSettings(NodeSettingsWO)
      */
-    protected void saveSettings(final NodeSettings cfg) {
+    protected void saveSettings(final NodeSettingsWO cfg) {
         // no settings to save.
     }
 

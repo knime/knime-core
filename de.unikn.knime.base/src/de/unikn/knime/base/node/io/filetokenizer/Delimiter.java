@@ -19,7 +19,8 @@
 package de.unikn.knime.base.node.io.filetokenizer;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Created for each delimiter for the <code>FileTokenizer</code> keeping its
@@ -73,7 +74,7 @@ public class Delimiter {
      * @param settings an object the parameters are read from.
      * @throws InvalidSettingsException if the config is invalid. Right?
      */
-    Delimiter(final NodeSettings settings) throws InvalidSettingsException {
+    Delimiter(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings == null) {
             throw new NullPointerException("Can't initialize from a null "
                     + "object! Settings incomplete!!");
@@ -123,7 +124,7 @@ public class Delimiter {
      * @param cfg a config object the internal values of this object will be
      *            stored into.
      */
-    void saveToConfig(final NodeSettings cfg) {
+    void saveToConfig(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'delimiter' "
                     + "to null config!");

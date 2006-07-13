@@ -24,7 +24,8 @@ import java.util.Vector;
 import de.unikn.knime.base.node.io.filereader.SettingsStatus;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Defines the object holding the configuration for the FileTokenizer. <br>
@@ -111,7 +112,7 @@ public class FileTokenizerSettings {
      *            settings will be created.
      * @throws InvalidSettingsException if the config is not valid
      */
-    public FileTokenizerSettings(final NodeSettings settings)
+    public FileTokenizerSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
         this();
@@ -119,16 +120,16 @@ public class FileTokenizerSettings {
         if (settings != null) {
             try {
                 // get the configuration that holds all delimiters
-                NodeSettings delims = settings.getNodeSettings(CFGKEY_DELIMS);
+                NodeSettingsRO delims = settings.getNodeSettings(CFGKEY_DELIMS);
                 addDelimitersFromConfiguration(delims);
                 // get the configuration that holds all quotes
-                NodeSettings quotes = settings.getNodeSettings(CFGKEY_QUOTES);
+                NodeSettingsRO quotes = settings.getNodeSettings(CFGKEY_QUOTES);
                 addQuotesFromConfiguration(quotes);
                 // get the configuration that holds all comments
-                NodeSettings comments = settings.getNodeSettings(CFGKEY_COMMENTS);
+                NodeSettingsRO comments = settings.getNodeSettings(CFGKEY_COMMENTS);
                 addCommentsFromConfiguration(comments);
                 // get the config holding white spaces
-                NodeSettings wspaces = settings.getNodeSettings(CFGKEY_WHITES);
+                NodeSettingsRO wspaces = settings.getNodeSettings(CFGKEY_WHITES);
                 addWhitesFromConfiguration(wspaces);
 
             } catch (InvalidSettingsException ice) {
@@ -163,14 +164,14 @@ public class FileTokenizerSettings {
      * 
      * @param cfg the config object the settings are stored into.
      */
-    public void saveToConfiguration(final NodeSettings cfg) {
+    public void saveToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'file "
                     + "tokenizer settings' to null config!");
         }
 
         // save delimiters first
-        NodeSettings subCfg = cfg.addNodeSettings(CFGKEY_DELIMS);
+        NodeSettingsWO subCfg = cfg.addNodeSettings(CFGKEY_DELIMS);
         saveDelimitersToConfiguration(subCfg);
 
         // save quotes next
@@ -202,7 +203,7 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addDelimitersFromConfiguration(final NodeSettings allDelims) {
+    private void addDelimitersFromConfiguration(final NodeSettingsRO allDelims) {
         for (String delimKey : allDelims.keySet()) {
             // they should all start with "Delim"...
             if (delimKey.indexOf(CFGKEY_DELIMCFG) != 0) {
@@ -211,7 +212,7 @@ public class FileTokenizerSettings {
                 continue;
             }
 
-            NodeSettings delimSettings;
+            NodeSettingsRO delimSettings;
             try {
                 delimSettings = allDelims.getNodeSettings(delimKey);
             } catch (InvalidSettingsException ice) {
@@ -243,13 +244,13 @@ public class FileTokenizerSettings {
      * saves the settings of all delimiters defined by adding a configuration
      * object for each delimiter to the passed config.
      */
-    private void saveDelimitersToConfiguration(final NodeSettings cfg) {
+    private void saveDelimitersToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'delimiters' "
                     + "to null config!");
         }
         for (int d = 0; d < m_delimPatterns.size(); d++) {
-            NodeSettings delimConf = cfg.addNodeSettings(CFGKEY_DELIMCFG + d);
+            NodeSettingsWO delimConf = cfg.addNodeSettings(CFGKEY_DELIMCFG + d);
             Delimiter delim = m_delimPatterns.get(d);
             delim.saveToConfig(delimConf);
         }
@@ -261,7 +262,7 @@ public class FileTokenizerSettings {
      * expects the config to contain quotes only. if anything illegal is defined
      * in there, it is going to print an error message and is ignoring it.
      */
-    private void addQuotesFromConfiguration(final NodeSettings allQuotes) {
+    private void addQuotesFromConfiguration(final NodeSettingsRO allQuotes) {
         for (String quoteKey : allQuotes.keySet()) {
             // they should all start with "Quote"...
             if (quoteKey.indexOf(CFGKEY_QUOTECFG) != 0) {
@@ -270,7 +271,7 @@ public class FileTokenizerSettings {
                 continue;
             }
 
-            NodeSettings quoteSettings;
+            NodeSettingsRO quoteSettings;
             try {
                 quoteSettings = allQuotes.getNodeSettings(quoteKey);
             } catch (InvalidSettingsException ice) {
@@ -299,13 +300,13 @@ public class FileTokenizerSettings {
      * saves the settings of all quotes defined by adding a configuration object
      * for each quote to the passed config.
      */
-    private void saveQuotesToConfiguration(final NodeSettings cfg) {
+    private void saveQuotesToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'quotes' "
                     + "to null config!");
         }
         for (int q = 0; q < m_quotePatterns.size(); q++) {
-            NodeSettings quoteConf = cfg.addNodeSettings(CFGKEY_QUOTECFG + q);
+            NodeSettingsWO quoteConf = cfg.addNodeSettings(CFGKEY_QUOTECFG + q);
             Quote quote = m_quotePatterns.get(q);
             quote.saveToConfig(quoteConf);
         }
@@ -318,7 +319,7 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addCommentsFromConfiguration(final NodeSettings allComments) {
+    private void addCommentsFromConfiguration(final NodeSettingsRO allComments) {
         for (String commentKey : allComments.keySet()) {
             // they should all start with "Comment"...
             if (commentKey.indexOf(CFGKEY_COMMNTCFG) != 0) {
@@ -327,7 +328,7 @@ public class FileTokenizerSettings {
                 continue;
             }
 
-            NodeSettings commentSettings;
+            NodeSettingsRO commentSettings;
 
             try {
                 commentSettings = allComments.getNodeSettings(commentKey);
@@ -355,7 +356,7 @@ public class FileTokenizerSettings {
         }
     }
 
-    private void addWhitesFromConfiguration(final NodeSettings allWhites) {
+    private void addWhitesFromConfiguration(final NodeSettingsRO allWhites) {
         for (String whitesKey : allWhites.keySet()) {
             // this must not go wrong.
             String ws = allWhites.getString(whitesKey, null);
@@ -372,13 +373,13 @@ public class FileTokenizerSettings {
      * saves the settings of all Comments defined by adding a configuration
      * object for each comment to the passed config.
      */
-    private void saveCommentsToConfiguration(final NodeSettings cfg) {
+    private void saveCommentsToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'comments' "
                     + "to null config!");
         }
         for (int c = 0; c < m_commentPatterns.size(); c++) {
-            NodeSettings commentConf = cfg.addNodeSettings(CFGKEY_COMMNTCFG + c);
+            NodeSettingsWO commentConf = cfg.addNodeSettings(CFGKEY_COMMNTCFG + c);
             Comment comment = m_commentPatterns.get(c);
             comment.saveToConfig(commentConf);
         }
@@ -388,7 +389,7 @@ public class FileTokenizerSettings {
     /*
      * saves user defined whitepsaces into the passed configuration
      */
-    private void saveWhitesToConfiguration(final NodeSettings cfg) {
+    private void saveWhitesToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'whitespaces' "
                     + "to null config!");

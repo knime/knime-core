@@ -29,7 +29,6 @@ import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
@@ -70,7 +69,7 @@ public class RowFilterNodeModel extends NodeModel {
         assert settings != null;
 
         if (m_rowFilter != null) {
-            NodeSettings filterCfg = settings.addNodeSettings(CFGFILTER);
+            NodeSettingsWO filterCfg = settings.addNodeSettings(CFGFILTER);
             m_rowFilter.saveSettingsTo(filterCfg);
         }
     }
@@ -91,13 +90,13 @@ public class RowFilterNodeModel extends NodeModel {
         loadOrValidateSettingsFrom(settings, false);
     }
 
-    private void loadOrValidateSettingsFrom(final NodeSettings settings,
+    private void loadOrValidateSettingsFrom(final NodeSettingsRO settings,
             final boolean verifyOnly) throws InvalidSettingsException {
 
         RowFilter tmpFilter = null;
 
         if (settings.containsKey(CFGFILTER)) {
-            NodeSettings filterCfg = settings.getNodeSettings(CFGFILTER);
+            NodeSettingsRO filterCfg = settings.getNodeSettings(CFGFILTER);
             // because we don't know what type of filter is in the config we
             // must ask the factory to figure it out for us (actually the type
             // is also saved in a valid config). When we save row filters they

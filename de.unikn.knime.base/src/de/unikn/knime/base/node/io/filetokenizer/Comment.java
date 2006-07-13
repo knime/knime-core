@@ -19,7 +19,8 @@
 package de.unikn.knime.base.node.io.filetokenizer;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Created for each comment pattern of the <code>FileTokenizer</code> keeping
@@ -73,7 +74,7 @@ public class Comment {
      * @param settings an object the parameters are read from.
      * @throws InvalidSettingsException if the config is not valid. Huh.
      */
-    Comment(final NodeSettings settings) throws InvalidSettingsException {
+    Comment(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings == null) {
             throw new NullPointerException("Can't initialize from a null "
                     + "object! Settings incomplete!!");
@@ -116,7 +117,7 @@ public class Comment {
      * @param cfg a config object the internal values of this object will be
      *            stored into.
      */
-    void saveToConfig(final NodeSettings cfg) {
+    void saveToConfig(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'comment' "
                     + "to null config!");

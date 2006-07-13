@@ -32,6 +32,7 @@ import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.ModelContentRO;
 import de.unikn.knime.core.node.ModelContentWO;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettingsRO;
@@ -49,7 +50,7 @@ public class PredictorReaderNodeModel extends NodeModel {
 
     private String m_fileName = null; // "<no file>";
 
-    private ModelContent m_predParams;
+    private ModelContentRO m_predParams;
 
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.

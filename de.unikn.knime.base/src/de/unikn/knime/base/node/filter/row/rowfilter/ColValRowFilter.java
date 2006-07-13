@@ -28,7 +28,8 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * A filter selecting rows depending on the content of a column (or cell of the
@@ -338,9 +339,9 @@ public class ColValRowFilter extends RowFilter {
      * A comparator MUST be set if a range is specified in the config object!!
      * 
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #loadSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *      #loadSettingsFrom(NodeSettingsRO)
      */
-    public void loadSettingsFrom(final NodeSettings cfg)
+    public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
         m_colName = cfg.getString(CFG_COLNAME);
@@ -390,9 +391,9 @@ public class ColValRowFilter extends RowFilter {
 
     /**
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #saveSettings(de.unikn.knime.core.node.NodeSettings)
+     *      #saveSettings(NodeSettingsWO)
      */
-    protected void saveSettings(final NodeSettings cfg) {
+    protected void saveSettings(final NodeSettingsWO cfg) {
         cfg.addBoolean(CFG_INCLUDE, m_include);
         cfg.addString(CFG_COLNAME, m_colName);
         if (m_pattern == null) {
