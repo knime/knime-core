@@ -20,9 +20,12 @@
  */
 package de.unikn.knime.core.node.defaultnodedialog;
 
+
+
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
@@ -43,7 +46,8 @@ import de.unikn.knime.core.node.NotConfigurableException;
  */
 public class DefaultNodeDialogPane extends NodeDialogPane {
     private final List<DialogComponent> m_dialogComponents;
-    private final JPanel m_panel;
+    private final JPanel m_compositePanel;
+    private JPanel m_currentPanel;
 
     /* The tabs' names. */
     private static final String TAB_TITLE = "Default Options";
@@ -56,9 +60,31 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
     public DefaultNodeDialogPane(final String title) {
         super(title);
         m_dialogComponents = new ArrayList<DialogComponent>();
-        m_panel = new JPanel();
-        m_panel.setLayout(new BoxLayout(m_panel, BoxLayout.Y_AXIS));
-        super.addTab(TAB_TITLE, m_panel);
+        m_compositePanel = new JPanel();
+        m_compositePanel.setLayout(new BoxLayout(m_compositePanel, 
+                BoxLayout.Y_AXIS));
+        m_currentPanel = createSubPanel("");
+        super.addTab(TAB_TITLE, m_compositePanel);
+    }
+    
+    /**
+     * Creates a new dialog component group and closes the current one. From now
+     * on the dialog components added with the addDialogComponent method are
+     * added to the current group. The group is a titled panel.
+     * 
+     * @param title - the title of the new group.
+     */
+    public void createNewGroup(final String title) {
+        m_currentPanel = createSubPanel(title);
+    }
+    
+    private JPanel createSubPanel(final String title) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), title));
+        m_compositePanel.add(panel);
+        return panel;
     }
 
     /**
@@ -70,7 +96,7 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
      */
     public void addDialogComponent(final DialogComponent diaC) {
         m_dialogComponents.add(diaC);
-        m_panel.add(diaC);
+        m_currentPanel.add(diaC);
     }
 
     /**
@@ -94,7 +120,10 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
             // ignore, should be handled in each component
             // assert false : ise.getMessage();
         }
-    } 
+    }
+    
+    
+    
     
     
     /**
