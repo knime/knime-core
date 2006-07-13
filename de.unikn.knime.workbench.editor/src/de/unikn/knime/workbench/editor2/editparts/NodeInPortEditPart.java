@@ -45,6 +45,14 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
     }
 
     /**
+     * @see de.unikn.knime.workbench.editor2.editparts.AbstractPortEditPart#
+     *      isModelPort()
+     */
+    public boolean isModelPort() {
+        return getNodeContainer().isPredictorInPort(getId());
+    }
+
+    /**
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
      */
     protected IFigure createFigure() {

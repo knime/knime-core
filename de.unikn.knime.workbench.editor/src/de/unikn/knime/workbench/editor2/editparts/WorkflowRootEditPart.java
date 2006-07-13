@@ -25,8 +25,13 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
+import org.eclipse.gef.CompoundSnapToHelper;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.gef.SnapToGrid;
+import org.eclipse.gef.SnapToGuides;
+import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
+import org.eclipse.gef.rulers.RulerProvider;
 
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
@@ -34,6 +39,7 @@ import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import de.unikn.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
+import de.unikn.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
 import de.unikn.knime.workbench.editor2.figures.WorkflowFigure;
 import de.unikn.knime.workbench.editor2.figures.WorkflowLayout;
 
@@ -68,6 +74,44 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     @SuppressWarnings("unchecked")
     protected List getModelChildren() {        
         return new ArrayList(getWorkflowManager().getNodes());
+    }
+    
+    /**
+     * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+     */
+    public Object getAdapter(final Class adapter) {
+        if (adapter == SnapToHelper.class) {
+            List<SnapToHelper> snapStrategies = new ArrayList<SnapToHelper>();
+            Boolean val = (Boolean)getViewer().getProperty(
+                    RulerProvider.PROPERTY_RULER_VISIBILITY);
+            if (false || val != null && val.booleanValue()) {
+                snapStrategies.add(new SnapToGuides(this));
+            }
+            val = (Boolean)getViewer().getProperty(
+                    SnapToPortGeometry.PROPERTY_SNAP_ENABLED);
+            if (true || val != null && val.booleanValue()) {
+                snapStrategies.add(new SnapToPortGeometry(this));
+            }
+            val = (Boolean)getViewer().getProperty(
+                    SnapToGrid.PROPERTY_GRID_ENABLED);
+            if (false || val != null && val.booleanValue()) {
+                snapStrategies.add(new SnapToGrid(this));
+            }
+
+            if (snapStrategies.size() == 0) {
+                return null;
+            }
+            if (snapStrategies.size() == 1) {
+                return (SnapToHelper)snapStrategies.get(0);
+            }
+
+            SnapToHelper[] ss = new SnapToHelper[snapStrategies.size()];
+            for (int i = 0; i < snapStrategies.size(); i++) {
+                ss[i] = (SnapToHelper)snapStrategies.get(i);
+            }
+            return new CompoundSnapToHelper(ss);
+        }
+        return super.getAdapter(adapter);
     }
 
     /**

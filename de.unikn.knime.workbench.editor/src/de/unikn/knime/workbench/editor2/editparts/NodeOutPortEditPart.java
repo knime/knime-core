@@ -80,6 +80,14 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
 
         return Collections.EMPTY_LIST;
     }
+    
+    /**
+     * @see de.unikn.knime.workbench.editor2.editparts.AbstractPortEditPart#
+     *      isModelPort()
+     */
+    public boolean isModelPort() {
+        return getNodeContainer().isPredictorOutPort(getId());
+    }
 
     /**
      * 

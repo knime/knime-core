@@ -34,6 +34,7 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.EditDomain;
@@ -42,6 +43,8 @@ import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.KeyHandler;
 import org.eclipse.gef.KeyStroke;
 import org.eclipse.gef.RootEditPart;
+import org.eclipse.gef.SnapToGeometry;
+import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.commands.CommandStack;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
@@ -599,6 +602,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 m_graphicalViewer.getControl(),
                 "de.unikn.knime.workbench.help.flow_editor_context");
 
+        loadProperties();
+
     }
 
     /**
@@ -690,6 +695,10 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // Editor name (title)
         setPartName(file.getParentFile().getName());
+
+        if (getGraphicalViewer() != null) {
+            loadProperties();
+        }
 
         // update Actions, as now there's everything available
         updateActions();
@@ -786,6 +795,47 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // the super implementation handles the rest
         return super.getAdapter(adapter);
+    }
+
+    /**
+     * Sets the snap functionality.
+     */
+    protected void loadProperties() {
+
+        // Ruler properties
+        // LogicRuler ruler =
+        // getLogicDiagram().getRuler(PositionConstants.WEST);
+        // RulerProvider provider = null;
+        // if (ruler != null) {
+        // provider = new LogicRulerProvider(ruler);
+        // }
+        // getGraphicalViewer().setProperty(RulerProvider.PROPERTY_VERTICAL_RULER,
+        // provider);
+        // ruler = getLogicDiagram().getRuler(PositionConstants.NORTH);
+        // provider = null;
+        // if (ruler != null) {
+        // provider = new LogicRulerProvider(ruler);
+        // }
+        // getGraphicalViewer().setProperty(
+        // RulerProvider.PROPERTY_HORIZONTAL_RULER, provider);
+        // getGraphicalViewer().setProperty(
+        // RulerProvider.PROPERTY_RULER_VISIBILITY,
+        // new Boolean(getLogicDiagram().getRulerVisibility()));
+
+        // Snap to Geometry property
+        getGraphicalViewer().setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
+                new Boolean(true));
+
+        // Grid properties
+        getGraphicalViewer().setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
+                new Boolean(false));
+        // Grid properties
+        getGraphicalViewer().setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
+                new Dimension(6, 6));
+        // We keep grid visibility and enablement in sync
+        getGraphicalViewer().setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
+                new Boolean(false));
+
     }
 
     private class ProgressHandler implements NodeProgressListener {

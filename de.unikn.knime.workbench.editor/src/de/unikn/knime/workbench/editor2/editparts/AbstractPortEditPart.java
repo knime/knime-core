@@ -70,6 +70,11 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public int getId() {
         return m_id;
     }
+    
+    /**
+     * @return if this is a model port.
+     */    
+    public abstract boolean isModelPort();
 
     /**
      * Convenience, returns the hosting container.
