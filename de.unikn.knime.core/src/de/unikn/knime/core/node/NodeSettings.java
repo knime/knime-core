@@ -85,7 +85,7 @@ public final class NodeSettings extends Config
     /**
      * @see Config#getNodeSettings(java.lang.String)
      */
-    public NodeSettingsRO getNodeSettings(final String key)
+    public NodeSettings getNodeSettings(final String key)
             throws InvalidSettingsException {
         return (NodeSettings)super.getConfig(key);
     }

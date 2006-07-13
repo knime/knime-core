@@ -78,7 +78,7 @@ public final class ModelContent extends Config
     /**
      * @see Config#getNodeSettings(java.lang.String)
      */
-    public ModelContentRO getModelContent(final String key)
+    public ModelContent getModelContent(final String key)
             throws InvalidSettingsException {
         return (ModelContent) super.getConfig(key);
     } 
