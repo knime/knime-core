@@ -37,6 +37,8 @@ import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
@@ -82,9 +84,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_isFromRefTable = isFromRefTable;
     }
     
-    public RearrangeColumnsTable(final File f, final NodeSettings settings,
+    public RearrangeColumnsTable(final File f, final NodeSettingsRO settings,
             final int loadID) throws IOException, InvalidSettingsException {
-        NodeSettings subSettings = settings.getConfig(CFG_INTERNAL_META);
+        NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
         int tableID = subSettings.getInt(CFG_REFERENCE_ID);
         m_reference = BufferedDataTable.getDataTable(loadID, tableID);
         m_map = subSettings.getIntArray(CFG_MAP);
@@ -156,9 +158,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @see KnowsRowCountTable#saveToFile(File, NodeSettings, ExecutionMonitor)
      */
     public void saveToFile(
-            final File f, final NodeSettings s, final ExecutionMonitor exec) 
+            final File f, final NodeSettingsWO s, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
-        NodeSettings subSettings = s.addConfig(CFG_INTERNAL_META);
+        NodeSettingsWO subSettings = s.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addInt(CFG_REFERENCE_ID, m_reference.getBufferedTableId());
         subSettings.addIntArray(CFG_MAP, m_map);
         subSettings.addBooleanArray(CFG_FLAGS, m_isFromRefTable);
