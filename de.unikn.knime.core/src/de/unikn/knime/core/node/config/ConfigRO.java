@@ -13,9 +13,7 @@
  * any way exploit any of the content, in whole or in part, except as
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
- * 
- * History
- *   12.07.2006 (gabriel): created
+ *
  */
 package de.unikn.knime.core.node.config;
 
@@ -30,14 +28,37 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.node.InvalidSettingsException;
 
+/**
+ * Interface implements only access functions for <code>Config</code> objects.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
+ */
 public interface ConfigRO extends TreeNode, Iterable<String> {
     
+    /**
+     * Returns a <code>Config</code> for the given key.
+     * @param key The identifier for the <code>Config</code>.
+     * @return A new <code>Config</code> object.
+     * @throws InvalidSettingsException If the Config could not be accessed.
+     */
     public Config getConfig(String key) throws InvalidSettingsException;
     
+    /**
+     * Saves this <code>Config</code> into the given stream in XML format.
+     * @param os The stream to write into.
+     * @throws IOException If an io exception occurs during writting.
+     */
     public void saveToXML(final OutputStream os) throws IOException;
     
+    /**
+     * Copies this <code>Config</code> into a write-only one.
+     * @param config The <code>Config</code> to write this to.
+     */
     public void copyTo(ConfigWO config);
     
+    /**
+     * @return The identifier for this <code>Config</code>.
+     */
     public String getKey();
     
     /**

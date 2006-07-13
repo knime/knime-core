@@ -66,8 +66,6 @@ public abstract class NodeFactory {
         Learner,
         /** A predicting node. */
         Predictor,
-        /** A data transforming node. */
-        Transformer,
         /** A data manipulating node. */
         Manipulator,
         /** A visualizing node. */

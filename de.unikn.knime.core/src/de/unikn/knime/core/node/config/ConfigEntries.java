@@ -162,7 +162,7 @@ enum ConfigEntries {
          * parent's config <code>addConfig</code> method.
          * @param key The key for this value.
          * @param value The String value as boolean.
-         * @see Config#addNodeSettings(String)
+         * @see Config#addConfig(String)
          * @return nothing, as it throws an exception
          * @throws UnsupportedOperationException always.
          */
