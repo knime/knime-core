@@ -111,7 +111,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     throws CanceledExecutionException {
         BufferedDataTable[] temp = new BufferedDataTable[tables.length];
         for (int i = 0; i < tables.length; i++) {
-            createBufferedDataTable(tables[i], exec);
+            temp[i] = createBufferedDataTable(tables[i], exec);
         }
         return temp;
     }
