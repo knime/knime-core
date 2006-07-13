@@ -24,7 +24,8 @@ package de.unikn.knime.workbench.editor2.extrainfo;
 import java.util.ArrayList;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.workflow.ConnectionExtraInfo;
 
 /**
@@ -82,9 +83,9 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
 
     /**
      * @see de.unikn.knime.core.node.workflow.ConnectionExtraInfo
-     *      #save(de.unikn.knime.core.node.NodeSettings)
+     *      #save(NodeSettingsWO)
      */
-    public void save(final NodeSettings config) {
+    public void save(final NodeSettingsWO config) {
         config.addInt(KEY_BENDPOINTS + "_size", m_bendpoints.size());
         for (int i = 0; i < m_bendpoints.size(); i++) {
             config.addIntArray(KEY_BENDPOINTS + "_" + i, (int[])m_bendpoints
@@ -95,9 +96,9 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
 
     /**
      * @see de.unikn.knime.core.node.workflow.ConnectionExtraInfo
-     *      #load(de.unikn.knime.core.node.NodeSettings)
+     *      #load(NodeSettingsRO)
      */
-    public void load(final NodeSettings config) throws InvalidSettingsException {
+    public void load(final NodeSettingsRO config) throws InvalidSettingsException {
         int size = config.getInt(KEY_BENDPOINTS + "_size");
 
         for (int i = 0; i < size; i++) {

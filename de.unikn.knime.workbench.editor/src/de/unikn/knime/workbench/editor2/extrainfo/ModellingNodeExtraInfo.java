@@ -20,7 +20,8 @@
 package de.unikn.knime.workbench.editor2.extrainfo;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.workflow.NodeExtraInfo;
 
 /**
@@ -63,18 +64,18 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     /**
      * @see de.unikn.knime.core.node.workflow.NodeExtraInfo
-     *      #save(de.unikn.knime.core.node.NodeSettings)
+     *      #save(NodeSettingsWO)
      */
-    public void save(final NodeSettings config) {
+    public void save(final NodeSettingsWO config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
         config.addString(KEY_TYPE, m_type);
     }
 
     /**
      * @see de.unikn.knime.core.node.workflow.NodeExtraInfo
-     *      #load(de.unikn.knime.core.node.NodeSettings)
+     *      #load(NodeSettingsRO)
      */
-    public void load(final NodeSettings conf) throws InvalidSettingsException {
+    public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
         m_type = conf.getString(KEY_TYPE);
     }
