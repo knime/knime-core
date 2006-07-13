@@ -29,6 +29,8 @@ public interface ConfigWO {
     public Config addConfig(String key);
     
     public void addConfig(Config config);
+    
+    public String getKey();
 
     /**
      * Adds an int.

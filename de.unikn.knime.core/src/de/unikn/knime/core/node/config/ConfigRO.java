@@ -38,6 +38,8 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
     
     public void copyTo(ConfigWO config);
     
+    public String getKey();
+    
     /**
      * Return int for key.
      * 
