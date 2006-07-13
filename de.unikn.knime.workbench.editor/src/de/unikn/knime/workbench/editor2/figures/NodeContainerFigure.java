@@ -470,9 +470,6 @@ public class NodeContainerFigure extends RectangleFigure {
         
         private static final String BACKGROUND_PREDICTOR = "icons/node/"
             + "background_predictor.png";
-
-        private static final String BACKGROUND_TRANSFORMER = "icons/node/"
-                + "background_transformer.png";
         
         private static final String BACKGROUND_MANIPULATOR = "icons/node/"
             + "background_manipulator.png";
@@ -540,8 +537,6 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_SOURCE;
             } else if (type.equals(NodeType.Sink)) {
                 str = BACKGROUND_SINK;
-            } else if (type.equals(NodeType.Transformer)) {
-                str = BACKGROUND_TRANSFORMER;
             } else if (type.equals(NodeType.Manipulator)) {
                 str = BACKGROUND_MANIPULATOR;
             } else if (type.equals(NodeType.Learner)) {
