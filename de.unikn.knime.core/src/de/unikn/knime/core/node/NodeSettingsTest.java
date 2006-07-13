@@ -35,7 +35,6 @@ import de.unikn.knime.core.data.def.FuzzyIntervalCell;
 import de.unikn.knime.core.data.def.FuzzyNumberCell;
 import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.node.config.Config;
 
 /**
  * Test the <code>Config</code> class.
@@ -491,15 +490,15 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testConfig() throws Exception {
         try {
-            SETT.addConfig((String)null);
+            SETT.addNodeSettings((String)null);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kConfig";
-        Config c = SETT.addConfig(key);
+        NodeSettings c = (NodeSettings) SETT.addNodeSettings(key);
         assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getConfig(key) == c);
+        assertTrue(SETT.getNodeSettings(key) == c);
         c.addString("kString_plus", "6");
         c.containsKey("kString_plus");
         assertTrue(c.getString("kString_plus", "-1").equals("6"));
@@ -512,7 +511,7 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testConfigAdd() throws Exception {
         NodeSettings settings = new NodeSettings("node_settings");
-        SETT.addConfig(settings);
+        SETT.addNodeSettings(settings);
         try {
             ModelContent predParams = new ModelContent("pred_params");
             SETT.addConfig(predParams);
@@ -529,10 +528,10 @@ public final class NodeSettingsTest extends TestCase {
      * Tests <code>getKeySet()</code> and <code>getKeySet(String)</code>.
      */
     public void testKeySets() {
-        Config key = SETT.addConfig("test_key_set");
-        key.addConfig("ConfigA");
-        key.addConfig("ConfigB");
-        key.addConfig("ConfigC");
+        NodeSettings key = (NodeSettings) SETT.addNodeSettings("test_key_set");
+        key.addNodeSettings("ConfigA");
+        key.addNodeSettings("ConfigB");
+        key.addNodeSettings("ConfigC");
         key.addInt("intA", 0);
         key.addInt("intB", 1);
         assertTrue(key.containsKey("ConfigA"));
@@ -557,7 +556,7 @@ public final class NodeSettingsTest extends TestCase {
      * @throws Exception Should not happen.
      */
     public void testSpecialStrings() throws Exception {
-        Config key = SETT.addConfig("special_strings");
+        NodeSettings key = (NodeSettings) SETT.addNodeSettings("special_strings");
         key.addString("N", "\n");
         key.addString("R", "\r");
         key.addString("T", "\t");
@@ -589,7 +588,7 @@ public final class NodeSettingsTest extends TestCase {
      * @throws InvalidSettingsException If a value could not be read.
      */
     public void testInt3DMatrix() throws InvalidSettingsException { 
-        Config config = SETT.addConfig("matrix");
+        NodeSettings config = (NodeSettings) SETT.addNodeSettings("matrix");
         // write int matrix
         int[][][] array = new int[][][]{{{1, 2, 4}, {5, 2, 6}, {7, 1, 9}}, 
                 {{7, 6, 4}, {8, 2, 9}, {0, 1, 2}}};
@@ -616,7 +615,7 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testKeys() {
         String key = "key-test";
-        SETT.addConfig(key);
+        SETT.addNodeSettings(key);
         SETT.addString(key, "string");
         SETT.addBoolean(key, true);
         SETT.addInt(key, -42);
@@ -664,8 +663,8 @@ public final class NodeSettingsTest extends TestCase {
         // read from XML
         try {
             InputStream is = new ByteArrayInputStream(os.toByteArray());
-            NodeSettings settings = NodeSettings.loadFromXML(is);
-            assertTrue(settings.isIdentical(SETT));
+            NodeSettingsRO settings = NodeSettings.loadFromXML(is);
+            assertTrue(settings.equals(SETT));
         } catch (IOException ioe) {
             ioe.printStackTrace();
             fail();

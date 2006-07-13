@@ -26,7 +26,8 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
@@ -65,7 +66,7 @@ public final class DialogComponentTextField extends DialogComponent {
      * @param specs The input specs.
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
         m_textField.setText(settings.getString(m_configName, m_dftText));
     }
@@ -76,7 +77,7 @@ public final class DialogComponentTextField extends DialogComponent {
      * @param settings The <code>NodeSettings</code> to write into.
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(m_configName, m_textField.getText());
     }
 

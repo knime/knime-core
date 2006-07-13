@@ -21,8 +21,13 @@
  */
 package de.unikn.knime.core.node;
 
+import javax.swing.tree.TreeNode;
+
 import de.unikn.knime.core.node.config.ConfigRO;
 
-public interface ModelContentRO extends ConfigRO {
+public interface ModelContentRO extends TreeNode, ConfigRO {
 
+    public ModelContentRO getModelContent(String key) 
+        throws InvalidSettingsException;
+    
 }

@@ -71,8 +71,8 @@ public abstract class NodeInPort extends NodePort {
                 && !(connPort instanceof NodePort.DataPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
-        if (this instanceof NodePort.PredictorParamsPort
-                && !(connPort instanceof NodePort.PredictorParamsPort)) {
+        if (this instanceof NodePort.ModelContentPort
+                && !(connPort instanceof NodePort.ModelContentPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
         NodeOutPort tmp = m_connOutPort;

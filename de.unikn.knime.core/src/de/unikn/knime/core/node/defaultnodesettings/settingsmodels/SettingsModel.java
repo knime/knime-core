@@ -25,7 +25,8 @@ import javax.swing.event.ChangeListener;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /** Abstract implementation of an ecapsulating class holding a (usually
  * rather basic) model of NodeModel Settings. The main motivation for this
@@ -45,7 +46,7 @@ public abstract class SettingsModel {
      * @param specs The input specs.
      * @throws InvalidSettingsException if load fails.
      */
-    public abstract void loadSettingsFrom(final NodeSettings settings,
+    public abstract void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws InvalidSettingsException;
 
     /**
@@ -54,7 +55,7 @@ public abstract class SettingsModel {
      * @param settings The <code>NodeSettings</code> to read from.
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
-    public abstract void saveSettingsTo(final NodeSettings settings)
+    public abstract void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException;
 
     /** Add a listener.

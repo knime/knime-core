@@ -24,6 +24,8 @@ import java.util.Arrays;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * Final <code>SizeHandler</code> implementation which keeps a 
@@ -91,11 +93,11 @@ public final class SizeHandler implements PropertyHandler {
      *         be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static SizeHandler load(final Config config) 
+    public static SizeHandler load(final ConfigRO config) 
             throws InvalidSettingsException {
         String modelClass = config.getString(CFG_SIZE_MODEL_CLASS);
         if (modelClass.equals(SizeModelDouble.class.getName())) {
-            Config subConfig = config.getConfig(CFG_SIZE_MODEL);
+            ConfigRO subConfig = config.getConfig(CFG_SIZE_MODEL);
             return new SizeHandler(SizeModelDouble.load(subConfig));
         } else {
             throw new InvalidSettingsException("Unknown SizeModel class: "
@@ -128,7 +130,7 @@ public final class SizeHandler implements PropertyHandler {
          * Save size settings to.
          * @param config This object.
          */
-        void save(Config config);
+        void save(ConfigWO config);
     }
     
 }

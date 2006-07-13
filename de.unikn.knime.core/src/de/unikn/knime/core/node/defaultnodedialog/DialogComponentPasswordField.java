@@ -34,7 +34,8 @@ import sun.misc.BASE64Encoder;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
@@ -83,7 +84,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @param specs The input specs.
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
         m_pwField.setText("");
     }
@@ -95,7 +96,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings)
+    public void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         char[] pw = m_pwField.getPassword();
         try {

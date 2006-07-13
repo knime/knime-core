@@ -24,7 +24,8 @@ import javax.swing.JPanel;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
@@ -52,7 +53,7 @@ public abstract class DialogComponent extends JPanel {
      * component to be valid (i.e. the settings are valid), e.g. if the given
      * specs lack some important columns or column types. 
      */
-    public abstract void loadSettingsFrom(final NodeSettings settings,
+    public abstract void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) 
         throws InvalidSettingsException, NotConfigurableException;
 
@@ -62,7 +63,7 @@ public abstract class DialogComponent extends JPanel {
      * @param settings the <code>NodeSettings</code> to read from
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
-    public abstract void saveSettingsTo(final NodeSettings settings)
+    public abstract void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException;
 
     /**

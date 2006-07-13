@@ -29,7 +29,8 @@ import javax.swing.JLabel;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Provides a standard component for a dialog that allows to edit a double
@@ -73,7 +74,7 @@ public class DialogComponentDouble extends DialogComponent {
      * @param specs the input specs
      */        
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
          double value = settings.getDouble(m_configName, m_dvalue);
          m_dvalueField.setValue(new Double(value));
@@ -86,7 +87,7 @@ public class DialogComponentDouble extends DialogComponent {
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings)
+    public void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         try {
             m_dvalueField.commitEdit();

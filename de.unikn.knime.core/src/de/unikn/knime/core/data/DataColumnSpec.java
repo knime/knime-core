@@ -16,12 +16,11 @@
  */
 package de.unikn.knime.core.data;
 
-import java.util.Arrays;
-
 import de.unikn.knime.core.data.property.ColorHandler;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * Interface describing the makeup of one column in a <code>DataTable</code>
@@ -223,9 +222,7 @@ public final class DataColumnSpec {
      * size property to the given <code>Config</code>. 
      * @param config Write properties into.
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addString(CFG_COLUMN_NAME, m_name);
         m_type.save(config.addConfig(CFG_COLUMN_TYPE));
         m_domain.save(config.addConfig(CFG_COLUMN_DOMAIN));
@@ -247,7 +244,7 @@ public final class DataColumnSpec {
      * @throws InvalidSettingsException If one of the non-optinal properties is
      *         not available or can't be initialized.
      */
-    public static DataColumnSpec load(final Config config) 
+    public static DataColumnSpec load(final ConfigRO config) 
             throws InvalidSettingsException {
         String name = config.getString(CFG_COLUMN_NAME);
         DataType type = DataType.load(config.getConfig(CFG_COLUMN_TYPE));

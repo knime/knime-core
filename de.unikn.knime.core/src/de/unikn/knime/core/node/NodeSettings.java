@@ -43,7 +43,7 @@ public final class NodeSettings extends Config
     }
     
     @Override
-    protected Config getInstance(String key) {
+    public Config getInstance(String key) {
         return new NodeSettings(key);
     }
 
@@ -65,16 +65,16 @@ public final class NodeSettings extends Config
      * @throws NullPointerException If one of the arguments is 
      *         <code>null</code>.
      */
-    public static synchronized NodeSettings loadFromXML(
+    public static synchronized NodeSettingsRO loadFromXML(
             final InputStream in) throws IOException {
         NodeSettings tmp = new NodeSettings("ignored");
         return (NodeSettings) Config.loadFromXML(tmp, in);
     }
 
     /**
-     * @see Config#addConfig(java.lang.String)
+     * @see Config#addNodeSettings(java.lang.String)
      */
-    public NodeSettings addNodeSettings(final String key) {
+    public NodeSettingsWO addNodeSettings(final String key) {
         return (NodeSettings)super.addConfig(key);
     }
     
@@ -83,29 +83,11 @@ public final class NodeSettings extends Config
     }
 
     /**
-     * @see Config#getConfig(java.lang.String)
+     * @see Config#getNodeSettings(java.lang.String)
      */
-    public NodeSettings getNodeSettings(final String key)
+    public NodeSettingsRO getNodeSettings(final String key)
             throws InvalidSettingsException {
         return (NodeSettings)super.getConfig(key);
     }
     
-    /**
-     * @see Config#addConfig(java.lang.String)
-     */
-    @Deprecated
-    public NodeSettings addConfig(final String key) {
-        return (NodeSettings)super.addConfig(key);
-    }
-    
-    /**
-     * @see Config#getConfig(java.lang.String)
-     */
-    @Deprecated
-    public NodeSettings getConfig(final String key)
-            throws InvalidSettingsException {
-        return (NodeSettings)super.getConfig(key);
-    }
-    
-
 }

@@ -20,7 +20,6 @@
 package de.unikn.knime.core.data.property;
 
 import java.awt.Color;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +28,8 @@ import java.util.Map;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.property.ColorHandler.ColorModel;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * Color model which maps a set of <code>DataCell</code> objects to 
@@ -83,13 +83,11 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
      * alpha component which are stored as int array.
      * @param config Save settings to.
      * @see de.unikn.knime.core.data.property.ColorHandler.ColorModel
-     *      #save(de.unikn.knime.core.node.config.Config)
+     *      #save(ConfigWO)
      * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
-        Config keyConfig = config.addConfig(CFG_KEYS);
+    public void save(final ConfigWO config) {
+        ConfigWO keyConfig = config.addConfig(CFG_KEYS);
         for (Map.Entry<DataCell, ColorAttr> e : m_map.entrySet()) {
             DataCell key = e.getKey();
             keyConfig.addDataCell(key.toString(), key);
@@ -109,10 +107,10 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
      *         be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static ColorModelNominal load(final Config config) 
+    public static ColorModelNominal load(final ConfigRO config) 
             throws InvalidSettingsException {
         Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
-        Config keyConfig = config.getConfig(CFG_KEYS);
+        ConfigRO keyConfig = config.getConfig(CFG_KEYS);
         for (String key : keyConfig.keySet()) {
             int[] value = config.getIntArray(key.toString());
             Color color = new Color(value[0], value[1], value[2], value[3]);

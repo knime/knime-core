@@ -89,7 +89,7 @@ final class XMLConfig2 {
      *         <code>false</code>).
      * @throws IOException If the stream could not be read.
      */
-    static Config load(final Config config, final InputStream is,
+    static ConfigWO load(final Config config, final InputStream is,
             final boolean readRoot) throws IOException {
         Document doc = null;
         try {

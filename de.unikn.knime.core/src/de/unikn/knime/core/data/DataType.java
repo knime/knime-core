@@ -41,7 +41,8 @@ import de.unikn.knime.core.data.renderer.SetOfRendererFamilies;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * The class for each type associated with a certain implementation of a data
@@ -754,7 +755,7 @@ public final class DataType {
      * @throws InvalidSettingsException If the <code>DataType</code> could not
      *         be loaded from the given <code>Config</code>.
      */
-    public static final DataType load(final Config config) 
+    public static final DataType load(final ConfigRO config) 
             throws InvalidSettingsException {
         String cellClassName = config.getString(CFG_CELL_NAME);
         if (cellClassName != null) {
@@ -802,9 +803,7 @@ public final class DataType {
      * cell classes.
      * @param config Write to this <code>Config</code>.
      */
-    public final void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public final void save(final ConfigWO config) {
         if (m_cellClass == null) {
             config.addString(CFG_CELL_NAME, null);
             config.addBoolean(CFG_HAS_PREF_VALUE, m_hasPreferredValueClass);

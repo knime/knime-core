@@ -25,7 +25,7 @@ import de.unikn.knime.core.node.config.ConfigRO;
 
 public interface NodeSettingsRO extends ConfigRO {
     
-    public NodeSettings getNodeSettings(String key) 
+    public NodeSettingsRO getNodeSettings(String key) 
         throws InvalidSettingsException;
 
 }

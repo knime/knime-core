@@ -157,9 +157,9 @@ public abstract class NodeDialogPane {
      * @throws NotConfigurableException if the dialog cannot be opened because
      * of real invalid settings or if any predconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
-     * @see NodeModel#loadSettingsFrom(NodeSettings)
+     * @see NodeModel#loadSettingsFrom(NodeSettingsRO)
      */
-    protected abstract void loadSettingsFrom(final NodeSettings settings,
+    protected abstract void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException;
 
     /**
@@ -176,9 +176,9 @@ public abstract class NodeDialogPane {
      * 
      * @throws InvalidSettingsException If the settings are not applicable to
      *             the model.
-     * @see NodeModel#loadSettingsFrom(NodeSettings)
+     * @see NodeModel#loadSettingsFrom(NodeSettingsRO)
      */
-    protected abstract void saveSettingsTo(final NodeSettings settings)
+    protected abstract void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException;
     
     /** Commit spinners and save settings. It will first call the 
@@ -188,9 +188,9 @@ public abstract class NodeDialogPane {
      * @param settings The settings object to write into.
      * @throws InvalidSettingsException If the settings are not applicable to
      *             the model.
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
-    void finishEditingAndSaveSettingsTo(final NodeSettings settings) 
+    void finishEditingAndSaveSettingsTo(final NodeSettingsWO settings) 
         throws InvalidSettingsException {
         commitComponentsRecursively(getPanel());
         saveSettingsTo(settings);

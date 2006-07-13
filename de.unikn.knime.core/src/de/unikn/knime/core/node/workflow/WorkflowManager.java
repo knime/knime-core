@@ -43,6 +43,8 @@ import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeProgressMonitor;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 
@@ -362,7 +364,7 @@ public class WorkflowManager implements WorkflowListener {
      * Create new WorkflowManager by a given <code>WORKFLOW_FILE</code>. All
      * nodes and connection are initialzied, and - if available -
      * <code>NodeSettings</code>, <code>DataTableSpec</code>,
-     * <code>DataTable</code>, and <code>PredictiveParams</code> are loaded
+     * <code>DataTable</code>, and <code>ModelContent</code> are loaded
      * into each node.
      * 
      * @param workflowFile the location of the workflow file,
@@ -1048,7 +1050,7 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         // load workflow topology
-        NodeSettings settings = NodeSettings.loadFromXML(new FileInputStream(
+        NodeSettingsRO settings = NodeSettings.loadFromXML(new FileInputStream(
                 workflowFile));
         load(settings);
 
@@ -1067,8 +1069,8 @@ public class WorkflowManager implements WorkflowListener {
         try {
             for (NodeContainer newNode : topSortNodes()) {
                 try {
-                    NodeSettings nodeSetting = settings.getConfig(KEY_NODES)
-                            .getConfig("node_" + newNode.getID());
+                    NodeSettingsRO nodeSetting = settings.getNodeSettings(KEY_NODES)
+                            .getNodeSettings("node_" + newNode.getID());
                     String nodeFileName = nodeSetting
                             .getString(KEY_NODE_SETTINGS_FILE);
                     File nodeFile = new File(parentDir, nodeFileName);
@@ -1098,25 +1100,25 @@ public class WorkflowManager implements WorkflowListener {
 
     /**
      * Only load internal workflow manager settings, init nodes and connections.
-     * No NodeSettings, DataTableSpec, DataTable, or PredictiveParams are
+     * No NodeSettings, DataTableSpec, DataTable, or ModelContent are
      * loaded.
      * 
      * @param settings read settings from
      * @throws InvalidSettingsException if an error occurs during reading
      */
-    private void load(final NodeSettings settings)
+    private void load(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // read running ids for new nodes and connections
         m_runningNodeID = settings.getInt(KEY_RUNNING_NODE_ID);
         m_runningConnectionID = settings.getInt(KEY_RUNNING_CONN_ID);
 
         // read nodes
-        NodeSettings nodes = settings.getConfig(KEY_NODES); // Node-Subconfig
+        NodeSettingsRO nodes = settings.getNodeSettings(KEY_NODES); // Node-Subconfig
         // get all keys in there
         for (String nodeKey : nodes.keySet()) {
-            NodeSettings nodeSetting = null;
+            NodeSettingsRO nodeSetting = null;
             // retrieve config object for each node
-            nodeSetting = nodes.getConfig(nodeKey);
+            nodeSetting = nodes.getNodeSettings(nodeKey);
             // create NodeContainer based on NodeSettings object
 
             try {
@@ -1138,11 +1140,11 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         // read connections
-        NodeSettings connections = settings.getConfig(KEY_CONNECTIONS);
+        NodeSettingsRO connections = settings.getNodeSettings(KEY_CONNECTIONS);
         for (String connectionKey : connections.keySet()) {
             // retrieve config object for next connection
-            NodeSettings connectionConfig = connections
-                    .getConfig(connectionKey);
+            NodeSettingsRO connectionConfig = connections
+                    .getNodeSettings(connectionKey);
             // and add appropriate connection to workflow
             ConnectionContainer cc = null;
             try {
@@ -1326,7 +1328,7 @@ public class WorkflowManager implements WorkflowListener {
         // save current connection id
         settings.addInt(KEY_RUNNING_CONN_ID, m_runningConnectionID);
         // save nodes in an own sub-config object as a series of configs
-        NodeSettings nodes = settings.addConfig(KEY_NODES);
+        NodeSettingsWO nodes = settings.addNodeSettings(KEY_NODES);
         int nodeNum = 0;
         for (NodeContainer nextNode : m_nodesByID.values()) {
 
@@ -1339,7 +1341,7 @@ public class WorkflowManager implements WorkflowListener {
                     "_")
                     + " (#" + nextNode.getID() + ")";
             // and save it to it's own config object
-            NodeSettings nextNodeConfig = nodes.addConfig("node_"
+            NodeSettingsWO nextNodeConfig = nodes.addNodeSettings("node_"
                     + nextNode.getID());
             String nodeFileName = nodeDirID + "/" + Node.SETTINGS_FILE_NAME;
             nextNodeConfig.addString(KEY_NODE_SETTINGS_FILE, nodeFileName);
@@ -1351,11 +1353,11 @@ public class WorkflowManager implements WorkflowListener {
             nextNode.save(nextNodeConfig, nodeFile, exec);
         }
 
-        NodeSettings connections = settings.addConfig(KEY_CONNECTIONS);
+        NodeSettingsWO connections = settings.addNodeSettings(KEY_CONNECTIONS);
         for (ConnectionContainer cc : m_connectionsByID.values()) {
             // and save it to it's own config object
-            NodeSettings nextConnectionConfig = connections
-                    .addConfig("connection_" + cc.getID());
+            NodeSettingsWO nextConnectionConfig = connections
+                    .addNodeSettings("connection_" + cc.getID());
             cc.save(nextConnectionConfig);
         }
         settings.saveToXML(new FileOutputStream(workflowFile));

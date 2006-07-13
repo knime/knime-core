@@ -29,7 +29,8 @@ import javax.swing.JLabel;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Provide a standard component for a dialog that allows to edit a int value.
@@ -74,7 +75,7 @@ public class DialogComponentInteger extends DialogComponent {
      * @param specs The input specs.
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
         int value = settings.getInt(m_configName, m_dvalue);
         m_dvalueField.setValue(new Integer(value));
@@ -87,7 +88,7 @@ public class DialogComponentInteger extends DialogComponent {
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings)
+    public void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         try {
             m_dvalueField.commitEdit();

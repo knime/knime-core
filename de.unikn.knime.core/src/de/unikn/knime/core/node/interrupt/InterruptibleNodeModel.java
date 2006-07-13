@@ -36,6 +36,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
 
 /**
  * This class provides a generic implementation of a node that can be stopped
@@ -325,7 +326,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         }  
         File f = new File(nodeInternDir, FILE_NAME);
         FileInputStream fis = new FileInputStream(f);
-        NodeSettings internalSettings = NodeSettings.loadFromXML(fis);
+        NodeSettingsRO internalSettings = NodeSettings.loadFromXML(fis);
         try {
         m_finished = internalSettings.getBoolean(INTERN_CFG_FINIS);
         m_iterationCounter = internalSettings.getInt(INTERN_CFG_ITERATION);

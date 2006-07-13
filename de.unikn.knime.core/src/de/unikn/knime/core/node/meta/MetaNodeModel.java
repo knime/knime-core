@@ -29,10 +29,12 @@ import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
-import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.ModelContentRO;
+import de.unikn.knime.core.node.ModelContentWO;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.SpecialNodeModel;
@@ -234,12 +236,12 @@ public class MetaNodeModel extends SpecialNodeModel
  
     /**
      * @see de.unikn.knime.core.node.SpecialNodeModel
-     *  #saveSettingsTo(java.io.File, de.unikn.knime.core.node.NodeSettings,
+     *  #saveSettingsTo(java.io.File, NodeSettingsWO,
      *  de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveSettingsTo(final File nodeFile,
-            final NodeSettings settings, final ExecutionMonitor exec) {
+            final NodeSettingsWO settings, final ExecutionMonitor exec) {
         if (internalWFM() == null) { return; }
         if (nodeFile != null) {
             try {
@@ -383,12 +385,12 @@ public class MetaNodeModel extends SpecialNodeModel
     /** 
      * @see de.unikn.knime.core.node.SpecialNodeModel
      *  #loadValidatedSettingsFrom(java.io.File,
-     *  de.unikn.knime.core.node.NodeSettings,
+     *  NodeSettingsRO,
      *  de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadValidatedSettingsFrom(final File nodeFile,
-            final NodeSettings settings, final ExecutionMonitor exec)
+            final NodeSettingsRO settings, final ExecutionMonitor exec)
             throws InvalidSettingsException {
         if (nodeFile != null) {
             File f = new File(nodeFile.getParentFile(),
@@ -511,11 +513,11 @@ public class MetaNodeModel extends SpecialNodeModel
 
     /**
      * @see de.unikn.knime.core.node.SpecialNodeModel
-     *  #validateSettings(java.io.File, de.unikn.knime.core.node.NodeSettings)
+     *  #validateSettings(java.io.File, NodeSettingsRO)
      */
     @Override
     protected void validateSettings(final File nodeFile,
-            final NodeSettings settings) throws InvalidSettingsException {
+            final NodeSettingsRO settings) throws InvalidSettingsException {
         //         
     }
     
@@ -535,23 +537,23 @@ public class MetaNodeModel extends SpecialNodeModel
 
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadPredictorParams(int, de.unikn.knime.core.node.ModelContent)
+     *  #loadModelContent(int, ModelContentRO)
      */
     @Override
-    protected void loadPredictorParams(final int index,
-            final ModelContent predParams) throws InvalidSettingsException {
-        m_modelInModels[index].setPredictorParams(predParams);
+    protected void loadModelContent(final int index,
+            final ModelContentRO predParams) throws InvalidSettingsException {
+        m_modelInModels[index].setModelContent(predParams);
     }
 
     
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #savePredictorParams(int, de.unikn.knime.core.node.ModelContent)
+     *  #saveModelContent(int, ModelContentWO)
      */
     @Override
-    protected void savePredictorParams(final int index,
-            final ModelContent predParams) throws InvalidSettingsException {
-        m_modelOutModels[index].getPredictorParams().copyTo(predParams);
+    protected void saveModelContent(final int index,
+            final ModelContentWO predParams) throws InvalidSettingsException {
+        m_modelOutModels[index].getModelContent().copyTo(predParams);
     }
 
 

@@ -205,7 +205,7 @@ public final class Node {
             m_outModelPorts[i] = new ModelContentOutPort(i + getNrDataOutPorts(),
                     this);
             m_outModelPorts[i].setPortName(m_factory.getOutportModelName(i));
-            m_outModelPorts[i].setPredictorParams(null);
+            m_outModelPorts[i].setModelContent(null);
         }
 
         if (m_model instanceof SpecialNodeModel) {
@@ -267,7 +267,7 @@ public final class Node {
         }
 
         // load node settings
-        NodeSettings settings = 
+        NodeSettingsRO settings = 
             NodeSettings.loadFromXML(new FileInputStream(nodeFile));
 
         // read node name
@@ -286,7 +286,7 @@ public final class Node {
 
         // read model and load settings
         try {
-            NodeSettings modelSettings = settings.getConfig(CFG_MODEL);
+            NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
             if (m_model instanceof SpecialNodeModel) {
                 ((SpecialNodeModel) m_model).loadSettingsFrom(nodeFile,
                         modelSettings, exec);
@@ -308,13 +308,13 @@ public final class Node {
         
         // if node was configured
         if (isConfigured()) {
-            NodeSettings spec = settings.getConfig(CFG_SPEC_FILES);
+            NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
             for (int i = 0; i < m_outDataPorts.length; i++) {
                 String specName = spec.getString(CFG_OUTPUT_PREFIX + i);
                 File targetFile = new File(m_nodeDir, specName);
                 DataTableSpec outSpec = null;
                 if (targetFile.exists()) {
-                    NodeSettings settingsSpec = NodeSettings.loadFromXML(
+                    NodeSettingsRO settingsSpec = NodeSettings.loadFromXML(
                         new BufferedInputStream(
                                 new FileInputStream(targetFile)));
                     outSpec = DataTableSpec.load(settingsSpec);
@@ -340,14 +340,14 @@ public final class Node {
                 loadData(loadID, dataConfigFile, exec);
             }
             // load models
-            NodeSettings model = settings.getConfig(CFG_MODEL_FILES);
+            NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
             for (int i = 0; i < m_outModelPorts.length; i++) {
                 String modelName = model.getString(CFG_OUTPUT_PREFIX + i);
                 File targetFile = new File(m_nodeDir, modelName);
                 BufferedInputStream in = 
                     new BufferedInputStream(new FileInputStream(targetFile));
-                ModelContent pred = ModelContent.loadFromXML(in);
-                m_outModelPorts[i].setPredictorParams(pred);
+                ModelContentRO pred = ModelContent.loadFromXML(in);
+                m_outModelPorts[i].setModelContent(pred);
             }
             m_isCurrentlySaved = true;
         } else {
@@ -409,14 +409,14 @@ public final class Node {
      * @return The total number of input ports (data + model ports).
      */
     public int getNrInPorts() {
-        return getNrDataInPorts() + getNrPredictorInPorts();
+        return getNrDataInPorts() + getNrModelContentInPorts();
     }
 
     /**
      * @return The total number of output ports (data + model ports).
      */
     public int getNrOutPorts() {
-        return getNrDataOutPorts() + getNrPredictorOutPorts();
+        return getNrDataOutPorts() + getNrModelContentOutPorts();
     }
 
     /**
@@ -429,7 +429,7 @@ public final class Node {
     /**
      * @return The number of input ports for <code>ModelContent</code>.
      */
-    public int getNrPredictorInPorts() {
+    public int getNrModelContentInPorts() {
         return m_inModelPorts.length;
     }
 
@@ -459,7 +459,7 @@ public final class Node {
     /**
      * @return The number of <code>ModelContent</code> output ports.
      */
-    public int getNrPredictorOutPorts() {
+    public int getNrModelContentOutPorts() {
         return m_outModelPorts.length;
     }
 
@@ -498,7 +498,7 @@ public final class Node {
      * @return <code>true</code> if the port with the specified ID is a
      *         ModelContent port.
      */
-    public boolean isPredictorInPort(final int id) {
+    public boolean isModelContentInPort(final int id) {
         if ((getNrDataInPorts() <= id) && (id < getNrInPorts())) {
             return true;
         }
@@ -512,7 +512,7 @@ public final class Node {
      * @return <code>true</code> if the port with the specified ID is a
      *         ModelContent port.
      */
-    public boolean isPredictorOutPort(final int id) {
+    public boolean isModelContentOutPort(final int id) {
         if ((getNrDataOutPorts() <= id) && (id < getNrOutPorts())) {
             return true;
         }
@@ -622,7 +622,7 @@ public final class Node {
             if (!inPort.isConnected()) {
                 return false;
             }
-            if (inPort.getPredictorParams() == null) {
+            if (inPort.getModelContent() == null) {
                 return false;
             }
         }
@@ -779,16 +779,16 @@ public final class Node {
         }
 
         // check created predictor models (if any)
-        predParams = new ModelContent[getNrPredictorOutPorts()];
+        predParams = new ModelContent[getNrModelContentOutPorts()];
         for (int p = 0; p < predParams.length; p++) {
             // create ModelContent to write into
             predParams[p] = new ModelContent("predictor");
             try {
-                m_model.savePredictorParams(p, predParams[p]);
+                m_model.saveModelContent(p, predParams[p]);
             } catch (InvalidSettingsException ise) {
                 m_logger.error("Predictor model couldn't be saved at port #"
                         + p, ise);
-                m_status = new NodeStatus.Error("Predictor model couldn't " 
+                m_status = new NodeStatus.Error("ModelContent couldn't " 
                         + "be saved at port #" + p + ise.getMessage());
                 notifyStateListeners(m_status);
                 notifyStateListeners(
@@ -811,8 +811,8 @@ public final class Node {
             t.setOwnerRecursively(this);
             m_outDataPorts[p].setDataTable(t);
         }
-        for (int p = 0; p < getNrPredictorOutPorts(); p++) {
-            m_outModelPorts[p].setPredictorParams(predParams[p]);
+        for (int p = 0; p < getNrModelContentOutPorts(); p++) {
+            m_outModelPorts[p].setModelContent(predParams[p]);
         }
         m_logger.info("End execute (" + (System.currentTimeMillis() - time)
                 / 100 / 10.0 + " sec)");
@@ -904,11 +904,11 @@ public final class Node {
         }
 
         // blow away our pred models in the out ports
-        for (int p = 0; p < getNrPredictorOutPorts(); p++) {
+        for (int p = 0; p < getNrModelContentOutPorts(); p++) {
             try {
-                m_outModelPorts[p].setPredictorParams(null);
+                m_outModelPorts[p].setModelContent(null);
             } catch (NullPointerException npe) {
-                m_logger.coding("loadPredictorParams() does not check for null"
+                m_logger.coding("loadModelContent() does not check for null"
                         + " argument.");
                 m_status = new NodeStatus.Warning("Node does not check for "
                         + "null argument in loadPreddictorParams().");
@@ -916,15 +916,15 @@ public final class Node {
         }
 
         // load ModelContent from all available InPorts again
-        for (int p = 0; p < getNrPredictorInPorts(); p++) {
+        for (int p = 0; p < getNrModelContentInPorts(); p++) {
             try {
-                m_model.loadPredictorParams(p, m_inModelPorts[p]
-                        .getPredictorParams());
+                m_model.loadModelContent(p, m_inModelPorts[p]
+                        .getModelContent());
             } catch (NullPointerException npe) {
-                m_logger.coding("loadPredictorParams() does not check for null"
+                m_logger.coding("loadModelContent() does not check for null"
                         + " argument.");
                 m_status = new NodeStatus.Warning("Node does not check for "
-                        + "null argument in loadPreddictorParams().");
+                        + "null argument in loadModelContent().");
             } catch (InvalidSettingsException ise) {
                 m_status = new NodeStatus.Warning("Could not load model"
                         + " settings into the node.");
@@ -984,7 +984,7 @@ public final class Node {
      * 
      * @see Node#inportHasNewHiLiteHandler
      * @see Node#inportHasNewTableSpec
-     * @see Node#inportHasNewPredictorParams
+     * @see Node#inportHasNewModelContent
      */
     void inportHasNewConnection(final int inPortID) {
         boundInPort(inPortID);
@@ -998,7 +998,7 @@ public final class Node {
             // also get a new DataTableSpec, if available
             inportHasNewTableSpec(inPortID);
         } else {
-            inportHasNewPredictorParams(inPortID);
+            inportHasNewModelContent(inPortID);
         }
     }
 
@@ -1026,14 +1026,14 @@ public final class Node {
              */
             int realId = inPortID - getNrDataInPorts();
             try {
-                m_model.loadPredictorParams(realId, null);
+                m_model.loadModelContent(realId, null);
             } catch (NullPointerException e) {
                 /*
                  * if the nodemodel implementation of the loadPredictorParams is
                  * correct we will not end up here.
                  */
                 m_logger.coding("Incorrect implementation of "
-                        + "method NodeModel.loadPredictorParams: "
+                        + "method NodeModel.loadModelConten(): "
                         + "It must handle null parameters");
             } catch (InvalidSettingsException ise) {
                 // ignore, since we tried to load null settings.
@@ -1116,17 +1116,17 @@ public final class Node {
      * @param inPortID The port ID that has a new predictor model spec
      *            available.
      */
-    void inportHasNewPredictorParams(final int inPortID) {
+    void inportHasNewModelContent(final int inPortID) {
         // Predictor params are propagated through model ports only
-        boundPredParamsInPort(inPortID);
+        boundModelContentInPort(inPortID);
         if (isExecuted()) {
             reset();
         }
         try {
             int realId = inPortID - getNrDataInPorts();
-            ModelContent params = m_inModelPorts[realId]
-                    .getPredictorParams();
-            m_model.loadPredictorParams(realId, params);
+            ModelContentRO params = m_inModelPorts[realId]
+                    .getModelContent();
+            m_model.loadModelContent(realId, params);
         } catch (InvalidSettingsException ise) {
             m_logger.warn("Unable to load ModelContent: "
                     + ise.getMessage());
@@ -1415,7 +1415,7 @@ public final class Node {
         settings.addBoolean(CFG_ISEXECUTED, isExecuted());
      
         // write model
-        final NodeSettings model = settings.addConfig(CFG_MODEL);
+        final NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
         try {
             if (m_model instanceof SpecialNodeModel) {
                 ((SpecialNodeModel) m_model).saveSettingsTo(nodeFile, model,
@@ -1432,7 +1432,7 @@ public final class Node {
         m_nodeDir = nodeFile.getParentFile();
         
         if (isConfigured()) {
-            NodeSettings specs = settings.addConfig(CFG_SPEC_FILES);
+            NodeSettingsWO specs = settings.addNodeSettings(CFG_SPEC_FILES);
             for (int i = 0; i < m_outDataPorts.length; i++) {
                 String specName = createSpecFileName(i);
                 specs.addString(CFG_OUTPUT_PREFIX + i, specName);
@@ -1479,12 +1479,12 @@ public final class Node {
                     File dataSettingsFile = new File(m_nodeDir, DATA_FILE_NAME);
                     saveData(dataSettingsFile, exec);
                 }
-                NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
+                NodeSettingsWO models = settings.addNodeSettings(CFG_MODEL_FILES);
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     String specName = createModelFileName(i);
                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
-                    ModelContent pred = 
-                        m_outModelPorts[i].getPredictorParams();
+                    ModelContentRO pred = 
+                        m_outModelPorts[i].getModelContent();
                     File targetFile = new File(m_nodeDir, specName);
                     BufferedOutputStream out = new BufferedOutputStream(
                             new FileOutputStream(targetFile));
@@ -1508,7 +1508,7 @@ public final class Node {
                  if (getNrDataOutPorts() > 0) {
                      settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
                  }
-                 NodeSettings models = settings.addConfig(CFG_MODEL_FILES);
+                 NodeSettingsWO models = settings.addNodeSettings(CFG_MODEL_FILES);
                  for (int i = 0; i < m_outModelPorts.length; i++) {
                      String specName = createModelFileName(i);
                      models.addString(CFG_OUTPUT_PREFIX + i, specName);
@@ -1536,8 +1536,8 @@ public final class Node {
         }
         settings.addString(CFG_DATA_FILE_DIR, DATA_FILE_DIR);
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            NodeSettings portSettings = 
-                settings.addConfig(CFG_OUTPUT_PREFIX + i);
+            NodeSettingsWO portSettings = 
+                settings.addNodeSettings(CFG_OUTPUT_PREFIX + i);
             String dataName = createDataFileDirName(i);
             File dir = new File(dataDir, dataName);
             dir.mkdir();
@@ -1556,7 +1556,7 @@ public final class Node {
     private void loadData(final int loadID, final File configfile, 
             final ExecutionMonitor exec) throws IOException, 
             CanceledExecutionException, InvalidSettingsException {
-        NodeSettings settings = NodeSettings.loadFromXML(
+        NodeSettingsRO settings = NodeSettings.loadFromXML(
                 new BufferedInputStream(new FileInputStream(configfile)));
         String dataPath = settings.getString(CFG_DATA_FILE_DIR);
         File dataDir = new File(m_nodeDir, dataPath);
@@ -1565,8 +1565,8 @@ public final class Node {
                     + dataDir.getAbsolutePath());
         }
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            NodeSettings portSettings = 
-                settings.getConfig(CFG_OUTPUT_PREFIX + i);
+            NodeSettingsRO portSettings = 
+                settings.getNodeSettings(CFG_OUTPUT_PREFIX + i);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
             File dir = new File(dataDir, dataName);
             if (!dir.isDirectory() || !dir.canRead()) {
@@ -1715,31 +1715,6 @@ public final class Node {
         return outDataPortID;
     }
 
-    // /**
-    // * Checks range for given output port ID.
-    // *
-    // * @param outPortID The output port ID to check.
-    // * @return Given params output port ID if in range.
-    // * @throws IndexOutOfBoundsException if the specified ID is not a pred
-    // * params output port ID.
-    // */
-    // private int boundPredParamsOutPort(final int outPortID) {
-    // if ((outPortID < getNrDataOutPorts())
-    // || (outPortID >= getNrPredictorOutPorts() + getNrDataOutPorts())) {
-    //
-    // throw new IndexOutOfBoundsException(
-    // "Invalid predictor params output-port number: "
-    // + outPortID
-    // + " (valid range: ["
-    // + getNrDataOutPorts()
-    // + "..."
-    // + (getNrPredictorOutPorts()
-    // + getNrDataOutPorts() - 1)
-    // + "])");
-    // }
-    // return outPortID;
-    // }
-
     /**
      * Checks range for given input port ID.
      * 
@@ -1748,17 +1723,17 @@ public final class Node {
      * @throws IndexOutOfBoundsException if the specified ID is not a pred
      *             params input port ID.
      */
-    private int boundPredParamsInPort(final int inPortID) {
+    private int boundModelContentInPort(final int inPortID) {
         // predictor params port ids are the indecies above the data port ids
         if ((inPortID < getNrDataInPorts())
-                || (inPortID >= getNrPredictorInPorts() + getNrDataInPorts())) {
+                || (inPortID >= getNrModelContentInPorts() + getNrDataInPorts())) {
             throw new IndexOutOfBoundsException(
-                    "Invalid predictor params input-port number: "
+                    "Invalid ModelContent input-port number: "
                             + inPortID
                             + " (valid range: ["
                             + getNrDataInPorts()
                             + "..."
-                            + (getNrPredictorInPorts() + getNrDataInPorts() - 1)
+                            + (getNrModelContentInPorts() + getNrDataInPorts() - 1)
                             + "])");
         }
         return inPortID;

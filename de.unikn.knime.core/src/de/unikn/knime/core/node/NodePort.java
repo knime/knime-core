@@ -24,7 +24,7 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 /**
  * Abstract node port implementation which keeps a unique id and a port name.
  * The inner classes can be used to distinguish between <code>DataPort</code>
- * and <code>PredictorParamsPort</code> objects.
+ * and <code>ModelContentPort</code> objects.
  * 
  * @see NodeInPort
  * @see NodeOutPort
@@ -129,11 +129,11 @@ public abstract class NodePort {
      * Interface to identify <code>PredcitorParamsPort</code> objects which
      * returns <code>ModelContent</code> objects.
      */
-    interface PredictorParamsPort {
+    interface ModelContentPort {
         /**
          * @return The node port's <code>ModelContent</code> object.
          */
-        ModelContent getPredictorParams();
+        ModelContentRO getModelContent();
     }
 
     /**

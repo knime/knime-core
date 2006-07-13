@@ -43,7 +43,8 @@ import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeOutPort;
 import de.unikn.knime.core.node.NodeProgressMonitor;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
 import de.unikn.knime.core.node.NodeView;
@@ -91,7 +92,7 @@ public class NodeContainer implements NodeStateListener {
      * @return new <code>NodeExtraInfo</code> object or null
      * @throws InvalidSettingsException if the settings are invalid
      */
-    protected static NodeExtraInfo createExtraInfo(final NodeSettings sett)
+    protected static NodeExtraInfo createExtraInfo(final NodeSettingsRO sett)
             throws InvalidSettingsException {
         NodeExtraInfo extraInfo = null; // null if it doesn't exist
         if (sett.containsKey(NodeContainer.KEY_EXTRAINFOCLASS)) {
@@ -112,7 +113,7 @@ public class NodeContainer implements NodeStateListener {
         return extraInfo;
     }
 
-    private static NodeFactory readNodeFactory(final NodeSettings settings)
+    private static NodeFactory readNodeFactory(final NodeSettingsRO settings)
             throws InvalidSettingsException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
         // read node factory class name
@@ -231,9 +232,9 @@ public class NodeContainer implements NodeStateListener {
      * @throws IllegalAccessException if the factory class is not acessible
      * @throws InstantiationException if a factory object could not be created
      * 
-     * @see #save(NodeSettings, File, ExecutionMonitor)
+     * @see #save(NodeSettingsWO, File, ExecutionMonitor)
      */
-    public NodeContainer(final NodeSettings settings, final WorkflowManager wfm)
+    public NodeContainer(final NodeSettingsRO settings, final WorkflowManager wfm)
             throws InvalidSettingsException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
         this(readNodeFactory(settings), wfm, settings.getInt(KEY_ID));
@@ -548,17 +549,17 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getNrPredictorInPorts()
+     * @see Node#getNrModelContentInPorts()
      */
-    public int getNrPredictorInPorts() {
-        return m_node.getNrPredictorInPorts();
+    public int getNrModelContentInPorts() {
+        return m_node.getNrModelContentInPorts();
     }
 
     /**
-     * @see Node#getNrPredictorOutPorts()
+     * @see Node#getNrModelContentOutPorts()
      */
-    public int getNrPredictorOutPorts() {
-        return m_node.getNrPredictorOutPorts();
+    public int getNrModelContentOutPorts() {
+        return m_node.getNrModelContentOutPorts();
     }
 
     /**
@@ -767,17 +768,17 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#isPredictorInPort(int)
+     * @see Node#isModelContentInPort(int)
      */
     public boolean isPredictorInPort(final int portNumber) {
-        return m_node.isPredictorInPort(portNumber);
+        return m_node.isModelContentInPort(portNumber);
     }
 
     /**
-     * @see Node#isPredictorOutPort(int)
+     * @see Node#isModelContentOutPort(int)
      */
     public boolean isPredictorOutPort(final int portNumber) {
-        return m_node.isPredictorOutPort(portNumber);
+        return m_node.isModelContentOutPort(portNumber);
     }
 
     /**
@@ -880,7 +881,7 @@ public class NodeContainer implements NodeStateListener {
      * 
      * @param settings To write settings to.
      */
-    public void save(final NodeSettings settings) {
+    public void save(final NodeSettingsWO settings) {
         settings.addString(KEY_FACTORY_NAME, m_node.getFactory().getClass()
                 .getName());
         settings.addInt(KEY_ID, m_id);
@@ -904,7 +905,7 @@ public class NodeContainer implements NodeStateListener {
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
-    public void save(final NodeSettings settings, final File nodeFile,
+    public void save(final NodeSettingsWO settings, final File nodeFile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         save(settings);

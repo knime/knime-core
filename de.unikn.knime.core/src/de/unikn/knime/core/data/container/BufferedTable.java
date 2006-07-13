@@ -25,7 +25,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
@@ -83,9 +83,9 @@ public class BufferedTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see KnowsRowCountTable#saveToFile(File, NodeSettings, ExecutionMonitor)
+     * @see KnowsRowCountTable#saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
-    public void saveToFile(final File f, final NodeSettings settings, 
+    public void saveToFile(final File f, final NodeSettingsWO settings, 
             final ExecutionMonitor exec) throws IOException, 
             CanceledExecutionException {
         m_buffer.saveToFile(f, exec);

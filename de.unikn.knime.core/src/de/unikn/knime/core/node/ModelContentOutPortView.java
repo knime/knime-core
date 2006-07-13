@@ -69,7 +69,7 @@ final class ModelContentOutPortView extends NodeOutPortView {
      * 
      * @param predParams The new content can be null.
      */
-    void updatePredictorParams(final ModelContent predParams) {
+    void updateModelContent(final ModelContentRO predParams) {
         m_tree.removeAll();
         if (predParams == null) {
             m_tree.setModel(new DefaultTreeModel(NO_TEXT));

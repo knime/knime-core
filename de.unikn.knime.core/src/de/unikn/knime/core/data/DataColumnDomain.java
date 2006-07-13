@@ -22,6 +22,7 @@ import java.util.Set;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
 
 /**
  * A column domain object holds information about one column's domain, that are,
@@ -262,7 +263,7 @@ public final class DataColumnDomain {
      * @return A new domain object with the read properties.
      * @throws InvalidSettingsException If lower or upper bound are ot defined.
      */
-    public static DataColumnDomain load(final Config config)
+    public static DataColumnDomain load(final ConfigRO config)
             throws InvalidSettingsException {
         DataCell lower = config.getDataCell(CFG_LOWER_BOUND);
         DataCell upper = config.getDataCell(CFG_UPPER_BOUND);

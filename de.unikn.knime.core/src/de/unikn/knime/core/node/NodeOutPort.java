@@ -122,8 +122,8 @@ public abstract class NodeOutPort extends NodePort {
                 && !(connInPort instanceof NodePort.DataPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
-        if (this instanceof NodePort.PredictorParamsPort
-                && !(connInPort instanceof NodePort.PredictorParamsPort)) {
+        if (this instanceof NodePort.ModelContentPort
+                && !(connInPort instanceof NodePort.ModelContentPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
         synchronized (m_connInPorts) {
@@ -148,8 +148,8 @@ public abstract class NodeOutPort extends NodePort {
                 && !(connInPort instanceof NodePort.DataPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
-        if (this instanceof NodePort.PredictorParamsPort
-                && !(connInPort instanceof NodePort.PredictorParamsPort)) {
+        if (this instanceof NodePort.ModelContentPort
+                && !(connInPort instanceof NodePort.ModelContentPort)) {
             throw new IllegalArgumentException("Port types don't match.");
         }
         synchronized (m_connInPorts) {

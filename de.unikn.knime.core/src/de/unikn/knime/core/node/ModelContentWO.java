@@ -25,4 +25,8 @@ import de.unikn.knime.core.node.config.ConfigWO;
 
 public interface ModelContentWO extends ConfigWO {
 
+    public ModelContentWO addModelContent(String key);
+    
+    public void addModelContent(ModelContent settings);
+    
 }

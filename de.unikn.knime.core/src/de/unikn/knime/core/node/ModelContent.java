@@ -33,7 +33,7 @@ import de.unikn.knime.core.node.config.Config;
  */
 public final class ModelContent extends Config 
         implements ModelContentRO, ModelContentWO {
-
+    
     /**
      * Hides public default constructor.
      * 
@@ -47,36 +47,10 @@ public final class ModelContent extends Config
      * @see de.unikn.knime.core.node.config.Config#getInstance(java.lang.String)
      */
     @Override
-    public ModelContent getInstance(final String key) {
+    public Config getInstance(final String key) {
         return new ModelContent(key);
     }
 
-    /**
-     * Creates and returns a new ModelContent with the given key.
-     * 
-     * @param key The key for the new ModelContent.
-     * @return A <code>ModelContent</code> object.
-     * 
-     * @see de.unikn.knime.core.node.NodeSettings#getConfig(String)
-     */
-    @Deprecated
-    public ModelContent addConfig(final String key) {
-        return (ModelContent)super.addConfig(key);
-    }
-
-    /**
-     * Returns the ModelContent for the given key.
-     * 
-     * @param key The key to retrieve the ModelContent for.
-     * @return The ModelContent object.
-     * @throws InvalidSettingsException The ModelContent could not be found.
-     */
-    @Deprecated
-    public ModelContent getConfig(final String key)
-            throws InvalidSettingsException {
-        return (ModelContent)super.getConfig(key);
-    }
-    
     /**
      * Reads <code>ModelContent</code> settings from the given XML stream 
      * and returns a new <code>ModelContent</code> object.
@@ -87,7 +61,7 @@ public final class ModelContent extends Config
      * @throws NullPointerException If one of the arguments is 
      *         <code>null</code>.
      */
-    public static synchronized ModelContent loadFromXML(
+    public static synchronized ModelContentRO loadFromXML(
             final InputStream in) throws IOException {
         ModelContent tmpSettings = new ModelContent("ignored");
         return (ModelContent) Config.loadFromXML(tmpSettings, in);
@@ -97,13 +71,16 @@ public final class ModelContent extends Config
         super.addConfig(modelContent);
     }
 
-    /**
-     * @see Config#getConfig(java.lang.String)
-     */
-    public ModelContent getModelContent(final String key)
-            throws InvalidSettingsException {
-        return (ModelContent)super.getConfig(key);
+    public ModelContentWO addModelContent(final String key) {
+        return (ModelContent) super.addConfig(key);
     }
     
+    /**
+     * @see Config#getNodeSettings(java.lang.String)
+     */
+    public ModelContentRO getModelContent(final String key)
+            throws InvalidSettingsException {
+        return (ModelContent) super.getConfig(key);
+    } 
 
 }

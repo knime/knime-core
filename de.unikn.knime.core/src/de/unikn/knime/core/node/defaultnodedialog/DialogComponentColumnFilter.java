@@ -54,7 +54,8 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Default component for dialogs allowing to select a subset of the available
@@ -338,10 +339,10 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param settings config to read from
      * @param specs table specs for the inports
      * @throws InvalidSettingsException if something fails
-     * @see DialogComponent#loadSettingsFrom(NodeSettings, DataTableSpec[])
+     * @see DialogComponent#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         LinkedHashSet<String> excl = new LinkedHashSet<String>();
         try {
@@ -362,10 +363,10 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * that).
      * 
      * @param settings config to write to
-     * @see DialogComponent#loadSettingsFrom(NodeSettings, DataTableSpec[])
+     * @see DialogComponent#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         List<String> colList;
         if (m_storeExcluded) {
             colList = this.getExcludedColumnList();

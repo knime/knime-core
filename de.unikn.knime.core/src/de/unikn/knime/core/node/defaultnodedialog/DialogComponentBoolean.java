@@ -26,7 +26,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Provide a standard component for a dialog that allows to edit a boolean
@@ -64,7 +65,7 @@ public final class DialogComponentBoolean extends DialogComponent {
      * @param specs the input specs
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
         boolean newBool = settings.getBoolean(m_configName, m_dftValue);
         m_checkbox.setSelected(newBool);
@@ -76,7 +77,7 @@ public final class DialogComponentBoolean extends DialogComponent {
      * @param settings the <code>NodeSettings</code> to write into
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addBoolean(m_configName, m_checkbox.getModel().isSelected());
     }
 

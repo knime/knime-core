@@ -21,7 +21,8 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * This model is for collecting the data tables that are produced by the meta
@@ -42,27 +43,27 @@ public class DataOutputNodeModel extends MetaOutputModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel#saveSettingsTo(
-     * de.unikn.knime.core.node.NodeSettings)
+     * NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel#validateSettings(
-     * de.unikn.knime.core.node.NodeSettings)
+     * NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel#
-     * loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     * loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
 

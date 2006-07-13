@@ -104,7 +104,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param index the index of the predictor input port
      * @return a predictor input port
      */
-    protected final ModelContentInPort getPredictorInPort(final int index) {
+    protected final ModelContentInPort getModelContentInPort(final int index) {
         return (ModelContentInPort)m_node.getInPort(index + getNrDataIns());
     }
 
@@ -115,7 +115,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param index the index of the predictor output port
      * @return a predictor output port
      */
-    protected final ModelContentOutPort getPredictorOutPort(final int index) {
+    protected final ModelContentOutPort getModelContentOutPort(final int index) {
         return (ModelContentOutPort)m_node.getOutPort(index + getNrDataOuts());
     }
     
@@ -212,7 +212,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      *             fails.
      */
     final void loadSettingsFrom(final File nodeFile,
-            final NodeSettings settings, final ExecutionMonitor exec)
+            final NodeSettingsRO settings, final ExecutionMonitor exec)
             throws InvalidSettingsException {
         validateSettings(nodeFile, settings);
         loadValidatedSettingsFrom(nodeFile, settings, exec);
@@ -221,10 +221,10 @@ public abstract class SpecialNodeModel extends NodeModel {
         
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *  #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected final void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected final void loadValidatedSettingsFrom(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         loadValidatedSettingsFrom(null, settings, null);        
     }
@@ -232,10 +232,10 @@ public abstract class SpecialNodeModel extends NodeModel {
     
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     *  #validateSettings(NodeSettingsRO)
      */
     @Override
-    protected final void validateSettings(final NodeSettings settings)
+    protected final void validateSettings(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         validateSettings(null, settings);
     }
@@ -254,20 +254,20 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param settings The settings to validate.
      * @throws InvalidSettingsException If the validation of the settings
      *             failed.
-     * @see #saveSettingsTo(NodeSettings)
-     * @see #loadValidatedSettingsFrom(NodeSettings)
+     * @see #saveSettingsTo(NodeSettingsWO)
+     * @see #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     protected abstract void validateSettings(final File nodeDir,
-            final NodeSettings settings)
+            final NodeSettingsRO settings)
             throws InvalidSettingsException;
     
     
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *  #saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected final void saveSettingsTo(final NodeSettings settings) {
+    protected final void saveSettingsTo(final NodeSettingsWO settings) {
         saveSettingsTo(null, settings, null);
     }
 
@@ -280,7 +280,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * saves
      */
     protected abstract void saveSettingsTo(final File nodeDir,
-            final NodeSettings settings, final ExecutionMonitor exec);
+            final NodeSettingsWO settings, final ExecutionMonitor exec);
     
     
     /**
@@ -293,7 +293,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @throws InvalidSettingsException if the settings are invalid
      */
     protected abstract void loadValidatedSettingsFrom(final File nodeDir,
-            final NodeSettings settings, final ExecutionMonitor exec)
+            final NodeSettingsRO settings, final ExecutionMonitor exec)
             throws InvalidSettingsException;
     
     

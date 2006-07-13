@@ -34,7 +34,8 @@ import javax.swing.border.Border;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.util.SimpleFileFilter;
 
 /**
@@ -162,14 +163,14 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     /**
      * @see de.unikn.knime.core.node.defaultnodedialog.DialogComponent
-     *      #loadSettingsFrom(NodeSettings, DataTableSpec[])
+     *      #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      * 
      * @param settings the NodeSettings object to read settings from
      * @param specs specs of all input tables
      * @throws InvalidSettingsException if the settings could not be read
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         assert settings != null;
         String fileName = "";
@@ -186,10 +187,10 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     /**
      * @see de.unikn.knime.core.node.defaultnodedialog.DialogComponent
-     *      #saveSettingsTo(NodeSettings)
+     *      #saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         String file = m_fileURL.getText().trim();
         if (file.length() == 0) {
             file = null;

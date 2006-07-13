@@ -25,7 +25,8 @@ import javax.swing.SpinnerNumberModel;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Provide a standard component for a dialog that allows to edit an integer
@@ -111,7 +112,7 @@ public class DialogComponentNumber extends DialogComponent {
      * @throws InvalidSettingsException If the settings could not be read.
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         assert (settings != null);
         if (m_type.equals(Type.INT)) {
@@ -131,7 +132,7 @@ public class DialogComponentNumber extends DialogComponent {
      * @param settings The <code>NodeSettings</code> to write into.
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_type.equals(Type.INT)) {
             settings.addInt(m_configName, ((Integer)m_spinner.getValue()));
         } else if (m_type.equals(Type.DOUBLE)) {

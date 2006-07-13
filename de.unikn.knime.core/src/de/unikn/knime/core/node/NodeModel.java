@@ -55,10 +55,10 @@ public abstract class NodeModel {
     private final int m_nrDataOuts;
 
     /** The number of input predictive models. */
-    private final int m_nrPredParamsIns;
+    private final int m_nrModelIns;
 
     /** The number of predictive models. */
-    private final int m_nrPredParamsOuts;
+    private final int m_nrModelOuts;
 
     /** Holds the input hilite handler for each input. */
     private final HiLiteHandler[] m_inHiLiteHdls;
@@ -108,9 +108,9 @@ public abstract class NodeModel {
         // inits number of outputs
         m_nrDataOuts = nrDataOuts;
         // inits number of inputs
-        m_nrPredParamsIns = nrPredParamsIns;
+        m_nrModelIns = nrPredParamsIns;
         // inits number of outputs
-        m_nrPredParamsOuts = nrPredParamsOuts;
+        m_nrModelOuts = nrPredParamsOuts;
 
         // model is not configured and not executed
         m_configured = false;
@@ -209,11 +209,11 @@ public abstract class NodeModel {
      * @throws InvalidSettingsException If the predictive parameters could not
      *             be loaded.
      */
-    protected void loadPredictorParams(final int index,
-            final ModelContent predParams) throws InvalidSettingsException {
+    protected void loadModelContent(final int index,
+            final ModelContentRO predParams) throws InvalidSettingsException {
         assert predParams == predParams;
         throw new InvalidSettingsException(
-                "loadPredictorParams() not overridden: " + index);
+                "loadModelContent() not overridden: " + index);
     }
 
     /**
@@ -231,11 +231,11 @@ public abstract class NodeModel {
      * @param predParams The ModelContent to save to.
      * @throws InvalidSettingsException If the model could not be saved.
      */
-    protected void savePredictorParams(final int index,
-            final ModelContent predParams) throws InvalidSettingsException {
+    protected void saveModelContent(final int index,
+            final ModelContentWO predParams) throws InvalidSettingsException {
         assert predParams == predParams;
         throw new InvalidSettingsException(
-                "savePredictorParams() not overridden: " + index);
+                "saveModelContent() not overridden: " + index);
     }
 
     /**
@@ -307,7 +307,7 @@ public abstract class NodeModel {
      * @return Number of inputs.
      */
     protected final int getNrModelIns() {
-        return m_nrPredParamsIns;
+        return m_nrModelIns;
     }
 
     /**
@@ -316,7 +316,7 @@ public abstract class NodeModel {
      * @return Number of outputs.
      */
     protected final int getNrModelOuts() {
-        return m_nrPredParamsOuts;
+        return m_nrModelOuts;
     }
 
     /**
@@ -325,7 +325,7 @@ public abstract class NodeModel {
      * @return Number of inputs.
      */
     protected final int getNrIns() {
-        return m_nrDataIns + m_nrPredParamsIns;
+        return m_nrDataIns + m_nrModelIns;
     }
 
     /**
@@ -334,7 +334,7 @@ public abstract class NodeModel {
      * @return Number of outputs.
      */
     protected final int getNrOuts() {
-        return m_nrDataOuts + m_nrPredParamsOuts;
+        return m_nrDataOuts + m_nrModelOuts;
     }
 
     /**
@@ -356,7 +356,7 @@ public abstract class NodeModel {
      * @throws InvalidSettingsException If the load iof the validated settings
      *             fails.
      */
-    final void loadSettingsFrom(final NodeSettings settings)
+    final void loadSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // validate the settings before loading them
         validateSettings(settings);
@@ -375,10 +375,10 @@ public abstract class NodeModel {
      * 
      * @param settings The object to write settings into.
      * 
-     * @see #loadValidatedSettingsFrom(NodeSettings)
-     * @see #validateSettings(NodeSettings)
+     * @see #loadValidatedSettingsFrom(NodeSettingsRO)
+     * @see #validateSettings(NodeSettingsRO)
      */
-    protected abstract void saveSettingsTo(final NodeSettings settings);
+    protected abstract void saveSettingsTo(final NodeSettingsWO settings);
 
     /**
      * Validates the settings in the passed <code>NodeSettings</code> object.
@@ -393,10 +393,10 @@ public abstract class NodeModel {
      * @param settings The settings to validate.
      * @throws InvalidSettingsException If the validation of the settings
      *             failed.
-     * @see #saveSettingsTo(NodeSettings)
-     * @see #loadValidatedSettingsFrom(NodeSettings)
+     * @see #saveSettingsTo(NodeSettingsWO)
+     * @see #loadValidatedSettingsFrom(NodeSettingsRO)
      */
-    protected abstract void validateSettings(final NodeSettings settings)
+    protected abstract void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException;
 
     /**
@@ -409,11 +409,11 @@ public abstract class NodeModel {
      * 
      * @throws InvalidSettingsException If a property is not available.
      * 
-     * @see #saveSettingsTo(NodeSettings)
-     * @see #validateSettings(NodeSettings)
+     * @see #saveSettingsTo(NodeSettingsWO)
+     * @see #validateSettings(NodeSettingsRO)
      */
     protected abstract void loadValidatedSettingsFrom(
-            final NodeSettings settings) throws InvalidSettingsException;
+            final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
      * Invokes the abstract <code>#execute()</code> method of this model. In

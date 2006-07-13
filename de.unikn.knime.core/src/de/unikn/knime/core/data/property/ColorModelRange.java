@@ -20,13 +20,13 @@
 package de.unikn.knime.core.data.property;
 
 import java.awt.Color;
-import java.util.Arrays;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.property.ColorHandler.ColorModel;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * Computes colors based on a range of minimum and maximum values assigned to
@@ -161,11 +161,9 @@ public final class ColorModelRange implements ColorModel {
      * 
      * @param config to save settings to.
      * @see de.unikn.knime.core.data.property.ColorHandler.ColorModel
-     *      #save(de.unikn.knime.core.node.config.Config)
+     *      #save(ConfigWO)
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: "
-                + Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addDouble(CFG_LOWER_VALUE, m_minValue);
         config.addDouble(CFG_UPPER_VALUE, m_maxValue);
         config.addIntArray(CFG_LOWER_COLOR, m_minColor.getRed(), m_minColor
@@ -182,7 +180,7 @@ public final class ColorModelRange implements ColorModel {
      * @return A new <code>ColorModelRange</code> object.
      * @throws InvalidSettingsException If the settings could not be read.
      */
-    public static ColorModelRange load(final Config config)
+    public static ColorModelRange load(final ConfigRO config)
             throws InvalidSettingsException {
         double lower = config.getDouble(CFG_LOWER_VALUE);
         double upper = config.getDouble(CFG_UPPER_VALUE);

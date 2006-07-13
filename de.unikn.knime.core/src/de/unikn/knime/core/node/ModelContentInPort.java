@@ -24,7 +24,7 @@ package de.unikn.knime.core.node;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ModelContentInPort extends NodeInPort implements
-        NodePort.PredictorParamsPort {
+        NodePort.ModelContentPort {
 
     /**
      * Creates a new ModelContent port.
@@ -45,20 +45,20 @@ public final class ModelContentInPort extends NodeInPort implements
      * 
      * @see #isConnected()
      */
-    public ModelContent getPredictorParams() {
+    public ModelContentRO getModelContent() {
         if (!isConnected()) {
             return null;
         }
         return ((ModelContentOutPort)super.getConnectedPort())
-                .getPredictorParams();
+                .getModelContent();
     }
 
     /**
      * Called by the connected output port to notify its counterparts of a new
      * ModelContent available.
      */
-    void newPredictorParamsAvailable() {
-        getNode().inportHasNewPredictorParams(super.getPortID());
+    void newModelContentAvailable() {
+        getNode().inportHasNewModelContent(super.getPortID());
     }
 
 }

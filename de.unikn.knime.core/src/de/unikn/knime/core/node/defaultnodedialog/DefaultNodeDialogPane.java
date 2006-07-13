@@ -29,7 +29,8 @@ import javax.swing.JPanel;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
@@ -82,7 +83,7 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
      */
     @Override
     public final void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs)
+            final NodeSettingsRO settings, final DataTableSpec[] specs)
     throws NotConfigurableException {
         assert (settings != null && specs != null);
         try {
@@ -101,12 +102,12 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
      * the configuration object.
      * 
      * @param settings the <code>NodeSettings</code> to write into
-     * @see NodeDialogPane#saveSettingsTo(NodeSettings)
+     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      * @throws InvalidSettingsException if the user has entered wrong
      * values
      */
     @Override
-    public final void saveSettingsTo(final NodeSettings settings) 
+    public final void saveSettingsTo(final NodeSettingsWO settings) 
                                 throws InvalidSettingsException {
         for (DialogComponent comp : m_dialogComponents) {
             comp.saveSettingsTo(settings);

@@ -59,29 +59,29 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected final void saveSettingsTo(final NodeSettings settings) {
+    protected final void saveSettingsTo(final NodeSettingsWO settings) {
         // nothing
 
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
     @Override
-    protected final void validateSettings(final NodeSettings settings)
+    protected final void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
     protected final void loadValidatedSettingsFrom(
-            final NodeSettings settings) throws InvalidSettingsException {
+            final NodeSettingsRO settings) throws InvalidSettingsException {
         // nothing
 
     }

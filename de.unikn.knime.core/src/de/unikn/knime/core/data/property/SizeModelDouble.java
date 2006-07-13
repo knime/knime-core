@@ -19,13 +19,12 @@
  */
 package de.unikn.knime.core.data.property;
 
-import java.util.Arrays;
-
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.property.SizeHandler.SizeModel;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * A <code>SizeModel</code> computing sizes of objects (rows) based on the 
@@ -93,12 +92,10 @@ public class SizeModelDouble implements SizeModel {
      * Saves min and max ranges to the given <code>Config</code>.
      * @param config To write bounds into.
      * @see de.unikn.knime.core.data.property.SizeHandler.SizeModel
-     *      #save(de.unikn.knime.core.node.config.Config)
+     *      #save(ConfigWO)
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addDouble(CFG_MIN, m_min);
         config.addDouble(CFG_MAX, m_max);
     }
@@ -110,7 +107,7 @@ public class SizeModelDouble implements SizeModel {
      * @throws InvalidSettingsException If the bounds could not be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static SizeModelDouble load(final Config config) 
+    public static SizeModelDouble load(final ConfigRO config) 
             throws InvalidSettingsException {
         double min = config.getDouble(CFG_MIN);
         double max = config.getDouble(CFG_MAX);

@@ -188,10 +188,10 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
     
-    void save(final File dir, final NodeSettings settings, 
+    void save(final File dir, final NodeSettingsWO settings, 
             final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
-        NodeSettings s = settings.addConfig(CFG_TABLE_META);
+        NodeSettingsWO s = settings.addNodeSettings(CFG_TABLE_META);
         s.addInt(CFG_TABLE_ID, getBufferedTableId());
         File outFile = new File(dir, TABLE_FILE);
         s.addString(CFG_TABLE_FILE_NAME, TABLE_FILE);
@@ -218,7 +218,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     }
     
     static BufferedDataTable loadFromFile(final File dir,
-            final NodeSettings settings, final ExecutionMonitor exec,
+            final NodeSettingsRO settings, final ExecutionMonitor exec,
             final int loadID) throws IOException, CanceledExecutionException,
             InvalidSettingsException {
         HashMap<Integer, BufferedDataTable> hash =
@@ -230,7 +230,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
                     + Arrays.toString(LOADER_HASH.keySet().toArray())
                     + ")");
         }
-        NodeSettings s = settings.getConfig(CFG_TABLE_META);
+        NodeSettingsRO s = settings.getNodeSettings(CFG_TABLE_META);
         int id = s.getInt(CFG_TABLE_ID);
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         File file = new File(dir, fileName);
@@ -282,7 +282,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
 
     public static interface KnowsRowCountTable extends DataTable, KnowsRowCount {
         int getRowCount();
-        void saveToFile(final File f, final NodeSettings settings, final ExecutionMonitor exec) 
+        void saveToFile(final File f, final NodeSettingsWO settings, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException;
     }
 }

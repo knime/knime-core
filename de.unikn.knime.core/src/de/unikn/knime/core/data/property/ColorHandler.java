@@ -24,6 +24,8 @@ import java.util.Arrays;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * Final <code>ColorHandler</code> implementation which forwards color
@@ -96,14 +98,14 @@ public final class ColorHandler implements PropertyHandler {
      *         could not be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
      */
-    public static ColorHandler load(final Config config) 
+    public static ColorHandler load(final ConfigRO config) 
             throws InvalidSettingsException {
         String modelClass = config.getString(CFG_COLOR_MODEL_CLASS);
         if (modelClass.equals(ColorModelNominal.class.getName())) {
-            Config subConfig = config.getConfig(CFG_COLOR_MODEL);
+            ConfigRO subConfig = config.getConfig(CFG_COLOR_MODEL);
             return new ColorHandler(ColorModelNominal.load(subConfig));
         } else if (modelClass.equals(ColorModelRange.class.getName())) {
-            Config subConfig = config.getConfig(CFG_COLOR_MODEL);
+            ConfigRO subConfig = config.getConfig(CFG_COLOR_MODEL);
             return new ColorHandler(ColorModelRange.load(subConfig));
         } else {
             throw new InvalidSettingsException("Unknown ColorModel class: "
@@ -135,7 +137,7 @@ public final class ColorHandler implements PropertyHandler {
          * Save color model settings to the given <code>Config</code>.
          * @param config Save settings to.
          */
-        void save(Config config);
+        void save(ConfigWO config);
     }
 
 }

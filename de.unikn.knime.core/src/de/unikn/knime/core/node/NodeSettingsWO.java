@@ -25,7 +25,7 @@ import de.unikn.knime.core.node.config.ConfigWO;
 
 public interface NodeSettingsWO extends ConfigWO {
 
-    public NodeSettings addNodeSettings(String key);
+    public NodeSettingsWO addNodeSettings(String key);
     
     public void addNodeSettings(NodeSettings settings);
 }

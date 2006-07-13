@@ -28,7 +28,8 @@ import javax.swing.JLabel;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Provide a standard component for a dialog that allows to select among a list
@@ -85,7 +86,7 @@ public class DialogComponentComboBox extends DialogComponent {
      * @throws InvalidSettingsException if the settings could not be read
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws InvalidSettingsException {
         String selection = null;
         selection = settings.getString(m_configName);
@@ -100,7 +101,7 @@ public class DialogComponentComboBox extends DialogComponent {
      * @param settings the <code>NodeSettings</code> to write into
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(m_configName, m_combobox.getSelectedItem()
                 .toString());
     }

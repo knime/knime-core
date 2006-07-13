@@ -21,8 +21,9 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.ModelContentRO;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * This model is for collecting the models that are produced by the meta
@@ -31,7 +32,7 @@ import de.unikn.knime.core.node.ModelContent;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelOutputNodeModel extends MetaOutputModel {
-    private ModelContent m_predictorParams;
+    private ModelContentRO m_predictorParams;
 
     /**
      * Creates a new node ModelOutputNodeModel.
@@ -42,20 +43,20 @@ public class ModelOutputNodeModel extends MetaOutputModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *      #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *      #saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         // nothing to do here
 
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *      #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     *      #validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do here
 
@@ -63,10 +64,10 @@ public class ModelOutputNodeModel extends MetaOutputModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *      #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do here
 
@@ -102,22 +103,22 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #loadPredictorParams(int,
-     *      de.unikn.knime.core.node.ModelContent)
+     * @see de.unikn.knime.core.node.NodeModel #loadModelContent(int,
+     *      ModelContentRO)
      */
     @Override
-    protected void loadPredictorParams(final int index,
-            final ModelContent predParams) throws InvalidSettingsException {
+    protected void loadModelContent(final int index,
+            final ModelContentRO predParams) throws InvalidSettingsException {
         m_predictorParams = predParams;
     }
 
     /**
      * Returns the model content loaded by
-     * {@link #loadPredictorParams(int, ModelContent)}.
+     * {@link #loadModelContent(int, ModelContentRO)}.
      * 
      * @return the loaded predictor params
      */
-    public ModelContent getPredictorParams() {
+    public ModelContentRO getModelContent() {
         return m_predictorParams;
     }
 }

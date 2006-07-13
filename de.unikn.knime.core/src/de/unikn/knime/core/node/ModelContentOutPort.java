@@ -23,12 +23,12 @@ package de.unikn.knime.core.node;
  * @author Thomas Gabriel, Konstanz University
  */
 public final class ModelContentOutPort extends NodeOutPort implements
-        NodePort.PredictorParamsPort {
+        NodePort.ModelContentPort {
 
     /**
      * The ModelContent of this port or null if not set..
      */
-    private ModelContent m_predParams;
+    private ModelContentRO m_predParams;
 
     /**
      * Creates a new output port for ModelContent objects. The predictive
@@ -48,16 +48,16 @@ public final class ModelContentOutPort extends NodeOutPort implements
      * 
      * @param predParams The new <code>ModelContent</code> object or null.
      */
-    void setPredictorParams(final ModelContent predParams) {
+    void setModelContent(final ModelContentRO predParams) {
         m_predParams = predParams;
         for (NodeInPort inPort : super.getConnectedInPorts()) {
             if (inPort instanceof ModelContentInPort) {
-                ((ModelContentInPort)inPort).newPredictorParamsAvailable();
+                ((ModelContentInPort)inPort).newModelContentAvailable();
             }
         }
         if (getPortView() != null) {
             ((ModelContentOutPortView)getPortView())
-                    .updatePredictorParams(m_predParams);
+                    .updateModelContent(m_predParams);
         }
     }
 
@@ -67,7 +67,7 @@ public final class ModelContentOutPort extends NodeOutPort implements
      * 
      * @return ModelContent of this port which can be null.
      */
-    public ModelContent getPredictorParams() {
+    public ModelContentRO getModelContent() {
         return m_predParams;
     }
 
@@ -83,7 +83,7 @@ public final class ModelContentOutPort extends NodeOutPort implements
         if (getPortView() == null) {
             super.setPortView(new ModelContentOutPortView(name, getPortName()));
             ((ModelContentOutPortView)getPortView())
-                    .updatePredictorParams(m_predParams);
+                    .updateModelContent(m_predParams);
         }
         getPortView().openView();
     }

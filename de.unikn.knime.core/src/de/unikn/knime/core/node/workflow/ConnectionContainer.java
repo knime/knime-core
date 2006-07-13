@@ -26,7 +26,8 @@ import java.util.Map;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Wrapper for a connection in a workflow. The connection knows which
@@ -109,7 +110,7 @@ public class ConnectionContainer {
      * @throws InvalidSettingsException if the settings do not contain a valid
      * connection
      */
-    ConnectionContainer(final int id, final NodeSettings config,
+    ConnectionContainer(final int id, final NodeSettingsRO config,
             final WorkflowManager wfm) throws InvalidSettingsException {
         this (id, config, wfm, null);
     }
@@ -130,7 +131,7 @@ public class ConnectionContainer {
      * @throws InvalidSettingsException if the settings do not contain a valid
      * connection
      */
-    ConnectionContainer(final int id, final NodeSettings config,
+    ConnectionContainer(final int id, final NodeSettingsRO config,
             final WorkflowManager wfm,
             final Map<Integer, Integer> translationMap)
     throws InvalidSettingsException {
@@ -296,7 +297,7 @@ public class ConnectionContainer {
      * 
      * @param config The configuration to write to current settings into.
      */
-    public void save(final NodeSettings config) {
+    public void save(final NodeSettingsWO config) {
         config.addInt(KEY_ID, m_id);
         // save source and target ids and port numbers
         config.addInt(KEY_SOURCE_ID, m_sourceNode.getID());
@@ -404,7 +405,7 @@ public class ConnectionContainer {
      * @throws InvalidSettingsException if the settings object is not a valid
      *             connection settings object
      */
-    static int getSourceIdFromConfig(final NodeSettings settings)
+    static int getSourceIdFromConfig(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
         return settings.getInt(KEY_SOURCE_ID);
@@ -418,7 +419,7 @@ public class ConnectionContainer {
      * @throws InvalidSettingsException if the settings object is not a valid
      *             connection settings object
      */
-    static int getTargetIdFromConfig(final NodeSettings settings)
+    static int getTargetIdFromConfig(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
         return settings.getInt(KEY_TARGET_ID);

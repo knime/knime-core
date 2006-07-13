@@ -26,7 +26,8 @@ import javax.swing.border.Border;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 import de.unikn.knime.core.node.util.ColumnSelectionPanel;
 
@@ -98,7 +99,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
      * constructor.
      */
     @Override
-    public void loadSettingsFrom(final NodeSettings settings,
+    public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) 
         throws InvalidSettingsException, NotConfigurableException {
         String classCol = "** Unknown column **";
@@ -117,7 +118,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
      * @param settings the <code>NodeSettings</code> to write into
      */
     @Override
-    public void saveSettingsTo(final NodeSettings settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         String classCol = m_chooser.getSelectedColumn();
         settings.addString(m_configName, classCol);
     }

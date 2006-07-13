@@ -1,4 +1,4 @@
-/* Created on Jun 19, 2006 5:08:56 PM by thor
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,8 +21,10 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.ModelContent;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.ModelContentRO;
+import de.unikn.knime.core.node.ModelContentWO;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * This model is for injecting models into a meta workflow. It should not be
@@ -31,7 +33,7 @@ import de.unikn.knime.core.node.NodeSettings;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ModelInputNodeModel extends MetaInputModel {
-    private ModelContent m_predictorParams;
+    private ModelContentRO m_predictorParams;
     
     /**
      * Creates a new data table input model with no input ports and one 
@@ -78,29 +80,29 @@ public class ModelInputNodeModel extends MetaInputModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *  #saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         // nothing to save here        
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     *  #validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         // nothing to do here        
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *  #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         // nothing to do here
     }
@@ -115,21 +117,21 @@ public class ModelInputNodeModel extends MetaInputModel {
     
     /**
      * Sets the predictor params that should be passed on in
-     * {@link #savePredictorParams(int, ModelContent)}.
+     * {@link #saveModelContent(int, ModelContentWO)}.
      * 
      * @param predParams the predictor parameters
      */
-    public void setPredictorParams(final ModelContent predParams) {
+    public void setModelContent(final ModelContentRO predParams) {
         m_predictorParams = predParams;
     }
 
     /** 
      * @see de.unikn.knime.core.node.NodeModel
-     *  #savePredictorParams(int, de.unikn.knime.core.node.ModelContent)
+     *  #saveModelContent(int, ModelContentWO)
      */
     @Override
-    protected void savePredictorParams(final int index,
-            final ModelContent predParams) throws InvalidSettingsException {
+    protected void saveModelContent(final int index,
+            final ModelContentWO predParams) throws InvalidSettingsException {
         m_predictorParams.copyTo(predParams);
     }    
 }

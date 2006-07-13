@@ -54,6 +54,8 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.util.FileUtil;
 
 /**
@@ -371,7 +373,7 @@ class Buffer {
     void writeSpecToFile(final ZipOutputStream outStream) throws IOException {
         outStream.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
         NodeSettings settings = new NodeSettings("Table Spec");
-        NodeSettings specSettings = settings.addConfig(CFG_TABLESPEC);
+        NodeSettingsWO specSettings = settings.addNodeSettings(CFG_TABLESPEC);
         m_spec.save(specSettings);
         // will only close the zip entry, not the entire stream.
         NonClosableZipOutputStream nonClosable = 
@@ -388,7 +390,7 @@ class Buffer {
     void writeMetaToFile(final ZipOutputStream zipOut) throws IOException {
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
         NodeSettings settings = new NodeSettings("Table Meta Information");
-        NodeSettings subSettings = settings.addConfig(CFG_INTERNAL_META);
+        NodeSettingsWO subSettings = settings.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addString(CFG_VERSION, getVersion());
         subSettings.addInt(CFG_SIZE, size());
         // m_shortCutsLookup to string array, saved in config
@@ -397,7 +399,7 @@ class Buffer {
             cellClasses[i] = m_shortCutsLookup[i].getName();
         }
         subSettings.addStringArray(CFG_CELL_CLASSES, cellClasses);
-        NodeSettings addSubSettings = settings.addConfig(CFG_ADDITIONAL_META); 
+        NodeSettingsWO addSubSettings = settings.addNodeSettings(CFG_ADDITIONAL_META); 
         // allow subclasses to do private savings.
         addMetaForSaving(addSubSettings);
         // will only close the zip entry, not the entire stream.
@@ -410,7 +412,7 @@ class Buffer {
     /** Intended for subclass NoKeyBuffer to add its private information.
      * @param settings Where to add meta information.
      */
-    void addMetaForSaving(final NodeSettings settings) {
+    void addMetaForSaving(final NodeSettingsWO settings) {
         // checkstyle complains otherwise.
         assert settings == settings;
     }
@@ -432,8 +434,8 @@ class Buffer {
         }
         InputStream inStream = new BufferedInputStream(specInput);
         try {
-            NodeSettings settings = NodeSettings.loadFromXML(inStream);
-            NodeSettings specSettings = settings.getConfig(CFG_TABLESPEC);
+            NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
+            NodeSettingsRO specSettings = settings.getNodeSettings(CFG_TABLESPEC);
             return DataTableSpec.load(specSettings);
         } finally {
             inStream.close();
@@ -457,8 +459,8 @@ class Buffer {
         }
         InputStream inStream = new BufferedInputStream(metaIn);
         try {
-            NodeSettings settings = NodeSettings.loadFromXML(inStream);
-            NodeSettings subSettings = settings.getConfig(CFG_INTERNAL_META);
+            NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
+            NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
             String version = subSettings.getString(CFG_VERSION);
             validateVersion(version);
             m_size = subSettings.getInt(CFG_SIZE);
@@ -475,7 +477,7 @@ class Buffer {
                 }
                 m_shortCutsLookup[i] = cl;
             }
-            readMetaFromSaving(settings.getConfig(CFG_ADDITIONAL_META));
+            readMetaFromSaving(settings.getNodeSettings(CFG_ADDITIONAL_META));
         } finally {
             inStream.close();
         }
@@ -487,7 +489,7 @@ class Buffer {
      * @param settings To read from.
      * @throws InvalidSettingsException If that fails.
      */
-    void readMetaFromSaving(final NodeSettings settings) 
+    void readMetaFromSaving(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
         // Checksyle is really rigid with regard to unused variables. This
         // is dirty, yes.

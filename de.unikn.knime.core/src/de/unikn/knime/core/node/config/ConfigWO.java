@@ -25,26 +25,10 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 
 public interface ConfigWO {
-
-    /**
-     * Creates a new Config with the given key and returns it.
-     * 
-     * @param key An identifier.
-     * @return A new Config object.
-     * @see #getInstance(String)
-     */
-    public ConfigWO addConfig(final String key);
-
-    /**
-     * Appends the given Config to this Config which has to directly derived 
-     * from this class.
-     * 
-     * @param config The Config to append.
-     * @throws NullPointerException If <code>config</code> is null. 
-     * @throws IllegalArgumentException If <code>config</code> is not instance
-     *         of this class.
-     */
-    public void addConfig(final Config config);
+    
+    public Config addConfig(String key);
+    
+    public void addConfig(Config config);
 
     /**
      * Adds an int.

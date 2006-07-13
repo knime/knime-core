@@ -27,6 +27,7 @@ import java.util.Properties;
 
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
 
 /**
  * Property map that contains (labeled) annotations assigned to a column. This
@@ -204,7 +205,7 @@ public final class DataColumnProperties implements Cloneable {
      * @throws InvalidSettingsException If the <i>keys</i> entry is not 
      *         available or a value is not available for a given key.
      */
-    public static DataColumnProperties load(final Config config) 
+    public static DataColumnProperties load(final ConfigRO config) 
             throws InvalidSettingsException {
         Hashtable<String, String> table = new Hashtable<String, String>();
         for (String key : config) {

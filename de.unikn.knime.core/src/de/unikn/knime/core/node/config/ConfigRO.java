@@ -19,24 +19,25 @@
  */
 package de.unikn.knime.core.node.config;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Set;
+
+import javax.swing.tree.TreeNode;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.node.InvalidSettingsException;
 
-public interface ConfigRO {
-
-    /**
-     * Retrieves Config by key.
-     * 
-     * @param key The key.
-     * @return A Config object.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public ConfigRO getConfig(final String key) throws InvalidSettingsException;
-
+public interface ConfigRO extends TreeNode, Iterable<String> {
+    
+    public Config getConfig(String key) throws InvalidSettingsException;
+    
+    public void saveToXML(final OutputStream os) throws IOException;
+    
+    public void copyTo(ConfigWO config);
+    
     /**
      * Return int for key.
      * 

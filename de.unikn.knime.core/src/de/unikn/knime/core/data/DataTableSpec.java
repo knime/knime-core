@@ -30,7 +30,8 @@ import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.data.property.SizeHandler;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.config.Config;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * DataTableSpecs are used in two ways: As meta information to specify the
@@ -590,13 +591,11 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * <code>Config</code> object.
      * @param config Write column properties into this object.
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Config must be empty: " 
-            + Arrays.toString(config.keySet().toArray()); 
+    public void save(final ConfigWO config) {
         config.addString(CFG_SPEC_NAME, m_name);
         config.addInt(CFG_NR_COLUMNS, m_columnSpecs.length);
         for (int i = 0; i < m_columnSpecs.length; i++) {
-            Config column = config.addConfig(CFG_COLUMN_SPEC + i);
+            ConfigWO column = config.addConfig(CFG_COLUMN_SPEC + i);
             m_columnSpecs[i].save(column);
         }
     }
@@ -609,13 +608,13 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @throws InvalidSettingsException If the name, number of columns, or
      *         a column spec could not be read,
      */
-    public static DataTableSpec load(final Config config) 
+    public static DataTableSpec load(final ConfigRO config) 
             throws InvalidSettingsException {
         String name = config.getString(CFG_SPEC_NAME);
         int ncols = config.getInt(CFG_NR_COLUMNS);
         DataColumnSpec[] specs = new DataColumnSpec[ncols]; 
         for (int i = 0; i < ncols; i++) {
-            Config column = config.getConfig(CFG_COLUMN_SPEC + i);
+            ConfigRO column = config.getConfig(CFG_COLUMN_SPEC + i);
             specs[i] = DataColumnSpec.load(column);
         }
         return new DataTableSpec(name, specs);
