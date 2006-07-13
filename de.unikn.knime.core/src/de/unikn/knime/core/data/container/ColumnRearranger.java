@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -24,6 +22,7 @@ package de.unikn.knime.core.data.container;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -31,8 +30,8 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DataValue;
+import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
@@ -43,29 +42,16 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  */
 public final class ColumnRearranger {
     
-    private static final DataCell[] EMPTY_CELL_ARRAY = new DataCell[0];
-    private static final DataColumnSpec[] EMPTY_COL_ARRAY = 
-        new DataColumnSpec[0];
-    
-    private static final CellFactory EMPTY_FACTORY = new CellFactory() {
-        public DataCell[] getCells(final DataRow row) {
-            return EMPTY_CELL_ARRAY;
-        }
-        public DataColumnSpec[] getColumnSpecs() {
-            return EMPTY_COL_ARRAY;
-        }
-    };
-    private static final ExecutionMonitor EMPTY_EXEC_MON = 
-        new ExecutionMonitor();
-    
     private final Vector<SpecAndFactoryObject> m_includes;
+    private final DataTableSpec m_originalSpec;
     
     public ColumnRearranger(final DataTableSpec original) {
         m_includes = new Vector<SpecAndFactoryObject>();
         m_includes.ensureCapacity(original.getNumColumns());
         for (int i = 0; i < original.getNumColumns(); i++) {
-            m_includes.add(new SpecAndFactoryObject(original.getColumnSpec(i)));
+            m_includes.add(new SpecAndFactoryObject(original.getColumnSpec(i), i));
         }
+        m_originalSpec = original;
     }
     
     public void keepOnly(final int... colIndices) {
@@ -169,221 +155,140 @@ public final class ColumnRearranger {
         insertAt(colIndex, newCol);
     }
     
-    static DataTableSpec createSpec(final DataTableSpec reference,
-            final int[] map, final boolean[] isFromRefTable, 
-            final DataColumnSpec[] newSpecs) {
-        DataColumnSpec[] finalSpecs = new DataColumnSpec[map.length];
-        for (int i = 0; i < map.length; i++) {
-            if (isFromRefTable[i]) {
-                finalSpecs[i] = reference.getColumnSpec(map[i]);
-            } else {
-                finalSpecs[i] = newSpecs[map[i]];
-            }
+    public DataTableSpec createSpec() {
+        final int size = m_includes.size();
+        DataColumnSpec[] colSpecs = new DataColumnSpec[size];
+        for (int i = 0; i < size; i++) {
+            colSpecs[i] = m_includes.get(i).getColSpec();
         }
-        return new DataTableSpec(finalSpecs);
+        return new DataTableSpec(colSpecs);
     }
     
-    private static final BufferedDataTable filter(
-            final BufferedDataTable table, final int[] cols, final boolean include) {
-        if (table == null) {
-            throw new NullPointerException("Table must not be null.");
-        }
-        int maxValid = table.getDataTableSpec().getNumColumns() - 1;
-        checkForDuplicates(maxValid, cols);
-        int[] includes;
-        if (!include) {
-            // reverse selection
-            HashSet<Integer> forbidden = new HashSet<Integer>();
-            for (int i : cols) {
-                forbidden.add(i);
-            }
-            int totalCount = table.getDataTableSpec().getNumColumns();
-            includes = new int[totalCount - cols.length];
-            int counter = 0;
-            for (int i = 0; i < totalCount; i++) {
-                if (!forbidden.contains(i)) {
-                    includes[counter] = i;
-                    counter++;
-                }
-            }
-            assert (counter == includes.length);
-        } else {
-            includes = new int[cols.length];
-            System.arraycopy(cols, 0, includes, 0, includes.length);
-        }
-        boolean[] flags = new boolean[includes.length];
-        Arrays.fill(flags, true);
-        try {
-            return new BufferedDataTable(new RearrangeColumnsTable(
-                    table, includes, flags, EMPTY_COL_ARRAY, EMPTY_FACTORY, 
-                    EMPTY_EXEC_MON));
-        } catch (CanceledExecutionException cee) {
-            throw new InternalError("Can't throw canceled exception;" 
-                    + " progress monitor is private");
-        }
-    }
-    
-    public static final BufferedDataTable filterInclude(
-            final BufferedDataTable table, final int... includes) {
-        return filter(table, includes, true);
-    }
-    
-    public static final BufferedDataTable filterInclude(
-            final BufferedDataTable table, final String... colNamesInclude) {
-        DataTableSpec spec = table.getDataTableSpec();
-        int[] includes = findColumnIndices(spec, colNamesInclude);
-        return filterInclude(table, includes);
-    }
-
-    public static final BufferedDataTable filterInclude(
-            final BufferedDataTable table, final DataColumnSpec... colInclude) {
-        String[] colIncludeNames = new String[colInclude.length];
-        for (int i = 0; i < colInclude.length; i++) {
-            colIncludeNames[i] = colInclude[i].getName();
-        }
-        return filterInclude(table, colIncludeNames);
-    }
-
-    public static final BufferedDataTable filterInclude(
-            final BufferedDataTable table, final Class<? extends DataValue>... valueInclude) {
-        int[] includes = findColumnIndices(table.getDataTableSpec(), valueInclude);
-        return filterInclude(table, includes);
-    }
-    
-    public static final BufferedDataTable filterExclude(
-            final BufferedDataTable table, final int... excludes) {
-        return filter(table, excludes, false);
-    }
-    
-    public static final BufferedDataTable filterExclude(
-            final BufferedDataTable table, final String... colNamesExclude) {
-        DataTableSpec spec = table.getDataTableSpec();
-        int[] includes = findColumnIndices(spec, colNamesExclude);
-        return filterExclude(table, includes);
-    }
-    
-    public static final BufferedDataTable filterExclude(
-            final BufferedDataTable table, final DataColumnSpec... colExcludes) {
-        String[] colIncludeNames = new String[colExcludes.length];
-        for (int i = 0; i < colExcludes.length; i++) {
-            colIncludeNames[i] = colExcludes[i].getName();
-        }
-        return filterExclude(table, colIncludeNames);
-    }
-    
-    public static final BufferedDataTable filterExclude(
-            final BufferedDataTable table, final Class<? extends DataValue>... valueExcludes) {
-        int[] includes = findColumnIndices(table.getDataTableSpec(), valueExcludes);
-        return filterExclude(table, includes);
-    }
-    
-    public static final BufferedDataTable append(
-            final BufferedDataTable table, final ExecutionMonitor exec, 
-            final CellFactory cellFactory, final DataColumnSpec... appendSpecs)
+    public BufferedDataTable createTable(
+            final BufferedDataTable table, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        int oldCount = table.getDataTableSpec().getNumColumns();
-        int colCount = oldCount + appendSpecs.length;
-        int[] allIndices = new int[colCount];
-        boolean[] allFlags = new boolean[colCount];
-        for (int i = 0; i < oldCount; i++) {
-            allIndices[i] = i;
-            allFlags[i] = true;
-        }
-        for (int i = 0; i < appendSpecs.length; i++) {
-            allIndices[oldCount + i] = i;
-            allFlags[oldCount + i] = false;
-        }
-        return new BufferedDataTable(new RearrangeColumnsTable(table, 
-                allIndices, allFlags, appendSpecs, cellFactory, exec));
-    }
-    
-    public static final BufferedDataTable replaceSingle(
-            final BufferedDataTable table, final ExecutionMonitor exec, 
-            final CellFactory cellFactory, final DataColumnSpec newSpec, 
-            final String obsoleteColumn) throws CanceledExecutionException {
-        DataTableSpec oldSpec = table.getDataTableSpec();
-        int colCount = oldSpec.getNumColumns();
-        int[] allIndices = new int[colCount];
-        boolean[] allFlags = new boolean[colCount];
-        for (int i = 0; i < colCount; i++) {
-            allIndices[i] = i;
-            allFlags[i] = true;
-        }
-        int replaceColIndex = oldSpec.findColumnIndex(obsoleteColumn);
-        if (replaceColIndex < 0) {
+        // names and types of the specs must match
+        if (!table.getDataTableSpec().equals(m_originalSpec)) {
             throw new IllegalArgumentException(
-                    "No such column: " + obsoleteColumn);
+                    "The argument table's spec does not match the original " 
+                    + "spec passed in the constructor.");
         }
-        allIndices[replaceColIndex] = 0; // first from factory
-        allFlags[replaceColIndex] = false;
-        return new BufferedDataTable(new RearrangeColumnsTable(table, 
-                allIndices, allFlags, new DataColumnSpec[]{newSpec}, 
-                cellFactory, exec));
-    }
-    
-    private static void checkForDuplicates(final int max, final int... list) {
-        HashSet<Integer> duplicateHash = new HashSet<Integer>();
-        for (int i = 0; i < list.length; i++) {
-            if (list[i] < 0) {
-                throw new IndexOutOfBoundsException("Index < 0: " + list[i]);
-            }
-            if (list[i] > max) {
-                throw new IndexOutOfBoundsException("Index > : " + max + ": " 
-                        + list[i]);
-            }
-            if (!duplicateHash.add(list[i])) {
-                throw new IllegalArgumentException(
-                        "Duplicate index: " + list[i]);
-            }
-        }
-    }
-    
-    private static int[] findColumnIndices(
-            final DataTableSpec spec, final String[] colNames) {
-        int[] includes = new int[colNames.length];
-        for (int i = 0; i < includes.length; i++) {
-            includes[i] = spec.findColumnIndex(colNames[i]);
-            // fail-fast here
-            if (includes[i] < 0) {
-                throw new IllegalArgumentException("No such column: " 
-                        + colNames[i]);
+        int size = m_includes.size();
+        DataTableSpec spec = createSpec();
+        ArrayList<DataColumnSpec> newColSpecsList = 
+            new ArrayList<DataColumnSpec>();
+        // the reduced set of SpecAndFactoryObject that models newly
+        // appended/inserted columns; this vector is in most cases 
+        // considerably smaller than m_includes
+        Vector<SpecAndFactoryObject> reducedList = 
+            new Vector<SpecAndFactoryObject>();
+        int newColCount = 0;
+        IdentityHashMap<CellFactory, Object> counter =
+            new IdentityHashMap<CellFactory, Object>();
+        for (int i = 0; i < size; i++) {
+            SpecAndFactoryObject s = m_includes.get(i);
+            if (s.isNewColumn()) {
+                counter.put(s.getFactory(), null);
+                reducedList.add(s);
+                newColSpecsList.add(s.getColSpec());
+                newColCount++;
             }
         }
-        return includes;
-    }
-    
-    private static int[] findColumnIndices(
-            final DataTableSpec spec, final Class<? extends DataValue>[] colValues) {
-        ArrayList<Integer> indices = new ArrayList<Integer>();
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            DataColumnSpec cs = spec.getColumnSpec(i);
-            DataType type = cs.getType();
-            boolean isCompatible = false;
-            for (int c = 0; !isCompatible && c < colValues.length; c++) {
-                if (type.isCompatible(colValues[c])) {
-                    isCompatible = true;
+        // number of different factories used, in 99% of all cases 
+        // this is either 0 or 1
+        final int factoryCount = counter.size();
+        DataColumnSpec[] newColSpecs = 
+            newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
+        NoKeyBuffer appendBuffer;
+        // for a pure filter (a table that just hides some columns from
+        // the reference table but does not add any new column we avoid to scan
+        // the entire table (nothing is written anyway))
+        if (newColCount > 0) {
+            DataContainer container = new DataContainer(
+                    new DataTableSpec(newColSpecs), true) {
+                protected Buffer newBuffer(final int rowsInMemory) {
+                    return new NoKeyBuffer(rowsInMemory);
                 }
+            };
+            assert reducedList.size() == newColCount;
+            int finalRowCount = table.getRowCount();
+            int r = 0;
+            try {
+                for (RowIterator it = table.iterator(); it.hasNext(); r++) {
+                    DataRow row = it.next();
+                    DataCell[] newCells = new DataCell[newColCount];
+                    int factoryCountRow = 0;
+                    CellFactory facForProgress = null;
+                    for (int i = 0; i < newColCount; i++) {
+                        // early stopping, if we have just one factory but 
+                        // many many columns, this if statement will save a lot
+                        if (factoryCount == factoryCountRow) {
+                            break;
+                        }
+                        if (newCells[i] != null) {
+                            continue;
+                        }
+                        SpecAndFactoryObject cur = reducedList.get(i);
+                        CellFactory fac = cur.getFactory();
+                        if (facForProgress == null) {
+                            facForProgress = fac;
+                        }
+                        factoryCountRow++;
+                        DataCell[] fromFac = fac.getCells(row);
+                        for (int j = 0; j < newColCount; j++) {
+                            SpecAndFactoryObject checkMe = reducedList.get(i);
+                            if (checkMe.getFactory() == fac) {
+                                assert newCells[j] == null;
+                                newCells[j] = 
+                                    fromFac[checkMe.getColumnInFactory()];
+                            }
+                        }
+                    }
+                    assert facForProgress != null;
+                    facForProgress.setProgress(r + 1, finalRowCount, 
+                            row.getKey(), exec);
+                    DataRow appendix = new DefaultRow(row.getKey(), newCells);
+                    container.addRowToTable(appendix);
+                    exec.checkCanceled();
+                }
+            } finally {
+                container.close();
             }
-            if (isCompatible) {
-                indices.add(i);
+            appendBuffer = (NoKeyBuffer)container.getBuffer();
+        } else {
+            appendBuffer = null;
+        }
+        boolean[] isFromRefTable = new boolean[size];
+        int[] includes = new int[size];
+        int newColIndex = 0;
+        for (int i = 0; i < size; i++) {
+            SpecAndFactoryObject c = m_includes.get(i);
+            if (c.isNewColumn()) {
+                isFromRefTable[i] = false;
+                includes[i] = newColIndex++;
+            } else {
+                isFromRefTable[i] = true;
+                includes[i] = c.getOriginalIndex();
             }
         }
-        int[] arrayIndices = new int[indices.size()];
-        for (int i = 0; i < indices.size(); i++) {
-            arrayIndices[i] = indices.get(i);
-        }
-        return arrayIndices;
+        assert newColCount == newColCount;
+        RearrangeColumnsTable t = new RearrangeColumnsTable(
+                table, includes, isFromRefTable, spec, appendBuffer);
+        return new BufferedDataTable(t);
     }
     
     private static class SpecAndFactoryObject {
         private final CellFactory m_factory;
         private final DataColumnSpec m_colSpec;
         private final int m_columnInFactory;
+        private final int m_originalIndex;
         
-        private SpecAndFactoryObject(final DataColumnSpec colSpec) {
+        private SpecAndFactoryObject(
+                final DataColumnSpec colSpec, final int originalIndex) {
             m_colSpec = colSpec;
             m_columnInFactory = -1;
             m_factory = null;
+            m_originalIndex = originalIndex;
         }
         
         private SpecAndFactoryObject(final CellFactory cellFactory, 
@@ -391,6 +296,7 @@ public final class ColumnRearranger {
             m_colSpec = colSpec;
             m_factory = cellFactory;
             m_columnInFactory = index;
+            m_originalIndex = -1;
         }
 
         /**
@@ -412,6 +318,17 @@ public final class ColumnRearranger {
          */
         final CellFactory getFactory() {
             return m_factory;
+        }
+        
+        final boolean isNewColumn() {
+            return m_factory != null;
+        }
+
+        /**
+         * @return Returns the originalIndex.
+         */
+        final int getOriginalIndex() {
+            return m_originalIndex;
         }
     }
     

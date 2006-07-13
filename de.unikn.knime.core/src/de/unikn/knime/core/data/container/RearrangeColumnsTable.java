@@ -67,50 +67,17 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     private final BufferedDataTable m_reference;
     private final int[] m_map;
     private final boolean[] m_isFromRefTable;
-    private final Buffer m_appendBuffer;
+    private final NoKeyBuffer m_appendBuffer;
 
     /**
      * 
      */
     RearrangeColumnsTable(final BufferedDataTable reference, final int[] map, 
-            final boolean[] isFromRefTable, final DataColumnSpec[] newSpecs, 
-            final CellFactory cellFactory, final ExecutionMonitor exec) 
-            throws CanceledExecutionException {
-        m_spec = ColumnRearranger.createSpec(
-                reference.getDataTableSpec(), map, isFromRefTable, newSpecs);
+            final boolean[] isFromRefTable, final DataTableSpec spec, 
+            NoKeyBuffer appendBuffer) {
+        m_spec = spec;
         m_reference = reference;
-        // for a pure filter (a table that just hides some columns from
-        // "reference" but does not add any new column we avoid to scan
-        // the entire table (nothing is written anyway)
-        boolean hasNewColumns = false;
-        for (int i = 0; i < isFromRefTable.length && !hasNewColumns; i++) {
-            hasNewColumns |= !isFromRefTable[i];
-        }
-        if (hasNewColumns) {
-            DataContainer container = new DataContainer(
-                    new DataTableSpec(newSpecs), true) {
-                protected Buffer newBuffer(final int rowsInMemory) {
-                    return new NoKeyBuffer(rowsInMemory);
-                }
-            };
-            double finalRowCount = reference.getRowCount();
-            int r = 0;
-            try {
-                for (RowIterator it = reference.iterator(); it.hasNext(); r++) {
-                    DataRow row = it.next();
-                    DataCell[] cells = cellFactory.getCells(row);
-                    DataRow appendix = new DefaultRow(row.getKey(), cells);
-                    container.addRowToTable(appendix);
-                    exec.setProgress(r / finalRowCount);
-                    exec.checkCanceled();
-                }
-            } finally {
-                container.close();
-            }
-            m_appendBuffer = container.getBuffer();
-        } else {
-            m_appendBuffer = null;
-        }
+        m_appendBuffer = appendBuffer;
         m_map = map;
         m_isFromRefTable = isFromRefTable;
     }
@@ -122,7 +89,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_reference = BufferedDataTable.getDataTable(loadID, tableID);
         m_map = subSettings.getIntArray(CFG_MAP);
         m_isFromRefTable = subSettings.getBooleanArray(CFG_FLAGS);
-        DataColumnSpec[] colSpecs;
+        DataColumnSpec[] appendColSpecs;
         boolean containsFalse = false;
         for (int i = 0; !containsFalse && i < m_isFromRefTable.length; i++) {
             if (!m_isFromRefTable[i]) {
@@ -132,16 +99,24 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         if (containsFalse) {
             m_appendBuffer = new NoKeyBuffer(f, loadID);
             DataTableSpec appendSpec = m_appendBuffer.getTableSpec();
-            colSpecs = new DataColumnSpec[appendSpec.getNumColumns()];
+            appendColSpecs = new DataColumnSpec[appendSpec.getNumColumns()];
             for (int i = 0; i < appendSpec.getNumColumns(); i++) {
-                colSpecs[i] = appendSpec.getColumnSpec(i);
+                appendColSpecs[i] = appendSpec.getColumnSpec(i);
             }
         } else {
             m_appendBuffer = null;
-            colSpecs = new DataColumnSpec [0];
+            appendColSpecs = new DataColumnSpec [0];
         }
-        m_spec = ColumnRearranger.createSpec(m_reference.getDataTableSpec(), 
-                m_map, m_isFromRefTable, colSpecs);
+        DataTableSpec refSpec = m_reference.getDataTableSpec();
+        DataColumnSpec[] colSpecs = new DataColumnSpec[m_isFromRefTable.length];
+        for (int i = 0; i < colSpecs.length; i++) {
+            if (m_isFromRefTable[i]) {
+                colSpecs[i] = refSpec.getColumnSpec(m_map[i]);
+            } else {
+                colSpecs[i] = appendColSpecs[m_map[i]];
+            }
+        }
+        m_spec = new DataTableSpec(colSpecs);
     }
     
     public BufferedDataTable getReferenceTable() {
@@ -195,99 +170,4 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
     
     
-    /**
-     * 
-     * @author wiswedel, University of Konstanz
-     */
-    private class NoKeyBuffer extends Buffer {
-        
-        private static final String VERSION = "noRowKeyContainer_1.0.0";
-        int m_loadID;
-        
-        NoKeyBuffer(final int maxRowsInMemory) {
-            super(maxRowsInMemory);
-        }
-        
-        /**
-         * For writing.
-         * @see Buffer#Buffer(File)
-         */
-        NoKeyBuffer(final File outFile, final NodeSettings additionalMeta) 
-            throws IOException {
-            super(outFile);
-        }
-        
-        /**
-         * For reading.
-         * @see Buffer#Buffer(File, boolean)
-         */
-        NoKeyBuffer(final File inFile, final int loadID) 
-            throws IOException {
-            super(inFile, false);
-        }
-        
-        /**
-         * @see de.unikn.knime.core.data.container.Buffer#getVersion()
-         */
-        @Override
-        public String getVersion() {
-            return VERSION;
-        }
-
-        /**
-         * @see Buffer#validateVersion(String)
-         */
-        @Override
-        public void validateVersion(final String version) throws IOException {
-            if (!VERSION.equals(version)) {
-                throw new IOException("Unsupported version: \"" + version 
-                        + "\" (expected \"" + VERSION + "\")");
-            }
-        }
-        
-        @Override
-        public void addRow(final DataRow row) {
-            if (row.getNumCells() > 0) {
-                super.addRow(row);
-            } else {
-                incrementSize();
-            }
-        }
-        
-        @Override
-        public RowIterator iterator() {
-            if (getTableSpec().getNumColumns() > 0) {
-                return super.iterator();
-            } else {
-                return new RowIterator() {
-                    private int m_count = 0;
-                    public boolean hasNext() {
-                        return m_count < size();
-                    }
-                    public DataRow next() {
-                        m_count++;
-                        return DUMMY_ROW;
-                    };
-                };
-            }
-        }
-        
-        /**
-         * Does nothing as row keys are not stored.
-         * @see Buffer#writeRowKey(RowKey)
-         */
-        @Override
-        void writeRowKey(final RowKey key) throws IOException {
-            // left empty, uses always the same key
-        }
-        
-        /**
-         * Returns always the same key, does nothing to the stream.
-         * @see Buffer#readRowKey(DCObjectInputStream)
-         */
-        @Override
-        RowKey readRowKey(final DCObjectInputStream inStream) throws IOException {
-            return DUMMY_KEY;
-        }
-    }
 }

@@ -20,6 +20,8 @@ package de.unikn.knime.core.data.container;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
+import de.unikn.knime.core.data.RowKey;
+import de.unikn.knime.core.node.ExecutionMonitor;
 
 /**
  * Factory for a AppendedColummTable that serves to generate the cells of the
@@ -29,10 +31,11 @@ import de.unikn.knime.core.data.DataRow;
 public interface CellFactory {
 
     /**
-     * Get the new cells for a given row. These cells are appended to the 
-     * existing row.
+     * Get the new cells for a given row. These cells are incorporated into the 
+     * existing row. The way it is done is defined through the ColumnRearranger
+     * using this object.
      * @param row The row of interest.
-     * @return The appended cells to that row.
+     * @return The new cells to that row.
      * @throws IllegalArgumentException  If there is no mapping available.
      */
     DataCell[] getCells(final DataRow row);
@@ -49,4 +52,15 @@ public interface CellFactory {
      */
     DataColumnSpec[] getColumnSpecs();
     
+    /** This method is called when a row has been processed. It allows the 
+     * implementor to set progress in the execution monitor and also some
+     * meaningful progress message.
+     * @param curRowNr The number of the row just processed
+     * @param rowCount The total number of rows.
+     * @param lastKey The row's key.
+     * @param exec The execution monitor to report progress to.
+     */ 
+    void setProgress(final int curRowNr, final int rowCount, 
+            final RowKey lastKey, final ExecutionMonitor exec);
+        
 }

@@ -23,6 +23,8 @@ package de.unikn.knime.core.data.container;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
+import de.unikn.knime.core.data.RowKey;
+import de.unikn.knime.core.node.ExecutionMonitor;
 
 /**
  * 
@@ -38,5 +40,14 @@ public abstract class SingleCellFactory implements CellFactory {
     }
     
     public abstract DataCell getCell(final DataRow row);
+    
+    /**
+     * @see CellFactory#setProgress(int, int, RowKey, ExecutionMonitor)
+     */
+    public void setProgress(final int curRowNr, final int rowCount, 
+            final RowKey lastKey, final ExecutionMonitor exec) {
+        exec.setProgress(curRowNr / (double)rowCount, "Processed row " 
+                + curRowNr + " (\"" + lastKey + "\")");
+    }
 
 }

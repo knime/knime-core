@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import de.unikn.knime.base.data.filter.column.FilterColumnTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.ColumnRearranger;
 import de.unikn.knime.core.node.BufferedDataTable;
@@ -89,12 +88,8 @@ final class FilterColumnNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws Exception {
 
         assert (data != null && data.length == 1 && data[INPORT] != null);
-
-        final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
-        final DataTableSpec outSpec = createOutDataTableSpec(inSpec);
-        final String[] cols = new String[outSpec.getNumColumns()];
-        BufferedDataTable outTable = 
-            ColumnRearranger.filterInclude((BufferedDataTable)data[0], cols);
+        ColumnRearranger c = createColumnRearranger(data[0].getDataTableSpec());
+        BufferedDataTable outTable = c.createTable(data[0], exec);
         return new BufferedDataTable[]{outTable};
     }
 
@@ -133,8 +128,8 @@ final class FilterColumnNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         assert (inSpecs != null);
-
-        return new DataTableSpec[]{createOutDataTableSpec(inSpecs[INPORT])};
+        ColumnRearranger c = createColumnRearranger(inSpecs[INPORT]);
+        return new DataTableSpec[]{c.createSpec()};
 
     }
 
@@ -143,13 +138,9 @@ final class FilterColumnNodeModel extends NodeModel {
      * Throws an InvalidSettingsException if colums are specified that don't
      * exist in the input table spec.
      */
-    private DataTableSpec createOutDataTableSpec(final DataTableSpec inSpec)
+    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec)
             throws InvalidSettingsException {
         assert inSpec != null;
-        // check if excluded columns exist
-        if (m_list.isEmpty()) {
-            return inSpec;
-        }
         // check if all specified columns exist in the input spec
         for (String name : m_list) {
             if (!inSpec.containsName(name)) {
@@ -171,8 +162,9 @@ final class FilterColumnNodeModel extends NodeModel {
         }
         assert (j == columns.length);
         // return the new spec
-        return FilterColumnTable.createFilterTableSpec(inSpec, columns);
-
+        ColumnRearranger c = new ColumnRearranger(inSpec);
+        c.keepOnly(columns);
+        return c;
     }
 
     /**
@@ -202,7 +194,6 @@ final class FilterColumnNodeModel extends NodeModel {
         for (int i = 0; i < columns.length; i++) {
             m_list.add(columns[i]);
         }
-
     }
 
     /**
