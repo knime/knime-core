@@ -22,6 +22,7 @@ package de.unikn.knime.core.node.defaultnodedialog;
 
 
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +64,7 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
         m_compositePanel = new JPanel();
         m_compositePanel.setLayout(new BoxLayout(m_compositePanel, 
                 BoxLayout.Y_AXIS));
-        m_currentPanel = createSubPanel("");
+        m_currentPanel = m_compositePanel;
         super.addTab(TAB_TITLE, m_compositePanel);
     }
     
@@ -85,6 +86,18 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
                 BorderFactory.createEtchedBorder(), title));
         m_compositePanel.add(panel);
         return panel;
+    }
+    
+    /**
+     * Closes the current group. Further added dialog components are added to 
+     * the default panel.
+     *
+     */
+    public void closeCurrentGroup() {
+        if (m_currentPanel.getComponentCount() == 0) {
+            m_compositePanel.remove(m_currentPanel);
+        }
+        m_currentPanel = m_compositePanel;
     }
 
     /**
