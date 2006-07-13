@@ -68,7 +68,7 @@ public final class NodeSettings extends Config
     public static synchronized NodeSettingsRO loadFromXML(
             final InputStream in) throws IOException {
         NodeSettings tmp = new NodeSettings("ignored");
-        return (NodeSettings) Config.loadFromXML(tmp, in);
+        return (NodeSettingsRO) Config.loadFromXML(tmp, in);
     }
 
     /**
