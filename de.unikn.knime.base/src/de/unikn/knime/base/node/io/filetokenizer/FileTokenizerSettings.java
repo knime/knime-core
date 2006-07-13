@@ -119,16 +119,16 @@ public class FileTokenizerSettings {
         if (settings != null) {
             try {
                 // get the configuration that holds all delimiters
-                NodeSettings delims = settings.getConfig(CFGKEY_DELIMS);
+                NodeSettings delims = settings.getNodeSettings(CFGKEY_DELIMS);
                 addDelimitersFromConfiguration(delims);
                 // get the configuration that holds all quotes
-                NodeSettings quotes = settings.getConfig(CFGKEY_QUOTES);
+                NodeSettings quotes = settings.getNodeSettings(CFGKEY_QUOTES);
                 addQuotesFromConfiguration(quotes);
                 // get the configuration that holds all comments
-                NodeSettings comments = settings.getConfig(CFGKEY_COMMENTS);
+                NodeSettings comments = settings.getNodeSettings(CFGKEY_COMMENTS);
                 addCommentsFromConfiguration(comments);
                 // get the config holding white spaces
-                NodeSettings wspaces = settings.getConfig(CFGKEY_WHITES);
+                NodeSettings wspaces = settings.getNodeSettings(CFGKEY_WHITES);
                 addWhitesFromConfiguration(wspaces);
 
             } catch (InvalidSettingsException ice) {
@@ -170,19 +170,19 @@ public class FileTokenizerSettings {
         }
 
         // save delimiters first
-        NodeSettings subCfg = cfg.addConfig(CFGKEY_DELIMS);
+        NodeSettings subCfg = cfg.addNodeSettings(CFGKEY_DELIMS);
         saveDelimitersToConfiguration(subCfg);
 
         // save quotes next
-        subCfg = cfg.addConfig(CFGKEY_QUOTES);
+        subCfg = cfg.addNodeSettings(CFGKEY_QUOTES);
         saveQuotesToConfiguration(subCfg);
 
         // also, save comments
-        subCfg = cfg.addConfig(CFGKEY_COMMENTS);
+        subCfg = cfg.addNodeSettings(CFGKEY_COMMENTS);
         saveCommentsToConfiguration(subCfg);
 
         // do the whitespaces
-        subCfg = cfg.addConfig(CFGKEY_WHITES);
+        subCfg = cfg.addNodeSettings(CFGKEY_WHITES);
         saveWhitesToConfiguration(subCfg);
 
         // add the linecontinuatino character if defined
@@ -213,7 +213,7 @@ public class FileTokenizerSettings {
 
             NodeSettings delimSettings;
             try {
-                delimSettings = allDelims.getConfig(delimKey);
+                delimSettings = allDelims.getNodeSettings(delimKey);
             } catch (InvalidSettingsException ice) {
                 assert false; // we've checked the type before...
                 LOGGER.warn("Illegal delimiter configuration '" + delimKey
@@ -249,7 +249,7 @@ public class FileTokenizerSettings {
                     + "to null config!");
         }
         for (int d = 0; d < m_delimPatterns.size(); d++) {
-            NodeSettings delimConf = cfg.addConfig(CFGKEY_DELIMCFG + d);
+            NodeSettings delimConf = cfg.addNodeSettings(CFGKEY_DELIMCFG + d);
             Delimiter delim = m_delimPatterns.get(d);
             delim.saveToConfig(delimConf);
         }
@@ -272,7 +272,7 @@ public class FileTokenizerSettings {
 
             NodeSettings quoteSettings;
             try {
-                quoteSettings = allQuotes.getConfig(quoteKey);
+                quoteSettings = allQuotes.getNodeSettings(quoteKey);
             } catch (InvalidSettingsException ice) {
                 assert false; // just tested it ...
                 LOGGER.warn("Illegal quote configuration '" + quoteKey
@@ -305,7 +305,7 @@ public class FileTokenizerSettings {
                     + "to null config!");
         }
         for (int q = 0; q < m_quotePatterns.size(); q++) {
-            NodeSettings quoteConf = cfg.addConfig(CFGKEY_QUOTECFG + q);
+            NodeSettings quoteConf = cfg.addNodeSettings(CFGKEY_QUOTECFG + q);
             Quote quote = m_quotePatterns.get(q);
             quote.saveToConfig(quoteConf);
         }
@@ -330,7 +330,7 @@ public class FileTokenizerSettings {
             NodeSettings commentSettings;
 
             try {
-                commentSettings = allComments.getConfig(commentKey);
+                commentSettings = allComments.getNodeSettings(commentKey);
             } catch (InvalidSettingsException ice) {
                 assert false; // we've just checked the type...
                 LOGGER.warn("Illegal comment configuration '" + commentKey
@@ -378,7 +378,7 @@ public class FileTokenizerSettings {
                     + "to null config!");
         }
         for (int c = 0; c < m_commentPatterns.size(); c++) {
-            NodeSettings commentConf = cfg.addConfig(CFGKEY_COMMNTCFG + c);
+            NodeSettings commentConf = cfg.addNodeSettings(CFGKEY_COMMNTCFG + c);
             Comment comment = m_commentPatterns.get(c);
             comment.saveToConfig(commentConf);
         }

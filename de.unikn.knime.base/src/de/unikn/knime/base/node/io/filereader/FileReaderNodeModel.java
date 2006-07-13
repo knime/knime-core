@@ -30,6 +30,8 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.util.StringHistory;
 
 /**
@@ -204,10 +206,10 @@ public class FileReaderNodeModel extends NodeModel {
      * @throws InvalidSettingsException if the settings are incorrect - which
      *             should not happen as they are supposed to be validated
      *             before.
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         readSettingsFromConfiguration(settings, /* validateOnly = */false);
     }
@@ -215,9 +217,9 @@ public class FileReaderNodeModel extends NodeModel {
     /**
      * Writes the current user settings into a configuration object.
      * 
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
 
         if (settings == null) {
             throw new NullPointerException("Can't write filereader node "
@@ -241,9 +243,9 @@ public class FileReaderNodeModel extends NodeModel {
      *            null.
      * @throws InvalidSettingsException if the settings in the specified object
      *             are incomplete, inconsistent, or in any way invalid.
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         readSettingsFromConfiguration(settings, /* validateOnly = */true);
     }

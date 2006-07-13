@@ -21,9 +21,11 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.ModelContentWO;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * This node model can be used to inject models into a workflow. The only
@@ -45,29 +47,29 @@ public class ModelInputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *      #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *      #saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         // nothing to do here
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *      #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     *      #validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do here
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *      #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do here
     }
@@ -111,12 +113,12 @@ public class ModelInputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #savePredictorParams(int,
-     *      de.unikn.knime.core.node.ModelContent)
+     * @see de.unikn.knime.core.node.NodeModel #saveModelContent(int,
+     *      ModelContentWO)
      */
     @Override
-    protected void savePredictorParams(final int index,
-            final ModelContent predParams) throws InvalidSettingsException {
+    protected void saveModelContent(final int index,
+            final ModelContentWO predParams) throws InvalidSettingsException {
         m_predictorParams.copyTo(predParams);
     }
 }

@@ -30,6 +30,8 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Model of a node filtering rows. It keeps an instance of a row filter, which
@@ -62,29 +64,29 @@ public class RowFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         assert settings != null;
 
         if (m_rowFilter != null) {
-            NodeSettings filterCfg = settings.addConfig(CFGFILTER);
+            NodeSettings filterCfg = settings.addNodeSettings(CFGFILTER);
             m_rowFilter.saveSettingsTo(filterCfg);
         }
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadOrValidateSettingsFrom(settings, true);
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadOrValidateSettingsFrom(settings, false);
     }
@@ -95,7 +97,7 @@ public class RowFilterNodeModel extends NodeModel {
         RowFilter tmpFilter = null;
 
         if (settings.containsKey(CFGFILTER)) {
-            NodeSettings filterCfg = settings.getConfig(CFGFILTER);
+            NodeSettings filterCfg = settings.getNodeSettings(CFGFILTER);
             // because we don't know what type of filter is in the config we
             // must ask the factory to figure it out for us (actually the type
             // is also saved in a valid config). When we save row filters they

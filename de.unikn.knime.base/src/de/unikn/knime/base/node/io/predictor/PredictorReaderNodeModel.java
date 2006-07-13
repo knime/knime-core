@@ -32,8 +32,10 @@ import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.ModelContentWO;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Read ModelContent object from file.
@@ -57,27 +59,27 @@ public class PredictorReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(FILENAME, m_fileName);
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         checkFileAccess(settings.getString(FILENAME));
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_fileName = checkFileAccess(settings.getString(FILENAME));
     }
@@ -91,8 +93,8 @@ public class PredictorReaderNodeModel extends NodeModel {
      *             file.
      */
     @Override
-    protected void savePredictorParams(final int index,
-            final ModelContent predParam) throws InvalidSettingsException {
+    protected void saveModelContent(final int index,
+            final ModelContentWO predParam) throws InvalidSettingsException {
         assert index == 0 : index;
         if (predParam != null && m_predParams != null) {
             m_predParams.copyTo(predParam);

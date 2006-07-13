@@ -25,7 +25,8 @@ import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * This is the model for the DefaultTable node. It only holds the DefaultTable.
@@ -102,22 +103,22 @@ public class DefaultTableNodeModel extends NodeModel {
     }
     
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
-    protected void loadValidatedSettingsFrom(final NodeSettings settings) 
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
-    protected void validateSettings(final NodeSettings settings) 
+    protected void validateSettings(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
     }
     

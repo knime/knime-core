@@ -107,7 +107,7 @@ class ColProperty {
         HashSet<DataCell> posValues = null;
         NodeSettings posVcfg = null;
         try {
-            posVcfg = cfg.getConfig(CFGKEY_POSVALUES);
+            posVcfg = cfg.getNodeSettings(CFGKEY_POSVALUES);
         } catch (InvalidSettingsException ice) {
             posVcfg = null;
         }
@@ -171,7 +171,7 @@ class ColProperty {
         cfg.addDataType(CFGKEY_COLTYPE, m_colSpec.getType());
         Set<DataCell> posValues = m_colSpec.getDomain().getValues();
         if ((posValues != null) && (posValues.size() > 0)) {
-            NodeSettings pVCfg = cfg.addConfig(CFGKEY_POSVALUES);
+            NodeSettings pVCfg = cfg.addNodeSettings(CFGKEY_POSVALUES);
             int count = 0;
             for (DataCell cell : posValues) {
                 pVCfg.addDataCell(CFGKEY_POSSVAL + count, cell);

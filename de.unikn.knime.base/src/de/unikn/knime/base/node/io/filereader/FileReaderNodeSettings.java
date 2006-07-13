@@ -103,7 +103,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
         if (cfg != null) {
             m_numOfColumns = cfg.getInt(CFGKEY_NUMOFCOLS);
-            readColumnPropsFromConfig(cfg.getConfig(CFGKEY_COLPROPS));
+            readColumnPropsFromConfig(cfg.getNodeSettings(CFGKEY_COLPROPS));
 
             // check settings
             SettingsStatus status = getStatusOfSettings();
@@ -154,7 +154,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     public void saveToConfiguration(final NodeSettings cfg) {
         super.saveToConfiguration(cfg);
         cfg.addInt(CFGKEY_NUMOFCOLS, m_numOfColumns);
-        saveColumnPropsToConfig(cfg.addConfig(CFGKEY_COLPROPS));
+        saveColumnPropsToConfig(cfg.addNodeSettings(CFGKEY_COLPROPS));
     }
 
     /*
@@ -173,7 +173,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         for (int c = 0; c < m_columnProperties.size(); c++) {
             ColProperty cProp = m_columnProperties.get(c);
             if (cProp != null) {
-                cProp.saveToConfiguration(cfg.addConfig("" + c));
+                cProp.saveToConfiguration(cfg.addNodeSettings("" + c));
             }
         }
 
@@ -212,7 +212,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                                 + " are specified twice in the conf object.");
             }
 
-            m_columnProperties.set(pos, new ColProperty(cfg.getConfig(key)));
+            m_columnProperties.set(pos, new ColProperty(cfg.getNodeSettings(key)));
 
         }
 

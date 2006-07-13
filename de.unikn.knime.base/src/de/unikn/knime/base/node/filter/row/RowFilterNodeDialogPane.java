@@ -37,7 +37,8 @@ import de.unikn.knime.base.node.filter.row.rowfilter.RowNoRowFilter;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
@@ -178,10 +179,10 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
 
     /**
      * @see de.unikn.knime.core.node.NodeDialogPane
-     *      #loadSettingsFrom(de.unikn.knime.core.node.NodeSettings,
+     *      #loadSettingsFrom(NodeSettingsRO,
      *      de.unikn.knime.core.data.DataTableSpec[])
      */
-    protected void loadSettingsFrom(final NodeSettings settings,
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 
         if ((specs[0] == null) || (specs[0].getNumColumns() < 1)) {
@@ -212,7 +213,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         try {
             // get the filter
             filter = RowFilterFactory.createRowFilter(settings
-                    .getConfig(RowFilterNodeModel.CFGFILTER));
+                    .getNodeSettings(RowFilterNodeModel.CFGFILTER));
         } catch (InvalidSettingsException ise) {
             // silently ignore invalid filters. 
         }
@@ -279,9 +280,9 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
 
     /**
      * @see de.unikn.knime.core.node.NodeDialogPane
-     *      #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *      #saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings)
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
 
         RowFilter theFilter = null;
@@ -306,7 +307,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         assert theFilter != null;
 
         theFilter.saveSettingsTo(settings
-                .addConfig(RowFilterNodeModel.CFGFILTER));
+                .addNodeSettings(RowFilterNodeModel.CFGFILTER));
 
     }
 }

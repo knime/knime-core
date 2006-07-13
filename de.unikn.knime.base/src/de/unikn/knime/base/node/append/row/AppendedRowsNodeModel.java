@@ -24,7 +24,8 @@ import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * <code>NodeModel</code> that concatenates its two input table to one output
@@ -78,10 +79,10 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addBoolean(CFG_APPEND_SUFFIX, m_appendSuffix);
         if (m_suffix != null) {
             settings.addString(CFG_SUFFIX, m_suffix);
@@ -89,10 +90,10 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         boolean appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
         if (appendSuffix) {
@@ -104,10 +105,10 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
         if (m_appendSuffix) {

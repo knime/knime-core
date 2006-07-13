@@ -21,7 +21,8 @@ import java.util.Set;
 import de.unikn.knime.base.node.util.FilterColumnPanel;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
@@ -57,7 +58,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      *         filtering.
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) 
+            final NodeSettingsRO settings, final DataTableSpec[] specs) 
             throws NotConfigurableException {
         assert (settings != null && specs.length == 1);
         if (specs[FilterColumnNodeModel.INPORT] == null
@@ -83,9 +84,9 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      * <code>FilterColumnNodeModel</code> retrieving them from the filter panel.
      * @param settings The <code>NodeSettings</code> to write into.
      *
-     * @see NodeDialogPane#saveSettingsTo(NodeSettings)
+     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         FilterColumnPanel p = 
             (FilterColumnPanel) getTab(TAB);
         Set<String> list = p.getExcludedColumnList();

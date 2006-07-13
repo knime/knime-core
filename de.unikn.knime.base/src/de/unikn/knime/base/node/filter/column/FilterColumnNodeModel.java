@@ -26,7 +26,8 @@ import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * The model for the column filter which extracts certain columns from the input
@@ -173,7 +174,7 @@ final class FilterColumnNodeModel extends NodeModel {
      * 
      * @param settings The object to save the settings into.
      */
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addStringArray(KEY, m_list.toArray(new String[0]));
     }
 
@@ -184,7 +185,7 @@ final class FilterColumnNodeModel extends NodeModel {
      * @throws InvalidSettingsException If the settings does not contain the
      *             size or a particular column key.
      */
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // clear exclude column list
         m_list.clear();
@@ -197,9 +198,9 @@ final class FilterColumnNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // true because the filter model does not care if there are columns to
         // exclude are available

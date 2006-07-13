@@ -236,7 +236,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
             if (cfg.containsKey(CFGKEY_MISSINGS)) {
                 NodeSettings missPattConf;
                 try {
-                    missPattConf = cfg.getConfig(CFGKEY_MISSINGS);
+                    missPattConf = cfg.getNodeSettings(CFGKEY_MISSINGS);
                 } catch (InvalidSettingsException ice) {
                     throw new InvalidSettingsException(
                             "Illegal config object for file "
@@ -248,7 +248,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
             NodeSettings rowDelimConf = null;
             try {
-                rowDelimConf = cfg.getConfig(CFGKEY_ROWDELIMS);
+                rowDelimConf = cfg.getNodeSettings(CFGKEY_ROWDELIMS);
             } catch (InvalidSettingsException ice) {
                 throw new InvalidSettingsException(
                         "Illegal config object for file reader settings!"
@@ -298,8 +298,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
             cfg.addString(CFGKEY_ROWPREF, m_rowHeaderPrefix);
         }
 
-        saveRowDelimitersToConfig(cfg.addConfig(CFGKEY_ROWDELIMS));
-        saveMissingPatternsToConfig(cfg.addConfig(CFGKEY_MISSINGS));
+        saveRowDelimitersToConfig(cfg.addNodeSettings(CFGKEY_ROWDELIMS));
+        saveMissingPatternsToConfig(cfg.addNodeSettings(CFGKEY_MISSINGS));
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
         cfg.addBoolean(CFGKEY_IGNOREATEOR, m_ignoreEmptyTokensAtEOR);
     }

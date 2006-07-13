@@ -32,7 +32,8 @@ import javax.swing.JTextField;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
@@ -74,9 +75,9 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
+     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
-    protected void loadSettingsFrom(final NodeSettings settings,
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 
         m_textField.setText(
@@ -84,9 +85,9 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
 
     }
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettings)
+     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings)
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         if ((m_textField.getText() == null) 
                 || m_textField.getText().equals("")) {

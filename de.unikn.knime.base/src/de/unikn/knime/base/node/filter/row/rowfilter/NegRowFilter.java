@@ -94,7 +94,7 @@ public class NegRowFilter extends RowFilter {
     public void loadSettingsFrom(final NodeSettings cfg)
             throws InvalidSettingsException {
 
-        NodeSettings inCfg = cfg.getConfig(CFG_INFILTER);
+        NodeSettings inCfg = cfg.getNodeSettings(CFG_INFILTER);
 
         m_inFilter = RowFilterFactory.createRowFilter(inCfg);
  
@@ -105,7 +105,7 @@ public class NegRowFilter extends RowFilter {
      */
     protected void saveSettings(final NodeSettings cfg) {
         if (m_inFilter != null) {
-            NodeSettings inCfg = cfg.addConfig(CFG_INFILTER);
+            NodeSettings inCfg = cfg.addNodeSettings(CFG_INFILTER);
             m_inFilter.saveSettingsTo(inCfg);
         }
     }

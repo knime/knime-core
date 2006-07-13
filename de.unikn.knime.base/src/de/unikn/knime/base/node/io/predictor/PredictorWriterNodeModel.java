@@ -32,8 +32,10 @@ import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.ModelContentRO;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Write ModelContent object into file.
@@ -57,27 +59,27 @@ public class PredictorWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettings)
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(FILENAME, m_fileName);
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettings)
+     * @see NodeModel#validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         checkFileAccess(settings.getString(FILENAME));
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettings)
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_fileName = checkFileAccess(settings.getString(FILENAME));
     }
@@ -85,12 +87,12 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * Load ModelContent from input port.
      * 
-     * @see de.unikn.knime.core.node.NodeModel#loadPredictorParams(int,
-     *      ModelContent)
+     * @see de.unikn.knime.core.node.NodeModel#loadModelContent(int,
+     *      ModelContentRO)
      */
     @Override
-    protected void loadPredictorParams(final int index,
-            final ModelContent pConf) {
+    protected void loadModelContent(final int index,
+            final ModelContentRO pConf) {
         assert index == 0 : index;
         m_predParams = pConf;
     }

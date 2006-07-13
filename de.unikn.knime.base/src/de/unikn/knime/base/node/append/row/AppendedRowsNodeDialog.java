@@ -34,7 +34,8 @@ import javax.swing.JTextField;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
@@ -88,10 +89,10 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
+     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
     protected void loadSettingsFrom(
-            final NodeSettings settings, final DataTableSpec[] specs) 
+            final NodeSettingsRO settings, final DataTableSpec[] specs) 
             throws NotConfigurableException {
         boolean appendSuffix = 
             settings.getBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, false);
@@ -106,9 +107,9 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettings)
+     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings)
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         boolean isSuffix = m_appendSuffixButton.isSelected();
         String suffix = m_suffixField.getText();

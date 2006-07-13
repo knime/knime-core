@@ -43,7 +43,8 @@ import javax.swing.filechooser.FileFilter;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
@@ -257,9 +258,9 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettings, DataTableSpec[])
+     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
-    protected void loadSettingsFrom(final NodeSettings settings,
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_url.setText(settings.
                 getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
@@ -269,9 +270,9 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettings)
+     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
-    protected void saveSettingsTo(final NodeSettings settings)
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         updateFileError();
         if (!m_urlError.getText().equals("")) {

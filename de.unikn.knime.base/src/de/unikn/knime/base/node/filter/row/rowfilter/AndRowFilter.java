@@ -138,8 +138,8 @@ public class AndRowFilter extends RowFilter {
     public void loadSettingsFrom(final NodeSettings cfg)
             throws InvalidSettingsException {
 
-        NodeSettings cfg1 = cfg.getConfig(CFG_FILTER1);
-        NodeSettings cfg2 = cfg.getConfig(CFG_FILTER2);
+        NodeSettings cfg1 = cfg.getNodeSettings(CFG_FILTER1);
+        NodeSettings cfg2 = cfg.getNodeSettings(CFG_FILTER2);
 
         m_in1 = RowFilterFactory.createRowFilter(cfg1);
         m_in2 = RowFilterFactory.createRowFilter(cfg2);
@@ -150,11 +150,11 @@ public class AndRowFilter extends RowFilter {
      */
     protected void saveSettings(final NodeSettings cfg) {
         if (m_in1 != null) {
-            NodeSettings cfg1 = cfg.addConfig(CFG_FILTER1);
+            NodeSettings cfg1 = cfg.addNodeSettings(CFG_FILTER1);
             m_in1.saveSettingsTo(cfg1);
         }
         if (m_in2 != null) {
-            NodeSettings cfg2 = cfg.addConfig(CFG_FILTER2);
+            NodeSettings cfg2 = cfg.addNodeSettings(CFG_FILTER2);
             m_in2.saveSettingsTo(cfg2);
         }
     }

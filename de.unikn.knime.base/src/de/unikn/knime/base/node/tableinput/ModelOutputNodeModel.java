@@ -21,9 +21,11 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.ModelContentRO;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.ModelContent;
+import de.unikn.knime.core.node.NodeSettingsRO;
+import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * This class lets you fetch the predictor params that are passed from the only
@@ -44,20 +46,20 @@ public class ModelOutputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettings)
+     *  #saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettings settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         // nothing to do here
 
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #validateSettings(de.unikn.knime.core.node.NodeSettings)
+     *  #validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do here
 
@@ -65,10 +67,10 @@ public class ModelOutputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(de.unikn.knime.core.node.NodeSettings)
+     *  #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettings settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do here
 
@@ -106,11 +108,11 @@ public class ModelOutputNodeModel extends NodeModel {
 
    /**
     * @see de.unikn.knime.core.node.NodeModel
-    *  #loadPredictorParams(int, de.unikn.knime.core.node.ModelContent)
+    *  #loadModelContent(int, ModelContentRO)
     */
    @Override
-   protected void loadPredictorParams(final int index,
-           final ModelContent predParams) throws InvalidSettingsException {
+   protected void loadModelContent(final int index,
+           final ModelContentRO predParams) throws InvalidSettingsException {
        m_predictorParams = predParams;
    }
 
