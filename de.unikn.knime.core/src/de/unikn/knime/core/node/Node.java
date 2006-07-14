@@ -241,6 +241,26 @@ public final class Node {
 
  
     /**
+     * Loads the settings (but not the data) from the given settings object.
+     * 
+     * @param settings a settings object
+     * @throws InvalidSettingsException if an expected setting is missing
+     */
+    public void loadSettings(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        m_name = settings.getString(CFG_NAME);
+
+        NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
+        if (m_model instanceof SpecialNodeModel) {
+            ((SpecialNodeModel) m_model).loadSettingsFrom(null, modelSettings,
+                    null);
+        } else {
+            m_model.loadSettingsFrom(modelSettings);
+        }            
+    }
+    
+    
+    /**
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
      * @param loadID Forwared to the node. This id serves as loading id, 
@@ -1396,17 +1416,13 @@ public final class Node {
         return MODEL_FILE_PREFIX + index + ".pmml.gz";
     }
     
+    
     /**
-     * Saves the node, node settings, and all internal structures, spec, data,
-     * and models, to the given node directory (located at the node file).
-     * @param nodeFile To write node settings to.
-     * @param exec Used to report progress during saving.
-     * @throws IOException If the node file can't be found or read.
-     * @throws CanceledExecutionException If the saving has been canceled.
+     * Saves the settings (but not the data).
+     * 
+     * @param settings a settings object
      */
-    public void save(final File nodeFile, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
+    public void saveSettings(final NodeSettingsWO settings) {
         // write node name
         settings.addString(CFG_NAME, m_name);
         // write configured flag
@@ -1418,8 +1434,7 @@ public final class Node {
         final NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
         try {
             if (m_model instanceof SpecialNodeModel) {
-                ((SpecialNodeModel) m_model).saveSettingsTo(nodeFile, model,
-                        exec);
+                ((SpecialNodeModel) m_model).saveSettingsTo(null, model, null);
             } else {
                 m_model.saveSettingsTo(model);
             }
@@ -1427,8 +1442,22 @@ public final class Node {
             m_logger.error("Could not save model", e);
         } catch (Error e) {
             m_logger.fatal("Could not save model", e);
-        }
-
+        }        
+    }
+    
+    /**
+     * Saves the node, node settings, and all internal structures, spec, data,
+     * and models, to the given node directory (located at the node file).
+     * @param nodeFile To write node settings to.
+     * @param exec Used to report progress during saving.
+     * @throws IOException If the node file can't be found or read.
+     * @throws CanceledExecutionException If the saving has been canceled.
+     */
+    public void save(final File nodeFile, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+        NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
+        saveSettings(settings);
+    
         m_nodeDir = nodeFile.getParentFile();
         
         if (isConfigured()) {

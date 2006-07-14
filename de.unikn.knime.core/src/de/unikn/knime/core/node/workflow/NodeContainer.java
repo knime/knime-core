@@ -76,7 +76,7 @@ public class NodeContainer implements NodeStateListener {
     static final String KEY_FACTORY_NAME = "factory";
 
     /** Key for this node's internal ID. */
-    private static final String KEY_ID = "id";
+    static final String KEY_ID = "id";
 
     private static final String KEY_IS_DELETABLE = "isDeletable";
 
@@ -781,6 +781,24 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isModelContentOutPort(portNumber);
     }
 
+    
+    /**
+     * Loads the settings (but not any data) from the given settings. They are
+     * also passed to the underlying node.
+     * 
+     * @param settings the settings
+     * @throws InvalidSettingsException if an expected setting is missing
+     */
+    public void loadSettings(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        m_customName = settings.getString(KEY_CUSTOM_NAME);
+        m_description = settings.getString(KEY_CUSTOM_DESCRIPTION);
+        m_deletable = settings.getBoolean(KEY_IS_DELETABLE);
+
+        setExtraInfo(createExtraInfo(settings));
+        m_node.loadSettings(settings);
+    }
+    
     /**
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
@@ -876,12 +894,14 @@ public class NodeContainer implements NodeStateListener {
         m_node.resetAndConfigure();
     }
 
+    
     /**
-     * Saves only the container specific settings but not the underlying node.
+     * Saves only the settings (including the ones from the underlying node)
+     * but not its data.
      * 
-     * @param settings To write settings to.
+     * @param settings a settings object
      */
-    public void save(final NodeSettingsWO settings) {
+    public void saveSettings(final NodeSettingsWO settings) {
         settings.addString(KEY_FACTORY_NAME, m_node.getFactory().getClass()
                 .getName());
         settings.addInt(KEY_ID, m_id);
@@ -894,6 +914,7 @@ public class NodeContainer implements NodeStateListener {
                     .getName());
             m_extraInfo.save(settings);
         }
+        m_node.saveSettings(settings);
     }
 
     /**
@@ -908,7 +929,7 @@ public class NodeContainer implements NodeStateListener {
     public void save(final NodeSettingsWO settings, final File nodeFile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        save(settings);
+        saveSettings(settings);
         m_node.save(nodeFile, exec);
     }
 
