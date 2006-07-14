@@ -28,7 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.PrecisionRectangle;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPartViewer;
@@ -36,11 +39,14 @@ import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
 import org.eclipse.gef.SnapToHelper;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.handles.HandleBounds;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.eclipse.gef.requests.GroupRequest;
 
+import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.editparts.AbstractPortEditPart;
+import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import de.unikn.knime.workbench.editor2.editparts.NodeInPortEditPart;
 
@@ -198,6 +204,8 @@ public class SnapToPortGeometry extends SnapToHelper {
      */
     protected GraphicalEditPart container;
 
+    private ZoomManager m_zoomManager;
+
     /**
      * Constructs a helper that will use the given part as its basis for
      * snapping. The part's contents pane will provide the coordinate system and
@@ -208,6 +216,9 @@ public class SnapToPortGeometry extends SnapToHelper {
      */
     public SnapToPortGeometry(GraphicalEditPart container) {
         this.container = container;
+
+        m_zoomManager = (ZoomManager)container.getRoot().getViewer()
+                .getProperty(ZoomManager.class.toString());
     }
 
     /**
@@ -281,7 +292,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         // get the smallest distance to the next y value
         double result = Double.MAX_VALUE;
         for (Entry entry : entries) {
-            System.out.println("Entry: " + entry.offset);
+            // System.out.println("Entry: " + entry.offset);
             for (Entry y : ys) {
 
                 // only compare inports to outports as only oposite parts
@@ -296,7 +307,7 @@ public class SnapToPortGeometry extends SnapToHelper {
                     continue;
                 }
 
-                System.out.println("y val: " + (y.offset + moveDelta));
+                // System.out.println("y val: " + (y.offset + moveDelta));
                 double diff = entry.offset - (y.offset + moveDelta);
                 if (Math.abs(diff) < Math.abs(result)) {
                     result = diff;
@@ -304,7 +315,7 @@ public class SnapToPortGeometry extends SnapToHelper {
             }
         }
 
-        return result;
+        return Math.round(result);
     }
 
     /**
@@ -405,7 +416,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * 
      * @param parts a List of EditParts
      */
-    protected void populateRowsAndCols(final List parts) {
+    protected void populateRowsAndCols(final List parts, final List dragedParts) {
 
         // add the port edit parts to a list
         List<AbstractPortEditPart> portList = getPorts(parts);
@@ -425,6 +436,36 @@ public class SnapToPortGeometry extends SnapToHelper {
             // get information is this is a model port
             rowVector.add(new Entry(0, bounds.y + (bounds.height - 1) / 2,
                     inport, portList.get(i).isModelPort()));
+        }
+
+        // add the port edit parts to a list
+        List<AbstractPortEditPart> dargedPortList = getPorts(dragedParts);
+        for (int i = 0; i < dargedPortList.size(); i++) {
+
+            // for each port get a possible connection (if connected)
+            AbstractPortEditPart portPart = dargedPortList.get(i);
+
+            List sourceConnections = portPart.getSourceConnections();
+            for (int j = 0; j < sourceConnections.size(); j++) {
+                ConnectionContainerEditPart conPart = (ConnectionContainerEditPart)sourceConnections
+                        .get(i);
+
+                Point p = ((Connection)conPart.getFigure()).getPoints()
+                        .getPoint(2);
+
+                rowVector.add(new Entry(0, p.y - 1, true, portPart.isModelPort()));
+            }
+
+            List targetConnections = portPart.getTargetConnections();
+            for (int j = 0; j < targetConnections.size(); j++) {
+                ConnectionContainerEditPart conPart = (ConnectionContainerEditPart)targetConnections
+                        .get(i);
+
+                PointList pList = ((Connection)conPart.getFigure()).getPoints();
+                Point p = pList.getPoint(pList.size() - 3);
+
+                rowVector.add(new Entry(0, p.y - 1, false, portPart.isModelPort()));
+            }
         }
 
         Vector<Entry> colVector = new Vector<Entry>();
@@ -460,7 +501,8 @@ public class SnapToPortGeometry extends SnapToHelper {
             if (!isClone && request instanceof GroupRequest) {
                 exclusionSet = ((GroupRequest)request).getEditParts();
             }
-            populateRowsAndCols(generateSnapPartsList(exclusionSet));
+            populateRowsAndCols(generateSnapPartsList(exclusionSet),
+                    exclusionSet);
         }
 
         if ((snapOrientation & HORIZONTAL) != 0) {
@@ -471,6 +513,9 @@ public class SnapToPortGeometry extends SnapToHelper {
                 snapOrientation &= ~HORIZONTAL;
                 correction.preciseX += xcorrect;
             }
+
+            // System.out.println("Xcorrect:" + correction.preciseX
+            // + " intermediat: " + xcorrect);
         }
 
         // get y values of the draged node part ports
@@ -493,7 +538,9 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         // get the move delta of the orignial location
-        int moveDelta = ((ChangeBoundsRequest)request).getMoveDelta().y;
+        Point moveDeltaPoint = ((ChangeBoundsRequest)request).getMoveDelta();
+        WorkflowEditor.adaptZoom(m_zoomManager, moveDeltaPoint, true);
+        int moveDelta = moveDeltaPoint.y;
         if ((snapOrientation & VERTICAL) != 0) {
             double ycorrect = THRESHOLD;
             ycorrect = getCorrectionForY(rows, request.getExtendedData(),
@@ -503,8 +550,8 @@ public class SnapToPortGeometry extends SnapToHelper {
                 correction.preciseY += (ycorrect + 1);
             }
 
-            System.out.println("Ycorrect:" + correction.preciseY
-                    + " intermediat: " + ycorrect);
+            // System.out.println("Ycorrect:" + correction.preciseY
+            // + " intermediat: " + ycorrect + "delta: " + moveDelta);
         }
 
         if ((snapOrientation & EAST) != 0) {

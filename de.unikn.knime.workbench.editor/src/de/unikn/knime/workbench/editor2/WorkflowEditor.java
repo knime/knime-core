@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.PrecisionPoint;
 import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.EditDomain;
 import org.eclipse.gef.EditPartViewer;
@@ -1283,5 +1284,28 @@ public class WorkflowEditor extends GraphicalEditor implements
         // adapt the location accordint to the zoom level
         pointToAdapt.x = (int)(pointToAdapt.x * (1.0 / zoomLevel));
         pointToAdapt.y = (int)(pointToAdapt.y * (1.0 / zoomLevel));
+    }
+
+    /**
+     * Adapts a precission point according to the given zoom manager.
+     * 
+     * @param zoomManager the zoom manager providing the zoom levels
+     * @param pointToAdapt the point to adapt
+     */
+    public static void adaptZoom(final ZoomManager zoomManager,
+            final PrecisionPoint pointToAdapt,
+            final boolean adaptViewPortLocation) {
+
+        if (adaptViewPortLocation) {
+            Point viewPortLocation = zoomManager.getViewport()
+                    .getViewLocation();
+            pointToAdapt.x += viewPortLocation.x;
+            pointToAdapt.y += viewPortLocation.y;
+        }
+        double zoomLevel = zoomManager.getZoom();
+
+        // adapt the location accordint to the zoom level
+        pointToAdapt.preciseX = (pointToAdapt.x * (1.0 / zoomLevel));
+        pointToAdapt.preciseY = (pointToAdapt.y * (1.0 / zoomLevel));
     }
 }
