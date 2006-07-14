@@ -28,6 +28,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.NodeExtraInfo;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
@@ -95,7 +96,7 @@ public class PasteAction extends AbstractClipboardAction {
     protected boolean calculateEnabled() {
         ClipboardObject clipboardContent = getEditor().getClipboardContent();
         return (clipboardContent != null
-                && clipboardContent.getContent() instanceof int[][]);
+                && clipboardContent.getContent() instanceof NodeSettings);
     }
 
     /**
@@ -112,7 +113,7 @@ public class PasteAction extends AbstractClipboardAction {
         ClipboardObject clipboardContent = getEditor().getClipboardContent();
         // ensure there is an object of type NodeSettings
         if (!(clipboardContent != null)
-                || !(clipboardContent.getContent() instanceof int[][])) {
+                || !(clipboardContent.getContent() instanceof NodeSettings)) {
 
             return;
         }
@@ -120,11 +121,10 @@ public class PasteAction extends AbstractClipboardAction {
         LOGGER.debug("Clipboard paste action invoked ...");
 
         // cast the clipboard object representing a sub workflow
-        int[][] copySettings = (int[][])clipboardContent.getContent();
+        NodeSettings copySettings = (NodeSettings)clipboardContent.getContent();
         int[][] newPartIds = null;
         try {
-            newPartIds = manager.createSubWorkflow(copySettings[0],
-                    copySettings[1]);
+            newPartIds = manager.createSubWorkflow(copySettings);
             
             for (int i = 0; i < newPartIds[0].length; i++) {
                 NodeContainer nc =
@@ -142,7 +142,7 @@ public class PasteAction extends AbstractClipboardAction {
 
                 
             }
-        } catch (CloneNotSupportedException ex) {
+        } catch (Exception ex) {
             LOGGER.error("Could not copy nodes", ex);
         }
 

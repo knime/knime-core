@@ -25,7 +25,11 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.NodeSettings;
+import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.workflow.ConnectionContainer;
+import de.unikn.knime.core.node.workflow.NodeContainer;
+import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ClipboardObject;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -97,22 +101,43 @@ public class CopyAction extends AbstractClipboardAction {
      * 
      * @return the node settings representing the selected nodes
      */
-    private int[][] getCopyObjects(
+    private NodeSettings getNodeSettings(
             final NodeContainerEditPart[] nodeParts,
             final ConnectionContainerEditPart[] connectionParts) {
-        int[] nodesToCopy = new int[nodeParts.length];
-        for (int i = 0; i < nodeParts.length; i++) {
-            nodesToCopy[i] = nodeParts[i].getNodeContainer().getID();
+
+        // copy node setttings root
+        NodeSettings clipboardRootSettings = new NodeSettings(
+                WorkflowEditor.CLIPBOARD_ROOT_NAME);
+
+        // save nodes in an own sub-config object as a series of configs
+        NodeSettingsWO nodes = clipboardRootSettings
+                .addNodeSettings(WorkflowManager.KEY_NODES);
+        for (NodeContainerEditPart nodeEditPart : nodeParts) {
+
+            NodeContainer nextNode = nodeEditPart.getNodeContainer();
+            // and save it to it's own config object
+            NodeSettingsWO nextNodeConfig = nodes.addNodeSettings("node_"
+                    + nextNode.getID());
+            nextNode.saveSettings(nextNodeConfig);
+            // TODO notify about node settings saved ????
         }
 
+        // save connections in an own sub-config object as a series of configs
+        NodeSettingsWO connections = clipboardRootSettings
+                .addNodeSettings(WorkflowManager.KEY_CONNECTIONS);
 
-        int[] connectionsToCopy = new int[connectionParts.length];
-        for (int i = 0; i < connectionParts.length; i++) {
-            connectionsToCopy[i] = 
-                ((ConnectionContainer) connectionParts[i].getModel()).getID();
+        for (ConnectionContainerEditPart connectionEditPart : connectionParts) {
+
+            ConnectionContainer nextConnection = (ConnectionContainer)connectionEditPart
+                    .getModel();
+
+            // // and save it to it's own config object
+            NodeSettingsWO nextConnectionConfig = connections
+                    .addNodeSettings("connection_" + nextConnection.getID());
+            nextConnection.save(nextConnectionConfig);
         }
 
-        return new int[][] {nodesToCopy, connectionsToCopy};
+        return clipboardRootSettings;
     }
 
     /**
@@ -140,7 +165,7 @@ public class CopyAction extends AbstractClipboardAction {
         // new Transfer[]{ResourceTransfer.getInstance()});
         getEditor()
                 .setClipboardContent(
-                        new ClipboardObject(getCopyObjects(nodeParts,
+                        new ClipboardObject(getNodeSettings(nodeParts,
                                 connectionParts)));
 
         // update the actions
