@@ -1579,7 +1579,8 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * Writes this Config to the given stream as XML.
+     * Writes this Config to the given stream as XML. The stream will be closed
+     * when finished.
      * 
      * @param os The stream to write into.
      * @throws IOException If this Config could be stored to the stream.
