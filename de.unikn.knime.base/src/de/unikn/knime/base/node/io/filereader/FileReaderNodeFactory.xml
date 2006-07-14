@@ -4,7 +4,7 @@
 	<name>File Reader</name>
 	
 	<shortDescription>
-	    flexible reader for ASCII files.
+	    Flexible reader for ASCII files.
 	</shortDescription>
 	
 	<fullDescription>
@@ -15,7 +15,7 @@
 		it will try to guess
 		the reader's settings by analyzing the beginning of the file.
 		Check the results of these settings in the preview table. If the 
-		data showing is not correct or an error is reported, you can adjust the
+		data shown is not correct or an error is reported, you can adjust the
 		settings manually (see below).<br />
 		When the node is executed it reads in the entire file and caches it in a
 		temporary file for faster access by the connected successor nodes. It 
@@ -46,7 +46,7 @@
 	    	will indicate the start of a comment (ended by a new line).
 			</option>
 	    <option name="Advanced...">Opens a new dialog with advanced settings.
-	    	Right now, there is more advanced support for quotes and for the
+	    	At the current time, there is more advanced support for quotes and for the
 	    	decimal separator in floating point numbers.	    
 			</option>
 	    <option name="Click on the table header">If the column header in the 

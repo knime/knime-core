@@ -10,7 +10,7 @@
 	<fullDescription>
 		<intro>
 			This node reads files that have been written using the Table Writer node 
-			(which uses an internal format). It will retain all meta information such as 
+			(which uses an internal format). It retains all meta information such as 
 			domain, properties, colors, size.
 		</intro>
 		<option name="File Chooser">
