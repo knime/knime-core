@@ -74,9 +74,10 @@ public final class ModelContent extends Config
     public ModelContentWO addModelContent(final String key) {
         return (ModelContent) super.addConfig(key);
     }
-    
-    /**
-     * @see Config#getNodeSettings(java.lang.String)
+
+    /** 
+     * @see de.unikn.knime.core.node.ModelContentRO
+     *  #getModelContent(java.lang.String)
      */
     public ModelContent getModelContent(final String key)
             throws InvalidSettingsException {

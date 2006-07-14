@@ -42,8 +42,11 @@ public final class NodeSettings extends Config
         super(key);
     }
     
+    /** 
+     * @see de.unikn.knime.core.node.config.Config#getInstance(java.lang.String)
+     */
     @Override
-    public Config getInstance(String key) {
+    public Config getInstance(final String key) {
         return new NodeSettings(key);
     }
 
@@ -71,8 +74,10 @@ public final class NodeSettings extends Config
         return (NodeSettingsRO) Config.loadFromXML(tmp, in);
     }
 
-    /**
-     * @see Config#addNodeSettings(java.lang.String)
+
+    /** 
+     * @see de.unikn.knime.core.node.NodeSettingsWO
+     *  #addNodeSettings(java.lang.String)
      */
     public NodeSettingsWO addNodeSettings(final String key) {
         return (NodeSettings)super.addConfig(key);
@@ -82,8 +87,10 @@ public final class NodeSettings extends Config
         super.addConfig(settings);
     }
 
-    /**
-     * @see Config#getNodeSettings(java.lang.String)
+
+    /** 
+     * @see de.unikn.knime.core.node.NodeSettingsRO
+     *  #getNodeSettings(java.lang.String)
      */
     public NodeSettings getNodeSettings(final String key)
             throws InvalidSettingsException {

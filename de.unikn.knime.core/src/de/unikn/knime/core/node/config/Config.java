@@ -1498,6 +1498,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * @see AbstractConfigEntry#getKey()
      */
+    @Override
     public String toString() {
         return super.getKey();
     }
@@ -1679,6 +1680,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param childIndex The index to retrieve the TreeNode for.
      * @return The associated TreeNode.
      */
+    @Override
     public TreeNode getChildAt(final int childIndex) {
         Iterator<String> it = m_map.keySet().iterator();
         for (int i = 0; i < childIndex; i++) {
@@ -1692,6 +1694,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return The number of entries in this Config.
      * @see javax.swing.tree.TreeNode#getChildCount()
      */
+    @Override
     public int getChildCount() {
         return m_map.size();
     }
@@ -1702,6 +1705,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return The index of the given node.
      * @see javax.swing.tree.TreeNode#getIndex(javax.swing.tree.TreeNode)
      */
+    @Override
     public int getIndex(final TreeNode node) {
         int i = 0;
         for (Map.Entry<String, AbstractConfigEntry> e : m_map.entrySet()) {
@@ -1717,6 +1721,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return true, only if the map is empty.
      * @see javax.swing.tree.TreeNode#isLeaf()
      */
+    @Override
     public final boolean isLeaf() {
         return m_map.isEmpty();
     }
@@ -1726,6 +1731,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return All elements of this Config.
      * @see javax.swing.tree.TreeNode#children()
      */
+    @Override
     public final Enumeration<TreeNode> children() {
         return new Vector<TreeNode>(m_map.values()).elements();
     }

@@ -816,9 +816,9 @@ public class WorkflowManager implements WorkflowListener {
      * 
      * @throws InvalidSettingsException thrown if the passed settings are not
      *             valid
-     * @throws ClassNotFoundException 
-     * @throws IllegalAccessException 
-     * @throws InstantiationException 
+     * @throws ClassNotFoundException if a node class cannot be found
+     * @throws IllegalAccessException if a node class is not accessible
+     * @throws InstantiationException if a node cannot be instantiated
      */
     public int[][] createSubWorkflow(final NodeSettings settings) 
             throws InvalidSettingsException, InstantiationException,

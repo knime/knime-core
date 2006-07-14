@@ -101,6 +101,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      * @return key + type + value
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return getKey() + " [" + getType().name() + "] -> " + toStringValue();
     }
@@ -119,6 +120,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      *         true.
      * @see #isIdentical(AbstractConfigEntry)
      */
+    @Override
     public final boolean equals(final Object o) {
         if (o == null) {
             return false;
