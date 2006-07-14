@@ -300,6 +300,18 @@ public class WorkflowManager implements WorkflowListener {
                 }
             }
         }
+        
+        public boolean canBeReset(final NodeContainer nc) {
+            if (m_runningNodes.containsKey(nc)) { return false; }
+            for (NodeContainer succ : nc.getAllSuccessors()) {
+                if (m_runningNodes.containsKey(succ)
+                        || m_waitingNodes.contains(succ)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
     }
 
     /** Key for connections. */
@@ -623,6 +635,16 @@ public class WorkflowManager implements WorkflowListener {
         }
     }
 
+    
+    private void checkForRunningNodes(final String msg, final NodeContainer nc)
+        throws WorkflowInExecutionException {
+        if (!m_executor.canBeReset(nc)) {
+            throw new WorkflowInExecutionException(msg
+                    + " while execution is in progress");
+        }
+    }
+    
+    
     /**
      * Removes all nodes and connection from the workflow.
      * 
@@ -1253,9 +1275,9 @@ public class WorkflowManager implements WorkflowListener {
      */
     public synchronized void resetAndConfigureAfterNode(final int nodeID)
             throws WorkflowInExecutionException {
-        checkForRunningNodes("Node cannot be reset");
-
         NodeContainer nodeCont = m_nodesByID.get(nodeID);
+        checkForRunningNodes("Node cannot be reset", nodeCont);
+        
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
             nc.resetAndConfigure();
         }
@@ -1285,9 +1307,9 @@ public class WorkflowManager implements WorkflowListener {
      */
     public synchronized void resetAndConfigureNode(final int nodeID)
             throws WorkflowInExecutionException {
-        checkForRunningNodes("Node cannot be reset");
-
         NodeContainer nodeCont = m_nodesByID.get(nodeID);
+        checkForRunningNodes("Node cannot be reset", nodeCont);
+        
         nodeCont.resetAndConfigure();
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
             nc.resetAndConfigure();
