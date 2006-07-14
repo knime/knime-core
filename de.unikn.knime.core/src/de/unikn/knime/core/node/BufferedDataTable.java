@@ -32,6 +32,7 @@ import de.unikn.knime.core.data.KnowsRowCount;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.container.BufferedTable;
 import de.unikn.knime.core.data.container.DataContainer;
+import de.unikn.knime.core.data.container.TableSpecReplacerTable;
 import de.unikn.knime.core.data.container.RearrangeColumnsTable;
 import de.unikn.knime.core.util.FileUtil;
 
@@ -105,6 +106,10 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         this((KnowsRowCountTable)table);
     }
     
+    public BufferedDataTable(TableSpecReplacerTable table) {
+        this((KnowsRowCountTable)table);
+    }
+    
     
     public static BufferedDataTable[] createBufferedDataTables(
             final DataTable[] tables, final ExecutionMonitor exec)
@@ -123,6 +128,8 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         if (table instanceof BufferedTable) {
             isKnown = true;
         } else if (table instanceof RearrangeColumnsTable) {
+            isKnown = true;
+        } else if (table instanceof TableSpecReplacerTable) {
             isKnown = true;
         } else if (table instanceof BufferedDataTable) {
             LOGGER.coding("No need to create a BufferedDataTable based " 
@@ -148,6 +155,8 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     BufferedDataTable getReferenceTable() {
         if (m_delegate instanceof RearrangeColumnsTable) {
             return ((RearrangeColumnsTable)m_delegate).getReferenceTable();
+        } else if (m_delegate instanceof TableSpecReplacerTable) {
+            return ((TableSpecReplacerTable)m_delegate).getReferenceTable();
         } 
         return null;
     }
@@ -185,6 +194,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     private static final String TABLE_TYPE_CONTAINER = "container_table";
     private static final String TABLE_TYPE_REARRANGE_COLUMN = 
         "rearrange_columns_table";
+    private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
     private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
     
@@ -198,10 +208,15 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         m_delegate.saveToFile(outFile, s, exec);
         if (m_delegate instanceof BufferedTable) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
-        } else if (m_delegate instanceof RearrangeColumnsTable) {
-            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
-            BufferedDataTable reference = 
-                ((RearrangeColumnsTable)m_delegate).getReferenceTable();
+        } else { 
+            if (m_delegate instanceof RearrangeColumnsTable) {
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
+            } else {
+                assert m_delegate instanceof TableSpecReplacerTable;
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_NEW_SPEC);
+            }
+            BufferedDataTable reference = getReferenceTable();
+            assert reference != null;
             if (reference.getOwner() == getOwner()) {
                 File subDir = new File(dir, TABLE_SUB_DIR);
                 subDir.mkdir();
@@ -241,14 +256,20 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         BufferedDataTable t;
         if (tableType.equals(TABLE_TYPE_CONTAINER)) {
             t = DataContainer.readFromZip(dest);
-        } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
+        } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
+                || (tableType.equals(TABLE_TYPE_NEW_SPEC))) {
             String reference = s.getString(CFG_TABLE_REFERENCE, null);
             if (reference != null) {
                 File referenceDir = new File(dir, reference);
                 loadFromFile(referenceDir, s, exec, loadID);
             }
-            t = new BufferedDataTable(
-                    new RearrangeColumnsTable(dest, s, loadID));
+            if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
+                t = new BufferedDataTable(
+                        new RearrangeColumnsTable(dest, s, loadID));
+            } else {
+                t = new BufferedDataTable(
+                        new TableSpecReplacerTable(dest, s, loadID));
+            }
         } else {
             throw new InvalidSettingsException("Unknown table identifier: "
                     + tableType);
@@ -272,9 +293,8 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     void setOwnerRecursively(final Node owner) {
         if (m_owner == null) {
             m_owner = owner;
-            if (m_delegate instanceof RearrangeColumnsTable) {
-                BufferedDataTable reference = 
-                    ((RearrangeColumnsTable)m_delegate).getReferenceTable();
+            BufferedDataTable reference = getReferenceTable();
+            if (reference != null) {
                 reference.setOwnerRecursively(owner);
             }
         }

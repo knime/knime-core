@@ -49,7 +49,8 @@ public final class ColumnRearranger {
         m_includes = new Vector<SpecAndFactoryObject>();
         m_includes.ensureCapacity(original.getNumColumns());
         for (int i = 0; i < original.getNumColumns(); i++) {
-            m_includes.add(new SpecAndFactoryObject(original.getColumnSpec(i), i));
+            m_includes.add(new SpecAndFactoryObject(
+                    original.getColumnSpec(i), i));
         }
         m_originalSpec = original;
     }
@@ -142,18 +143,30 @@ public final class ColumnRearranger {
         insertAt(m_includes.size(), fac);
     }
     
-    public void replace(final String colName, final CellFactory newCol) {
+    public void replace(final CellFactory newCol, final String colName) {
         int index = indexOf(colName);
         if (index < 0) {
             throw new IllegalArgumentException("No such column: " + colName);
         }
-        replace(index, newCol);
+        replace(newCol, index);
     }
     
-    public void replace(final int colIndex, final CellFactory newCol) {
-        remove(colIndex);
-        insertAt(colIndex, newCol);
+    public void replace(final CellFactory fac, final int... colIndex) {
+        DataColumnSpec[] colSpecs = fac.getColumnSpecs();
+        if (colSpecs.length != colIndex.length) {
+            throw new IndexOutOfBoundsException(
+                    "Arguments do not apply to same number of columns: "
+                    + colSpecs.length + " vs. " + colIndex.length + ")");
+        }
+        for (int i = 0; i < colSpecs.length; i++) {
+            remove(colIndex[i]);
+            SpecAndFactoryObject s = 
+                new SpecAndFactoryObject(fac, i, colSpecs[i]);
+            m_includes.insertElementAt(s, colIndex[i]);
+        }
     }
+    
+    
     
     public DataTableSpec createSpec() {
         final int size = m_includes.size();
@@ -236,7 +249,7 @@ public final class ColumnRearranger {
                         factoryCountRow++;
                         DataCell[] fromFac = fac.getCells(row);
                         for (int j = 0; j < newColCount; j++) {
-                            SpecAndFactoryObject checkMe = reducedList.get(i);
+                            SpecAndFactoryObject checkMe = reducedList.get(j);
                             if (checkMe.getFactory() == fac) {
                                 assert newCells[j] == null;
                                 newCells[j] = 
