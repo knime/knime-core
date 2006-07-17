@@ -429,6 +429,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             PlatformUI.getWorkbench().getActiveWorkbenchWindow()
                     .getActivePage().closeEditor(metaWorkflowEditor, false);
         }
+        
+        m_manager.closeAllViews();
 
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
