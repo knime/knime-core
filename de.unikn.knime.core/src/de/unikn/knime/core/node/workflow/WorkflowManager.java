@@ -1607,7 +1607,7 @@ public class WorkflowManager implements WorkflowListener {
      */
     synchronized void applyDialogSettings(final NodeContainer nodeCont)
             throws WorkflowInExecutionException, InvalidSettingsException {
-        checkForRunningNodes("Dialog settings cannot be applied");
+        checkForRunningNodes("Dialog settings cannot be applied", nodeCont);
 
         nodeCont.loadModelSettingsFromDialog();
         nodeCont.resetAndConfigure();
