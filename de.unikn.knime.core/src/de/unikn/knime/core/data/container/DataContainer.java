@@ -322,8 +322,8 @@ public class DataContainer implements RowAppender {
      */
     public BufferedDataTable getTable() {
         if (!isClosed()) {
-            throw new IllegalStateException("Cannot get table: container is"
-                    + " not closed.");
+            throw new IllegalStateException(
+                    "Cannot get table: container is not closed.");
         }
         return new BufferedDataTable((BufferedTable)m_table);
     }
