@@ -76,12 +76,12 @@ public class WorkflowConnectionBendpointTracker extends
         PointList pList = ((Connection)request.getSource().getFigure())
                 .getPoints();
 
-        System.out.println("Number points: " + pList.size());
+        //System.out.println("Number points: " + pList.size());
 
         Point[] neighbourPoints = getNeighbourPoints(dragPoint, pList);
 
-        System.out.println("x vals: drag:" + dragPoint.x + " neig1: "
-                + neighbourPoints[0].x + "neig2: " + neighbourPoints[1].x);
+//        System.out.println("x vals: drag:" + dragPoint.x + " neig1: "
+//                + neighbourPoints[0].x + "neig2: " + neighbourPoints[1].x);
 
         double xCorrection = 0.0;
         // check the drag point for all 4 vertical / horizontal lines
