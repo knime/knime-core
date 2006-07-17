@@ -37,7 +37,6 @@ import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.StringValue;
-import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.util.FileUtil;
@@ -570,10 +569,10 @@ public class DataContainer implements RowAppender {
      * @return The table contained in the zip file.
      * @throws IOException If that fails.
      */
-    public static BufferedDataTable readFromZip(
-            final File zipFile) throws IOException {
+    public static DataTable readFromZip(final File zipFile) 
+        throws IOException {
         Buffer buffer = new Buffer(zipFile, /*ignoreMe*/false);
-        return new BufferedDataTable(new ContainerTable(buffer));
+        return new ContainerTable(buffer);
     }
     
     /** the temp file will have a time stamp in its name. */

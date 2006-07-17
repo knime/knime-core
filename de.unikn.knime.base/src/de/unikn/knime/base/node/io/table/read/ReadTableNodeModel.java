@@ -22,6 +22,7 @@ package de.unikn.knime.base.node.io.table.read;
 import java.io.File;
 import java.io.IOException;
 
+import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
@@ -90,8 +91,9 @@ public class ReadTableNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         File f = new File(m_fileName);
-        BufferedDataTable outTable = DataContainer.readFromZip(f);
-        return new BufferedDataTable[]{outTable};
+        DataTable table = DataContainer.readFromZip(f);
+        BufferedDataTable out = exec.createBufferedDataTable(table, exec);
+        return new BufferedDataTable[]{out};
     }
 
     /**
@@ -114,7 +116,7 @@ public class ReadTableNodeModel extends NodeModel {
             File f = new File(m_fileName);
             // doesn't hurt to read the table here. It will only parse
             // the spec, not the data content.
-            BufferedDataTable outTable = DataContainer.readFromZip(f);
+            DataTable outTable = DataContainer.readFromZip(f);
             return new DataTableSpec[]{outTable.getDataTableSpec()};
         } catch (IOException ioe) {
             String message = ioe.getMessage();

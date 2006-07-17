@@ -256,7 +256,9 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         String tableType = s.getString(CFG_TABLE_TYPE);
         BufferedDataTable t;
         if (tableType.equals(TABLE_TYPE_CONTAINER)) {
-            t = DataContainer.readFromZip(dest);
+            ContainerTable fromContainer = 
+                (ContainerTable)DataContainer.readFromZip(dest); 
+            t = new BufferedDataTable(fromContainer);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
                 || (tableType.equals(TABLE_TYPE_NEW_SPEC))) {
             String reference = s.getString(CFG_TABLE_REFERENCE, null);

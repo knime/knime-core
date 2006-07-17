@@ -70,7 +70,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     
     private int m_iterationCounter = 0;
     
-    private BufferedDataTable[] m_inData;
+    private DataTable[] m_inData;
     
     private int m_delay = INITIAL_DELAY;
     
@@ -233,7 +233,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @return - the input data as a whole.
      */
-    public BufferedDataTable[] getInputData() {
+    public DataTable[] getInputData() {
         return m_inData;
     }
     
@@ -379,7 +379,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * @throws InvalidSettingsException - if the inData doesn't fit the expected
      *             configuration.
      */
-    public abstract void init(final BufferedDataTable[] inData)
+    public abstract void init(final DataTable[] inData)
     throws InvalidSettingsException;
     
     /**
