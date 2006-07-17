@@ -448,7 +448,7 @@ public class SnapToPortGeometry extends SnapToHelper {
             List sourceConnections = portPart.getSourceConnections();
             for (int j = 0; j < sourceConnections.size(); j++) {
                 ConnectionContainerEditPart conPart = (ConnectionContainerEditPart)sourceConnections
-                        .get(i);
+                        .get(j);
 
                 Point p = ((Connection)conPart.getFigure()).getPoints()
                         .getPoint(2);
@@ -459,7 +459,7 @@ public class SnapToPortGeometry extends SnapToHelper {
             List targetConnections = portPart.getTargetConnections();
             for (int j = 0; j < targetConnections.size(); j++) {
                 ConnectionContainerEditPart conPart = (ConnectionContainerEditPart)targetConnections
-                        .get(i);
+                        .get(j);
 
                 PointList pList = ((Connection)conPart.getFigure()).getPoints();
                 Point p = pList.getPoint(pList.size() - 3);

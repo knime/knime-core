@@ -67,7 +67,7 @@ public class WorkflowConnectionBendpointTracker extends
         BendpointRequest request = (BendpointRequest)getSourceRequest();
 
         // get the currently dragging bendpoint
-        //PrecisionPoint dragPoint = new PrecisionPoint(getLocation());
+        // PrecisionPoint dragPoint = new PrecisionPoint(getLocation());
         Point dragPoint = getLocation();
         WorkflowEditor.adaptZoom(m_zoomManager, dragPoint, false);
 
@@ -76,12 +76,18 @@ public class WorkflowConnectionBendpointTracker extends
         PointList pList = ((Connection)request.getSource().getFigure())
                 .getPoints();
 
-        //System.out.println("Number points: " + pList.size());
+        // System.out.println("Number points: " + pList.size());
 
         Point[] neighbourPoints = getNeighbourPoints(dragPoint, pList);
 
-//        System.out.println("x vals: drag:" + dragPoint.x + " neig1: "
-//                + neighbourPoints[0].x + "neig2: " + neighbourPoints[1].x);
+        // if the neighbours could not be determined to not apply snapping
+        if (neighbourPoints == null) {
+            request.setLocation(getLocation());
+            return;
+        }
+
+        // System.out.println("x vals: drag:" + dragPoint.x + " neig1: "
+        // + neighbourPoints[0].x + "neig2: " + neighbourPoints[1].x);
 
         double xCorrection = 0.0;
         // check the drag point for all 4 vertical / horizontal lines
@@ -135,7 +141,11 @@ public class WorkflowConnectionBendpointTracker extends
                 bestDist = dist;
             }
         }
-
+        // senity checks
+        if (indexOfClosestPoint <= 1
+                || indexOfClosestPoint >= pointList.size() - 1) {
+            return null;
+        }
         neighbours[0] = pointList.getPoint(indexOfClosestPoint - 1);
         neighbours[1] = pointList.getPoint(indexOfClosestPoint + 1);
         return neighbours;
