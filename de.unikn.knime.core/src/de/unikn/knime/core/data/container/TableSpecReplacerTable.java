@@ -49,7 +49,7 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     private final BufferedDataTable m_reference;
     private final DataTableSpec m_newSpec;
     
-    TableSpecReplacerTable(
+    public TableSpecReplacerTable(
             final BufferedDataTable table, final DataTableSpec newSpec) {
         DataTableSpec oldSpec = table.getDataTableSpec();
         if (oldSpec.getNumColumns() != newSpec.getNumColumns()) {

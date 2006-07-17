@@ -22,7 +22,8 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.container.ColumnRearranger;
-import de.unikn.knime.core.data.container.TableSpecReplacer;
+import de.unikn.knime.core.data.container.RearrangeColumnsTable;
+import de.unikn.knime.core.data.container.TableSpecReplacerTable;
 
 /**
  * An <code>ExecutionContext</code> provides storage capacities during a
@@ -198,8 +199,11 @@ public class ExecutionContext extends ExecutionMonitor {
             final BufferedDataTable in, final ColumnRearranger rearranger,
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
-        BufferedDataTable t = rearranger.createTable(in, subProgressMon);
-        return t;
+        RearrangeColumnsTable t = RearrangeColumnsTable.create(
+                rearranger, in, subProgressMon);
+        BufferedDataTable out = new BufferedDataTable(t);
+        out.setOwnerRecursively(m_node);
+        return out;
     }
 
     /**
@@ -213,8 +217,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createSpecReplacerTable(
             final BufferedDataTable in, final DataTableSpec newSpec) {
-        BufferedDataTable out = TableSpecReplacer.createReplaceSpecTable(in,
-                newSpec);
+        TableSpecReplacerTable t = new TableSpecReplacerTable(in, newSpec);
+        BufferedDataTable out = new BufferedDataTable(t);
         out.setOwnerRecursively(m_node);
         return out;
     }

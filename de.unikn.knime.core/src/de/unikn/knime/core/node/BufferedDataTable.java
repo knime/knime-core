@@ -102,23 +102,12 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         this((KnowsRowCountTable)table);
     }
     
-    public BufferedDataTable(RearrangeColumnsTable table) {
+    BufferedDataTable(RearrangeColumnsTable table) {
         this((KnowsRowCountTable)table);
     }
     
-    public BufferedDataTable(TableSpecReplacerTable table) {
+    BufferedDataTable(TableSpecReplacerTable table) {
         this((KnowsRowCountTable)table);
-    }
-    
-    
-    static BufferedDataTable[] createBufferedDataTables(
-            final DataTable[] tables, final ExecutionMonitor exec)
-    throws CanceledExecutionException {
-        BufferedDataTable[] temp = new BufferedDataTable[tables.length];
-        for (int i = 0; i < tables.length; i++) {
-            temp[i] = createBufferedDataTable(tables[i], exec);
-        }
-        return temp;
     }
     
     static BufferedDataTable createBufferedDataTable(

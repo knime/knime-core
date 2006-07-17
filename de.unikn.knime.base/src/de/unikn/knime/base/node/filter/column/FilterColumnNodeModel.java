@@ -91,7 +91,8 @@ final class FilterColumnNodeModel extends NodeModel {
 
         assert (data != null && data.length == 1 && data[INPORT] != null);
         ColumnRearranger c = createColumnRearranger(data[0].getDataTableSpec());
-        BufferedDataTable outTable = c.createTable(data[0], exec);
+        BufferedDataTable outTable = 
+            exec.createBufferedDataTable(data[0], c, exec);
         return new BufferedDataTable[]{outTable};
     }
 

@@ -23,6 +23,9 @@ package de.unikn.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.Vector;
 
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
@@ -31,11 +34,13 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
+import de.unikn.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -146,8 +151,123 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
     
     
+    public static RearrangeColumnsTable create(
+            final ColumnRearranger rearranger, final BufferedDataTable table, 
+            final ExecutionMonitor subProgress) 
+        throws CanceledExecutionException {
+        DataTableSpec originalSpec = rearranger.getOriginalSpec();
+        Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
+        // names and types of the specs must match
+        if (!table.getDataTableSpec().equals(originalSpec)) {
+            throw new IllegalArgumentException(
+                    "The argument table's spec does not match the original " 
+                    + "spec passed in the constructor.");
+        }
+        int size = includes.size();
+        DataTableSpec spec = rearranger.createSpec();
+        ArrayList<DataColumnSpec> newColSpecsList = 
+            new ArrayList<DataColumnSpec>();
+        // the reduced set of SpecAndFactoryObject that models newly
+        // appended/inserted columns; this vector is in most cases 
+        // considerably smaller than m_includes
+        Vector<SpecAndFactoryObject> reducedList = 
+            new Vector<SpecAndFactoryObject>();
+        int newColCount = 0;
+        IdentityHashMap<CellFactory, Object> counter =
+            new IdentityHashMap<CellFactory, Object>();
+        for (int i = 0; i < size; i++) {
+            SpecAndFactoryObject s = includes.get(i);
+            if (s.isNewColumn()) {
+                counter.put(s.getFactory(), null);
+                reducedList.add(s);
+                newColSpecsList.add(s.getColSpec());
+                newColCount++;
+            }
+        }
+        // number of different factories used, in 99% of all cases 
+        // this is either 0 or 1
+        final int factoryCount = counter.size();
+        DataColumnSpec[] newColSpecs = 
+            newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
+        NoKeyBuffer appendBuffer;
+        // for a pure filter (a table that just hides some columns from
+        // the reference table but does not add any new column we avoid to scan
+        // the entire table (nothing is written anyway))
+        if (newColCount > 0) {
+            DataContainer container = new DataContainer(
+                    new DataTableSpec(newColSpecs), true) {
+                protected Buffer newBuffer(final int rowsInMemory) {
+                    return new NoKeyBuffer(rowsInMemory);
+                }
+            };
+            assert reducedList.size() == newColCount;
+            int finalRowCount = table.getRowCount();
+            int r = 0;
+            try {
+                for (RowIterator it = table.iterator(); it.hasNext(); r++) {
+                    DataRow row = it.next();
+                    DataCell[] newCells = new DataCell[newColCount];
+                    int factoryCountRow = 0;
+                    CellFactory facForProgress = null;
+                    for (int i = 0; i < newColCount; i++) {
+                        // early stopping, if we have just one factory but 
+                        // many many columns, this if statement will save a lot
+                        if (factoryCount == factoryCountRow) {
+                            break;
+                        }
+                        if (newCells[i] != null) {
+                            continue;
+                        }
+                        SpecAndFactoryObject cur = reducedList.get(i);
+                        CellFactory fac = cur.getFactory();
+                        if (facForProgress == null) {
+                            facForProgress = fac;
+                        }
+                        factoryCountRow++;
+                        DataCell[] fromFac = fac.getCells(row);
+                        for (int j = 0; j < newColCount; j++) {
+                            SpecAndFactoryObject checkMe = reducedList.get(j);
+                            if (checkMe.getFactory() == fac) {
+                                assert newCells[j] == null;
+                                newCells[j] = 
+                                    fromFac[checkMe.getColumnInFactory()];
+                            }
+                        }
+                    }
+                    assert facForProgress != null;
+                    facForProgress.setProgress(r + 1, finalRowCount, 
+                            row.getKey(), subProgress);
+                    DataRow appendix = new DefaultRow(row.getKey(), newCells);
+                    container.addRowToTable(appendix);
+                    subProgress.checkCanceled();
+                }
+            } finally {
+                container.close();
+            }
+            appendBuffer = (NoKeyBuffer)container.getBuffer();
+        } else {
+            appendBuffer = null;
+        }
+        boolean[] isFromRefTable = new boolean[size];
+        int[] includesIndex = new int[size];
+        int newColIndex = 0;
+        for (int i = 0; i < size; i++) {
+            SpecAndFactoryObject c = includes.get(i);
+            if (c.isNewColumn()) {
+                isFromRefTable[i] = false;
+                includesIndex[i] = newColIndex++;
+            } else {
+                isFromRefTable[i] = true;
+                includesIndex[i] = c.getOriginalIndex();
+            }
+        }
+        assert newColCount == newColCount;
+        return new RearrangeColumnsTable(
+                table, includesIndex, isFromRefTable, spec, appendBuffer);
+    }
+
     /**
-     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     * @see BufferedDataTable.KnowsRowCountTable#getRowCount()
      */
     public int getRowCount() {
         return m_reference.getRowCount();
