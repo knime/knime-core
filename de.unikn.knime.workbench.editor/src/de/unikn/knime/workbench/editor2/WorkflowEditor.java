@@ -69,6 +69,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
@@ -94,6 +95,7 @@ import de.unikn.knime.core.node.NodeProgressListener;
 import de.unikn.knime.core.node.NodeLogger.LEVEL;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
+import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -896,8 +898,21 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         } catch (CanceledExecutionException cee) {
             LOGGER.debug("Saving of workflow canceled");
+        } catch (WorkflowInExecutionException e) {
+
+            // inform the user
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Workflow could not be saveed ...");
+            mb.setMessage("The workflow could not be "
+                    + "saved due to executing nodes.");
+            mb.open();
+
+            LOGGER.warn("Could not save workflow");
+            monitor.setCanceled(true);
+
         } catch (Exception e) {
-            LOGGER.warn("Could not save workflow", e);
+            LOGGER.debug("Could not save workflow");
         }
 
         try {
