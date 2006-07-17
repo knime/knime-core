@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
@@ -208,9 +209,8 @@ public class WorkflowManager implements WorkflowListener {
                         m_runningNodes.put(nc, pm);
 
                         try {
-                            fireWorkflowEvent(
-                                    new WorkflowEvent.NodeStarted(
-                                            nc.getID(), nc, pm));
+                            fireWorkflowEvent(new WorkflowEvent.NodeStarted(nc
+                                    .getID(), nc, pm));
                             nc.addListener(this);
                             nc.startExecution(pm);
                         } catch (Exception e) {
@@ -300,19 +300,20 @@ public class WorkflowManager implements WorkflowListener {
                 }
             }
         }
-        
+
         /**
          * Checks if it is allowed to reset the given node container. A
-         * container may not be reset if it is currently executing or if any
-         * of its successor nodes is waiting for execution or currently
-         * executing.
+         * container may not be reset if it is currently executing or if any of
+         * its successor nodes is waiting for execution or currently executing.
          * 
          * @param nc any node container
          * @return <code>true</code> if it can be reset, <code>false</code>
-         * otherwise
+         *         otherwise
          */
         public boolean canBeReset(final NodeContainer nc) {
-            if (m_runningNodes.containsKey(nc)) { return false; }
+            if (m_runningNodes.containsKey(nc)) {
+                return false;
+            }
             for (NodeContainer succ : nc.getAllSuccessors()) {
                 if (m_runningNodes.containsKey(succ)
                         || m_waitingNodes.contains(succ)) {
@@ -321,7 +322,7 @@ public class WorkflowManager implements WorkflowListener {
             }
             return true;
         }
-        
+
     }
 
     /** Key for connections. */
@@ -637,8 +638,8 @@ public class WorkflowManager implements WorkflowListener {
         m_executor.cancelExecution(nodeCont.getAllSuccessors());
     }
 
-
-    /* checks if any running nodes are in the workflow and throws an exception
+    /*
+     * checks if any running nodes are in the workflow and throws an exception
      * if this is the case
      */
     private void checkForRunningNodes(final String msg)
@@ -649,19 +650,17 @@ public class WorkflowManager implements WorkflowListener {
         }
     }
 
-    
     /*
      * check sif the given node can be reset
      */
     private void checkForRunningNodes(final String msg, final NodeContainer nc)
-        throws WorkflowInExecutionException {
+            throws WorkflowInExecutionException {
         if (!m_executor.canBeReset(nc)) {
             throw new WorkflowInExecutionException(msg
                     + " while execution is in progress");
         }
     }
-    
-    
+
     /**
      * Removes all nodes and connection from the workflow.
      * 
@@ -801,8 +800,6 @@ public class WorkflowManager implements WorkflowListener {
         return new int[][]{nids, cids};
     }
 
-    
-    
     /**
      * Creates additional nodes and optional connections between those specified
      * in the settings object.
@@ -820,7 +817,7 @@ public class WorkflowManager implements WorkflowListener {
      * @throws IllegalAccessException if a node class is not accessible
      * @throws InstantiationException if a node cannot be instantiated
      */
-    public int[][] createSubWorkflow(final NodeSettings settings) 
+    public int[][] createSubWorkflow(final NodeSettings settings)
             throws InvalidSettingsException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
         NodeSettings nodes = settings.getNodeSettings(KEY_NODES);
@@ -849,7 +846,6 @@ public class WorkflowManager implements WorkflowListener {
 
                 // change the id, as this id is already in use (it was copied)
                 // first remeber the old id "map(oldId, newId)"
-
 
                 idMap.put(oldId, newId);
                 // remember the new id for the return value
@@ -923,7 +919,7 @@ public class WorkflowManager implements WorkflowListener {
 
         return new int[][]{nids, cids};
     }
-    
+
     /**
      * Removes all connections (incoming and outgoing) from a node container.
      * Note that this results in a bunch of workflow events !
@@ -1238,14 +1234,16 @@ public class WorkflowManager implements WorkflowListener {
                     File nodeFile = new File(parentDir, nodeFileName);
                     newNode.load(loadID, nodeFile, progMon);
                 } catch (IOException ioe) {
-                    String msg = "Unable to load node: " 
-                        + newNode.getNameWithID() + " -> reset and configure.";
+                    String msg = "Unable to load node: "
+                            + newNode.getNameWithID()
+                            + " -> reset and configure.";
                     LOGGER.error(msg);
                     LOGGER.debug("", ioe);
                     failedNodes.add(newNode);
                 } catch (InvalidSettingsException ise) {
-                    String msg = "Unable to load node: " 
-                        + newNode.getNameWithID() + " -> reset and configure.";
+                    String msg = "Unable to load node: "
+                            + newNode.getNameWithID()
+                            + " -> reset and configure.";
                     LOGGER.error(msg);
                     LOGGER.debug("", ise);
                     failedNodes.add(newNode);
@@ -1262,8 +1260,7 @@ public class WorkflowManager implements WorkflowListener {
 
     /**
      * Only load internal workflow manager settings, init nodes and connections.
-     * No NodeSettings, DataTableSpec, DataTable, or ModelContent are
-     * loaded.
+     * No NodeSettings, DataTableSpec, DataTable, or ModelContent are loaded.
      * 
      * @param settings read settings from
      * @throws InvalidSettingsException if an error occurs during reading
@@ -1353,7 +1350,7 @@ public class WorkflowManager implements WorkflowListener {
         m_connectionsByID.remove(connection.getID());
 
         resetAndConfigureNode(targetNode.getID());
-        
+
         // notify listeners
         LOGGER.info("Removed connection (from node id:" + sourceNode.getID()
                 + ", port:" + portOut + " to node id:" + targetNode.getID()
@@ -1419,7 +1416,7 @@ public class WorkflowManager implements WorkflowListener {
             throws WorkflowInExecutionException {
         NodeContainer nodeCont = m_nodesByID.get(nodeID);
         checkForRunningNodes("Node cannot be reset", nodeCont);
-        
+
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
             nc.resetAndConfigure();
         }
@@ -1451,7 +1448,7 @@ public class WorkflowManager implements WorkflowListener {
             throws WorkflowInExecutionException {
         NodeContainer nodeCont = m_nodesByID.get(nodeID);
         checkForRunningNodes("Node cannot be reset", nodeCont);
-        
+
         nodeCont.resetAndConfigure();
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
             nc.resetAndConfigure();
@@ -1626,5 +1623,24 @@ public class WorkflowManager implements WorkflowListener {
      */
     public boolean executionInProgress() {
         return m_executor.executionInProgress(this);
+    }
+
+    /**
+     * Closes all opened views of the nodes of this workflow.
+     */
+    public void closeAllViews() {
+
+        Set<Map.Entry<NodeContainer, Integer>> containerSet = m_idsByNode
+                .entrySet();
+        Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries = containerSet
+                .iterator();
+
+        while (nodeContaierEntries.hasNext()) {
+
+            Map.Entry<NodeContainer, Integer> entry = nodeContaierEntries
+                    .next();
+
+            entry.getKey().closeAllViews();
+        }
     }
 }
