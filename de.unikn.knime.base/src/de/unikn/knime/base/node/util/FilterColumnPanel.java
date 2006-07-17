@@ -218,7 +218,14 @@ public final class FilterColumnPanel extends JPanel {
         inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(searchButtonIncl, BorderLayout.EAST);
         m_markAllHitsIncl = new JCheckBox("Mark all search hits");
-        m_markAllHitsIncl.addActionListener(actionListenerIncl);
+        ActionListener actionListenerAllIncl = new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                m_inclList.clearSelection();
+                onSearch(m_inclList, m_inclMdl, searchFieldIncl, 
+                        m_markAllHitsIncl.isSelected());
+            }
+        };
+        m_markAllHitsIncl.addActionListener(actionListenerAllIncl);
         inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(" Include ");
@@ -253,7 +260,14 @@ public final class FilterColumnPanel extends JPanel {
         exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Mark all search hits");
-        m_markAllHitsExcl.addActionListener(actionListenerExcl);
+        ActionListener actionListenerAllExcl = new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                m_exclList.clearSelection();
+                onSearch(m_exclList, m_exclMdl, searchFieldExcl, 
+                        m_markAllHitsExcl.isSelected());
+            }
+        };
+        m_markAllHitsExcl.addActionListener(actionListenerAllExcl);
         exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(" Exclude ");
