@@ -783,18 +783,31 @@ public final class Node {
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
+            this.resetAndConfigure();
             m_status = new NodeStatus.Warning("Execution canceled!");
-            notifyStateListeners(new NodeStatus.EndExecute());
-            m_model.reset();
+            return false;
+        } catch (AssertionError ae) {
+            m_logger.assertLog(false, ae.getMessage(), ae);
+            this.resetAndConfigure();
+            m_status = new NodeStatus.Error(
+                    "Execute failed: " + ae.getMessage());
+            this.notifyStateListeners(m_status);
+            return false;
+        } catch (Error e) {
+            // some other error - should never happen!
+            m_logger.fatal("Fatal error", e);
+            this.resetAndConfigure();
+            m_status = new NodeStatus.Error(
+                    "Execute failed: " + e.getMessage());
+            this.notifyStateListeners(m_status);
             return false;
         } catch (Exception e) {
             // execution failed
             m_logger.error("Execute failed", e);
+            this.resetAndConfigure();
             m_status = new NodeStatus.Error(
                     "Execute failed: " + e.getMessage());
             this.notifyStateListeners(m_status);
-            notifyStateListeners(new NodeStatus.EndExecute());
-            m_model.reset();
             return false;
         }
 

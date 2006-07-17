@@ -393,8 +393,11 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      *      ExecutionContext)
      * @return - an BufferedDataTable[] as should be returned from the 
      *      NodeModel's execute method.
+     * @throws CanceledExecutionException If writting output tables has been
+     *      canceled.
      *      
      */
-    public abstract BufferedDataTable[] getOutput(final ExecutionMonitor exec);
+    public abstract BufferedDataTable[] getOutput(final ExecutionContext exec)
+        throws CanceledExecutionException;
     
 }

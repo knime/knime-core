@@ -1007,14 +1007,6 @@ public class NodeContainer implements NodeStateListener {
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
                     m_node.execute(new ExecutionContext(pm, m_node));
-                } catch (Exception e) {
-                    // some other error - this should never happen!
-                    m_logger.fatal("Fatal exception", e);
-                } catch (AssertionError ae) {
-                    m_logger.assertLog(false, ae.getMessage(), ae);
-                } catch (Error e) {
-                    // some other error - should never happen!
-                    m_logger.fatal("Fatal error", e);
                 } finally {
                     // and always clean up, no matter how we got out of here
                     m_executionRunning = false;
