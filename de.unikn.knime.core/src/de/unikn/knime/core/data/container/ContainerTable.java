@@ -38,7 +38,7 @@ import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * fixed.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class BufferedTable implements DataTable, KnowsRowCountTable {
+public class ContainerTable implements DataTable, KnowsRowCountTable {
     
     /** To read the data from. */
     private final Buffer m_buffer;
@@ -49,7 +49,7 @@ public class BufferedTable implements DataTable, KnowsRowCountTable {
      * @param buffer To read data from.
      * @see DataContainer#getTable()
      */
-    BufferedTable(final Buffer buffer) {
+    ContainerTable(final Buffer buffer) {
         assert (buffer != null);
         m_buffer = buffer;
     }

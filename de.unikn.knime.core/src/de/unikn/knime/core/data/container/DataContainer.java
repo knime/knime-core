@@ -94,7 +94,7 @@ public class DataContainer implements RowAppender {
     private DataTableSpec m_spec;
     
     /** Table to return. Not null when close() is called. */
-    private BufferedTable m_table;
+    private ContainerTable m_table;
     
     /** The number of possible values to be memorized. */
     private int m_maxPossibleValues;
@@ -287,7 +287,7 @@ public class DataContainer implements RowAppender {
         }
         DataTableSpec finalSpec = createTableSpecWithRange();
         m_buffer.close(finalSpec);
-        m_table = new BufferedTable(m_buffer);
+        m_table = new ContainerTable(m_buffer);
         m_buffer = null;
         m_spec = null;
         m_keySet = null;
@@ -305,7 +305,7 @@ public class DataContainer implements RowAppender {
      */
     public int size() {
         if (isClosed()) {
-            return ((BufferedTable)m_table).getBuffer().size();
+            return ((ContainerTable)m_table).getBuffer().size();
         }
         if (!isOpen()) {
             throw new IllegalStateException("Container is not open.");
@@ -331,7 +331,7 @@ public class DataContainer implements RowAppender {
      * @throws IllegalStateException If <code>isClosed()</code> returns
      *         <code>false</code>
      */
-    protected final BufferedTable getBufferedTable() {
+    protected final ContainerTable getBufferedTable() {
         if (!isClosed()) {
             throw new IllegalStateException(
             "Cannot get table: container is not closed.");
@@ -540,8 +540,8 @@ public class DataContainer implements RowAppender {
     public static void writeToZip(final DataTable table, final File outFile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        if (table instanceof BufferedTable) {
-            Buffer buf = ((BufferedTable)table).getBuffer();
+        if (table instanceof ContainerTable) {
+            Buffer buf = ((ContainerTable)table).getBuffer();
             if (buf.usesOutFile()) {
                 File tempFile = buf.getFile();
                 FileUtil.copy(tempFile, outFile, exec);
@@ -573,7 +573,7 @@ public class DataContainer implements RowAppender {
     public static BufferedDataTable readFromZip(
             final File zipFile) throws IOException {
         Buffer buffer = new Buffer(zipFile, /*ignoreMe*/false);
-        return new BufferedDataTable(new BufferedTable(buffer));
+        return new BufferedDataTable(new ContainerTable(buffer));
     }
     
     /** the temp file will have a time stamp in its name. */
@@ -605,6 +605,6 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If the argument is <code>null</code>.
      */
     public static final boolean isContainerTable(final DataTable table) {
-        return table instanceof BufferedTable;
+        return table instanceof ContainerTable;
     }
 }

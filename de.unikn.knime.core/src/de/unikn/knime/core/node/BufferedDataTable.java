@@ -30,7 +30,7 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.KnowsRowCount;
 import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.container.BufferedTable;
+import de.unikn.knime.core.data.container.ContainerTable;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.data.container.TableSpecReplacerTable;
 import de.unikn.knime.core.data.container.RearrangeColumnsTable;
@@ -98,7 +98,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     private int m_tableID;
     private Node m_owner;
     
-    public BufferedDataTable(BufferedTable table) {
+    public BufferedDataTable(ContainerTable table) {
         this((KnowsRowCountTable)table);
     }
     
@@ -125,7 +125,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
             final DataTable table, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         boolean isKnown = false;
-        if (table instanceof BufferedTable) {
+        if (table instanceof ContainerTable) {
             isKnown = true;
         } else if (table instanceof RearrangeColumnsTable) {
             isKnown = true;
@@ -144,7 +144,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
                     + "reference. Use one of the constructors in the future!");
             return new BufferedDataTable((KnowsRowCountTable)table);
         } 
-        BufferedTable t = (BufferedTable)DataContainer.cache(table, exec);
+        ContainerTable t = (ContainerTable)DataContainer.cache(table, exec);
         return new BufferedDataTable(t);
     }
     
@@ -207,7 +207,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         File outFile = new File(dir, TABLE_FILE);
         s.addString(CFG_TABLE_FILE_NAME, TABLE_FILE);
         m_delegate.saveToFile(outFile, s, exec);
-        if (m_delegate instanceof BufferedTable) {
+        if (m_delegate instanceof ContainerTable) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
         } else { 
             if (m_delegate instanceof RearrangeColumnsTable) {

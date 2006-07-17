@@ -20,7 +20,7 @@
 package de.unikn.knime.core.node;
 
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.container.BufferedTable;
+import de.unikn.knime.core.data.container.ContainerTable;
 import de.unikn.knime.core.data.container.DataContainer;
 
 /**
@@ -49,7 +49,7 @@ public class BufferedDataContainer extends DataContainer {
     @Override
     public BufferedDataTable getTable() {
         if (m_resultTable == null) {
-            BufferedTable buffer = getBufferedTable();
+            ContainerTable buffer = getBufferedTable();
             m_resultTable = new BufferedDataTable(buffer);
             m_resultTable.setOwnerRecursively(m_node);
         }
