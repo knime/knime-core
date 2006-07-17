@@ -19,7 +19,7 @@ package de.unikn.knime.base.node.tableinput;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.ExecutionMonitor;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NoSettingsNodeModel;
 
@@ -55,7 +55,7 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionMonitor exec) throws Exception {
+            final ExecutionContext exec) throws Exception {
         return new BufferedDataTable[] {m_datatable};
     }
 
@@ -88,7 +88,7 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
     
     /**
      * Sets the data table that should be returned by
-     * {@link #execute(BufferedDataTable[], ExecutionMonitor)}.
+     * {@link #execute(BufferedDataTable[], ExecutionContext)}.
      *  
      * @param table the data table
      */

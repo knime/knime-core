@@ -25,6 +25,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
@@ -109,10 +110,10 @@ public class FileReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionMonitor exec) throws 
+            final ExecutionContext exec) throws 
             CanceledExecutionException, InvalidSettingsException {
 
         LOGGER.info("Preparing to read from '"

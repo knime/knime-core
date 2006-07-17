@@ -23,6 +23,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.container.ColumnRearranger;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -83,10 +84,10 @@ final class FilterColumnNodeModel extends NodeModel {
      * @return The filtered table.
      * @throws Exception if current settings are invalid
      * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionMonitor exec) throws Exception {
+            final ExecutionContext exec) throws Exception {
 
         assert (data != null && data.length == 1 && data[INPORT] != null);
         ColumnRearranger c = createColumnRearranger(data[0].getDataTableSpec());

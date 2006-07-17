@@ -29,6 +29,7 @@ import de.unikn.knime.core.data.IntValue;
 import de.unikn.knime.core.data.StringValue;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
@@ -136,11 +137,11 @@ public class CSVWriterNodeModel extends NodeModel {
     /**
      * Writes to file...
      * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionMonitor exec) throws CanceledExecutionException,
+            final ExecutionContext exec) throws CanceledExecutionException,
             IOException {
         DataTable in = data[0];
         File file = new File(m_fileName);

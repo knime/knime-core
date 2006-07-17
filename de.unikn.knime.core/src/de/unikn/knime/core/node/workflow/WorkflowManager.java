@@ -1216,8 +1216,7 @@ public class WorkflowManager implements WorkflowListener {
                 workflowFile));
         load(settings);
 
-        ExecutionMonitor exec = new ExecutionMonitor(
-                new DefaultNodeProgressMonitor());
+        NodeProgressMonitor progMon = new DefaultNodeProgressMonitor(); 
 
         File parentDir = workflowFile.getParentFile();
 
@@ -1231,12 +1230,13 @@ public class WorkflowManager implements WorkflowListener {
         try {
             for (NodeContainer newNode : topSortNodes()) {
                 try {
-                    NodeSettingsRO nodeSetting = settings.getNodeSettings(KEY_NODES)
+                    NodeSettingsRO nodeSetting = 
+                        settings.getNodeSettings(KEY_NODES)
                             .getNodeSettings("node_" + newNode.getID());
                     String nodeFileName = nodeSetting
                             .getString(KEY_NODE_SETTINGS_FILE);
                     File nodeFile = new File(parentDir, nodeFileName);
-                    newNode.load(loadID, nodeFile, exec);
+                    newNode.load(loadID, nodeFile, progMon);
                 } catch (IOException ioe) {
                     String msg = "Unable to load node: " 
                         + newNode.getNameWithID() + " -> reset and configure.";

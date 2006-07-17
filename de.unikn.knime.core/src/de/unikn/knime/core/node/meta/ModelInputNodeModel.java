@@ -19,7 +19,7 @@ package de.unikn.knime.core.node.meta;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.ExecutionMonitor;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.ModelContentRO;
 import de.unikn.knime.core.node.ModelContentWO;
@@ -53,7 +53,7 @@ public class ModelInputNodeModel extends MetaInputModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionMonitor exec) throws Exception {
+            final ExecutionContext exec) throws Exception {
         return new BufferedDataTable[0];
     }
 

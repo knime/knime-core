@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
@@ -144,11 +145,11 @@ public class MetaNodeModel extends SpecialNodeModel
      * The inner workflow gets executed and the output <code>DataTable</code>s 
      * from the <code>MetaOutputNode</code>s are returned.
      * @see de.unikn.knime.core.node.NodeModel
-     *  #execute(BufferedDataTable[], ExecutionMonitor)
+     *  #execute(BufferedDataTable[], ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionMonitor exec) throws Exception {
+            final ExecutionContext exec) throws Exception {
         exec.setMessage("Executing inner workflow");
         
         KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {

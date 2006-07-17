@@ -24,9 +24,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -435,17 +433,17 @@ public abstract class NodeModel {
      * @throws IllegalStateException If the number of <code>DataTable</code>
      *             objects returned by the derived <code>NodeModel</code> does
      *             not match the number of outputs. Or if any of them is null.
-     * @see #execute(BufferedDataTable[],ExecutionMonitor)
+     * @see #execute(BufferedDataTable[],ExecutionContext)
      */
     protected final BufferedDataTable[] executeModel(
-            final BufferedDataTable[] data, final ExecutionMonitor exec) 
+            final BufferedDataTable[] data, final ExecutionContext exec) 
             throws Exception {
         assert (data != null && data.length == m_nrDataIns);
         assert (exec != null);
 
         // temp. storage for result of derived model.
         // EXECUTE DERIVED MODEL
-        DataTable[] outData = execute(data, exec);
+        BufferedDataTable[] outData = execute(data, exec);
 
         // if execution was canceled without exception flying return false
         if (exec.isCanceled()) {
@@ -470,27 +468,8 @@ public abstract class NodeModel {
                         + " is null.");
             }
         }
-        // The implementor should not memorize the returned DataTable
-        // array. It "should" be perfectly ok to change the elements
-        // in the array. However, to be sure that we don't mess with
-        // one of the implementations, we copy the references here
-        // and change the content of that copy instead of the returned
-        // array
-        BufferedDataTable[] result = new BufferedDataTable[outData.length];
-        for (int i = 0; i < result.length; i++) {
-            DataTable asReturned = outData[i];
-            if (asReturned instanceof BufferedDataTable) {
-                result[i] = (BufferedDataTable)asReturned;
-            } else {
-                result[i] = DataContainer.cache(asReturned, exec);
-            }
-        }
-
         setExecuted(true);
-
-        // return array of output DataTable
-        return result;
-
+        return outData;
     } // executeModel(DataTable[],ExecutionMonitor)
     
     /**
@@ -527,7 +506,7 @@ public abstract class NodeModel {
      * @return <code>true</code> if the node was execute otherwise
      *         <code>false</code>.
      * 
-     * @see #executeModel(BufferedDataTable[],ExecutionMonitor)
+     * @see #executeModel(BufferedDataTable[],ExecutionContext)
      * @see #resetModel()
      */
     final boolean isExecuted() {
@@ -565,7 +544,7 @@ public abstract class NodeModel {
      *             the execution.
      */
     protected abstract BufferedDataTable[] execute(
-            final BufferedDataTable[] inData, final ExecutionMonitor exec) 
+            final BufferedDataTable[] inData, final ExecutionContext exec) 
             throws Exception;
 
     /**

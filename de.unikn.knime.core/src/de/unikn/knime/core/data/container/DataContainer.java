@@ -320,12 +320,23 @@ public class DataContainer implements RowAppender {
      * @throws IllegalStateException If <code>isClosed()</code> returns
      *         <code>false</code>
      */
-    public BufferedDataTable getTable() {
+    public DataTable getTable() {
+        return getBufferedTable();
+    }
+    
+    /** Returns the table holding the data. This method is identical to
+     * the getTable() method but is more specific with respec to the return
+     * type. It's used in derived classes.
+     * @return The table underlying this container.
+     * @throws IllegalStateException If <code>isClosed()</code> returns
+     *         <code>false</code>
+     */
+    protected final BufferedTable getBufferedTable() {
         if (!isClosed()) {
             throw new IllegalStateException(
-                    "Cannot get table: container is not closed.");
+            "Cannot get table: container is not closed.");
         }
-        return new BufferedDataTable((BufferedTable)m_table);
+        return m_table;
     }
     
     /** Get reference to underlying buffer.
@@ -473,7 +484,7 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If the argument is <code>null</code>.
      * @throws CanceledExecutionException If the process has been canceled.
      */
-    public static BufferedDataTable cache(final DataTable table, 
+    public static DataTable cache(final DataTable table, 
             final ExecutionMonitor exec, final int maxCellsInMemory) 
         throws CanceledExecutionException {
         DataContainer buf = new DataContainer(
@@ -514,7 +525,7 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If the argument is <code>null</code>.
      * @throws CanceledExecutionException If the process has been canceled.
      */
-    public static BufferedDataTable cache(final DataTable table, 
+    public static DataTable cache(final DataTable table, 
             final ExecutionMonitor exec) throws CanceledExecutionException {
         return cache(table, exec, MAX_CELLS_IN_MEMORY);
     }

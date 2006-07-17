@@ -26,6 +26,7 @@ import de.unikn.knime.base.node.filter.row.rowfilter.RowFilterFactory;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -119,10 +120,10 @@ public class RowFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
      */
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionMonitor exec) throws Exception {
+            final ExecutionContext exec) throws Exception {
         if (m_rowFilter != null) {
             m_rowFilter.configure(inData[0].getDataTableSpec());
             return new BufferedDataTable[]{

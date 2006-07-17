@@ -111,7 +111,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     }
     
     
-    public static BufferedDataTable[] createBufferedDataTables(
+    static BufferedDataTable[] createBufferedDataTables(
             final DataTable[] tables, final ExecutionMonitor exec)
     throws CanceledExecutionException {
         BufferedDataTable[] temp = new BufferedDataTable[tables.length];
@@ -121,7 +121,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
         return temp;
     }
     
-    public static BufferedDataTable createBufferedDataTable(
+    static BufferedDataTable createBufferedDataTable(
             final DataTable table, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         boolean isKnown = false;
@@ -144,7 +144,8 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
                     + "reference. Use one of the constructors in the future!");
             return new BufferedDataTable((KnowsRowCountTable)table);
         } 
-        return DataContainer.cache(table, exec);
+        BufferedTable t = (BufferedTable)DataContainer.cache(table, exec);
+        return new BufferedDataTable(t);
     }
     
     private BufferedDataTable(KnowsRowCountTable table) {

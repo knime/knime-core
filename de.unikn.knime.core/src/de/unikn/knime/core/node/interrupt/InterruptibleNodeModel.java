@@ -31,6 +31,7 @@ import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
@@ -243,11 +244,11 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @see de.unikn.knime.core.node.NodeModel#execute(
      *  BufferedDataTable[],
-     *  de.unikn.knime.core.node.ExecutionMonitor)
+     *  ExecutionContext)
      */
     @Override
     public final BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionMonitor exec) throws Exception {
+            final ExecutionContext exec) throws Exception {
         m_inData = inData;
         init(inData);
         try {
@@ -389,7 +390,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @param exec The execution monitor to show the progress.
      * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
-     *      ExecutionMonitor)
+     *      ExecutionContext)
      * @return - an BufferedDataTable[] as should be returned from the 
      *      NodeModel's execute method.
      *      

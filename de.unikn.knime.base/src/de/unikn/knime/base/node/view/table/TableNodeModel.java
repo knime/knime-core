@@ -23,6 +23,7 @@ import java.io.IOException;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
@@ -78,10 +79,10 @@ public class TableNodeModel extends NodeModel {
      * @param exec The execution monitor.
      * @return Empty table.
      * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     protected BufferedDataTable[] execute(
-            final BufferedDataTable[] data, final ExecutionMonitor exec) {
+            final BufferedDataTable[] data, final ExecutionContext exec) {
         assert (data != null);
         assert (data.length == 1);
         final DataTable in = data[0];

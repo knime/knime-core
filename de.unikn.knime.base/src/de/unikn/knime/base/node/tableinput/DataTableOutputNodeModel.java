@@ -21,7 +21,7 @@ package de.unikn.knime.base.node.tableinput;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.ExecutionMonitor;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettingsRO;
@@ -72,11 +72,11 @@ public class DataTableOutputNodeModel extends NodeModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#execute(
      * BufferedDataTable[], 
-     * de.unikn.knime.core.node.ExecutionMonitor)
+     * ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
-            final ExecutionMonitor exec)
+            final ExecutionContext exec)
             throws Exception {
         assert inData.length == 1;
         m_dataTable = inData[0];

@@ -19,7 +19,7 @@ package de.unikn.knime.core.node.meta;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.ExecutionMonitor;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
@@ -55,7 +55,7 @@ public class DataInputNodeModel extends MetaInputModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionMonitor exec) throws Exception {
+            final ExecutionContext exec) throws Exception {
         return new BufferedDataTable[] {m_datatable};
     }
 
@@ -88,7 +88,7 @@ public class DataInputNodeModel extends MetaInputModel {
 
     /**
      * Sets the datatable that should be passed on in
-     * {@link #execute(BufferedDataTable[], ExecutionMonitor)}.
+     * {@link #execute(BufferedDataTable[], ExecutionContext)}.
      * 
      * @param table the data table
      */

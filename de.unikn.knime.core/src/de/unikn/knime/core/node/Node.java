@@ -276,7 +276,7 @@ public final class Node {
      * @throws CanceledExecutionException If loading was canceled. 
      */
     public void load(final int loadID, final File nodeFile, 
-            final ExecutionMonitor exec) throws IOException, 
+            final ExecutionContext exec) throws IOException, 
             InvalidSettingsException, CanceledExecutionException {
         assert exec != null;
         m_status = null;
@@ -687,12 +687,12 @@ public final class Node {
     }
 
     /**
-     * @see #execute(ExecutionMonitor)
+     * @see #execute(ExecutionContext)
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
      */
     public boolean execute() {
-        ExecutionMonitor exe = new ExecutionMonitor();
+        ExecutionContext exe = new ExecutionContext(null, this);
         NodeProgressMonitorView progView = new NodeProgressMonitorView(null,
                 exe.getProgressMonitor());
         progView.setVisible(true);
@@ -720,9 +720,9 @@ public final class Node {
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
      * @see NodeModel#isConfigured()
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
-    public boolean execute(final ExecutionMonitor exec) {
+    public boolean execute(final ExecutionContext exec) {
         // start message and keep start time
         final long time = System.currentTimeMillis();
         m_logger.info("Start execute");

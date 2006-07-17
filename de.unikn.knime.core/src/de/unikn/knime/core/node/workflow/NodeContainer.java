@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
@@ -809,17 +810,17 @@ public class NodeContainer implements NodeStateListener {
      * {@link de.unikn.knime.core.node.BufferedDataTable#getDataTable(
      * int, Integer)}.
      * @param nodeFile The node settings location.
-     * @param exec The execution monitor reporting progress during reading
-     *            structure.
+     * @param prog The monitor reporting progress during reading structure.
      * @throws IOException If the node settings file can't be found or read.
      * @throws InvalidSettingsException If the settings are wrong.
      * @throws CanceledExecutionException If loading was canceled.
      */
     public void load(final int loadID, final File nodeFile, 
-            final ExecutionMonitor exec)
+            final NodeProgressMonitor prog)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
-        m_node.load(loadID, nodeFile, exec);
+        ExecutionContext context = new ExecutionContext(prog, m_node);
+        m_node.load(loadID, nodeFile, context);
     }
 
     /**
@@ -1005,7 +1006,7 @@ public class NodeContainer implements NodeStateListener {
                     // canceled - or after it has been finished of course
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
-                    m_node.execute(new ExecutionMonitor(pm));
+                    m_node.execute(new ExecutionContext(pm, m_node));
                 } catch (Exception e) {
                     // some other error - this should never happen!
                     m_logger.fatal("Fatal exception", e);

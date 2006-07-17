@@ -19,7 +19,7 @@ package de.unikn.knime.core.node.meta;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.ExecutionMonitor;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
@@ -70,11 +70,11 @@ public class DataOutputNodeModel extends MetaOutputModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#execute(
      * BufferedDataTable[], 
-     * de.unikn.knime.core.node.ExecutionMonitor)
+     * ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
-            final ExecutionMonitor exec)
+            final ExecutionContext exec)
             throws Exception {
         assert inData.length == 1;
         m_dataTable = inData[0];

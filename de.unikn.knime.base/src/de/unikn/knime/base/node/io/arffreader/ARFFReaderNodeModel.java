@@ -27,6 +27,7 @@ import java.net.URL;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
@@ -104,11 +105,11 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionMonitor)
+     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(
-            final BufferedDataTable[] inData, final ExecutionMonitor exec) 
+            final BufferedDataTable[] inData, final ExecutionContext exec) 
             throws Exception {
 
         assert m_file != null;

@@ -25,7 +25,7 @@ package de.unikn.knime.core.node;
  * 
  * @author Thomas Gabriel, Konstanz University
  */
-public final class ExecutionMonitor {
+public class ExecutionMonitor {
 
     /** The progress monitor cancel and progress are delegated. */
     private final NodeProgressMonitor m_progress;
