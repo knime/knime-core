@@ -903,9 +903,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             // inform the user
             MessageBox mb = new MessageBox(Display.getDefault()
                     .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
-            mb.setText("Workflow could not be saveed ...");
-            mb.setMessage("The workflow could not be "
-                    + "saved due to executing nodes.");
+            mb.setText("Workflow could not be saved ...");
+            mb.setMessage("Execution in progress! The workflow could not be "
+                    + "saved.");
             mb.open();
 
             LOGGER.warn("Could not save workflow");
