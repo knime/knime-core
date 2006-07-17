@@ -340,7 +340,7 @@ public final class ColPropertyDialog extends JDialog {
     /* blows away the dialog */
     private void shutDown() {
         setVisible(false);
-        dispose();
+        // (tg) dispose(); causes the parent to move to back
     }
 
     /**
