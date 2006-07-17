@@ -805,11 +805,11 @@ public final class Node {
             predParams[p] = new ModelContent("predictor");
             try {
                 m_model.saveModelContent(p, predParams[p]);
-            } catch (InvalidSettingsException ise) {
+            } catch (Exception e) {
                 m_logger.error("Predictor model couldn't be saved at port #"
-                        + p, ise);
+                        + p, e);
                 m_status = new NodeStatus.Error("ModelContent couldn't " 
-                        + "be saved at port #" + p + ise.getMessage());
+                        + "be saved at port #" + p + e.getMessage());
                 notifyStateListeners(m_status);
                 notifyStateListeners(
                         new NodeStatus.EndExecute());
