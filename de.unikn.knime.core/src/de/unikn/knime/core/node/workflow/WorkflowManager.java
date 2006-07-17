@@ -1339,22 +1339,24 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         // retrieve source and target node
-        NodeContainer nodeOut = connection.getSource();
+        NodeContainer sourceNode = connection.getSource();
         int portOut = connection.getSourcePortID();
-        NodeContainer nodeIn = connection.getTarget();
+        NodeContainer targetNode = connection.getTarget();
         int portIn = connection.getTargetPortID();
         // remove outgoing edge
-        nodeOut.removeOutgoingConnection(portOut, nodeIn);
+        sourceNode.removeOutgoingConnection(portOut, targetNode);
         // remove incoming edge
-        nodeIn.removeIncomingConnection(portIn);
+        targetNode.removeIncomingConnection(portIn);
         // also disconnect the two underlying Nodes.
-        nodeIn.disconnectPort(portIn);
+        targetNode.disconnectPort(portIn);
         // finally remove connection from internal list
         m_connectionsByID.remove(connection.getID());
 
+        resetAndConfigureNode(targetNode.getID());
+        
         // notify listeners
-        LOGGER.info("Removed connection (from node id:" + nodeOut.getID()
-                + ", port:" + portOut + " to node id:" + nodeIn.getID()
+        LOGGER.info("Removed connection (from node id:" + sourceNode.getID()
+                + ", port:" + portOut + " to node id:" + targetNode.getID()
                 + ", port:" + portIn + ")");
         fireWorkflowEvent(new WorkflowEvent.ConnectionRemoved(-1, connection,
                 null));
