@@ -118,8 +118,8 @@ public class ARFFReaderNodeModel extends NodeModel {
                     + " execute it.");
         }
 
-        BufferedDataTable out = BufferedDataTable.createBufferedDataTable(
-                new ARFFTable(m_file, 
+        BufferedDataTable out = exec.createBufferedDataTable(
+                new ARFFTable(m_file,
                         ARFFTable.createDataTableSpecFromARFFfile(m_file, exec),
                         m_rowPrefix), exec);
         return new BufferedDataTable[]{out};

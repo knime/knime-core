@@ -62,9 +62,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTable out = new AppendedRowsTable(
-                (m_appendSuffix ? m_suffix : null), inData);
+                (m_appendSuffix ? m_suffix : null), (DataTable[])inData);
         return new BufferedDataTable[] {
-                BufferedDataTable.createBufferedDataTable(out, exec)};
+                exec.createBufferedDataTable(out, exec)};
     }
 
     /**

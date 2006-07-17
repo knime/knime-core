@@ -127,7 +127,7 @@ public class RowFilterNodeModel extends NodeModel {
         if (m_rowFilter != null) {
             m_rowFilter.configure(inData[0].getDataTableSpec());
             return new BufferedDataTable[]{
-                    BufferedDataTable.createBufferedDataTable(
+                    exec.createBufferedDataTable(
                             new RowFilterTable(inData[0], m_rowFilter), exec)};
         } else {
             throw new InvalidSettingsException(

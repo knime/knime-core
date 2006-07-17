@@ -22,7 +22,6 @@ import java.net.URL;
 import java.util.Vector;
 
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionContext;
@@ -135,7 +134,8 @@ public class FileReaderNodeModel extends NodeModel {
         // the error message is printed during filereader execution (were it
         // belongs to) and not some time later when a node uses the row 
         // iterator from the file table.
-        BufferedDataTable cacheTable = DataContainer.cache(fTable, exec);
+        BufferedDataTable cacheTable = 
+            exec.createBufferedDataTable(fTable, exec);
         return new BufferedDataTable[] {cacheTable};
     }
 
