@@ -98,7 +98,7 @@ public final class BufferedDataTable implements DataTable, KnowsRowCount {
     private int m_tableID;
     private Node m_owner;
     
-    public BufferedDataTable(ContainerTable table) {
+    BufferedDataTable(ContainerTable table) {
         this((KnowsRowCountTable)table);
     }
     
