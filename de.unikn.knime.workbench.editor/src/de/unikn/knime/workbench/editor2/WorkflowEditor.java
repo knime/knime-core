@@ -92,6 +92,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeProgressListener;
+import de.unikn.knime.core.node.NodeProgressMonitor;
 import de.unikn.knime.core.node.NodeLogger.LEVEL;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
@@ -110,6 +111,7 @@ import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
 import de.unikn.knime.workbench.editor2.actions.PasteAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
 import de.unikn.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
+import de.unikn.knime.workbench.editor2.actions.job.DummyNodeJob;
 import de.unikn.knime.workbench.repository.RepositoryManager;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 import de.unikn.knime.workbench.ui.preferences.PreferenceConstants;
@@ -1026,6 +1028,14 @@ public class WorkflowEditor extends GraphicalEditor implements
         LOGGER.debug("Workflow event triggered: " + event.toString());
 
         markDirty();
+        
+        if (event instanceof WorkflowEvent.NodeStarted) {
+            NodeContainer nc = (NodeContainer)event.getOldValue();
+            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
+
+            DummyNodeJob job = new DummyNodeJob(nc.getNameWithID(), pm, nc);
+            job.schedule();
+        }
     }
 
     /**

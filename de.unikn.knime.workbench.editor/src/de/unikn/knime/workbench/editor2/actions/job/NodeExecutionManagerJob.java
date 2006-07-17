@@ -25,10 +25,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeProgressMonitor;
 import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowEvent;
-import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -38,7 +35,7 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class NodeExecutionManagerJob extends Job implements WorkflowListener {
+public class NodeExecutionManagerJob extends Job {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeExecutionManagerJob.class);
@@ -79,9 +76,6 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
         IStatus state = Status.OK_STATUS;
 
         try {
-            // we must register on the manager to get lifecycle events
-            m_manager.addListener(this);
-
             // if there are no specified parts, execute all nodes
             if (m_parts == null) {
                 LOGGER.debug("Execute all nodes.");
@@ -114,26 +108,8 @@ public class NodeExecutionManagerJob extends Job implements WorkflowListener {
 
         } finally {
             LOGGER.info("Execution finished");
-            m_manager.removeListener(this);
         }
 
         return state;
-    }
-
-    /**
-     * Creates new jobs if there's another node ready to be executed or set the
-     * 'finished' flag.
-     * 
-     * @see de.unikn.knime.core.node.workflow.WorkflowListener
-     *      #workflowChanged(de.unikn.knime.core.node.workflow.WorkflowEvent)
-     */
-    public void workflowChanged(final WorkflowEvent event) {
-        if (event instanceof WorkflowEvent.NodeStarted) {
-            NodeContainer nc = (NodeContainer)event.getOldValue();
-            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
-
-            DummyNodeJob job = new DummyNodeJob(nc.getNameWithID(), pm, nc);
-            job.schedule();
-        }
     }
 }
