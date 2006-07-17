@@ -71,8 +71,6 @@ public class WrappedNodeDialog extends Dialog {
 
     private Menu m_menuBar;
 
-//    private Listener m_listener;
-
     /**
      * Creates the (application modal) dialog for a given node.
      * 
@@ -187,41 +185,9 @@ public class WrappedNodeDialog extends Dialog {
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        // !!!!!!!!!!!!!!!!!! IMPORTANT... TODO. THINK ABOUT !!!!!!!!!!!!!!!!!!!
-        // Here a key listener is added to the display for enter and esc
-        // There are several problems with that.
-        // 1. The key listener must be removed. Otherwise the dialog is indirect
-        // ly registered in the display and can not be garbage collected
-        // 2. The key listener was active (before it was removed with this work
-        // around) and has affected on some strage way the Enter key once the
-        // NewPictureChooser was executed????!!!!????
-        // 3. Normally the key listener should be registered at the dialog
-        // At the moment no posibility is seen to do that.
-        // => The workaround is to de-register the listener once the ok button
-        // is pressed. (only possible and usefull, as the dialog is modal and
-        // therefore nothing else is effected by pressing enter
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // (tg) finally we decided to remove the key listener, since child
-        // dialogs closed theirs parents on these events.
-//        m_listener = new Listener() {
-//            public void handleEvent(final Event event) {
-//                if (event.keyCode == SWT.CR) { // enter
-//                    doOK(new SelectionEvent(event));
-//                } else if (event.keyCode == SWT.ESC) { // escape
-//                    doCancel();
-//                }
-//            }
-//        };
-//
-//        Display.getCurrent().addFilter(SWT.KeyDown, m_listener);
-
+        
         return area;
     }
-
-//    private void doCancel() {
-//        buttonPressed(IDialogConstants.CANCEL_ID);
-//    }
 
     /**
      * Linux (GTK) hack: must explicitly invoke <code>getInitialSize()</code>.
@@ -246,29 +212,23 @@ public class WrappedNodeDialog extends Dialog {
         // WORKAROUND !! We can't use IDialogConstants.OK_ID here, as this
         // always closes the dialog, regardless if the settings couldn't be
         // applied.
-        Button btnOK = createButton(parent, IDialogConstants.NEXT_ID,
-                IDialogConstants.OK_LABEL, true);
-        Button btnApply = createButton(parent, IDialogConstants.FINISH_ID,
-                "Apply", false);
-        Button btnCancel = createButton(parent, IDialogConstants.CANCEL_ID,
+        final Button btnOK = createButton(parent, 
+                IDialogConstants.NEXT_ID, IDialogConstants.OK_LABEL, false);
+        final Button btnApply = createButton(parent, 
+                IDialogConstants.FINISH_ID, "Apply", false);
+        final Button btnCancel = createButton(parent, 
+                IDialogConstants.CANCEL_ID, 
                 IDialogConstants.CANCEL_LABEL, false);
 
-        // Register listeneres that notify the content object, whicch
+        // Register listeneres that notify the content object, which
         // in turn notify the dialog about the particular event.
-        // event.doit = false cancels the SWT selection event, so that the
-        // dialog is not closed on errors.
         btnOK.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetDefaultSelected(final SelectionEvent e) {
+            public void widgetSelected(final SelectionEvent e) {
                 doOK(e);
             }
-
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                this.widgetDefaultSelected(e);
-            }
-        });
-
+        });    
+            
         btnApply.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
@@ -283,7 +243,7 @@ public class WrappedNodeDialog extends Dialog {
             }
         });
     }
-
+        
     private void doOK(final SelectionEvent e) {
         // simulate doApply
         if (doApply(e)) {
@@ -293,6 +253,8 @@ public class WrappedNodeDialog extends Dialog {
 
     private boolean doApply(final SelectionEvent e) {
         boolean result = false;
+        // event.doit = false cancels the SWT selection event, so that the
+        // dialog is not closed on errors.
         try {
             // if the settings are equal and the node is executed
             // to the previous settings inform the user but do nothing
@@ -393,7 +355,6 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     public boolean close() {
-//        Display.getCurrent().removeFilter(SWT.KeyDown, m_listener);
         return super.close();
     }
 
