@@ -52,7 +52,7 @@ import de.unikn.knime.core.data.container.TableSpecReplacerTable;
  * <dt><strong>Some columns of the input have changed</strong></dt>
  * <dd>This is the case, for instance when you just append a single column to
  * the input table (or filter/replace existing columns from it). The method to
- * use here is {@link #createBufferedDataTable(BufferedDataTable, 
+ * use here is {@link #createColumnRearrangeTable(BufferedDataTable, 
  * ColumnRearranger, ExecutionMonitor)}. When the workflow is saved, only the
  * columns that have changed are stored to disc.</dd>
  * <a name="new_spec"/>
@@ -195,7 +195,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @return A new table which can be returned in the execute method.
      * @throws CanceledExecutionException If canceled.
      */
-    public BufferedDataTable createBufferedDataTable(
+    public BufferedDataTable createColumnRearrangeTable(
             final BufferedDataTable in, final ColumnRearranger rearranger,
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {

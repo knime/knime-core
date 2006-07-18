@@ -47,7 +47,7 @@ import de.unikn.knime.core.data.DataTableSpec;
  * public BufferedDataTable[] execute(BufferedDataTable[] in, 
  *     ExecutionContext exec) throws Exception {
  *     ColumnRearranger c = createColumnRearranger(in[0].getDataTableSpec());
- *     BufferedDataTable out = exec.createBufferedDataTable(in[0], c, exec);
+ *     BufferedDataTable out = exec.createColumnRearrangeTable(in[0], c, exec);
  *     return new BufferedDataTable[]{out};
  * }
  * 
@@ -100,7 +100,7 @@ import de.unikn.knime.core.data.DataTableSpec;
  * </pre>
  * 
  * @see de.unikn.knime.core.data.container.CellFactory
- * @see de.unikn.knime.core.node.ExecutionContext#createBufferedDataTable(
+ * @see de.unikn.knime.core.node.ExecutionContext#createColumnRearrangeTable(
  *      de.unikn.knime.core.node.BufferedDataTable, ColumnRearranger,
  *      de.unikn.knime.core.node.ExecutionMonitor)
  * @author Bernd Wiswedel, University of Konstanz
