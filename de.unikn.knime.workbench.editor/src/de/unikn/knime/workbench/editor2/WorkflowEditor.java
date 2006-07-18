@@ -22,8 +22,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -1020,6 +1022,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
+    private final Map<Integer, DummyNodeJob> m_dummyNodeJobs =
+        new HashMap<Integer, DummyNodeJob>();
+    
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
      * 
@@ -1031,13 +1036,19 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         markDirty();
         
-        if (event instanceof WorkflowEvent.NodeStarted) {
+        if (event instanceof WorkflowEvent.NodeWaiting) {
             NodeContainer nc = (NodeContainer)event.getOldValue();
             NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
 
-            DummyNodeJob job = new DummyNodeJob(nc.getNameWithID(), pm, nc);
+            DummyNodeJob job = new DummyNodeJob(nc.getNameWithID(), pm);
             job.schedule();
+            m_dummyNodeJobs.put(event.getID(), job);
+        } else if (event instanceof WorkflowEvent.NodeStarted) {
+            // m_dummyNodeJobs.get(event.getID()).blabla();
+        } else if (event instanceof WorkflowEvent.NodeFinished) {
+            m_dummyNodeJobs.get(event.getID()).finish();
         }
+
     }
 
     /**

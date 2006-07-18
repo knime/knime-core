@@ -24,29 +24,29 @@ import org.eclipse.core.runtime.jobs.Job;
 
 import de.unikn.knime.core.node.NodeProgressListener;
 import de.unikn.knime.core.node.NodeProgressMonitor;
-import de.unikn.knime.core.node.NodeStateListener;
-import de.unikn.knime.core.node.NodeStatus;
-import de.unikn.knime.core.node.workflow.NodeContainer;
 
 /**
+ * This class is a dummy node job whose only responsibility is to show a
+ * progress bar for the running (or waiting) node.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DummyNodeJob extends Job implements NodeProgressListener,
-    NodeStateListener {
+public class DummyNodeJob extends Job implements NodeProgressListener {
     private final NodeProgressMonitor m_nodeMonitor;
-    private final NodeContainer m_node;
     private IProgressMonitor m_eclipseMonitor;
     private int m_currentWorked;
     private String m_currentProgressMessage;
     private volatile boolean m_finished;
     
-    public DummyNodeJob(final String name, final NodeProgressMonitor monitor,
-            final NodeContainer node) {
+    /**
+     * Creates a new dummy node job.
+     * 
+     * @param name the job's name
+     * @param monitor the progress monitor to listen to
+     */
+    public DummyNodeJob(final String name, final NodeProgressMonitor monitor) {
         super(name);
         m_nodeMonitor = monitor;
-        m_node = node;
-        m_node.addListener(this);
         setPriority(LONG);
     }
 
@@ -81,7 +81,6 @@ public class DummyNodeJob extends Job implements NodeProgressListener,
             }
         } finally {
             m_nodeMonitor.removeProgressListener(this);
-            m_node.removeListener(this);
         }
         
         return Status.OK_STATUS;
@@ -118,14 +117,11 @@ public class DummyNodeJob extends Job implements NodeProgressListener,
         }
 
     }
-
+    
     /**
-     * @see de.unikn.knime.core.node.NodeStateListener
-     *  #stateChanged(de.unikn.knime.core.node.NodeStatus, int)
+     * Finishes the job.
      */
-    public void stateChanged(final NodeStatus state, final int id) {
-        if (state instanceof NodeStatus.EndExecute) {
-            m_finished = true;
-        }
+    public void finish() {
+        m_finished = true;
     }
 }
