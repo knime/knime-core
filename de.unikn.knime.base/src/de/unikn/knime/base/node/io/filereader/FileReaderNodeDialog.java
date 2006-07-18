@@ -74,6 +74,7 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 import de.unikn.knime.core.node.tableview.TableView;
+import de.unikn.knime.core.util.FileReaderFileFilter;
 
 /**
  * 
