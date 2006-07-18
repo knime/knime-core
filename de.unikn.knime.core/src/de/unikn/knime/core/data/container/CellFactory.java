@@ -24,8 +24,10 @@ import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.node.ExecutionMonitor;
 
 /**
- * Factory for a AppendedColummTable that serves to generate the cells of the
- * new columns.
+ * Factory for a ColumnRearranger to provide new columns which are, e.g. 
+ * appended to a given table.
+ * @see de.unikn.knime.core.data.container.ColumnRearranger
+ * @see de.unikn.knime.core.data.container.ColumnRearranger#append(CellFactory)
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface CellFactory {
