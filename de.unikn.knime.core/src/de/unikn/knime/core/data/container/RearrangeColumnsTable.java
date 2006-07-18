@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -40,13 +38,17 @@ import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
- * 
+ * Table implemenation that is created based on a ColumnRearranger. This class
+ * is not intended for subclassing or to be used directly in any node 
+ * implementation. Instead use the functionality provided through the 
+ * ColumnRearranger and the ExecutionContext that is provided in the NodeModel's
+ * execute method. See {@link ColumnRearranger} for more details on how to use 
+ * them.
  * @author wiswedel, University of Konstanz
  */
 public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
@@ -55,6 +57,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     private static final DataRow DUMMY_ROW = 
         new DefaultRow(DUMMY_KEY, new DataCell[0]);
     
+    /** If this table just filters columns from the reference table, we use
+     * this dummy iterator to provide empty appended cells.
+     */
     private static final RowIterator EMPTY_ITERATOR = new RowIterator() {
         public boolean hasNext() {
             return true;
@@ -76,11 +81,12 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     private final NoKeyBuffer m_appendBuffer;
 
     /**
-     * 
+     * Used from the factory method, see below.
+     * @see #create(ColumnRearranger, BufferedDataTable, ExecutionMonitor)
      */
-    RearrangeColumnsTable(final BufferedDataTable reference, final int[] map, 
-            final boolean[] isFromRefTable, final DataTableSpec spec, 
-            NoKeyBuffer appendBuffer) {
+    private RearrangeColumnsTable(final BufferedDataTable reference, 
+            final int[] map, final boolean[] isFromRefTable, 
+            final DataTableSpec spec, final NoKeyBuffer appendBuffer) {
         m_spec = spec;
         m_reference = reference;
         m_appendBuffer = appendBuffer;
@@ -88,9 +94,24 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_isFromRefTable = isFromRefTable;
     }
     
+    /**
+     * Creates new object based on the content in <code>settings</code> and
+     * the content from the file <code>f</code>. Used when the data is restored
+     * from disc. 
+     * 
+     * <p>Note: You should not be required to use this constructor!
+     * @param f The file to read from the newly appended columns.
+     * @param settings The settings containing the information how to assemble
+     *         the table.
+     * @param loadID The load ID to get the reference table from the global
+     *         table repository.
+     * @throws IOException If reading the fails fails.
+     * @throws InvalidSettingsException If the settings are invalid.
+     */
     public RearrangeColumnsTable(final File f, final NodeSettingsRO settings,
             final int loadID) throws IOException, InvalidSettingsException {
-        NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
+        NodeSettingsRO subSettings = 
+            settings.getNodeSettings(CFG_INTERNAL_META);
         int tableID = subSettings.getInt(CFG_REFERENCE_ID);
         m_reference = BufferedDataTable.getDataTable(loadID, tableID);
         m_map = subSettings.getIntArray(CFG_MAP);
@@ -103,7 +124,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             }
         }
         if (containsFalse) {
-            m_appendBuffer = new NoKeyBuffer(f, loadID);
+            m_appendBuffer = new NoKeyBuffer(f);
             DataTableSpec appendSpec = m_appendBuffer.getTableSpec();
             appendColSpecs = new DataColumnSpec[appendSpec.getNumColumns()];
             for (int i = 0; i < appendSpec.getNumColumns(); i++) {
@@ -125,6 +146,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_spec = new DataTableSpec(colSpecs);
     }
     
+    /** Get handle to the reference table.
+     * @return The table providing likely most of the columns and the rowkeys.
+     */
     public BufferedDataTable getReferenceTable() {
         return m_reference;
     }
@@ -150,7 +174,17 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
                 m_reference.iterator(), appendIt, m_map, m_isFromRefTable);
     }
     
-    
+    /** 
+     * This factory method is intended to be used immediately before the 
+     * BufferedDataTable is created. 
+     * @param rearranger The meta information how to assemble everything.
+     * @param table The reference table.
+     * @param subProgress The progress monitor for progress/cancel.
+     * @return The newly created table.
+     * @throws CanceledExecutionException If canceled.
+     * @throws IllegalArgumentException If the spec is not equal to the
+     * spec of the rearranger.
+     */
     public static RearrangeColumnsTable create(
             final ColumnRearranger rearranger, final BufferedDataTable table, 
             final ExecutionMonitor subProgress) 
@@ -274,7 +308,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#saveToFile(File, NodeSettings, ExecutionMonitor)
+     * @see KnowsRowCountTable#saveToFile(
+     * File, NodeSettingsWO, ExecutionMonitor)
      */
     public void saveToFile(
             final File f, final NodeSettingsWO s, final ExecutionMonitor exec) 
