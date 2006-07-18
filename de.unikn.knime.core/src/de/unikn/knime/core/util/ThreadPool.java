@@ -492,17 +492,23 @@ public class ThreadPool {
      * @param w the finished worker
      */
     protected void workerFinished(final Worker w) {
-        synchronized (m_runningWorkers) {
-            m_runningWorkers.remove(w);
+        if (m_parent != null) {
+            synchronized (m_runningWorkers) {
+                m_runningWorkers.remove(w);
+            }
 
-            if (m_parent != null) {
-                m_parent.workerFinished(w);
-            } else { // this is the root pool
+            m_parent.workerFinished(w);
+        } else { // this is the root pool
+            synchronized (m_runningWorkers) {
+                m_runningWorkers.remove(w);
                 m_availableWorkers.add(w);
                 if (checkQueue()) {
                     return;
                 }
             }
+        }
+
+        synchronized (m_runningWorkers) {
             m_runningWorkers.notifyAll();
         }
     }
