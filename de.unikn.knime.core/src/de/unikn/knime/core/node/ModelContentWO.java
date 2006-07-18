@@ -23,10 +23,26 @@ package de.unikn.knime.core.node;
 
 import de.unikn.knime.core.node.config.ConfigWO;
 
+/**
+ * Write-only <code>ModelContentWO</code> interface.
+ * 
+ * @author gabriel, University of Konstanz
+ */
 public interface ModelContentWO extends ConfigWO {
 
-    public ModelContentWO addModelContent(String key);
+    /**
+     * Creates new <code>ModelContentWO</code> object for the given key and
+     * returns it.
+     * @param key The identifier for the given config.
+     * @return A new <code>ModelContentWO</code> object.
+     */
+    ModelContentWO addModelContent(String key);
     
-    public void addModelContent(ModelContent settings);
+    /**
+     * Add the given <code>ModelContent</code> object to this Config using the 
+     * key of the argument's <code>ModelContent</code>.
+     * @param modelContent The object to add to this <code>Config</code>.
+     */
+    void addModelContent(ModelContent modelContent);
     
 }

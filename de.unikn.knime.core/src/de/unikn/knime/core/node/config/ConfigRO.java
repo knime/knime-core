@@ -30,6 +30,8 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * Interface implements only access functions for <code>Config</code> objects.
+ * In addition, it implements the <code>TreeNode</code> and 
+ * <code>Iterable</code> interface.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

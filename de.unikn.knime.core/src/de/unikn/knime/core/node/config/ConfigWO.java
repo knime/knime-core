@@ -1,5 +1,5 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
+/*  
+ * 
  * 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
@@ -24,13 +24,26 @@ package de.unikn.knime.core.node.config;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataType;
 
+/**
+ * Write-only interface for <code>Config</code> objects providing only access
+ * functions.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
+ */
 public interface ConfigWO {
     
-    public Config addConfig(String key);
+    /**
+     * Creates and adds a new <code>Config</code> to this <code>Config</code>
+     * by the given <i>key</i>.
+     * @param key The key for the config to add.
+     * @return A new <code>Config</code> object. 
+     */
+    Config addConfig(String key);
     
-    public void addConfig(Config config);
-    
-    public String getKey();
+    /**
+     * @return The identifier for this <code>Config</code>.
+     */
+    String getKey();
 
     /**
      * Adds an int.

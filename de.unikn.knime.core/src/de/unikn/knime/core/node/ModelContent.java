@@ -67,10 +67,17 @@ public final class ModelContent extends Config
         return (ModelContent) Config.loadFromXML(tmpSettings, in);
     }
     
+    /**
+     * @see de.unikn.knime.core.node.
+     * ModelContentWO#addModelContent(de.unikn.knime.core.node.ModelContent)
+     */
     public void addModelContent(final ModelContent modelContent) {
         super.addConfig(modelContent);
     }
 
+    /**
+     * @see de.unikn.knime.core.node.ModelContentWO#addModelContent(String)
+     */
     public ModelContentWO addModelContent(final String key) {
         return (ModelContent) super.addConfig(key);
     }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -21,13 +19,22 @@
  */
 package de.unikn.knime.core.node;
 
-import javax.swing.tree.TreeNode;
-
 import de.unikn.knime.core.node.config.ConfigRO;
 
-public interface ModelContentRO extends TreeNode, ConfigRO {
+/**
+ * Read-only interface for <code>ModelContent</code> objects.
+ * 
+ * @author gabriel, University of Konstanz
+ */
+public interface ModelContentRO extends ConfigRO {
 
-    public ModelContentRO getModelContent(String key) 
+    /**
+     * Returns a read-only <code>ModelContentRO</code> object from this config.
+     * @param key The identifier.
+     * @return A new <code>ModelContentRO</code> object.
+     * @throws InvalidSettingsException If the object can't be accessed.
+     */
+    ModelContentRO getModelContent(String key) 
         throws InvalidSettingsException;
     
 }

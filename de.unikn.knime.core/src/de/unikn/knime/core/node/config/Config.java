@@ -345,7 +345,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The new Config's key.
      * @return A new instance of this Config.
      */
-    public abstract Config getInstance(final String key);
+    protected abstract Config getInstance(final String key);
 
     /**
      * Creates a new Config with the given key and returns it.
@@ -369,7 +369,7 @@ public abstract class Config extends AbstractConfigEntry
      * @throws IllegalArgumentException If <code>config</code> is not instance
      *         of this class.
      */
-    public final void addConfig(final Config config) {
+    protected final void addConfig(final Config config) {
         if (getClass() != config.getClass()) {
             throw new IllegalArgumentException("This " + getClass() 
                     + " is not equal to " + config.getClass());

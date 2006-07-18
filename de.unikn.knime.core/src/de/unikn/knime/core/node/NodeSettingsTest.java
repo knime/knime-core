@@ -505,26 +505,6 @@ public final class NodeSettingsTest extends TestCase {
     }
     
     /**
-     * Test add Configs.
-     * 
-     * @throws Exception Should not happen.
-     */
-    public void testConfigAdd() throws Exception {
-        NodeSettings settings = new NodeSettings("node_settings");
-        SETT.addNodeSettings(settings);
-        try {
-            ModelContent predParams = new ModelContent("pred_params");
-            SETT.addConfig(predParams);
-            SETT.addConfig(predParams);
-            fail();
-        } catch (IllegalArgumentException iae) {
-            assertTrue(true);
-        } catch (NullPointerException npe) {
-            assertTrue(true);
-        }
-    }
-
-    /**
      * Tests <code>getKeySet()</code> and <code>getKeySet(String)</code>.
      */
     public void testKeySets() {
@@ -556,7 +536,8 @@ public final class NodeSettingsTest extends TestCase {
      * @throws Exception Should not happen.
      */
     public void testSpecialStrings() throws Exception {
-        NodeSettings key = (NodeSettings) SETT.addNodeSettings("special_strings");
+        NodeSettings key = (NodeSettings) SETT.addNodeSettings(
+                "special_strings");
         key.addString("N", "\n");
         key.addString("R", "\r");
         key.addString("T", "\t");

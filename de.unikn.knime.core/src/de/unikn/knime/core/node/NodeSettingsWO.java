@@ -23,9 +23,26 @@ package de.unikn.knime.core.node;
 
 import de.unikn.knime.core.node.config.ConfigWO;
 
+/**
+ * Write-only <code>NodeSettingsWO</code> interface.
+ * 
+ * @author gabriel, University of Konstanz
+ */
 public interface NodeSettingsWO extends ConfigWO {
 
-    public NodeSettingsWO addNodeSettings(String key);
+    /**
+     * Creates new <code>NodeSettingsWO</code> object for the given key and
+     * returns it.
+     * @param key The identifier for the given config.
+     * @return A new <code>NodeSettingsWO</code> object.
+     */
+    NodeSettingsWO addNodeSettings(String key);
     
-    public void addNodeSettings(NodeSettings settings);
+    /**
+     * Add the given <code>NodeSettings</code> object to this Config using the 
+     * key of the argument's <code>NodeSettings</code>.
+     * @param settings The object to add to this <code>Config</code>.
+     */
+    void addNodeSettings(NodeSettings settings);
+    
 }

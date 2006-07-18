@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -23,9 +21,20 @@ package de.unikn.knime.core.node;
 
 import de.unikn.knime.core.node.config.ConfigRO;
 
+/**
+ * Read-only interface for <code>NodeSettingsRO</code> objects.
+ * 
+ * @author gabriel, University of Konstanz
+ */
 public interface NodeSettingsRO extends ConfigRO {
-    
-    public NodeSettingsRO getNodeSettings(String key) 
-        throws InvalidSettingsException;
 
+    /**
+     * Returns a read-only <code>NodeSettingsRO</code> object from this config.
+     * @param key The identifier.
+     * @return A new <code>NodeSettingsRO</code> object.
+     * @throws InvalidSettingsException If the object can't be accessed.
+     */
+    NodeSettingsRO getNodeSettings(String key) 
+        throws InvalidSettingsException;
+    
 }
