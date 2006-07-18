@@ -48,11 +48,11 @@ public class OpenViewAction extends Action {
      * New action to opne a node view.
      * 
      * @param nodeContainer The node
-     * @param portIndex The index of the node view
+     * @param viewIndex The index of the node view
      */
-    public OpenViewAction(final NodeContainer nodeContainer, final int portIndex) {
+    public OpenViewAction(final NodeContainer nodeContainer, final int viewIndex) {
         m_nodeContainer = nodeContainer;
-        m_index = portIndex;
+        m_index = viewIndex;
     }
 
     /**
@@ -74,8 +74,7 @@ public class OpenViewAction extends Action {
      * @see org.eclipse.jface.action.IAction#getText()
      */
     public String getText() {
-        return "View: "
-                + m_nodeContainer.getViewName(m_index);
+        return "View: " + m_nodeContainer.getViewName(m_index);
     }
 
     /**
