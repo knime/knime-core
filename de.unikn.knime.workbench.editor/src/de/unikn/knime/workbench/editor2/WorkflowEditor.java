@@ -431,7 +431,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             PlatformUI.getWorkbench().getActiveWorkbenchWindow()
                     .getActivePage().closeEditor(metaWorkflowEditor, false);
         }
-        
+
         m_manager.closeAllViews();
 
         // remove appender listener from "our" NodeLogger
@@ -1022,9 +1022,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    private final Map<Integer, DummyNodeJob> m_dummyNodeJobs =
-        new HashMap<Integer, DummyNodeJob>();
-    
+    private final Map<Integer, DummyNodeJob> m_dummyNodeJobs = new HashMap<Integer, DummyNodeJob>();
+
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
      * 
@@ -1035,7 +1034,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         LOGGER.debug("Workflow event triggered: " + event.toString());
 
         markDirty();
-        
+
         if (event instanceof WorkflowEvent.NodeWaiting) {
             NodeContainer nc = (NodeContainer)event.getOldValue();
             NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
@@ -1047,6 +1046,16 @@ public class WorkflowEditor extends GraphicalEditor implements
             // m_dummyNodeJobs.get(event.getID()).blabla();
         } else if (event instanceof WorkflowEvent.NodeFinished) {
             m_dummyNodeJobs.get(event.getID()).finish();
+        } else if (event instanceof WorkflowEvent.NodeRemoved) {
+
+            // if a node removed node was a meta node
+            // a possible open meta editor must be closed
+            MetaWorkflowEditor childEditor = getEditor((NodeContainer)event
+                    .getOldValue());
+            if (childEditor != null && !childEditor.isClosed()) {
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                        .getActivePage().closeEditor(childEditor, false);
+            }
         }
 
     }
