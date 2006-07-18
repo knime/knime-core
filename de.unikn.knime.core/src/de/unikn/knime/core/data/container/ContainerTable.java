@@ -69,7 +69,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     * @see KnowsRowCountTable#getRowCount()
      */
     public int getRowCount() {
         return m_buffer.size();
@@ -83,7 +83,8 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see KnowsRowCountTable#saveToFile(File, NodeSettingsWO, ExecutionMonitor)
+     * @see KnowsRowCountTable#
+     * saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
     public void saveToFile(final File f, final NodeSettingsWO settings, 
             final ExecutionMonitor exec) throws IOException, 
