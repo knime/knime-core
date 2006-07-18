@@ -28,14 +28,93 @@ import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTableSpec;
 
 /**
+ * Meta object to describe in which way a table shall be modified (column-based)
+ * to create a new table.
+ * <p>
+ * A <code>ColumnRearranger</code> is used in <code>NodeModel</code>
+ * implementations that perform column based operations on columns of the input
+ * table, such as a column filter node (that simply hides some columns from the
+ * input table) or a node that appends/replaces certain columns.
  * 
- * @author wiswedel, University of Konstanz
+ * <p>
+ * The following example demonstrates the usage of a
+ * <code>ColumnRearranger</code> to append a column to a given table, which
+ * contains the sum of the first two columns of the input table (given that
+ * these colums are numeric). The node model implementation would contain code
+ * as follows.
+ * 
+ * <pre>
+ * public BufferedDataTable[] execute(BufferedDataTable[] in, 
+ *     ExecutionContext exec) throws Exception {
+ *     ColumnRearranger c = createColumnRearranger(in[0].getDataTableSpec());
+ *     BufferedDataTable out = exec.createBufferedDataTable(in[0], c, exec);
+ *     return new BufferedDataTable[]{out};
+ * }
+ * 
+ * public DataTableSpec[] configure(DataTableSpec[] in)
+ *         throws InvalidSettingsException {
+ *     DataColumnSpec c0 = in[0].getColumnSpec(0);
+ *     DataColumnSpec c1 = in[0].getColumnSpec(1);
+ *     if (!c0.getType().isCompatibleTo(DoubleValue.class)) {
+ *         throw new InvalidSettingsException(
+ *           &quot;Invalid type at first column.&quot;);
+ *     }
+ *     if (!c1.getType().isCompatibleTo(DoubleValue.class)) {
+ *         throw new InvalidSettingsException(
+ *           &quot;Invalid type at second column.&quot;);
+ *     }
+ *     ColumnRearranger c = createColumnRearranger(in[0]);
+ *     DataTableSpec result = c.createSpec();
+ *     return new DataTableSpec[]{result};
+ * }
+ * </pre>
+ * 
+ * The createColumnRearranger method is a local helper method, which is called
+ * from both the <code>execute</code> and the <code>configure</code> method:
+ * 
+ * <pre>
+ * public ColumnRearranger createColumnRearranger(DataTableSpec in) {
+ *     ColumnRearranger c = new ColumnRearranger(in);
+ *     // column spec of the appended column
+ *     DataColumnSpec newColSpec = 
+ *       new DataColumnSpecCreator(&quot;sum_of_0_and_1&quot;, DoubleCell.TYPE);
+ *     // utility object that performs the calculation
+ *     CellFactory factory = new SingleCellFactory(newColSpec) {
+ *         public DataCell getCell(DataRow row) {
+ *             DataCell c0 = row.getCellAt(0);
+ *             DataCell c1 = row.getCellAt(1);
+ *             if (c0.isMissing() || c1.isMissing()) {
+ *                 return DataType.getMissingCell();
+ *             } else {
+ *                 // configure method has checked if column 0 and 1 are numeric
+ *                 // safe to type cast
+ *                 double d0 = ((DoubleValue)c0).getDoubleValue();
+ *                 double d1 = ((DoubleValue)c1).getDoubleValue();
+ *                 return new DoubleCell(d0 + d1);
+ *             }
+ *         }
+ *     };
+ *     c.append(factory);
+ *     return c;
+ * }
+ * </pre>
+ * 
+ * @see de.unikn.knime.core.data.container.CellFactory
+ * @see de.unikn.knime.core.node.ExecutionContext#createBufferedDataTable(
+ *      de.unikn.knime.core.node.BufferedDataTable, ColumnRearranger,
+ *      de.unikn.knime.core.node.ExecutionMonitor)
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class ColumnRearranger {
     
     private final Vector<SpecAndFactoryObject> m_includes;
     private final DataTableSpec m_originalSpec;
     
+    /** Creates new object based on the spec of the table underlying the
+     * newly created table.
+     * @param original The table which serves as reference.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     */
     public ColumnRearranger(final DataTableSpec original) {
         m_includes = new Vector<SpecAndFactoryObject>();
         m_includes.ensureCapacity(original.getNumColumns());
@@ -46,6 +125,20 @@ public final class ColumnRearranger {
         m_originalSpec = original;
     }
     
+    /** Removes all columns from the current settings, whose index is not 
+     * contained in the argument <code>colIndices</code>. In other words,
+     * the number of columns in the spec that would be created after this method
+     * has been called, is <code>colIndices.length</code>.
+     * 
+     * <p>
+     * Note: Any subsequent invocation of this method or any other method that
+     * refers to column indices is based on the reduced set of columns.
+     * @param colIndices The indices of the columns to keep.
+     * @throws IndexOutOfBoundsException If any value in the argument array
+     * is out of bounds (smaller 0 or greater/equal to the current number of
+     * columns) or the array contains duplicates.
+     * @throws NullPointerException If the argument is <code>null</code> 
+     */
     public void keepOnly(final int... colIndices) {
         HashSet<Integer> hash = new HashSet<Integer>();
         final int currentSize = m_includes.size();
@@ -55,6 +148,11 @@ public final class ColumnRearranger {
             }
             hash.add(i);
         }
+        if (hash.size() != colIndices.length) {
+            throw new IndexOutOfBoundsException("Duplicates in argument: "
+                    + Arrays.toString(colIndices));
+        }
+        // traverse backwards!
         for (int i = currentSize - 1; i >= 0; i--) {
             if (!hash.remove(i)) {
                 m_includes.remove(i);
@@ -64,8 +162,29 @@ public final class ColumnRearranger {
         assert hash.isEmpty();
     }
     
+    /** Removes all columns from the current settings, whose column name is not 
+     * contained in the argument <code>colNames</code>. In other words,
+     * the number of columns in the spec that would be created after this method
+     * has been called, is <code>colNames.length</code>.
+     * 
+     * @param colNames The names of the columns to keep.
+     * @throws IllegalArgumentException If any value in the argument array
+     * is invalid, i.e. null or not contained in the current set of columns or
+     * if the array contains duplicates.
+     * @throws NullPointerException If the argument is <code>null</code> 
+     */
     public void keepOnly(final String... colNames) {
-        HashSet<String> found = new HashSet<String>(Arrays.asList(colNames)); 
+        HashSet<String> found = new HashSet<String>(Arrays.asList(colNames));
+        // check for null elements
+        if (found.contains(null)) {
+            throw new IllegalArgumentException("Argument contains null: "
+                    + Arrays.toString(colNames));
+        }
+        // check for duplicates
+        if (found.size() != colNames.length) {
+            throw new IllegalArgumentException("Argument contains duplicates: "
+                    + Arrays.toString(colNames));
+        }
         for (Iterator<SpecAndFactoryObject> it = m_includes.iterator(); 
             it.hasNext();) {
             SpecAndFactoryObject cur = it.next();
@@ -81,17 +200,50 @@ public final class ColumnRearranger {
         assert m_includes.size() == colNames.length;
     }
     
+    /** Removes all columns whose index is contained in the argument array.
+     *
+     * <p>
+     * Note: Any subsequent invocation of this method or any other method that
+     * refers to column indices is based on the reduced set of columns.
+     * @param colIndices The indices of the columns to remove.
+     * @throws IndexOutOfBoundsException If any element in the array is out of
+     * bounds (i.e. smaller than 0 or greater/equal the current number of 
+     * columns) or the argument contains duplicates.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     */
     public void remove(final int... colIndices) {
         int[] copy = new int[colIndices.length];
         System.arraycopy(colIndices, 0, copy, 0, copy.length);
         Arrays.sort(copy);
+        // check for duplicates
+        for (int i = 1; i < copy.length; i++) {
+            if (copy[i] == copy[i - 1]) {
+                throw new IndexOutOfBoundsException("Duplicates encountered "
+                        + Arrays.toString(colIndices));
+            }
+        }
         for (int i = copy.length - 1; i >= 0; i--) {
             m_includes.remove(copy[i]);
         }
     }
     
+    /** Removes all columns from the current set of columns whose name is 
+     * contained in the argument array.
+     * @param colNames The names of the columns to remove.
+     * @throws NullPointerException If any element is null
+     */
     public void remove(final String... colNames) {
         HashSet<String> found = new HashSet<String>(Arrays.asList(colNames));
+        // check for null elements
+        if (found.contains(null)) {
+            throw new IllegalArgumentException("Argument contains null: "
+                    + Arrays.toString(colNames));
+        }
+        // check for duplicates
+        if (found.size() != colNames.length) {
+            throw new IllegalArgumentException("Argument contains duplicates: "
+                    + Arrays.toString(colNames));
+        }
         for (Iterator<SpecAndFactoryObject> it = m_includes.iterator(); 
             it.hasNext();) {
                 SpecAndFactoryObject cur = it.next();
@@ -106,6 +258,13 @@ public final class ColumnRearranger {
         }
     }
     
+    /** Get the current index of the column with name <code>colName</code>. 
+     * Note, the index may change if any of the modifier methods is called.
+     * @param colName The name of the column to find.
+     * @return The index of the column whose name equals <code>colName</code>
+     * or -1 if it is not contained.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     */
     public int indexOf(final String colName) {
         if (colName == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -119,21 +278,52 @@ public final class ColumnRearranger {
         return -1;
     }
     
+    /** Inserts the columns provided by <code>fac</code> at a given position.
+     * Any columns before that position stay where they are, the column at
+     * the position and any thereafter are shifted to the right by the number
+     * of columns provided by <code>fac</code>.
+     * @param position The position (index) where to insert the new colums.
+     * @param fac The factory from which we get the new columns.
+     * @throws IndexOutOfBoundsException If position is invalid.
+     * @throws NullPointerException If <code>fac</code> is <code>null</code>.
+     */
     public void insertAt(final int position, final CellFactory fac) {
         DataColumnSpec[] colSpecs = fac.getColumnSpecs();
         SpecAndFactoryObject[] ins = new SpecAndFactoryObject[colSpecs.length];
         for (int i = 0; i < ins.length; i++) {
             ins[i] = new SpecAndFactoryObject(fac, i, colSpecs[i]);
         }
+        // traverse backwards! Important here.
         for (int i = ins.length - 1; i >= 0; i--) {
             m_includes.insertElementAt(ins[i], position);
         }
     }
-    
+
+    /** Appends the columns provided by <code>fac</code> to the end of
+     * the current column set.
+     * @param fac The factory from which we get the new columns.
+     * @throws NullPointerException If <code>fac</code> is <code>null</code>.
+     */
     public void append(final CellFactory fac) {
         insertAt(m_includes.size(), fac);
     }
     
+    /** Replaces a single column. The target column is specified by the 
+     * <code>colName</code> argument and the new column is given through the
+     * <code>newCol</code> cell factory.
+     * <p><strong>Note:</strong>The newCol argument must only specify one 
+     * single column. If you need to replace one column by many others, use
+     * the <code>remove(colName)</code> in conjunction with the 
+     * <code>insertAt(position, newCol)</code> method. 
+     * @param newCol The column factory for the <strong>single</strong> new 
+     *         column.
+     * @param colName The name of the column to replace.
+     * @throws NullPointerException If any argument is null.
+     * @throws IndexOutOfBoundsException If newCol provides not exactly one new
+     *          column
+     * @throws IllegalArgumentException If <code>colName</code> is not 
+     *          contained in the current set of columns.
+     */
     public void replace(final CellFactory newCol, final String colName) {
         int index = indexOf(colName);
         if (index < 0) {
@@ -142,6 +332,20 @@ public final class ColumnRearranger {
         replace(newCol, index);
     }
     
+    /** Replaces a set of columns. The columns to be replaced are specified by
+     * the <code>colIndex</code> argument and the new columns is given through
+     * the <code>newCol</code> cell factory.
+     * <p><strong>Note:</strong>The newCol argument must specify exactly as 
+     * many columns as there are in <code>colIndex</code>. If you want to 
+     * remove more (or fewer) columns as given by <code>fac</code>, you can
+     * always accomplish this using the remove, indexOf, and/or inserAt methods.
+     * @param fac The column factory for the new columns.
+     * @param colIndex The indices of the columns to be replaced.
+     * @throws NullPointerException If any argument is null.
+     * @throws IndexOutOfBoundsException If <code>fac</code> provides not 
+     *          exactly as many columns as colIndex.length or the colIndex
+     *          argument contains invalid entries.
+     */
     public void replace(final CellFactory fac, final int... colIndex) {
         DataColumnSpec[] colSpecs = fac.getColumnSpecs();
         if (colSpecs.length != colIndex.length) {
@@ -157,14 +361,26 @@ public final class ColumnRearranger {
         }
     }
     
+    /** Access method for the internal datastructure.
+     * @return The current set of columns.
+     */
     Vector<SpecAndFactoryObject> getIncludes() {
         return m_includes;
     }
     
+    /** Access method for the internal datastructure.
+     * @return The original spec as passed in the constructor.
+     */
     DataTableSpec getOriginalSpec() {
         return m_originalSpec;
     }
     
+    /** Creates the data table spec on the current set of columns. Subsequent
+     * changes to this object will also change the return value of this method.
+     * You may want to call this method during configure in order to create the
+     * output spec of your node.
+     * @return The table spec reflecting the current set of columns.
+     */
     public DataTableSpec createSpec() {
         final int size = m_includes.size();
         DataColumnSpec[] colSpecs = new DataColumnSpec[size];
@@ -174,7 +390,8 @@ public final class ColumnRearranger {
         return new DataTableSpec(colSpecs);
     }
     
-    static class SpecAndFactoryObject {
+    /** Utility class that helps us with internal data structures. */
+    static final class SpecAndFactoryObject {
         private final CellFactory m_factory;
         private final DataColumnSpec m_colSpec;
         private final int m_columnInFactory;
@@ -217,6 +434,9 @@ public final class ColumnRearranger {
             return m_factory;
         }
         
+        /**
+         * @return If the column is created through a cell factory.
+         */
         final boolean isNewColumn() {
             return m_factory != null;
         }
