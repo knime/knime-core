@@ -25,7 +25,9 @@ import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.def.DefaultRow;
 
 /**
- * 
+ * Internal iterator class that concatenates two rows. The iterator assumes
+ * that both underlying iterators return the row keys in the same order. No
+ * check is done.
  * @author wiswedel, University of Konstanz
  */
 class JoinTableIterator extends RowIterator {
@@ -35,8 +37,17 @@ class JoinTableIterator extends RowIterator {
     private final int[] m_map;
     private final boolean[] m_flags;
     
-    JoinTableIterator(RowIterator itReference, 
-            RowIterator itAppended, int[] map, boolean[] flags) {
+    /**
+     * Creates new iterator based on two iterators.
+     * @param itReference The reference iterator, providing the keys, e.g.
+     * @param itAppended The row to be appended.
+     * @param map The internal map which columns are contributed from what 
+     *         iterator
+     * @param flags The flags from which row to use.
+     */
+    JoinTableIterator(final RowIterator itReference, 
+            final RowIterator itAppended, final int[] map, 
+            final boolean[] flags) {
         m_itReference = itReference;
         m_itAppended = itAppended;
         m_map = map;
