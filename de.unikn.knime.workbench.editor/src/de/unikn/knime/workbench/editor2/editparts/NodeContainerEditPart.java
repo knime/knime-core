@@ -60,6 +60,7 @@ import de.unikn.knime.workbench.ui.wrapper.WrappedNodeDialog;
  * changed extra infos or execution states
  * 
  * @author Florian Georg, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateListener, MouseListener {
@@ -531,9 +532,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         + " reason:\n" + ex.getMessage());
                 mb.open();
             }
-
+            
+            //me.consume();
         }
         m_lastClick = System.currentTimeMillis();
+        
     }
 
     /**
@@ -554,7 +557,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public void mouseDoubleClicked(final MouseEvent me) {
 
-        // do nothing here
+       // do nothing yet
     }
 
     /**
