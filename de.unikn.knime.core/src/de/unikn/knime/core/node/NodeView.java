@@ -43,6 +43,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import de.unikn.knime.core.util.FileReaderFileFilter;
+
 /**
  * Node view base class which implements the basic and common window properties.
  * The part specific to the special purpose node view must be implemented in the
@@ -230,8 +232,6 @@ public abstract class NodeView {
         // after view has been created: register the view with the model
         m_nodeModel.registerView(this);
 
-        // the directory to export the view as image is initally empty
-        exportDir = "";
     } // NodeView(NodeModel,String)
 
     /**
@@ -255,12 +255,23 @@ public abstract class NodeView {
 
         String path;
         JFileChooser chooser = new JFileChooser(exportDirFile);
+        chooser.setFileFilter(new FileReaderFileFilter("png",
+                "PNG - Portable Network Graphics"));
+
         int returnVal = chooser.showSaveDialog(m_frame);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            
+
             try {
-                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
-                        .toString();
+                String fileName = chooser.getSelectedFile().getAbsolutePath();
+
+                // append "zip" extension if not there.
+                String extension = fileName.substring(fileName.length() - 4,
+                        fileName.length());
+
+                if (!extension.equals(".png")) {
+                    fileName = fileName + ".png";
+                }
+                path = new File(fileName).toURL().toString();
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
@@ -269,7 +280,7 @@ public abstract class NodeView {
             // do not save anything
             return;
         }
-
+        
         // create an image from the view component
         BufferedImage image = new BufferedImage(m_comp.getWidth(), m_comp
                 .getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -294,7 +305,8 @@ public abstract class NodeView {
         }
 
         JOptionPane.showConfirmDialog(m_frame, "View successfully exported.",
-           "Info", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                "Info", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
@@ -454,8 +466,8 @@ public abstract class NodeView {
         onClose();
         m_nodeModel.unregisterView(this);
         if (m_frame != null) {
-            m_frame.getContentPane().firePropertyChange(
-                    PROP_CHANGE_CLOSE, 0, 1);
+            m_frame.getContentPane()
+                    .firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
             // this will trigger a windowClosed event
             // (listener see above) and call closeViewComponent()
             m_frame.setVisible(false);
@@ -586,5 +598,4 @@ public abstract class NodeView {
                         INIT_COMP_HEIGTH));
         return noData;
     }
-
 }
