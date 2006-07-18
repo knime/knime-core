@@ -95,9 +95,8 @@ public class WorkflowManager implements WorkflowListener {
      * @author Thorsten Meinl, University of Konstanz
      */
     private class WorkflowExecutor implements NodeStateListener {
-        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = new HashMap<NodeContainer, NodeProgressMonitor>();
-
-        private final List<NodeContainer> m_waitingNodes = new LinkedList<NodeContainer>();
+        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = new HashMap<NodeContainer, NodeProgressMonitor>(),
+                m_waitingNodes = new HashMap<NodeContainer, NodeProgressMonitor>();
 
         /**
          * Adds new nodes to the list of nodes that are waiting for execution.
@@ -108,9 +107,13 @@ public class WorkflowManager implements WorkflowListener {
             synchronized (m_waitingNodes) {
                 boolean change = false;
                 for (NodeContainer nc : nodes) {
-                    if (!m_waitingNodes.contains(nc)
+                    if (!m_waitingNodes.containsKey(nc)
                             && !m_runningNodes.containsKey(nc)) {
-                        m_waitingNodes.add(nc);
+                        DefaultNodeProgressMonitor pm = new DefaultNodeProgressMonitor();
+                        m_waitingNodes.put(nc, pm);
+                        fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc
+                                .getID(), nc, pm));
+
                         change = true;
                     }
                 }
@@ -127,6 +130,11 @@ public class WorkflowManager implements WorkflowListener {
          */
         public void cancelExecution() {
             synchronized (m_waitingNodes) {
+                for (NodeContainer nc : m_waitingNodes.keySet()) {
+                    fireWorkflowEvent(new WorkflowEvent.NodeFinished(
+                            nc.getID(), null, null));
+                }
+
                 m_waitingNodes.clear();
             }
             for (NodeProgressMonitor pm : m_runningNodes.values()) {
@@ -145,6 +153,8 @@ public class WorkflowManager implements WorkflowListener {
             synchronized (m_waitingNodes) {
                 for (NodeContainer nc : nodes) {
                     m_waitingNodes.remove(nc);
+                    fireWorkflowEvent(new WorkflowEvent.NodeFinished(
+                            nc.getID(), null, null));
                 }
             }
 
@@ -174,9 +184,8 @@ public class WorkflowManager implements WorkflowListener {
                     }
                 }
 
-                for (NodeContainer nc : m_waitingNodes) {
+                for (NodeContainer nc : m_waitingNodes.keySet()) {
                     if (wfm.m_nodesByID.values().contains(nc)) {
-
                         return true;
                     }
                 }
@@ -199,13 +208,15 @@ public class WorkflowManager implements WorkflowListener {
          */
         private void startNewNodes() {
             synchronized (m_waitingNodes) {
-                Iterator<NodeContainer> it = m_waitingNodes.iterator();
+                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = m_waitingNodes
+                        .entrySet().iterator();
                 while (it.hasNext()) {
-                    NodeContainer nc = it.next();
-                    if (nc.isExecutable()) {
+                    Map.Entry<NodeContainer, NodeProgressMonitor> e = it.next();
+                    if (e.getKey().isExecutable()) {
                         it.remove();
+                        NodeContainer nc = e.getKey();
+                        NodeProgressMonitor pm = e.getValue();
 
-                        DefaultNodeProgressMonitor pm = new DefaultNodeProgressMonitor();
                         m_runningNodes.put(nc, pm);
 
                         try {
@@ -213,12 +224,12 @@ public class WorkflowManager implements WorkflowListener {
                                     .getID(), nc, pm));
                             nc.addListener(this);
                             nc.startExecution(pm);
-                        } catch (Exception e) {
+                        } catch (Exception ex) {
                             // remove from running nodes due to an error
                             m_runningNodes.remove(nc);
                         }
 
-                    } else if (nc.isExecuted()) {
+                    } else if (e.getKey().isExecuted()) {
                         it.remove();
                     }
                 }
@@ -228,7 +239,13 @@ public class WorkflowManager implements WorkflowListener {
                         LOGGER.warn("Some nodes were still waiting but none is"
                                 + " running: " + m_waitingNodes);
                     }
+
+                    for (NodeContainer nc : m_waitingNodes.keySet()) {
+                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
+                                .getID(), null, null));
+                    }
                     m_waitingNodes.clear();
+
                     m_waitingNodes.notifyAll();
                 }
             }
@@ -280,7 +297,7 @@ public class WorkflowManager implements WorkflowListener {
                     }
 
                     if (!interesting) {
-                        for (NodeContainer nc : m_waitingNodes) {
+                        for (NodeContainer nc : m_waitingNodes.keySet()) {
                             if (wfm.m_nodesByID.values().contains(nc)) {
                                 interesting = true;
                                 break;
@@ -316,7 +333,7 @@ public class WorkflowManager implements WorkflowListener {
             }
             for (NodeContainer succ : nc.getAllSuccessors()) {
                 if (m_runningNodes.containsKey(succ)
-                        || m_waitingNodes.contains(succ)) {
+                        || m_waitingNodes.containsKey(succ)) {
                     return false;
                 }
             }
@@ -1212,7 +1229,7 @@ public class WorkflowManager implements WorkflowListener {
                 workflowFile));
         load(settings);
 
-        NodeProgressMonitor progMon = new DefaultNodeProgressMonitor(); 
+        NodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
 
         File parentDir = workflowFile.getParentFile();
 
@@ -1226,9 +1243,9 @@ public class WorkflowManager implements WorkflowListener {
         try {
             for (NodeContainer newNode : topSortNodes()) {
                 try {
-                    NodeSettingsRO nodeSetting = 
-                        settings.getNodeSettings(KEY_NODES)
-                            .getNodeSettings("node_" + newNode.getID());
+                    NodeSettingsRO nodeSetting = settings.getNodeSettings(
+                            KEY_NODES).getNodeSettings(
+                            "node_" + newNode.getID());
                     String nodeFileName = nodeSetting
                             .getString(KEY_NODE_SETTINGS_FILE);
                     File nodeFile = new File(parentDir, nodeFileName);
@@ -1629,14 +1646,12 @@ public class WorkflowManager implements WorkflowListener {
      * Closes all opened views of the nodes of this workflow.
      */
     public void closeAllViews() {
-
         Set<Map.Entry<NodeContainer, Integer>> containerSet = m_idsByNode
                 .entrySet();
         Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries = containerSet
                 .iterator();
 
         while (nodeContaierEntries.hasNext()) {
-
             Map.Entry<NodeContainer, Integer> entry = nodeContaierEntries
                     .next();
 

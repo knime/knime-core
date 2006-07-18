@@ -183,6 +183,21 @@ public abstract class WorkflowEvent {
             super(nodeID, oldValue, newValue);
         }        
     }
+    
+    /** Event: node is waiting for execution. */
+    public static class NodeWaiting extends WorkflowEvent {
+        /**
+         * Creates a new "node waiting for execution" event.
+         * 
+         * @param nodeID the ID for the affected node
+         * @param oldValue value before the change (may be <code>null</code>)
+         * @param newValue value after the change (may be <code>null</code>) 
+         */
+        public NodeWaiting(final int nodeID, final Object oldValue, 
+                final Object newValue) {
+            super(nodeID, oldValue, newValue);
+        }
+    }
 
     private int m_id;
     private long m_timestamp;
