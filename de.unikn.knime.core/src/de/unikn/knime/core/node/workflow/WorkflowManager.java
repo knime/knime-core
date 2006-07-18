@@ -1642,7 +1642,7 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /**
-     * Closes all opened views of the nodes of this workflow.
+     * Closes all opened views (also port views) of the nodes of this workflow.
      */
     public void closeAllViews() {
         Set<Map.Entry<NodeContainer, Integer>> containerSet = m_idsByNode
