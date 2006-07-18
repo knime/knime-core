@@ -390,7 +390,8 @@ class Buffer {
     void writeMetaToFile(final ZipOutputStream zipOut) throws IOException {
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
         NodeSettings settings = new NodeSettings("Table Meta Information");
-        NodeSettingsWO subSettings = settings.addNodeSettings(CFG_INTERNAL_META);
+        NodeSettingsWO subSettings = 
+            settings.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addString(CFG_VERSION, getVersion());
         subSettings.addInt(CFG_SIZE, size());
         // m_shortCutsLookup to string array, saved in config
@@ -399,7 +400,8 @@ class Buffer {
             cellClasses[i] = m_shortCutsLookup[i].getName();
         }
         subSettings.addStringArray(CFG_CELL_CLASSES, cellClasses);
-        NodeSettingsWO addSubSettings = settings.addNodeSettings(CFG_ADDITIONAL_META); 
+        NodeSettingsWO addSubSettings = 
+            settings.addNodeSettings(CFG_ADDITIONAL_META); 
         // allow subclasses to do private savings.
         addMetaForSaving(addSubSettings);
         // will only close the zip entry, not the entire stream.
@@ -435,7 +437,8 @@ class Buffer {
         InputStream inStream = new BufferedInputStream(specInput);
         try {
             NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
-            NodeSettingsRO specSettings = settings.getNodeSettings(CFG_TABLESPEC);
+            NodeSettingsRO specSettings = 
+                settings.getNodeSettings(CFG_TABLESPEC);
             return DataTableSpec.load(specSettings);
         } finally {
             inStream.close();
@@ -460,7 +463,8 @@ class Buffer {
         InputStream inStream = new BufferedInputStream(metaIn);
         try {
             NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
-            NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
+            NodeSettingsRO subSettings = 
+                settings.getNodeSettings(CFG_INTERNAL_META);
             String version = subSettings.getString(CFG_VERSION);
             validateVersion(version);
             m_size = subSettings.getInt(CFG_SIZE);
@@ -683,10 +687,16 @@ class Buffer {
         }
     }
     /**
+     * Delegate method that's been called from the container table to save
+     * the internals.
+     * @param f To write to.
+     * @param exec For progress/cancel
+     * @throws IOException If it fails to write to a file.
+     * @throws CanceledExecutionException If canceled.
      * @see de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable#
-     *  saveToFile(File, ExecutionMonitor)
+     * saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
-    public void saveToFile(final File f, final ExecutionMonitor exec) 
+    void saveToFile(final File f, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
         if (!usesOutFile()) {
             close(m_spec); // will also use this file for subsequent iterations
