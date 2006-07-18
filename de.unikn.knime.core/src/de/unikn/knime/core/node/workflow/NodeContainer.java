@@ -335,6 +335,13 @@ public class NodeContainer implements NodeStateListener {
     public void closeAllViews() {
         m_node.closeAllViews();
     }
+    
+    /**
+     * @see Node#closeAllPortViews()
+     */
+    public void closeAllPortViews() {
+        m_node.closeAllPortViews();
+    }
 
     /**
      * @see Node#configure()

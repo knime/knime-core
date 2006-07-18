@@ -1655,6 +1655,7 @@ public class WorkflowManager implements WorkflowListener {
                     .next();
 
             entry.getKey().closeAllViews();
+            entry.getKey().closeAllPortViews();
         }
     }
 }
