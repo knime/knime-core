@@ -301,7 +301,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see BufferedDataTable.KnowsRowCountTable#getRowCount()
+     * @see de.unikn.knime.core.node.BufferedDataTable.
+     *  KnowsRowCountTable#getRowCount()
      */
     public int getRowCount() {
         return m_reference.getRowCount();

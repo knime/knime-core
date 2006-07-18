@@ -69,7 +69,7 @@ public final class ModelContent extends Config
     
     /**
      * @see de.unikn.knime.core.node.
-     * ModelContentWO#addModelContent(de.unikn.knime.core.node.ModelContent)
+     * ModelContentWO#addModelContent(ModelContent)
      */
     public void addModelContent(final ModelContent modelContent) {
         super.addConfig(modelContent);

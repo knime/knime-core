@@ -134,8 +134,8 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      * Hilites those keys of the event which are not already hilited and 
      * forwards them to the registered handlers and listeners.
      * 
-     * @see de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler#
-     * hiLite(de.unikn.knime.core.data.DataCell...)
+     * @see de.unikn.knime.core.node.property.hilite.
+     * DefaultHiLiteHandler#hiLite(de.unikn.knime.core.data.DataCell...)
      */
     @Override
     public synchronized void hiLite(final DataCell... ids) {
@@ -148,8 +148,8 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      * Hilites those keys of the event which are not already hilited and 
      * forwards them to the registered handlers and listeners.
      * 
-     * @see de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler#
-     * hiLite(java.util.Set)
+     * @see de.unikn.knime.core.node.property.hilite.
+     * DefaultHiLiteHandler#hiLite(java.util.Set)
      */
     @Override
     public synchronized void hiLite(final Set<DataCell> ids) {
@@ -162,8 +162,8 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      * Unhilites those keys which are hilited and propagates them to the 
      * registered handlers and listeners.
      *      
-     * @see de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler#
-     * unHiLite(de.unikn.knime.core.data.DataCell...)
+     * @see de.unikn.knime.core.node.property.hilite.
+     * DefaultHiLiteHandler#unHiLite(de.unikn.knime.core.data.DataCell...)
      */
     @Override
     public synchronized void unHiLite(final DataCell... ids) {
@@ -176,8 +176,8 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      * Unhilites those keys which are hilited and propagates them to the 
      * registered handlers and listeners.
      * 
-     * @see de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler#
-     * unHiLite(java.util.Set)
+     * @see de.unikn.knime.core.node.property.hilite.
+     * DefaultHiLiteHandler#unHiLite(java.util.Set)
      */
     @Override
     public synchronized void unHiLite(final Set<DataCell> ids) {
@@ -187,8 +187,8 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
     }
 
     /**
-     * @see de.unikn.knime.core.node.property.hilite.DefaultHiLiteHandler#
-     * unHiLiteAll()
+     * @see de.unikn.knime.core.node.property.hilite.
+     * DefaultHiLiteHandler#unHiLiteAll()
      */
     @Override
     public synchronized void unHiLiteAll() {

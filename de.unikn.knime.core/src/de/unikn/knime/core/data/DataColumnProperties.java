@@ -67,7 +67,7 @@ public final class DataColumnProperties implements Cloneable {
      * @return <code>true</code> if <code>key</code> is contained in this
      *         property object, <code>false</code> otherwise.
      * 
-     * @see Properties#containsKey(String)
+     * @see java.util.Properties#containsKey(Object)
      */
     public boolean containsProperty(final String key) {
         return m_props.containsKey(key);

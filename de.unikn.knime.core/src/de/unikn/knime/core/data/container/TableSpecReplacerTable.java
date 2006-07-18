@@ -45,8 +45,8 @@ import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * class is not intended for subclassing or to be used in a node model 
  * implementation. Instead, use the method provided through the execution
  * context.
- * @see de.unikn.knime.core.node.ExecutionContext#
- * createSpecReplacerTable(BufferedDataTable, DataTableSpec)
+ * @see de.unikn.knime.core.node.ExecutionContext#createSpecReplacerTable(
+ *       BufferedDataTable, DataTableSpec)
  * @author wiswedel, University of Konstanz
  */
 public class TableSpecReplacerTable implements KnowsRowCountTable {
@@ -101,8 +101,8 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     private static final String ZIP_ENTRY_SPEC = "newspec.xml";
     
     /**
-     * @see de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable#
-     *  saveToFile(File, NodeSettingsWO, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.BufferedDataTable.
+     *  KnowsRowCountTable#saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
     public void saveToFile(final File f, final NodeSettingsWO s,
             final ExecutionMonitor exec) throws IOException,
@@ -133,8 +133,8 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     }
 
     /**
-     * @see de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable#
-     *  getRowCount()
+     * @see de.unikn.knime.core.node.BufferedDataTable.
+     * KnowsRowCountTable#getRowCount()
      */
     public int getRowCount() {
         return m_reference.getRowCount();

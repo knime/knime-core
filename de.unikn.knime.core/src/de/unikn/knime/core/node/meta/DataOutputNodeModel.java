@@ -60,8 +60,8 @@ public class DataOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#
-     * loadValidatedSettingsFrom(NodeSettingsRO)
+     * @see de.unikn.knime.core.node.NodeModel#loadValidatedSettingsFrom(
+     * NodeSettingsRO)
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)

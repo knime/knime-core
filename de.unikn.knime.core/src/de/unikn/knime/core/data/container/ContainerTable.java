@@ -83,8 +83,8 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see KnowsRowCountTable#
-     * saveToFile(File, NodeSettingsWO, ExecutionMonitor)
+     * @see KnowsRowCountTable#saveToFile(
+     * File, NodeSettingsWO, ExecutionMonitor)
      */
     public void saveToFile(final File f, final NodeSettingsWO settings, 
             final ExecutionMonitor exec) throws IOException, 

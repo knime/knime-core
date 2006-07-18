@@ -134,7 +134,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * Is the current value of {@link #m_rowCountOfInterest} final? If
      * {@link #m_showOnlyHiLit} is <code>false</code> this field is equal to
-     * {@linl #m_isMaxRowCountFinal}.
+     * {@link #m_isMaxRowCountFinal}.
      */
     private boolean m_isRowCountOfInterestFinal;
     

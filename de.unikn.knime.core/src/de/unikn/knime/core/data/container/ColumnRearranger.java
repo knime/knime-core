@@ -73,11 +73,11 @@ import de.unikn.knime.core.data.DataTableSpec;
  * from both the <code>execute</code> and the <code>configure</code> method:
  * 
  * <pre>
- * public ColumnRearranger createColumnRearranger(DataTableSpec in) {
+ * private ColumnRearranger createColumnRearranger(DataTableSpec in) {
  *     ColumnRearranger c = new ColumnRearranger(in);
  *     // column spec of the appended column
- *     DataColumnSpec newColSpec = 
- *       new DataColumnSpecCreator(&quot;sum_of_0_and_1&quot;, DoubleCell.TYPE);
+ *     DataColumnSpec newColSpec = new DataColumnSpecCreator(
+ *     &quot;sum_of_0_and_1&quot;, DoubleCell.TYPE).createSpec();
  *     // utility object that performs the calculation
  *     CellFactory factory = new SingleCellFactory(newColSpec) {
  *         public DataCell getCell(DataRow row) {

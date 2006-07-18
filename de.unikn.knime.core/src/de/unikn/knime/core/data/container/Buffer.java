@@ -693,8 +693,8 @@ class Buffer {
      * @param exec For progress/cancel
      * @throws IOException If it fails to write to a file.
      * @throws CanceledExecutionException If canceled.
-     * @see de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable#
-     * saveToFile(File, NodeSettingsWO, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.BufferedDataTable.
+     * KnowsRowCountTable#saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
     void saveToFile(final File f, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
