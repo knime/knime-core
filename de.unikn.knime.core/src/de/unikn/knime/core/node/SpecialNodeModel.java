@@ -263,15 +263,6 @@ public abstract class SpecialNodeModel extends NodeModel {
     
     
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(NodeSettingsWO)
-     */
-    @Override
-    protected final void saveSettingsTo(final NodeSettingsWO settings) {
-        saveSettingsTo(null, settings, null);
-    }
-
-    /**
      * Saves the settings of this model.
      * 
      * @param nodeDir the directory for the node

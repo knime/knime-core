@@ -39,6 +39,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
      */
     public ModelOutputNodeModel() {
         super(0, 1);
+        setAutoExecutable(true);
     }
 
     /**

@@ -1446,11 +1446,7 @@ public final class Node {
         // write model
         final NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
         try {
-            if (m_model instanceof SpecialNodeModel) {
-                ((SpecialNodeModel) m_model).saveSettingsTo(null, model, null);
-            } else {
-                m_model.saveSettingsTo(model);
-            }
+            m_model.saveSettingsTo(model);
         } catch (Exception e) {
             m_logger.error("Could not save model", e);
         } catch (Error e) {
@@ -1472,6 +1468,20 @@ public final class Node {
         saveSettings(settings);
     
         m_nodeDir = nodeFile.getParentFile();
+        
+        if (m_model instanceof SpecialNodeModel) {
+            try {
+                NodeSettings model = settings.getNodeSettings(CFG_MODEL);
+                ((SpecialNodeModel) m_model).saveSettingsTo(m_nodeDir, model,
+                        exec);
+            } catch (InvalidSettingsException ex) {
+                // this should never happen as we have added the model
+                // in saveSettings(...) above
+                m_logger.error("Internal error while saving a meta node", ex);
+            }            
+        }
+
+        
         
         if (isConfigured()) {
             NodeSettingsWO specs = settings.addNodeSettings(CFG_SPEC_FILES);

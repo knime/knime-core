@@ -241,46 +241,44 @@ public class MetaNodeModel extends SpecialNodeModel
      *  de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void saveSettingsTo(final File nodeFile,
+    protected void saveSettingsTo(final File nodeDir,
             final NodeSettingsWO settings, final ExecutionMonitor exec) {
         if (internalWFM() == null) { return; }
-        if (nodeFile != null) {
-            try {
-                int[] ids = new int[m_dataInContainer.length];
-                for (int i = 0; i < m_dataInContainer.length; i++) {
-                    ids[i] = m_dataInContainer[i].getID();
-                }
-                settings.addIntArray("dataInContainerIDs", ids);
-                
-                ids = new int[m_dataOutContainer.length];
-                for (int i = 0; i < m_dataOutContainer.length; i++) {
-                    ids[i] = m_dataOutContainer[i].getID();
-                }
-                settings.addIntArray("dataOutContainerIDs", ids);
-                
-                
-                ids = new int[m_modelInContainer.length];
-                for (int i = 0; i < m_modelInContainer.length; i++) {
-                    ids[i] = m_modelInContainer[i].getID();
-                }
-                settings.addIntArray("modelInContainerIDs", ids);
-                
-                ids = new int[m_modelOutContainer.length];
-                for (int i = 0; i < m_modelOutContainer.length; i++) {
-                    ids[i] = m_modelOutContainer[i].getID();
-                }
-                settings.addIntArray("modelOutContainerIDs", ids);
-    
-                File f = new File(nodeFile.getParentFile(), "workflow.knime");
-                f.createNewFile();
-                internalWFM().save(f, exec);
-            } catch (IOException ex) {
-                LOGGER.error(ex);
-            } catch (CanceledExecutionException ex) {
-                LOGGER.error(ex);
-            } catch (WorkflowInExecutionException ex) {
-                LOGGER.error("Could not save meta node", ex);
+        try {
+            int[] ids = new int[m_dataInContainer.length];
+            for (int i = 0; i < m_dataInContainer.length; i++) {
+                ids[i] = m_dataInContainer[i].getID();
             }
+            settings.addIntArray("dataInContainerIDs", ids);
+            
+            ids = new int[m_dataOutContainer.length];
+            for (int i = 0; i < m_dataOutContainer.length; i++) {
+                ids[i] = m_dataOutContainer[i].getID();
+            }
+            settings.addIntArray("dataOutContainerIDs", ids);
+            
+            
+            ids = new int[m_modelInContainer.length];
+            for (int i = 0; i < m_modelInContainer.length; i++) {
+                ids[i] = m_modelInContainer[i].getID();
+            }
+            settings.addIntArray("modelInContainerIDs", ids);
+            
+            ids = new int[m_modelOutContainer.length];
+            for (int i = 0; i < m_modelOutContainer.length; i++) {
+                ids[i] = m_modelOutContainer[i].getID();
+            }
+            settings.addIntArray("modelOutContainerIDs", ids);
+
+            File f = new File(nodeDir, "workflow.knime");
+            f.createNewFile();
+            internalWFM().save(f, exec);
+        } catch (IOException ex) {
+            LOGGER.error(ex);
+        } catch (CanceledExecutionException ex) {
+            LOGGER.error(ex);
+        } catch (WorkflowInExecutionException ex) {
+            LOGGER.error("Could not save meta node", ex);
         }
     }
 
@@ -589,5 +587,16 @@ public class MetaNodeModel extends SpecialNodeModel
      */
     protected final DataOutputNodeModel dataOutModel(final int index) {
         return m_dataOutModels[index];
+    }
+
+
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveSettingsTo(de.unikn.knime.core.node.NodeSettingsWO)
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        // nothing to save here        
     }
 }
