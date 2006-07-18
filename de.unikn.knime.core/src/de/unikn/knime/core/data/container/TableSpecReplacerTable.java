@@ -41,7 +41,12 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
- * 
+ * Table that only replaces the data table spec of an underlying table. This
+ * class is not intended for subclassing or to be used in a node model 
+ * implementation. Instead, use the method provided through the execution
+ * context.
+ * @see de.unikn.knime.core.node.ExecutionContext#
+ * createSpecReplacerTable(BufferedDataTable, DataTableSpec)
  * @author wiswedel, University of Konstanz
  */
 public class TableSpecReplacerTable implements KnowsRowCountTable {
@@ -49,6 +54,13 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     private final BufferedDataTable m_reference;
     private final DataTableSpec m_newSpec;
     
+    /** Creates new table. Not intended to be used directly for node 
+     * implementations.
+     * @param table The reference table.
+     * @param newSpec Its new spec.
+     * @throws IllegalArgumentException If the spec doesn't match the data
+     * (number of columns)
+     */
     public TableSpecReplacerTable(
             final BufferedDataTable table, final DataTableSpec newSpec) {
         DataTableSpec oldSpec = table.getDataTableSpec();
@@ -62,6 +74,15 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
         m_newSpec = newSpec;
     }
 
+    /**
+     * Restores table from a file. Not intended to be used by node 
+     * implementations.
+     * @param f The file to read from.
+     * @param s The settings to get meta information from.
+     * @param loadID The internal node id (to get the reference table from).
+     * @throws IOException If reading the file fails.
+     * @throws InvalidSettingsException If reading the settings fails.
+     */
     public TableSpecReplacerTable(final File f, final NodeSettingsRO s, 
             final int loadID) throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
@@ -119,6 +140,10 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
         return m_reference.getRowCount();
     }
     
+    /**
+     * Get handle to reference table.
+     * @return Reference to that table.
+     */
     public BufferedDataTable getReferenceTable() {
         return m_reference;
     }
