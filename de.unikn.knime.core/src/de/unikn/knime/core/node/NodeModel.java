@@ -516,23 +516,29 @@ public abstract class NodeModel {
     /**
      * This function is invoked by the <code>Node#executeNode()</code> method
      * of the node (through the
-     * <code>#executeModel(DataTable[],ExecutionMonitor)</code> method) only
-     * after all predecessor nodes have been successfully executed and all data
-     * is therefore available at the input ports. Implement this function with
-     * your task in the derived model.
+     * <code>#executeModel(BufferedDataTable[],ExecutionMonitor)</code>
+     * method)only after all predecessor nodes have been successfully executed
+     * and all data is therefore available at the input ports. Implement this
+     * function with your task in the derived model.
      * <p>
      * The input data is available in the given array argument
      * <code>inData</code> and is ensured to be neither <code>null</code>
      * nor contain <code>null</code> elements.
      * 
+     * <p>
+     * In order to create output data, you need to create objects of class
+     * <code>BufferedDataTable</code>. Use the execution context argument to
+     * create <code>BufferedDataTable</code>.
+     * 
      * @param inData An array holding <code>DataTable</code> elements, one for
      *            each input.
-     * @param exec The execution monitor for this execute method. Should be
-     *            asked frequently if the execution should be interrupted and
-     *            throws an exeption then. This exception might me caught, and
-     *            then after closing all data streams, been thrown again. Also,
-     *            if you can tell the progress of your task, just set it in this
-     *            monitor.
+     * @param exec The execution monitor for this execute method. It provides us
+     *            with means to create new <code>BufferedDataTable</code>.
+     *            Additionally, it should be asked frequently if the execution
+     *            should be interrupted and throws an exeption then. This
+     *            exception might me caught, and then after closing all data
+     *            streams, been thrown again. Also, if you can tell the progress
+     *            of your task, just set it in this monitor.
      * @return An array of non- <code>null</code> DataTable elements with the
      *         size of the number of outputs. The result of this execution.
      * @throws Exception If you must fail the execution. Try to provide a
