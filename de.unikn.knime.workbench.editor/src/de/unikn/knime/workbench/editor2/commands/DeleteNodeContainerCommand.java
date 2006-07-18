@@ -74,8 +74,6 @@ public class DeleteNodeContainerCommand extends Command {
         LOGGER.debug("Deleting node #" + m_part.getNodeContainer().getID()
                 + " from Workflow");
         
-        m_part.deactivate();
-
         // The WFM must removes all connections for us, before the node is
         // removed.
         try {
