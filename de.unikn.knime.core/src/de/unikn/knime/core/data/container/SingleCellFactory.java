@@ -22,6 +22,7 @@
 package de.unikn.knime.core.data.container;
 
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.node.ExecutionMonitor;
@@ -31,6 +32,16 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * @author wiswedel, University of Konstanz
  */
 public abstract class SingleCellFactory implements CellFactory {
+    
+    private final DataColumnSpec[] m_colSpec;
+    
+    public SingleCellFactory(final DataColumnSpec newColSpec) {
+        m_colSpec = new DataColumnSpec[]{newColSpec};
+    }
+    
+    public DataColumnSpec[] getColumnSpecs() {
+        return m_colSpec;
+    }
 
     /**
      * @see CellFactory#getCells(DataRow)
