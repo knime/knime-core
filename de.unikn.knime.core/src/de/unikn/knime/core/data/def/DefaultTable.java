@@ -35,7 +35,7 @@ import de.unikn.knime.core.data.util.ObjectToDataCellConverter;
  * Default implementation of a <code>DataTable</code> object. This
  * implementation keeps the data in memory all the time. It's really meant only
  * for use with very small data tables. All others should rather use the 
- * <code>DataContainer</code> instead.
+ * {@link de.unikn.knime.core.data.container.DataContainer}.
  * 
  * There are basically two ways to initialize an instance of this class. Either
  * by passing directly <code>DataRow</code> objects along with the column
@@ -430,7 +430,8 @@ public class DefaultTable implements DataTable {
     }
     
     /**
-     * @see de.unikn.knime.core.data.DataTable#getRowCount()
+     * Get the number of rows in this table.
+     * @return The number of rows.
      */
     public int getRowCount() {
         return m_rowList.size();
