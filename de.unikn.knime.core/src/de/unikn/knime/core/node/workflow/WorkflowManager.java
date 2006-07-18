@@ -372,7 +372,8 @@ public class WorkflowManager implements WorkflowListener {
     private final Map<Integer, ConnectionContainer> m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
 
     // change listener support (transient) <= why? (tm)
-    private final transient ArrayList<WorkflowListener> m_eventListeners;
+    private final transient ArrayList<WorkflowListener> m_eventListeners =
+        new ArrayList<WorkflowListener>();
 
     private final WorkflowExecutor m_executor;
 
@@ -396,8 +397,7 @@ public class WorkflowManager implements WorkflowListener {
      */
     public WorkflowManager() {
         m_parent = null;
-        m_executor = new WorkflowExecutor();
-        m_eventListeners = new ArrayList<WorkflowListener>();
+        m_executor = new WorkflowExecutor(); 
     }
 
     /**
@@ -434,7 +434,6 @@ public class WorkflowManager implements WorkflowListener {
         m_parent = parent;
         m_parent.m_children.add(new WeakReference<WorkflowManager>(this));
         m_executor = m_parent.m_executor;
-        m_eventListeners = m_parent.m_eventListeners;
     }
 
     private void addConnection(final ConnectionContainer cc) {
@@ -1116,9 +1115,9 @@ public class WorkflowManager implements WorkflowListener {
             l.workflowChanged(event);
         }
 
-        if (m_parent != null) {
-            m_parent.fireWorkflowEvent(event);
-        }
+//        if (m_parent != null) {
+//            m_parent.fireWorkflowEvent(event);
+//        }
     }
 
     /**
