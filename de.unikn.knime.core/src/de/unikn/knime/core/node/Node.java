@@ -202,8 +202,8 @@ public final class Node {
         // init model output ports
         m_outModelPorts = new ModelContentOutPort[m_model.getNrModelOuts()];
         for (int i = 0; i < m_outModelPorts.length; i++) {
-            m_outModelPorts[i] = new ModelContentOutPort(i + getNrDataOutPorts(),
-                    this);
+            m_outModelPorts[i] = 
+                new ModelContentOutPort(i + getNrDataOutPorts(), this);
             m_outModelPorts[i].setPortName(m_factory.getOutportModelName(i));
             m_outModelPorts[i].setModelContent(null);
         }
@@ -1339,14 +1339,25 @@ public final class Node {
     
     /**
      * Closes all views.
-     *
      */
     public void closeAllViews() {
         for (NodeView view : m_model.getViews()) {
             view.closeView();
         }
     }
-
+    
+    /**
+     * Closes all output port views (data and model port views).
+     */
+    public void closeAllPortViews() {
+        for (DataOutPort port : m_outDataPorts) {
+            port.disposePortView();
+        }
+        for (ModelContentOutPort port : m_outModelPorts) {
+            port.disposePortView();
+        }
+    }
+    
     /**
      * @return <code>true</code> if a dialog is available.
      */
@@ -1531,7 +1542,8 @@ public final class Node {
                     File dataSettingsFile = new File(m_nodeDir, DATA_FILE_NAME);
                     saveData(dataSettingsFile, exec);
                 }
-                NodeSettingsWO models = settings.addNodeSettings(CFG_MODEL_FILES);
+                NodeSettingsWO models = 
+                    settings.addNodeSettings(CFG_MODEL_FILES);
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     String specName = createModelFileName(i);
                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
@@ -1560,7 +1572,8 @@ public final class Node {
                  if (getNrDataOutPorts() > 0) {
                      settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
                  }
-                 NodeSettingsWO models = settings.addNodeSettings(CFG_MODEL_FILES);
+                 NodeSettingsWO models = 
+                     settings.addNodeSettings(CFG_MODEL_FILES);
                  for (int i = 0; i < m_outModelPorts.length; i++) {
                      String specName = createModelFileName(i);
                      models.addString(CFG_OUTPUT_PREFIX + i, specName);
@@ -1598,7 +1611,8 @@ public final class Node {
                         + dir.getAbsolutePath());
             }
             portSettings.addString(CFG_DATA_FILE_DIR, dataName);
-            BufferedDataTable outTable = m_outDataPorts[i].getBufferedDataTable();
+            BufferedDataTable outTable = 
+                m_outDataPorts[i].getBufferedDataTable();
             outTable.save(dir, portSettings, exec);
         }
         settings.saveToXML(new BufferedOutputStream(
@@ -1778,14 +1792,16 @@ public final class Node {
     private int boundModelContentInPort(final int inPortID) {
         // predictor params port ids are the indecies above the data port ids
         if ((inPortID < getNrDataInPorts())
-                || (inPortID >= getNrModelContentInPorts() + getNrDataInPorts())) {
+                || (inPortID >= getNrModelContentInPorts() 
+                        + getNrDataInPorts())) {
             throw new IndexOutOfBoundsException(
                     "Invalid ModelContent input-port number: "
                             + inPortID
                             + " (valid range: ["
                             + getNrDataInPorts()
                             + "..."
-                            + (getNrModelContentInPorts() + getNrDataInPorts() - 1)
+                            + (getNrModelContentInPorts() 
+                                    + getNrDataInPorts() - 1)
                             + "])");
         }
         return inPortID;
