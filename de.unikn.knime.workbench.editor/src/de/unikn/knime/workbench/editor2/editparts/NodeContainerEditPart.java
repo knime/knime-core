@@ -158,6 +158,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void deactivate() {
+        super.deactivate();
 
         getNodeContainer().removeListener(this);
     }
