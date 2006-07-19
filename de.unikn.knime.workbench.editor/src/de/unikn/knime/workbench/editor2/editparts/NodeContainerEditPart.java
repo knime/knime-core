@@ -487,6 +487,27 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
+     * Marks this node parts figure. Used to hilite it from the rest of the
+     * parts.
+     * 
+     * @see NodeContainerEditPart#unmark()
+     */
+    public void mark() {
+
+        ((NodeContainerFigure)getFigure()).mark();
+    }
+
+    /**
+     * Resets the marked part.
+     * 
+     * @see NodeContainerEditPart#mark()
+     */
+    public void unmark() {
+
+        ((NodeContainerFigure)getFigure()).unmark();
+    }
+
+    /**
      * Implements a manual double click to open a nodes dialog. TODO: at the
      * moment every 4th pressed event is not submitted to this listener. Find
      * out why. Seems to be a draw2D problme.
@@ -532,11 +553,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         + " reason:\n" + ex.getMessage());
                 mb.open();
             }
-            
-            //me.consume();
+
+            // me.consume();
         }
         m_lastClick = System.currentTimeMillis();
-        
+
     }
 
     /**
@@ -557,7 +578,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public void mouseDoubleClicked(final MouseEvent me) {
 
-       // do nothing yet
+        // do nothing yet
     }
 
     /**

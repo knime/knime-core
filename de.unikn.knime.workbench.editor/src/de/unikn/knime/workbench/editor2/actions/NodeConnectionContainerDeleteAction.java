@@ -21,6 +21,7 @@
  */
 package de.unikn.knime.workbench.editor2.actions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.gef.EditPart;
@@ -32,6 +33,7 @@ import org.eclipse.gef.ui.actions.DeleteAction;
 import org.eclipse.ui.IWorkbenchPart;
 
 import de.unikn.knime.workbench.editor2.commands.VerifyingCompoundCommand;
+import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * This class overrides the default delete action of eclipse. This is due to
@@ -48,7 +50,7 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
      * 
      * @param part The part for this action
      */
-    public NodeConnectionContainerDeleteAction(IWorkbenchPart part) {
+    public NodeConnectionContainerDeleteAction(final IWorkbenchPart part) {
         super(part);
         setLazyEnablementCalculation(false);
     }
@@ -74,9 +76,25 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         VerifyingCompoundCommand compoundCmd = new VerifyingCompoundCommand(
                 GEFMessages.DeleteAction_ActionDeleteCommandName);
 
-        // set the text to display in the verification dialog
-        compoundCmd.setDialogDisplayText("Do you really want to delete "
-                + "the selected component(s)?");
+        // if there is just one node edit part to delete name it
+        List<NodeContainerEditPart> nodeParts = getNodeContainerEditParts(getSelectedObjects());
+        if (nodeParts.size() == 1) {
+
+            NodeContainerEditPart nodePart = nodeParts.get(0);
+            String name = nodePart.getNodeContainer().getName();
+            String customName = nodePart.getNodeContainer().getCustomName();
+
+            String dialogText = "Do you really want to delete "
+                    + "the selected node: " + customName + " (" + name + ")?";
+            compoundCmd.setDialogDisplayText(dialogText);
+        } else {
+            String dialogText = "Do you really want to delete "
+                    + nodeParts.size() + " selected nodes?";
+            compoundCmd.setDialogDisplayText(dialogText);
+        }
+        
+        // set the parts into the compound command
+        compoundCmd.setNodeParts(nodeParts);
 
         for (int i = 0; i < objects.size(); i++) {
             EditPart object = (EditPart)objects.get(i);
@@ -87,5 +105,21 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         }
 
         return compoundCmd;
+    }
+
+    private List<NodeContainerEditPart> getNodeContainerEditParts(
+            final List objects) {
+
+        List<NodeContainerEditPart> result = new ArrayList<NodeContainerEditPart>();
+
+        for (int i = 0; i < objects.size(); i++) {
+            Object obj = objects.get(i);
+
+            if (obj instanceof NodeContainerEditPart) {
+                result.add((NodeContainerEditPart)obj);
+            }
+        }
+
+        return result;
     }
 }

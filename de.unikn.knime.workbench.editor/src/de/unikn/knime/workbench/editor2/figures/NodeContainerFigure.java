@@ -61,6 +61,7 @@ import de.unikn.knime.workbench.editor2.ImageRepository;
  * </ul>
  * 
  * @author Florian Georg, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class NodeContainerFigure extends RectangleFigure {
 
@@ -153,6 +154,9 @@ public class NodeContainerFigure extends RectangleFigure {
     /** contains the the "traffic light". * */
     private StatusFigure m_statusFigure;
 
+    /** The background color to apply. */
+    private Color m_backgroundColor;
+
     /** contains the the warning/error sign. * */
     private InfoWarnErrorPanel m_infoWarnErrorPanel;
 
@@ -181,6 +185,8 @@ public class NodeContainerFigure extends RectangleFigure {
      * Creates a new node figure.
      */
     public NodeContainerFigure() {
+
+        m_backgroundColor = ColorConstants.white;
 
         m_description = null;
 
@@ -411,7 +417,7 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     @Override
     public Color getBackgroundColor() {
-        return ColorConstants.white;
+        return m_backgroundColor;
     }
 
     /**
@@ -448,6 +454,15 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
+     * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+     */
+    public void paintFigure(Graphics graphics) {
+
+        graphics.setBackgroundColor(getBackgroundColor());
+        super.paintFigure(graphics);
+    }
+
+    /**
      * Subfigure, hosts the in/out port figures and the icon.
      * 
      * @author Florian Georg, University of Konstanz
@@ -461,27 +476,27 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private static final String BACKGROUND_SOURCE = "icons/node/"
                 + "background_source.png";
-        
+
         private static final String BACKGROUND_SINK = "icons/node/"
-            + "background_sink.png";
+                + "background_sink.png";
 
         private static final String BACKGROUND_LEARNER = "icons/node/"
                 + "background_learner.png";
-        
+
         private static final String BACKGROUND_PREDICTOR = "icons/node/"
-            + "background_predictor.png";
-        
+                + "background_predictor.png";
+
         private static final String BACKGROUND_MANIPULATOR = "icons/node/"
-            + "background_manipulator.png";
-        
+                + "background_manipulator.png";
+
         private static final String BACKGROUND_META = "icons/node/"
-            + "background_meta.png";
+                + "background_meta.png";
 
         private static final String BACKGROUND_VIEWER = "icons/node/"
                 + "background_viewer.png";
-        
+
         private static final String BACKGROUND_UNKNOWN = "icons/node/"
-            + "background_unknown.png";
+                + "background_unknown.png";
 
         private Label m_backgroundIcon;
 
@@ -501,6 +516,7 @@ public class NodeContainerFigure extends RectangleFigure {
             DelegatingLayout layout = new DelegatingLayout();
             setLayoutManager(layout);
             setOpaque(false);
+            setFill(false);
 
             // setLayoutManager(new BorderLayout());
 
@@ -973,5 +989,28 @@ public class NodeContainerFigure extends RectangleFigure {
     public String getCustomName() {
 
         return m_name.getText();
+    }
+
+    /**
+     * Marks this node parts figure. Used to hilite it from the rest of the
+     * parts.
+     * 
+     * @see NodeContainerFigure#unmark()
+     */
+    public void mark() {
+
+        m_contentFigure.setOpaque(true);
+        m_contentFigure.setBackgroundColor(ColorConstants.red);
+    }
+
+    /**
+     * Resets the marked figure.
+     * 
+     * @see NodeContainerFigure#mark()
+     */
+    public void unmark() {
+
+        m_contentFigure.setOpaque(false);
+        m_contentFigure.setBackgroundColor(ColorConstants.white);
     }
 }

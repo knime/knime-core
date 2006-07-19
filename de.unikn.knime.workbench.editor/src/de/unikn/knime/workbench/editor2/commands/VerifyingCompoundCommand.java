@@ -21,12 +21,15 @@
  */
 package de.unikn.knime.workbench.editor2.commands;
 
+import java.util.List;
+
 import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 
 import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Overrides the default <code>CompoundCommand</code> to add a verification
@@ -43,6 +46,11 @@ public class VerifyingCompoundCommand extends CompoundCommand {
      * The text to display in the verfication dialog.
      */
     private String m_dialogDisplayText;
+
+    /**
+     * The selected parts of this compound command.
+     */
+    private List<NodeContainerEditPart> m_nodeParts;
 
     /**
      * Constructs an empty CompoundCommand.
@@ -69,6 +77,11 @@ public class VerifyingCompoundCommand extends CompoundCommand {
      */
     public void execute() {
 
+        // before showing the confirmation dialog, mark the node part figures
+        for (NodeContainerEditPart nodePart : m_nodeParts) {
+            
+            nodePart.mark();
+        }
         // first create the verification dialog for confirmation of the
         // compound command
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
@@ -76,6 +89,12 @@ public class VerifyingCompoundCommand extends CompoundCommand {
         mb.setText("Confirm ...");
         mb.setMessage(m_dialogDisplayText);
         if (mb.open() != SWT.YES) {
+            
+            // in case the node are not supposed to delete unmark the nodes
+            for (NodeContainerEditPart nodePart : m_nodeParts) {
+                
+                nodePart.unmark();
+            }
             return;
         }
 
@@ -89,5 +108,14 @@ public class VerifyingCompoundCommand extends CompoundCommand {
      */
     public void setDialogDisplayText(final String dialogDisplayText) {
         m_dialogDisplayText = dialogDisplayText;
+    }
+
+    /**
+     * Sets the node parts affected by this compound command.
+     * 
+     * @param nodeParts the affected parts.
+     */
+    public void setNodeParts(List<NodeContainerEditPart> nodeParts) {
+        this.m_nodeParts = nodeParts;
     }
 }

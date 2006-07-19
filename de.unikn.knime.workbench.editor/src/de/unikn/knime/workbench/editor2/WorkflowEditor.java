@@ -919,6 +919,15 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         } catch (Exception e) {
             LOGGER.debug("Could not save workflow");
+
+            // inform the user
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Workflow could not be saved ...");
+            mb.setMessage("The workflow could not be saved. "
+                    + "Possibly the file was removed fromt the file "
+                    + "system, or the file is set read-only.");
+            mb.open();
         }
 
         try {
