@@ -20,11 +20,17 @@
  */
 package de.unikn.knime.core.node.property.hilite;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import de.unikn.knime.core.data.DataCell;
+import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.config.ConfigRO;
+import de.unikn.knime.core.node.config.ConfigWO;
 
 /**
  * A default mapper for hilite translation which holds a map from 
@@ -64,5 +70,46 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
      */
     public Set<DataCell> keySet() {
         return Collections.unmodifiableSet(m_map.keySet());
+    }
+    
+    
+    private static final String CFG_MAPPED_KEYS = "CFG_MAPPED_KEYS";
+
+    /**
+     * Saves the settings in this mapper to a config object. Note that it writes
+     * directly to the passed root node of the config tree. It's good practice
+     * to open an local config object on which this method is invoked.
+     * @param config The config to write to.
+     */
+    public void save(final ConfigWO config) {
+        for (DataCell key : keySet()) {
+            Set<DataCell> mappedKey = getKeys(key);
+            ConfigWO keySettings = config.addConfig(key.toString());
+            keySettings.addDataCell(key.toString(), key);
+            keySettings.addDataCellArray(CFG_MAPPED_KEYS, 
+                    mappedKey.toArray(new DataCell[mappedKey.size()]));
+        }
+    }
+    
+    /** Restores the mapper from the config object that has been written using
+     * the save method.
+     * @param config To read from
+     * @return A new mapper based on the settings.
+     * @throws InvalidSettingsException If that fails.
+     */
+    public static DefaultHiLiteMapper load(final ConfigRO config) 
+        throws InvalidSettingsException {
+        // load hilite mapping
+        LinkedHashMap<DataCell, Set<DataCell>> mapping 
+            = new LinkedHashMap<DataCell, Set<DataCell>>();
+        for (String key : config.keySet()) {
+            ConfigRO keySettings = config.getConfig(key);
+            DataCell cellKey = keySettings.getDataCell(key);
+            DataCell[] mappedKeys = keySettings.getDataCellArray(
+                    CFG_MAPPED_KEYS);
+            mapping.put(cellKey, new LinkedHashSet<DataCell>(
+                    Arrays.asList(mappedKeys)));
+        }
+        return new DefaultHiLiteMapper(mapping);
     }
 }
