@@ -77,6 +77,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -428,8 +429,12 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // first of all close all child editors
         for (MetaWorkflowEditor metaWorkflowEditor : m_childEditors) {
-            PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                    .getActivePage().closeEditor(metaWorkflowEditor, false);
+
+            IWorkbenchPage page = PlatformUI.getWorkbench()
+                    .getActiveWorkbenchWindow().getActivePage();
+            if (page != null) {
+                page.closeEditor(metaWorkflowEditor, false);
+            }
         }
 
         m_manager.closeAllViews();
