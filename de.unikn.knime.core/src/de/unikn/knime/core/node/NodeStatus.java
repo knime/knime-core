@@ -166,6 +166,23 @@ public abstract class NodeStatus {
          */
         public ExtrainfoChanged(final String messsage) { super(messsage); }
     }
+
+    /** Indicates that the execution of the node has been canceled by the
+     *  user. */
+    public static class ExecutionCanceled extends NodeStatus {
+        /**
+         * Creates a new "extra info changed" node status.
+         */
+        public ExecutionCanceled() { super(); }
+
+        /**
+         * Creates a new "extra info changed" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public ExecutionCanceled(final String messsage) { super(messsage); }
+    }
+
     
     /** The internal message to show or null if not available. */
     private final String m_message;

@@ -139,6 +139,8 @@ public class MetaNodeModel extends SpecialNodeModel
         return outspecs;
     }
 
+    private boolean m_innerExecCanceled;
+    
     /**
      * During execute, the inData <code>DataTables</code> are passed on to the 
      * <code>MetaInputNode</code>s.
@@ -150,6 +152,7 @@ public class MetaNodeModel extends SpecialNodeModel
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        m_innerExecCanceled = false;
         exec.setMessage("Executing inner workflow");
         
         KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
@@ -157,6 +160,9 @@ public class MetaNodeModel extends SpecialNodeModel
                 internalWFM().executeAll(true);
             }
         });
+        if (m_innerExecCanceled) {
+            throw new CanceledExecutionException("Inner node canceled");
+        }
         exec.checkCanceled();
         
         // translate output
@@ -227,9 +233,12 @@ public class MetaNodeModel extends SpecialNodeModel
     protected void reset() {        
         if (!m_resetFromInterior && (internalWFM() != null)) {
             try {
+                m_resetFromInterior = true;
                 internalWFM().resetAndConfigureAll();
             } catch (WorkflowInExecutionException ex) {
                 LOGGER.error("Could not reset meta node", ex);
+            } finally {
+                m_resetFromInterior = false;
             }
         }
     }
@@ -299,6 +308,8 @@ public class MetaNodeModel extends SpecialNodeModel
             notifyStateListeners(new NodeStatus.ExtrainfoChanged());
         } else if (event instanceof WorkflowEvent.ConnectionExtrainfoChanged) {
             notifyStateListeners(new NodeStatus.ExtrainfoChanged());
+        } else if (event instanceof WorkflowEvent.NodeAdded) {
+            ((NodeContainer) event.getNewValue()).addListener(this);
         }
     }
 
@@ -485,27 +496,30 @@ public class MetaNodeModel extends SpecialNodeModel
     public void stateChanged(final NodeStatus state, final int id) {
         boolean outNode = false;
         for (NodeContainer nc : m_dataOutContainer) {
-            if (nc.getID() == id) {
+            if ((nc != null) && (nc.getID() == id)) {
                 outNode = true;
                 break;
             }
         }
         
         for (NodeContainer nc : m_modelOutContainer) {
-            if (nc.getID() == id) {
+            if ((nc != null) && (nc.getID() == id)) {
                 outNode = true;
                 break;
             }
         }
 
         if (((state instanceof NodeStatus.Reset)
-                || (state instanceof NodeStatus.Configured)) && outNode) {
+                || (state instanceof NodeStatus.Configured)) && outNode
+                && !m_resetFromInterior) {
             m_resetFromInterior = true;
             try {
                 resetMyself();
             } finally {
                 m_resetFromInterior = false;
             }
+        } else if (state instanceof NodeStatus.ExecutionCanceled) {
+            m_innerExecCanceled = true;
         }
     }
 

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -96,6 +97,28 @@ public class WorkflowManager implements WorkflowListener {
      * @author Thorsten Meinl, University of Konstanz
      */
     private class WorkflowExecutor implements NodeStateListener {
+        private class MyNodePM extends DefaultNodeProgressMonitor {
+            private final NodeContainer m_node;
+
+            public MyNodePM(final NodeContainer node) {
+                m_node = node;
+            }
+
+            @Override
+            public synchronized void setExecuteCanceled() {
+                super.setExecuteCanceled();
+                if (m_runningNodes.containsKey(m_node)) {
+                    for (NodeContainer succ : m_node.getAllSuccessors()) {
+                        if (m_waitingNodes.remove(succ) != null) {
+                            fireWorkflowEvent(new WorkflowEvent.NodeFinished(
+                                    succ.getID(), null, null));
+                        }
+                    }
+                }
+
+            }
+        }
+
         private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = new HashMap<NodeContainer, NodeProgressMonitor>(),
                 m_waitingNodes = new HashMap<NodeContainer, NodeProgressMonitor>();
 
@@ -107,10 +130,10 @@ public class WorkflowManager implements WorkflowListener {
         public void addWaitingNodes(final Collection<NodeContainer> nodes) {
             synchronized (m_waitingNodes) {
                 boolean change = false;
-                for (NodeContainer nc : nodes) {
+                for (final NodeContainer nc : nodes) {
                     if (!m_waitingNodes.containsKey(nc)
                             && !m_runningNodes.containsKey(nc)) {
-                        DefaultNodeProgressMonitor pm = new DefaultNodeProgressMonitor();
+                        MyNodePM pm = new MyNodePM(nc);
                         m_waitingNodes.put(nc, pm);
                         fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc
                                 .getID(), nc, pm));
@@ -152,15 +175,22 @@ public class WorkflowManager implements WorkflowListener {
          */
         public void cancelExecution(final Collection<NodeContainer> nodes) {
             synchronized (m_waitingNodes) {
-                for (NodeContainer nc : nodes) {
-                    m_waitingNodes.remove(nc);
-                    fireWorkflowEvent(new WorkflowEvent.NodeFinished(
-                            nc.getID(), null, null));
-                }
-            }
+                Set<NodeContainer> cancelNodes = new HashSet<NodeContainer>();
+                cancelNodes.addAll(nodes);
 
-            for (NodeProgressMonitor pm : m_runningNodes.values()) {
-                pm.setExecuteCanceled();
+                for (NodeContainer nc : nodes) {
+                    if (m_runningNodes.containsKey(nc)) {
+                        m_runningNodes.get(nc).setExecuteCanceled();
+                        cancelNodes.addAll(nc.getAllSuccessors());
+                    }
+                }
+
+                for (NodeContainer nc : cancelNodes) {
+                    if (m_waitingNodes.remove(nc) != null) {
+                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
+                                .getID(), null, null));
+                    }
+                }
             }
         }
 
@@ -373,8 +403,7 @@ public class WorkflowManager implements WorkflowListener {
     private final Map<Integer, ConnectionContainer> m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
 
     // change listener support (transient) <= why? (tm)
-    private final transient ArrayList<WorkflowListener> m_eventListeners =
-        new ArrayList<WorkflowListener>();
+    private final transient ArrayList<WorkflowListener> m_eventListeners = new ArrayList<WorkflowListener>();
 
     private final WorkflowExecutor m_executor;
 
@@ -398,7 +427,7 @@ public class WorkflowManager implements WorkflowListener {
      */
     public WorkflowManager() {
         m_parent = null;
-        m_executor = new WorkflowExecutor(); 
+        m_executor = new WorkflowExecutor();
     }
 
     /**
@@ -1116,9 +1145,9 @@ public class WorkflowManager implements WorkflowListener {
             l.workflowChanged(event);
         }
 
-//        if (m_parent != null) {
-//            m_parent.fireWorkflowEvent(event);
-//        }
+        // if (m_parent != null) {
+        // m_parent.fireWorkflowEvent(event);
+        // }
     }
 
     /**
@@ -1345,8 +1374,8 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized void removeConnection(
             final ConnectionContainer connection)
             throws WorkflowInExecutionException {
-        checkForRunningNodes("Connection cannot be removed",
-                connection.getTarget());
+        checkForRunningNodes("Connection cannot be removed", connection
+                .getTarget());
 
         // if connection does not exist simply return
         if (!(m_connectionsByID.containsKey(connection.getID()))) {
@@ -1362,7 +1391,7 @@ public class WorkflowManager implements WorkflowListener {
         sourceNode.removeOutgoingConnection(portOut, targetNode);
         // remove incoming edge
         targetNode.removeIncomingConnection(portIn);
-        
+
         // cancel the disconnected node and all its sucessors
         // (this will only remove them from the queue as they are not executed;
         // this is caught in checkForRunningNodes)
@@ -1370,7 +1399,7 @@ public class WorkflowManager implements WorkflowListener {
         cancelNodes.add(targetNode);
         cancelNodes.addAll(targetNode.getAllSuccessors());
         m_executor.cancelExecution(cancelNodes);
-        
+
         // also disconnect the two underlying Nodes.
         targetNode.disconnectPort(portIn);
         // finally remove connection from internal list

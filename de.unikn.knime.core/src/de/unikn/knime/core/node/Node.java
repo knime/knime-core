@@ -783,32 +783,33 @@ public final class Node {
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
-            this.resetAndConfigure();
-            m_status = new NodeStatus.Warning("Execution canceled!");
+            resetAndConfigure();
+            m_status = new NodeStatus.ExecutionCanceled("Execution canceled");
             return false;
         } catch (AssertionError ae) {
             m_logger.assertLog(false, ae.getMessage(), ae);
-            this.resetAndConfigure();
+            resetAndConfigure();
             m_status = new NodeStatus.Error(
                     "Execute failed: " + ae.getMessage());
-            this.notifyStateListeners(m_status);
             return false;
         } catch (Error e) {
             // some other error - should never happen!
             m_logger.fatal("Fatal error", e);
-            this.resetAndConfigure();
+            resetAndConfigure();
             m_status = new NodeStatus.Error(
                     "Execute failed: " + e.getMessage());
-            this.notifyStateListeners(m_status);
             return false;
         } catch (Exception e) {
             // execution failed
             m_logger.error("Execute failed", e);
-            this.resetAndConfigure();
+            resetAndConfigure();
             m_status = new NodeStatus.Error(
-                    "Execute failed: " + e.getMessage());
-            this.notifyStateListeners(m_status);
+                    "Execute failed: " + e.getMessage());            
             return false;
+        } finally {
+            if (m_status != null) {
+                notifyStateListeners(m_status);    
+            }
         }
 
         // check created predictor models (if any)
@@ -880,13 +881,13 @@ public final class Node {
      * order to reset the underlying model. The <code>#isExecuted()</code>
      * method will return <code>false</code> after this call.
      * 
-     * @see #reset()
+     * @see #reset(boolean)
      * @see #configure()
      */
     public void resetAndConfigure() {
         // reset
         try {
-            reset();
+            reset(false);
         } catch (Exception e) {
             m_logger.error("Reset failed", e);
             m_status = new NodeStatus.Warning(
@@ -895,24 +896,24 @@ public final class Node {
             m_logger.fatal("Reset failed", e);
             m_status = new NodeStatus.Warning(
                     "Reset failed: " + e.getMessage());
-        } finally {
-            notifyStateListeners(new NodeStatus.Reset("Not configured."));
-            notifyStateListeners(m_status);
         }
+        
         // configure
         try {
             configure();
         } catch (Exception e) {
             m_logger.error("Configure failed", e);
+            
+            notifyStateListeners(new NodeStatus.Reset("Not configured."));
             m_status = new NodeStatus.Warning(
                     "Configure failed: " + e.getMessage());
         } catch (Error e) {
             m_logger.fatal("Configure failed", e);
+            notifyStateListeners(new NodeStatus.Reset("Not configured."));
             m_status = new NodeStatus.Warning(
-                    "Configure failed: " + e.getMessage());
+                    "Configure failed: " + e.getMessage());            
         } finally {
-            notifyStateListeners(new NodeStatus.Configured("Configured."));
-            notifyStateListeners(m_status);
+            if (m_status != null) { notifyStateListeners(m_status); }
         }
     }
 
@@ -920,8 +921,11 @@ public final class Node {
      * Resets this node with out re-configuring it. All connected nodes will be
      * reset, as well as the <code>DataTable</code>s and
      * <code>PredictParams</code> at the outports.
+     * 
+     * @param sendEvent <code>true</code> if an {@link NodeStatus.Reset} event
+     * should be fired, <code>false</code> otherwise
      */
-    private void reset() {
+    private void reset(final boolean sendEvent) {
         m_logger.info("reset");
         // if reset had no exception, reset node status
         m_status = null;
@@ -963,11 +967,13 @@ public final class Node {
                         + " settings into the node.");
             }
         }
-        
-        // notify about the new status or send warning if something failed 
-        notifyStateListeners(new NodeStatus.Reset());
-        if (m_status != null) {
-            notifyStateListeners(m_status);
+
+        if (sendEvent) {
+            // notify about the new status or send warning if something failed 
+            notifyStateListeners(new NodeStatus.Reset());
+            if (m_status != null) {
+                notifyStateListeners(m_status);
+            }
         }
     }
 
@@ -978,7 +984,7 @@ public final class Node {
      */
     public void detach() {
         // reset this node first
-        reset();
+        reset(true);
         // close and unregister all views
         NodeView[] views = m_model.getViews().toArray(new NodeView[0]);
         for (NodeView view : views) {
@@ -1030,6 +1036,11 @@ public final class Node {
             inportHasNewHiLiteHandler(inPortID);
             // also get a new DataTableSpec, if available
             inportHasNewTableSpec(inPortID);
+            
+            if (((DataOutPort) m_inDataPorts[inPortID].getConnectedPort())
+                    .getBufferedDataTable() != null) {
+                inportHasNewDataTable(inPortID);
+            }
         } else {
             inportHasNewModelContent(inPortID);
         }
@@ -1046,7 +1057,7 @@ public final class Node {
     void inportWasDisconnected(final int inPortID) {
         boundInPort(inPortID);
         // call reset
-        reset();
+        reset(true);
 
         if (isDataInPort(inPortID)) {
             // reset hilite handler in this node.
@@ -1128,7 +1139,7 @@ public final class Node {
         // data tables specs are propagated through data ports only
         boundDataInPort(inPortID);
         if (isExecuted()) {
-            reset();
+            reset(true);
         }
 
         if (m_model instanceof SpecialNodeModel) {
@@ -1153,7 +1164,7 @@ public final class Node {
         // Predictor params are propagated through model ports only
         boundModelContentInPort(inPortID);
         if (isExecuted()) {
-            reset();
+            reset(true);
         }
         try {
             int realId = inPortID - getNrDataInPorts();
@@ -1246,7 +1257,7 @@ public final class Node {
             // call configure model to create output table specs
             DataTableSpec[] newSpecs = m_model.configureModel(inSpecs);
             // notify state listeners before the new specs are propagated
-            this.notifyStateListeners(new NodeStatus.Configured("Configured"));
+            notifyStateListeners(new NodeStatus.Configured("Configured"));
             /*
              * set the new specs in the output ports, which will propagate them
              * to connected successor nodes
@@ -1257,13 +1268,13 @@ public final class Node {
             }
         } catch (InvalidSettingsException ise) {
             m_logger.warn("Configure failed: " + ise.getMessage());
-            reset();
+            reset(true);
         } catch (Exception e) {
             m_logger.error("Configure failed", e);
-            reset();
+            reset(true);
         } catch (Error e) {
             m_logger.fatal("Configure failed", e);
-            reset();
+            reset(true);
         } finally {
             processModelWarnings();
         }

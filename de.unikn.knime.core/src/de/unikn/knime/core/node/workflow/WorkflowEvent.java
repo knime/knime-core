@@ -39,8 +39,8 @@ public abstract class WorkflowEvent {
          * Creates a new "node added" event.
          *  
          * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
+         * @param oldValue <code>null</code>
+         * @param newValue the newly created {@link NodeContainer}
          */
         public NodeAdded(final int nodeID, final Object oldValue,
                 final Object newValue) {
