@@ -64,6 +64,8 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     private DecSepPanel m_decSepPanel;
 
+    private IgnoreDelimsPanel m_ignoreDelimsPanel;
+
     /**
      * This is the default constructor.
      * 
@@ -100,6 +102,7 @@ public class FileReaderAdvancedDialog extends JDialog {
     void overrideSettings(final FileReaderNodeSettings settings) {
         getQuotePanel().overrideSettings(settings);
         getDecSepPanel().overrideSettings(settings);
+        getIngoreWSatEORPanel().overrideSettings(settings);
     }
 
     /**
@@ -267,6 +270,13 @@ public class FileReaderAdvancedDialog extends JDialog {
         
     }
     
+    private IgnoreDelimsPanel getIngoreWSatEORPanel() {
+        if (m_ignoreDelimsPanel == null) {
+            m_ignoreDelimsPanel = new IgnoreDelimsPanel(m_settings);
+        }
+        return m_ignoreDelimsPanel;
+    }
+    
     /**
      * This method initializes jTabbedPane.
      * 
@@ -279,6 +289,8 @@ public class FileReaderAdvancedDialog extends JDialog {
                     "Adjust settings for quote characters here");
             m_jTabbedPane.addTab("Decimal Separator", null, getDecSepPanel(), 
                     "Set the decimal separator here");
+            m_jTabbedPane.addTab("Ingore spaces", null, getIngoreWSatEORPanel(),
+                    "Ignore extra whitespaces at end of rows.");
         }
         return m_jTabbedPane;
     }

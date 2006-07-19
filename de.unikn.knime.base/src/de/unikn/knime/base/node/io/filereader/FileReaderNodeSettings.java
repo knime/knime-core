@@ -74,6 +74,10 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     private boolean m_hasRowHeadersIsSet;
 
     private boolean m_ignoreEmptyLinesIsSet;
+    
+    private boolean m_ignoreDelimsAtEndOfRowIsSet;
+    
+    private boolean m_delimsAtEOFUserValue;
 
     private boolean m_commentIsSet;
 
@@ -124,6 +128,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_delimIsSet = true;
         m_whiteIsSet = true;
         m_ignoreEmptyLinesIsSet = true;
+        m_ignoreDelimsAtEndOfRowIsSet = true;
+        m_delimsAtEOFUserValue = ignoreEmptyTokensAtEndOfRow();
         m_analyzedAllRows = false;
     }
 
@@ -138,6 +144,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_hasColHeadersIsSet = false;
         m_hasRowHeadersIsSet = false;
         m_ignoreEmptyLinesIsSet = false;
+        m_ignoreDelimsAtEndOfRowIsSet = false;
+        m_delimsAtEOFUserValue = false;
         m_commentIsSet = false;
         m_quoteIsSet = false;
         m_delimIsSet = false;
@@ -214,7 +222,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                                 + " are specified twice in the conf object.");
             }
 
-            m_columnProperties.set(pos, new ColProperty(cfg.getNodeSettings(key)));
+            m_columnProperties.set(pos, 
+                    new ColProperty(cfg.getNodeSettings(key)));
 
         }
 
@@ -755,6 +764,32 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     public boolean isWhiteSpaceUserSet() {
         return m_whiteIsSet;
     }
+    
+    /**
+     * Sets the "is user set" flag and stores the user value.
+     * 
+     * @param ignoreEm if true extra delims at the end of the row (in case of a
+     *            tab or space delim) will be ignored.
+     */
+    public void setIgnoreDelimsAtEndOfRowUserValue(final boolean ignoreEm) {
+        m_ignoreDelimsAtEndOfRowIsSet = true;
+        m_delimsAtEOFUserValue = ignoreEm;
+    }
+    
+    /**
+     * @return true, if user set the value for "ignore delims at end of row"
+     */
+    public boolean ignoreDelimsAtEORUserSet() {
+        return m_ignoreDelimsAtEndOfRowIsSet;
+    }
+    
+    /**
+     * @return the value the user chose for this flag.
+     */
+    public boolean ignoreDelimsAtEORUserValue() {
+        return m_delimsAtEOFUserValue;
+    }
+
 
     /**
      * @return the value of the analyze flag previously set. Or false by

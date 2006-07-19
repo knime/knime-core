@@ -92,7 +92,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private static final int PANEL_WIDTH = 5000;
 
     private static final Delimiter[] DEFAULT_DELIMS = new Delimiter[]{
-            // the <none> MUST be the first one!!!
+            // the <none> MUST be the first one (index zero!)!!!
             new Delimiter("<none>", false, false, false),
             new Delimiter(",", false, false, false),
             new Delimiter(" ", true, false, false),
@@ -190,6 +190,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         m_dialogPanel.add(Box.createVerticalGlue());
         super.addTab("Settings", m_dialogPanel);
+        System.out.println("CWD: '" + System.getProperty("user.dir") + "'");
     }
 
     private JPanel createFileNamePanel() {
@@ -672,48 +673,61 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             }
             m_frSettings.removeDelimiterPattern(delim.getDelimiter());
         }
-
+        m_frSettings.setIgnoreEmptyTokensAtEndOfRow(false);
+        
+        
         // now set the selected one
-        String delimStr = null;
-        if (m_delimField.getSelectedIndex() > -1) {
-            // user selected one from the list (didn't edit a new one)
-            if (m_delimField.getSelectedIndex() >= 0) {
-                // index 0 is the <none> placeholder
+
+        // index 0 is the <none> placeholder
+        if (m_delimField.getSelectedIndex() != 0) {
+            
+            String delimStr = null;
+            if (m_delimField.getSelectedIndex() > -1) {
+                // user selected one from the list (didn't edit a new one)
                 try {
                     // add that delimiter:
-                    Delimiter selDelim = 
-                        (Delimiter)m_delimField.getSelectedItem();
-                    // here comes the trick: if user choses space or tab from 
-                    // the list we use it as defined in the DEFAULT_DELIMS (i.e.
-                    // ignoring consecutive spaces). If he enteres a space in
-                    // the combobox, we create a new delimiter (in the else
-                    // branch down there) and do not combine consecutives!)
-                    m_frSettings.addDelimiterPattern(selDelim.getDelimiter(),
-                            selDelim.combineConsecutiveDelims(), 
-                            selDelim.returnAsToken(), 
-                            selDelim.includeInToken());
+                    Delimiter selDelim = (Delimiter)m_delimField
+                            .getSelectedItem();
+                    delimStr = selDelim.getDelimiter();
+                    m_frSettings
+                            .addDelimiterPattern(delimStr,
+                                    selDelim.combineConsecutiveDelims(),
+                                    selDelim.returnAsToken(), selDelim
+                                            .includeInToken());
                 } catch (IllegalArgumentException iae) {
                     setErrorLabelText(iae.getMessage());
                     m_insideDelimChange = false;
                     return;
                 }
-            }
-        } else {
-            delimStr = (String)m_delimField.getSelectedItem();
-            delimStr = FileTokenizerSettings.unescapeString(delimStr);
 
-            if ((delimStr != null) && (!delimStr.equals(""))) {
-                try {
-                    m_frSettings.addDelimiterPattern(delimStr, false, false,
-                            false);
-                } catch (IllegalArgumentException iae) {
-                    setErrorLabelText(iae.getMessage());
-                    m_insideDelimChange = false;
-                    return;
+            } else {
+                delimStr = (String)m_delimField.getSelectedItem();
+                delimStr = FileTokenizerSettings.unescapeString(delimStr);
+
+                if ((delimStr != null) && (!delimStr.equals(""))) {
+                    try {
+                        m_frSettings.addDelimiterPattern(delimStr, false,
+                                false, false);
+                    } catch (IllegalArgumentException iae) {
+                        setErrorLabelText(iae.getMessage());
+                        m_insideDelimChange = false;
+                        return;
+                    }
                 }
             }
+            
+            if ((delimStr != null)
+                    && (delimStr.equals(" ") || delimStr.equals("\t"))) {
+                // with whitespaces we ignore (by default) extra delims at EOR
+                if (m_frSettings.ignoreDelimsAtEORUserSet()) {
+                    m_frSettings.setIgnoreEmptyTokensAtEndOfRow(
+                            m_frSettings.ignoreDelimsAtEORUserValue());
+                } else {
+                    m_frSettings.setIgnoreEmptyTokensAtEndOfRow(true);
+                }
+            }
+            
         }
-
         analyzeDataFileAndUpdatePreview(true); // force re-analyze
         m_insideDelimChange = false;
     }
@@ -1357,7 +1371,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if ((url == null) || (url.equals(""))) {
             throw new MalformedURLException("Specify a not empty valid URL");
         }
-
+        
         URL newURL;
         try {
             newURL = new URL(url);

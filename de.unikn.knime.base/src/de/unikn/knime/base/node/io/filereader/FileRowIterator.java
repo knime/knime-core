@@ -230,7 +230,7 @@ final class FileRowIterator extends RowIterator {
         // In case we've seen a row delimiter before the row was complete:
         // puke and die
         int lineNr = m_tokenizer.getLineNumber();
-        if (token.equals("\n") && (lineNr > 0)) {
+        if ((lineNr > 0) && (token != null) && (token.equals("\n"))) {
             lineNr--;
         }  
         if (createdCols < noOfCols) {     

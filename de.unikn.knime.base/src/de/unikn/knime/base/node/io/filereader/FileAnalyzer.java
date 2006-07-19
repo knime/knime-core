@@ -1012,23 +1012,6 @@ public final class FileAnalyzer {
                 // seems they've added ',' as comment before - alright then.
             }
 
-            //
-            // try tab seperated columns
-            //
-            try {
-                result.removeAllDelimiters();
-                // make sure '\n' is a row delimiter. Always.
-                result.addRowDelimiter("\n", true);
-                
-                result.addDelimiterPattern("\t", true, false, false);
-                
-                if (testDelimiterSettingsSetColNum(result)) {
-                    return;
-                }
-            } catch (IllegalArgumentException iae) {
-                // seems they've added '\t' as comment before - alright then.
-            }
-
             // Try tab, ignoring additional tabs at the end of each line
             try {
                 result.removeAllDelimiters();
@@ -1047,22 +1030,24 @@ public final class FileAnalyzer {
             // restore it to false
             result.setIgnoreEmptyTokensAtEndOfRow(false);   
                             
-            
             //
-            // try space seperated columns
+            // try tab seperated columns
             //
             try {
                 result.removeAllDelimiters();
                 // make sure '\n' is a row delimiter. Always.
                 result.addRowDelimiter("\n", true);
-                result.addDelimiterPattern(" ", true, false, false);
-
+                
+                result.addDelimiterPattern("\t", true, false, false);
+                
                 if (testDelimiterSettingsSetColNum(result)) {
                     return;
                 }
             } catch (IllegalArgumentException iae) {
-                // seems we've added ' ' as comment before - alright then.
+                // seems they've added '\t' as comment before - alright then.
             }
+
+
             // Try space, ignoring additional tabs at the end of each line
             try {
                 result.removeAllDelimiters();
@@ -1080,6 +1065,22 @@ public final class FileAnalyzer {
             } 
             // restore it to false
             result.setIgnoreEmptyTokensAtEndOfRow(false);   
+            
+            //
+            // try space seperated columns
+            //
+            try {
+                result.removeAllDelimiters();
+                // make sure '\n' is a row delimiter. Always.
+                result.addRowDelimiter("\n", true);
+                result.addDelimiterPattern(" ", true, false, false);
+
+                if (testDelimiterSettingsSetColNum(result)) {
+                    return;
+                }
+            } catch (IllegalArgumentException iae) {
+                // seems we've added ' ' as comment before - alright then.
+            }
                         
 
             //
@@ -1121,7 +1122,12 @@ public final class FileAnalyzer {
             }
 
             result.setDelimiterUserSet(true);
-                        
+            result.setIgnoreEmptyTokensAtEndOfRow(
+                    userSettings.ignoreEmptyTokensAtEndOfRow());
+            if (userSettings.ignoreDelimsAtEORUserSet()) {
+                result.setIgnoreDelimsAtEndOfRowUserValue(
+                        userSettings.ignoreDelimsAtEORUserValue());
+            }
             // set the number of cols that we read in with user presets.
             // take the maximum if rows have different num of cols.
             result.setNumberOfColumns(getMaximumNumberOfColumns(result));
@@ -1166,17 +1172,14 @@ public final class FileAnalyzer {
         int linesRead = 0;
         int columns = 0; // column counter per line
         int numOfCols = -1; // num of cols with these settings
-        int maxNumOfCols = -1; // num of cols including some emtpy tokens at EOR
+        int maxNumOfCols = -1; // num of cols including some emtpy tokens at
+                                // EOR
         boolean useSettings = false; // set it true to use these settings.
         int consEmptyTokens = 0; // consecutive empty tokens read
-        
+
         while (true) {
 
             String token = tokenizer.nextToken();
-            if (token == null) {
-                // seen end of file.
-                break;
-            }
             if (!settings.isRowDelimiter(token)) {
 
                 columns++;
@@ -1187,63 +1190,70 @@ public final class FileAnalyzer {
                 } else {
                     consEmptyTokens = 0;
                 }
-                
+
             } else {
-                if (columns == 0) {
+                if (columns > 0) {
                     // ignore empty lines
-                    continue;
-                }
 
-                linesRead++;
+                    linesRead++;
 
-                if (linesRead > 1) {
-                    if (numOfCols < 1) {
-                        // this is the first line we are counting columns for
-                        if (settings.ignoreEmptyTokensAtEndOfRow()) {
-                            // these are the "hard" columns we need
-                            numOfCols = columns - consEmptyTokens;
-                            // we could fill up to this number with empty tokens
-                            maxNumOfCols = columns;
-                        } else {
-                            numOfCols = columns;
-                        }
-                        if (numOfCols > 1) {
-                            // if we get more than one col settings look
-                            // reasonable
-                            useSettings = true;
-                        }
-                    } else {
-                        if (settings.ignoreEmptyTokensAtEndOfRow()) {
-                            if ((columns - consEmptyTokens) > maxNumOfCols) {
-                                // we read more non-emtpy columns than we could
-                                // fill (in other rows) with emtpy tokens
-                                useSettings = false;
-                                break;
-                            }
-                            if (columns < numOfCols) {
-                                // even with empty tokens this line has not 
-                                // ebough columns
-                                useSettings = false;
-                                break;
-                            }
-                            if (columns < maxNumOfCols) {
-                                // "maxNumOfCols" is the maximum number all rows
-                                // can deliver.
-                                maxNumOfCols = columns;
-                            }
-                            if ((columns - consEmptyTokens) > numOfCols) {
-                                // Adjust the number of "hard" columns
+                    if (linesRead > 1) {
+                        if (numOfCols < 1) {
+                            // this is the first line we are counting columns
+                            // for
+                            if (settings.ignoreEmptyTokensAtEndOfRow()) {
+                                // these are the "hard" columns we need
                                 numOfCols = columns - consEmptyTokens;
+                                // we could fill up to this number with empty
+                                // tokens
+                                maxNumOfCols = columns;
+                            } else {
+                                numOfCols = columns;
                             }
-                            // "hard" columns must be less than the soft cols
-                            assert numOfCols <= maxNumOfCols;
+                            if (numOfCols > 1) {
+                                // if we get more than one col settings look
+                                // reasonable
+                                useSettings = true;
+                            }
                         } else {
-                            // make sure we always get the same number of cols
-                            if (columns != numOfCols) {
-                                // not good. Getting different number of cols in
-                                // different lines.
-                                useSettings = false;
-                                break;
+                            if (settings.ignoreEmptyTokensAtEndOfRow()) {
+                                if ((columns - consEmptyTokens) 
+                                        > maxNumOfCols) {
+                                    // we read more non-emtpy columns than we
+                                    // could
+                                    // fill (in other rows) with emtpy tokens
+                                    useSettings = false;
+                                    break;
+                                }
+                                if (columns < numOfCols) {
+                                    // even with empty tokens this line has not
+                                    // ebough columns
+                                    useSettings = false;
+                                    break;
+                                }
+                                if (columns < maxNumOfCols) {
+                                    // "maxNumOfCols" is the maximum number all
+                                    // rows
+                                    // can deliver.
+                                    maxNumOfCols = columns;
+                                }
+                                if ((columns - consEmptyTokens) > numOfCols) {
+                                    // Adjust the number of "hard" columns
+                                    numOfCols = columns - consEmptyTokens;
+                                }
+                                // "hard" columns must be less than the soft
+                                // cols
+                                assert numOfCols <= maxNumOfCols;
+                            } else {
+                                // make sure we always get the same number of
+                                // cols
+                                if (columns != numOfCols) {
+                                    // not good. Getting different number of
+                                    // cols in
+                                    // different lines.
+                                    useSettings = false;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1254,6 +1264,10 @@ public final class FileAnalyzer {
                 if (linesRead == NUMOFLINES) {
                     // seen enough lines.
                     settings.setAnalyzeUsedAllRows(false);
+                    break;
+                }
+                if (token == null) {
+                    // seen end of file.
                     break;
                 }
             }
@@ -1295,7 +1309,8 @@ public final class FileAnalyzer {
         int linesRead = 0;
         int colCount = 0; // the counter per line
         int numOfCols = 0; // the maximum
-
+        int consEmptyTokens = 0; // consecutive emtpy tokens
+        
         while (true) {
 
             String token = tokenizer.nextToken();
@@ -1304,6 +1319,13 @@ public final class FileAnalyzer {
 
                 colCount++;
 
+                // keep track of the empty tokens read.
+                if (token.equals("") && !tokenizer.lastTokenWasQuoted()) {
+                    consEmptyTokens++;
+                } else {
+                    consEmptyTokens = 0;
+                }
+
             } else {
                 // null token (=EOF) is a row delimiter
                 if (colCount > 0) {
@@ -1311,13 +1333,19 @@ public final class FileAnalyzer {
                     linesRead++;
                 }
 
+                if (settings.ignoreEmptyTokensAtEndOfRow()) {
+                    // we are looking for the maximum - those emtpy tokens
+                    // should not contribute to it.
+                    colCount -= consEmptyTokens;
+                }
                 if (colCount > numOfCols) {
                     // we are supposed to return the maximum
                     numOfCols = colCount;
                 }
 
                 colCount = 0;
-
+                consEmptyTokens = 0;
+                
                 if (token == null) {
                     break;
                 }

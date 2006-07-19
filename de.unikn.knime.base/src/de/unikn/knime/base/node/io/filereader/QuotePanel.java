@@ -20,6 +20,7 @@ package de.unikn.knime.base.node.io.filereader;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
@@ -168,8 +169,16 @@ public class QuotePanel extends JPanel {
             m_qCtrlPanel = new JPanel();
             m_qCtrlPanel.setLayout(
                     new BoxLayout(m_qCtrlPanel, BoxLayout.Y_AXIS));
-            m_qCtrlPanel.add(getAddButton(), null);
-            m_qCtrlPanel.add(getRemoveButton(), null);
+            JPanel buttonBox = new JPanel(new GridLayout(0, 1));
+//            getAddButton().setPreferredSize(getRemoveButton().getSize());
+//            getAddButton().setMinimumSize(getRemoveButton().getSize());
+            buttonBox.add(getAddButton());
+            buttonBox.add(getRemoveButton());
+            buttonBox.setMaximumSize(new Dimension(120, 50));
+            buttonBox.setMinimumSize(new Dimension(120, 50));
+            m_qCtrlPanel.add(Box.createVerticalGlue());
+            m_qCtrlPanel.add(buttonBox);
+            m_qCtrlPanel.add(Box.createVerticalGlue());
         }
         return m_qCtrlPanel;
     }
@@ -463,7 +472,8 @@ public class QuotePanel extends JPanel {
                 settings.addQuotePattern(quotes, quotes);
             }
         }
-
+        // fix the settings.
+        settings.setQuoteUserSet(true);
     }
 
     /**
