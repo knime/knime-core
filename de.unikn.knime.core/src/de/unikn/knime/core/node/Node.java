@@ -279,7 +279,7 @@ public final class Node {
             final ExecutionContext exec) throws IOException, 
             InvalidSettingsException, CanceledExecutionException {
         assert exec != null;
-        m_status = null;
+        
         if (!nodeFile.isFile() || !nodeFile.canRead()) {
             m_model.setExecuted(false);
             throw new IOException(SETTINGS_FILE_NAME + " can't be read: " 
@@ -292,17 +292,6 @@ public final class Node {
 
         // read node name
         m_name = settings.getString(CFG_NAME);
-
-        // read configured flag
-        boolean wasConfigured = settings.getBoolean(CFG_ISCONFIGURED);
-        m_model.setConfigured(wasConfigured);
-        // read executed flag
-        boolean wasExecuted = settings.getBoolean(CFG_ISEXECUTED);
-        if (m_model.isAutoExecutable()) {
-            m_model.setExecuted(false);
-        } else {
-            m_model.setExecuted(wasExecuted);
-        }
 
         // read model and load settings
         try {
@@ -324,24 +313,22 @@ public final class Node {
             throw new InvalidSettingsException(e);
         }
 
-        m_nodeDir = nodeFile.getParentFile();
         
-        // if node was configured
-        if (isConfigured()) {
-            NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                String specName = spec.getString(CFG_OUTPUT_PREFIX + i);
-                File targetFile = new File(m_nodeDir, specName);
-                DataTableSpec outSpec = null;
-                if (targetFile.exists()) {
-                    NodeSettingsRO settingsSpec = NodeSettings.loadFromXML(
-                        new BufferedInputStream(
-                                new FileInputStream(targetFile)));
-                    outSpec = DataTableSpec.load(settingsSpec);
-                }
-                m_outDataPorts[i].setDataTableSpec(outSpec);
-            }
+
+        m_status = null;
+        // read configured flag
+        boolean wasConfigured = settings.getBoolean(CFG_ISCONFIGURED);
+        m_model.setConfigured(wasConfigured);
+        // read executed flag
+        boolean wasExecuted = settings.getBoolean(CFG_ISEXECUTED);
+        if (m_model.isAutoExecutable()) {
+            m_model.setExecuted(false);
+        } else {
+            m_model.setExecuted(wasExecuted);
         }
+
+
+        m_nodeDir = nodeFile.getParentFile();
         // load data if node was executed
         if (isExecuted()) {
             File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
@@ -370,10 +357,24 @@ public final class Node {
                 m_outModelPorts[i].setModelContent(pred);
             }
             m_isCurrentlySaved = true;
-        } else {
-            if (wasExecuted && m_model.isAutoExecutable()) {
-                execute(exec);
+        } else if (isConfigured()) {
+            NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                String specName = spec.getString(CFG_OUTPUT_PREFIX + i);
+                File targetFile = new File(m_nodeDir, specName);
+                DataTableSpec outSpec = null;
+                if (targetFile.exists()) {
+                    NodeSettingsRO settingsSpec = NodeSettings.loadFromXML(
+                        new BufferedInputStream(
+                                new FileInputStream(targetFile)));
+                    outSpec = DataTableSpec.load(settingsSpec);
+                }
+                m_outDataPorts[i].setDataTableSpec(outSpec);
             }
+        }
+        
+        if (wasExecuted && m_model.isAutoExecutable()) {
+            execute(exec);
         }
     }
 
