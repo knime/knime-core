@@ -12,7 +12,6 @@ Bundle-ClassPath: lib/junit.jar,
  knime-core.jar
 Provide-Package: de.unikn.knime.core.data,
  de.unikn.knime.core.data.container,
- de.unikn.knime.core.data.coordinate,
  de.unikn.knime.core.data.def,
  de.unikn.knime.core.data.property,
  de.unikn.knime.core.data.renderer,
