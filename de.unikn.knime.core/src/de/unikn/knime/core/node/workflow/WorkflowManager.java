@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -381,7 +382,7 @@ public class WorkflowManager implements WorkflowListener {
     private final Map<NodeContainer, Integer> m_idsByNode = new HashMap<NodeContainer, Integer>();
 
     // quick access to nodes by ID
-    private final Map<Integer, NodeContainer> m_nodesByID = new HashMap<Integer, NodeContainer>();
+    private final Map<Integer, NodeContainer> m_nodesByID = new LinkedHashMap<Integer, NodeContainer>();
 
     private final MyNodeStateListener m_nodeStateListener = new MyNodeStateListener();
 
@@ -1344,7 +1345,8 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized void removeConnection(
             final ConnectionContainer connection)
             throws WorkflowInExecutionException {
-        checkForRunningNodes("Connection cannot be removed");
+        checkForRunningNodes("Connection cannot be removed",
+                connection.getTarget());
 
         // if connection does not exist simply return
         if (!(m_connectionsByID.containsKey(connection.getID()))) {
@@ -1360,6 +1362,15 @@ public class WorkflowManager implements WorkflowListener {
         sourceNode.removeOutgoingConnection(portOut, targetNode);
         // remove incoming edge
         targetNode.removeIncomingConnection(portIn);
+        
+        // cancel the disconnected node and all its sucessors
+        // (this will only remove them from the queue as they are not executed;
+        // this is caught in checkForRunningNodes)
+        ArrayList<NodeContainer> cancelNodes = new ArrayList<NodeContainer>();
+        cancelNodes.add(targetNode);
+        cancelNodes.addAll(targetNode.getAllSuccessors());
+        m_executor.cancelExecution(cancelNodes);
+        
         // also disconnect the two underlying Nodes.
         targetNode.disconnectPort(portIn);
         // finally remove connection from internal list
