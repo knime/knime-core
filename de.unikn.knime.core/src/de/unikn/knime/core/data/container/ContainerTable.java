@@ -83,6 +83,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
+     * Do not call this method! Internal use!
      * @see KnowsRowCountTable#saveToFile(
      * File, NodeSettingsWO, ExecutionMonitor)
      */

@@ -594,7 +594,7 @@ public class DataContainer implements RowAppender {
      * @return The table contained in the zip file.
      * @throws IOException If that fails.
      */
-    public static DataTable readFromZip(final File zipFile) 
+    public static ContainerTable readFromZip(final File zipFile) 
         throws IOException {
         Buffer buffer = new Buffer(zipFile, /*ignoreMe*/false);
         return new ContainerTable(buffer);
