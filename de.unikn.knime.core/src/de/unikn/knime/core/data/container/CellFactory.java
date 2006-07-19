@@ -57,6 +57,8 @@ public interface CellFactory {
     /** This method is called when a row has been processed. It allows the 
      * implementor to set progress in the execution monitor and also some
      * meaningful progress message.
+     * <p>Note, you don't need to check <code>exec.checkCanceled()</code> in
+     * the implementation as this is done in the calling class.
      * @param curRowNr The number of the row just processed
      * @param rowCount The total number of rows.
      * @param lastKey The row's key.
