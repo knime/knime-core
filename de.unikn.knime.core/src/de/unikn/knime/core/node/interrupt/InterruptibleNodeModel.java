@@ -23,12 +23,9 @@
 package de.unikn.knime.core.node.interrupt;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionContext;
@@ -36,8 +33,6 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.NodeSettingsRO;
 
 /**
  * This class provides a generic implementation of a node that can be stopped
@@ -70,15 +65,15 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     
     private int m_iterationCounter = 0;
     
-    private DataTable[] m_inData;
+    private BufferedDataTable[] m_inData;
     
     private int m_delay = INITIAL_DELAY;
     
-    private static final String FILE_NAME = "interruptibleInput";
-    
-    private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
-    private static final String INTERN_CFG_ITERATION = "iteration";
-    private static final String INTERN_CFG_FINIS = "finished";
+//    private static final String FILE_NAME = "interruptibleInput";
+//    
+//    private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
+//    private static final String INTERN_CFG_ITERATION = "iteration";
+//    private static final String INTERN_CFG_FINIS = "finished";
     
     
     /**
@@ -233,7 +228,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @return - the input data as a whole.
      */
-    public DataTable[] getInputData() {
+    public BufferedDataTable[] getInputData() {
         return m_inData;
     }
     
@@ -320,7 +315,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) 
     throws IOException, CanceledExecutionException {
-        m_inData = new BufferedDataTable[getNrDataIns()];
+       /* m_inData = new BufferedDataTable[getNrDataIns()];
         for (int i = 0; i < getNrDataIns(); i++) {
             File f = new File(nodeInternDir, FILE_NAME + i);
             m_inData[i] = DataContainer.readFromZip(f);
@@ -334,7 +329,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             LOGGER.warn(ise.getMessage());
             throw new IOException(ise.getMessage());
-        }
+        }*/
     }
 
     /**
@@ -345,7 +340,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
-        for (int i = 0; i < m_inData.length; i++) {
+       /* for (int i = 0; i < m_inData.length; i++) {
             File f = new File(nodeInternDir, FILE_NAME + i);
             DataContainer.writeToZip(m_inData[i], f, exec);
         }
@@ -354,7 +349,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         internalSettings.addBoolean(INTERN_CFG_FINIS, m_finished);
         File f = new File(nodeInternDir, FILE_NAME);
         FileOutputStream fos = new FileOutputStream(f);
-        internalSettings.saveToXML(fos);
+        internalSettings.saveToXML(fos);*/
     }
     
     /**
@@ -379,7 +374,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * @throws InvalidSettingsException - if the inData doesn't fit the expected
      *             configuration.
      */
-    public abstract void init(final DataTable[] inData)
+    public abstract void init(final BufferedDataTable[] inData)
     throws InvalidSettingsException;
     
     /**
