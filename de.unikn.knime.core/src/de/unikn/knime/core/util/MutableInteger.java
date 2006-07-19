@@ -28,7 +28,7 @@ package de.unikn.knime.core.util;
  */
 public final class MutableInteger extends Number {
     private static final long serialVersionUID = -1576835000083239940L;
-    private int m_i;
+    private volatile int m_i;
     
     /**
      * Creates a new mutable integer.

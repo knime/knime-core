@@ -50,6 +50,7 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NodeStateListener;
 import de.unikn.knime.core.node.NodeStatus;
+import de.unikn.knime.core.util.MutableInteger;
 
 /**
  * Manager for a workflow holding Nodes and the connecting edge information. The
@@ -100,6 +101,12 @@ public class WorkflowManager implements WorkflowListener {
         private class MyNodePM extends DefaultNodeProgressMonitor {
             private final NodeContainer m_node;
 
+            /**
+             * Creates a new internal progress monitor for the workflow
+             * executor.
+             * 
+             * @param node the node
+             */
             public MyNodePM(final NodeContainer node) {
                 m_node = node;
             }
@@ -417,10 +424,10 @@ public class WorkflowManager implements WorkflowListener {
 
     private final WorkflowManager m_parent;
 
-    private volatile int m_runningConnectionID = -1;
+    private final MutableInteger m_runningConnectionID;
 
     // internal variables to allow generation of unique indices
-    private volatile int m_runningNodeID = 0;
+    private final MutableInteger m_runningNodeID;
 
     /**
      * Create new Workflow.
@@ -428,6 +435,8 @@ public class WorkflowManager implements WorkflowListener {
     public WorkflowManager() {
         m_parent = null;
         m_executor = new WorkflowExecutor();
+        m_runningConnectionID = new MutableInteger(-1);
+        m_runningNodeID = new MutableInteger(0);
     }
 
     /**
@@ -464,6 +473,8 @@ public class WorkflowManager implements WorkflowListener {
         m_parent = parent;
         m_parent.m_children.add(new WeakReference<WorkflowManager>(this));
         m_executor = m_parent.m_executor;
+        m_runningConnectionID = parent.m_runningConnectionID;
+        m_runningNodeID = parent.m_runningNodeID;
     }
 
     private void addConnection(final ConnectionContainer cc) {
@@ -524,7 +535,7 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         ConnectionContainer newConnection = new ConnectionContainer(
-                ++m_runningConnectionID, nodeOut, portOut, nodeIn, portIn);
+                m_runningConnectionID.inc(), nodeOut, portOut, nodeIn, portIn);
         addConnection(newConnection);
         return newConnection;
     }
@@ -549,7 +560,7 @@ public class WorkflowManager implements WorkflowListener {
      * @return the <code>NodeContainer</code> representing the created node
      */
     public synchronized NodeContainer addNewNode(final NodeFactory factory) {
-        final int newNodeID = ++m_runningNodeID;
+        final int newNodeID = m_runningNodeID.inc();
         assert (!m_nodesByID.containsKey(newNodeID));
         NodeContainer newNode = new NodeContainer(factory, this, newNodeID);
         LOGGER.debug("adding new node '" + newNode + "' to the workflow...");
@@ -725,8 +736,10 @@ public class WorkflowManager implements WorkflowListener {
         assert (m_nodesByID.size() == 0);
         assert (m_connectionsByID.size() == 0);
         assert (m_idsByNode.size() == 0);
-        m_runningConnectionID = -1;
-        m_runningNodeID = 0;
+        if (m_parent == null) {
+            m_runningConnectionID.setValue(-1);
+            m_runningNodeID.setValue(0);
+        }
     }
 
     /**
@@ -781,7 +794,7 @@ public class WorkflowManager implements WorkflowListener {
             }
 
             // create NodeContainer based on NodeSettings object
-            final int newId = ++m_runningNodeID;
+            final int newId = m_runningNodeID.inc();
             final NodeContainer newNode = new NodeContainer(nc, newId);
 
             idMap.put(nc.getID(), newId);
@@ -822,7 +835,7 @@ public class WorkflowManager implements WorkflowListener {
             }
 
             ConnectionContainer newConn = new ConnectionContainer(
-                    ++m_runningConnectionID, m_nodesByID.get(idMap
+                    m_runningConnectionID.inc(), m_nodesByID.get(idMap
                             .get(oldSourceID)), cc.getSourcePortID(),
                     m_nodesByID.get(idMap.get(oldTargetID)), cc
                             .getTargetPortID());
@@ -883,7 +896,7 @@ public class WorkflowManager implements WorkflowListener {
 
                 // remember temporarily the old id
                 final int oldId = nodeSetting.getInt(NodeContainer.KEY_ID);
-                final int newId = ++m_runningNodeID;
+                final int newId = m_runningNodeID.inc();
                 nodeSetting.addInt(NodeContainer.KEY_ID, newId);
                 final NodeContainer newNode = new NodeContainer(nodeSetting,
                         this);
@@ -940,7 +953,8 @@ public class WorkflowManager implements WorkflowListener {
                 }
 
                 ConnectionContainer cc = new ConnectionContainer(
-                        ++m_runningConnectionID, connectionConfig, this, idMap);
+                        m_runningConnectionID.inc(), connectionConfig, this,
+                        idMap);
                 addConnection(cc);
                 // add the id to the new ids
                 newConnectionIDs.add(cc.getID());
@@ -1314,8 +1328,10 @@ public class WorkflowManager implements WorkflowListener {
     private void load(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // read running ids for new nodes and connections
-        m_runningNodeID = settings.getInt(KEY_RUNNING_NODE_ID);
-        m_runningConnectionID = settings.getInt(KEY_RUNNING_CONN_ID);
+        if (m_parent == null) {
+            m_runningNodeID.setValue(settings.getInt(KEY_RUNNING_NODE_ID));
+            m_runningConnectionID.setValue(settings.getInt(KEY_RUNNING_CONN_ID));
+        }
 
         // read nodes
         NodeSettingsRO nodes = settings.getNodeSettings(KEY_NODES); // Node-Subconfig
@@ -1353,7 +1369,7 @@ public class WorkflowManager implements WorkflowListener {
             // and add appropriate connection to workflow
             ConnectionContainer cc = null;
             try {
-                cc = new ConnectionContainer(++m_runningConnectionID,
+                cc = new ConnectionContainer(m_runningConnectionID.inc(),
                         connectionConfig, this);
             } catch (InvalidSettingsException ise) {
                 LOGGER.warn("Could not create connection: " + connectionKey
@@ -1541,9 +1557,9 @@ public class WorkflowManager implements WorkflowListener {
         // workflow settings
         NodeSettings settings = new NodeSettings(WORKFLOW_FILE);
         // save current running id
-        settings.addInt(KEY_RUNNING_NODE_ID, m_runningNodeID);
+        settings.addInt(KEY_RUNNING_NODE_ID, m_runningNodeID.intValue());
         // save current connection id
-        settings.addInt(KEY_RUNNING_CONN_ID, m_runningConnectionID);
+        settings.addInt(KEY_RUNNING_CONN_ID, m_runningConnectionID.intValue());
         // save nodes in an own sub-config object as a series of configs
         NodeSettingsWO nodes = settings.addNodeSettings(KEY_NODES);
         int nodeNum = 0;
