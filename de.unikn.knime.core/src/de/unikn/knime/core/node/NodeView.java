@@ -572,7 +572,7 @@ public abstract class NodeView {
         }
 
         m_activeComp = cmp;
-        cmp.setBackground(COLOR_BACKGROUND);
+//        cmp.setBackground(COLOR_BACKGROUND);
         cont.add(m_activeComp, BorderLayout.CENTER);
 
         if (doPack) {
