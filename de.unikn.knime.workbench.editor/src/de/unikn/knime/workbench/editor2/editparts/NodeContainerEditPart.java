@@ -364,6 +364,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 } else if (state instanceof NodeStatus.Warning) {
                     fig.setState(NodeContainerFigure.STATE_WARNING, state
                             .getMessage());
+                } else if (state instanceof NodeStatus.ExecutionCanceled) {
+                    fig.setState(NodeContainerFigure.STATE_WARNING,
+                            state.getMessage() != null ? state.getMessage() 
+                                    : "Execution canceled");
                 } else if (state instanceof NodeStatus.Error) {
                     fig.setState(NodeContainerFigure.STATE_ERROR, state
                             .getMessage());

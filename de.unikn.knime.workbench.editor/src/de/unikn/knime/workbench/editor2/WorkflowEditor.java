@@ -1054,7 +1054,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
 
             DummyNodeJob job = new DummyNodeJob(nc.getNameWithID(), pm);
-            job.schedule();
+            job.schedule(10);
             m_dummyNodeJobs.put(event.getID(), job);
         } else if (event instanceof WorkflowEvent.NodeStarted) {
             // m_dummyNodeJobs.get(event.getID()).blabla();
