@@ -69,6 +69,8 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     
     private int m_delay = INITIAL_DELAY;
     
+    private ExecutionContext m_exec;
+    
 //    private static final String FILE_NAME = "interruptibleInput";
 //    
 //    private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
@@ -245,7 +247,8 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     public final BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         m_inData = inData;
-        init(inData);
+        m_exec = exec;
+        init(inData, exec);
         try {
             while (!isFinished()) {
                 exec.checkCanceled();
@@ -273,7 +276,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
                 } else if (!isPaused()) {
                     synchronized (this) {
                         // LOGGER.debug("execute one iteration");
-                        executeOneIteration();
+                        executeOneIteration(exec);
                         incrementIterationCounter();
                         if (getNumberOfIterations() % m_delay == 0) {
                             // LOGGER.debug("notify views at iteration nr.: "
@@ -353,6 +356,13 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     }
     
     /**
+     * @return the ExecutionContext of this Node.
+     */
+    public ExecutionContext getExecutionContext() {
+        return m_exec;
+    }
+    
+    /**
      * This method is assumed to implement one iteration of an interruptible
      * algorithm. Most of the data mining algorithm typically run in several
      * for- or while-clauses until they meet any stopping criteria. Here the
@@ -362,8 +372,13 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * any case implement in this method the content of the for- or
      * while-clause.
      * 
+     * @param exec the ExecutionContext to cancel the operation or show
+     * the progress.
+     * @throws CanceledExecutionException if the operation is canceled
+     * by the user.
      */
-    public abstract void executeOneIteration();
+    public abstract void executeOneIteration(final ExecutionContext exec)
+    throws CanceledExecutionException;
     
     /**
      * Do here the initialisation of the model. This method is called before
@@ -371,11 +386,16 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @param inData - the incoming DataTables at the moment the execute method
      *            starts.
+     * @param exec to show the progress of the initialization or to
+     *            cancel it.
+     *  @throws CanceledExecutionException if the operation is canceled by
+     *  the user.
      * @throws InvalidSettingsException - if the inData doesn't fit the expected
      *             configuration.
      */
-    public abstract void init(final BufferedDataTable[] inData)
-    throws InvalidSettingsException;
+    public abstract void init(final BufferedDataTable[] inData,
+            ExecutionContext exec) throws CanceledExecutionException,
+            InvalidSettingsException;
     
     /**
      * Is called at the end of the execute method when it is finished and the

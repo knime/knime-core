@@ -33,6 +33,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeView;
 
@@ -159,10 +161,17 @@ public abstract class InterruptibleNodeView extends NodeView implements
         } else if (e.getActionCommand().equals(InterruptControlPanel.NEXT)) {
             assert ((InterruptibleNodeModel)getNodeModel()).isPaused();
             LOGGER.debug("next step");
-            ((InterruptibleNodeModel)getNodeModel()).executeOneIteration();
-            ((InterruptibleNodeModel)getNodeModel())
-                    .incrementIterationCounter();
-            updateModel(getNodeModel());
+            ExecutionContext exec = ((InterruptibleNodeModel)getNodeModel())
+                    .getExecutionContext();
+            try {
+                ((InterruptibleNodeModel)getNodeModel())
+                        .executeOneIteration(exec);
+                ((InterruptibleNodeModel)getNodeModel())
+                        .incrementIterationCounter();
+                updateModel(getNodeModel());
+            } catch (CanceledExecutionException ce) {
+                LOGGER.info(ce);
+            }
         } else if (e.getActionCommand().equals(InterruptControlPanel.FINISH)) {
             LOGGER.debug("finish");
             ((InterruptibleNodeModel)getNodeModel()).finish();
