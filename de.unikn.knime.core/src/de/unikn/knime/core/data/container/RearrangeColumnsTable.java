@@ -198,7 +198,6 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
                     + "spec passed in the constructor.");
         }
         int size = includes.size();
-        DataTableSpec spec = rearranger.createSpec();
         ArrayList<DataColumnSpec> newColSpecsList = 
             new ArrayList<DataColumnSpec>();
         // the reduced set of SpecAndFactoryObject that models newly
@@ -284,17 +283,26 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         }
         boolean[] isFromRefTable = new boolean[size];
         int[] includesIndex = new int[size];
+        // create the new spec. Do not use rearranger.createSpec because
+        // that might lack the domain information!
+        DataColumnSpec[] colSpecs = new DataColumnSpec[size];
+        DataTableSpec fromBufferSpec = appendBuffer.getTableSpec();
         int newColIndex = 0;
         for (int i = 0; i < size; i++) {
             SpecAndFactoryObject c = includes.get(i);
             if (c.isNewColumn()) {
                 isFromRefTable[i] = false;
-                includesIndex[i] = newColIndex++;
+                includesIndex[i] = newColIndex;
+                colSpecs[i] = fromBufferSpec.getColumnSpec(newColIndex); 
+                newColIndex++;
             } else {
                 isFromRefTable[i] = true;
-                includesIndex[i] = c.getOriginalIndex();
+                int originalIndex = c.getOriginalIndex();
+                includesIndex[i] = originalIndex;
+                colSpecs[i] = originalSpec.getColumnSpec(originalIndex);
             }
         }
+        DataTableSpec spec = new DataTableSpec(colSpecs);
         assert newColCount == newColCount;
         return new RearrangeColumnsTable(
                 table, includesIndex, isFromRefTable, spec, appendBuffer);
