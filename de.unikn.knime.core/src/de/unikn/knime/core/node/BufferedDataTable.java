@@ -26,12 +26,11 @@ import java.util.HashMap;
 
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.KnowsRowCount;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.container.ContainerTable;
 import de.unikn.knime.core.data.container.DataContainer;
-import de.unikn.knime.core.data.container.TableSpecReplacerTable;
 import de.unikn.knime.core.data.container.RearrangeColumnsTable;
+import de.unikn.knime.core.data.container.TableSpecReplacerTable;
 import de.unikn.knime.core.util.FileUtil;
 
 /**
@@ -49,7 +48,7 @@ import de.unikn.knime.core.util.FileUtil;
  * 
  * @author wiswedel, University of Konstanz
  */
-public final class BufferedDataTable implements DataTable, KnowsRowCount {
+public final class BufferedDataTable implements DataTable {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(BufferedDataTable.class);

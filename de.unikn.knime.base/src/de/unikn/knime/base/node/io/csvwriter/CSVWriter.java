@@ -30,9 +30,9 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.KnowsRowCount;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.StringValue;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeLogger;
@@ -115,8 +115,8 @@ public class CSVWriter extends BufferedWriter {
         // write data
         int i = 0;
         int rowCnt = -1;
-        if (table instanceof KnowsRowCount) {
-            rowCnt = ((KnowsRowCount)table).getRowCount();
+        if (table instanceof BufferedDataTable) {
+            rowCnt = ((BufferedDataTable)table).getRowCount();
         }
         for (RowIterator it = table.iterator(); it.hasNext(); i++) {
             final DataRow next = it.next();

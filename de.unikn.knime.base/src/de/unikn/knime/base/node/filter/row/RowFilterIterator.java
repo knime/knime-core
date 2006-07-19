@@ -7,8 +7,8 @@ import de.unikn.knime.base.node.filter.row.rowfilter.IncludeFromNowOn;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.KnowsRowCount;
 import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 
@@ -74,8 +74,8 @@ public class RowFilterIterator extends RowIterator {
         m_filter = filter;
         m_orig = origTable.iterator();
         int count = -1;
-        if (origTable instanceof KnowsRowCount) { 
-            count = ((KnowsRowCount) origTable).getRowCount();
+        if (origTable instanceof BufferedDataTable) { 
+            count = ((BufferedDataTable) origTable).getRowCount();
         }
         m_totalCountInOrig = count;
         m_exec = exec == null ? new ExecutionMonitor() : exec;
