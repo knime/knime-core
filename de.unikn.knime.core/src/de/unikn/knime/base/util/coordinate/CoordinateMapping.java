@@ -17,7 +17,7 @@
  * History
  *   02.02.2006 (sieb): created
  */
-package de.unikn.knime.core.data.coordinate;
+package de.unikn.knime.base.util.coordinate;
 
 /**
  * Abstract class describing a coordinate mapping. A coordinate mapping

@@ -17,7 +17,7 @@
  * History
  *   01.02.2006 (sieb): created
  */
-package de.unikn.knime.core.data.coordinate;
+package de.unikn.knime.base.util.coordinate;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -154,7 +154,7 @@ public class NominalCoordinate extends Coordinate {
      * Calculates a numeric mapping assuming a column with a given number of
      * possible values.
      * 
-     * @see de.unikn.knime.core.data.coordinate.Coordinate#
+     * @see de.unikn.knime.base.util.coordinate.Coordinate#
      *      calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
      *      boolean)
      */
@@ -190,7 +190,7 @@ public class NominalCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.core.data.coordinate.Coordinate#isNominal()
+     * @see de.unikn.knime.base.util.coordinate.Coordinate#isNominal()
      */
     @Override
     public boolean isNominal() {

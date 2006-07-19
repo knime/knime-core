@@ -17,7 +17,7 @@
  * History
  *   01.02.2006 (sieb): created
  */
-package de.unikn.knime.core.data.coordinate;
+package de.unikn.knime.base.util.coordinate;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -502,7 +502,7 @@ public class NumericCoordinate extends Coordinate {
     /**
      * Calculates a numeric mapping assuming a <code>DoubleDataCell</code>.
      * 
-     * @see de.unikn.knime.core.data.coordinate.Coordinate
+     * @see de.unikn.knime.base.util.coordinate.Coordinate
      *  #calculateMappedValue(de.unikn.knime.core.data.DataCell,double, boolean)
      */
     @Override
@@ -535,7 +535,7 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.core.data.coordinate.Coordinate#isNominal()
+     * @see de.unikn.knime.base.util.coordinate.Coordinate#isNominal()
      */
     @Override
     public boolean isNominal() {
@@ -545,7 +545,7 @@ public class NumericCoordinate extends Coordinate {
     /**
      * A numeric coordinate does not has a unused distance range.
      * 
-     * @see de.unikn.knime.core.data.coordinate.Coordinate
+     * @see de.unikn.knime.base.util.coordinate.Coordinate
      *  #getUnusedDistBetweenTicks(double)
      */
     @Override

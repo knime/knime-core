@@ -17,7 +17,7 @@
  * History
  *   02.02.2006 (sieb): created
  */
-package de.unikn.knime.core.data.coordinate;
+package de.unikn.knime.base.util.coordinate;
 
 /**
  * Holds the original value according to the domain and its mapping.

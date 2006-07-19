@@ -17,26 +17,24 @@
  * History
  *   02.02.2006 (sieb): created
  */
-package de.unikn.knime.core.data.coordinate;
+package de.unikn.knime.base.util.coordinate;
 
 /**
- * Enumeration of all available policies determine the position of ticks
- * of a <code>NumericCoordinate</code>.
+ * Holds the nominal domain value according its mapping.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public enum NumericTickPolicy {
-    
+public class NominalCoordinateMapping extends CoordinateMapping {
+
     /**
-     * The policy which sets a tick at the first and last domain value.
-     * In between the ticks are distributed equally with a minimum distance
-     * defined in <code>Coordinate.DEFAULT_ABSOLUTE_TICK_DIST</code>.
+     * Constructs a coordinate mapping.
+     * 
+     * @param domainValue the domain value
+     * @param mappingValue the corresponding mapped value
      */
-    START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE, 
-    
-    /**
-     * Sets the ticks such that the lables are rounded according to the domain
-     * range.
-     */
-    LABLE_WITH_ROUNDED_NUMBERS   
+    NominalCoordinateMapping(final String domainValue,
+            final double mappingValue) {
+        super(domainValue, mappingValue);
+    }
+
 }
