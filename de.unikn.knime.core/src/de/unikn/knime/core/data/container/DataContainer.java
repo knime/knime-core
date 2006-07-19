@@ -209,7 +209,7 @@ public class DataContainer implements RowAppender {
             // do now for min/max
             if (initDomain) {
                 DataCell min = colSpec.getDomain().getLowerBound();
-                DataCell max = colSpec.getDomain().getLowerBound();
+                DataCell max = colSpec.getDomain().getUpperBound();
                 if (min != null || max != null) {
                     m_minCells[i] = min != null ? min 
                             : DataType.getMissingCell();
