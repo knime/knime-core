@@ -186,29 +186,54 @@ public class DataContainer implements RowAppender {
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = m_spec.getColumnSpec(i);
             DataType colType = colSpec.getType();
-            if (colType.isCompatible(StringValue.class)) {
-                m_possibleValues[i] = new LinkedHashSet<DataCell>();
-                if (initDomain) {
-                    Set<DataCell> values = colSpec.getDomain().getValues();
-                    if (values != null) {
-                        m_possibleValues[i].addAll(values);
-                    }
-                }
-            }
-            if (colType.isCompatible(DoubleValue.class)) {
-                if (initDomain) {
-                    DataCell min = colSpec.getDomain().getLowerBound();
-                    DataCell max = colSpec.getDomain().getLowerBound();
-                    m_minCells[i] = 
-                        min != null ? min : DataType.getMissingCell();
-                    m_maxCells[i] = 
-                        max != null ? max : DataType.getMissingCell();
+            // bug fix #591: We must init the domain no matter what data
+            // type is in the column (we had the problem where one passed
+            // a FuzzyIntervalCell which is not compatible to doublevalue.
+            
+            // do first for possible values
+            if (initDomain) {
+                Set<DataCell> values = colSpec.getDomain().getValues();
+                if (values != null) {
+                    m_possibleValues[i] = new LinkedHashSet<DataCell>(values);
+                } else if (colType.isCompatible(StringValue.class)) {
+                    m_possibleValues[i] = new LinkedHashSet<DataCell>();
                 } else {
-                    m_minCells[i] = DataType.getMissingCell();
-                    m_maxCells[i] = DataType.getMissingCell();
+                    m_possibleValues[i] = null;
                 }
+            } else if (colType.isCompatible(StringValue.class)) {
+                m_possibleValues[i] = new LinkedHashSet<DataCell>();
+            } else {
+                m_possibleValues[i] = null;
             }
             
+            // do now for min/max
+            if (initDomain) {
+                DataCell min = colSpec.getDomain().getLowerBound();
+                DataCell max = colSpec.getDomain().getLowerBound();
+                if (min != null || max != null) {
+                    m_minCells[i] = min != null ? min 
+                            : DataType.getMissingCell();
+                    m_maxCells[i] = max != null ? max 
+                            : DataType.getMissingCell();
+                } else if (colType.isCompatible(DoubleValue.class)) {
+                    // if no min/max available, init only if column is
+                    // double compatible
+                    m_minCells[i] = DataType.getMissingCell();
+                    m_maxCells[i] = DataType.getMissingCell();
+                } else {
+                    // invalid column type, no domain initialized
+                    m_minCells[i] = null;
+                    m_maxCells[i] = null;
+                }
+            } else {
+                if (colType.isCompatible(DoubleValue.class)) {
+                    m_minCells[i] = DataType.getMissingCell();
+                    m_maxCells[i] = DataType.getMissingCell();
+                } else {
+                    m_minCells[i] = null;
+                    m_maxCells[i] = null;
+                }
+            }
         }
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
