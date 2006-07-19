@@ -351,7 +351,7 @@ public final class Node {
             } catch (IOException ioe) {
                 m_status = new NodeStatus.Error(
                     "Unable to load internals: " + ioe.getMessage());
-                this.notifyStateListeners(m_status);
+                notifyStateListeners(m_status);
             }
             // load data
             if (getNrDataOutPorts() > 0) {
@@ -769,8 +769,7 @@ public final class Node {
                         "Couldn't get data from predecessor (Port No." + i 
                         + "). Is it not executed?!?");
                 notifyStateListeners(m_status);
-                notifyStateListeners(
-                        new NodeStatus.EndExecute());
+                notifyStateListeners(new NodeStatus.EndExecute());
                 return false;
             }
         }
@@ -825,8 +824,7 @@ public final class Node {
                 m_status = new NodeStatus.Error("ModelContent couldn't " 
                         + "be saved at port #" + p + e.getMessage());
                 notifyStateListeners(m_status);
-                notifyStateListeners(
-                        new NodeStatus.EndExecute());
+                notifyStateListeners(new NodeStatus.EndExecute());
                 return false;
             }
         }
@@ -869,7 +867,7 @@ public final class Node {
             m_logger.warn("Model warning message: " + warningMessage);
             m_status = new NodeStatus.Warning("Warning: " + warningMessage);
 
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
             // reset the warning message
             m_model.setWarningMessage(null);
         }
@@ -1176,12 +1174,12 @@ public final class Node {
                     + ise.getMessage());
             m_status = new NodeStatus.Error(
                     "Could not load ModelContent: " + ise.getMessage());
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
         } catch (NullPointerException npe) {
             m_logger.coding("Model need to check for null argument.");
             m_status = new NodeStatus.Error(
                     "Could not load ModelContent due to null argument.");
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
         }
         configure();
 
@@ -1327,12 +1325,12 @@ public final class Node {
             m_logger.error("Show view failed", e);
             m_status = new NodeStatus.Error(
                     "View could not be opened, reason: " + e.getMessage());
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
         } catch (Error e) {
             m_logger.fatal("Show view failed", e);
             m_status = new NodeStatus.Error(
                     "View could not be opened, reason: " + e.getMessage());
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
         }
     }
 
@@ -1390,12 +1388,12 @@ public final class Node {
             m_logger.error("show dialog failed", e);
             m_status = new NodeStatus.Error(
                     "Dialog could not be opend properly: " + e.getMessage());
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
         } catch (Error e) {
             m_logger.fatal("show dialog failed", e);
             m_status = new NodeStatus.Error(
                     "Dialog could not be opend properly: " + e.getMessage());
-            this.notifyStateListeners(m_status);
+            notifyStateListeners(m_status);
         }
     }
 
@@ -1544,7 +1542,7 @@ public final class Node {
                         } catch (IOException ioe) {
                             m_status = new NodeStatus.Error("Unable to save " 
                                     + "internals: " + ioe.getMessage());
-                            this.notifyStateListeners(m_status);
+                            notifyStateListeners(m_status);
                         }
                     }
                 }
