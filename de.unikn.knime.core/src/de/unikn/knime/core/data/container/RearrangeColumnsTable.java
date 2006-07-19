@@ -223,6 +223,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         DataColumnSpec[] newColSpecs = 
             newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
         NoKeyBuffer appendBuffer;
+        DataTableSpec appendBufferSpec;
         // for a pure filter (a table that just hides some columns from
         // the reference table but does not add any new column we avoid to scan
         // the entire table (nothing is written anyway))
@@ -278,22 +279,23 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
                 container.close();
             }
             appendBuffer = (NoKeyBuffer)container.getBuffer();
+            appendBufferSpec = appendBuffer.getTableSpec();
         } else {
             appendBuffer = null;
+            appendBufferSpec = new DataTableSpec();
         }
         boolean[] isFromRefTable = new boolean[size];
         int[] includesIndex = new int[size];
         // create the new spec. Do not use rearranger.createSpec because
         // that might lack the domain information!
         DataColumnSpec[] colSpecs = new DataColumnSpec[size];
-        DataTableSpec fromBufferSpec = appendBuffer.getTableSpec();
         int newColIndex = 0;
         for (int i = 0; i < size; i++) {
             SpecAndFactoryObject c = includes.get(i);
             if (c.isNewColumn()) {
                 isFromRefTable[i] = false;
                 includesIndex[i] = newColIndex;
-                colSpecs[i] = fromBufferSpec.getColumnSpec(newColIndex); 
+                colSpecs[i] = appendBufferSpec.getColumnSpec(newColIndex); 
                 newColIndex++;
             } else {
                 isFromRefTable[i] = true;
