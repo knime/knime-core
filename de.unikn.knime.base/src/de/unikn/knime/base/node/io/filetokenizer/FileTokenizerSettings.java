@@ -126,10 +126,12 @@ public class FileTokenizerSettings {
                 NodeSettingsRO quotes = settings.getNodeSettings(CFGKEY_QUOTES);
                 addQuotesFromConfiguration(quotes);
                 // get the configuration that holds all comments
-                NodeSettingsRO comments = settings.getNodeSettings(CFGKEY_COMMENTS);
+                NodeSettingsRO comments = 
+                    settings.getNodeSettings(CFGKEY_COMMENTS);
                 addCommentsFromConfiguration(comments);
                 // get the config holding white spaces
-                NodeSettingsRO wspaces = settings.getNodeSettings(CFGKEY_WHITES);
+                NodeSettingsRO wspaces = 
+                    settings.getNodeSettings(CFGKEY_WHITES);
                 addWhitesFromConfiguration(wspaces);
 
             } catch (InvalidSettingsException ice) {
@@ -203,7 +205,8 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addDelimitersFromConfiguration(final NodeSettingsRO allDelims) {
+    private void addDelimitersFromConfiguration(
+            final NodeSettingsRO allDelims) {
         for (String delimKey : allDelims.keySet()) {
             // they should all start with "Delim"...
             if (delimKey.indexOf(CFGKEY_DELIMCFG) != 0) {
@@ -319,7 +322,8 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addCommentsFromConfiguration(final NodeSettingsRO allComments) {
+    private void addCommentsFromConfiguration(
+            final NodeSettingsRO allComments) {
         for (String commentKey : allComments.keySet()) {
             // they should all start with "Comment"...
             if (commentKey.indexOf(CFGKEY_COMMNTCFG) != 0) {
@@ -379,7 +383,8 @@ public class FileTokenizerSettings {
                     + "to null config!");
         }
         for (int c = 0; c < m_commentPatterns.size(); c++) {
-            NodeSettingsWO commentConf = cfg.addNodeSettings(CFGKEY_COMMNTCFG + c);
+            NodeSettingsWO commentConf = 
+                cfg.addNodeSettings(CFGKEY_COMMNTCFG + c);
             Comment comment = m_commentPatterns.get(c);
             comment.saveToConfig(commentConf);
         }
