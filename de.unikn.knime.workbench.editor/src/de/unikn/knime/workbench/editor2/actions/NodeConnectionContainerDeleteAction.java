@@ -104,7 +104,7 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
                 dialogText += "and ";
             }
             if (connParts.size() > 0) {
-                dialogText += connParts.size() + " connections";
+                dialogText += connParts.size() + " connection(s)";
             }
 
             dialogText += "?";
