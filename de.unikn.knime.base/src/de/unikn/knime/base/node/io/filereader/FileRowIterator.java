@@ -195,10 +195,11 @@ final class FileRowIterator extends RowIterator {
             try {
                 token = m_tokenizer.nextToken();
             } catch (FileTokenizerException fte) {
-                throw prepareForException(fte.getMessage() + " (Source: "
-                        + m_frSettings.getDataFileLocation() + ", line "
-                        + m_tokenizer.getLineNumber() + ")", m_tokenizer
-                        .getLineNumber(), rowHeader, row);
+                throw prepareForException(fte.getMessage() + " (line: " 
+                        + m_tokenizer.getLineNumber()
+                        + " (" + rowHeader + ") source: '"
+                        + m_frSettings.getDataFileLocation() + "')", 
+                        m_tokenizer.getLineNumber(), rowHeader, row);
             }
             // row delims are returned as token
             if ((token == null) || m_frSettings.isRowDelimiter(token)) {
@@ -237,8 +238,9 @@ final class FileRowIterator extends RowIterator {
         }
         if (createdCols < noOfCols) {
             throw prepareForException("Too few data elements in row "
-                    + "(Source: '" + m_frSettings.getDataFileLocation()
-                    + "' line: " + lineNr + ")", lineNr, rowHeader, row);
+                    + "(line: " + lineNr + " (" + rowHeader + "), source: '" 
+                    + m_frSettings.getDataFileLocation()
+                    + "')", lineNr, rowHeader, row);
         }
 
         token = m_tokenizer.nextToken();
@@ -250,17 +252,19 @@ final class FileRowIterator extends RowIterator {
             try {
                 token = m_tokenizer.nextToken();
             } catch (FileTokenizerException fte) {
-                throw prepareForException(fte.getMessage() + " (Source: "
-                        + m_frSettings.getDataFileLocation() + ", line "
-                        + lineNr + ")", lineNr, rowHeader, row);
+                throw prepareForException(fte.getMessage() 
+                        + "(line: " + lineNr + " (" + rowHeader + "), source: '"
+                        + m_frSettings.getDataFileLocation() + "')", 
+                        lineNr, rowHeader, row);
             }
         }
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
         if (!m_frSettings.isRowDelimiter(token)) {
             throw prepareForException("Too many data elements in row "
-                    + "(Source: '" + m_frSettings.getDataFileLocation()
-                    + "' line: " + lineNr + ")", lineNr, rowHeader, row);
+                    + "(line: " + lineNr + " (" + rowHeader + "), source: '" 
+                    + m_frSettings.getDataFileLocation() + "')", 
+                    lineNr, rowHeader, row);
         }
         m_rowNumber++;
 
