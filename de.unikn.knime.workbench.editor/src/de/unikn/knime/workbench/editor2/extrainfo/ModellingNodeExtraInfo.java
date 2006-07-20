@@ -40,6 +40,12 @@ import de.unikn.knime.core.node.workflow.NodeExtraInfo;
  */
 public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
+    /** Version id of this extra info implementation */
+    public static final String VERSION = "1.0";
+
+    /** The key under which the type is registered. * */
+    public static final String KEY_VERSION = "extrainfo.node.version";
+
     /** The key under which the bounds are registered. * */
     public static final String KEY_BOUNDS = "extrainfo.node.bounds";
 
@@ -62,6 +68,18 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     private String m_type;
 
+    private String m_loadedVersion;
+
+    /**
+     * Constructs a <code>ModellingConnectionExtraInfo</code>.
+     * 
+     */
+    public ModellingNodeExtraInfo() {
+        // initiallizes this extra info with the implementation version
+        // given in the constant
+        m_loadedVersion = VERSION;
+    }
+
     /**
      * @see de.unikn.knime.core.node.workflow.NodeExtraInfo
      *      #save(NodeSettingsWO)
@@ -69,6 +87,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     public void save(final NodeSettingsWO config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
         config.addString(KEY_TYPE, m_type);
+        config.addString(KEY_VERSION, getVersion());
     }
 
     /**
@@ -76,6 +95,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      *      #load(NodeSettingsRO)
      */
     public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
+        m_loadedVersion = conf.getString(KEY_VERSION);
         m_bounds = conf.getIntArray(KEY_BOUNDS);
         m_type = conf.getString(KEY_TYPE);
     }
@@ -143,13 +163,13 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      * @param moveDist the distance to change the left top corner
      */
     public void changePosition(final int moveDist) {
-        
+
         // first change the x value
         m_bounds[0] = m_bounds[0] + moveDist;
         m_bounds[1] = m_bounds[1] + moveDist;
     }
 
-    /** 
+    /**
      * @see java.lang.Object#clone()
      */
     @Override
@@ -158,5 +178,12 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         newObject.m_bounds = this.m_bounds.clone();
         newObject.m_type = this.m_type;
         return newObject;
-    }    
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.workflow.ExtraInfo#getVersion()
+     */
+    public String getVersion() {
+        return m_loadedVersion;
+    }
 }

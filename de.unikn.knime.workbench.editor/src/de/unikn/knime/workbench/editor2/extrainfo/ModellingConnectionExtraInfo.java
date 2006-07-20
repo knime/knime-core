@@ -37,10 +37,28 @@ import de.unikn.knime.core.node.workflow.ConnectionExtraInfo;
  */
 public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
 
+    /** Version id of this extra info implementation */
+    public static final String VERSION = "1.0";
+    
+    /** The key under which the type is registered. * */
+    public static final String KEY_VERSION = "extrainfo.conn.version";
+
     /** The key under which the bounds are registered. * */
     public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
 
     private ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
+    
+    private String m_loadedVersion;
+    
+    /**
+     * Constructs a <code>ModellingConnectionExtraInfo</code>.
+     * 
+     */
+    public ModellingConnectionExtraInfo() {
+        // initiallizes this extra info with the implementation version
+        // given in the constant
+        m_loadedVersion = VERSION;
+    }
 
     /**
      * Add a bendpoint.
@@ -86,6 +104,8 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
      *      #save(NodeSettingsWO)
      */
     public void save(final NodeSettingsWO config) {
+        
+        config.addString(KEY_VERSION, getVersion());
         config.addInt(KEY_BENDPOINTS + "_size", m_bendpoints.size());
         for (int i = 0; i < m_bendpoints.size(); i++) {
             config.addIntArray(KEY_BENDPOINTS + "_" + i, (int[])m_bendpoints
@@ -98,13 +118,22 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
      * @see de.unikn.knime.core.node.workflow.ConnectionExtraInfo
      *      #load(NodeSettingsRO)
      */
-    public void load(final NodeSettingsRO config) throws InvalidSettingsException {
+    public void load(final NodeSettingsRO config)
+            throws InvalidSettingsException {
+        m_loadedVersion = config.getString(KEY_VERSION);
         int size = config.getInt(KEY_BENDPOINTS + "_size");
 
         for (int i = 0; i < size; i++) {
             m_bendpoints.add(i, config.getIntArray(KEY_BENDPOINTS + "_" + i));
         }
 
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.workflow.ExtraInfo#getVersion()
+     */
+    public String getVersion() {
+        return m_loadedVersion;
     }
 
 }
