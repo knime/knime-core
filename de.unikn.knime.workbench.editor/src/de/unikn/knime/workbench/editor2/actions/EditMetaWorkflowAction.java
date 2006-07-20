@@ -133,6 +133,7 @@ public class EditMetaWorkflowAction extends Action {
                     .openEditor(editorInput,
                           "de.unikn.knime.workbench.editor.MetaWorkflowEditor");
 
+            childEditor.setParentEditor(parentEditor);
             parentEditor.addEditor(childEditor);
 
         } catch (Exception e) {
