@@ -1062,7 +1062,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         .getCustomName()
                         + " (" + nc.getName() + ")", pm, m_manager, nc,
                         "Queued for execution...");
-                job.schedule(10);
+                job.schedule();
 
                 m_dummyNodeJobs.put(event.getID(), job);
             }
