@@ -140,57 +140,37 @@ public abstract class NodeModel {
     }
     
     /**
-     * Load internal settings into the <code>NodeModel</code>. Read all your
-     * internal structures from the given directory.
+     * Load internals into the derived <code>NodeModel</code>. This method is 
+     * only called if the <code>Node</code> was executed. Read all your
+     * internal structures from the given file directory to create your internal
+     * data structure which is necessary to provide all node functionalities
+     * after the workflow is loaded, e.g. view content and/or hilite mapping.  
      * @param nodeInternDir The directory to read from.
-     * @param exec Used to report progress and to cancecl loading process.
+     * @param exec Used to report progress and to cancel the load process.
      * @throws IOException If an error occurs during reading from this dir.
      * @throws CanceledExecutionException If the loading has been canceled.
      * @see #saveInternals(File,ExecutionMonitor)
      */
-    protected void loadInternals(final File nodeInternDir,
+    protected abstract void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // avoid checkstyle warning  
-        assert nodeInternDir == nodeInternDir;
-        assert exec == exec;
-        if (false) {
-            throw new IOException();
-        }
-        if (false) {
-            throw new CanceledExecutionException();
-        }
-        String msg = "NodeModel does not overwrite loadInternals(File).";
-        m_logger.coding(msg);
-        setWarningMessage(msg);
-    }
-
+            throws IOException, CanceledExecutionException;
+    
     /**
-     * Save internal settings of the <code>NodeModel</code>. Save all your
-     * internal structures into the given directory.
+     * Save internals of the derived <code>NodeModel</code>. This method is 
+     * only called if the <code>Node</code> is executed. Write all your
+     * internal structures into the given file directory which are necessary to 
+     * recreate this model when the workflow is loaded, e.g. view content and/or
+     * hilite mapping.  
      * @param nodeInternDir The directory to write into.
-     * @param exec Used to report progress and to cancecl loading process.
+     * @param exec Used to report progress and to cancel the save process.
      * @throws IOException If an error occurs during writting to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File,ExecutionMonitor)
      */
-    protected void saveInternals(final File nodeInternDir,
+    protected abstract void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        // avoid checkstyle warning  
-        assert nodeInternDir == nodeInternDir;
-        assert exec == exec;
-        if (false) {
-            throw new IOException();
-        }
-        if (false) {
-            throw new CanceledExecutionException();
-        }
-        String msg = "NodeModel does not overwrite saveInternals(File).";
-        m_logger.coding(msg);
-        setWarningMessage(msg);
-    }
-
+            throws IOException, CanceledExecutionException;
+    
     /**
      * Override this methode if <code>ModelContent</code> input(s) have
      * been set. This methode is then called for each ModelContent input to
