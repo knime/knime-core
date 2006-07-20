@@ -87,6 +87,7 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
         // is not shown in the progress bar in eclipse. If we set it to 101
         // here, it will be shown with little space to the right.
         m_eclipseMonitor.beginTask("", 101);
+        m_eclipseMonitor.subTask(m_stateMessage);
 
         try {
             while (!m_finished) {
@@ -114,7 +115,7 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
      */
     public synchronized void progressChanged(final double progress,
             final String message) {
-        
+
         String tmpMessage = message;
 
         int newWorked = (int)Math.round(Math.max(0, Math.min(progress * 100,
@@ -133,17 +134,18 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
             if (!m_currentProgressMessage.equals(tmpMessage)) {
 
                 if (message == null) {
-                    
+
                     tmpMessage = m_stateMessage;
                 } else {
-                    
+
                     tmpMessage = m_stateMessage + " - " + message;
                 }
 
-                m_eclipseMonitor.subTask(message);
+                m_eclipseMonitor.subTask(tmpMessage);
             }
 
-            m_currentProgressMessage = message == null ? "" : message;
+            m_currentProgressMessage = message == null ? "" : m_stateMessage
+                    + " - " + message;
         }
     }
 
