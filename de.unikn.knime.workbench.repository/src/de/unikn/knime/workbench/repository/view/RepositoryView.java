@@ -113,28 +113,33 @@ public class RepositoryView extends ViewPart {
         // check if there were categories that could not be processed properly
         // i.e. the afer-relationship information was wrong
         List<Category> problemCategories = m_root.getProblemCategories();
-        StringBuffer message = new StringBuffer();
-        message.append("The following categories could not be inserted at a "
-                + "proper position in the node repository due to wrong "
-                + "positioning information.\n"
-                + "See the corresponding plugin.xml file.\n "
-                + "The categories were instead appended at the end "
-                + "in each level.\n\n");
-        for (Category category : problemCategories) {
-            message.append("ID: ").append(category.getID());
-            message.append(" Name: ").append(category.getName());
-            message.append(" After-ID: ").append(category.getAfterID());
-            message.append("\n");
-        }
 
-        try {
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
-            mb.setText("Problem categories...");
-            mb.setMessage(message.toString());
-            mb.open();
-        } catch (Exception e) {
-            // do nothing as this is just an information box
+        if (problemCategories.size() > 0) {
+
+            StringBuffer message = new StringBuffer();
+            message
+                    .append("The following categories could not be inserted at a "
+                            + "proper position in the node repository due to wrong "
+                            + "positioning information.\n"
+                            + "See the corresponding plugin.xml file.\n "
+                            + "The categories were instead appended at the end "
+                            + "in each level.\n\n");
+            for (Category category : problemCategories) {
+                message.append("ID: ").append(category.getID());
+                message.append(" Name: ").append(category.getName());
+                message.append(" After-ID: ").append(category.getAfterID());
+                message.append("\n");
+            }
+
+            try {
+                MessageBox mb = new MessageBox(Display.getDefault()
+                        .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+                mb.setText("Problem categories...");
+                mb.setMessage(message.toString());
+                mb.open();
+            } catch (Exception e) {
+                // do nothing as this is just an information box
+            }
         }
 
         // The viewer provides the selection to the workbench.
