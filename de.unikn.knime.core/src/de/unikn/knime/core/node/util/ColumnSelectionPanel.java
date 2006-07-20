@@ -21,10 +21,16 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
@@ -126,8 +132,45 @@ public class ColumnSelectionPanel extends JPanel {
         m_chooser = new JComboBox();
         m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
         m_chooser.setMinimumSize(new Dimension(100, 25));
+        m_chooser.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
         m_isRequired = true;
         add(m_chooser);
+    }
+    
+    /**
+     * Creates a column selection panel with a label instead of a border which 
+     * preserves the minimum size to either the label width or the combo box 
+     * width.
+     * @param label label of the combo box.
+     * @param filterValueClasses allowed classes.
+     */
+    public ColumnSelectionPanel(final JLabel label, 
+            final Class<? extends DataValue>...filterValueClasses) {
+        if (filterValueClasses == null || filterValueClasses.length == 0) {
+            throw new NullPointerException("Classes must not be null");
+        }
+        List<Class<? extends DataValue>> list = 
+            Arrays.asList(filterValueClasses);
+        if (list.contains(null)) {
+            throw new NullPointerException("List of value classes must not " 
+                    + "contain null elements.");
+        }
+        m_filterClasses = filterValueClasses;
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        m_chooser = new JComboBox();
+        m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
+        m_chooser.setMinimumSize(new Dimension(100, 25));
+        m_chooser.setMaximumSize(new Dimension(200, 25));
+        m_isRequired = true;
+        Box labelBox = Box.createHorizontalBox();
+        labelBox.add(label);
+        labelBox.add(Box.createHorizontalGlue());
+        add(labelBox);
+        add(Box.createVerticalGlue());
+        Box chooserBox = Box.createHorizontalBox();
+        chooserBox.add(m_chooser);
+        chooserBox.add(Box.createHorizontalGlue());
+        add(chooserBox);        
     }
     
     /**
@@ -226,6 +269,34 @@ public class ColumnSelectionPanel extends JPanel {
             return selected.getName();
         }
         return null;
+    }
+    
+    
+    /**
+     * Attempts to set the argument as selected column and disables the combo
+     * box if there is only one available.
+     * 
+     * @param colName Name of the fixed x columns.
+     */
+    public void fixSelectablesTo(final String... colName) {
+        DataColumnSpec oldSelected = (DataColumnSpec)m_chooser
+            .getSelectedItem();
+        HashSet<String> hash = new HashSet<String>(Arrays.asList(colName));
+        Vector<DataColumnSpec> survivers = new Vector<DataColumnSpec>();
+        for (int item = 0; item < m_chooser.getItemCount(); item++) {
+            DataColumnSpec s = (DataColumnSpec)m_chooser.getItemAt(item);
+            if (hash.contains(s.getName())) {
+                survivers.add(s);
+            }
+        }
+        m_chooser.setModel(new DefaultComboBoxModel(survivers));
+        if (survivers.contains(oldSelected)) {
+            m_chooser.setSelectedItem(oldSelected);
+        } else {
+            // may be -1 ... but that is ok
+            m_chooser.setSelectedIndex(survivers.size() - 1);
+        }
+        m_chooser.setEnabled(survivers.size() > 1);
     }
     
     
