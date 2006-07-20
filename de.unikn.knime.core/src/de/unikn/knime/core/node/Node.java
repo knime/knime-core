@@ -1076,7 +1076,7 @@ public final class Node {
                  * correct we will not end up here.
                  */
                 m_logger.coding("Incorrect implementation of "
-                        + "method NodeModel.loadModelConten(): "
+                        + "method NodeModel.loadModelContent(): "
                         + "It must handle null parameters");
             } catch (InvalidSettingsException ise) {
                 // ignore, since we tried to load null settings.
@@ -1177,7 +1177,7 @@ public final class Node {
                     "Could not load ModelContent: " + ise.getMessage());
             notifyStateListeners(m_status);
         } catch (NullPointerException npe) {
-            m_logger.coding("Model need to check for null argument.");
+            m_logger.coding("Model needs to check for null argument.");
             m_status = new NodeStatus.Error(
                     "Could not load ModelContent due to null argument.");
             notifyStateListeners(m_status);
