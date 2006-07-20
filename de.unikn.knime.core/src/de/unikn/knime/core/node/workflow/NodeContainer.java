@@ -975,7 +975,7 @@ public class NodeContainer implements NodeStateListener {
      * @see Node#showDialog()
      */
     public void showDialog() {
-        m_node.showDialog();
+        m_node.showDialog("Dialog - " + getNameWithID());
     }
 
     /**

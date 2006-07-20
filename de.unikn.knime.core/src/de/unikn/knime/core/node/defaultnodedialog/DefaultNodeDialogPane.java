@@ -59,7 +59,7 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
      * @param title dialog title
      */
     public DefaultNodeDialogPane(final String title) {
-        super(title);
+        super();
         m_dialogComponents = new ArrayList<DialogComponent>();
         m_compositePanel = new JPanel();
         m_compositePanel.setLayout(new BoxLayout(m_compositePanel, 

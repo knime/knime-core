@@ -1374,15 +1374,24 @@ public final class Node {
     public boolean hasDialog() {
         return m_factory.hasDialog();
     }
+    
+    /**
+     * Shows this node's dialog with the name of this node as title.
+     * @see #showDialog(String)
+     */
+    public void showDialog() {
+        showDialog("Dialog - " + getName());
+    }
 
     /**
      * Opens the node's dialog and loads the current settings from the model
      * into the dialog.
+     * @param title The title for the dialog to open.
      */
-    public void showDialog() {
+    public void showDialog(final String title) {
         try {
             if (hasDialog()) {
-                NodeDialog dlg = new NodeDialog(getDialogPane());
+                NodeDialog dlg = new NodeDialog(getDialogPane(), title);
                 dlg.openDialog();
             }
         } catch (Exception e) {

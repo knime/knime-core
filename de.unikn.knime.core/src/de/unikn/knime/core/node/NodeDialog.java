@@ -78,11 +78,12 @@ final class NodeDialog {
      * order to view the <code>NodeDialogPane</code>.
      * 
      * @param pane This dialog's underlying pane.
+     * @param nodeNameWithID The node's name with id.
      */
-    NodeDialog(final NodeDialogPane pane) {
+    NodeDialog(final NodeDialogPane pane, final String nodeNameWithID) {
         // keep node dialog pane and init this dialog
         m_dialogPane = pane;
-        m_dialog = initDialog(m_dialogPane.getTitle());
+        m_dialog = initDialog("Dialog - " + nodeNameWithID);
 
         // init OK and Cancel button
         JPanel control = new JPanel(new FlowLayout(FlowLayout.RIGHT));

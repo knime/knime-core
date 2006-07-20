@@ -71,17 +71,11 @@ public abstract class NodeDialogPane {
      * Creates a new dialog with the given title. The pane holds a tabbed pane
      * ready to take additional components needed by the derived class 
      * (<code>#addTab(String,Component)</code>).
-     * 
-     * @param title The title of this dialog.
      */
-    protected NodeDialogPane(final String title) {
+    protected NodeDialogPane() {
         m_panel = new JPanel();
         // init the panel with layout
         m_panel.setLayout(new BorderLayout());
-        // set title
-        String theTitle = 
-            ((title == null || title.length() == 0) ? "<no title>" : title);
-        m_panel.setName("Dialog - " + theTitle);
         // init map for tabs
         m_tabs = new LinkedHashMap<String, Component>();
         // init tabbed pane and at it to the underlying panel
@@ -336,13 +330,6 @@ public abstract class NodeDialogPane {
      */
     protected final Component getTab(final String title) {
         return m_tabs.get(title);
-    }
-
-    /**
-     * @return The title of this dialog pane.
-     */
-    public final String getTitle() {
-        return m_panel.getName();
     }
 
     /**
