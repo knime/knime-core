@@ -127,11 +127,15 @@ public class RepositoryView extends ViewPart {
             message.append("\n");
         }
 
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_INFORMATION | SWT.OK);
-        mb.setText("Problem categories...");
-        mb.setMessage(message.toString());
-        mb.open();
+        try {
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+            mb.setText("Problem categories...");
+            mb.setMessage(message.toString());
+            mb.open();
+        } catch (Exception e) {
+            // do nothing as this is just an information box
+        }
 
         // The viewer provides the selection to the workbench.
         this.getSite().setSelectionProvider(m_viewer);
