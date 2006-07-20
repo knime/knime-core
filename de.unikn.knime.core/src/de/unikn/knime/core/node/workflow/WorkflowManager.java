@@ -189,6 +189,10 @@ public class WorkflowManager implements WorkflowListener {
                     if (m_runningNodes.containsKey(nc)) {
                         m_runningNodes.get(nc).setExecuteCanceled();
                         cancelNodes.addAll(nc.getAllSuccessors());
+                        if (nc.getEmbeddedWorkflowManager() != null) {
+                            cancelExecution(nc.getEmbeddedWorkflowManager()
+                                    .getNodes());
+                        }
                     }
                 }
 
@@ -294,7 +298,8 @@ public class WorkflowManager implements WorkflowListener {
          *      #stateChanged(de.unikn.knime.core.node.NodeStatus, int)
          */
         public void stateChanged(final NodeStatus state, final int id) {
-            if (state instanceof NodeStatus.EndExecute) {
+            if ((state instanceof NodeStatus.EndExecute)
+                    || (state instanceof NodeStatus.ExecutionCanceled)) {
                 synchronized (m_waitingNodes) {
                     Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = m_runningNodes
                             .entrySet().iterator();
@@ -306,6 +311,9 @@ public class WorkflowManager implements WorkflowListener {
 
                             fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
                                     .getID(), null, null));
+                            if (state instanceof NodeStatus.ExecutionCanceled) {
+                                cancelExecution(nc.getAllSuccessors());
+                            }
                         }
                     }
 
@@ -684,15 +692,26 @@ public class WorkflowManager implements WorkflowListener {
         m_executor.cancelExecution();
     }
 
+    // /**
+    // * Cancels the execution of the workflow after the passed node.
+    // *
+    // * @param nodeID the id of the node after which the execution should be
+    // * canceled
+    // */
+    // public void cancelExecutionAfterNode(final int nodeID) {
+    // NodeContainer nodeCont = m_nodesByID.get(nodeID);
+    // m_executor.cancelExecution(nodeCont.getAllSuccessors());
+    // }
+
     /**
-     * Cancels the execution of the workflow after the passed node.
+     * Cancels execution of the given node and all its sucessor nodes.
      * 
-     * @param nodeID the id of the node after which the execution should be
-     *            canceled
+     * @param node a node
      */
-    public void cancelExecutionAfterNode(final int nodeID) {
-        NodeContainer nodeCont = m_nodesByID.get(nodeID);
-        m_executor.cancelExecution(nodeCont.getAllSuccessors());
+    public void cancelExecution(final NodeContainer node) {
+        Collection<NodeContainer> l = node.getAllSuccessors();
+        l.add(node);
+        m_executor.cancelExecution(l);
     }
 
     /*
@@ -1330,7 +1349,8 @@ public class WorkflowManager implements WorkflowListener {
         // read running ids for new nodes and connections
         if (m_parent == null) {
             m_runningNodeID.setValue(settings.getInt(KEY_RUNNING_NODE_ID));
-            m_runningConnectionID.setValue(settings.getInt(KEY_RUNNING_CONN_ID));
+            m_runningConnectionID
+                    .setValue(settings.getInt(KEY_RUNNING_CONN_ID));
         }
 
         // read nodes
