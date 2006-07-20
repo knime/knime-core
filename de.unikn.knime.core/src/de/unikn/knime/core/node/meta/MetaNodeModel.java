@@ -614,6 +614,12 @@ public class MetaNodeModel extends SpecialNodeModel
         // nothing to save here        
     }
     
+    /**
+     * Checks if a node in the inner workflow has been canceled.
+     * 
+     * @return <code>true</code> if the inner workflow has been canceled,
+     * <code>false</code> otherwise
+     */
     protected final boolean innerExecCanceled() {
         return m_innerExecCanceled;
     }
