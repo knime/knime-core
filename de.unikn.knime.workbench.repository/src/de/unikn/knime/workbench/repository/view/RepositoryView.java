@@ -115,9 +115,11 @@ public class RepositoryView extends ViewPart {
         List<Category> problemCategories = m_root.getProblemCategories();
         StringBuffer message = new StringBuffer();
         message.append("The following categories could not be inserted at a "
-                + "proper position due to wrong positioning information.\n"
+                + "proper position in the node repository due to wrong "
+                + "positioning information.\n"
                 + "See the corresponding plugin.xml file.\n "
-                + "The categories were instead appended at the end in each level.\n\n");
+                + "The categories were instead appended at the end "
+                + "in each level.\n\n");
         for (Category category : problemCategories) {
             message.append("ID: ").append(category.getID());
             message.append(" Name: ").append(category.getName());
