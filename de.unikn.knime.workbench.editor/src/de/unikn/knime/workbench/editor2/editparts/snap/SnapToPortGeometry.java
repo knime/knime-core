@@ -319,7 +319,7 @@ public class SnapToPortGeometry extends SnapToHelper {
     }
 
     /**
-     * Returns the correction value between ± {@link #THRESHOLD}, or the
+     * Returns the correction value between {@link #THRESHOLD}, or the
      * THRESHOLD if no corrections were found.
      * 
      * @param entries the entries
@@ -329,8 +329,9 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @param side which sides should be considered
      * @return the correction or THRESHOLD if no correction was made
      */
-    protected double getCorrectionFor(Entry entries[], Map extendedData,
-            boolean vert, double value, int side) {
+    protected double getCorrectionFor(final Entry entries[],
+            final Map extendedData, final boolean vert, final double value,
+            final int side) {
         double resultMag = THRESHOLD;
         double result = THRESHOLD;
 
