@@ -152,7 +152,6 @@ public class MetaNodeModel extends SpecialNodeModel
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        m_innerExecCanceled = false;
         exec.setMessage("Executing inner workflow");
         
         KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
@@ -230,7 +229,8 @@ public class MetaNodeModel extends SpecialNodeModel
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
     @Override
-    protected void reset() {        
+    protected void reset() {
+        m_innerExecCanceled = false;
         if (!m_resetFromInterior && (internalWFM() != null)) {
             try {
                 m_resetFromInterior = true;
@@ -612,5 +612,9 @@ public class MetaNodeModel extends SpecialNodeModel
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         // nothing to save here        
+    }
+    
+    protected final boolean innerExecCanceled() {
+        return m_innerExecCanceled;
     }
 }
