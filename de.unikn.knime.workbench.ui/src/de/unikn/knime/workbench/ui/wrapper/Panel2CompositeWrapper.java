@@ -19,7 +19,9 @@
  */
 package de.unikn.knime.workbench.ui.wrapper;
 
+import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.Panel;
 
 import javax.swing.JPanel;
 
@@ -58,9 +60,17 @@ public class Panel2CompositeWrapper extends Composite {
         setLayout(gridLayout);
 
         m_awtFrame = SWT_AWT.new_Frame(this);
+        /* Use another panel to enable cursor switching (for instance
+         * in an embedded JSplitPane where the mouse cursor changes when you
+         * adjust the pane sizes. This is the workaround for bug #594 as
+         * suggested by 
+         * https://bugs.eclipse.org/bugs/show_bug.cgi?id=58308
+         */
+        Panel wrap = new Panel(new BorderLayout());
         // use panel as root
         m_awtPanel = panel;
-        m_awtFrame.add(m_awtPanel);
+        wrap.add(m_awtPanel);
+        m_awtFrame.add(wrap);
         
         // Pack the frame
         m_awtFrame.pack();
