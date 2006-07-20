@@ -59,10 +59,11 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.util.FileUtil;
 
 /**
- * A buffer writes the rows from a <code>DataContainer</code> to a file. 
- * This class serves as connector between the <code>DataContainer</code> and 
- * the <code>DataTable</code> that is returned by the container. It 
+ * A buffer writes the rows from a {@link DataContainer} to a file. 
+ * This class serves as connector between the {@link DataContainer} and 
+ * the {@link DataContainer} that is returned by the container. It 
  * "centralizes" the IO operations.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 class Buffer {
@@ -124,7 +125,8 @@ class Buffer {
      * future. */
     private static final String VERSION = "container_1.0.0";
 
-    /** Contains weak references to file iterators that have ever been created
+    /**
+     * Contains weak references to file iterators that have ever been created
      * but not (yet) garbage collected. We will add a shutdown hook 
      * (Runtime#addShutDownHook) and close the streams of all iterators that 
      * are open. This is a workaround for bug #63 (see also
@@ -201,6 +203,7 @@ class Buffer {
     /**
      * Creates new buffer with a given spec, and a max row count that may 
      * resize in memory.
+     * 
      * @param maxRowsInMemory Maximum numbers of rows that are kept in memory 
      *        until they will be subsequent written to the temp file. (0 to 
      *        write immediately to a file)
@@ -693,8 +696,8 @@ class Buffer {
      * @param exec For progress/cancel
      * @throws IOException If it fails to write to a file.
      * @throws CanceledExecutionException If canceled.
-     * @see de.unikn.knime.core.node.BufferedDataTable.
-     * KnowsRowCountTable#saveToFile(File, NodeSettingsWO, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable
+     * #saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
     void saveToFile(final File f, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {

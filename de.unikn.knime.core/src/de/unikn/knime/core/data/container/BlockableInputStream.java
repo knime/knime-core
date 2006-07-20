@@ -21,10 +21,11 @@ import java.io.InputStream;
 
 /**
  * Input Stream that wraps a given input stream and searches for terminated end
- * blocks. Such a block is typically a serialized <code>DataCell</code>.
- * It will simulate an eof file if it entcounters a block end. This class is 
- * intended to be used on streams written with the 
- * <code>BlockableOutStream</code> class.
+ * blocks. Such a block is typically a serialized
+ * {@link de.unikn.knime.core.data.DataCell}. It will simulate an eof file if
+ * it entcounters a block end. This class is intended to be used on streams
+ * written with the
+ * {@link de.unikn.knime.core.data.container.BlockableOutputStream} class.
  * 
  * @see de.unikn.knime.core.data.container.BlockableOutputStream
  * @author wiswedel, University of Konstanz
@@ -33,14 +34,17 @@ final class BlockableInputStream extends InputStream {
 
     /** Input stream to wrap. */
     private final InputStream m_inStream;
-    /** If an block end has been encountered, it will return -1 on subsequent
-     * read() unless endBlock() is called.
+
+    /**
+     * If an block end has been encountered, it will return -1 on subsequent
+     * {@link #read()} unless {@link #endBlock()} is called.
      */
     private boolean m_simulateTerminate;
 
     /**
      * Inits the Stream.
-     * @param inStream The stream to wrap. Must not be <code>null</code>.
+     * 
+     * @param inStream the stream to wrap; must not be <code>null</code>
      */
     BlockableInputStream(final InputStream inStream) {
         m_inStream = inStream;
@@ -50,6 +54,7 @@ final class BlockableInputStream extends InputStream {
     /**
      * Reads next byte from stream and if it is an escape byte, it returns the
      * next following byte. If it is a terminate byte, it returns -1, i.e. eof.
+     * 
      * @see java.io.InputStream#read()
      */
     @Override
@@ -68,12 +73,14 @@ final class BlockableInputStream extends InputStream {
             return c;
         }
     }
-    
-    /** Finishes the current block, i.e. when the block end has already been
-     * reached, releases the block and allows further read() operations. 
-     * Otherwise it will subsequently call read() until the block end is 
-     * reached.
-     * @throws IOException If read() fails.
+
+    /**
+     * Finishes the current block, i.e. when the block end has already been
+     * reached, releases the block and allows further {@link #read()}
+     * operations. Otherwise it will subsequently call {@link #read()} until the
+     * block end is reached.
+     * 
+     * @throws IOException if {@link #read()} fails
      */
     public void endBlock() throws IOException {
         // read until eof or terminate

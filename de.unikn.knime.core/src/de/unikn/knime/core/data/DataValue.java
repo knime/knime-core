@@ -29,7 +29,7 @@ import de.unikn.knime.core.data.renderer.DataValueRendererFamily;
  * (which is displayed in table column headers, for instance) and a comparator, 
  * which are all defined through the definition of a static member UTITLITY. 
  * For more information regarding definition of new data cells see the
- * {@link de.unikn.knime.core.data package description} and the
+ * <a href="package-summary.html">package description</a> and the
  * <a href="doc-files/newtypes.html">manual on how to define new types</a>, 
  * in particular the <a href="doc-files/newtypes.html#newtypes">
  * remarks on DataValue</a>

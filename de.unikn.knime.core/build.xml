@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="javadoc">
+	<target name="javadoc">
+	<javadoc sourcepath="src" destdir="doc"
+		classpath="lib/log4j.jar:lib/junit.jar" access="package"
+		locale="en_US" encoding="utf-8" use="true" author="true"
+		source="1.5">
+		<fileset dir="src"></fileset>
+		<link href="http://java.sun.com/j2se/1.5.0/docs/api/" />
+	</javadoc>
+	</target>
+</project>

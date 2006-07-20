@@ -33,8 +33,8 @@ import java.io.Serializable;
  * 
  * <p>This class implements Serializable. However, if you define a custom
  * <code>DataCell</code> implementation, consider to implement a factory that 
- * takes care of reading/writing a cell to a <code>DataInput</code> or 
- * <code>DataOutput</code> source. Ordinary Java serialization is considerably
+ * takes care of reading/writing a cell to a {@link java.io.DataInput} or 
+ * {@link java.io.DataOutput} source. Ordinary Java serialization is considerably
  * slower than using such a factory. To register such a factory, define a 
  * static method having the following signature:
  * <pre>
@@ -49,7 +49,7 @@ import java.io.Serializable;
  * using reflection. This method is only called once, i.e. the first time
  * that it is used.
  * 
- * <p>Since <code>DataCell</code> may implement different <code>DataValue</code>
+ * <p>Since <code>DataCell</code> may implement different {@link DataValue}
  * interfaces but only one is the <i>native</i> value class, consider to 
  * implement a static method in your derived class with the following signature:
  * <pre>
@@ -57,14 +57,14 @@ import java.io.Serializable;
  *       ...
  *   }
  * </pre>
- * This method is called when the runtime <code>DataType</code> of the cell is 
- * created using reflection. The associated <code>DataType</code> will set the 
+ * This method is called when the runtime {@link DataType} of the cell is 
+ * created using reflection. The associated {@link DataType} will set the 
  * renderer, icon, and comparator of this native value class as default. 
  * If you don't specify such method, the order on the value interfaces 
  * is undefined.
  * 
  * <p>For further details on data types, see also the 
- * {@link de.unikn.knime.core.data package description} and the 
+ * <a href="package-summary.html">package description</a> and the 
  * <a href="doc-files/newtypes.html">manual on defining new KNIME cell 
  * types</a>.
  * @see DataType

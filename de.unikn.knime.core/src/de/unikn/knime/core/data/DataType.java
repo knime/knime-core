@@ -54,7 +54,7 @@ import de.unikn.knime.core.node.config.ConfigWO;
  * the DataValues the two types contain).
  * 
  * <p>On details of data types in KNIME see the 
- * {@link de.unikn.knime.core.data package description} and the 
+ * <a href="package-summary.html">package description</a> and the 
  * <a href="doc-files/newtypes.html">manual on how to define customized 
  * data types</a>.
  *

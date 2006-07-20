@@ -25,7 +25,8 @@ import javax.swing.tree.TreeNode;
 
 /**
  * Abstract Config entry holding only a Config entry type. Deriving classes must
- * store the corresponding value and implement the toStringValue() method.
+ * store the corresponding value and implement the {@link #toStringValue()}
+ * method.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
