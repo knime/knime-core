@@ -97,6 +97,8 @@ import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeProgressListener;
 import de.unikn.knime.core.node.NodeProgressMonitor;
 import de.unikn.knime.core.node.NodeLogger.LEVEL;
+import de.unikn.knime.core.node.meta.MetaInputModel;
+import de.unikn.knime.core.node.meta.MetaOutputModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
@@ -114,7 +116,7 @@ import de.unikn.knime.workbench.editor2.actions.OpenDialogAction;
 import de.unikn.knime.workbench.editor2.actions.PasteAction;
 import de.unikn.knime.workbench.editor2.actions.ResetAction;
 import de.unikn.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
-import de.unikn.knime.workbench.editor2.actions.job.DummyNodeJob;
+import de.unikn.knime.workbench.editor2.actions.job.ProgressMonitorJob;
 import de.unikn.knime.workbench.repository.RepositoryManager;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 import de.unikn.knime.workbench.ui.preferences.PreferenceConstants;
@@ -1036,7 +1038,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    private final Map<Integer, DummyNodeJob> m_dummyNodeJobs = new HashMap<Integer, DummyNodeJob>();
+    private final Map<Integer, ProgressMonitorJob> m_dummyNodeJobs = new HashMap<Integer, ProgressMonitorJob>();
 
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
@@ -1051,15 +1053,21 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         if (event instanceof WorkflowEvent.NodeWaiting) {
             NodeContainer nc = (NodeContainer)event.getOldValue();
-            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
-
-            DummyNodeJob job = new DummyNodeJob(nc.getNameWithID(), pm);
-            job.schedule(10);
-            m_dummyNodeJobs.put(event.getID(), job);
+            if (!(MetaOutputModel.class.isAssignableFrom(nc.getModelClass())
+                    || MetaInputModel.class.isAssignableFrom(nc.getModelClass())))
+            {            
+                NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
+    
+                ProgressMonitorJob job = new ProgressMonitorJob(nc.getNameWithID(), pm,
+                        m_manager, nc);
+                job.schedule(10);
+                m_dummyNodeJobs.put(event.getID(), job);
+            }
         } else if (event instanceof WorkflowEvent.NodeStarted) {
             // m_dummyNodeJobs.get(event.getID()).blabla();
         } else if (event instanceof WorkflowEvent.NodeFinished) {
-            m_dummyNodeJobs.get(event.getID()).finish();
+            ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
+            if (j != null) { j.finish(); }
         } else if (event instanceof WorkflowEvent.NodeRemoved) {
 
             // if a node removed node was a meta node

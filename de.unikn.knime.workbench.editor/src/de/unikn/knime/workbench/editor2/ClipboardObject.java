@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -35,14 +33,14 @@ public class ClipboardObject {
     private final Object m_content;
 
     /**
-     * To remember how often the object was retrieved
+     * To remember how often the object was retrieved.
      */
-    private int retrievalCounter;
+    private int m_retrievalCounter;
 
-    public ClipboardObject(Object content) {
+    public ClipboardObject(final Object content) {
         m_content = content;
 
-        retrievalCounter = 0;
+        m_retrievalCounter = 0;
     }
 
     /**
@@ -56,7 +54,7 @@ public class ClipboardObject {
      * @return returns the number of retrievals of this clipboard object
      */
     public int getRetrievalCounter() {
-        return retrievalCounter;
+        return m_retrievalCounter;
     }
 
     /**
@@ -64,7 +62,7 @@ public class ClipboardObject {
      * application dependant.
      */
     public void incrementRetrievalCounter() {
-        retrievalCounter++;
+        m_retrievalCounter++;
     }
 
 }

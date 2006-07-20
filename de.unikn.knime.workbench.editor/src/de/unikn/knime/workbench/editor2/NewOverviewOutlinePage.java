@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -79,6 +77,7 @@ public class NewOverviewOutlinePage extends Page
      * @see org.eclipse.ui.part.IPage
      *      #createControl(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     public void createControl(final Composite parent) {
         // create canvas and lws
         m_overview = new Canvas(parent, SWT.NONE);
@@ -96,6 +95,7 @@ public class NewOverviewOutlinePage extends Page
     /**
      * @see org.eclipse.ui.part.IPage#dispose()
      */
+    @Override
     public void dispose() {
         if (null != m_thumbnail) {
             m_thumbnail.deactivate();
@@ -107,6 +107,7 @@ public class NewOverviewOutlinePage extends Page
     /**
      * @see org.eclipse.ui.part.IPage#getControl()
      */
+    @Override
     public Control getControl() {
         return m_overview;
     }
@@ -131,6 +132,7 @@ public class NewOverviewOutlinePage extends Page
     /**
      * @see org.eclipse.ui.part.IPage#setFocus()
      */
+    @Override
     public void setFocus() {
         if (getControl() != null) {
             getControl().setFocus();

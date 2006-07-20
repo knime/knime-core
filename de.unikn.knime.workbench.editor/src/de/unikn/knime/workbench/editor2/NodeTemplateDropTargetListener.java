@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -101,6 +99,7 @@ public class NodeTemplateDropTargetListener extends
      * 
      * @return The CreateRequest
      */
+    @Override
     protected Request createTargetRequest() {
         CreateRequest request = new CreateRequest();
 
@@ -119,6 +118,7 @@ public class NodeTemplateDropTargetListener extends
     /**
      * Update the location of the current CreateRequest.
      */
+    @Override
     protected void updateTargetRequest() {
         ((CreateRequest) getTargetRequest()).setLocation(getDropLocation());
     }
@@ -130,9 +130,9 @@ public class NodeTemplateDropTargetListener extends
      * @see org.eclipse.gef.dnd.AbstractTransferDropTargetListener
      *      #handleDragOver()
      */
+    @Override
     protected void handleDragOver() {
         getCurrentEvent().detail = DND.DROP_COPY;
         super.handleDragOver();
     }
-
 }

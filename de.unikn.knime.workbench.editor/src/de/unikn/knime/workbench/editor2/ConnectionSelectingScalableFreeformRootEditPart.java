@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -25,6 +23,7 @@ import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.tools.MarqueeDragTracker;
+import org.eclipse.gef.tools.MarqueeSelectionTool;
 
 /**
  * Overrides the default <code>ScalableFreeformRootEditPart</code> to return
@@ -40,14 +39,15 @@ public class ConnectionSelectingScalableFreeformRootEditPart extends
      * 
      * @see org.eclipse.gef.EditPart#getDragTracker(org.eclipse.gef.Request)
      */
-    public DragTracker getDragTracker(Request req) {
+    @Override
+    public DragTracker getDragTracker(final Request req) {
         /*
          * The root will only be asked for a drag tracker if for some reason the
          * contents editpart says it is neither selector nor opaque.
          */
         MarqueeDragTracker tracker = new MarqueeDragTracker();
         tracker
-                .setMarqueeBehavior(MarqueeDragTracker.BEHAVIOR_NODES_AND_CONNECTIONS);
+                .setMarqueeBehavior(MarqueeSelectionTool.BEHAVIOR_NODES_AND_CONNECTIONS);
         
         return tracker;
     }
