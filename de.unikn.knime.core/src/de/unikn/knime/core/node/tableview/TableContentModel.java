@@ -37,7 +37,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.property.ColorAttr;
-import de.unikn.knime.core.node.NodeLogger;
+import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteListener;
 import de.unikn.knime.core.node.property.hilite.KeyEvent;
@@ -70,8 +70,6 @@ public class TableContentModel extends AbstractTableModel
     implements HiLiteListener, TableContentInterface {
     
     private static final long serialVersionUID = 8413295641103391635L;
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(TableContentModel.class);
 
     /**
      * Property name of the event when the data table has changed.
@@ -241,6 +239,10 @@ public class TableContentModel extends AbstractTableModel
             return;  // do not start event storm
         }
         cancelRowCountingInBackground();
+        int oldColCount = getColumnCount();
+        int newColCount = 
+            data != null ? data.getDataTableSpec().getNumColumns() : 0;
+        int oldRowCount = getRowCount();
         DataTable oldData = m_data;
         m_data = data;
         m_cachedRows = null;
@@ -252,19 +254,40 @@ public class TableContentModel extends AbstractTableModel
         m_rowCounterThread = null;
         m_isMaxRowCountFinal = true;
         m_isRowCountOfInterestFinal = true;
+        if (oldColCount == newColCount) {
+            if (oldRowCount > 0) {
+                fireTableRowsDeleted(0, oldRowCount - 1);
+            }
+        }
         if (data != null) { // new data available, release old stuff
             // assume that there are rows, may change in cacheNextRow() below
             m_isMaxRowCountFinal = false;
             m_isRowCountOfInterestFinal = false;
+            if (data instanceof BufferedDataTable) {
+                BufferedDataTable bData = (BufferedDataTable)data;
+                m_isMaxRowCountFinal = true;
+                m_maxRowCount = bData.getRowCount();
+                if (!showsHiLitedOnly()) {
+                    m_rowCountOfInterest = m_maxRowCount;
+                    m_isRowCountOfInterestFinal = true;
+                }
+            }
             int cacheSize = getCacheSize();
             m_cachedRows = new DataRow[cacheSize];
             m_hilitSet = new BitSet(cacheSize);
             clearCache();  // will instantiate a new iterator.
             // will also set m_isRowCountOfInterestFinal etc. accordingly 
             cacheNextRow();
-        }            
-        // notify listeners
-        fireTableStructureChanged();
+        }
+        if (oldColCount == newColCount) {
+            int newRowCount = getRowCount();
+            if (newRowCount > 0) {
+                fireTableRowsInserted(0, newRowCount);
+            }
+        } else {
+            // notify listeners
+            fireTableStructureChanged();
+        }
         m_propertySupport.firePropertyChange(PROPERTY_DATA, oldData, m_data);
     } // setDataTable(DataTable)
     
@@ -1091,13 +1114,11 @@ public class TableContentModel extends AbstractTableModel
         if (oldCount >= newCount) {
             return;
         }
-        if (isFinal) {
-            LOGGER.debug("Table has " + newCount + "rows.");
-        }
         m_isMaxRowCountFinal = isFinal;
         m_maxRowCount = newCount;
         if (!showsHiLitedOnly()) {
             m_rowCountOfInterest = m_maxRowCount;
+            m_isRowCountOfInterestFinal = isFinal;
         }
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
