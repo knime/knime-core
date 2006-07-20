@@ -98,6 +98,10 @@ public class NodeContainerFigure extends RectangleFigure {
     /** Error sign. * */
     public static final Image ERROR_SIGN = ImageRepository
             .getImage("icons/error.jpg");
+    
+    /** Delete sign. * */
+    public static final Image DELETE_SIGN = ImageRepository
+            .getImage("icons/delete.png");
 
     /** State: Node not configured. * */
     public static final int STATE_NOT_CONFIGURED = 0;
@@ -471,6 +475,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private Label m_iconFigure;
 
+        private Label m_deleteIcon;
+
         private static final String BACKGROUND_OTHER = "icons/node/"
                 + "background_other.png";
 
@@ -529,6 +535,11 @@ public class NodeContainerFigure extends RectangleFigure {
             // m_iconFigure.setBorder(new RaisedBorder(2, 2, 2, 2));
             m_iconFigure.setOpaque(false);
 
+            // create the delete icon
+            m_deleteIcon = new Label();
+            m_deleteIcon.setOpaque(false);
+            m_deleteIcon.setIcon(DELETE_SIGN);
+            
             // center the icon figure
             add(m_backgroundIcon);
             m_backgroundIcon.setLayoutManager(new BorderLayout());
@@ -999,8 +1010,8 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void mark() {
 
-        m_contentFigure.setOpaque(true);
-        m_contentFigure.setBackgroundColor(ColorConstants.red);
+        m_contentFigure.m_backgroundIcon.add(m_contentFigure.m_deleteIcon,
+                BorderLayout.CENTER);
     }
 
     /**
@@ -1010,7 +1021,6 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void unmark() {
 
-        m_contentFigure.setOpaque(false);
-        m_contentFigure.setBackgroundColor(ColorConstants.white);
+        m_contentFigure.m_backgroundIcon.remove(m_contentFigure.m_deleteIcon);
     }
 }
