@@ -66,8 +66,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     private int[] m_bounds = new int[]{0, 0, -1, -1};
 
-    private String m_type;
-
     private String m_loadedVersion;
 
     /**
@@ -86,7 +84,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void save(final NodeSettingsWO config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
-        config.addString(KEY_TYPE, m_type);
         config.addString(KEY_VERSION, getVersion());
     }
 
@@ -95,9 +92,8 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      *      #load(NodeSettingsRO)
      */
     public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
-        m_loadedVersion = conf.getString(KEY_VERSION);
+        m_loadedVersion = conf.getString(KEY_VERSION, "0.0");
         m_bounds = conf.getIntArray(KEY_BOUNDS);
-        m_type = conf.getString(KEY_TYPE);
     }
 
     /**
@@ -143,20 +139,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     }
 
     /**
-     * @return Returns the type.
-     */
-    public String getType() {
-        return m_type;
-    }
-
-    /**
-     * @param type The type to set.
-     */
-    public void setType(final String type) {
-        m_type = type;
-    }
-
-    /**
      * Changes the position by setting the bounds left top corner according to
      * the given moving distance.
      * 
@@ -176,7 +158,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     public Object clone() throws CloneNotSupportedException {
         ModellingNodeExtraInfo newObject = new ModellingNodeExtraInfo();
         newObject.m_bounds = this.m_bounds.clone();
-        newObject.m_type = this.m_type;
         return newObject;
     }
 

@@ -120,7 +120,7 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
      */
     public void load(final NodeSettingsRO config)
             throws InvalidSettingsException {
-        m_loadedVersion = config.getString(KEY_VERSION);
+        m_loadedVersion = config.getString(KEY_VERSION, "0.0");
         int size = config.getInt(KEY_BENDPOINTS + "_size");
 
         for (int i = 0; i < size; i++) {
