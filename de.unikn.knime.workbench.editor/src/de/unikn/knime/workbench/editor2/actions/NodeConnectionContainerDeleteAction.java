@@ -33,6 +33,7 @@ import org.eclipse.gef.ui.actions.DeleteAction;
 import org.eclipse.ui.IWorkbenchPart;
 
 import de.unikn.knime.workbench.editor2.commands.VerifyingCompoundCommand;
+import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -76,23 +77,41 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         VerifyingCompoundCommand compoundCmd = new VerifyingCompoundCommand(
                 GEFMessages.DeleteAction_ActionDeleteCommandName);
 
-        // if there is just one node edit part to delete name it
+        // get the selected nodes and connections
         List<NodeContainerEditPart> nodeParts = getNodeContainerEditParts(getSelectedObjects());
+        List<ConnectionContainerEditPart> connParts = getConnectionContainerEditParts(getSelectedObjects());
         if (nodeParts.size() == 1) {
 
             NodeContainerEditPart nodePart = nodeParts.get(0);
             String name = nodePart.getNodeContainer().getName();
             String customName = nodePart.getNodeContainer().getCustomName();
 
+            if (!(customName == null) && !customName.trim().equals("")) {
+                name += "(" + name + ")";
+            }
+
             String dialogText = "Do you really want to delete "
-                    + "the selected node: " + customName + " (" + name + ")?";
+                    + "the selected node: " + customName + name + "?";
             compoundCmd.setDialogDisplayText(dialogText);
         } else {
-            String dialogText = "Do you really want to delete "
-                    + nodeParts.size() + " selected nodes?";
+
+            String dialogText = "Do you really want to delete ";
+
+            if (nodeParts.size() > 0) {
+                dialogText += nodeParts.size() + " nodes ";
+            }
+            if (nodeParts.size() > 0 && connParts.size() > 0) {
+                dialogText += "and ";
+            }
+            if (connParts.size() > 0) {
+                dialogText += connParts.size() + " connections";
+            }
+
+            dialogText += "?";
+
             compoundCmd.setDialogDisplayText(dialogText);
         }
-        
+
         // set the parts into the compound command
         compoundCmd.setNodeParts(nodeParts);
 
@@ -117,6 +136,22 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
 
             if (obj instanceof NodeContainerEditPart) {
                 result.add((NodeContainerEditPart)obj);
+            }
+        }
+
+        return result;
+    }
+
+    private List<ConnectionContainerEditPart> getConnectionContainerEditParts(
+            final List objects) {
+
+        List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
+
+        for (int i = 0; i < objects.size(); i++) {
+            Object obj = objects.get(i);
+
+            if (obj instanceof ConnectionContainerEditPart) {
+                result.add((ConnectionContainerEditPart)obj);
             }
         }
 

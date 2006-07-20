@@ -82,6 +82,8 @@ public class VerifyingCompoundCommand extends CompoundCommand {
             
             nodePart.mark();
         }
+        
+        
         // first create the verification dialog for confirmation of the
         // compound command
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
