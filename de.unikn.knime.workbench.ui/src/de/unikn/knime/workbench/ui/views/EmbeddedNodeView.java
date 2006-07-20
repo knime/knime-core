@@ -112,7 +112,7 @@ public class EmbeddedNodeView extends ViewPart
         m_content.addPropertyChangeListener(this);
 
         // update title
-        setPartName(m_nodeView.getViewName() + ":"
+        setPartName(m_nodeView.getViewTitle() + ":"
                 + getViewSite().getSecondaryId());
 
     }
