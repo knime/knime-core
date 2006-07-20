@@ -1,4 +1,4 @@
-/* Created on Jun 19, 2006 4:59:48 PM by thor
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -17,9 +17,14 @@
  */
 package de.unikn.knime.base.node.tableinput;
 
+import java.io.File;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionContext;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.ModelContentRO;
 import de.unikn.knime.core.node.NodeModel;
@@ -124,4 +129,27 @@ public class ModelOutputNodeModel extends NodeModel {
    public ModelContentRO getModelContent() {
        return m_predictorParams;
    }
+   
+   /**
+    * @see de.unikn.knime.core.node.
+    *      NodeModel#loadInternals(File, ExecutionMonitor)
+    */
+   @Override
+   protected void loadInternals(final File nodeInternDir, 
+           final ExecutionMonitor exec) 
+           throws IOException, CanceledExecutionException {
+       
+   }
+
+   /**
+    * @see de.unikn.knime.core.node.
+    *      NodeModel#saveInternals(File, ExecutionMonitor)
+    */
+   @Override
+   protected void saveInternals(final File nodeInternDir, 
+           final ExecutionMonitor exec) 
+           throws IOException, CanceledExecutionException {
+       
+   }
+   
 }

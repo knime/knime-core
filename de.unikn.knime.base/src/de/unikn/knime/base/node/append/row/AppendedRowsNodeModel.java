@@ -17,11 +17,16 @@
  */
 package de.unikn.knime.base.node.append.row;
 
+import java.io.File;
+import java.io.IOException;
+
 import de.unikn.knime.base.data.append.row.AppendedRowsTable;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionContext;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettingsRO;
@@ -124,6 +129,28 @@ public class AppendedRowsNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.
+     *      NodeModel#loadInternals(File, ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.
+     *      NodeModel#saveInternals(File, ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        
     }
 
 }

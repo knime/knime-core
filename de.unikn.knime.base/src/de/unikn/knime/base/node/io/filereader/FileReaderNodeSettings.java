@@ -42,7 +42,6 @@ import de.unikn.knime.core.data.def.IntCell;
 import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
@@ -159,7 +158,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * analyzedAllRows flag.
      * 
      * @see de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings
-     *      #saveToConfiguration(NodeSettings)
+     *      #saveToConfiguration(NodeSettingsWO)
      */
     public void saveToConfiguration(final NodeSettingsWO cfg) {
         super.saveToConfiguration(cfg);

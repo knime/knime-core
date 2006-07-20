@@ -16,13 +16,18 @@
  */
 package de.unikn.knime.base.node.io.def;
 
+import java.io.File;
+import java.io.IOException;
+
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.def.DefaultTable;
 import de.unikn.knime.core.node.BufferedDataTable;
+import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionContext;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettingsRO;
@@ -119,6 +124,28 @@ public class DefaultTableNodeModel extends NodeModel {
      */
     protected void validateSettings(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
+    }
+    
+    /**
+     * @see de.unikn.knime.core.node.
+     *      NodeModel#loadInternals(File, ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.
+     *      NodeModel#saveInternals(File, ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        
     }
     
 }
