@@ -60,12 +60,26 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
     private NodeContainer m_metaNodeContainer;
 
     /**
+     * The parent editor of this meta workflow editor.
+     */
+    private WorkflowEditor m_parent;
+
+    /**
      * No arg constructor, creates the edit domain for this editor.
      */
     public MetaWorkflowEditor() {
         super();
 
         LOGGER.debug("Creating MetaWorkflowEditor...");
+    }
+
+    /**
+     * Sets the parent editor for this meta editor.
+     * 
+     * @param parent the parent editor
+     */
+    public void setParentEditor(final WorkflowEditor parent) {
+        m_parent = parent;
     }
 
     /**
@@ -205,4 +219,13 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
         }
 
     }
+
+    /**
+     * Marks this editor as diry and notifies the parent editor.
+     */
+    public void markDirty() {
+        super.markDirty();
+        m_parent.markDirty();
+    }
+
 }
