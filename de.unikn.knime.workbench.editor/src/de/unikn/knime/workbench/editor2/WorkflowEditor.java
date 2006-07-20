@@ -1053,21 +1053,29 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         if (event instanceof WorkflowEvent.NodeWaiting) {
             NodeContainer nc = (NodeContainer)event.getOldValue();
-            if (!(MetaOutputModel.class.isAssignableFrom(nc.getModelClass())
-                    || MetaInputModel.class.isAssignableFrom(nc.getModelClass())))
-            {            
-                NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
-    
-                ProgressMonitorJob job = new ProgressMonitorJob(nc.getNameWithID(), pm,
-                        m_manager, nc);
+            if (!(MetaOutputModel.class.isAssignableFrom(nc.getModelClass()) || MetaInputModel.class
+                    .isAssignableFrom(nc.getModelClass()))) {
+                NodeProgressMonitor pm = (NodeProgressMonitor)event
+                        .getNewValue();
+
+                ProgressMonitorJob job = new ProgressMonitorJob(nc
+                        .getCustomName()
+                        + " (" + nc.getName() + ")", pm, m_manager, nc,
+                        "Queued for execution...");
                 job.schedule(10);
+
                 m_dummyNodeJobs.put(event.getID(), job);
             }
         } else if (event instanceof WorkflowEvent.NodeStarted) {
-            // m_dummyNodeJobs.get(event.getID()).blabla();
+            ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
+            if (j != null) {
+                j.setStateMessage("Executing");
+            }
         } else if (event instanceof WorkflowEvent.NodeFinished) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
-            if (j != null) { j.finish(); }
+            if (j != null) {
+                j.finish();
+            }
         } else if (event instanceof WorkflowEvent.NodeRemoved) {
 
             // if a node removed node was a meta node
