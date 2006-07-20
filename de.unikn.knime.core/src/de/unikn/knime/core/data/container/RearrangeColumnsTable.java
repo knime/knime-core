@@ -61,12 +61,14 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * this dummy iterator to provide empty appended cells.
      */
     private static final RowIterator EMPTY_ITERATOR = new RowIterator() {
+        @Override
         public boolean hasNext() {
             return true;
         }
+        @Override
         public DataRow next() {
             return DUMMY_ROW;
-        };
+        }
     };
 
     private static final String CFG_INTERNAL_META = "meta_internal";
@@ -80,7 +82,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     private final boolean[] m_isFromRefTable;
     private final NoKeyBuffer m_appendBuffer;
 
-    /**
+    /*
      * Used from the factory method, see below.
      * @see #create(ColumnRearranger, BufferedDataTable, ExecutionMonitor)
      */
@@ -230,6 +232,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         if (newColCount > 0) {
             DataContainer container = new DataContainer(
                     new DataTableSpec(newColSpecs), true) {
+                @Override
                 protected Buffer newBuffer(final int rowsInMemory) {
                     return new NoKeyBuffer(rowsInMemory);
                 }
@@ -311,8 +314,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see de.unikn.knime.core.node.BufferedDataTable.
-     *  KnowsRowCountTable#getRowCount()
+     * @see de.unikn.knime.core.node.BufferedDataTable.KnowsRowCountTable
+     * #getRowCount()
      */
     public int getRowCount() {
         return m_reference.getRowCount();

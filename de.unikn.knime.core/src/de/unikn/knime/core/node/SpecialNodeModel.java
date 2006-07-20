@@ -22,10 +22,9 @@ import java.io.File;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
 
-
 /**
- * This special node model is an extension of a normal node model that allows
- * to implement nodes that do "special" things like managing meta workflows.
+ * This special node model is an extension of a normal node model that allows to
+ * implement nodes that do "special" things like managing meta workflows.
  * 
  * <b>This class is not intended for regular use by data processing nodes!</b>
  * 
@@ -33,8 +32,9 @@ import de.unikn.knime.core.node.workflow.WorkflowManager;
  */
 public abstract class SpecialNodeModel extends NodeModel {
     private Node m_node;
+
     private WorkflowManager m_internalWFM;
-    
+
     /**
      * Creates a new model with the given number of data, and predictor in- and
      * outputs.
@@ -43,13 +43,13 @@ public abstract class SpecialNodeModel extends NodeModel {
      *            as inputs.
      * @param nrDataOuts The number of <code>DataTable</code> objects expected
      *            at the output.
-     * @param nrPredParamsIns The number of <code>ModelContent</code>
-     *            elements available as inputs.
-     * @param nrPredParamsOuts The number of <code>ModelContent</code>
-     *            objects available at the output.
+     * @param nrPredParamsIns The number of <code>ModelContent</code> elements
+     *            available as inputs.
+     * @param nrPredParamsOuts The number of <code>ModelContent</code> objects
+     *            available at the output.
      * @throws NegativeArraySizeException If the number of in- or outputs is
      *             smaller than zero.
-     */    
+     */
     public SpecialNodeModel(final int nrDataIns, final int nrDataOuts,
             final int nrPredParamsIns, final int nrPredParamsOuts) {
         super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
@@ -59,12 +59,12 @@ public abstract class SpecialNodeModel extends NodeModel {
      * Creates a new model with the given number of in- and outputs.
      * 
      * @param nrDataIns Number of data inputs.
-     * @param nrDataOuts Number of data outputs. 
+     * @param nrDataOuts Number of data outputs.
      */
     public SpecialNodeModel(final int nrDataIns, final int nrDataOuts) {
         super(nrDataIns, nrDataOuts);
     }
-    
+
     /**
      * Sets the node in which this model is contained.
      * 
@@ -87,7 +87,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     protected final DataInPort getDataInPort(final int index) {
         return (DataInPort)m_node.getInPort(index);
     }
-    
+
     /**
      * Returns the data output port with the given index.
      * 
@@ -97,7 +97,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     protected final DataOutPort getDataOutPort(final int index) {
         return (DataOutPort)m_node.getOutPort(index);
     }
-    
+
     /**
      * Returns the predictor input port with the given index.
      * 
@@ -108,18 +108,16 @@ public abstract class SpecialNodeModel extends NodeModel {
         return (ModelContentInPort)m_node.getInPort(index + getNrDataIns());
     }
 
-    
     /**
      * Returns the predictor output port with the given index.
      * 
-     * @param index the index of the predictor output port
+     * @param idx the index of the predictor output port
      * @return a predictor output port
      */
-    protected final ModelContentOutPort getModelContentOutPort(final int index) {
-        return (ModelContentOutPort)m_node.getOutPort(index + getNrDataOuts());
+    protected final ModelContentOutPort getModelContentOutPort(final int idx) {
+        return (ModelContentOutPort)m_node.getOutPort(idx + getNrDataOuts());
     }
-    
-    
+
     /**
      * This method is called, if a new data table is available at an input port.
      * 
@@ -130,8 +128,7 @@ public abstract class SpecialNodeModel extends NodeModel {
             final int inPortID) {
         // nothing to do for this class here
     }
-    
-    
+
     /**
      * This method is called, if a new data table spec is available at an input
      * port.
@@ -143,7 +140,7 @@ public abstract class SpecialNodeModel extends NodeModel {
             final int inPortID) {
         // nothing to do for this class here
     }
-    
+
     /**
      * This method is called if a new connection at an input port is added.
      * 
@@ -153,7 +150,6 @@ public abstract class SpecialNodeModel extends NodeModel {
         // nothing to do for this class here
     }
 
-    
     /**
      * This method is called if an input port has been disconnected.
      * 
@@ -162,14 +158,14 @@ public abstract class SpecialNodeModel extends NodeModel {
     protected void inportWasDisconnected(final int inPortID) {
         // nothing to do for this class here
     }
-    
+
     /**
      * Sets the internal workflow manager. If it has already been set an
      * exception is thrown.
      * 
      * @param wfm the internal workflow manager
      * @throws IllegalStateException if the workflow manager has already been
-     * set
+     *             set
      */
     void setInternalWFM(final WorkflowManager wfm)
     throws IllegalStateException {
@@ -179,7 +175,7 @@ public abstract class SpecialNodeModel extends NodeModel {
         }
         m_internalWFM = wfm;
     }
-    
+
     /**
      * Returns the internal workflow manager.
      * 
@@ -188,7 +184,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     protected WorkflowManager internalWFM() {
         return m_internalWFM;
     }
-    
+
     /**
      * Returns the node progress monitor inside the execution monitor.
      * 
@@ -200,7 +196,6 @@ public abstract class SpecialNodeModel extends NodeModel {
         return exec.getProgressMonitor();
     }
 
-    
     /**
      * Validates the specified settings in the model and then loads them into
      * it.
@@ -217,26 +212,23 @@ public abstract class SpecialNodeModel extends NodeModel {
         validateSettings(nodeFile, settings);
         loadValidatedSettingsFrom(nodeFile, settings, exec);
     }
-    
-        
-    /** 
+
+    /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(NodeSettingsRO)
+     *      #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected final void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-    throws InvalidSettingsException {
-        loadValidatedSettingsFrom(null, settings, null);        
+    protected final void loadValidatedSettingsFrom(final NodeSettingsRO setts)
+            throws InvalidSettingsException {
+        loadValidatedSettingsFrom(null, setts, null);
     }
 
-    
-    /** 
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #validateSettings(NodeSettingsRO)
+    /**
+     * @see de.unikn.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
      */
     @Override
     protected final void validateSettings(final NodeSettingsRO settings)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         validateSettings(null, settings);
     }
 
@@ -258,36 +250,32 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @see #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     protected abstract void validateSettings(final File nodeDir,
-            final NodeSettingsRO settings)
-            throws InvalidSettingsException;
-    
-    
+            final NodeSettingsRO settings) throws InvalidSettingsException;
+
     /**
      * Saves the settings of this model.
      * 
      * @param nodeDir the directory for the node
      * @param settings a settings object
      * @param exec an execution monitor to report progress for long-running
-     * saves
+     *            saves
      */
     protected abstract void saveSettingsTo(final File nodeDir,
             final NodeSettingsWO settings, final ExecutionMonitor exec);
-    
-    
+
     /**
      * Loads the validated settings for this model.
      * 
      * @param nodeDir the directory of the node
      * @param settings a settings object
      * @param exec an execution monitor to report progress for long-running
-     * loads
+     *            loads
      * @throws InvalidSettingsException if the settings are invalid
      */
     protected abstract void loadValidatedSettingsFrom(final File nodeDir,
             final NodeSettingsRO settings, final ExecutionMonitor exec)
             throws InvalidSettingsException;
-    
-    
+
     /**
      * Resets the node. If you use this method make sure that no loop is
      * created.

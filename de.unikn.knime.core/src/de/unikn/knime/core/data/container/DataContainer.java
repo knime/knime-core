@@ -329,7 +329,7 @@ public class DataContainer implements RowAppender {
      */
     public int size() {
         if (isClosed()) {
-            return ((ContainerTable)m_table).getBuffer().size();
+            return m_table.getBuffer().size();
         }
         if (!isOpen()) {
             throw new IllegalStateException("Container is not open.");

@@ -20,20 +20,22 @@ import java.io.File;
 import javax.swing.filechooser.FileFilter;
 
 /**
- * Our File Filter for the JFileChooser Dialog
- * You can create one accepting all files ending with one extension ".ext".
- * Other pattern matches are not supported.
+ * Our File Filter for the JFileChooser Dialog You can create one accepting all
+ * files ending with one extension ".ext". Other pattern matches are not
+ * supported.
  * 
  * @author ohl University of Konstanz
  */
 public class FileReaderFileFilter extends FileFilter {
 
     private final String m_ext;
+
     private final String m_description;
 
     /**
      * creates a new FileFilter that accepts files matching "*.'ext'".
-     * @param ext the extension 
+     * 
+     * @param ext the extension
      * @param description the readable description (like "XML files")
      */
     public FileReaderFileFilter(final String ext, final String description) {
@@ -42,7 +44,7 @@ public class FileReaderFileFilter extends FileFilter {
         }
         if (ext.lastIndexOf('.') >= 0) {
             throw new IllegalArgumentException(
-                "FileFilter: Ext must not contain '.'");
+                    "FileFilter: Ext must not contain '.'");
         }
         m_ext = ext;
         m_description = description;
@@ -51,6 +53,7 @@ public class FileReaderFileFilter extends FileFilter {
     /**
      * @see javax.swing.filechooser.FileFilter#accept(java.io.File)
      */
+    @Override
     public boolean accept(final File f) {
         if (f != null) {
             if (f.isDirectory()) {
@@ -72,9 +75,11 @@ public class FileReaderFileFilter extends FileFilter {
         }
         return false;
     }
+
     /**
      * @see javax.swing.filechooser.FileFilter#getDescription()
      */
+    @Override
     public String getDescription() {
         return m_description;
     }

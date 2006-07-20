@@ -1050,7 +1050,7 @@ public class WorkflowManager implements WorkflowListener {
             for (Map.Entry<NodeContainer, Integer> e : m_idsByNode.entrySet()) {
                 // we also add unconfigured nodes here because they may get
                 // configured if their predecessor(s) are executed
-                if (!e.getKey().isExecuted()) {
+                if (!e.getKey().isExecuted() && e.getKey().isFullyConnected()) {
                     nodes.add(m_nodesByID.get(e.getValue()));
                 }
             }

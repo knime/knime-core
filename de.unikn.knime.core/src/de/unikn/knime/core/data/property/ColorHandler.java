@@ -114,8 +114,9 @@ public final class ColorHandler implements PropertyHandler {
     }
     
     /**
-     * @return String summary of the underlying <code>ColorModel</code>.
-     * @see ColorModel#toString()
+     * Returns a string summary of the underlying {@link ColorModel}.
+     * 
+     * @return a string summary
      */
     @Override
     public String toString() {

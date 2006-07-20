@@ -336,8 +336,7 @@ public final class BufferedDataTable implements DataTable {
         String tableType = s.getString(CFG_TABLE_TYPE);
         BufferedDataTable t;
         if (tableType.equals(TABLE_TYPE_CONTAINER)) {
-            ContainerTable fromContainer = 
-                (ContainerTable)DataContainer.readFromZip(dest); 
+            ContainerTable fromContainer = DataContainer.readFromZip(dest); 
             t = new BufferedDataTable(fromContainer);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
                 || (tableType.equals(TABLE_TYPE_NEW_SPEC))) {

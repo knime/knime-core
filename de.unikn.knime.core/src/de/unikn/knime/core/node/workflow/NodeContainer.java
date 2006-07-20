@@ -224,7 +224,7 @@ public class NodeContainer implements NodeStateListener {
      * successors will NOT be initalized correctly. The Workflow manager is
      * required to take care of re-initializing the connections.
      * 
-     * @param settings retrieve the data from
+     * @param setts retrieve the data from
      * @param wfm the workflowmanager that is responsible for this node
      * @throws InvalidSettingsException if the required keys are not available
      *             in the NodeSettings
@@ -235,16 +235,16 @@ public class NodeContainer implements NodeStateListener {
      * 
      * @see #save(NodeSettingsWO, File, ExecutionMonitor)
      */
-    public NodeContainer(final NodeSettingsRO settings, final WorkflowManager wfm)
+    public NodeContainer(final NodeSettingsRO setts, final WorkflowManager wfm)
             throws InvalidSettingsException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
-        this(readNodeFactory(settings), wfm, settings.getInt(KEY_ID));
+        this(readNodeFactory(setts), wfm, setts.getInt(KEY_ID));
 
-        setExtraInfo(createExtraInfo(settings));
+        setExtraInfo(createExtraInfo(setts));
 
         try {
             // read custom name
-            String name = settings.getString(KEY_CUSTOM_NAME);
+            String name = setts.getString(KEY_CUSTOM_NAME);
 
             // if there was no user node name defined than keep the default name
             if (name != null) {
@@ -257,14 +257,14 @@ public class NodeContainer implements NodeStateListener {
 
         try {
             // read custom description
-            String description = settings.getString(KEY_CUSTOM_DESCRIPTION);
+            String description = setts.getString(KEY_CUSTOM_DESCRIPTION);
             setDescription(description);
         } catch (InvalidSettingsException ise) {
             LOGGER.warn("In the settings of node <id:" + getID() + "|type:"
                     + getName() + "> is no user description specified");
         }
 
-        m_deletable = settings.getBoolean(KEY_IS_DELETABLE, true);
+        m_deletable = setts.getBoolean(KEY_IS_DELETABLE, true);
     }
 
     /**
@@ -1113,5 +1113,12 @@ public class NodeContainer implements NodeStateListener {
      */
     public void retrieveModel(final MetaNodeModel metaModel) {
         m_node.retrieveModel(metaModel);
+    }
+    
+    /**
+     * @see Node#isFullyConnected()
+     */
+    public boolean isFullyConnected() {
+        return m_node.isFullyConnected();
     }
 }

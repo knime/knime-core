@@ -24,7 +24,7 @@ a general state (i.e. the user settings of all nodes, workflows, prediction
 models, etc.) in form of key-value pairs. The key is always a string, the value 
 can be of type DataCell, DataType, and almost all generic types, and also another 
 <code>Config</code> object in order to build hierarchical state structures.<br>
-All entries implement {@link de.unikn.knime.core.node.config.ConfigurableEntry},
+All entries extend {@link de.unikn.knime.core.node.config.AbstractConfigEntry},
 which provides a string representation of the value that can be serialized and 
 written out as XML stream to file. 
 </body>

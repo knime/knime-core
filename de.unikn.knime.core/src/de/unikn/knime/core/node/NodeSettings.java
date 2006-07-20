@@ -84,8 +84,8 @@ public final class NodeSettings extends Config
     }
 
     /**
-     * @see de.unikn.knime.core.node.
-     * NodeSettingsWO#addNodeSettings(de.unikn.knime.core.node.NodeSettings)
+     * @see de.unikn.knime.core.node.NodeSettingsWO
+     * #addNodeSettings(de.unikn.knime.core.node.NodeSettings)
      */
     public void addNodeSettings(final NodeSettings settings) {
         super.addConfig(settings);

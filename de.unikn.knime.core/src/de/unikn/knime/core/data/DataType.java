@@ -861,7 +861,8 @@ public final class DataType {
             return toString().hashCode();
         }
         
-        /** Overridden here to return the singleton. This method is being 
+        /*
+         * Overridden here to return the singleton. This method is being 
          * called  by the java reflection mechanism.
          */
         private Object readResolve() {

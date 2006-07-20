@@ -49,7 +49,8 @@ public interface NodeExtraInfo {
      * 
      * @see #save
      */
-    public void load(final NodeSettingsRO config) throws InvalidSettingsException;
+    public void load(final NodeSettingsRO config)
+    throws InvalidSettingsException;
     
     /**
      * Checks if all information for this extra info is set properly.

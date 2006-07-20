@@ -106,8 +106,9 @@ public final class SizeHandler implements PropertyHandler {
     }
     
     /**
-     * @return String summary of the underlying <code>SizeModel</code>.
-     * @see SizeModel#toString()
+     * Returns a string summary of the underlying {@link SizeModel}.
+     * 
+     * @return a string summary
      */
     @Override
     public String toString() {

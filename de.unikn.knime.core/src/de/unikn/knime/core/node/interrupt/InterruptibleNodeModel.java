@@ -71,11 +71,11 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     
     private ExecutionContext m_exec;
     
-//    private static final String FILE_NAME = "interruptibleInput";
+//   private static final String FILE_NAME = "interruptibleInput";
 //    
-//    private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
-//    private static final String INTERN_CFG_ITERATION = "iteration";
-//    private static final String INTERN_CFG_FINIS = "finished";
+//   private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
+//   private static final String INTERN_CFG_ITERATION = "iteration";
+//   private static final String INTERN_CFG_FINIS = "finished";
     
     
     /**
