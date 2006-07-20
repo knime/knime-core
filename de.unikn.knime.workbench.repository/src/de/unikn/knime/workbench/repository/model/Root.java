@@ -21,6 +21,9 @@
  */
 package de.unikn.knime.workbench.repository.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Realizes a root node. This has no parent (<code>null</code>) and can't be
  * added as a child to other containers.
@@ -87,13 +90,24 @@ public class Root extends AbstractContainerObject {
             if (!(obj instanceof IContainerObject)) {
                 continue;
             }
-            parent = (IContainerObject) obj;
+            parent = (IContainerObject)obj;
 
         }
 
         assert parent != null;
 
         return parent;
+    }
+
+    /**
+     * @return a list with categories that have wrong after-relationship
+     *         information.
+     */
+    public List<Category> getProblemCategories() {
+        List<Category> problemCategories = new ArrayList<Category>();
+        appendProblemCategories(problemCategories);
+        
+        return problemCategories;
     }
 
 }

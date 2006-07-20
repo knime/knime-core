@@ -168,7 +168,7 @@ public final class RepositoryManager {
                 LOGGER.info("Found category: " + category.getID());
 
             } catch (Exception ex) {
-                ex.printStackTrace(); // <=== DON'T PRINT TO SYSTEM.OUT,
+                LOGGER.error(ex); // <=== DON'T PRINT TO SYSTEM.OUT,
                 // PLEASE
                 WorkbenchErrorLogger.error("Could not load contributed "
                         + "extension, skipped: '" + e.getAttribute("id")

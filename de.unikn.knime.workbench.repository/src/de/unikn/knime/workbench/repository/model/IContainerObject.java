@@ -21,8 +21,6 @@
  */
 package de.unikn.knime.workbench.repository.model;
 
-import java.util.Comparator;
-
 /**
  * Interface for repository objects that act as a container of other objects.
  * 
@@ -74,12 +72,4 @@ public interface IContainerObject extends IRepositoryObject {
      * @return The child, or <code>null</code>
      */
     public IRepositoryObject getChildByID(String id, boolean recurse);
-
-    /**
-     * Sets the comparator, used to order the children.
-     * 
-     * @param comp The comparator
-     */
-    public void setComparator(Comparator comp);
-
 }

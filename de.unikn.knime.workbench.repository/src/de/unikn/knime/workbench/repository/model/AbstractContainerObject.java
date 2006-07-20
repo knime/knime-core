@@ -23,21 +23,27 @@ package de.unikn.knime.workbench.repository.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Abstract base implementation of a container object.
  * 
  * @author Florian Georg, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public abstract class AbstractContainerObject extends AbstractRepositoryObject
         implements IContainerObject {
 
-    // ordered set using default comparator
-    private ArrayList m_children = new ArrayList();
+    /**
+     * The list of categories and nodes.
+     */
+    private ArrayList<AbstractRepositoryObject> m_children = new ArrayList<AbstractRepositoryObject>();
 
-    private Comparator m_comparator = new DefaultRepositoryComparator();
+    /**
+     * Contains a list of categories that could not inserted properly.
+     */
+    private ArrayList<Category> m_problemCategories = new ArrayList<Category>();
 
     /**
      * Return true, if there are children contained in this cotainer.
@@ -76,17 +82,199 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     }
 
     /**
-     * Returns the children.
+     * Returns the children. The children are sorted according to the
+     * after-relationship defined in the plugin-xml and lexicographically.
      * 
-     * @return The children
+     * @return The children (category and nodes of current level)
      * @see de.unikn.knime.workbench.repository.model.IContainerObject#
      *      getChildren()
      */
     public IRepositoryObject[] getChildren() {
-        Collections.sort(m_children, m_comparator);
 
-        return (IRepositoryObject[]) m_children
+        // Collections.sort(m_children, m_comparator);
+        m_children = sortChildren(m_children);
+
+        return (IRepositoryObject[])m_children
                 .toArray(new IRepositoryObject[m_children.size()]);
+    }
+
+    /**
+     * Sorts the children (categories and nodes) of this level. Categories are
+     * placed before nodes and are sorted according to the after-relationship
+     * defined in the plugin.xml. Nodes are sorted lexicographically and are
+     * appended at the end of the list.
+     * 
+     * @param children the children (categories and nodes)
+     * 
+     * @return the sorted list
+     */
+    private ArrayList<AbstractRepositoryObject> sortChildren(
+            final ArrayList<AbstractRepositoryObject> children) {
+
+        // create two seperate lists of categories and nodes, as categories
+        // are ordered according to the after-relationship (see plugin.xml)
+        ArrayList<Category> categoryChildren = new ArrayList<Category>();
+        ArrayList<NodeTemplate> nodeChildren = new ArrayList<NodeTemplate>();
+        for (AbstractRepositoryObject object : children) {
+
+            if (object instanceof Category) {
+
+                categoryChildren.add((Category)object);
+
+            } else if (object instanceof NodeTemplate) {
+
+                nodeChildren.add((NodeTemplate)object);
+            }
+        }
+
+        // the ordered result list
+        ArrayList<AbstractRepositoryObject> result = new ArrayList<AbstractRepositoryObject>();
+
+        // Create the root element of the after-relationship tree
+        TreeEntry root = new TreeEntry(null);
+
+        // Recursively create the tree
+        addSuccessors(root, categoryChildren);
+
+        // traverse the tree depth first (apriori) and thus create the
+        // sorted list
+        createSortedList(root, result);
+
+        // append all categories that have not been inserted due to wrong
+        // or missing after-relationship information
+        Collections.sort(categoryChildren);
+        for (Category category : categoryChildren) {
+
+            m_problemCategories.add(category);
+            result.add(category);
+        }
+
+        // Finally append all nodes in lexicographically order
+        Collections.sort(nodeChildren);
+        for (NodeTemplate node : nodeChildren) {
+
+            result.add(node);
+        }
+
+        return result;
+    }
+
+    /**
+     * Traverses a tree in depth first (apriori) order to create a sorted list.
+     * 
+     * @param entry the current entry of the tree
+     * @param result the list the visited nodes are entered
+     * @see AbstractContainerObject#sortChildren(ArrayList)
+     */
+    private void createSortedList(final TreeEntry entry,
+            final ArrayList<AbstractRepositoryObject> result) {
+
+        for (TreeEntry treeEntry : entry.getChildren()) {
+
+            result.add(treeEntry.m_category);
+            createSortedList(treeEntry, result);
+        }
+    }
+
+    /**
+     * Recursive method to add all categories to the given parent entry from the
+     * given list of categories (children).
+     * 
+     * @param parent the parent node to which the after-relationship related
+     *            categories are added
+     * @param children the list of all categories
+     */
+    private void addSuccessors(final TreeEntry parent,
+            final ArrayList<Category> children) {
+
+        // add all children with an after id equal to the parents id
+        Iterator<Category> childIter = children.iterator();
+        while (childIter.hasNext()) {
+            Category child = childIter.next();
+
+            if (child.getAfterID().equals(parent.getId())) {
+                parent.addChildCategory(new TreeEntry(child));
+                childIter.remove();
+            }
+
+        }
+
+        // sort the child entries
+        parent.sort();
+
+        // then invoke this method recursively for all children
+        // this is the recursion termination in case there is no category
+        // with an after id corresponding to the parents id
+        for (TreeEntry childCategory : parent.getChildren()) {
+            addSuccessors(childCategory, children);
+        }
+
+    }
+
+    /**
+     * An entry of a tree holding a category and all its direct successors
+     * according to the after-relationship defined in the plugin.xml.
+     * 
+     * @author Christoph Sieb, University of Konstanz
+     */
+    private class TreeEntry implements Comparable<TreeEntry> {
+
+        private Category m_category;
+
+        private List<TreeEntry> m_treeChildren;
+
+        private String m_id;
+
+        /**
+         * Constructs a new GraphEntry.
+         * 
+         * @param category the category representing the parent
+         */
+        public TreeEntry(final Category category) {
+            m_category = category;
+
+            if (m_category != null) {
+                m_id = m_category.getID();
+            } else {
+                m_id = "";
+            }
+            m_treeChildren = new ArrayList<TreeEntry>();
+        }
+
+        /**
+         * Sorts the children lexicographically.
+         */
+        public void sort() {
+            Collections.sort(m_treeChildren);
+        }
+
+        /**
+         * Adds a category as child to this tree entry.
+         * 
+         * @param category the category to add.
+         */
+        public void addChildCategory(final TreeEntry category) {
+            m_treeChildren.add(category);
+        }
+
+        /**
+         * @return returns the after relationship id
+         */
+        public String getId() {
+            return m_id;
+        }
+
+        /**
+         * @return the child categories of this tree entry.
+         */
+        public List<TreeEntry> getChildren() {
+            return m_treeChildren;
+        }
+
+        public int compareTo(final TreeEntry o) {
+
+            return m_category.compareTo(o.m_category);
+        }
     }
 
     /**
@@ -130,7 +318,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
             return this;
         }
         for (Iterator it = m_children.iterator(); it.hasNext();) {
-            IRepositoryObject o = (IRepositoryObject) it.next();
+            IRepositoryObject o = (IRepositoryObject)it.next();
 
             if (o.getID().equals(id)) {
                 return o;
@@ -139,7 +327,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
             // if it is a container, recursivly dive inside it !
             if (rec) {
                 if (o instanceof IContainerObject) {
-                    IRepositoryObject result = ((IContainerObject) o)
+                    IRepositoryObject result = ((IContainerObject)o)
                             .getChildByID(id, rec);
                     if (result != null) {
                         return result;
@@ -161,12 +349,12 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         IRepositoryObject[] c = getChildren();
         for (int i = 0; i < c.length; i++) {
             if (c[i] instanceof NodeTemplate) {
-                NodeTemplate t = (NodeTemplate) c[i];
+                NodeTemplate t = (NodeTemplate)c[i];
                 if (t.getFactory().getName().equals(factory)) {
                     return t;
                 }
             } else if (c[i] instanceof AbstractContainerObject) {
-                NodeTemplate t = ((AbstractContainerObject) c[i])
+                NodeTemplate t = ((AbstractContainerObject)c[i])
                         .findTemplateByFactory(factory);
                 if (t != null) {
                     return t;
@@ -177,12 +365,22 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     }
 
     /**
+     * Appends all categories to the passed list, that have wrong
+     * after-relationship information.
      * 
-     * @see IContainerObject#setComparator(Comparator)
+     * @param problemList the list to which the problem categories are appended
      */
-    public void setComparator(final Comparator comp) {
-        m_comparator = comp;
-        Collections.sort(m_children, m_comparator);
+    protected void appendProblemCategories(final List<Category> problemList) {
+        
+        problemList.addAll(m_problemCategories);
+        
+        for (AbstractRepositoryObject repositoryObject : m_children) {
+            
+            if (repositoryObject instanceof AbstractContainerObject) {
+                
+                ((AbstractContainerObject)repositoryObject)
+                        .appendProblemCategories(problemList);
+            }
+        }
     }
-
 }

@@ -35,10 +35,6 @@ import de.unikn.knime.workbench.repository.model.props.CategoryPropertySource;
  */
 public class Category extends AbstractContainerObject {
 
-    private String m_id;
-
-    private String m_name;
-
     private String m_description;
 
     private String m_path;
@@ -55,7 +51,7 @@ public class Category extends AbstractContainerObject {
      * @param id The id
      */
     public Category(final String id) {
-        m_id = id;
+        setID(id);
     }
 
     /**
@@ -70,20 +66,6 @@ public class Category extends AbstractContainerObject {
      */
     public void setDescription(final String description) {
         m_description = description;
-    }
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return m_name;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setName(final String name) {
-        m_name = name;
     }
 
     /**
@@ -112,20 +94,6 @@ public class Category extends AbstractContainerObject {
      */
     public void setIcon(final Image icon) {
         m_icon = icon;
-    }
-
-    /**
-     * @return Returns the id.
-     */
-    public String getID() {
-        return m_id;
-    }
-
-    /**
-     * @param id The id to set.
-     */
-    public void setID(final String id) {
-        m_id = id;
     }
 
     /**
@@ -168,5 +136,13 @@ public class Category extends AbstractContainerObject {
      */
     public String getAfterID() {
         return m_afterID;
+    }
+
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return "Id: " + getID() + " Name: " + getName() + " After-id: "
+                + m_afterID;
     }
 }

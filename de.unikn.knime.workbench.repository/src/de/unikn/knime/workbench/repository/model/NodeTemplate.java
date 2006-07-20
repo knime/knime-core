@@ -79,10 +79,6 @@ public class NodeTemplate extends AbstractSimpleObject {
         TYPES.add(TYPE_OTHER);
     }
 
-    private String m_id;
-
-    private String m_name;
-
     private Class m_factory;
 
     private Image m_icon;
@@ -100,28 +96,7 @@ public class NodeTemplate extends AbstractSimpleObject {
      * @param id The id, usually parsed from the extension
      */
     public NodeTemplate(final String id) {
-        m_id = id;
-    }
-
-    /**
-     * @return Returns the id.
-     */
-    public String getID() {
-        return m_id;
-    }
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return m_name;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setName(final String name) {
-        m_name = name;
+        setID(id);
     }
 
     /**

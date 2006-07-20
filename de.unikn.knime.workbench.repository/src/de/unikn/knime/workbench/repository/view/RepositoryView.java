@@ -21,6 +21,8 @@
  */
 package de.unikn.knime.workbench.repository.view;
 
+import java.util.List;
+
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -32,7 +34,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
@@ -42,6 +46,7 @@ import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.IPropertySourceProvider;
 
 import de.unikn.knime.workbench.repository.RepositoryManager;
+import de.unikn.knime.workbench.repository.model.Category;
 import de.unikn.knime.workbench.repository.model.Root;
 
 /**
@@ -104,11 +109,33 @@ public class RepositoryView extends ViewPart {
         m_viewer.setLabelProvider(new RepositoryLabelProvider());
         // m_viewer.setSorter(new NameRepositorySorter());
         m_viewer.setInput(m_root);
+
+        // check if there were categories that could not be processed properly
+        // i.e. the afer-relationship information was wrong
+        List<Category> problemCategories = m_root.getProblemCategories();
+        StringBuffer message = new StringBuffer();
+        message.append("The following categories could not be inserted at a "
+                + "proper position due to wrong positioning information.\n"
+                + "See the corresponding plugin.xml file.\n "
+                + "The categories were instead appended at the end in each level.\n\n");
+        for (Category category : problemCategories) {
+            message.append("ID: ").append(category.getID());
+            message.append(" Name: ").append(category.getName());
+            message.append(" After-ID: ").append(category.getAfterID());
+            message.append("\n");
+        }
+
+        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
+                SWT.ICON_INFORMATION | SWT.OK);
+        mb.setText("Problem categories...");
+        mb.setMessage(message.toString());
+        mb.open();
+
         // The viewer provides the selection to the workbench.
         this.getSite().setSelectionProvider(m_viewer);
         // The viewer supports drag&drop
         // (well, actually only drag - objects are dropped into the editor ;-)
-        Transfer[] transfers = new Transfer[] {NodeTemplateTransfer
+        Transfer[] transfers = new Transfer[]{NodeTemplateTransfer
                 .getInstance()};
         m_viewer.addDragSupport(DND.DROP_COPY, transfers,
                 new NodeTemplateDragListener(m_viewer));
@@ -217,9 +244,9 @@ public class RepositoryView extends ViewPart {
 
             // Look if we can get an adapter to IPropertySource....
             if (object instanceof IAdaptable) {
-                IAdaptable adaptable = (IAdaptable) object;
+                IAdaptable adaptable = (IAdaptable)object;
 
-                return (IPropertySource) adaptable
+                return (IPropertySource)adaptable
                         .getAdapter(IPropertySource.class);
             }
 

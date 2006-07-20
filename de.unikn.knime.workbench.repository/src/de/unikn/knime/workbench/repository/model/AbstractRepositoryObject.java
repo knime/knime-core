@@ -26,9 +26,14 @@ package de.unikn.knime.workbench.repository.model;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public abstract class AbstractRepositoryObject implements IRepositoryObject {
+public abstract class AbstractRepositoryObject implements IRepositoryObject,
+        Comparable<AbstractRepositoryObject> {
 
     private IContainerObject m_parent;
+
+    private String m_name;
+
+    private String m_id;
 
     /**
      * Default implementation, provides no adapters.
@@ -83,5 +88,45 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject {
      */
     protected void detach() {
         m_parent = null;
+    }
+
+    /**
+     * @return Returns the id.
+     */
+    public String getID() {
+        return m_id;
+    }
+
+    /**
+     * Set the id.
+     * 
+     * @param id the id
+     */
+    protected void setID(final String id) {
+        m_id = id;
+    }
+
+    /**
+     * @return Returns the name.
+     */
+    public String getName() {
+        return m_name;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setName(final String name) {
+        m_name = name;
+    }
+
+    /**
+     * Compares two repository objects lexicographically accordint to their
+     * name.
+     * 
+     * @see java.lang.Comparable#compareTo(Object)
+     */
+    public int compareTo(final AbstractRepositoryObject o) {
+        return m_name.compareTo(o.m_name);
     }
 }
