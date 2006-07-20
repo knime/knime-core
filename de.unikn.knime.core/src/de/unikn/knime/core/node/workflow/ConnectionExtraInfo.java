@@ -20,9 +20,6 @@
  */
 package de.unikn.knime.core.node.workflow;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
 
 /** Interface for an object that's held within a ConnectionContainer and
  * allows loading and saving of information. Usually such objects
@@ -30,23 +27,6 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public interface ConnectionExtraInfo {
-    /**
-     * Stores all contained information into the given configuration.
-     * 
-     * @param config The configuration to write the current settings into.
-     * @see #load
-     */
-    void save(final NodeSettingsWO config);
-    
-    /**
-     * Reads the information from the NodeSettings object.
-     * 
-     * @param config Retrieve the data from. 
-     * @throws InvalidSettingsException If the required keys are not
-     *         available in the NodeSettings.
-     * 
-     * @see #save
-     */
-    void load(final NodeSettingsRO config) throws InvalidSettingsException;
+public interface ConnectionExtraInfo extends ExtraInfo{
+   
 }
