@@ -46,7 +46,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
 
     /** object version for serialization. */
     static final long serialVersionUID = 1;
-    
+
     private final JSpinner m_first;
 
     private final JCheckBox m_tilEOT;
@@ -86,8 +86,8 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
         });
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.
-                createEtchedBorder(), "Row number range:"));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Row number range:"));
 
         Box labelBox = Box.createVerticalBox();
         labelBox.add(Box.createHorizontalStrut(300));
@@ -136,6 +136,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
     /**
      * @see RowFilterPanel#loadSettingsFromFilter(RowFilter)
      */
+    @Override
     public void loadSettingsFromFilter(final RowFilter filter)
             throws InvalidSettingsException {
         if (!(filter instanceof RowNoRowFilter)) {
@@ -159,7 +160,8 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
         // the filter contains index values (starting from 0)
         // the spinner show the numbers, so we need to add 1 here.
         m_first.setValue(new Integer(first + 1));
-        m_tilEOT.setSelected(last == RowNoRowFilter.EOT); // en/disables m_last
+        m_tilEOT.setSelected(last == RowNoRowFilter.EOT); // en/disables
+                                                            // m_last
         if (last != RowNoRowFilter.EOT) {
             m_last.setValue(new Integer(last + 1));
         }
@@ -170,6 +172,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
      * @see de.unikn.knime.base.node.filter.row.RowFilterPanel
      *      #createFilter(boolean)
      */
+    @Override
     public RowFilter createFilter(final boolean include)
             throws InvalidSettingsException {
         // just in case, because the err text is the indicator for err existence

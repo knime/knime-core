@@ -57,6 +57,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      * @throws NotConfigurableException If no columns are available for
      *         filtering.
      */
+    @Override
     protected void loadSettingsFrom(
             final NodeSettingsRO settings, final DataTableSpec[] specs) 
             throws NotConfigurableException {
@@ -86,6 +87,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      *
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         FilterColumnPanel p = 
             (FilterColumnPanel) getTab(TAB);

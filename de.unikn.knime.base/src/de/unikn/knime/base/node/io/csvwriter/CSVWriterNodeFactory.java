@@ -22,21 +22,23 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * Factory to create a CSV (comma separated) writer node. 
+ * Factory to create a CSV (comma separated) writer node.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriterNodeFactory extends NodeFactory {
-    
+
     /**
-     * Creates new factory proposing a default file in the user's home 
-     * directory as target.
+     * Creates new factory proposing a default file in the user's home directory
+     * as target.
      */
     public CSVWriterNodeFactory() {
     }
-    
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         return new CSVWriterNodeModel();
     }
@@ -44,6 +46,7 @@ public class CSVWriterNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
@@ -51,14 +54,16 @@ public class CSVWriterNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeView(int, NodeModel)
      */
-    public NodeView createNodeView(
-            final int viewIndex, final NodeModel nodeModel) {
+    @Override
+    public NodeView createNodeView(final int viewIndex,
+            final NodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return true;
     }
@@ -66,6 +71,7 @@ public class CSVWriterNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return new CSVWriterNodeDialog();
     }

@@ -175,6 +175,7 @@ public class Comment {
      * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         StringBuffer result = new StringBuffer();
         boolean closeParan = false;

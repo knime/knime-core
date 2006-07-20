@@ -41,19 +41,21 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import de.unikn.knime.core.node.util.StringHistory;
 
 /**
- * Panel that contains an editable Combo Box showing the file to write to and
- * a button to trigger a file chooser. The elements in the combo are files 
- * that have been recently used.
+ * Panel that contains an editable Combo Box showing the file to write to and a
+ * button to trigger a file chooser. The elements in the combo are files that
+ * have been recently used.
  * 
  * @see de.unikn.knime.core.node.util.StringHistory
  * @author wiswedel, University of Konstanz
  */
 public final class CSVFilesHistoryPanel extends JPanel {
-    
+
     private final JComboBox m_textBox;
+
     private final JButton m_chooseButton;
 
-    /** Creates new instance, sets properties, for instance renderer, 
+    /**
+     * Creates new instance, sets properties, for instance renderer,
      * accordingly.
      */
     public CSVFilesHistoryPanel() {
@@ -65,7 +67,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
         m_chooseButton = new JButton("Browse...");
         m_chooseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                String newFile = getOutputFileName(); 
+                String newFile = getOutputFileName();
                 if (newFile != null) {
                     m_textBox.setSelectedItem(newFile);
                 }
@@ -76,7 +78,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
         add(m_chooseButton);
         updateHistory();
     }
-        
+
     private String getOutputFileName() {
         // file chooser triggered by choose button
         final JFileChooser fileChooser = new JFileChooser();
@@ -91,26 +93,28 @@ public final class CSVFilesHistoryPanel extends JPanel {
         if (r == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             if (file.exists() && file.isDirectory()) {
-                    JOptionPane.showMessageDialog(this, "Error: Please specify "
-                            + "a file, not a directory.");
-                    return null;
+                JOptionPane.showMessageDialog(this, "Error: Please specify "
+                        + "a file, not a directory.");
+                return null;
             }
             return file.getAbsolutePath();
         }
         return null;
     }
-        
+
     /**
      * Get currently selected file.
+     * 
      * @return The current file url.
      * @see javax.swing.JComboBox#getSelectedItem()
      */
     public String getSelectedFile() {
-        return (String)m_textBox.getEditor().getItem().toString();
+        return m_textBox.getEditor().getItem().toString();
     }
 
     /**
      * Set the file url as default.
+     * 
      * @param url The file to choose.
      * @see javax.swing.JComboBox#setSelectedItem(java.lang.Object)
      */
@@ -120,8 +124,8 @@ public final class CSVFilesHistoryPanel extends JPanel {
 
     /** Updates the elements in the combo box, reads the file history. */
     public void updateHistory() {
-        StringHistory history = StringHistory.getInstance(
-                CSVWriterNodeModel.FILE_HISTORY_ID);
+        StringHistory history = StringHistory
+                .getInstance(CSVWriterNodeModel.FILE_HISTORY_ID);
         String[] allVals = history.getHistory();
         LinkedHashSet<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < allVals.length; i++) {
@@ -133,8 +137,8 @@ public final class CSVFilesHistoryPanel extends JPanel {
                 continue;
             }
         }
-        DefaultComboBoxModel comboModel = 
-            (DefaultComboBoxModel)m_textBox.getModel();
+        DefaultComboBoxModel comboModel = (DefaultComboBoxModel)m_textBox
+                .getModel();
         comboModel.removeAllElements();
         for (Iterator it = list.iterator(); it.hasNext();) {
             comboModel.addElement(it.next());
@@ -144,7 +148,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
         Dimension newMin = new Dimension(0, getPreferredSize().height);
         setMinimumSize(newMin);
     }
-    
+
     /**
      * Tries to create a File from the passed string.
      * 
@@ -152,8 +156,8 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * @return File if entered value could be properly tranformed, or
      * @throws MalformedURLException if the value passed was invalid
      */
-    private static File textToFile(final String url) 
-        throws MalformedURLException {
+    private static File textToFile(final String url)
+            throws MalformedURLException {
         if ((url == null) || (url.equals(""))) {
             throw new MalformedURLException("Specify a not empty valid URL");
         }
@@ -167,14 +171,16 @@ public final class CSVFilesHistoryPanel extends JPanel {
             return new File(url);
         }
         if (file == null || file.equals("")) {
-            throw new MalformedURLException(
-                    "Can't get file from file '" + url + "'");
+            throw new MalformedURLException("Can't get file from file '" + url
+                    + "'");
         }
         return new File(file);
     }
 
-    /** Return a file object for the given fileName. It makes sure that if
-     * the fileName is not absolute it will be relative to the user's home dir.
+    /**
+     * Return a file object for the given fileName. It makes sure that if the
+     * fileName is not absolute it will be relative to the user's home dir.
+     * 
      * @param fileName The file name to convert to a file.
      * @return A file representing fileName.
      */
@@ -185,22 +191,23 @@ public final class CSVFilesHistoryPanel extends JPanel {
         }
         return f;
     }
-    
+
     /** renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
         /**
          * @see BasicComboBoxRenderer#getListCellRendererComponent(
-         * javax.swing.JList, java.lang.Object, int, boolean, boolean)
+         *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
          */
-        public Component getListCellRendererComponent(final JList list, 
-                final Object value, final int index, final boolean isSelected, 
+        @Override
+        public Component getListCellRendererComponent(final JList list,
+                final Object value, final int index, final boolean isSelected,
                 final boolean cellHasFocus) {
             if (index > -1) {
                 list.setToolTipText(value.toString());
             }
-            return super.getListCellRendererComponent(
-                    list, value, index, isSelected, cellHasFocus);
-        }  
+            return super.getListCellRendererComponent(list, value, index,
+                    isSelected, cellHasFocus);
+        }
     }
 
 }

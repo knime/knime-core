@@ -188,7 +188,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         errBox.add(Box.createHorizontalGlue());
         errBox.add(errLblBox);
         errBox.add(Box.createHorizontalGlue());
-        //errBox.add(Box.createHorizontalGlue());
+        // errBox.add(Box.createHorizontalGlue());
         panel.add(Box.createHorizontalStrut(300));
         panel.add(errBox);
         panel.add(Box.createVerticalStrut(7));
@@ -208,8 +208,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         for (int c = 0; c < tSpec.getNumColumns(); c++) {
             colNames.add(tSpec.getColumnSpec(c).getName());
         }
-        m_colCombo = new ColumnSelectionComboxBox((Border)null, 
-                DataValue.class);
+        m_colCombo = new ColumnSelectionComboxBox((Border)null, DataValue.class);
         m_colCombo.update(tSpec, null);
         m_colCombo.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -395,8 +394,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         try {
             Pattern.compile(m_regExpr.getText());
         } catch (PatternSyntaxException pse) {
-            setErrMsg("Error in regular expression. ('"
-                    + pse.getMessage() + "')");
+            setErrMsg("Error in regular expression. ('" + pse.getMessage()
+                    + "')");
             validate();
         }
     }
@@ -406,6 +405,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      *      #loadSettingsFromFilter(
      *      de.unikn.knime.base.node.filter.row.rowfilter.RowFilter)
      */
+    @Override
     public void loadSettingsFromFilter(final RowFilter filter)
             throws InvalidSettingsException {
         if (!(filter instanceof ColValRowFilter)) {
@@ -443,6 +443,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * @see de.unikn.knime.base.node.filter.row.RowFilterPanel
      *      #createFilter(boolean)
      */
+    @Override
     public RowFilter createFilter(final boolean include)
             throws InvalidSettingsException {
         if (hasErrors()) {
@@ -488,7 +489,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * @return the selected name of the column to test.
      */
     private String getSelectedColumnName() {
-        
+
         return m_colCombo.getSelectedColumn();
     }
 
@@ -555,8 +556,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                     double lb = Double.parseDouble(editField.getText());
                     return new DoubleCell(lb);
                 } catch (NumberFormatException nfe) {
-                    throw new InvalidSettingsException("Number format error in "
-                                    + name + " bound number: enter a valid "
+                    throw new InvalidSettingsException(
+                            "Number format error in " + name
+                                    + " bound number: enter a valid "
                                     + "float number");
                 }
             } else {
@@ -589,7 +591,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     public String getErrMsg() {
         return m_errText.getText();
     }
-    
+
     private void setErrMsg(final String msg) {
         m_errText.setText(msg);
         m_errText.setToolTipText(msg);

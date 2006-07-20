@@ -46,10 +46,12 @@ import de.unikn.knime.core.node.util.StringHistory;
 public class CSVWriterNodeModel extends NodeModel {
 
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = NodeLogger.
-            getLogger(CSVWriterNodeModel.class);
-    
-    /** Identifier for StringHistory.
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(CSVWriterNodeModel.class);
+
+    /**
+     * Identifier for StringHistory.
+     * 
      * @see StringHistory
      */
     public static final String FILE_HISTORY_ID = "csvwrite";
@@ -89,6 +91,7 @@ public class CSVWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_fileName != null) {
             settings.addString(CFGKEY_FILE, m_fileName);
@@ -101,6 +104,7 @@ public class CSVWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String missing = settings.getString(CFGKEY_MISSING);
@@ -115,6 +119,7 @@ public class CSVWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_fileName = settings.getString(CFGKEY_FILE);
@@ -128,7 +133,7 @@ public class CSVWriterNodeModel extends NodeModel {
         m_writeColHeader = settings.getBoolean(CFGKEY_COLHEADER, true);
         m_writeRowHeader = settings.getBoolean(CFGKEY_ROWHEADER, true);
         m_missingPattern = settings.getString(CFGKEY_MISSING, "");
-        StringHistory history = StringHistory.getInstance(FILE_HISTORY_ID); 
+        StringHistory history = StringHistory.getInstance(FILE_HISTORY_ID);
         if (forhistory != null) {
             history.add(forhistory);
         }
@@ -171,6 +176,7 @@ public class CSVWriterNodeModel extends NodeModel {
      * 
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
     }
 
@@ -184,10 +190,10 @@ public class CSVWriterNodeModel extends NodeModel {
             CanceledExecutionException {
         // no internals to save
     }
-    
+
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     * #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -195,10 +201,11 @@ public class CSVWriterNodeModel extends NodeModel {
             CanceledExecutionException {
         // nothing to save.
     }
-    
+
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_missingPattern != null && m_missingPattern.indexOf(',') >= 0) {
@@ -219,14 +226,15 @@ public class CSVWriterNodeModel extends NodeModel {
         }
         return new DataTableSpec[0];
     }
-    
+
     /**
      * Helper that checks some properties for the file argument.
+     * 
      * @param fileName The file to check
      * @throws InvalidSettingsException If that fails.
      */
-    private void checkFileAccess(final String fileName) 
-        throws InvalidSettingsException {
+    private void checkFileAccess(final String fileName)
+            throws InvalidSettingsException {
         if (fileName == null) {
             throw new InvalidSettingsException("No file set.");
         }

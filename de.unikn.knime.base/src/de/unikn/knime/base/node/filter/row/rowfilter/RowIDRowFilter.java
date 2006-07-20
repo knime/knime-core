@@ -128,6 +128,7 @@ public class RowIDRowFilter extends RowFilter {
     /**
      * @see RowFilter#matches(DataRow, int)
      */
+    @Override
     public boolean matches(final DataRow row, final int rowIndex) {
         assert row != null;
         Matcher matcher = m_pattern.matcher(row.getKey().getId().toString());
@@ -144,6 +145,7 @@ public class RowIDRowFilter extends RowFilter {
     /**
      * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
+    @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         m_include = cfg.getBoolean(CFG_INCLUDE);
@@ -168,17 +170,19 @@ public class RowIDRowFilter extends RowFilter {
     /**
      * @see RowFilter#saveSettings(NodeSettingsWO)
      */
+    @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
         cfg.addBoolean(CFG_INCLUDE, m_include);
         cfg.addBoolean(CFG_STARTSWITH, m_startsWith);
         cfg.addString(CFG_PATTERN, m_pattern.pattern());
         cfg.addBoolean(CFG_CASESENSE, m_caseSensitive);
     }
-    
+
     /**
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *  #configure(de.unikn.knime.core.data.DataTableSpec)
+     *      #configure(de.unikn.knime.core.data.DataTableSpec)
      */
+    @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException {
         if (m_pattern == null) {
@@ -186,16 +190,18 @@ public class RowIDRowFilter extends RowFilter {
         }
         return inSpec;
     }
+
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
-       String result = "ROW-ID-FILTER:";
-       result += m_include ? "include " : "exclude ";
-       result += "row IDs matching '" + m_pattern.pattern() + "' (";
-       result += m_caseSensitive ? "case, " : "nocase, ";
-       result += m_startsWith ? "prefixed)" : "entire)";
-       return result;
+        String result = "ROW-ID-FILTER:";
+        result += m_include ? "include " : "exclude ";
+        result += "row IDs matching '" + m_pattern.pattern() + "' (";
+        result += m_caseSensitive ? "case, " : "nocase, ";
+        result += m_startsWith ? "prefixed)" : "entire)";
+        return result;
     }
 
 }

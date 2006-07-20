@@ -91,6 +91,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
+    @Override
     protected void loadSettingsFrom(
             final NodeSettingsRO settings, final DataTableSpec[] specs) 
             throws NotConfigurableException {
@@ -109,6 +110,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         boolean isSuffix = m_appendSuffixButton.isSelected();

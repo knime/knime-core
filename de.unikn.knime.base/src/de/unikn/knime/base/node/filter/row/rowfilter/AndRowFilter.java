@@ -96,6 +96,7 @@ public class AndRowFilter extends RowFilter {
     /**
      * @see RowFilter#matches(DataRow, int)
      */
+    @Override
     public boolean matches(final DataRow row, final int rowIndex)
             throws EndOfTableException, IncludeFromNowOn {
 
@@ -136,6 +137,7 @@ public class AndRowFilter extends RowFilter {
     /**
      * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
+    @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
@@ -149,6 +151,7 @@ public class AndRowFilter extends RowFilter {
     /**
      * @see RowFilter#saveSettings(NodeSettingsWO)
      */
+    @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
         if (m_in1 != null) {
             NodeSettingsWO cfg1 = cfg.addNodeSettings(CFG_FILTER1);
@@ -163,6 +166,7 @@ public class AndRowFilter extends RowFilter {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "AND-Filter:\nINPUT1: " + m_in1.toString() + "\nINPUT2: "
                 + m_in2.toString();
@@ -172,11 +176,12 @@ public class AndRowFilter extends RowFilter {
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
      *      #configure(de.unikn.knime.core.data.DataTableSpec)
      */
+    @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException {
         DataTableSpec spec1 = null;
         DataTableSpec spec2 = null;
-        
+
         if (m_in1 != null) {
             spec1 = m_in1.configure(inSpec);
         } else {
@@ -187,7 +192,7 @@ public class AndRowFilter extends RowFilter {
             spec2 = m_in2.configure(inSpec);
         } else {
             throw new InvalidSettingsException(
-            "AND-rowfilter: no input filter set");
+                    "AND-rowfilter: no input filter set");
         }
         if ((spec1 != null) || (spec2 != null)) {
             // TODO: how in the world do we AND two specs?!?
@@ -195,10 +200,11 @@ public class AndRowFilter extends RowFilter {
         }
         return null;
     }
-    
+
     /**
      * @see java.lang.Object#clone()
      */
+    @Override
     public Object clone() {
         AndRowFilter arf = (AndRowFilter)super.clone();
         if (m_in1 != null) {

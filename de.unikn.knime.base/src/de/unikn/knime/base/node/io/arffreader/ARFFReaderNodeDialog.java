@@ -94,8 +94,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
 
         JPanel fPanel = new JPanel();
         fPanel.setLayout(new BoxLayout(fPanel, BoxLayout.X_AXIS));
-        fPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.
-                createEtchedBorder(), "Enter location of ARFF file:"));
+        fPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Enter location of ARFF file:"));
         Container fileBox = Box.createHorizontalBox();
         fileBox.add(Box.createHorizontalStrut(20));
         fileBox.add(new JLabel("valid URL:"));
@@ -139,8 +139,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
 
         Container prefixBox = Box.createHorizontalBox();
         JPanel prefixPanel = new JPanel();
-        prefixPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.
-                createEtchedBorder(), "Row IDs are build from prefix + "
+        prefixPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Row IDs are build from prefix + "
                 + "row number"));
         prefixPanel.setLayout(new BoxLayout(prefixPanel, BoxLayout.X_AXIS));
 
@@ -247,8 +247,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
             try {
-                path = chooser.getSelectedFile().getAbsoluteFile().toURL().
-                        toString();
+                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
+                        .toString();
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
@@ -260,10 +260,11 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
+    @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_url.setText(settings.
-                getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
+        m_url.setText(settings
+                .getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
         m_rowPrefix.setText(settings.getString(
                 ARFFReaderNodeModel.CFGKEY_ROWPREFIX, ""));
 
@@ -272,6 +273,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         updateFileError();
@@ -280,8 +282,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
                     + "Or press 'Cancel'.");
         }
         settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, m_url.getText());
-        settings.addString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, m_rowPrefix.
-                getText());
+        settings.addString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, m_rowPrefix
+                .getText());
     }
 
     /**
@@ -294,6 +296,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         /**
          * @see javax.swing.filechooser.FileFilter#accept(java.io.File)
          */
+        @Override
         public boolean accept(final File f) {
             if (f != null) {
                 if (f.isDirectory()) {
@@ -310,10 +313,9 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         /**
          * @see javax.swing.filechooser.FileFilter#getDescription()
          */
+        @Override
         public String getDescription() {
             return "ARFF data files (*.arff)";
         }
-
     }
-
 }

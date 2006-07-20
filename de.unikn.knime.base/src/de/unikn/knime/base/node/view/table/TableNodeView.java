@@ -108,7 +108,7 @@ public class TableNodeView extends NodeView {
     public boolean hasData() {
         return m_tableView.hasData();
     }
-    
+
     /**
      * Checks is property handler is set.
      * 
@@ -243,6 +243,7 @@ public class TableNodeView extends NodeView {
      * 
      * @see de.unikn.knime.core.node.NodeView#modelChanged()
      */
+    @Override
     protected void modelChanged() {
         if (isOpen()) {
             countRowsInBackground();
@@ -252,6 +253,7 @@ public class TableNodeView extends NodeView {
     /**
      * @see de.unikn.knime.core.node.NodeView#onClose()
      */
+    @Override
     protected void onClose() {
         // unregister from hilite handler
         m_tableView.cancelRowCountingInBackground();
@@ -262,59 +264,63 @@ public class TableNodeView extends NodeView {
      * 
      * @see de.unikn.knime.core.node.NodeView#onOpen()
      */
+    @Override
     protected void onOpen() {
         countRowsInBackground();
         updateTitle();
     }
-    
-    /** Delegates to the table view that it should start a row counter 
-     * thread. Multiple invocations of this method don't harm.
+
+    /**
+     * Delegates to the table view that it should start a row counter thread.
+     * Multiple invocations of this method don't harm.
      */
     private void countRowsInBackground() {
         if (hasData()) {
             m_tableView.countRowsInBackground();
         }
     }
-    
-    /** A JMenu that has one entry "Write to CSV file". */
+
+    /* A JMenu that has one entry "Write to CSV file". */
     private JMenu createWriteCSVMenu() {
         JMenu menu = new JMenu("Output");
         JMenuItem item = new JMenuItem("Write CSV");
-        item.addPropertyChangeListener(
-                "ancestor", new PropertyChangeListener() {
-           public void propertyChange(final PropertyChangeEvent evt) {
-               ((JMenuItem)evt.getSource()).setEnabled(hasData());
-           } 
-        });
+        item.addPropertyChangeListener("ancestor",
+                new PropertyChangeListener() {
+                    public void propertyChange(final PropertyChangeEvent evt) {
+                        ((JMenuItem)evt.getSource()).setEnabled(hasData());
+                    }
+                });
         final CSVFilesHistoryPanel hist = new CSVFilesHistoryPanel();
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                int i = JOptionPane.showConfirmDialog(m_tableView, hist, 
+                int i = JOptionPane.showConfirmDialog(m_tableView, hist,
                         "Choose File", JOptionPane.OK_CANCEL_OPTION);
                 if (i == JOptionPane.OK_OPTION) {
                     String sfile = hist.getSelectedFile();
                     File file = CSVFilesHistoryPanel.getFile(sfile);
                     writeToCSV(file);
                 }
-            };
+            }
         });
         menu.add(item);
         return menu;
     }
-    
-    /** Called by the JMenu item "Write to CVS", it write the table as
-     * shown in table view to a CSV file. 
-     * @param file The file to write to. 
+
+    /**
+     * Called by the JMenu item "Write to CVS", it write the table as shown in
+     * table view to a CSV file.
+     * 
+     * @param file The file to write to.
      */
     private void writeToCSV(final File file) {
         // CSV Writer supports ExecutionMonitor. Some table may be big.
         DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
         ExecutionMonitor e = new ExecutionMonitor(progMon);
         // Frame of m_tableView (if any)
-        Frame f = (Frame)SwingUtilities.getAncestorOfClass(
-                Frame.class, m_tableView);
-        final NodeProgressMonitorView progView =
-            new NodeProgressMonitorView(f, progMon);
+        Frame f = (Frame)SwingUtilities.getAncestorOfClass(Frame.class,
+                m_tableView);
+        final NodeProgressMonitorView progView = new NodeProgressMonitorView(f,
+                progMon);
         // CSV Writer does not support 1-100 progress (unknown row count)
         progView.setShowProgress(false);
         // Writing is done in a thread (allows repainting of GUI)
@@ -322,51 +328,53 @@ public class TableNodeView extends NodeView {
         t.start();
         // A thread that waits for t to finish and then disposes the prog view
         new Thread(new Runnable() {
-           public void run() {
-               try {
-                   t.join();
-               } catch (InterruptedException ie) {
-                   // do nothing. Only dispose the view
-               } finally {
-                   progView.dispose();
-               }
-           } 
+            public void run() {
+                try {
+                    t.join();
+                } catch (InterruptedException ie) {
+                    // do nothing. Only dispose the view
+                } finally {
+                    progView.dispose();
+                }
+            }
         }).start();
         progView.pack();
         progView.setLocationRelativeTo(m_tableView);
         progView.setVisible(true);
     }
-    
+
     /** Thread that write the current table to a file. */
     private final class CSVWriterThread extends Thread {
-        
+
         private final File m_file;
+
         private final ExecutionMonitor m_exec;
-        
-        /** Creates instance.
+
+        /**
+         * Creates instance.
+         * 
          * @param file The file to write to
          * @param exec The execution monitor.
          */
-        public CSVWriterThread(
-                final File file, final ExecutionMonitor exec) {
+        public CSVWriterThread(final File file, final ExecutionMonitor exec) {
             m_file = file;
             m_exec = exec;
         }
-        
+
         @Override
         public void run() {
             DataTable table = m_tableView.getContentModel().getDataTable();
-            boolean writeHilightedOnly = 
-                m_tableView.getContentModel().showsHiLitedOnly(); 
-            HiLiteHandler hdl = 
-                m_tableView.getContentModel().getHiLiteHandler();
+            boolean writeHilightedOnly = m_tableView.getContentModel()
+                    .showsHiLitedOnly();
+            HiLiteHandler hdl = m_tableView.getContentModel()
+                    .getHiLiteHandler();
             Object mutex = writeHilightedOnly ? hdl : new Object();
             // if hilighted rows are written only, we need to sync with
             // the handler (prevent others to (un-)hilight rows in the meantime)
             synchronized (mutex) {
                 if (writeHilightedOnly) {
-                    DataTable hilightOnlyTable = new RowFilterTable(
-                            table, new HilightOnlyRowFilter(hdl));
+                    DataTable hilightOnlyTable = new RowFilterTable(table,
+                            new HilightOnlyRowFilter(hdl));
                     table = hilightOnlyTable;
                 }
                 try {
@@ -381,50 +389,55 @@ public class TableNodeView extends NodeView {
                     } catch (CanceledExecutionException ce) {
                         writer.close();
                         m_file.delete();
-                    } 
+                    }
                 } catch (IOException ioe) {
-                    JOptionPane.showMessageDialog(m_tableView, ioe.getMessage(),
-                            "Write error", JOptionPane.ERROR_MESSAGE); 
-                } 
+                    JOptionPane.showMessageDialog(m_tableView,
+                            ioe.getMessage(), "Write error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
     }
-    
-    /** RowFilter that filters non-hilited rows - it's the most 
-     * convenient way to write only the hilited rows.
+
+    /**
+     * RowFilter that filters non-hilited rows - it's the most convenient way to
+     * write only the hilited rows.
      * 
      * @author wiswedel, University of Konstanz
      */
     private static final class HilightOnlyRowFilter extends RowFilter {
-        
+
         private final HiLiteHandler m_handler;
-        /** Creates new instance given a hilight handler.
+
+        /**
+         * Creates new instance given a hilight handler.
+         * 
          * @param handler The handler to get the hilite info from.
          */
         public HilightOnlyRowFilter(final HiLiteHandler handler) {
             m_handler = handler;
         }
-        
+
         @Override
-        public DataTableSpec configure(final DataTableSpec inSpec) 
-            throws InvalidSettingsException {
+        public DataTableSpec configure(final DataTableSpec inSpec)
+                throws InvalidSettingsException {
             throw new IllegalStateException("Not intended for permanent usage");
         }
-        
+
         @Override
-        public void loadSettingsFrom(final NodeSettingsRO cfg) 
-            throws InvalidSettingsException {
+        public void loadSettingsFrom(final NodeSettingsRO cfg)
+                throws InvalidSettingsException {
             throw new IllegalStateException("Not intended for permanent usage");
         }
-        
+
         @Override
         protected void saveSettings(final NodeSettingsWO cfg) {
             throw new IllegalStateException("Not intended for permanent usage");
         }
-        
+
         @Override
-        public boolean matches(final DataRow row, final int rowIndex) 
-            throws EndOfTableException, IncludeFromNowOn {
+        public boolean matches(final DataRow row, final int rowIndex)
+                throws EndOfTableException, IncludeFromNowOn {
             return m_handler.isHiLit(row.getKey().getId());
         }
     }

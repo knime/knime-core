@@ -162,7 +162,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         m_filterPanel.remove(m_rangePanel);
         m_filterPanel.remove(m_rowIDPanel);
         m_filterPanel.remove(m_colValPanel);
-        
+
         if (activeFilterMethod.equals("id")) {
             m_filterPanel.add(m_rowIDPanel);
         }
@@ -182,6 +182,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
      *      #loadSettingsFrom(NodeSettingsRO,
      *      de.unikn.knime.core.data.DataTableSpec[])
      */
+    @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 
@@ -215,19 +216,18 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
             filter = RowFilterFactory.createRowFilter(settings
                     .getNodeSettings(RowFilterNodeModel.CFGFILTER));
         } catch (InvalidSettingsException ise) {
-            // silently ignore invalid filters. 
+            // silently ignore invalid filters.
         }
 
         String actionCommand = "colval";
 
-       
         if (filter == null) {
             // set the default
             m_colValInclRadio.setSelected(true);
             filterSelectionChanged("colval");
             return;
         }
-        
+
         if (filter instanceof ColValRowFilter) {
             ColValRowFilter f = (ColValRowFilter)filter;
             actionCommand = "colval";
@@ -275,13 +275,14 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         }
 
         filterSelectionChanged(actionCommand);
-        
+
     }
 
     /**
      * @see de.unikn.knime.core.node.NodeDialogPane
      *      #saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
 
@@ -290,11 +291,11 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
             theFilter = m_rangePanel.createFilter(true);
         }
         if (m_rangeExclRadio.isSelected()) {
-            theFilter = m_rangePanel.createFilter(false);            
+            theFilter = m_rangePanel.createFilter(false);
         }
         if (m_colValInclRadio.isSelected()) {
             theFilter = m_colValPanel.createFilter(true);
-        }        
+        }
         if (m_colValExclRadio.isSelected()) {
             theFilter = m_colValPanel.createFilter(false);
         }

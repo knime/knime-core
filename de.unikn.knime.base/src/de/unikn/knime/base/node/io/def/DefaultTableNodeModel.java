@@ -56,13 +56,13 @@ public class DefaultTableNodeModel extends NodeModel {
 
     /**
      * Also this constructor is available in <code>DefaultTable</code>.
+     * 
      * @param rows Passed to constructor of <code>DefaultTable</code>
      * @param spec Passed to constructor of <code>DefaultTable</code>
      * @see de.unikn.knime.core.data.def.DefaultTable#DefaultTable( DataRow[],
      *      DataTableSpec)
      */
-    public DefaultTableNodeModel(final DataRow[] rows, final DataTableSpec spec)
-    {
+    public DefaultTableNodeModel(final DataRow[] rows, final DataTableSpec spec) {
         super(0, 1); // tell the super we need no input and one output
         m_table = new DefaultTable(rows, spec);
     }
@@ -83,9 +83,9 @@ public class DefaultTableNodeModel extends NodeModel {
     /**
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
-    protected BufferedDataTable[] execute(
-            final BufferedDataTable[] data, final ExecutionContext exec) 
-            throws Exception {
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+            final ExecutionContext exec) throws Exception {
         BufferedDataTable out = exec.createBufferedDataTable(m_table, exec);
         return new BufferedDataTable[]{out};
     }
@@ -93,59 +93,65 @@ public class DefaultTableNodeModel extends NodeModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
         // we don't destroy our static datatable.
     }
 
     /**
-     * The standard table can always provide a DataTableSpec, that's why
-     * it is also executable: returns true (so to say).
+     * The standard table can always provide a DataTableSpec, that's why it is
+     * also executable: returns true (so to say).
+     * 
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
-        return new DataTableSpec[]{m_table.getDataTableSpec()}; 
+        return new DataTableSpec[]{m_table.getDataTableSpec()};
     }
-    
+
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
 
     /**
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
-    protected void validateSettings(final NodeSettingsRO settings) 
-            throws InvalidSettingsException {
-    }
-    
-    /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#loadInternals(File, ExecutionMonitor)
-     */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
     }
 
     /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#saveInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
     }
-    
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(File,
+     *      ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
+    }
+
 }

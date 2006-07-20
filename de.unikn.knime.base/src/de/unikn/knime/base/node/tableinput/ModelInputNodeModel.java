@@ -51,8 +51,7 @@ public class ModelInputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *      #saveSettingsTo(NodeSettingsWO)
+     * @see de.unikn.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -60,8 +59,7 @@ public class ModelInputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *      #validateSettings(NodeSettingsRO)
+     * @see de.unikn.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -80,8 +78,7 @@ public class ModelInputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *      #execute(BufferedDataTable[],
+     * @see de.unikn.knime.core.node.NodeModel #execute(BufferedDataTable[],
      *      ExecutionContext)
      */
     @Override
@@ -126,27 +123,27 @@ public class ModelInputNodeModel extends NodeModel {
             final ModelContentWO predParams) throws InvalidSettingsException {
         m_predictorParams.copyTo(predParams);
     }
-    
+
     /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#loadInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
     }
 
     /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#saveInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
     }
-    
+
 }

@@ -1435,7 +1435,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             return clipped;
         }
 
-        /**
+        /*
          * builds strings with the following pattern: if size is smaller than
          * 30, return the last 30 chars in the string; if the size is larger
          * than 30: return the first 12 chars + ... + chars from the end. Size

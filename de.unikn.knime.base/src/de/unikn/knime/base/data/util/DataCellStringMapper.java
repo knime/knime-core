@@ -54,7 +54,7 @@ public class DataCellStringMapper {
         // check if this cell already has a mapping:
         if (m_cellToString.containsKey(cell)) {
             // yes, return existing string
-            String name = (String)(m_cellToString.get(cell));
+            String name = m_cellToString.get(cell);
             assert m_stringToCell.containsKey(name);
             return name;
         }

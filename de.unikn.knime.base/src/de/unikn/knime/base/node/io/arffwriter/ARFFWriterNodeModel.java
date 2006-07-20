@@ -49,8 +49,8 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 public class ARFFWriterNodeModel extends NodeModel {
 
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = NodeLogger.
-            getLogger(ARFFWriterNodeModel.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(ARFFWriterNodeModel.class);
 
     /** the key used to store the filename in the model spec. */
     static final String CFGKEY_FILENAME = "ARFFoutput";
@@ -95,6 +95,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_file != null) {
             settings.addString(CFGKEY_FILENAME, m_file.getAbsolutePath());
@@ -107,6 +108,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         stringToWriteableFile(settings.getString(CFGKEY_FILENAME));
@@ -115,6 +117,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_file = stringToWriteableFile(settings.getString(CFGKEY_FILENAME));
@@ -127,6 +130,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     /**
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
@@ -182,11 +186,11 @@ public class ARFFWriterNodeModel extends NodeModel {
         long rowCnt = inData[0].getRowCount();
         long rowNr = 0;
         for (DataRow row : inData[0]) {
-            
+
             rowNr++;
-            exec.setProgress(rowNr / (double)rowCnt, "Writing row " + rowNr 
+            exec.setProgress(rowNr / (double)rowCnt, "Writing row " + rowNr
                     + " ('" + row.getKey().getId() + "') of " + rowCnt);
-            
+
             if (m_sparse) {
                 writer.write("{");
             }
@@ -202,8 +206,7 @@ public class ARFFWriterNodeModel extends NodeModel {
                         }
                     }
                     if (cell instanceof DoubleValue) {
-                        if (Math.abs(((DoubleValue)cell).getDoubleValue()) 
-                                < 1e-29) {
+                        if (Math.abs(((DoubleValue)cell).getDoubleValue()) < 1e-29) {
                             continue;
                         }
                     }
@@ -345,13 +348,14 @@ public class ARFFWriterNodeModel extends NodeModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
         // doodledoom.
     }
-    
+
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     * #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -361,8 +365,8 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     * #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -370,15 +374,16 @@ public class ARFFWriterNodeModel extends NodeModel {
             CanceledExecutionException {
         // no internals to save.
     }
-    
+
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
         checkFileAccess(m_file);
-        
+
         for (int c = 0; c < inSpecs[0].getNumColumns(); c++) {
             DataType colType = inSpecs[0].getColumnSpec(c).getType();
 
@@ -391,19 +396,20 @@ public class ARFFWriterNodeModel extends NodeModel {
         }
         return new DataTableSpec[0];
     }
-    
+
     /**
      * Helper that checks some properties for the file argument.
-     * @param fileName The file to check
+     * 
+     * @param file The file to check
      * @throws InvalidSettingsException If that fails.
      */
-    private void checkFileAccess(final File file) 
-        throws InvalidSettingsException {
+    private void checkFileAccess(final File file)
+            throws InvalidSettingsException {
 
         if (m_file == null) {
             throw new InvalidSettingsException("Output file not specified.");
         }
-        
+
         if (file.isDirectory()) {
             throw new InvalidSettingsException("\"" + file.getAbsolutePath()
                     + "\" is a directory.");

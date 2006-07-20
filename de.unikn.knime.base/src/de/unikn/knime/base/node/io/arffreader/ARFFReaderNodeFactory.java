@@ -30,7 +30,7 @@ import de.unikn.knime.core.node.NodeView;
 public class ARFFReaderNodeFactory extends NodeFactory {
 
     private final String m_fileURL;
-    
+
     /**
      * will deliver a model with no default file set.
      */
@@ -40,21 +40,25 @@ public class ARFFReaderNodeFactory extends NodeFactory {
 
     /**
      * this factory will create a model with the file set as default file.
+     * 
      * @param fileURL a valid URL to the default ARFF file.
      */
     public ARFFReaderNodeFactory(final String fileURL) {
         m_fileURL = fileURL;
     }
-    
+
     /**
      * @see NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return new ARFFReaderNodeDialog();
     }
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         if (m_fileURL == null) {
             return new ARFFReaderNodeModel();
@@ -62,10 +66,12 @@ public class ARFFReaderNodeFactory extends NodeFactory {
             return new ARFFReaderNodeModel(m_fileURL);
         }
     }
+
     /**
      * @see NodeFactory#createNodeView(int, NodeModel)
      */
-    public NodeView createNodeView(final int viewIndex, 
+    @Override
+    public NodeView createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
         assert false;
         return null;
@@ -74,12 +80,15 @@ public class ARFFReaderNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return true;
     }

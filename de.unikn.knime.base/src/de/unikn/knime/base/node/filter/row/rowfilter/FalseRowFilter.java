@@ -35,6 +35,7 @@ public class FalseRowFilter extends RowFilter {
     /**
      * @see RowFilter#matches(DataRow, int)
      */
+    @Override
     public boolean matches(final DataRow row, final int rowIndex)
             throws EndOfTableException {
         // we can immediately tell that the end of the table is reached.
@@ -44,6 +45,7 @@ public class FalseRowFilter extends RowFilter {
     /**
      * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
+    @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         // no settings to load.
@@ -52,6 +54,7 @@ public class FalseRowFilter extends RowFilter {
     /**
      * @see RowFilter#saveSettings(NodeSettingsWO)
      */
+    @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
         // no settings to save.
     }
@@ -60,6 +63,7 @@ public class FalseRowFilter extends RowFilter {
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
      *      #configure(de.unikn.knime.core.data.DataTableSpec)
      */
+    @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException {
         return inSpec;
@@ -68,6 +72,7 @@ public class FalseRowFilter extends RowFilter {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "FALSE-Filter";
     }

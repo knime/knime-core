@@ -72,6 +72,7 @@ final class FilterColumnNodeModel extends NodeModel {
     /**
      * Resets the internal list of columns to exclude.
      */
+    @Override
     protected void reset() {
 
     }
@@ -86,20 +87,22 @@ final class FilterColumnNodeModel extends NodeModel {
      * 
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
 
         assert (data != null && data.length == 1 && data[INPORT] != null);
         ColumnRearranger c = createColumnRearranger(data[0].getDataTableSpec());
-        BufferedDataTable outTable = 
-            exec.createColumnRearrangeTable(data[0], c, exec);
+        BufferedDataTable outTable = exec.createColumnRearrangeTable(data[0],
+                c, exec);
         return new BufferedDataTable[]{outTable};
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel# saveInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
      */
+    @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
@@ -108,9 +111,10 @@ final class FilterColumnNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel# loadInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
      */
+    @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
@@ -128,6 +132,7 @@ final class FilterColumnNodeModel extends NodeModel {
      * @throws InvalidSettingsException If the selected column is not available
      *             in the DataTableSpec.
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         assert (inSpecs != null);
@@ -176,6 +181,7 @@ final class FilterColumnNodeModel extends NodeModel {
      * 
      * @param settings The object to save the settings into.
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addStringArray(KEY, m_list.toArray(new String[0]));
     }
@@ -187,6 +193,7 @@ final class FilterColumnNodeModel extends NodeModel {
      * @throws InvalidSettingsException If the settings does not contain the
      *             size or a particular column key.
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // clear exclude column list
@@ -202,6 +209,7 @@ final class FilterColumnNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // true because the filter model does not care if there are columns to

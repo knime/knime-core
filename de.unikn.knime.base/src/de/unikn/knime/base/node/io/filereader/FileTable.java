@@ -229,6 +229,7 @@ public class FileTable implements DataTable {
      * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         // maximum number of chars to print
         final int colLength = 15;

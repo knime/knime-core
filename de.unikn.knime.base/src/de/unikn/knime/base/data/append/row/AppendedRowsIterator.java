@@ -98,6 +98,7 @@ class AppendedRowsIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
         return m_nextRow != null; 
     }
@@ -105,6 +106,7 @@ class AppendedRowsIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
+    @Override
     public DataRow next() {
         if (!hasNext()) {
             throw new NoSuchElementException();

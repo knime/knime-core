@@ -23,9 +23,9 @@ object. They will be set in the file reader's dialog. In there the
 {@link de.unikn.knime.base.node.io.filereader.FileAnalyzer} does the job of 
 guessing the settings by looking at the first couple of thousands of lines of 
 the file.<p>
-The node provides a {@link de.unikn.knime.base.io.filereader.FileTable} at its 
+The node provides a {@link de.unikn.knime.base.node.io.filereader.FileTable} at its 
 output port. The actual job of reading in the file is done in the 
-{@link de.unikn.knime.base.io.filereader.RowIterator}. It reads in the data as 
+{@link de.unikn.knime.base.node.io.filereader.FileRowIterator}. It reads in the data as 
 requested, line by line, as specified by the settings.
 <p>
 To 
@@ -36,7 +36,7 @@ really deal with. If the filereader would not traverse the entire file once,
 the row iterator would fail at some later time, when a successor node is 
 executing - and it would be very hard for the user to relate the failure
 of a successor node to a problem during file reading. Another nice side effect
-of this is, the filereader can provide a <code>DataTableSpec</code> (after 
+of this is, the filereader can provide a {@link de.unikn.knime.core.data.DataTableSpec} (after 
 execution) with domain information (like possible values or value ranges) filled
 in.
 

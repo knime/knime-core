@@ -81,6 +81,7 @@ public class TableNodeModel extends NodeModel {
      * 
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
+    @Override
     protected BufferedDataTable[] execute(
             final BufferedDataTable[] data, final ExecutionContext exec) {
         assert (data != null);
@@ -117,6 +118,7 @@ public class TableNodeModel extends NodeModel {
      * @see de.unikn.knime.core.node.NodeModel
      *          #saveInternals(java.io.File, ExecutionMonitor)
      */
+    @Override
     protected void saveInternals(final File internDir, 
             final ExecutionMonitor exec) throws IOException {
     }
@@ -127,6 +129,7 @@ public class TableNodeModel extends NodeModel {
      * from the node's <code>reset()</code> method.
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */ 
+    @Override
     protected void reset() {
         m_contModel.setDataTable(null);
         m_contModel.setHiLiteHandler(null);
@@ -138,6 +141,7 @@ public class TableNodeModel extends NodeModel {
      * as it has an input (otherwise this method is never being called).
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
         return new DataTableSpec[0];
     }
@@ -145,6 +149,7 @@ public class TableNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
     }
@@ -152,12 +157,14 @@ public class TableNodeModel extends NodeModel {
     /**
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
     }

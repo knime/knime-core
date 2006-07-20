@@ -53,6 +53,7 @@ final class FilterColumnRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
         return m_it.hasNext();
     }
@@ -60,6 +61,7 @@ final class FilterColumnRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
+    @Override
     public DataRow next() {
         return new FilterColumnRow(m_it.next(), m_columns);
     }

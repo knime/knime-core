@@ -59,7 +59,7 @@ public class ColValRowFilter extends RowFilter {
     private boolean m_include;
 
     private int m_colIndex;
-    
+
     private String m_colName;
 
     /*
@@ -293,6 +293,7 @@ public class ColValRowFilter extends RowFilter {
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
      *      #matches(de.unikn.knime.core.data.DataRow, int)
      */
+    @Override
     public boolean matches(final DataRow row, final int rowIndex)
             throws EndOfTableException, IncludeFromNowOn {
 
@@ -300,8 +301,7 @@ public class ColValRowFilter extends RowFilter {
          * if this goes off you propably didn't set a comparator after loading a
          * range from a config object. Which is not good.
          */
-        assert (((m_lowerBound == null) 
-                && (m_upperBound == null)) || m_dcComp != null);
+        assert (((m_lowerBound == null) && (m_upperBound == null)) || m_dcComp != null);
 
         DataCell theCell = row.getCell(m_colIndex);
         boolean match = false;
@@ -341,6 +341,7 @@ public class ColValRowFilter extends RowFilter {
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
      *      #loadSettingsFrom(NodeSettingsRO)
      */
+    @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
@@ -393,6 +394,7 @@ public class ColValRowFilter extends RowFilter {
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
      *      #saveSettings(NodeSettingsWO)
      */
+    @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
         cfg.addBoolean(CFG_INCLUDE, m_include);
         cfg.addString(CFG_COLNAME, m_colName);
@@ -414,6 +416,7 @@ public class ColValRowFilter extends RowFilter {
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
      *      #configure(de.unikn.knime.core.data.DataTableSpec)
      */
+    @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException {
 
@@ -433,9 +436,9 @@ public class ColValRowFilter extends RowFilter {
             throw new InvalidSettingsException("Column value filter: "
                     + "Input table doesn't contain specified column name");
         }
-        
+
         m_colIndex = inSpec.findColumnIndex(m_colName);
-        
+
         DataType colType = inSpec.getColumnSpec(m_colIndex).getType();
         if (m_lowerBound != null) {
             if (!colType.isASuperTypeOf(m_lowerBound.getType())) {
@@ -447,10 +450,10 @@ public class ColValRowFilter extends RowFilter {
                         + colType.getClass().getName().substring(
                                 colType.getClass().getName().lastIndexOf('.'))
                         + ",RangeType:"
-                        + m_lowerBound.getType().getClass().getName().
-                                substring(
-                                        m_lowerBound.getType().getClass().
-                                                getName().lastIndexOf('.')));
+                        + m_lowerBound.getType().getClass().getName()
+                                .substring(
+                                        m_lowerBound.getType().getClass()
+                                                .getName().lastIndexOf('.')));
             }
         }
         if (m_upperBound != null) {
@@ -463,10 +466,10 @@ public class ColValRowFilter extends RowFilter {
                         + colType.getClass().getName().substring(
                                 colType.getClass().getName().lastIndexOf('.'))
                         + ",RangeType:"
-                        + m_upperBound.getType().getClass().getName().
-                                substring(
-                                        m_upperBound.getType().getClass().
-                                                getName().lastIndexOf('.')));
+                        + m_upperBound.getType().getClass().getName()
+                                .substring(
+                                        m_upperBound.getType().getClass()
+                                                .getName().lastIndexOf('.')));
             }
         }
 
@@ -479,6 +482,7 @@ public class ColValRowFilter extends RowFilter {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         String result = "ColVal-Filter: Col# " + m_colIndex;
         result += m_include ? ", include " : ", exclude ";
@@ -489,11 +493,12 @@ public class ColValRowFilter extends RowFilter {
         }
         if (rangeSet()) {
             result += " values from '";
-            result += (m_lowerBound == null) ? "<open>" : m_lowerBound.
-                    toString();
+            result += (m_lowerBound == null) ? "<open>" : m_lowerBound
+                    .toString();
             result += "' to '";
-            result += (m_upperBound == null) ? "<open>" : m_upperBound.
-                    toString();            result += "'";
+            result += (m_upperBound == null) ? "<open>" : m_upperBound
+                    .toString();
+            result += "'";
             if (m_dcComp == null) {
                 result += " NO COMPARATOR SET!!!";
             }

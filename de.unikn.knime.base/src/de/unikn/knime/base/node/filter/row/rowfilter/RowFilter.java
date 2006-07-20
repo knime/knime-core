@@ -36,22 +36,23 @@ public abstract class RowFilter implements Cloneable {
 
     /**
      * return true if the specified row matches the criteria set in the filter.
-     * Can throw a EndOfTableException if the filter can tell that no more
-     * rows of the table will be able to fulfill the criteria (the iterator will
-     * flag atEnd() after receiving this exception!)
+     * Can throw a EndOfTableException if the filter can tell that no more rows
+     * of the table will be able to fulfill the criteria (the iterator will flag
+     * atEnd() after receiving this exception!)
      * 
      * @param row the row to test
      * @param rowIndex the row index of the passed row in the original table.
      * @return true if the row matches the criteria set in the filter, false if
      *         not.
      * @throws EndOfTableException if there is no chance that any of the rows
-     *         coming (including the current <code>rowIndex</code>) will fulfill
-     *         the criteria, thus no further row in the original table will be 
-     *         a match to this filter. (In general this is hard to tell, but a 
-     *         row number filter can certainly use it.) If the exception is 
-     *         received the row filter table iterator will flag an end of table.
+     *             coming (including the current <code>rowIndex</code>) will
+     *             fulfill the criteria, thus no further row in the original
+     *             table will be a match to this filter. (In general this is
+     *             hard to tell, but a row number filter can certainly use it.)
+     *             If the exception is received the row filter table iterator
+     *             will flag an end of table.
      * @throws IncludeFromNowOn if the current and all following rows from now
-     *         on are to be included into the result table.
+     *             on are to be included into the result table.
      */
     public abstract boolean matches(final DataRow row, final int rowIndex)
             throws EndOfTableException, IncludeFromNowOn;
@@ -106,12 +107,11 @@ public abstract class RowFilter implements Cloneable {
      */
     public abstract DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException;
-    
-
 
     /**
      * @see java.lang.Object#clone()
      */
+    @Override
     public Object clone() {
         try {
             return super.clone();
@@ -120,4 +120,4 @@ public abstract class RowFilter implements Cloneable {
             throw new InternalError();
         }
     }
- }
+}

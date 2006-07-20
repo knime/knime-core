@@ -117,9 +117,9 @@ public class Delimiter {
     }
 
     /**
-     * Writes the object into a <code>NodeSettings</code> object. If this config
-     * object is then used to construct a new <code>Delimiter</code> this and
-     * the new object should be identical.
+     * Writes the object into a <code>NodeSettings</code> object. If this
+     * config object is then used to construct a new <code>Delimiter</code>
+     * this and the new object should be identical.
      * 
      * @param cfg a config object the internal values of this object will be
      *            stored into.
@@ -178,16 +178,20 @@ public class Delimiter {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return FileTokenizerSettings.printableStr(getDelimiter());
     }
-    
-    /* --- the equal and hash functions only look at the delimier.
-     *     The don't compare the value of any flag. -------------- */
-    
+
+    /*
+     * --- the equal and hash functions only look at the delimier. The don't
+     * compare the value of any flag. --------------
+     */
+
     /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
@@ -197,10 +201,11 @@ public class Delimiter {
         }
         return this.getDelimiter().equals(((Delimiter)obj).getDelimiter());
     }
-    
+
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return getDelimiter().hashCode();
     }

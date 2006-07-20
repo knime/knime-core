@@ -39,7 +39,7 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  */
 public class ModelOutputNodeModel extends NodeModel {
     private ModelContentRO m_predictorParams;
-    
+
     /**
      * Creates a new model output node model.
      */
@@ -47,10 +47,8 @@ public class ModelOutputNodeModel extends NodeModel {
         super(0, 0, 1, 0);
     }
 
-
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveSettingsTo(NodeSettingsWO)
+     * @see de.unikn.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -59,8 +57,7 @@ public class ModelOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #validateSettings(NodeSettingsRO)
+     * @see de.unikn.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -71,7 +68,7 @@ public class ModelOutputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(NodeSettingsRO)
+     *      #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -81,9 +78,8 @@ public class ModelOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #execute(BufferedDataTable[],
-     *  ExecutionContext)
+     * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
+     *      ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -101,55 +97,53 @@ public class ModelOutputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     *  #configure(de.unikn.knime.core.data.DataTableSpec[])
+     *      #configure(de.unikn.knime.core.data.DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return new DataTableSpec[0];
     }
-    
 
-   /**
-    * @see de.unikn.knime.core.node.NodeModel
-    *  #loadModelContent(int, ModelContentRO)
-    */
-   @Override
-   protected void loadModelContent(final int index,
-           final ModelContentRO predParams) throws InvalidSettingsException {
-       m_predictorParams = predParams;
-   }
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#loadModelContent(int,
+     *      ModelContentRO)
+     */
+    @Override
+    protected void loadModelContent(final int index,
+            final ModelContentRO predParams) throws InvalidSettingsException {
+        m_predictorParams = predParams;
+    }
 
-   
-   /**
-    * Returns the predictor params from the sucessor node.
-    * 
-    * @return the predictor params
-    */
-   public ModelContentRO getModelContent() {
-       return m_predictorParams;
-   }
-   
-   /**
-    * @see de.unikn.knime.core.node.
-    *      NodeModel#loadInternals(File, ExecutionMonitor)
-    */
-   @Override
-   protected void loadInternals(final File nodeInternDir, 
-           final ExecutionMonitor exec) 
-           throws IOException, CanceledExecutionException {
-       
-   }
+    /**
+     * Returns the predictor params from the sucessor node.
+     * 
+     * @return the predictor params
+     */
+    public ModelContentRO getModelContent() {
+        return m_predictorParams;
+    }
 
-   /**
-    * @see de.unikn.knime.core.node.
-    *      NodeModel#saveInternals(File, ExecutionMonitor)
-    */
-   @Override
-   protected void saveInternals(final File nodeInternDir, 
-           final ExecutionMonitor exec) 
-           throws IOException, CanceledExecutionException {
-       
-   }
-   
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(File,
+     *      ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
+    }
+
+    /**
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(File,
+     *      ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
+    }
+
 }

@@ -148,8 +148,8 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#saveInternals(java.io.File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #saveInternals(java.io.File, ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 
@@ -159,8 +159,8 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
     
     /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#loadInternals(java.io.File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel
+     *  #loadInternals(java.io.File, ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir, 

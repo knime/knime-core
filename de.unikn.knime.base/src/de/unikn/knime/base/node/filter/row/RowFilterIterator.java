@@ -27,10 +27,11 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * traverse through the entire input table - which is actually the reason we
  * handle the row number range not in a filter.)
  * 
- * <p>Note: Iterating may be slow as the iterator must potentially skip many
- * rows until it encounters a row to be returned. This iterator does also 
- * support cancelation/progress information using an ExecutionMonitor. This 
- * iterator may throw a
+ * <p>
+ * Note: Iterating may be slow as the iterator must potentially skip many rows
+ * until it encounters a row to be returned. This iterator does also support
+ * cancelation/progress information using an ExecutionMonitor. This iterator may
+ * throw a
  * 
  * @author ohl, University of Konstanz
  */
@@ -52,30 +53,30 @@ public class RowFilterIterator extends RowIterator {
     // If true the filter will not be asked - every row will be included in the
     // result.
     private boolean m_includeRest;
-    
+
     // the exec mon for cancel/progress, may use default one
     private final ExecutionMonitor m_exec;
-    
+
     // the row count in the original table
     private final int m_totalCountInOrig;
-    
+
     /**
      * Creates a new row iterator wrapping an existing one and delivering only
      * rows that match the specified conditions.
      * 
      * @param origTable the original table from which we get the iterator and
-     * the row count, if any.
+     *            the row count, if any.
      * @param filter a filter object that will decide whether rows are included
      *            in the result or filtered out.
      * @param exec To report progress to and to check for cancel status.
      */
-    public RowFilterIterator(final DataTable origTable, 
-            final RowFilter filter, final ExecutionMonitor exec) {
+    public RowFilterIterator(final DataTable origTable, final RowFilter filter,
+            final ExecutionMonitor exec) {
         m_filter = filter;
         m_orig = origTable.iterator();
         int count = -1;
-        if (origTable instanceof BufferedDataTable) { 
-            count = ((BufferedDataTable) origTable).getRowCount();
+        if (origTable instanceof BufferedDataTable) {
+            count = ((BufferedDataTable)origTable).getRowCount();
         }
         m_totalCountInOrig = count;
         m_exec = exec == null ? new ExecutionMonitor() : exec;
@@ -94,20 +95,20 @@ public class RowFilterIterator extends RowIterator {
      * rows that match the specified conditions. No progress info or canceled
      * status is available.
      * 
-     * @param origTable the original table from which we get the iterator and
-     * the row count, if any.
+     * @param orig the original table from which we get the iterator and the row
+     *            count, if any.
      * @param filter a filter object that will decide whether rows are included
      *            in the result or filtered out.
      */
-    public RowFilterIterator(final DataTable origTable, 
-            final RowFilter filter) {
-        this(origTable, filter, null);
-        
+    public RowFilterIterator(final DataTable orig, final RowFilter filter) {
+        this(orig, filter, null);
+
     }
-    
+
     /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
         return (m_nextRow != null);
     }
@@ -115,6 +116,7 @@ public class RowFilterIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
+    @Override
     public DataRow next() {
         if (m_nextRow == null) {
             throw new NoSuchElementException(
@@ -172,24 +174,30 @@ public class RowFilterIterator extends RowIterator {
 
         }
     }
-    
-    /** Runtime exception that's thrown when the execution monitor's 
+
+    /**
+     * Runtime exception that's thrown when the execution monitor's
      * <code>checkCanceled</code> method throws an CanceledExecutionException.
-     */ 
-    public static final class RuntimeCanceledExecutionException 
-        extends RuntimeException {
-        
-        /** Inits object.
+     */
+    public static final class RuntimeCanceledExecutionException extends
+            RuntimeException {
+
+        /**
+         * Inits object.
+         * 
          * @param cee The exception to wrap.
          */
         private RuntimeCanceledExecutionException(
                 final CanceledExecutionException cee) {
             super(cee.getMessage(), cee);
         }
-        
-        /** Get reference to causing exception.
+
+        /**
+         * Get reference to causing exception.
+         * 
          * @see java.lang.Throwable#getCause()
-         */ 
+         */
+        @Override
         public CanceledExecutionException getCause() {
             return (CanceledExecutionException)super.getCause();
         }

@@ -77,25 +77,27 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
+    @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 
-        m_textField.setText(
-                settings.getString(ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
+        m_textField.setText(settings.getString(
+                ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
 
     }
+
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        if ((m_textField.getText() == null) 
-                || m_textField.getText().equals("")) {
+        if ((m_textField.getText() == null) || m_textField.getText().equals("")) {
             throw new InvalidSettingsException("Specify a valid file name, "
                     + "or press cancel, please.");
         }
-        settings.addString(
-                ARFFWriterNodeModel.CFGKEY_FILENAME, m_textField.getText());
+        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_textField
+                .getText());
     }
 
     /**

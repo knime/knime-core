@@ -154,9 +154,8 @@ public class NominalCoordinate extends Coordinate {
      * Calculates a numeric mapping assuming a column with a given number of
      * possible values.
      * 
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#
-     *      calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
-     *      boolean)
+     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     * #calculateMappedValue(de.unikn.knime.core.data.DataCell, double, boolean)
      */
     @Override
     public double calculateMappedValue(final DataCell domainValueCell,

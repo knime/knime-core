@@ -49,6 +49,7 @@ public class AppendedColumnRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
         return m_iterator.hasNext();
     }
@@ -56,6 +57,7 @@ public class AppendedColumnRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
+    @Override
     public DataRow next() {
         DataRow base = m_iterator.next();
         DataCell[] append = m_factory.getAppendedCell(base);

@@ -42,23 +42,21 @@ public class DataTableOutputNodeModel extends NodeModel {
 
     /**
      * 
-     *
+     * 
      */
     public DataTableOutputNodeModel() {
         super(1, 0);
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#saveSettingsTo(
-     * NodeSettingsWO)
+     * @see de.unikn.knime.core.node.NodeModel#saveSettingsTo( NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#validateSettings(
-     * NodeSettingsRO)
+     * @see de.unikn.knime.core.node.NodeModel#validateSettings( NodeSettingsRO)
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -66,8 +64,8 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#
-     * loadValidatedSettingsFrom(NodeSettingsRO)
+     * @see de.unikn.knime.core.node.NodeModel
+     * #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -75,14 +73,12 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#execute(
-     * BufferedDataTable[], 
-     * ExecutionContext)
+     * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
+     *      ExecutionContext)
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
-            final ExecutionContext exec)
-            throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
         assert inData.length == 1;
         m_dataTable = inData[0];
         return new BufferedDataTable[0];
@@ -98,14 +94,14 @@ public class DataTableOutputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel#configure(
-     * de.unikn.knime.core.data.DataTableSpec[])
+     *      de.unikn.knime.core.data.DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return new DataTableSpec[0];
     }
-    
+
     /**
      * 
      * @return - the datatable.
@@ -113,27 +109,26 @@ public class DataTableOutputNodeModel extends NodeModel {
     public DataTable getDataTable() {
         return m_dataTable;
     }
-    
+
     /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#loadInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do here
     }
 
     /**
-     * @see de.unikn.knime.core.node.
-     *      NodeModel#saveInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do here
     }
-
 }

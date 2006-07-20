@@ -52,8 +52,8 @@ import de.unikn.knime.core.node.NodeLogger;
 public class ARFFTable implements DataTable {
 
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = NodeLogger.
-            getLogger(ARFFTable.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(ARFFTable.class);
 
     private final URL m_file;
 
@@ -100,14 +100,7 @@ public class ARFFTable implements DataTable {
             return null;
         }
     }
-    
-    /**
-     * @see de.unikn.knime.core.data.DataTable#getRowCount()
-     */
-    public int getRowCount() {
-        throw new UnsupportedOperationException("No RowCount available!");
-    }
-    
+
     /**
      * reads in the header of the specified ARFF file and returns a
      * corresponding <code>DataTableSpec</code> object.
@@ -135,22 +128,22 @@ public class ARFFTable implements DataTable {
         // prepare for creating a column spec for each "@attribute" read
         Vector<DataColumnSpec> colSpecs = new Vector<DataColumnSpec>();
         String tableName = null;
-        
+
         String token;
 
         // now we collect the header information - until we see the EOF or
         // the data section begins.
         while (true) {
-            
+
             if (exec != null) {
                 exec.checkCanceled(); // throws exception if user canceled.
             }
-            
+
             DataCell[] possVals = null;
             DataType type;
             token = tokenizer.nextToken();
             if (token == null) {
-                throw new InvalidSettingsException("Incorrect/Incomplete " 
+                throw new InvalidSettingsException("Incorrect/Incomplete "
                         + "ARFF file. No data section found.");
             }
             if (token.length() == 0) {
@@ -208,14 +201,13 @@ public class ARFFTable implements DataTable {
                             + "' at line " + tokenizer.getLineNumber() + ".");
                 }
 
-                DataColumnSpecCreator dcsc = 
-                    new DataColumnSpecCreator(colName, type);
+                DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName,
+                        type);
                 if (possVals != null) {
-                    dcsc.setDomain(new DataColumnDomainCreator(
-                            possVals).createDomain());
+                    dcsc.setDomain(new DataColumnDomainCreator(possVals)
+                            .createDomain());
                 }
                 colSpecs.add(dcsc.createSpec());
-
 
             } else if (token.equalsIgnoreCase("@RELATION")) {
                 tableName = tokenizer.nextToken();
@@ -249,8 +241,7 @@ public class ARFFTable implements DataTable {
         for (int c = 0; c < colSpecs.size(); c++) {
             // compare it with all specs with higher index
             for (int h = c + 1; h < colSpecs.size(); h++) {
-                if (colSpecs.get(c).getName().equals(
-                        colSpecs.get(h).getName())) {
+                if (colSpecs.get(c).getName().equals(colSpecs.get(h).getName())) {
                     throw new InvalidSettingsException("Two attributes with "
                             + "equal names defined in header of file '"
                             + fileLoc + "'.");
@@ -260,8 +251,8 @@ public class ARFFTable implements DataTable {
         // 2.: check uniquity of possible values for each nominal column
         // we've moved that part where we read in the values
 
-        return new DataTableSpec(tableName, colSpecs.toArray(
-                new DataColumnSpec[colSpecs.size()]));
+        return new DataTableSpec(tableName, colSpecs
+                .toArray(new DataColumnSpec[colSpecs.size()]));
 
     } // createDataTableSpecFromARFFfile(URL)
 
@@ -313,8 +304,8 @@ public class ARFFTable implements DataTable {
         tokSets.addQuotePattern("\"", "\"");
         tokizer.setSettings(tokSets);
 
-        for (String val = tokizer.nextToken(); val != null; val = tokizer.
-                nextToken()) {
+        for (String val = tokizer.nextToken(); val != null; val = tokizer
+                .nextToken()) {
 
             // trimm off any whitespaces.
             // This leads us into trouble if people start a quoted value with a

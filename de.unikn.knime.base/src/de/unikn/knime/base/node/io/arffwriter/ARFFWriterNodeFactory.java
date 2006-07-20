@@ -30,31 +30,35 @@ import de.unikn.knime.core.node.NodeView;
 public class ARFFWriterNodeFactory extends NodeFactory {
 
     private final String m_file;
-    
+
     /**
      * new factory - no default file.
      */
     public ARFFWriterNodeFactory() {
         m_file = null;
     }
-    
+
     /**
      * new ARFF factory with default output file.
+     * 
      * @param defFile the default file to write to.
      */
     public ARFFWriterNodeFactory(final String defFile) {
         m_file = defFile;
     }
-    
+
     /**
      * @see NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return new ARFFWriterNodeDialog();
     }
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         if (m_file == null) {
             return new ARFFWriterNodeModel();
@@ -62,10 +66,12 @@ public class ARFFWriterNodeFactory extends NodeFactory {
             return new ARFFWriterNodeModel(m_file);
         }
     }
+
     /**
      * @see NodeFactory#createNodeView(int, NodeModel)
      */
-    public NodeView createNodeView(final int viewIndex, 
+    @Override
+    public NodeView createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
         return null;
     }
@@ -73,12 +79,15 @@ public class ARFFWriterNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
+
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return true;
     }

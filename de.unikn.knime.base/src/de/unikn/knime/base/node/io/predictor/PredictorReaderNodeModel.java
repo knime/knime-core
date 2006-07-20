@@ -143,7 +143,7 @@ public class PredictorReaderNodeModel extends NodeModel {
         return new DataTableSpec[0];
     }
 
-    /**
+    /*
      * Helper that checks some properties for the file argument.
      * 
      * @param fileName The file to check

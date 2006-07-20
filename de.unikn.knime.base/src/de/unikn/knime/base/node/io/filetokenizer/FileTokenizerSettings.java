@@ -1125,6 +1125,7 @@ public class FileTokenizerSettings {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         StringBuffer result = new StringBuffer();
         // print the delimiters
@@ -1310,7 +1311,7 @@ public class FileTokenizerSettings {
         StringBuffer res = new StringBuffer(str.length());
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            if ((int)c <= (int)' ') {
+            if (c <= ' ') {
                 // it's a ctrl char - translate it into something printable
                 if (c == ' ') {
                     res.append("<space>");
@@ -1320,7 +1321,7 @@ public class FileTokenizerSettings {
                     res.append("<lf>");
                 } else {
                     res.append("\\0x");
-                    res.append(Integer.toHexString((int)c));
+                    res.append(Integer.toHexString(c));
                 }
             } else {
                 res.append(c);

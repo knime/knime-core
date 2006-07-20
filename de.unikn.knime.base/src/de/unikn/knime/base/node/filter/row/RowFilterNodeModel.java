@@ -66,6 +66,7 @@ public class RowFilterNodeModel extends NodeModel {
     /**
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         assert settings != null;
 
@@ -78,6 +79,7 @@ public class RowFilterNodeModel extends NodeModel {
     /**
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadOrValidateSettingsFrom(settings, true);
@@ -86,6 +88,7 @@ public class RowFilterNodeModel extends NodeModel {
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadOrValidateSettingsFrom(settings, false);
@@ -122,13 +125,13 @@ public class RowFilterNodeModel extends NodeModel {
     /**
      * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
      */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         if (m_rowFilter != null) {
             m_rowFilter.configure(inData[0].getDataTableSpec());
-            return new BufferedDataTable[]{
-                    exec.createBufferedDataTable(
-                            new RowFilterTable(inData[0], m_rowFilter), exec)};
+            return new BufferedDataTable[]{exec.createBufferedDataTable(
+                    new RowFilterTable(inData[0], m_rowFilter), exec)};
         } else {
             throw new InvalidSettingsException(
                     "No row filter set in RowFilter table");
@@ -138,6 +141,7 @@ public class RowFilterNodeModel extends NodeModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
         // nothing to do.
     }
@@ -169,6 +173,7 @@ public class RowFilterNodeModel extends NodeModel {
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_rowFilter == null) {

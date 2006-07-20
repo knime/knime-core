@@ -200,6 +200,7 @@ public final class FileAnalyzer {
      *            comments, quotes, colNumber, and rowHeader flag.
      * @return a vector of colProperty objects, having the columnSpec set and
      *         the useFileHeader flag.
+     * @throws IOException if an I/O error occurs
      */
     private static Vector<ColProperty> createColumnProperties(
             final FileReaderNodeSettings userSettings,
@@ -358,6 +359,7 @@ public final class FileAnalyzer {
      * 
      * @param settings the file to look at with corresponding settings
      * @return true if it's reasonable to assume the file has row headers.
+     * @throws IOException if an I/O error occurs
      */
     private static boolean checkRowHeader(final FileReaderNodeSettings settings)
             throws IOException {
@@ -502,7 +504,7 @@ public final class FileAnalyzer {
      * @param colNames the names of the columns. Items can be null.
      * @param userProps ColProperty objects preset by the user. Used, if not
      *            null, instead of a generated col property.
-     * @param columnTypes the type of the columns. Items can NOT be null.
+     * @param colTypes the type of the columns. Items can NOT be null.
      * @return a Vector of ColProperties. colTypes.length in number.
      */
     private static Vector<ColProperty> createColProps(final String[] colNames,
@@ -768,6 +770,7 @@ public final class FileAnalyzer {
      * 
      * @param settings object containing the data file location. The method will
      *            add comment patterns to this object.
+     * @throws IOException if an I/O error occurs
      */
     private static void addComments(final FileReaderNodeSettings settings)
             throws IOException {
@@ -842,6 +845,7 @@ public final class FileAnalyzer {
      * 
      * @param settings the object to add quote settings to. Must contain file
      *            location and possibly comments - but no delimiters yet!
+     * @throws IOException if an I/O error occurs
      */
     private static void addQuotes(final FileReaderNodeSettings settings)
             throws IOException {
@@ -975,7 +979,7 @@ public final class FileAnalyzer {
         }
     }
 
-    /**
+    /*
      * Tokenizes the first lines of the file (honouring the settings in the
      * settings object), and tries to guess which delimiters create the best
      * results. It'll try out comma-whitespace, whitespace, or
@@ -983,9 +987,6 @@ public final class FileAnalyzer {
      * than one column will be set. If no settings create more than one column
      * no column delimiters will be set. A row delimiter ('\n') will always be
      * set.
-     * 
-     * @param settings the object to use settings from (i.e. file location, the
-     *            comment and quote settings) and to add the delimiters to.
      */
     private static void setDelimitersAndColNum(
             final FileReaderNodeSettings userSettings,

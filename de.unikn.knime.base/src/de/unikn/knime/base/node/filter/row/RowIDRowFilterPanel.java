@@ -44,7 +44,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
 
     /** object version for serialization. */
     static final long serialVersionUID = 1;
-    
+
     private JLabel m_errText;
 
     private JTextField m_regExpr;
@@ -64,8 +64,8 @@ class RowIDRowFilterPanel extends RowFilterPanel {
         m_regExpr = new JTextField();
         m_caseSensitive = new JCheckBox("case sensitive match.");
         m_startsWith = new JCheckBox("row ID must only start with expression.");
-        m_startsWith.
-                setToolTipText("if not checked the entire row ID must match");
+        m_startsWith
+                .setToolTipText("if not checked the entire row ID must match");
         m_regExpr.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(final DocumentEvent e) {
                 regExprChanged();
@@ -82,8 +82,8 @@ class RowIDRowFilterPanel extends RowFilterPanel {
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.
-                createEtchedBorder(), "Row ID pattern:"));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Row ID pattern:"));
 
         Box exprBox = Box.createHorizontalBox();
         exprBox.add(new JLabel("regular expression to match:"));
@@ -137,6 +137,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     /**
      * @see RowFilterPanel#loadSettingsFromFilter(RowFilter)
      */
+    @Override
     public void loadSettingsFromFilter(final RowFilter filter)
             throws InvalidSettingsException {
         if (!(filter instanceof RowIDRowFilter)) {
@@ -155,6 +156,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     /**
      * @see RowFilterPanel#createFilter(boolean)
      */
+    @Override
     public RowFilter createFilter(final boolean include)
             throws InvalidSettingsException {
         // just in case, because the err text is the indicator for err existence
@@ -164,8 +166,8 @@ class RowIDRowFilterPanel extends RowFilterPanel {
             throw new InvalidSettingsException(m_errText.getText());
         }
 
-        return new RowIDRowFilter(m_regExpr.getText(), include, m_caseSensitive.
-                isSelected(), m_startsWith.isSelected());
+        return new RowIDRowFilter(m_regExpr.getText(), include, m_caseSensitive
+                .isSelected(), m_startsWith.isSelected());
 
     }
 

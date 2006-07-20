@@ -94,6 +94,7 @@ public class OrRowFilter extends RowFilter {
     /**
      * @see RowFilter#matches(DataRow, int)
      */
+    @Override
     public boolean matches(final DataRow row, final int rowIndex)
             throws EndOfTableException, IncludeFromNowOn {
         /*
@@ -142,6 +143,7 @@ public class OrRowFilter extends RowFilter {
     /**
      * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
+    @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
@@ -155,6 +157,7 @@ public class OrRowFilter extends RowFilter {
     /**
      * @see RowFilter#saveSettings(NodeSettingsWO)
      */
+    @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
         if (m_in1 != null) {
             NodeSettingsWO cfg1 = cfg.addNodeSettings(CFG_FILTER1);
@@ -170,6 +173,7 @@ public class OrRowFilter extends RowFilter {
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
      *      #configure(de.unikn.knime.core.data.DataTableSpec)
      */
+    @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException {
         DataTableSpec spec1 = null;
@@ -197,6 +201,7 @@ public class OrRowFilter extends RowFilter {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "OR-Filter:\nINPUT1: " + m_in1.toString() + "\nINPUT2: "
                 + m_in2.toString();
@@ -205,6 +210,7 @@ public class OrRowFilter extends RowFilter {
     /**
      * @see java.lang.Object#clone()
      */
+    @Override
     public Object clone() {
         OrRowFilter orf = (OrRowFilter)super.clone();
         if (m_in1 != null) {

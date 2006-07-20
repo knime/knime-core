@@ -33,9 +33,9 @@ import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.StringCell;
 
 /**
- * Row iterator for the FileTable. 
+ * Row iterator for the FileTable.
  * <p>
- * The iterator provides a method 
+ * The iterator provides a method
  * 
  * @author Peter Ohl, University of Konstanz
  * 
@@ -64,10 +64,10 @@ final class FileRowIterator extends RowIterator {
 
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
-    
+
     // if true we need to replace the char in the double tokens with a '.'
     private boolean m_customDecimalSeparator;
-    
+
     private char m_decSeparator;
 
     /**
@@ -90,7 +90,7 @@ final class FileRowIterator extends RowIterator {
 
         m_decSeparator = frSettings.getDecimalSeparator();
         m_customDecimalSeparator = m_decSeparator != '.';
-        
+
         m_rowNumber = 1;
         m_exceptionThrown = false;
 
@@ -129,6 +129,7 @@ final class FileRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
 
         if (m_exceptionThrown) {
@@ -161,6 +162,7 @@ final class FileRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
+    @Override
     public DataRow next() {
         int noOfCols = m_tableSpec.getNumColumns();
         String token = null;
@@ -232,19 +234,18 @@ final class FileRowIterator extends RowIterator {
         int lineNr = m_tokenizer.getLineNumber();
         if ((lineNr > 0) && (token != null) && (token.equals("\n"))) {
             lineNr--;
-        }  
-        if (createdCols < noOfCols) {     
+        }
+        if (createdCols < noOfCols) {
             throw prepareForException("Too few data elements in row "
                     + "(Source: '" + m_frSettings.getDataFileLocation()
                     + "' line: " + lineNr + ")", lineNr, rowHeader, row);
         }
-        
+
         token = m_tokenizer.nextToken();
 
         // eat all empty tokens til the end of the row, if we're supposed to
         while (m_frSettings.ignoreEmptyTokensAtEndOfRow()
-                && !m_frSettings.isRowDelimiter(token) 
-                && token.equals("") 
+                && !m_frSettings.isRowDelimiter(token) && token.equals("")
                 && (!m_tokenizer.lastTokenWasQuoted())) {
             try {
                 token = m_tokenizer.nextToken();
@@ -311,7 +312,7 @@ final class FileRowIterator extends RowIterator {
         } else if (type.equals(DoubleCell.TYPE)) {
             String dblData = data;
             if (m_customDecimalSeparator) {
-                // we must reject tokens with a '.'. 
+                // we must reject tokens with a '.'.
                 if (data.indexOf('.') >= 0) {
                     throw prepareForException("Wrong data format. In line "
                             + m_tokenizer.getLineNumber() + " read '" + data
@@ -331,7 +332,7 @@ final class FileRowIterator extends RowIterator {
             }
         } else {
             throw prepareForException("Cannot create DataCell of type "
-                    + type.toString() + ". Looks like an internal error.", 
+                    + type.toString() + ". Looks like an internal error.",
                     m_tokenizer.getLineNumber(), rowHeader, row);
         }
     } // createNewDataCellOfType(Class,String,boolean)
@@ -350,8 +351,7 @@ final class FileRowIterator extends RowIterator {
     private StringCell createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
-        assert (m_frSettings.getFileHasRowHeaders() 
-                || (m_rowHeaderPrefix != null));
+        assert (m_frSettings.getFileHasRowHeaders() || (m_rowHeaderPrefix != null));
 
         // if there is a row header in the file we must read it - independend
         // of if we are going to use it or not.
@@ -376,8 +376,7 @@ final class FileRowIterator extends RowIterator {
             String newRowHeader;
             if (fileHeader.equals("") && !m_tokenizer.lastTokenWasQuoted()) {
                 // seems we got a missing row delimiter. Let's build one.
-                newRowHeader = DataType.getMissingCell().toString()
-                        + rowNumber;
+                newRowHeader = DataType.getMissingCell().toString() + rowNumber;
             } else {
                 newRowHeader = fileHeader;
             }
@@ -424,20 +423,19 @@ final class FileRowIterator extends RowIterator {
 
     }
 
-    /* !!!!!!!!!!
-     * Creates the exception object (storing the last read items in the row
-     * of the exception), sets the global "exception thrown" flag, and closes
-     * the input stream.
-     * !!!!!!!!!!
+    /*
+     * !!!!!!!!!! Creates the exception object (storing the last read items in
+     * the row of the exception), sets the global "exception thrown" flag, and
+     * closes the input stream. !!!!!!!!!!
      */
     private FileReaderException prepareForException(final String msg,
             final int lineNumber, final DataCell rowHeader,
             final DataCell[] cellsRead) {
-        
-        /* 
+
+        /*
          * indicate we have thrown (actually will throw...) an exception, and
          * close the stream as we will not read anymore from the stream after
-         * the exception. 
+         * the exception.
          */
         m_exceptionThrown = true;
         m_tokenizer.closeSourceStream();

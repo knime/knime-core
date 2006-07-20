@@ -279,6 +279,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * 
      * @param cfg the config object the settings are stored into.
      */
+    @Override
     public void saveToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
             throw new NullPointerException("Can't save 'file "
@@ -841,6 +842,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * 
      * @see FileTokenizerSettings#getStatusOfSettings()
      */
+    @Override
     public SettingsStatus getStatusOfSettings() {
         return getStatusOfSettings(false, null);
     }
@@ -966,6 +968,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         StringBuffer res = new StringBuffer(super.toString());
         res.append("\nReading from:'");

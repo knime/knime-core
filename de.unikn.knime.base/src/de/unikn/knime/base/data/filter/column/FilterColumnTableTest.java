@@ -95,6 +95,7 @@ public final class FilterColumnTableTest extends TestCase {
         /**
          * @see de.unikn.knime.core.data.RowIterator#hasNext()
          */
+        @Override
         public boolean hasNext() {
             return (m_index != m_rows.length);
         }
@@ -102,6 +103,7 @@ public final class FilterColumnTableTest extends TestCase {
         /**
          * @see de.unikn.knime.core.data.RowIterator#next()
          */
+        @Override
         public DataRow next() {
             return m_rows[m_index++];
         }
@@ -117,6 +119,7 @@ public final class FilterColumnTableTest extends TestCase {
      * 
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         // init test table
@@ -128,6 +131,7 @@ public final class FilterColumnTableTest extends TestCase {
      * 
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         m_table = null;

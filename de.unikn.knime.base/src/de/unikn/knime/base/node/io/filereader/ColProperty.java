@@ -292,6 +292,7 @@ class ColProperty {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         if (m_colSpec != null) {
@@ -309,6 +310,7 @@ class ColProperty {
      * returns a new ColProperty object containing a deep copy of this one.
      * @see java.lang.Object#clone()
      */
+    @Override
     public Object clone() {
         
         ColProperty result = new ColProperty();

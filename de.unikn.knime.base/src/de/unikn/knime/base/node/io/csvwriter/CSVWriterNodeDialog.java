@@ -36,51 +36,54 @@ import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Dialog to choose a file for csv output.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriterNodeDialog extends NodeDialogPane {
-    
+
     /** textfield to enter file name. */
     private final CSVFilesHistoryPanel m_textBox;
+
     /** Checkbox for writing column header. */
     private final JCheckBox m_colHeaderChecker;
+
     /** Checkbox for writing column header. */
     private final JCheckBox m_rowHeaderChecker;
+
     /** text field for missing pattern. */
     private final JTextField m_missingField;
-    
 
     /**
      * Creates a new CSV writer dialog.
      */
     public CSVWriterNodeDialog() {
         super();
-        
+
         final JPanel filePanel = new JPanel();
         filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
         filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Output file location:")); 
+                .createEtchedBorder(), "Output file location:"));
         m_textBox = new CSVFilesHistoryPanel();
         filePanel.add(m_textBox);
         filePanel.add(Box.createHorizontalGlue());
-        
+
         final JPanel optionsPanel = new JPanel();
         optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
         optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Writer options:")); 
-        
+                .createEtchedBorder(), "Writer options:"));
+
         m_colHeaderChecker = new JCheckBox("Write column header");
         m_rowHeaderChecker = new JCheckBox("Write row header");
         m_missingField = new JTextField(3);
         m_missingField.setMaximumSize(new Dimension(40, 20));
-        m_missingField.setToolTipText(
-                "Pattern for missing values. If unsure, simply leave empty");
+        m_missingField
+                .setToolTipText("Pattern for missing values. If unsure, simply leave empty");
         final JPanel missingPanel = new JPanel();
         missingPanel.setLayout(new BoxLayout(missingPanel, BoxLayout.X_AXIS));
         missingPanel.add(m_missingField);
         missingPanel.add(new JLabel(" Missing Pattern"));
         missingPanel.add(Box.createHorizontalGlue());
-        
+
         final JPanel colHeaderPane = new JPanel();
         colHeaderPane.setLayout(new BoxLayout(colHeaderPane, BoxLayout.X_AXIS));
         colHeaderPane.add(m_colHeaderChecker);
@@ -96,7 +99,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         optionsPanel.add(Box.createVerticalStrut(5));
         optionsPanel.add(rowHeaderPane);
         optionsPanel.add(Box.createVerticalStrut(5));
-        
+
         final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(filePanel);
@@ -109,16 +112,17 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
-    protected void loadSettingsFrom(final NodeSettingsRO settings, 
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        String fileName = 
-            settings.getString(CSVWriterNodeModel.CFGKEY_FILE, null);
-        boolean writeColHeader = 
-            settings.getBoolean(CSVWriterNodeModel.CFGKEY_COLHEADER, true);
-        boolean writeRowHeader = 
-            settings.getBoolean(CSVWriterNodeModel.CFGKEY_ROWHEADER, true);
-        String missing = settings.getString(
-                CSVWriterNodeModel.CFGKEY_MISSING, "");
+        String fileName = settings.getString(CSVWriterNodeModel.CFGKEY_FILE,
+                null);
+        boolean writeColHeader = settings.getBoolean(
+                CSVWriterNodeModel.CFGKEY_COLHEADER, true);
+        boolean writeRowHeader = settings.getBoolean(
+                CSVWriterNodeModel.CFGKEY_ROWHEADER, true);
+        String missing = settings.getString(CSVWriterNodeModel.CFGKEY_MISSING,
+                "");
         m_textBox.updateHistory();
         m_textBox.setSelectedFile(fileName);
         m_missingField.setText(missing);
@@ -129,22 +133,23 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         String fileName = m_textBox.getSelectedFile();
         if (!fileName.equals("")) {
             File file = CSVFilesHistoryPanel.getFile(fileName);
-            settings.addString(
-                    CSVWriterNodeModel.CFGKEY_FILE, file.getAbsolutePath());
+            settings.addString(CSVWriterNodeModel.CFGKEY_FILE, file
+                    .getAbsolutePath());
         }
         boolean writeColHeader = m_colHeaderChecker.isSelected();
         boolean writeRowHeader = m_rowHeaderChecker.isSelected();
         String missing = m_missingField.getText();
         settings.addString(CSVWriterNodeModel.CFGKEY_MISSING, missing);
-        settings.addBoolean(
-                CSVWriterNodeModel.CFGKEY_COLHEADER, writeColHeader);
-        settings.addBoolean(
-                CSVWriterNodeModel.CFGKEY_ROWHEADER, writeRowHeader);
+        settings
+                .addBoolean(CSVWriterNodeModel.CFGKEY_COLHEADER, writeColHeader);
+        settings
+                .addBoolean(CSVWriterNodeModel.CFGKEY_ROWHEADER, writeRowHeader);
     }
-    
+
 }

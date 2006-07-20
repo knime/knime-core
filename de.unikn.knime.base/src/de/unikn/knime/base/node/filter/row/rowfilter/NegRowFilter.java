@@ -70,6 +70,7 @@ public class NegRowFilter extends RowFilter {
     /**
      * @see RowFilter#matches(DataRow, int)
      */
+    @Override
     public boolean matches(final DataRow row, final int rowIndex)
             throws EndOfTableException, IncludeFromNowOn {
 
@@ -92,18 +93,20 @@ public class NegRowFilter extends RowFilter {
     /**
      * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
      */
+    @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
 
         NodeSettingsRO inCfg = cfg.getNodeSettings(CFG_INFILTER);
 
         m_inFilter = RowFilterFactory.createRowFilter(inCfg);
- 
+
     }
 
     /**
      * @see RowFilter#saveSettings(NodeSettingsWO)
      */
+    @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
         if (m_inFilter != null) {
             NodeSettingsWO inCfg = cfg.addNodeSettings(CFG_INFILTER);
@@ -111,24 +114,25 @@ public class NegRowFilter extends RowFilter {
         }
     }
 
-    
     /**
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     * #configure(de.unikn.knime.core.data.DataTableSpec)
+     *      #configure(de.unikn.knime.core.data.DataTableSpec)
      */
+    @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException {
         if (m_inFilter == null) {
-                throw new InvalidSettingsException(
-                        "NEG-rowfilter: no input filter set");
+            throw new InvalidSettingsException(
+                    "NEG-rowfilter: no input filter set");
         } else {
             return m_inFilter.configure(inSpec);
         }
     }
-    
+
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "NEG-Filter:\nINPUT: " + m_inFilter.toString();
     }
@@ -136,6 +140,7 @@ public class NegRowFilter extends RowFilter {
     /**
      * @see java.lang.Object#clone()
      */
+    @Override
     public Object clone() {
         NegRowFilter nrf = (NegRowFilter)super.clone();
         if (m_inFilter != null) {

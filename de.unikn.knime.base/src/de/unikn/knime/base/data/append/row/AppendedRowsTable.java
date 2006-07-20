@@ -198,7 +198,7 @@ public class AppendedRowsTable implements DataTable {
         return new DataTableSpec(colSpecs);
     }
 
-    /**
+    /*
      * Convenience method that extracts the table specs and calls
      * generateDataTableSpec(DataTableSpec[]).
      */
@@ -211,7 +211,8 @@ public class AppendedRowsTable implements DataTable {
         return generateDataTableSpec(tableSpecs);
     }
     
-    /** Merges two domains of the same column, i.e. emerging from different
+    /* 
+     * Merges two domains of the same column, i.e. emerging from different
      * tables, min max will be updated (if possible) and the possible value
      * set. 
      */

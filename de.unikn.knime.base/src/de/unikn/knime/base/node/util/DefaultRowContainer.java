@@ -379,17 +379,9 @@ public class DefaultRowContainer implements RowContainer  {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#getRowCount()
-     */
-    public int getRowCount() {
-        return m_rows.size();
-    }
-    
-    /**
      * @see RowContainer#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_tSpec;
     }
-
 }

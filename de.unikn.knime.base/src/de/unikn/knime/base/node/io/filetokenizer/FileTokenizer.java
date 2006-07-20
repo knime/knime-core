@@ -480,7 +480,7 @@ public class FileTokenizer {
      */
     public boolean isWhiteSpace(final char c) {
         for (int w = 0; w < m_whiteSpaces.size(); w++) {
-            if (((String)m_whiteSpaces.get(w)).charAt(0) == c) {
+            if (m_whiteSpaces.get(w).charAt(0) == c) {
                 return true;
             }
         }
@@ -531,12 +531,12 @@ public class FileTokenizer {
     private Comment isCommentPattern() {
         String[] patterns = new String[m_commentPatterns.size()];
         for (int i = 0; i < patterns.length; i++) {
-            patterns[i] = ((Comment)m_commentPatterns.get(i)).getBegin();
+            patterns[i] = m_commentPatterns.get(i).getBegin();
         }
 
         int index = matchPattern(patterns);
         if (index >= 0) {
-            return (Comment)m_commentPatterns.get(index);
+            return m_commentPatterns.get(index);
         } else {
             return null;
         }
@@ -548,12 +548,12 @@ public class FileTokenizer {
     private Delimiter isDelimiterPattern() {
         String[] patterns = new String[m_delimPatterns.size()];
         for (int i = 0; i < patterns.length; i++) {
-            patterns[i] = ((Delimiter)m_delimPatterns.get(i)).getDelimiter();
+            patterns[i] = m_delimPatterns.get(i).getDelimiter();
         }
 
         int index = matchPattern(patterns);
         if (index >= 0) {
-            return (Delimiter)m_delimPatterns.get(index);
+            return m_delimPatterns.get(index);
         } else {
             return null;
         }
@@ -566,12 +566,12 @@ public class FileTokenizer {
     private Quote isQuotePattern() {
         String[] patterns = new String[m_quotePatterns.size()];
         for (int i = 0; i < patterns.length; i++) {
-            patterns[i] = ((Quote)m_quotePatterns.get(i)).getLeft();
+            patterns[i] = m_quotePatterns.get(i).getLeft();
         }
 
         int index = matchPattern(patterns);
         if (index >= 0) {
-            return (Quote)m_quotePatterns.get(index);
+            return m_quotePatterns.get(index);
         } else {
             return null;
         }

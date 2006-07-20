@@ -117,7 +117,7 @@ public final class FilterColumnPanel extends JPanel {
         this(DataValue.class);
     }
     
-    /** Only used to init the filter class array. */
+    /* Only used to init the filter class array. */
     private static Class<? extends DataValue>[] init(
             final Class<? extends DataValue>... filterValueClasses) {
         if (filterValueClasses == null || filterValueClasses.length == 0) {
@@ -378,7 +378,7 @@ public final class FilterColumnPanel extends JPanel {
         this.update(spec, exclude, Arrays.asList(cells));
     }
     
-    /** Checks if the given type is included in the list of allowed types. If 
+    /* Checks if the given type is included in the list of allowed types. If 
      * the list is empty, all types are valid.
      */
     private boolean typeAllowed(final DataType type) {
@@ -464,7 +464,7 @@ public final class FilterColumnPanel extends JPanel {
         return getColumnList(m_inclMdl);
     }
 
-    /**
+    /*
      * Helper for the get***ColumnList methods.
      * 
      * @param list The list from which to retrieve the elements
@@ -539,7 +539,7 @@ public final class FilterColumnPanel extends JPanel {
         }
     }
 
-    /** 
+    /* 
      * Finds in the list any occurrence of the argument string (as substring). 
      */
     private static int searchInList(final JList list, final String str,

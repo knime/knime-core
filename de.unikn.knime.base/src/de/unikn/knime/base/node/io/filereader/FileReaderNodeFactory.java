@@ -46,6 +46,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         if (m_defaultXMLFile == null) {
             return new FileReaderNodeModel();
@@ -57,6 +58,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
@@ -64,6 +66,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
      */
+    @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
         throw new IllegalStateException();
     }
@@ -72,6 +75,7 @@ public class FileReaderNodeFactory extends NodeFactory {
      * @return <b>true </b>.
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return true;
     }
@@ -79,6 +83,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return new FileReaderNodeDialog();
     }

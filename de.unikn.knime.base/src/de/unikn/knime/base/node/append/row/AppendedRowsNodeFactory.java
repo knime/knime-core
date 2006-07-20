@@ -31,6 +31,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         return new AppendedRowsNodeModel();
     }
@@ -38,6 +39,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
@@ -45,6 +47,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeView(int, NodeModel)
      */
+    @Override
     public NodeView createNodeView(
             final int viewIndex, final NodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
@@ -53,6 +56,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return true;
     }
@@ -60,8 +64,8 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return new AppendedRowsNodeDialog(); 
     }
-
 }

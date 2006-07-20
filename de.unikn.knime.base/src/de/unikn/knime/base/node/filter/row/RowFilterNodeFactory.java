@@ -32,6 +32,7 @@ public class RowFilterNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         return new RowFilterNodeModel();
     }
@@ -39,6 +40,7 @@ public class RowFilterNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
@@ -47,6 +49,7 @@ public class RowFilterNodeFactory extends NodeFactory {
      * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int,
      *      de.unikn.knime.core.node.NodeModel)
      */
+    @Override
     public NodeView createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
         return null;
@@ -55,6 +58,7 @@ public class RowFilterNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return true;
     }
@@ -62,6 +66,7 @@ public class RowFilterNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return new RowFilterNodeDialogPane();
     }

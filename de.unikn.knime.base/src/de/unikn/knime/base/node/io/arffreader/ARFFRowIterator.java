@@ -44,10 +44,10 @@ import de.unikn.knime.core.node.NodeLogger;
  * @author ohl, University of Konstanz
  */
 public class ARFFRowIterator extends RowIterator {
-    
+
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(ARFFRowIterator.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(ARFFRowIterator.class);
 
     private final DataTableSpec m_tSpec;
 
@@ -116,22 +116,23 @@ public class ARFFRowIterator extends RowIterator {
         settings.addQuotePattern("\"", "\"");
         // the data in the data section is separated by comma.
         settings.addDelimiterPattern(",", false, false, false);
-        
+
         settings.addWhiteSpaceCharacter(' ');
         settings.addWhiteSpaceCharacter('\t');
-        
+
         m_tokenizer.setSettings(settings);
     }
 
     /**
      * @see de.unikn.knime.core.data.RowIterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
         String token = null;
         try {
             token = m_tokenizer.nextToken();
             // skip empty lines. Dont call this from within 'next()'
-            while ((token != null) 
+            while ((token != null)
                     && (token.equals("\n") || (token.length() == 0))) {
                 token = m_tokenizer.nextToken();
             }
@@ -145,8 +146,8 @@ public class ARFFRowIterator extends RowIterator {
     /**
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
+    @Override
     public DataRow next() {
-
         // before anything else: check if there is more in the stream
         if (!hasNext()) {
             throw new NoSuchElementException(
@@ -165,27 +166,28 @@ public class ARFFRowIterator extends RowIterator {
         while (createdCols < noOfCols) {
 
             token = m_tokenizer.nextToken();
-            
+
             if (token == null) {
                 // file ended early.
                 break;
             }
 
-            // EOL is returned as token            
+            // EOL is returned as token
             if (token.equals("\n")) {
                 if (createdCols == 0) {
-                /* this is a bit of a hack. The tokenizer doesn't combine 
-                   delimiters if there is comment between them. That's why 
-                   a comment line would create a row filled with missing 
-                   values. This avoids that. */
-                continue;
+                    /*
+                     * this is a bit of a hack. The tokenizer doesn't combine
+                     * delimiters if there is comment between them. That's why a
+                     * comment line would create a row filled with missing
+                     * values. This avoids that.
+                     */
+                    continue;
                 }
                 // line ended early.
                 m_tokenizer.pushBack();
                 // we need the row delim in the file, for after the loop
                 break;
             }
-                
 
             if (createdCols == 0) {
                 // if the token in the first column starts with a '{' then
@@ -201,8 +203,7 @@ public class ARFFRowIterator extends RowIterator {
             boolean isMissingCell = false;
             if (token.equals("") && (!m_tokenizer.lastTokenWasQuoted())) {
                 if (m_numMsgMissVal < MAX_ERR_MSG) {
-                    LOGGER.warn(
-                            "ARFF reader WARNING: No value for"
+                    LOGGER.warn("ARFF reader WARNING: No value for"
                             + " column " + (createdCols + 1) + "("
                             + m_tSpec.getColumnSpec(createdCols) + "), file '"
                             + m_file + "' line " + m_tokenizer.getLineNumber()
@@ -213,17 +214,15 @@ public class ARFFRowIterator extends RowIterator {
                     LOGGER.warn("   (last message of this kind)");
                 }
                 isMissingCell = true;
-            } else if ((token.equals("?")) 
+            } else if ((token.equals("?"))
                     && (!m_tokenizer.lastTokenWasQuoted())) {
                 // the ARFF pattern for missing values
                 isMissingCell = true;
             }
 
             // now get that new cell (it throws something at us if it couldn't)
-            rowCells[createdCols] = 
-                createNewDataCellOfType(
-                        m_tSpec.getColumnSpec(createdCols).getType(), 
-                        token, isMissingCell);
+            rowCells[createdCols] = createNewDataCellOfType(m_tSpec
+                    .getColumnSpec(createdCols).getType(), token, isMissingCell);
 
             createdCols++;
 
@@ -233,20 +232,18 @@ public class ARFFRowIterator extends RowIterator {
         // fill the row with missing cells
         if (createdCols < noOfCols) {
             if (m_numMsgMissCol < MAX_ERR_MSG) {
-                LOGGER.warn(
-                        "ARFF reader WARNING: Too few columns in "
+                LOGGER.warn("ARFF reader WARNING: Too few columns in "
                         + "file '" + m_file + "' line "
                         + m_tokenizer.getLineNumber()
                         + ". Creating missing values for the missing columns.");
                 m_numMsgMissCol++;
             }
             if (m_numMsgMissCol == MAX_ERR_MSG) {
-                LOGGER.warn(
-                        "   (last message of this kind)");
+                LOGGER.warn("   (last message of this kind)");
             }
             while (createdCols < noOfCols) {
-                rowCells[createdCols] = createNewDataCellOfType(m_tSpec.
-                        getColumnSpec(createdCols).getType(), null, true);
+                rowCells[createdCols] = createNewDataCellOfType(m_tSpec
+                        .getColumnSpec(createdCols).getType(), null, true);
                 createdCols++;
             }
         }
@@ -270,15 +267,13 @@ public class ARFFRowIterator extends RowIterator {
 
         while ((token != null) && !token.equals("\n")) { // EOF is also EOL
             if (!msgPrinted && (m_numMsgExtraCol < MAX_ERR_MSG)) {
-                LOGGER.warn(
-                        "ARFF reader WARNING: Ignoring extra "
+                LOGGER.warn("ARFF reader WARNING: Ignoring extra "
                         + "columns in the data section of file '" + m_file
                         + "' line " + m_tokenizer.getLineNumber() + ".");
                 m_numMsgExtraCol++;
             }
             if (m_numMsgExtraCol == MAX_ERR_MSG) {
-                LOGGER.warn(
-                        "   (last message of this kind.)");
+                LOGGER.warn("   (last message of this kind.)");
             }
         }
 
@@ -320,18 +315,16 @@ public class ARFFRowIterator extends RowIterator {
                     return new IntCell(val);
                 } catch (NumberFormatException nfe) {
                     if (m_numMsgWrongFormat < MAX_ERR_MSG) {
-                        LOGGER.warn(
-                                "ARFF reader WARNING: Wrong data "
+                        LOGGER.warn("ARFF reader WARNING: Wrong data "
                                 + "format. In line "
                                 + m_tokenizer.getLineNumber() + " read '"
                                 + data + "' for an integer.");
-                        LOGGER.warn(
-                                "    Creating missing cell for it.");
+                        LOGGER.warn("    Creating missing cell for it.");
                         m_numMsgWrongFormat++;
                         if (m_numMsgWrongFormat == MAX_ERR_MSG) {
-                            LOGGER.warn(
-                                    "    (last message of "
-                                    + "this kind.)");
+                            LOGGER
+                                    .warn("    (last message of "
+                                            + "this kind.)");
                         }
                     }
                     return DataType.getMissingCell();
@@ -346,17 +339,14 @@ public class ARFFRowIterator extends RowIterator {
                     return new DoubleCell(val);
                 } catch (NumberFormatException nfe) {
                     if (m_numMsgWrongFormat < MAX_ERR_MSG) {
-                        LOGGER.warn(
-                                "ARFF reader WARNING: Wrong data "
+                        LOGGER.warn("ARFF reader WARNING: Wrong data "
                                 + "format. In line "
                                 + m_tokenizer.getLineNumber() + " read '"
                                 + data + "' for a floating point.");
-                        LOGGER.warn(
-                                "    Creating missing cell for it.");
+                        LOGGER.warn("    Creating missing cell for it.");
                         m_numMsgWrongFormat++;
                         if (m_numMsgWrongFormat == MAX_ERR_MSG) {
-                            LOGGER.warn(
-                                    "    (last message of this kind.)");
+                            LOGGER.warn("    (last message of this kind.)");
                         }
                     }
                     return DataType.getMissingCell();

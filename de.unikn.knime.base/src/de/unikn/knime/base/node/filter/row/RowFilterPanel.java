@@ -51,7 +51,7 @@ public abstract class RowFilterPanel extends JPanel {
 
         super.add(Box.createHorizontalStrut(width));
 
-         Box panelBox = Box.createVerticalBox();
+        Box panelBox = Box.createVerticalBox();
         panelBox.add(m_panel);
         panelBox.add(Box.createVerticalGlue());
 
@@ -72,6 +72,7 @@ public abstract class RowFilterPanel extends JPanel {
     /**
      * @see java.awt.Container#add(java.awt.Component)
      */
+    @Override
     public Component add(final Component comp) {
         return m_panel.add(comp);
     }

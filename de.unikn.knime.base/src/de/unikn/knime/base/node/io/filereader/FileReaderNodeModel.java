@@ -58,7 +58,8 @@ public class FileReaderNodeModel extends NodeModel {
      * Creates a new model that creates and holds a Filetable.
      */
     public FileReaderNodeModel() {
-        super(0, 1); // tell the super we need no inputs and one output, please.
+        super(0, 1); // tell the super we need no inputs and one output,
+                        // please.
         m_frSettings = null;
     }
 
@@ -90,8 +91,9 @@ public class FileReaderNodeModel extends NodeModel {
                 // doesn't have the xml extension - consider it a data file
                 m_frSettings = new FileReaderNodeSettings();
                 try {
-                    m_frSettings.setDataFileLocationAndUpdateTableName(
-                            FileReaderNodeDialog.textToURL(filename));
+                    m_frSettings
+                            .setDataFileLocationAndUpdateTableName(FileReaderNodeDialog
+                                    .textToURL(filename));
                 } catch (MalformedURLException mue) {
                     LOGGER.error("FileReader: " + mue.getMessage());
                     LOGGER.error("FileReader: Data file location not set.");
@@ -104,16 +106,18 @@ public class FileReaderNodeModel extends NodeModel {
     /**
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
+    @Override
     protected void reset() {
-        //m_frSettings = null;
+        // m_frSettings = null;
     }
 
     /**
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws 
-            CanceledExecutionException, InvalidSettingsException {
+            final ExecutionContext exec) throws CanceledExecutionException,
+            InvalidSettingsException {
 
         LOGGER.info("Preparing to read from '"
                 + m_frSettings.getDataFileLocation().toString() + "'.");
@@ -124,19 +128,19 @@ public class FileReaderNodeModel extends NodeModel {
         if (status.getNumOfErrors() > 0) {
             throw new InvalidSettingsException(status.getAllErrorMessages(10));
         }
-        
+
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
         FileTable fTable = new FileTable(tSpec, m_frSettings);
-        
+
         // create a DataContainer and fill it with the rows read. It is faster
         // then reading the file everytime (for each row iterator), and it
         // collects the domain for each column for us. Also, if things fail,
         // the error message is printed during filereader execution (were it
-        // belongs to) and not some time later when a node uses the row 
+        // belongs to) and not some time later when a node uses the row
         // iterator from the file table.
-        BufferedDataTable cacheTable = 
-            exec.createBufferedDataTable(fTable, exec);
-        return new BufferedDataTable[] {cacheTable};
+        BufferedDataTable cacheTable = exec.createBufferedDataTable(fTable,
+                exec);
+        return new BufferedDataTable[]{cacheTable};
     }
 
     /**
@@ -149,6 +153,7 @@ public class FileReaderNodeModel extends NodeModel {
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         assert inSpecs.length == 0;
@@ -160,8 +165,7 @@ public class FileReaderNodeModel extends NodeModel {
         // see if settings are good enough for execution
         SettingsStatus status = m_frSettings.getStatusOfSettings(true, null);
         if (status.getNumOfErrors() == 0) {
-            return new DataTableSpec[] {m_frSettings
-                    .createDataTableSpec()};
+            return new DataTableSpec[]{m_frSettings.createDataTableSpec()};
         }
 
         throw new InvalidSettingsException(status.getAllErrorMessages(0));
@@ -209,6 +213,7 @@ public class FileReaderNodeModel extends NodeModel {
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         readSettingsFromConfiguration(settings, /* validateOnly = */false);
@@ -219,6 +224,7 @@ public class FileReaderNodeModel extends NodeModel {
      * 
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
 
         if (settings == null) {
@@ -245,6 +251,7 @@ public class FileReaderNodeModel extends NodeModel {
      *             are incomplete, inconsistent, or in any way invalid.
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         readSettingsFromConfiguration(settings, /* validateOnly = */true);
@@ -294,8 +301,8 @@ public class FileReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     * #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -304,7 +311,7 @@ public class FileReaderNodeModel extends NodeModel {
         // noo internals to save.
         return;
     }
-    
+
     /**
      * @return the current file history associated with the file reader.
      */
@@ -323,7 +330,7 @@ public class FileReaderNodeModel extends NodeModel {
                     File f = new File(url.getPath());
                     if ((f != null) && (f.exists())) {
                         validLoc.add(loc);
-                    } // else  ignore old, not existing entries
+                    } // else ignore old, not existing entries
                 } else {
                     // non-file URL we just take over
                     validLoc.add(loc);
@@ -333,7 +340,7 @@ public class FileReaderNodeModel extends NodeModel {
             }
         }
         return validLoc.toArray(new String[0]);
-   
+
     }
 
 }

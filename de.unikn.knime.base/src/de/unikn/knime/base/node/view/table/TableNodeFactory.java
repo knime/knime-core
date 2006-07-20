@@ -32,6 +32,7 @@ public class TableNodeFactory extends NodeFactory {
      * @return <b>false</b>.
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return false;
     }
@@ -43,6 +44,7 @@ public class TableNodeFactory extends NodeFactory {
      * @throws IllegalStateException Always.
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
      */ 
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         throw new InternalError();
     }
@@ -50,6 +52,7 @@ public class TableNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         return new TableNodeModel();
     }
@@ -57,6 +60,7 @@ public class TableNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
      */
+    @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
         if (i != 0) {
             throw new IllegalArgumentException();
@@ -67,6 +71,7 @@ public class TableNodeFactory extends NodeFactory {
     /**
      * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 1;
     }

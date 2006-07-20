@@ -38,7 +38,7 @@ public class Quote {
     private boolean m_hasEscape;
 
     /* keys used to store parameters in a config object */
-    private static final  String CFGKEY_LEFT = "left";
+    private static final String CFGKEY_LEFT = "left";
 
     private static final String CFGKEY_RIGHT = "right";
 
@@ -92,7 +92,7 @@ public class Quote {
             m_right = settings.getString(CFGKEY_RIGHT);
         } catch (InvalidSettingsException ice) {
             throw new InvalidSettingsException("Illegal config object for "
-                    + "quote (missing key)! Settings incomplete!");            
+                    + "quote (missing key)! Settings incomplete!");
         }
         try {
             if (settings.containsKey(CFGKEY_ESC)) {
@@ -106,14 +106,14 @@ public class Quote {
         } catch (InvalidSettingsException ice) {
             throw new InvalidSettingsException("Illegal config object for "
                     + "quote (must not specify mult char string as escape"
-                    + "character)! Settings incomplete!");            
+                    + "character)! Settings incomplete!");
         }
     }
-    
+
     /**
-     * Writes the object into a <code>NodeSettings</code> object. If this config
-     * object is then used to construct a new <code>Delimiter</code> this and
-     * the new object should be identical.
+     * Writes the object into a <code>NodeSettings</code> object. If this
+     * config object is then used to construct a new <code>Delimiter</code>
+     * this and the new object should be identical.
      * 
      * @param cfg a config object the internal values of this object will be
      *            stored into.
@@ -131,7 +131,6 @@ public class Quote {
         }
 
     }
-
 
     /**
      * @return The left quote pattern.
@@ -169,12 +168,14 @@ public class Quote {
     public char getFirstCharOfLeft() {
         return m_left.charAt(0);
     }
-    
+
     /**
-     * Returns "[left]...[right], '[esc]'", with ", [esc]" only
-     * printed when an escape char is defined.
+     * Returns "[left]...[right], '[esc]'", with ", [esc]" only printed when an
+     * escape char is defined.
+     * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         StringBuffer result = new StringBuffer();
         result.append(getLeft());
