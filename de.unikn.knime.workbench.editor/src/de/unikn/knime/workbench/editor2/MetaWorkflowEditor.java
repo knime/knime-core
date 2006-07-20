@@ -31,7 +31,6 @@ import de.unikn.knime.core.node.meta.MetaInputModel;
 import de.unikn.knime.core.node.meta.MetaOutputModel;
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
-import de.unikn.knime.workbench.repository.model.NodeTemplate;
 
 /**
  * This is the implementation of the Eclipse Editor used for editing a
@@ -169,7 +168,6 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
 
         ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
         info.setNodeLocation(xPos, yPos, 40, 40);
-        info.setType(NodeTemplate.TYPE_META);
         container.setExtraInfo(info);
     }
 
