@@ -54,7 +54,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
      * Creates a new CSV writer dialog.
      */
     public CSVWriterNodeDialog() {
-        super("CSV File Writer");
+        super();
         
         final JPanel filePanel = new JPanel();
         filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));

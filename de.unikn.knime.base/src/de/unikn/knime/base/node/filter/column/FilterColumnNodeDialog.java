@@ -44,7 +44,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      * to set the desired columns. 
      */
     FilterColumnNodeDialog() {
-        super("Column Filter Settings");
+        super();
         super.addTab(TAB, new FilterColumnPanel());
     }
 

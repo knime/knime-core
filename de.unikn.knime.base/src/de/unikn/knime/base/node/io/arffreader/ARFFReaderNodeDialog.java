@@ -74,7 +74,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
      * Creates a new ARFF file reader dialog.
      */
     public ARFFReaderNodeDialog() {
-        super("ARFF File Reader");
+        super();
 
         addTab("Specify ARFF file", createFilePanel());
 

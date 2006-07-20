@@ -166,7 +166,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * Creates a new file reader dialog pain.
      */
     FileReaderNodeDialog() {
-        super("ASCII Data File Reader");
+        super();
         m_frSettings = new FileReaderNodeSettings();
         m_insideLoadDelim = false;
         m_insideDelimChange = false;

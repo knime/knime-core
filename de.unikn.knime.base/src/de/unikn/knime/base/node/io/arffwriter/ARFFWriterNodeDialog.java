@@ -49,7 +49,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
      * creates a new dialog for the ARFF writer.
      */
     public ARFFWriterNodeDialog() {
-        super("ARFF Writer");
+        super();
 
         m_textField = new JTextField(20);
 

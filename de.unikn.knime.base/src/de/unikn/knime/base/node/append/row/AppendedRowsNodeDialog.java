@@ -53,7 +53,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
      * Constructor to init the gui and set a title. 
      */
     public AppendedRowsNodeDialog() {
-        super("Row concatenator properties");
+        super();
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_suffixField.setEnabled(m_appendSuffixButton.isSelected());

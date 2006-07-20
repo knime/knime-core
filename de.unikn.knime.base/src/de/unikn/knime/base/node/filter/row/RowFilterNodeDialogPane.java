@@ -77,7 +77,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
      * creates a new panel for the row filter node dialog.
      */
     public RowFilterNodeDialogPane() {
-        super("Row filter settings");
+        super();
         JPanel dlg = createDialogPanel();
         // the actual filter panel instantiations happen during loadSettings.
         addTab("Filter Criteria", dlg);
