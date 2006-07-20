@@ -992,7 +992,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         URL newURL;
 
         // clear preview first.
-        m_previewTableView.setDataTable(null);
 
         try {
             newURL = textToURL(m_urlCombo.getEditor().getItem().toString());
@@ -1000,6 +999,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             // leave settings unchanged.
             setErrorLabelText("Malformed URL '"
                     + m_urlCombo.getEditor().getItem() + "'.");
+            m_previewTableView.setDataTable(null);
             return;
         }
 
@@ -1023,6 +1023,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                 } catch (IOException ioe) {
                     setErrorLabelText("Can't access '" + newURL + "'");
+                    m_previewTableView.setDataTable(null);
                     return;
                 }
             } else {
@@ -1058,6 +1059,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 } catch (IOException ioe) {
                     m_frSettings.setColumnProperties(oldColProps);
                     setErrorLabelText("Can't access '" + newURL + "'");
+                    m_previewTableView.setDataTable(null);
                     return;
                 }
             }
