@@ -150,6 +150,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // set the initial settings to the figure on the next "stateChanged"
             // event.
             m_figureInitialized = false;
+            // create default extra info and set it
+            // NOTE: This is done for nodes that are created from code
+            // e.g. cross validation node creates a partitioner and 
+            // has no knowledge about a extrainfo
+            ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
+            info.setNodeLocation(0, 0, -1, -1);
+            getNodeContainer().setExtraInfo(info);
+
         }
     }
 
@@ -365,9 +373,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     fig.setState(NodeContainerFigure.STATE_WARNING, state
                             .getMessage());
                 } else if (state instanceof NodeStatus.ExecutionCanceled) {
-                    fig.setState(NodeContainerFigure.STATE_WARNING,
-                            state.getMessage() != null ? state.getMessage() 
-                                    : "Execution canceled");
+                    fig.setState(NodeContainerFigure.STATE_WARNING, state
+                            .getMessage() != null ? state.getMessage()
+                            : "Execution canceled");
                 } else if (state instanceof NodeStatus.Error) {
                     fig.setState(NodeContainerFigure.STATE_ERROR, state
                             .getMessage());
