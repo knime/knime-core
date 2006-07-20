@@ -67,6 +67,7 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
         m_nodeMonitor = monitor;
         m_wfm = manager;
         m_node = node;
+        m_currentProgressMessage = "";
         setPriority(LONG);
     }
 
