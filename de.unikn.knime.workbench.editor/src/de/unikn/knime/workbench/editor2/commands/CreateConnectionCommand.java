@@ -150,7 +150,7 @@ public class CreateConnectionCommand extends Command {
     public boolean canExecute() {
         return (m_sourceNode != null)
                 && (m_targetNode != null)
-                && (!(m_sourceNode.isLocked()))
+                //&& (!(m_sourceNode.isLocked()))
                 && (!(m_targetNode.isLocked()))
                 && (m_manager.canAddConnection(m_sourceNode.getNodeContainer()
                         .getID(), m_sourcePortID, m_targetNode
