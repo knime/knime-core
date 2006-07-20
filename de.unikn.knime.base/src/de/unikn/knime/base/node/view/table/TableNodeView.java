@@ -76,7 +76,7 @@ public class TableNodeView extends NodeView {
      * @param nodeModel The underlying model.
      */
     public TableNodeView(final TableNodeModel nodeModel) {
-        super(nodeModel, "Table View");
+        super(nodeModel);
         // get data model, init view
         TableContentModel cntModel = nodeModel.getContentModel();
         assert (cntModel != null);
@@ -225,7 +225,7 @@ public class TableNodeView extends NodeView {
      */
     protected void updateTitle() {
         final TableContentView view = m_tableView.getContentTable();
-        StringBuffer title = new StringBuffer("Table (");
+        StringBuffer title = new StringBuffer(getViewName() + " (");
         if (view.hasData()) {
             int rowCount = view.getRowCount();
             boolean isFinal = view.isRowCountFinal();
@@ -235,7 +235,7 @@ public class TableNodeView extends NodeView {
         } else {
             title.append("no data)");
         }
-        super.setViewName(title.toString());
+        super.setViewTitle(title.toString());
     } // updateTitle()
 
     /**
