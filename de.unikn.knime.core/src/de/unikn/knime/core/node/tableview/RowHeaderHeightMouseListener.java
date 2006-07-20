@@ -24,6 +24,8 @@ import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 import javax.swing.JTable;
 import javax.swing.event.MouseInputAdapter;
@@ -74,8 +76,26 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
      * @throws NullPointerException If the argument is null.
      */
     public RowHeaderHeightMouseListener(final JTable table) {
+        // that's some sort of a hack: I make sure that this object is 
+        // notified first when it comes to events. Some events (those which
+        // trigger row resizing are e.consume()'d. The selection listeners
+        // respects this and will ignore the selection event, bug fix#654
+        MouseListener[] mouseListener = table.getMouseListeners();
+        MouseMotionListener[] motionListener = table.getMouseMotionListeners();
+        for (MouseListener m : mouseListener) {
+            table.removeMouseListener(m);
+        }
+        for (MouseMotionListener m : motionListener) {
+            table.removeMouseMotionListener(m);
+        }
         table.addMouseListener(this);
         table.addMouseMotionListener(this);
+        for (MouseListener m : mouseListener) {
+            table.addMouseListener(m);
+        }
+        for (MouseMotionListener m : motionListener) {
+            table.addMouseMotionListener(m);
+        }
         m_table = table;
     }
 
@@ -94,6 +114,8 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
             m_yOld = point.y;
             // and remember that we are now dragging something
             m_isDragging = true;
+            // must consume here, flag for the selection mouse listener
+            e.consume();
         }
     }
 
@@ -140,6 +162,8 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
             m_table.setRowHeight(m_resizingRow, newHeight);
             // and remember where mouse is now
             m_yOld = mouseY;
+            // must consume here, flag for the selection mouse listener
+            e.consume();
         }
     }
     
@@ -152,7 +176,10 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
             int height = m_table.getRowHeight(m_resizingRow);
             m_table.setRowHeight(height);
         }
-        m_isDragging = false;
+        if (m_isDragging) {
+            m_isDragging = false;
+            e.consume();
+        }
     }
 
     /** Swaps the current cursor and the temp cursor. */

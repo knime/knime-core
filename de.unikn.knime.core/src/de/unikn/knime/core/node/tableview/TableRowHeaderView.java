@@ -112,7 +112,7 @@ public final class TableRowHeaderView extends JTable {
             throw new ClassCastException("Not a TableRowHeaderModel");
         }
         super.setModel(tableModel);
-    } // setModel(TableModel)
+    } 
     
     /**
      * Delegating method to model. It sets the column header name which is,
@@ -299,12 +299,14 @@ public final class TableRowHeaderView extends JTable {
         // add a listener to the row header view, which makes sure that
         // any row height change is propagated to the content view
         PropertyChangeListener prop2Listener = new PropertyChangeListener() {
-            public void propertyChange(final PropertyChangeEvent evt) {
-                if (evt.getPropertyName().equals("allrowheight")) {
-                    table.setRowHeight((Integer)evt.getNewValue());
-                } else if (evt.getPropertyName().equals(
+            public void propertyChange(final PropertyChangeEvent e) {
+                if (e.getPropertyName().equals("allrowheight")) {
+                    table.setRowHeight((Integer)e.getNewValue());
+                } else if (e.getPropertyName().equals("rowSelectionAllowed")) {
+                    table.setRowSelectionAllowed((Boolean)e.getNewValue());
+                } else if (e.getPropertyName().equals(
                         "individualrowheight")) {
-                    int row = (Integer)evt.getNewValue();
+                    int row = (Integer)e.getNewValue();
                     int newHeight = headerView.getRowHeight(row);
                     table.setRowHeight(row, newHeight);
                 }
