@@ -147,12 +147,11 @@ public abstract class NodeView {
      * operation <code>JFrame.DISPOSE_ON_CLOSE</code>.
      * 
      * @param nodeModel The underlying node model.
-     * @param title The title of this frame.
      * @throws NullPointerException If the <code>nodeModel</code> is null.
      * @see #setComponent(Component)
      * @see #onClose()
      */
-    protected NodeView(final NodeModel nodeModel, final String title) {
+    protected NodeView(final NodeModel nodeModel) {
         if (nodeModel == null) {
             throw new NullPointerException();
         }
@@ -165,7 +164,6 @@ public abstract class NodeView {
 
         // init frame
         m_frame = new JFrame();
-        setViewName(title);
         if (KNIMEConstants.KNIME16X16 != null) {
             m_frame.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
@@ -494,23 +492,38 @@ public abstract class NodeView {
     protected final boolean isOpen() {
         return m_frame.isVisible();
     }
-
+    
     /**
-     * Set a new name for this view. The title is updated to <i>View - &lt;
-     * <code>newName</code> &gt; </i>. If <code>newName</code> is
-     * <code>null</code> the new title is <i>View - no title</i>.
+     * Set a new name for this view. The title is updated to the given title. 
+     * If <code>newName</code> is <code>null</code> the new title is 
+     * <i>base name - &lt; no title &gt; </i>.
      * 
-     * @param newName new title and name to be set
+     * @param newName The new title to be set.
      */
-    protected final void setViewName(final String newName) {
-        m_frame.setName(newName);
+    protected final void setViewTitle(final String newName) {
         if (newName == null) {
-            m_frame.setTitle("View - no title");
+            m_frame.setTitle(getViewName() + " - <no title>");
         } else {
-            m_frame.setTitle("View - " + newName);
+            m_frame.setTitle(newName);
         }
     }
-
+    
+    /**
+     * @return The current view's title.
+     */
+    public final String getViewTitle() {
+        return m_frame.getTitle();
+    }
+    
+    /**
+     * Sets the given name as frame name and title. 
+     * @param name The frame's name and title.
+     */
+    final void setViewName(final String name) {
+        m_frame.setName(name);
+        m_frame.setTitle(name);
+    }   
+    
     /**
      * Returns the view name as set by <code>#setViewName(String)</code> or
      * <code>null</code> if that hasn't happen yet.
@@ -518,7 +531,7 @@ public abstract class NodeView {
      * @return The view's name.
      * @see JFrame#setName(String)
      */
-    public final String getViewName() {
+    protected final String getViewName() {
         return m_frame.getName();
     }
 

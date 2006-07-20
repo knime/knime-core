@@ -75,7 +75,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      */
     public InterruptibleNodeView(final InterruptibleNodeModel model,
             final String title) {
-        super(model, title);
+        super(model);
         setShowNODATALabel(false);
         // The interrupt menu
         // add the menu entry to the menu bar
@@ -94,7 +94,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
     public InterruptibleNodeView(final String title, 
             final InterruptibleNodeModel model,
             final JPanel innerView) {
-        super(model, title);
+        super(model);
 
         setShowNODATALabel(false);
 

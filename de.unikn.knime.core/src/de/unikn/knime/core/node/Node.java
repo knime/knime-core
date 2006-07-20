@@ -1344,6 +1344,7 @@ public final class Node {
      */
     public NodeView getView(final int viewIndex) {
         NodeView view = m_factory.createNodeView(viewIndex, m_model);
+        view.setViewName(m_factory.getNodeViewName(viewIndex));
         return view;
     }
     
