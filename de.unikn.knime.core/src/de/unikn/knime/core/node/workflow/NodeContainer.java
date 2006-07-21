@@ -315,7 +315,7 @@ public class NodeContainer implements NodeStateListener {
     void addOutgoingConnection(final int port, final NodeContainer nc) {
         // sanity checks:
         if (nc == null) {
-            throw new NullPointerException("Outgoing connection at port #"
+            throw new IllegalArgumentException("Outgoing connection at port #"
                     + port + " has no target node defined (null).");
         }
         if (port < 0 || port > getNrOutPorts()) {

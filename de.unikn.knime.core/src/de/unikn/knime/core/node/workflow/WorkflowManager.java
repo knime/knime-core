@@ -1396,7 +1396,11 @@ public class WorkflowManager implements WorkflowListener {
                         + " reason: " + ise.getMessage());
                 LOGGER.debug(connectionConfig, ise);
             }
-            addConnection(cc);
+            try {
+                addConnection(cc);
+            } catch (Exception ex) {
+                LOGGER.error("Could not add connection", ex);
+            }
         }
     }
 
