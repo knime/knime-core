@@ -1047,11 +1047,11 @@ public class WorkflowManager implements WorkflowListener {
         synchronized (this) {
             Collection<NodeContainer> nodes = new ArrayList<NodeContainer>();
 
-            for (Map.Entry<NodeContainer, Integer> e : m_idsByNode.entrySet()) {
+            for (NodeContainer nc : topSortNodes()) {
                 // we also add unconfigured nodes here because they may get
                 // configured if their predecessor(s) are executed
-                if (!e.getKey().isExecuted() && e.getKey().isFullyConnected()) {
-                    nodes.add(m_nodesByID.get(e.getValue()));
+                if (!nc.isExecuted() && nc.isFullyConnected()) {
+                    nodes.add(m_nodesByID.get(nc));
                 }
             }
 
@@ -1098,10 +1098,13 @@ public class WorkflowManager implements WorkflowListener {
                         + " executed");
             }
 
-            Collection<NodeContainer> nodes = new ArrayList<NodeContainer>();
+            List<NodeContainer> nodes = new ArrayList<NodeContainer>();
             nodes.add(nc);
             findExecutableNodes(nc, nodes);
 
+            // queue the nodes in reverse order, i.e. the first executing nodes
+            // gets queued first, so that its progress bar comes first
+            Collections.reverse(nodes);
             m_executor.addWaitingNodes(nodes);
         }
         if (block) {
