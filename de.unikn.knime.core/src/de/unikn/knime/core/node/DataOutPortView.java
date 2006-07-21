@@ -107,6 +107,17 @@ final class DataOutPortView extends NodeOutPortView {
      */
     void updateDataTable(final DataTable newDataTable) {
         m_dataView.setDataTable(newDataTable);
+        // display the number of rows in the upper left corner
+
+        if (newDataTable instanceof BufferedDataTable) {
+            // only BufferedTables have the row count set.
+            BufferedDataTable bTable = (BufferedDataTable)newDataTable;
+            String rowCount = "" + bTable.getRowCount() + " row" 
+            +  (bTable.getRowCount() != 1 ? "s" : "");
+            m_dataView.getHeaderTable().setColumnName(rowCount);
+        } else {
+            m_dataView.getHeaderTable().setColumnName("");
+        }
     }
 
     /**
