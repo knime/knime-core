@@ -1051,7 +1051,7 @@ public class WorkflowManager implements WorkflowListener {
                 // we also add unconfigured nodes here because they may get
                 // configured if their predecessor(s) are executed
                 if (!nc.isExecuted() && nc.isFullyConnected()) {
-                    nodes.add(m_nodesByID.get(nc));
+                    nodes.add(nc);
                 }
             }
 
