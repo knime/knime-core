@@ -1275,7 +1275,11 @@ public final class Node {
                 m_outDataPorts[p].setDataTableSpec(newSpecs[p]);
             }
         } catch (InvalidSettingsException ise) {
-            m_logger.warn("Configure failed: " + ise.getMessage());
+            if (isFullyConnected()) {
+                m_logger.warn("Configure failed: " + ise.getMessage());
+            } else {
+                m_logger.debug("Configure failed: " + ise.getMessage());
+            }
             reset(true);
         } catch (Exception e) {
             m_logger.error("Configure failed", e);

@@ -18,6 +18,7 @@
 package de.unikn.knime.core.node;
 
 import java.io.File;
+import java.io.IOException;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
@@ -167,8 +168,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @throws IllegalStateException if the workflow manager has already been
      *             set
      */
-    void setInternalWFM(final WorkflowManager wfm)
-    throws IllegalStateException {
+    void setInternalWFM(final WorkflowManager wfm) throws IllegalStateException {
         if (m_internalWFM != null) {
             throw new IllegalStateException("Internal workflow manager has"
                     + " already been set");
@@ -210,7 +210,11 @@ public abstract class SpecialNodeModel extends NodeModel {
             final NodeSettingsRO settings, final ExecutionMonitor exec)
             throws InvalidSettingsException {
         validateSettings(nodeFile, settings);
-        loadValidatedSettingsFrom(nodeFile, settings, exec);
+        try {
+            loadValidatedSettingsFrom(nodeFile, settings, exec);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException(ex);
+        }
     }
 
     /**
@@ -220,7 +224,11 @@ public abstract class SpecialNodeModel extends NodeModel {
     @Override
     protected final void loadValidatedSettingsFrom(final NodeSettingsRO setts)
             throws InvalidSettingsException {
-        loadValidatedSettingsFrom(null, setts, null);
+        try {
+            loadValidatedSettingsFrom(null, setts, null);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException(ex);
+        }
     }
 
     /**
@@ -259,9 +267,12 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param settings a settings object
      * @param exec an execution monitor to report progress for long-running
      *            saves
+     * @throws InvalidSettingsException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     protected abstract void saveSettingsTo(final File nodeDir,
-            final NodeSettingsWO settings, final ExecutionMonitor exec);
+            final NodeSettingsWO settings, final ExecutionMonitor exec)
+            throws InvalidSettingsException, IOException;
 
     /**
      * Loads the validated settings for this model.
@@ -271,10 +282,11 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param exec an execution monitor to report progress for long-running
      *            loads
      * @throws InvalidSettingsException if the settings are invalid
+     * @throws IOException if an I/O error occurs
      */
     protected abstract void loadValidatedSettingsFrom(final File nodeDir,
             final NodeSettingsRO settings, final ExecutionMonitor exec)
-            throws InvalidSettingsException;
+            throws InvalidSettingsException, IOException;
 
     /**
      * Resets the node. If you use this method make sure that no loop is
