@@ -184,6 +184,7 @@ public class MetaNodeModel extends SpecialNodeModel
             m_dataInContainer[i] =
                 internalWFM().addNewNode(new DataInputNodeFactory());
             m_dataInContainer[i].setCustomName("External data input " + i);
+            m_dataInContainer[i].setDeletable(false);
         }
 
         for (int i = 0; i < m_dataOutContainer.length; i++) {
@@ -191,13 +192,14 @@ public class MetaNodeModel extends SpecialNodeModel
                 internalWFM().addNewNode(new DataOutputNodeFactory());
             m_dataOutContainer[i].addListener(this);
             m_dataOutContainer[i].setCustomName("Data collector " + i);
-            m_dataOutContainer[i].addListener(this);
+            m_dataOutContainer[i].setDeletable(false);
         }
 
         for (int i = 0; i < m_modelInContainer.length; i++) {
             m_modelInContainer[i] =
                 internalWFM().addNewNode(new ModelInputNodeFactory());
             m_modelInContainer[i].setCustomName("External model input " + i);
+            m_modelInContainer[i].setDeletable(false);
         }
 
         for (int i = 0; i < m_modelOutContainer.length; i++) {
@@ -205,7 +207,7 @@ public class MetaNodeModel extends SpecialNodeModel
                 internalWFM().addNewNode(new ModelOutputNodeFactory());
             m_modelOutContainer[i].addListener(this);
             m_modelOutContainer[i].setCustomName("Model collector " + i);
-            m_modelOutContainer[i].addListener(this);
+            m_modelOutContainer[i].setDeletable(false);
         }
         
         for (NodeContainer cont : internalWFM().getNodes()) {
@@ -427,24 +429,28 @@ public class MetaNodeModel extends SpecialNodeModel
                 for (int i = 0; i < ids.length; i++) {
                     m_dataInContainer[i] =
                         internalWFM().getNodeContainerById(ids[i]);
+                    m_dataInContainer[i].setDeletable(false);
                 }
                             
                 ids = settings.getIntArray("dataOutContainerIDs", new int[0]);
                 for (int i = 0; i < ids.length; i++) {
                     m_dataOutContainer[i] =
                         internalWFM().getNodeContainerById(ids[i]);
+                    m_dataOutContainer[i].setDeletable(false);
                 }
                 
                 ids = settings.getIntArray("modelInContainerIDs", new int[0]);
                 for (int i = 0; i < ids.length; i++) {
                     m_modelInContainer[i] =
                         internalWFM().getNodeContainerById(ids[i]);
+                    m_modelInContainer[i].setDeletable(false);
                 }
     
                 ids = settings.getIntArray("modelOutContainerIDs", new int[0]);
                 for (int i = 0; i < ids.length; i++) {
                     m_modelOutContainer[i] =
                         internalWFM().getNodeContainerById(ids[i]);
+                    m_modelOutContainer[i].setDeletable(false);
                 }
                 
                 for (NodeContainer cont : internalWFM().getNodes()) {
