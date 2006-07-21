@@ -1064,7 +1064,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                         .getCustomName()
                         + " (" + nc.getName() + ")", pm, m_manager, nc,
                         "Queued for execution...");
-                job.schedule();
+                // Reverted as not properly ordered yet. Improve in next version
+                // job.schedule();
 
                 m_dummyNodeJobs.put(event.getID(), job);
             }
@@ -1072,6 +1073,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
             if (j != null) {
                 j.setStateMessage("Executing");
+                j.schedule();
             }
         } else if (event instanceof WorkflowEvent.NodeFinished) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
