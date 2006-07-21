@@ -92,5 +92,14 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
             CanceledExecutionException {
         m_buffer.saveToFile(f, exec);
     }
+    
+    /**
+     * Do not call this method! It's used internally to delete temp files. 
+     * Any iteration on the table will fail!
+     * @see KnowsRowCountTable#clear()
+     */
+    public void clear() {
+        m_buffer.clear();
+    }
 
 }

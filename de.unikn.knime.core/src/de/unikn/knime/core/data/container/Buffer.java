@@ -713,7 +713,17 @@ class Buffer {
      */
     @Override
     protected void finalize() throws Throwable {
-        if (m_outFile != null && m_hasCreatedTempFile) {
+        if (m_hasCreatedTempFile) {
+            clear();
+        }
+        super.finalize();
+    }
+    
+    /**
+     * Clears the temp file. Any subsequent iteration will fail!
+     */
+    void clear() {
+        if (m_outFile != null) {
             if (m_outFile.delete()) {
                 LOGGER.debug("Deleted temp file \"" 
                         + m_outFile.getAbsolutePath() + "\"");
@@ -722,7 +732,7 @@ class Buffer {
                         + m_outFile.getAbsolutePath() + "\"");
             }
         }
-        super.finalize();
+        m_outFile = null;
     }
     
     /**

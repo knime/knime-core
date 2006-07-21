@@ -117,6 +117,14 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
         // will also close the stream.
         specWriteSettings.saveToXML(zipOut);
     }
+    
+    /**
+     * Do not call this method! It's used internally. 
+     * @see KnowsRowCountTable#clear()
+     */
+    public void clear() {
+        // empty.
+    }
 
     /**
      * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()

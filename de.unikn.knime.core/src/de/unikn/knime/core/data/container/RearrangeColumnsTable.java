@@ -339,5 +339,15 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         }
     }
     
+    /**
+     * Do not call this method! It's used internally to delete temp files. 
+     * Any iteration on the table will fail!
+     * @see KnowsRowCountTable#clear()
+     */
+    public void clear() {
+        if (m_appendBuffer != null) {
+            m_appendBuffer.clear();
+        }
+    }
     
 }

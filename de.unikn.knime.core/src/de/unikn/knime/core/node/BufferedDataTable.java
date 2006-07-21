@@ -381,6 +381,15 @@ public final class BufferedDataTable implements DataTable {
             }
         }
     }
+    
+    /** Clears any associated storage, for instance temp files. */
+    void clear() {
+        BufferedDataTable reference = getReferenceTable();
+        if (reference != null && reference.getOwner() == getOwner()) {
+            reference.clear();
+        }
+        m_delegate.clear();
+    }
 
     /** Internally used interface. You won't have any benefit by implementing
      * this interface! It's used for selected classes in the KNIME core.
@@ -401,6 +410,11 @@ public final class BufferedDataTable implements DataTable {
         void saveToFile(final File f, final NodeSettingsWO settings, 
                 final ExecutionMonitor exec) 
                 throws IOException, CanceledExecutionException;
+        
+        /** Clears and allocated temporary files. The table won't be used
+         * anymore.
+         */
+        void clear();
     }
 }
 

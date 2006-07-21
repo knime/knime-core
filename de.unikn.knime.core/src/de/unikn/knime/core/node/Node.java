@@ -1012,11 +1012,12 @@ public final class Node {
 
 
     /**
-     * Blabla
-     *
+     * Deletes and temporary rescources associated with this node. 
      */
     public void cleanup() {
-        
+        for (DataOutPort o : m_outDataPorts) {
+            o.clearData();
+        }
     }
     
     /**

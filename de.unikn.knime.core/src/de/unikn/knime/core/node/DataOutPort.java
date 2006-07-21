@@ -95,6 +95,12 @@ public final class DataOutPort extends NodeOutPort
      * @param dataTable The new data table for this port or null.
      */
     void setDataTable(final BufferedDataTable dataTable) {
+        if (dataTable == m_dataTable) {
+            return;
+        }
+        if (m_dataTable != null) {
+            m_dataTable.clear();
+        }
         //  (tg) also set the new spec here
         if (dataTable != null) {
             setDataTableSpec(dataTable.getDataTableSpec());
@@ -170,6 +176,15 @@ public final class DataOutPort extends NodeOutPort
             ((DataOutPortView) getPortView()).updateHiliteHandler(m_hiliteHdl);
         }
         getPortView().openView();
+    }
+    
+    /** Deletes all recources associated with this port. That is, the temp
+     * file underlying the table (if any)
+     */
+    public void clearData() {
+        if (m_dataTable != null) {
+            m_dataTable.clear();
+        }
     }
     
 }
