@@ -225,7 +225,10 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
      */
     public void markDirty() {
         super.markDirty();
-        m_parent.markDirty();
+
+        if (m_parent != null) {
+            m_parent.markDirty();
+        }
     }
 
 }
