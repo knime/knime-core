@@ -241,4 +241,23 @@ public class ColumnSelectionComboxBox extends JComboBox {
         }
         return null;
     }
+    
+    /** 
+     * Selects the column with the name provided in the argument. Does nothing
+     * if the argument is <code>null</code> or the name is invalid.
+     * @param name The name of the column.
+     */
+    public final void setSelectedColumn(final String name) {
+        if (name == null) {
+            return;
+        }
+        final int size = getItemCount();
+        for (int i = 0; i < size; i++) {
+            DataColumnSpec colSpec = (DataColumnSpec)getItemAt(i);
+            if (colSpec.getName().equals(name)) {
+                setSelectedIndex(i);
+                return;
+            }
+        }
+    }
 }
