@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
+import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
 import de.unikn.knime.core.node.ExecutionContext;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -405,7 +406,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
                     internalWFM().clear();
 
                     try {
-                        internalWFM().load(f);
+                        internalWFM().load(f, new DefaultNodeProgressMonitor());
                     } catch (IOException ex) {
                         throw new InvalidSettingsException(
                                 "Could not load internal workflow");

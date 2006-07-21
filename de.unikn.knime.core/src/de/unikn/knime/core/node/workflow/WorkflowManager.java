@@ -461,12 +461,12 @@ public class WorkflowManager implements WorkflowListener {
      * @throws IOException if the workflow file can not be found or files to
      *             load node internals
      */
-    public WorkflowManager(final File workflowFile)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException {
+    public WorkflowManager(final File workflowFile,
+            final NodeProgressMonitor progMon) throws InvalidSettingsException,
+            CanceledExecutionException, IOException {
         this();
         try {
-            load(workflowFile);
+            load(workflowFile, progMon);
         } catch (WorkflowInExecutionException ex) {
             // this is not possible
         }
@@ -1278,7 +1278,8 @@ public class WorkflowManager implements WorkflowListener {
      * @throws WorkflowInExecutionException if the workflow is currently being
      *             executed
      */
-    public synchronized void load(final File workflowFile) throws IOException,
+    public synchronized void load(final File workflowFile,
+            final NodeProgressMonitor progMon) throws IOException,
             InvalidSettingsException, CanceledExecutionException,
             WorkflowInExecutionException {
         checkForRunningNodes("Workflow cannot be loaded");
@@ -1294,8 +1295,6 @@ public class WorkflowManager implements WorkflowListener {
                 workflowFile));
         load(settings);
 
-        NodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
-
         File parentDir = workflowFile.getParentFile();
 
         // data files are loaded using a repository of reference tables;
@@ -1306,7 +1305,11 @@ public class WorkflowManager implements WorkflowListener {
         ArrayList<NodeContainer> failedNodes = new ArrayList<NodeContainer>();
         // get all keys in there
         try {
+            double nodeCounter = 1.0;
             for (NodeContainer newNode : topSortNodes()) {
+                progMon.checkCanceled();
+                progMon.setProgress(nodeCounter / topSortNodes().size());
+                nodeCounter += 1.0;
                 try {
                     NodeSettingsRO nodeSetting = settings.getNodeSettings(
                             KEY_NODES).getNodeSettings(
