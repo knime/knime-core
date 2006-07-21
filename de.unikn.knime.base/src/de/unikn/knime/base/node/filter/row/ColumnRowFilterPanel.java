@@ -208,7 +208,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         for (int c = 0; c < tSpec.getNumColumns(); c++) {
             colNames.add(tSpec.getColumnSpec(c).getName());
         }
-        m_colCombo = new ColumnSelectionComboxBox((Border)null, DataValue.class);
+        m_colCombo = new ColumnSelectionComboxBox((Border)null, 
+                DataValue.class);
         m_colCombo.update(tSpec, null);
         m_colCombo.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -416,7 +417,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         ColValRowFilter colFilter = (ColValRowFilter)filter;
         String colName = colFilter.getColumnName();
         if (colName != null) {
-            m_colCombo.setSelectedItem(colName);
+            m_colCombo.setSelectedColumn(colName);
         }
         if (colFilter.rangeSet()) {
             String upper = "";

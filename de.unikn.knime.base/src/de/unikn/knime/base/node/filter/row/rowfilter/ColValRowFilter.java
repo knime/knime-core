@@ -301,7 +301,8 @@ public class ColValRowFilter extends RowFilter {
          * if this goes off you propably didn't set a comparator after loading a
          * range from a config object. Which is not good.
          */
-        assert (((m_lowerBound == null) && (m_upperBound == null)) || m_dcComp != null);
+        assert (((m_lowerBound == null) && (m_upperBound == null)) 
+                || m_dcComp != null);
 
         DataCell theCell = row.getCell(m_colIndex);
         boolean match = false;
@@ -423,10 +424,6 @@ public class ColValRowFilter extends RowFilter {
         if ((inSpec == null) || (inSpec.getNumColumns() <= 0)) {
             m_dcComp = null;
             return null;
-        }
-        if (inSpec.getNumColumns() <= m_colIndex) {
-            throw new InvalidSettingsException("Column value filter: Selected"
-                    + " column index out of range.");
         }
         if ((m_colName == null) || (m_colName.length() < 1)) {
             throw new InvalidSettingsException("Column value filter: "
