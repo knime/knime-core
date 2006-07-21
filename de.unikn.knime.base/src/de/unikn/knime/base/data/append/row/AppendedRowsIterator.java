@@ -30,7 +30,6 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeLogger;
@@ -97,7 +96,7 @@ public class AppendedRowsIterator extends RowIterator {
      */
     AppendedRowsIterator(final DataTable[] tables, 
             final DataTableSpec spec, final String suffix) {
-        this(tables, spec, suffix, null);
+        this(tables, spec, suffix, null, -1);
     }
     
     /**
@@ -109,9 +108,11 @@ public class AppendedRowsIterator extends RowIterator {
      * duplicates in this iterator (prints warning)
      * columns and order) 
      * @param exec For progress/cancel, may be <code>null</code>.
+     * @param totalRowCount The total row count or negative if unknown.
      */
     AppendedRowsIterator(final DataTable[] tables, final DataTableSpec spec, 
-            final String suffix, final ExecutionMonitor exec) {
+            final String suffix, final ExecutionMonitor exec, 
+            final int totalRowCount) {
         m_curMapping = new int[spec.getNumColumns()];
         m_tables = tables;
         m_suffix = suffix;
@@ -119,16 +120,7 @@ public class AppendedRowsIterator extends RowIterator {
         m_curTable = -1;
         m_duplicateHash = new HashSet<RowKey>();
         m_exec = exec;
-        int rowCount = 0;
-        for (DataTable t : tables) {
-            if (t instanceof BufferedDataTable) {
-                rowCount += ((BufferedDataTable)t).getRowCount();
-            } else {
-                rowCount = -1;
-                break;
-            }
-        }
-        m_totalRowCount = rowCount;
+        m_totalRowCount = totalRowCount;
         initNextTable();
         initNextRow();
     }
