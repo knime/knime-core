@@ -21,8 +21,11 @@ import java.io.File;
 import java.io.IOException;
 
 import de.unikn.knime.base.data.append.row.AppendedRowsTable;
+import de.unikn.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
+import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.node.BufferedDataContainer;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionContext;
@@ -66,10 +69,23 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTable out = new AppendedRowsTable(
+        AppendedRowsTable out = new AppendedRowsTable(
                 (m_appendSuffix ? m_suffix : null), (DataTable[])inData);
-        return new BufferedDataTable[] {
-                exec.createBufferedDataTable(out, exec)};
+        // note, this iterator throws runtime exceptions when canceled.
+        RowIterator it = out.iterator(exec);
+        BufferedDataContainer c = 
+            exec.createDataContainer(out.getDataTableSpec());
+        try {
+            while (it.hasNext()) {
+                // may throw exception, also sets progress
+                c.addRowToTable(it.next());
+            }
+        } catch (RuntimeCanceledExecutionException rcee) {
+            throw rcee.getCause();
+        } finally {
+            c.close();
+        }
+        return new BufferedDataTable[] {c.getTable()};
     }
 
     /**

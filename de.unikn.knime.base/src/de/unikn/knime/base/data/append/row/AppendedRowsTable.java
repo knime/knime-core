@@ -32,6 +32,7 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DataValueComparator;
 import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
@@ -118,6 +119,20 @@ public class AppendedRowsTable implements DataTable {
      */
     public RowIterator iterator() {
         return new AppendedRowsIterator(m_tables, m_spec, m_suffix);
+    }
+    
+    /**
+     * Get an iterator whose next() method may throw an exception if the 
+     * execution is canceled. In particular if you try to concatenate a table
+     * to itself and do not allow duplicates, the next() method runs _very_
+     * long (scanning the entire table to just figure out that there are only
+     * duplicates).
+     * @param exec The exeuction monitor for cancel / progress
+     * @return An iterator which reacts on cancel events.
+     * @see AppendedRowsIterator.RuntimeCanceledExecutionException
+     */
+    public RowIterator iterator(final ExecutionMonitor exec) {
+        return new AppendedRowsIterator(m_tables, m_spec, m_suffix, exec);
     }
     
     /**
