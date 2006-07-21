@@ -5,20 +5,29 @@
     <shortDescription>Concatenates two tables row-wise.</shortDescription>         
             
     <fullDescription>
-        <intro> This node concatenates two tables. The table at inport 0 is given as the first
+        <intro>
+            This node concatenates two tables. The table at inport 0 is given as the first
             input table (top input port), the table at inport 1 is the second table, resp. 
-			Columns with equal names are concatenated (if the column type differs 
-			the column type is the
-            common base type of both input column types). If one input table contains a column
-            name that is not included in the other table, this column will also be included in 
-			the output table;  it will contain missing values for 
-			those rows that are provided by the input table that does not have 
-            this column. The dialog enables dupplicate row keys to be treated: two options are
-            available: </intro>
+			Columns with equal names are concatenated (if the column types differ 
+			the column type is the common base type of both input column types). 
+			If one input table contains column names that the other table does not, the
+			columns can either be filled with missing values or
+			filtered out, i.e. they will not be in the output table.
+			The dialog allows to set the following parameters:
+		</intro>
         <option name="Skip rows"> Duplicate row keys occuring in the second 
 			table are not appended to the output table. </option>
         <option name="Append suffix"> The output table will contain all rows, but
             duplicate row keys are labeled with a suffix. </option>
+            
+        <option name="Use intersection of columns">
+        	Use ony the columns that appear in both input tables. Any other
+        	column is ignored and won't appear in the output table.
+        </option
+        <option name="Use union of columns">
+        	Use all columns available in the input tables. Fill rows with 
+        	missing values if they miss cells for some columns.
+        </option
 		</fullDescription>                  
     <ports>                 
         <dataIn index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</dataIn>

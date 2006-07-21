@@ -19,9 +19,12 @@ package de.unikn.knime.base.node.append.row;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashSet;
 
 import de.unikn.knime.base.data.append.row.AppendedRowsTable;
 import de.unikn.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
+import de.unikn.knime.base.data.filter.column.FilterColumnTable;
+import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataTable;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
@@ -50,10 +53,13 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     /** NodeSettings key: suffix to append. */
     static final String CFG_SUFFIX = "suffix";
+    
+    /** NodeSettings key: Use only the intersection of columns. */
+    static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
 
-    private boolean m_appendSuffix = false;
-
+    private boolean m_isAppendSuffix = false;
     private String m_suffix = null;
+    private boolean m_isIntersection;
 
     /**
      * Creates new node model with two inputs and one output.
@@ -69,10 +75,27 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        DataTable[] corrected;
+        int totalRowCount = 0;
+        if (m_isIntersection) {
+            DataTableSpec[] inSpecs = new DataTableSpec[inData.length];
+            for (int i = 0; i < inData.length; i++) {
+                inSpecs[i] = inData[i].getDataTableSpec();
+                totalRowCount += inData[i].getRowCount();
+            }
+            corrected = new DataTable[inData.length];
+            String[] intersection = getIntersection(inSpecs);
+            for (int i = 0; i < inData.length; i++) {
+                corrected[i] = new FilterColumnTable(inData[i], intersection);
+            }
+        } else {
+            corrected = inData;
+        }
+
         AppendedRowsTable out = new AppendedRowsTable(
-                (m_appendSuffix ? m_suffix : null), (DataTable[])inData);
+                (m_isAppendSuffix ? m_suffix : null), (DataTable[])corrected);
         // note, this iterator throws runtime exceptions when canceled.
-        RowIterator it = out.iterator(exec);
+        RowIterator it = out.iterator(exec, totalRowCount);
         BufferedDataContainer c = 
             exec.createDataContainer(out.getDataTableSpec());
         try {
@@ -94,9 +117,40 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec[] corrected;
+        if (m_isIntersection) {
+            corrected = new DataTableSpec[inSpecs.length];
+            String[] intersection = getIntersection(inSpecs);
+            for (int i = 0; i < inSpecs.length; i++) {
+                corrected[i] = FilterColumnTable.createFilterTableSpec(
+                        inSpecs[i], intersection);
+            }
+        } else {
+            corrected = inSpecs;
+        }
         DataTableSpec[] outSpecs = new DataTableSpec[1];
-        outSpecs[0] = AppendedRowsTable.generateDataTableSpec(inSpecs);
+        outSpecs[0] = AppendedRowsTable.generateDataTableSpec(corrected);
         return outSpecs;
+    }
+    
+    /** Determines the names of columns that appear in all specs.
+     * @param specs Specs to check
+     * @return Column names that appear in all columns.
+     */
+    static String[] getIntersection(final DataTableSpec... specs) {
+        LinkedHashSet<String> hash = new LinkedHashSet<String>();
+        for (DataColumnSpec c : specs[0]) {
+            hash.add(c.getName());
+        }
+        LinkedHashSet<String> hash2 = new LinkedHashSet<String>();
+        for (int i = 1; i < specs.length; i++) {
+            hash2.clear();
+            for (DataColumnSpec c : specs[i]) {
+                hash2.add(c.getName());
+            }
+            hash.retainAll(hash2);
+        }
+        return hash.toArray(new String[hash.size()]);
     }
 
     /**
@@ -104,7 +158,8 @@ public class AppendedRowsNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addBoolean(CFG_APPEND_SUFFIX, m_appendSuffix);
+        settings.addBoolean(CFG_APPEND_SUFFIX, m_isAppendSuffix);
+        settings.addBoolean(CFG_INTERSECT_COLUMNS, m_isIntersection);
         if (m_suffix != null) {
             settings.addString(CFG_SUFFIX, m_suffix);
         }
@@ -116,6 +171,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        settings.getBoolean(CFG_INTERSECT_COLUMNS);
         boolean appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
         if (appendSuffix) {
             String suffix = settings.getString(CFG_SUFFIX);
@@ -131,8 +187,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
-        if (m_appendSuffix) {
+        m_isIntersection = settings.getBoolean(CFG_INTERSECT_COLUMNS);
+        m_isAppendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
+        if (m_isAppendSuffix) {
             m_suffix = settings.getString(CFG_SUFFIX);
         } else {
             // may be in there, but must not necessarily

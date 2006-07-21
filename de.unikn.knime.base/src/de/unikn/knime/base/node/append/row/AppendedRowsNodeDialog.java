@@ -19,14 +19,13 @@
  */
 package de.unikn.knime.base.node.append.row;
 
-import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
@@ -48,12 +47,13 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     private final JRadioButton m_appendSuffixButton;
     private final JRadioButton m_skipRowButton;
     private final JTextField m_suffixField;
+    private final JRadioButton m_useInterSectionButton;
+    private final JRadioButton m_useUnionButton;
     
     /**
      * Constructor to init the gui and set a title. 
      */
     public AppendedRowsNodeDialog() {
-        super();
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_suffixField.setEnabled(m_appendSuffixButton.isSelected());
@@ -71,11 +71,10 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
                 + "duplicate row key to make it unique.");
         m_appendSuffixButton.addActionListener(actionListener);
         buttonGroup.add(m_appendSuffixButton);
-        JPanel panel = new JPanel(new BorderLayout());
-        JLabel helpLabel = new JLabel("\n  Please specify how to deal with " 
-                + "duplicate row keys");
-        panel.add(helpLabel, BorderLayout.NORTH);
+        JPanel panel = new JPanel(new GridLayout(0, 1));
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
+        centerPanel.setBorder(BorderFactory.createTitledBorder(
+        "Duplicate row key handling"));
         JPanel skipButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         skipButtonPanel.add(m_skipRowButton);
         centerPanel.add(skipButtonPanel);
@@ -83,9 +82,26 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         suffixButtonPanel.add(m_appendSuffixButton);
         suffixButtonPanel.add(m_suffixField);
         centerPanel.add(suffixButtonPanel);
-        panel.add(centerPanel, BorderLayout.CENTER);
-        addTab("Duplicate Key Treatment", panel);
         m_skipRowButton.doClick();
+        panel.add(centerPanel);
+        
+        ButtonGroup bGroup = new ButtonGroup();
+        m_useInterSectionButton = 
+            new JRadioButton("Use intersection of columns");
+        m_useUnionButton = new JRadioButton("Use union of columns");
+        bGroup.add(m_useInterSectionButton);
+        bGroup.add(m_useUnionButton);
+        JPanel intersectPanel = new JPanel(new GridLayout(0, 1));
+        intersectPanel.setBorder(BorderFactory.createTitledBorder(
+            "Column handling"));
+        JPanel intersectButPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        intersectButPanel.add(m_useInterSectionButton);
+        intersectPanel.add(intersectButPanel);
+        JPanel unionButPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        unionButPanel.add(m_useUnionButton);
+        intersectPanel.add(unionButPanel);
+        panel.add(intersectPanel);
+        addTab("Settings", panel);
     }
 
     /**
@@ -105,6 +121,14 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
             m_skipRowButton.doClick();
         }
         m_suffixField.setText(suffix);
+        
+        boolean isUseIntersection = settings.getBoolean(
+                AppendedRowsNodeModel.CFG_INTERSECT_COLUMNS, false);
+        if (isUseIntersection) {
+            m_useInterSectionButton.doClick();
+        } else {
+            m_useUnionButton.doClick();
+        }
     }
 
     /**
@@ -114,9 +138,12 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         boolean isSuffix = m_appendSuffixButton.isSelected();
+        boolean isIntersection = m_useInterSectionButton.isSelected();
         String suffix = m_suffixField.getText();
         settings.addBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, isSuffix);
         settings.addString(AppendedRowsNodeModel.CFG_SUFFIX, suffix);
+        settings.addBoolean(
+                AppendedRowsNodeModel.CFG_INTERSECT_COLUMNS, isIntersection);
     }
     
 }
