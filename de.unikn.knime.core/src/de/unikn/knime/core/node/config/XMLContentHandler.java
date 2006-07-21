@@ -59,7 +59,6 @@ class XMLContentHandler extends DefaultHandler {
     @Override
     public void characters(final char[] ch, final int start, final int length)
         throws SAXException {
-        System.out.println(new String(ch, start, length));
     }
 
     /**
