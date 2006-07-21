@@ -439,7 +439,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
         }
 
-        m_manager.closeAllViews();
+        m_manager.shutdown();
 
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
