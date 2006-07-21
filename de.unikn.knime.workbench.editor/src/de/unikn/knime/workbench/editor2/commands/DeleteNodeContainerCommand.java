@@ -63,7 +63,7 @@ public class DeleteNodeContainerCommand extends Command {
      */
     @Override
     public boolean canExecute() {
-        return !m_part.isLocked();
+        return !m_part.isLocked() && m_part.getNodeContainer().isDeletable();
     }
 
     /**
