@@ -1010,6 +1010,15 @@ public final class Node {
         }
     }
 
+
+    /**
+     * Blabla
+     *
+     */
+    public void cleanup() {
+        
+    }
+    
     /**
      * Notification method, called by an input port to tell the node about a new
      * connected outport from a predecessor. The notification is done, as the

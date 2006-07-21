@@ -1651,7 +1651,7 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /* Topological sorting of all nodes inthe workflow */
-    private Collection<NodeContainer> topSortNodes() {
+    private List<NodeContainer> topSortNodes() {
         Collection<NodeContainer> termList = new ArrayList<NodeContainer>();
         for (Integer nodeKey : m_nodesByID.keySet()) {
             NodeContainer newNode = m_nodesByID.get(nodeKey);
@@ -1722,13 +1722,14 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /**
-     * Closes all opened views (also port views) of the nodes of this workflow.
+     * Shuts the workflow manager down, i.e. stops all nodes, closes all views
+     * and cleans up all temporary data.
      */
-    public void closeAllViews() {
-        Set<Map.Entry<NodeContainer, Integer>> containerSet = m_idsByNode
-                .entrySet();
-        Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries = containerSet
-                .iterator();
+    public void shutdown() {
+        m_executor.cancelExecution();
+
+        Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries = m_idsByNode
+                .entrySet().iterator();
 
         while (nodeContaierEntries.hasNext()) {
             Map.Entry<NodeContainer, Integer> entry = nodeContaierEntries
@@ -1736,6 +1737,12 @@ public class WorkflowManager implements WorkflowListener {
 
             entry.getKey().closeAllViews();
             entry.getKey().closeAllPortViews();
+        }
+        
+        List<NodeContainer> sortedNodes = topSortNodes();
+        
+        for (int i = sortedNodes.size() - 1; i >= 0; i--) {
+            sortedNodes.get(i).cleanup();
         }
     }
 }

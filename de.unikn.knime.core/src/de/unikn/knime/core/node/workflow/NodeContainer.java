@@ -370,6 +370,13 @@ public class NodeContainer implements NodeStateListener {
         m_node.detach();
     }
 
+    /** 
+     * @see Node#cleanup()
+     */
+    void cleanup() {
+        m_node.cleanup();
+    }
+    
     /**
      * Disconnets the inport with the given id from its predecessor.
      * 
