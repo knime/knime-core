@@ -654,7 +654,7 @@ public class NodeContainer implements NodeStateListener {
      * @see Node#getView(int)
      */
     public NodeView getView(final int viewIndex) {
-        return m_node.getView(viewIndex);
+        return m_node.getView(viewIndex, getNameWithID());
     }
 
     /**
@@ -986,10 +986,13 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
+     * Opens the NodeView for the given index. Views for each index can be 
+     * opened multiple times.
+     * @param viewIndex The view's index.
      * @see Node#showView(int)
      */
     public void showView(final int viewIndex) {
-        m_node.showView(viewIndex);
+        m_node.showView(viewIndex, getNameWithID());
     }
 
     /**

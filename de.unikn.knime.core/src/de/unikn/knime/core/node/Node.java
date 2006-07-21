@@ -1322,15 +1322,24 @@ public final class Node {
     public String getViewName(final int viewIndex) {
         return m_factory.getNodeViewName(viewIndex);
     }
-
+    
+    /**
+     * Opens the node's view.
+     * @param viewIndex The view index to show.
+     */
+    public void showView(final int viewIndex) {
+        showView(viewIndex, getName());
+    }
+    
     /**
      * Opens the node's view.
      * 
      * @param viewIndex The view's index to show.
+     * @param nodeName The underlying node's name.
      */
-    public void showView(final int viewIndex) {
+    public void showView(final int viewIndex, final String nodeName) {
         try {
-            getView(viewIndex).openView();
+            getView(viewIndex, nodeName).openView();
         } catch (Exception e) {
             m_logger.error("Show view failed", e);
             m_status = new NodeStatus.Error(
@@ -1348,12 +1357,14 @@ public final class Node {
      * Return a new instance of the node's view (without opening it).
      * 
      * @param viewIndex The view's index to show up.
+     * @param nodeName The underlying node's name.
      * @return The node view with the specified index.
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
-    public NodeView getView(final int viewIndex) {
+    public NodeView getView(final int viewIndex, final String nodeName) {
         NodeView view = m_factory.createNodeView(viewIndex, m_model);
-        view.setViewName(m_factory.getNodeViewName(viewIndex));
+        view.setViewName(nodeName + " - " 
+                + m_factory.getNodeViewName(viewIndex));
         return view;
     }
     
