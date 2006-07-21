@@ -23,11 +23,11 @@
         <option name="Use intersection of columns">
         	Use ony the columns that appear in both input tables. Any other
         	column is ignored and won't appear in the output table.
-        </option
+        </option>
         <option name="Use union of columns">
         	Use all columns available in the input tables. Fill rows with 
         	missing values if they miss cells for some columns.
-        </option
+        </option>
 		</fullDescription>                  
     <ports>                 
         <dataIn index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</dataIn>
