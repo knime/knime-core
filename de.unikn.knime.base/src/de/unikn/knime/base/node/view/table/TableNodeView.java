@@ -83,9 +83,9 @@ public class TableNodeView extends NodeView {
         m_tableView = new TableView(cntModel);
         cntModel.addTableModelListener(new TableModelListener() {
             public void tableChanged(final TableModelEvent e) {
-                // fired when new rows have been seen (refer to description
-                // of caching strategy of the model)
-                updateTitle();
+               // fired when new rows have been seen (refer to description 
+               // of caching strategy of the model)
+               updateTitle();
             }
         });
         getJMenuBar().add(m_tableView.createHiLiteMenu());
@@ -225,13 +225,14 @@ public class TableNodeView extends NodeView {
      */
     protected void updateTitle() {
         final TableContentView view = m_tableView.getContentTable();
+        TableContentModel model = view.getContentModel();
         StringBuffer title = new StringBuffer(getViewName() + " (");
-        if (view.hasData()) {
-            int rowCount = view.getRowCount();
-            boolean isFinal = view.isRowCountFinal();
+        if (model.hasData()) {
+            int rowCount = model.getRowCount();
+            boolean isFinal = model.isRowCountFinal();
             title.append(rowCount);
             title.append(isFinal ? " x " : "+ x ");
-            title.append(view.getColumnCount() + ")");
+            title.append(model.getColumnCount() + ")");
         } else {
             title.append("no data)");
         }
