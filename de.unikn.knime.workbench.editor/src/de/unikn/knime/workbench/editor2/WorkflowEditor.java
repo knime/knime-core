@@ -453,7 +453,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                 .removeSelectionListener(this);
 
         // register resource listener..
-        m_fileResource.getWorkspace().removeResourceChangeListener(this);
+        if (m_fileResource != null) {
+            m_fileResource.getWorkspace().removeResourceChangeListener(this);
+        }
 
         getCommandStack().removeCommandStackListener(this);
 
@@ -1063,13 +1065,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                         + " (" + nc.getName() + ")", pm, m_manager, nc,
                         "Queued for execution...");
                 job.schedule();
+
                 m_dummyNodeJobs.put(event.getID(), job);
-                try {
-                    // let the job progress monitor job start
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {
-                    // do nothing
-                }                
             }
         } else if (event instanceof WorkflowEvent.NodeStarted) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
