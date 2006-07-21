@@ -173,7 +173,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     if (viewPart instanceof KnimeResourceNavigator) {
                         TreeViewer viewer = ((KnimeResourceNavigator)viewPart)
                                 .getViewer();
-                        //viewer.refresh();
+                        viewer.refresh();
                         viewer.expandToLevel(2);
 
                     }
