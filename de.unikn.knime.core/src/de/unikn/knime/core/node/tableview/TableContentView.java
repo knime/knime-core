@@ -72,6 +72,8 @@ import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
  */
 public class TableContentView extends JTable {
     private static final long serialVersionUID = -3503118869778091484L;
+    
+    private PropertyChangeListener m_dataListener;
 
     /**
      * Creates empty content view. Consider 
@@ -124,14 +126,29 @@ public class TableContentView extends JTable {
     @Override
     public void setModel(final TableModel tableModel) {
         TableContentModel tblModel = (TableContentModel)tableModel;
-        tblModel.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(final PropertyChangeEvent evt) {
-                String id = evt.getPropertyName(); 
-                if (id.equals(TableContentModel.PROPERTY_DATA)) {
+        if (m_dataListener == null) { // may be null whin in <init>
+            m_dataListener = new PropertyChangeListener() {
+                public void propertyChange(final PropertyChangeEvent evt) {
+                    String id = evt.getPropertyName();
+                    if (!id.equals(TableContentModel.PROPERTY_DATA)) {
+                        return;
+                    }
                     scrollRectToVisible(new Rectangle());
-                }
-            }  
-        });
+                    TableColumnModel tcM = getColumnModel();
+                    if (hasData()) {
+                        for (int i = 0; i < tcM.getColumnCount(); i++) {
+                            DataTable data = getContentModel().getDataTable();
+                            DataColumnSpec headerValue = 
+                                data.getDataTableSpec().getColumnSpec(i);
+                            tcM.getColumn(i).setHeaderValue(headerValue);
+                        }
+                    }
+                }  
+            };
+        } else {
+            getContentModel().removePropertyChangeListener(m_dataListener);
+        }
+        tblModel.addPropertyChangeListener(m_dataListener);
         super.setModel(tblModel);
     } // setModel(TableModel)
     
