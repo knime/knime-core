@@ -51,7 +51,7 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * 
  * @author ohl, University of Konstanz
  */
-public class DefaultRowContainer implements RowContainer  {
+public class DefaultDataArray implements DataArray  {
 
     /* this is where we store the rows. */
     private ArrayList<DataRow> m_rows;
@@ -85,7 +85,7 @@ public class DefaultRowContainer implements RowContainer  {
      * @param firstRow the first row to store (must be greater than zero)
      * @param numOfRows the number of rows to store (must be zero or more)
      */
-    public DefaultRowContainer(final DataTable dTable, final int firstRow,
+    public DefaultDataArray(final DataTable dTable, final int firstRow,
             final int numOfRows) {
         try {
             init(dTable, firstRow, numOfRows, null);
@@ -105,7 +105,7 @@ public class DefaultRowContainer implements RowContainer  {
      *            functionality
      * @throws CanceledExecutionException if the construction was canceled
      */
-    public DefaultRowContainer(final DataTable dTable, final int firstRow,
+    public DefaultDataArray(final DataTable dTable, final int firstRow,
             final int numOfRows, final ExecutionMonitor execMon)
             throws CanceledExecutionException {
         init(dTable, firstRow, numOfRows, execMon);
@@ -117,7 +117,7 @@ public class DefaultRowContainer implements RowContainer  {
 
         if (dTable == null) {
             throw new NullPointerException("Must provide non-null data table"
-                    + " for RowContainer");
+                    + " for DataArray");
         }
         if (firstRow < 1) {
             throw new IllegalArgumentException("Starting row must be greater"
@@ -379,7 +379,7 @@ public class DefaultRowContainer implements RowContainer  {
     }
 
     /**
-     * @see RowContainer#getDataTableSpec()
+     * @see DataArray#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_tSpec;

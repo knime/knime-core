@@ -36,7 +36,7 @@ import de.unikn.knime.core.data.RowIterator;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public interface RowContainer extends DataTable, Iterable<DataRow> {
+public interface DataArray extends DataTable, Iterable<DataRow> {
     /**
      * Returns the row from the container with index <code>idx</code>. Index
      * starts at zero and must be less than the size of the container (which
