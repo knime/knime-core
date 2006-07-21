@@ -20,6 +20,7 @@ package de.unikn.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashMap;
@@ -64,6 +65,7 @@ import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -77,6 +79,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -84,6 +87,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
@@ -104,6 +108,7 @@ import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
+import de.unikn.knime.core.util.MutableInteger;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
 import de.unikn.knime.workbench.editor2.actions.CancelAllAction;
 import de.unikn.knime.workbench.editor2.actions.CopyAction;
@@ -675,7 +680,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // LOGGER.debug("Created new WFM object as input");
 
         LOGGER.debug("Resource File's project: " + m_fileResource.getProject());
-        File file = m_fileResource.getLocation().toFile();
+        final File file = m_fileResource.getLocation().toFile();
         try {
             // FIXME:
             // setInput is called before the entire repository is loaded,
@@ -686,29 +691,77 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.fatal("Dummy line, never printed");
             }
             assert m_manager == null;
-            m_manager = new WorkflowManager(file);
+
+            // If something fails an empty workflow is created
+            // except when cancalation occured
+            final MutableInteger createEmptyWorkflow = new MutableInteger(0);
+
+            IWorkbench wb = PlatformUI.getWorkbench();
+            IProgressService ps = wb.getProgressService();
+            ps.busyCursorWhile(new IRunnableWithProgress() {
+                public void run(final IProgressMonitor pm) {
+                    try {
+                        // create progress monitor
+                        ProgressHandler progressHandler = new ProgressHandler(
+                                pm, 1);
+                        final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
+                        progressMonitor.addProgressListener(progressHandler);
+
+                        CheckThread checkThread = new CheckThread(pm,
+                                progressMonitor);
+
+                        checkThread.start();
+
+                        pm.beginTask("Load workflow...", 10);
+                        pm.subTask("Load nodes...");
+                        m_manager = new WorkflowManager(file, progressMonitor);
+                        pm.subTask("Finished.");
+                        pm.done();
+                        checkThread.finished();
+                    } catch (FileNotFoundException fnfe) {
+                        LOGGER.fatal("File not found", fnfe);
+                    } catch (IOException ioe) {
+                        if (file.length() == 0) {
+                            LOGGER.info("New workflow created.");
+                        } else {
+                            LOGGER.error("Could not load workflow from: "
+                                    + file.getName(), ioe);
+                        }
+                    } catch (InvalidSettingsException ise) {
+                        LOGGER.error("Could not load workflow from: "
+                                + file.getName(), ise);
+                    } catch (CanceledExecutionException cee) {
+                        LOGGER.info("Canceled loading worflow: "
+                                + file.getName());
+                        m_manager = null;
+                        createEmptyWorkflow.setValue(1);
+                    } catch (Exception e) {
+                        LOGGER.info("Workflow could not be loaded. "
+                                + file.getName());
+                        m_manager = null;
+                    } finally {
+                        // create empty WFM if loading failed
+
+                        if (m_manager == null) {
+                            // && createEmptyWorkflow.intValue() == 0) {
+                            m_manager = new WorkflowManager();
+                            m_isDirty = false;
+                        }
+                    }
+                }
+            });
+
+            if (createEmptyWorkflow.intValue() == 1) {
+                throw new RuntimeException("Opening workflow canceled.");
+            }
+            
+            
+
             m_manager.addListener(this);
-        } catch (FileNotFoundException fnfe) {
-            LOGGER.fatal("File not found", fnfe);
-        } catch (IOException ioe) {
-            if (file.length() == 0) {
-                LOGGER.info("New workflow created.");
-            } else {
-                LOGGER.error("Could not load workflow from: " + file.getName(),
-                        ioe);
-            }
-        } catch (InvalidSettingsException ise) {
-            LOGGER
-                    .error("Could not load workflow from: " + file.getName(),
-                            ise);
-        } catch (CanceledExecutionException cee) {
-            LOGGER.info("Canceled loading worflow: " + file.getName());
-        } finally {
-            // create empty WFM if loading failed
-            if (m_manager == null) {
-                m_manager = new WorkflowManager();
-                m_isDirty = false;
-            }
+        } catch (InterruptedException ie) {
+            LOGGER.fatal("Workflow loading thread interrupted", ie);
+        } catch (InvocationTargetException e) {
+            LOGGER.fatal("Workflow could not be loaded.", e);
         }
 
         // Editor name (title)
@@ -721,6 +774,50 @@ public class WorkflowEditor extends GraphicalEditor implements
         // update Actions, as now there's everything available
         updateActions();
     }
+
+    private class CheckThread extends Thread {
+
+        private boolean m_finished = false;
+
+        private IProgressMonitor m_pm;
+
+        private DefaultNodeProgressMonitor m_progressMonitor;
+
+        /**
+         * Creates a new cancel execution checker.
+         * 
+         * @param pm the eclipse progress monitor
+         * @param progressMonitor the knime progress monitor
+         */
+        public CheckThread(final IProgressMonitor pm,
+                final DefaultNodeProgressMonitor progressMonitor) {
+            m_pm = pm;
+            m_progressMonitor = progressMonitor;
+        }
+
+        /**
+         * Sets the finished flag.
+         * 
+         */
+        public void finished() {
+            m_finished = true;
+        }
+
+        public void run() {
+
+            while (!m_finished) {
+
+                if (m_pm.isCanceled()) {
+                    m_progressMonitor.setExecuteCanceled();
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    // nothing to do here
+                }
+            }
+        }
+    };
 
     /**
      * Sets the input in the super class for defaults.
