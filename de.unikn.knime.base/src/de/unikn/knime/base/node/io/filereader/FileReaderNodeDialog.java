@@ -1119,8 +1119,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         for (int c = 0; c < numCols; c++) {
             DataColumnSpec cSpec = tSpec.getColumnSpec(c);
             String name;
-            boolean userSet = m_frSettings.getColumnProperties().get(c)
+            boolean userSet = false;
+            if (c < m_frSettings.getNumberOfColumns()) {
+                userSet = m_frSettings.getColumnProperties().get(c)
                     .getUserSettings();
+            }
             if (userSet) {
                 name = cSpec.getName().toString() + "*";
             } else {
