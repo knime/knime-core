@@ -866,8 +866,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
         } else {
             // see if we can access the data file - if permitted.
             if (openDataFile) {
+                BufferedReader reader = null;
                 try {
-                    if (m_dataFileLocation.openStream() == null) {
+                    reader = createNewInputReader();
+                    if (reader == null) {
                         status.addError("I/O Error while connecting to '"
                                 + m_dataFileLocation.toString() + "'.");
                     }
@@ -879,6 +881,13 @@ public class FileReaderSettings extends FileTokenizerSettings {
                     // a path like c:\blah\ \ (space as dir) causes a NPE.
                     status.addError("I/O Error while connecting to '"
                             + m_dataFileLocation.toString() + "'.");
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException ioe) {
+                        // then don't close it. 
+                    }
                 }
             }
         }
