@@ -190,7 +190,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         m_dialogPanel.add(Box.createVerticalGlue());
         super.addTab("Settings", m_dialogPanel);
-        System.out.println("CWD: '" + System.getProperty("user.dir") + "'");
     }
 
     private JPanel createFileNamePanel() {
