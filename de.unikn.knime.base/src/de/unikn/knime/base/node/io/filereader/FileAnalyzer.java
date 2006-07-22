@@ -148,12 +148,10 @@ public final class FileAnalyzer {
             result.setFileHasRowHeaders(hasRowHeaders);
             result.setFileHasRowHeadersUserSet(false);
         }
-        if (userSettings.getNumberOfColumns() <= 0) {
-            // if user didn't specify num of columns we must correct the
-            // value we've guessed
-            if (result.getFileHasRowHeaders()) {
-                result.setNumberOfColumns(result.getNumberOfColumns() - 1);
-            }
+
+        // we must correct the colnumber we've guessed
+        if (result.getFileHasRowHeaders()) {
+            result.setNumberOfColumns(result.getNumberOfColumns() - 1);
         }
 
         // guesses (copies) column types and names.
@@ -260,7 +258,8 @@ public final class FileAnalyzer {
             // check first if we get off easy: If we didn't get enough column
             // headers, we assume the rowHeader is a data column header.
             if (result.getFileHasRowHeaders()
-            // && (the last token is empty)
+                 // && (the last token is empty)
+                    && (columnHeaders.length > 0)
                     && (columnHeaders[columnHeaders.length - 1] == null)) {
                 result.setFileHasColumnHeaders(true);
                 // discard the last (=null) token
@@ -270,6 +269,7 @@ public final class FileAnalyzer {
                         colNames.length - 1);
                 return createColProps(colNames, userColProps, columnTypes);
             }
+
             // another indication for a column_headers_must_have is when the
             // first line contains tokens that are not type compliant with all
             // other lines (e.g. all items in the column are integers except in
@@ -315,7 +315,8 @@ public final class FileAnalyzer {
             }
             // and now, see if the headers to be are nicely formatted - that is
             // all have the same prefix and a growing index.
-            if (consecutiveHeaders(columnHeaders)) {
+            if ((columnHeaders.length > 0) 
+                    && consecutiveHeaders(columnHeaders)) {
                 result.setFileHasColumnHeaders(true);
                 return createColProps(columnHeaders, userColProps, columnTypes);
             }
