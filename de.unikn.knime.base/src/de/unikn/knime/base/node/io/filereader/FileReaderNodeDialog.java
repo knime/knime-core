@@ -36,6 +36,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
@@ -965,6 +966,30 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     + m_previewTable.getErrorLine() + "): "
                     + m_previewTable.getErrorMsg());
         }
+        // file existence is not checked during model::loadsettings. Do it here.
+        Reader reader = null;
+        try {
+            reader = m_frSettings.createNewInputReader();
+            if (reader == null) {
+                throw new InvalidSettingsException("I/O Error while accessing '"
+                        + m_frSettings.getDataFileLocation().toString() + "'.");
+            }
+        } catch (IOException ioe) {
+            throw new InvalidSettingsException("I/O Error while accessing '"
+                    + m_frSettings.getDataFileLocation().toString() + "'.");
+        } catch (NullPointerException npe) {
+            // occures with Windows and a space in the path
+            throw new InvalidSettingsException("I/O Error while accessing '"
+                    + m_frSettings.getDataFileLocation().toString() + "'.");
+        }
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (IOException ioe) {
+                // then don't close it.
+            }
+        }
+        
         m_frSettings.saveToConfiguration(settings);
 
     }
