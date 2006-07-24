@@ -707,7 +707,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             ps.busyCursorWhile(new IRunnableWithProgress() {
                 public void run(final IProgressMonitor pm) {
                     CheckThread checkThread = null;
+                    // indicates whether to create an empty workflow
+                    // this is done if the file is empty
+                    boolean createEmptyWorkflow = false;
                     try {
+
                         // create progress monitor
                         ProgressHandler progressHandler = new ProgressHandler(
                                 pm, 1);
@@ -729,6 +733,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     } catch (IOException ioe) {
                         if (file.length() == 0) {
                             LOGGER.info("New workflow created.");
+                            createEmptyWorkflow = true;
                         } else {
                             LOGGER.error("Could not load workflow from: "
                                     + file.getName(), ioe);
@@ -743,17 +748,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                         m_closeAfterInit = true;
                     } catch (Exception e) {
                         LOGGER.info("Workflow could not be loaded. "
-                                + file.getName());
+                                + e.getMessage());
                         m_manager = null;
                     } finally {
                         // terminate the check thread
                         checkThread.finished();
                         // create empty WFM if loading failed
 
-                        if (m_manager == null) {
+                        if (createEmptyWorkflow) {
                             // && createEmptyWorkflow.intValue() == 0) {
                             m_manager = new WorkflowManager();
                             m_isDirty = false;
+                        } else if (m_manager == null) {
+                            throw new RuntimeException(
+                                    "Workflow could not be created.");
                         }
                     }
                 }
@@ -761,7 +769,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             // check if the editor should be closed
             if (m_closeAfterInit) {
-                throw new OperationCanceledException("Loading workflow canceled by user.");
+                throw new OperationCanceledException(
+                        "Loading workflow canceled by user.");
             }
 
             m_manager.addListener(this);
@@ -1014,6 +1023,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         // progressMonitor.addProgressListener(progressHandler);
         // ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
 
+        // Exception messages from the inner thread
+        final StringBuffer exceptionMessage = new StringBuffer();
+
         try {
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
@@ -1043,12 +1055,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                         pm.done();
                     } catch (FileNotFoundException fnfe) {
                         LOGGER.fatal("File not found", fnfe);
+                        exceptionMessage.append("File access problems: "
+                                + fnfe.getMessage());
+
+                        monitor.setCanceled(true);
+
                     } catch (IOException ioe) {
                         if (file.length() == 0) {
                             LOGGER.info("New workflow created.");
                         } else {
                             LOGGER.error("Could not load workflow from: "
                                     + file.getName(), ioe);
+                            exceptionMessage.append("File access problems: "
+                                    + ioe.getMessage());
+                            monitor.setCanceled(true);
                         }
                     } catch (CanceledExecutionException cee) {
                         LOGGER.info("Canceled loading worflow: "
@@ -1057,30 +1077,19 @@ public class WorkflowEditor extends GraphicalEditor implements
                     } catch (WorkflowInExecutionException e) {
 
                         // inform the user
-                        MessageBox mb = new MessageBox(Display.getDefault()
-                                .getActiveShell(), SWT.ICON_INFORMATION
-                                | SWT.OK);
-                        mb.setText("Workflow could not be saved ...");
-                        mb.setMessage("Execution in progress! "
+                        exceptionMessage.append("Execution in progress! "
                                 + "The workflow could not be saved.");
-                        mb.open();
 
                         LOGGER.warn("Could not save workflow");
                         monitor.setCanceled(true);
 
                     } catch (Exception e) {
-                        LOGGER.debug("Could not save workflow", e);
+                        LOGGER.debug("Could not save workflow");
 
-                        // inform the user
-                        MessageBox mb = new MessageBox(Display.getDefault()
-                                .getActiveShell(), SWT.ICON_INFORMATION
-                                | SWT.OK);
-                        mb.setText("Workflow could not be saved ...");
-                        mb.setMessage("The workflow could not be saved. "
-                                + "Possibly the file was removed from"
-                                + " the file "
-                                + "system, or the file is set read-only.");
-                        mb.open();
+                        exceptionMessage.append("Could not save workflow: "
+                                + e.getMessage());
+                        monitor.setCanceled(true);
+
                     } finally {
                         checkThread.finished();
                     }
@@ -1094,22 +1103,15 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         } catch (Exception e) {
 
-            // if canceld return without changing the sates
-            if (monitor.isCanceled()) {
-                return;
-            }
-            LOGGER.debug("Could not save workflow");
+            LOGGER.debug("Could not save workflow: " + exceptionMessage);
 
             // inform the user
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
-            mb.setText("Workflow could not be saved ...");
-            mb.setMessage("The workflow could not be saved. "
-                    + "Possibly the file was removed fromt the file "
-                    + "system, or the file is set read-only.");
-            mb.open();
+            if (exceptionMessage.toString().trim().length() > 0) {
+                showInfoMessage(exceptionMessage.toString());
+            }
 
-            return;
+            throw new OperationCanceledException("Workflow was not saved: "
+                    + exceptionMessage.toString());
         }
 
         try {
@@ -1132,6 +1134,20 @@ public class WorkflowEditor extends GraphicalEditor implements
         // }
 
         monitor.done();
+    }
+
+    /**
+     * Shwos a simple information message.
+     * 
+     * @param message the info message to display
+     */
+    private void showInfoMessage(final String message) {
+        // inform the user
+        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
+                SWT.ICON_INFORMATION | SWT.OK);
+        mb.setText("Workflow could not be saved ...");
+        mb.setMessage(message);
+        mb.open();
     }
 
     /**
