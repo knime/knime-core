@@ -23,6 +23,7 @@ import java.awt.Component;
 import java.awt.Graphics;
 
 import javax.swing.Icon;
+import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -57,6 +58,18 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         showIcon(true);
     } // DataCellHeaderRenderer()
     
+    /**
+     * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(
+     * javax.swing.JTable,java.lang.Object, boolean, boolean, int, int)
+     */
+    @Override
+    public Component getTableCellRendererComponent(final JTable table,
+            final Object value, final boolean isSelected,
+            final boolean hasFocus, final int row, final int column) {
+        setToolTipText("Row " + (row + 1) + " \"" + value + "\"");
+        return super.getTableCellRendererComponent(table, value, isSelected,
+                hasFocus, row, column);
+    }
     
     /**
      * @see java.awt.Component#setBounds(int, int, int, int)
