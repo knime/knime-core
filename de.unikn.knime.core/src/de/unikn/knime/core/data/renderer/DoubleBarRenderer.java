@@ -30,6 +30,7 @@ import javax.swing.Icon;
 
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnSpec;
+import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.def.DoubleCell;
 
@@ -42,7 +43,9 @@ import de.unikn.knime.core.data.def.DoubleCell;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class DoubleBarRenderer extends DefaultDataValueRenderer {
-    
+
+    private BarIcon m_icon;
+
     /** Creates new instance given a column spec. This object will get the
      * information about min/max from the spec and do the normalization 
      * accordingly.
@@ -51,29 +54,33 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
      */
     public DoubleBarRenderer(final DataColumnSpec spec) {
         super(spec);
-        setIcon(new BarIcon());
+        m_icon = new BarIcon();
+        setIcon(m_icon);
         setIconTextGap(0);
     }
-    
+
     /** Overridden to ignore any invocation.
      * @see javax.swing.JLabel#setText(java.lang.String)
      */
     @Override
     public void setText(final String text) {
     }
-    
+
     /** Sets the value for the icon.
      * @param d the value to be used.
      */
     public void setIconValue(final double d) {
         Icon icon = getIcon();
+        if (icon == null) {
+            setIcon(m_icon);
+        }
         if (icon instanceof BarIcon) {
             ((BarIcon)icon).setValue(d);
         }
     }
-    
+
     /**
-    /** Sets the value according to the column domain's min/max. If the 
+     /** Sets the value according to the column domain's min/max. If the 
      * object is not instance of DoubleValue, the cell is painted red.
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
@@ -88,8 +95,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
             boolean takeValuesFrom = spec != null;
             takeValuesFrom &= spec.getDomain().hasLowerBound();
             takeValuesFrom &= spec.getDomain().hasUpperBound();
-            takeValuesFrom &= DoubleCell.TYPE.isASuperTypeOf(spec
-                    .getType());
+            takeValuesFrom &= DoubleCell.TYPE.isASuperTypeOf(spec.getType());
             double min;
             double max;
             if (takeValuesFrom) {
@@ -106,12 +112,19 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
             }
             d = (float)((val - min) / (max - min));
             setIconValue(d);
+            setTextInternal(null);
         } else {
-            setIconValue(Double.NaN);
+            setIcon(null);
+            setTextInternal(DataType.getMissingCell().toString());
         }
     }
-    
-    /** Returns "Gray Scale".
+
+    /** Internal setter. */
+    private void setTextInternal(final String text) {
+        super.setText(text);
+    }
+
+    /** Returns "Bars".
      * @see de.unikn.knime.core.data.renderer.DataValueRenderer#getDescription()
      */
     @Override
@@ -133,14 +146,14 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         public int getIconHeight() {
             return getHeight();
         }
-        
+
         /**
          * @see javax.swing.Icon#getIconWidth()
          */
         public int getIconWidth() {
             return getWidth();
         }
-        
+
         /**
          * Sets the current vale.
          * @param d double value.
@@ -148,7 +161,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         public void setValue(final double d) {
             m_value = d;
         }
-        
+
         /**
          * @see javax.swing.Icon#paintIcon( java.awt.Component,
          *      java.awt.Graphics, int, int)
@@ -156,21 +169,14 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         public void paintIcon(final Component c, final Graphics g, final int x,
                 final int y) {
             int iconWidth = getIconWidth();
-            if (Double.isNaN(m_value)) {
-                g.setColor(Color.BLACK);
-                ((Graphics2D)g).fill(new Rectangle2D.Double(x, y
-                        + (getIconHeight() / 4), iconWidth - 4,
-                        getIconHeight() / 2));
-            } else {
-                int width = (int)(m_value * iconWidth);
-                GradientPaint redtogreen = new GradientPaint(x, y, Color.red,
-                        iconWidth, y, Color.green);
-                ((Graphics2D)g).setPaint(redtogreen);
-                g.draw3DRect(x, y + (getIconHeight() / 4), width,
-                        getIconHeight() / 2, true);
-                ((Graphics2D)g).fill(new Rectangle2D.Double(x, y
-                        + (getIconHeight() / 4), width, getIconHeight() / 2));
-            }
+            int width = (int)(m_value * iconWidth);
+            GradientPaint redtogreen = new GradientPaint(x, y, Color.red,
+                    iconWidth, y, Color.green);
+            ((Graphics2D)g).setPaint(redtogreen);
+            g.draw3DRect(x, y + (getIconHeight() / 4), width,
+                    getIconHeight() / 2, true);
+            ((Graphics2D)g).fill(new Rectangle2D.Double(x, y
+                    + (getIconHeight() / 4), width, getIconHeight() / 2));
         }
     } // end class BarIcon
 }
