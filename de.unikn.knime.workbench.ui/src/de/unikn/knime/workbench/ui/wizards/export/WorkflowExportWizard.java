@@ -90,6 +90,9 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
         // if the specified export file already exist ask the user
         // for confirmation
+        
+        
+        
         final File exportFile = new File(fileName);
         if (exportFile.exists()) {
 
@@ -122,8 +125,12 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             return false;
         } catch (InvocationTargetException e) {
             Throwable realException = e.getTargetException();
-            MessageDialog.openError(getShell(), "Error", realException
-                    .getMessage());
+            String message = realException.getMessage();
+           
+                message = "Problem during export: " + e.getMessage();
+           
+                
+            MessageDialog.openError(getShell(), "Error", message);
             return false;
         }
         return true;
@@ -227,12 +234,12 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
         try {
             exportOperation.run(monitor);
-        } catch (Exception e) {
+        } catch (Throwable t) {
             MessageBox mb = new MessageBox(Display.getDefault()
                     .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText("Export could not be completed...");
             mb.setMessage("Knime project could not be exported.\n Reason: "
-                    + e.getMessage());
+                    + t.getMessage());
         }
 
         // final IFile file = container.getFile(new Path(fileName));
