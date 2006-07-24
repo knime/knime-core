@@ -81,10 +81,10 @@ public final class FilterColumnPanel extends JPanel {
     /** Exclude model. */
     private final DefaultListModel m_exclMdl;
     
-    /**Mark all search hits in the include model.*/
+    /** Hilight all search hits in the include model.*/
     private final JCheckBox m_markAllHitsIncl;
     
-    /**Mark all search hits in the exclude model.*/
+    /** Hilight all search hits in the exclude model.*/
     private final JCheckBox m_markAllHitsExcl;
 
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
@@ -217,7 +217,7 @@ public final class FilterColumnPanel extends JPanel {
                 BorderFactory.createEmptyBorder(15, 15, 15, 15));
         inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(searchButtonIncl, BorderLayout.EAST);
-        m_markAllHitsIncl = new JCheckBox("Mark all search hits");
+        m_markAllHitsIncl = new JCheckBox("Highlight all search hits");
         ActionListener actionListenerAllIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
@@ -259,7 +259,7 @@ public final class FilterColumnPanel extends JPanel {
         exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
-        m_markAllHitsExcl = new JCheckBox("Mark all search hits");
+        m_markAllHitsExcl = new JCheckBox("Highlight all search hits");
         ActionListener actionListenerAllExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
