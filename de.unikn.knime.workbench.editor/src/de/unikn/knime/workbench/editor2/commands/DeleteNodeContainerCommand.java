@@ -63,7 +63,17 @@ public class DeleteNodeContainerCommand extends Command {
      */
     @Override
     public boolean canExecute() {
-        return !m_part.isLocked() && m_part.getNodeContainer().isDeletable();
+
+        // is the node locked
+        boolean isNotLocked = !m_part.isLocked();
+
+        // is the node a deletable node
+        boolean isDeletable = m_part.getNodeContainer().isDeletable();
+
+        // does the workflow status allow deletion of the selected node
+        // only if the workflow is not executing
+        boolean workflowAllowsDeletion = !m_manager.executionInProgress();
+        return isNotLocked && isDeletable && workflowAllowsDeletion;
     }
 
     /**
@@ -73,19 +83,18 @@ public class DeleteNodeContainerCommand extends Command {
     public void execute() {
         LOGGER.debug("Deleting node #" + m_part.getNodeContainer().getID()
                 + " from Workflow");
-        
+
         // The WFM must removes all connections for us, before the node is
         // removed.
         try {
             m_manager.removeNode(m_part.getNodeContainer());
         } catch (WorkflowInExecutionException ex) {
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_INFORMATION | SWT.OK);
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Operation not allowed");
             mb.setMessage("You cannot remove a node while the workflow"
                     + " is in execution.");
-            mb.open();            
+            mb.open();
         }
     }
 
