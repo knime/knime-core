@@ -1001,6 +1001,12 @@ public final class Node {
         }
         // remove all state listeners
         m_stateListeners.clear();
+    }
+    
+    /**
+     * Removes the internal directory and all data inside.
+     */
+    public void removeInternals() {
         // delete all node file with the node's directory
         if (m_nodeDir != null) {
             boolean b = FileUtil.deleteRecursively(m_nodeDir);

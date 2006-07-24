@@ -436,6 +436,9 @@ public class WorkflowManager implements WorkflowListener {
 
     // internal variables to allow generation of unique indices
     private final MutableInteger m_runningNodeID;
+    
+    private final List<NodeContainer> m_detachedNodes = 
+        new ArrayList<NodeContainer>();
 
     /**
      * Create new Workflow.
@@ -1489,6 +1492,7 @@ public class WorkflowManager implements WorkflowListener {
                 container.detach();
                 resetAndConfigureAfterNode(id);
                 disconnectNodeContainer(container);
+                m_detachedNodes.add(container);
             } catch (Exception ex) {
                 LOGGER.error("Error while removing node", ex);
             }
@@ -1582,6 +1586,12 @@ public class WorkflowManager implements WorkflowListener {
             throw new IOException("File must be named: \"" + WORKFLOW_FILE
                     + "\": " + workflowFile);
         }
+        
+        // remove internals of all detached nodes first
+        for (NodeContainer cont : m_detachedNodes) {
+            cont.removeInternals();
+        }
+        m_detachedNodes.clear();
 
         File parentDir = workflowFile.getParentFile();
         // workflow settings

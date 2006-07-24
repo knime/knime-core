@@ -362,6 +362,13 @@ public class NodeContainer implements NodeStateListener {
         m_node.getInPort(inPort)
                 .connectPort(outNode.m_node.getOutPort(outPort));
     }
+    
+    /**
+     * @see Node#removeInternals()
+     */
+    void removeInternals() {
+        m_node.removeInternals();
+    }
 
     /**
      * @see Node#detach()
