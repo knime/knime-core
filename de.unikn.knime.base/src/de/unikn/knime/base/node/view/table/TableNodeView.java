@@ -226,15 +226,20 @@ public class TableNodeView extends NodeView {
     protected void updateTitle() {
         final TableContentView view = m_tableView.getContentTable();
         TableContentModel model = view.getContentModel();
-        StringBuffer title = new StringBuffer(getViewName() + " (");
+        StringBuffer title = new StringBuffer(getViewName());
         if (model.hasData()) {
+            String tableName = model.getTableName();
+            title.append(" \"");
+            title.append(tableName);
+            title.append("\" (");
             int rowCount = model.getRowCount();
             boolean isFinal = model.isRowCountFinal();
             title.append(rowCount);
             title.append(isFinal ? " x " : "+ x ");
-            title.append(model.getColumnCount() + ")");
+            title.append(model.getColumnCount());
+            title.append(")");
         } else {
-            title.append("no data)");
+            title.append(" <no data>");
         }
         super.setViewTitle(title.toString());
     } // updateTitle()

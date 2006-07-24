@@ -397,6 +397,13 @@ public class TableContentModel extends AbstractTableModel
         return m_data != null;
     } // hasData()
     
+    /** Get the name of the current data table (if any) or <code>null</code>.
+     * @return The table name or <code>null</code>.
+     */
+    public String getTableName() {
+        return hasData() ? getDataTableSpec().getName() : null;
+    }
+    
     /** 
      * Is there a HiLiteHandler connected?
      * 
