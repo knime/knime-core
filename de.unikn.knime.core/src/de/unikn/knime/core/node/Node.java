@@ -339,6 +339,12 @@ public final class Node {
                 m_status = new NodeStatus.Error(
                     "Unable to load internals: " + ioe.getMessage());
                 notifyStateListeners(m_status);
+            } catch (Exception e) {
+                m_logger.coding("Coding problem: loadInternals() "
+                        + "should only cause IOException.");
+                m_status = new NodeStatus.Error(
+                        "Unable to load internals: " + e.getMessage());
+                    notifyStateListeners(m_status);
             }
             // load data
             if (getNrDataOutPorts() > 0) {
@@ -1587,6 +1593,12 @@ public final class Node {
                         } catch (IOException ioe) {
                             m_status = new NodeStatus.Error("Unable to save " 
                                     + "internals: " + ioe.getMessage());
+                            notifyStateListeners(m_status);
+                        } catch (Exception e) {
+                            m_logger.coding("Coding problem: saveInternals() "
+                                    + "should only cause IOException.");
+                            m_status = new NodeStatus.Error("Unable to save " 
+                                    + "internals: " + e.getMessage());
                             notifyStateListeners(m_status);
                         }
                     }
