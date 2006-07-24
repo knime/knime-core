@@ -696,6 +696,10 @@ public abstract class Config extends AbstractConfigEntry
         
         // this should be save as the super ensures identical classes
         Config otherCfg = (Config)otherConfig;
+
+        if (this.m_map.size() != otherCfg.m_map.size()) {
+           return false;
+        }
         
         for (String myKey : this.m_map.keySet()) {
             // The other config must contain all keys we've stored.
