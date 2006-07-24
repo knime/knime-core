@@ -103,10 +103,42 @@ public class WriteTableNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_fileName == null) {
-            throw new InvalidSettingsException("No file given.");
-        }
+
+        checkFileAccess(m_fileName);
+        
         return new DataTableSpec[0];
+    }
+
+    /**
+     * Helper that checks some properties for the file argument.
+     * 
+     * @param fileName The file to check
+     * @throws InvalidSettingsException If that fails.
+     */
+    private void checkFileAccess(final String fileName)
+            throws InvalidSettingsException {
+        if (fileName == null) {
+            throw new InvalidSettingsException("No file set.");
+        }
+        File file = new File(fileName);
+
+        if (file.isDirectory()) {
+            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
+                    + "\" is a directory.");
+        }
+        if (!file.exists()) {
+            // dunno how to check the write access to the directory. If we can't
+            // create the file the execute of the node will fail. Well, too bad.
+            return;
+        }
+        if (!file.canWrite()) {
+            throw new InvalidSettingsException("Cannot write to file \""
+                    + file.getAbsolutePath() + "\".");
+        }
+        // here it exists and we can write it: warn user!
+        setWarningMessage("Selected output file exists and will be "
+                + "overwritten!");
+
     }
 
     /** 

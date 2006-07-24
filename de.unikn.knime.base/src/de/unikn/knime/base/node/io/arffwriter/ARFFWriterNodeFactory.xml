@@ -12,7 +12,8 @@
  		This node saves data to a file in ARFF format. In the configuration dialog,
 		specify a valid destination file. When executed, the node writes the 
 		data, coming through its input port, into the specified location.
-		At this point in time, it only writes not-sparse ARFF files.
+		At this point in time, it only writes not-sparse ARFF files (i.e. it 
+		always writes out all data, even if its value is zero).
 		</intro>
 	</fullDescription>
 	

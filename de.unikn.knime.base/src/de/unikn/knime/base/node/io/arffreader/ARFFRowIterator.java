@@ -222,7 +222,8 @@ public class ARFFRowIterator extends RowIterator {
 
             // now get that new cell (it throws something at us if it couldn't)
             rowCells[createdCols] = createNewDataCellOfType(m_tSpec
-                    .getColumnSpec(createdCols).getType(), token, isMissingCell);
+                    .getColumnSpec(createdCols).getType(), token, 
+                                    isMissingCell);
 
             createdCols++;
 

@@ -187,6 +187,10 @@ public class PredictorWriterNodeModel extends NodeModel {
                     + " file \"" + tempFile.getAbsolutePath() + "\".");
         }
 
+        // here it exists and we can write it: warn user!
+        setWarningMessage("Selected output file exists and will be "
+                + "overwritten!");
+        
         return newFileName;
     }
 

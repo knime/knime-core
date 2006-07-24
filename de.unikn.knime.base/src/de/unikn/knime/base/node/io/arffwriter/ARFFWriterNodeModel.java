@@ -22,8 +22,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 
+import de.unikn.knime.base.node.io.arffreader.ARFFReaderNodeModel;
 import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataRow;
@@ -99,7 +102,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_file != null) {
             settings.addString(CFGKEY_FILENAME, m_file.getAbsolutePath());
-        }
+        } 
         if (m_sparse) {
             settings.addBoolean(CFGKEY_SPARSE, m_sparse);
         }
@@ -111,7 +114,9 @@ public class ARFFWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+
         stringToWriteableFile(settings.getString(CFGKEY_FILENAME));
+
     }
 
     /**
@@ -121,9 +126,6 @@ public class ARFFWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_file = stringToWriteableFile(settings.getString(CFGKEY_FILENAME));
-        if (m_file.exists()) {
-            LOGGER.warn("ARFF Writer: File exists - will be overriden!");
-        }
 
     }
 
@@ -147,7 +149,8 @@ public class ARFFWriterNodeModel extends NodeModel {
             }
         }
 
-        LOGGER.info("ARFF Writer: ARFFing into file '" + m_file + "'.");
+        LOGGER.info("ARFF Writer: ARFFing into file '" + m_file.getName() 
+                + "'.");
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(m_file));
 
@@ -206,7 +209,8 @@ public class ARFFWriterNodeModel extends NodeModel {
                         }
                     }
                     if (cell instanceof DoubleValue) {
-                        if (Math.abs(((DoubleValue)cell).getDoubleValue()) < 1e-29) {
+                        if (Math.abs(((DoubleValue)cell).getDoubleValue()) 
+                                < 1e-29) {
                             continue;
                         }
                     }
@@ -266,6 +270,8 @@ public class ARFFWriterNodeModel extends NodeModel {
         writer.flush();
         writer.close();
 
+        ARFFReaderNodeModel.addToFileHistory(m_file.toURL().toString());
+        
         // execution successful return empty array
         return new BufferedDataTable[0];
     }
@@ -324,27 +330,7 @@ public class ARFFWriterNodeModel extends NodeModel {
         }
         return false;
     }
-
-    /* tries to create a file for the passed file name. */
-    private File stringToWriteableFile(final String fileName)
-            throws InvalidSettingsException {
-
-        File result = new File(fileName);
-
-        if (result.isDirectory()) {
-            throw new InvalidSettingsException("\"" + result.getAbsolutePath()
-                    + "\" is a directory.");
-        }
-        if (!result.exists()) {
-            return result;
-        }
-        if (!result.canWrite()) {
-            throw new InvalidSettingsException("Cannot write to file \""
-                    + result.getAbsolutePath() + "\".");
-        }
-        return result;
-    }
-
+    
     /**
      * @see de.unikn.knime.core.node.NodeModel#reset()
      */
@@ -381,7 +367,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-
+        
         checkFileAccess(m_file);
 
         for (int c = 0; c < inSpecs[0].getNumColumns(); c++) {
@@ -427,6 +413,35 @@ public class ARFFWriterNodeModel extends NodeModel {
         setWarningMessage("Selected output file exists and will be "
                 + "overwritten!");
 
+    }
+
+
+    /* tries to create a file for the passed file name. */
+    private File stringToWriteableFile(final String fileName)
+            throws InvalidSettingsException {
+
+        // make sure to handle URLs
+        URL url = null;
+        try {
+            url = ARFFReaderNodeModel.stringToURL(fileName);
+        } catch (MalformedURLException mue) {
+            throw new InvalidSettingsException("Invalid file name");
+        }
+        
+        File result = new File(url.getPath());
+        
+        if (result.isDirectory()) {
+            throw new InvalidSettingsException("\"" + result.getAbsolutePath()
+                    + "\" is a directory.");
+        }
+        if (!result.exists()) {
+            return result;
+        }
+        if (!result.canWrite()) {
+            throw new InvalidSettingsException("Cannot write to file \""
+                    + result.getAbsolutePath() + "\".");
+        }
+        return result;
     }
 
 }

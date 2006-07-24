@@ -23,6 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Vector;
+
+import javax.swing.filechooser.FileFilter;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.BufferedDataTable;
@@ -34,6 +37,7 @@ import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
+import de.unikn.knime.core.node.util.StringHistory;
 
 /**
  * The model of the ARFF reader node. The interesting work is done in the
@@ -42,16 +46,18 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  * @author ohl, University of Konstanz
  */
 public class ARFFReaderNodeModel extends NodeModel {
-    
+
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(ARFFReaderNodeModel.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(ARFFReaderNodeModel.class);
 
     /** key used to store the ARFF file location in the settings object. */
     static final String CFGKEY_FILEURL = "FileURL";
 
     /** key used to store the row prefix in the settings object. */
     static final String CFGKEY_ROWPREFIX = "RowPrefix";
+
+    private static final String ARFF_HISTORY_ID = "ARFFFiles";
 
     private String m_rowPrefix;
 
@@ -69,6 +75,7 @@ public class ARFFReaderNodeModel extends NodeModel {
 
     /**
      * creates a new ARFF reader with a default file.
+     * 
      * @param arffFileLocation URL to the ARFF file to read.
      */
     public ARFFReaderNodeModel(final String arffFileLocation) {
@@ -76,27 +83,27 @@ public class ARFFReaderNodeModel extends NodeModel {
         try {
             m_file = stringToURL(arffFileLocation);
         } catch (MalformedURLException mue) {
-            LOGGER.error(mue.getMessage()); 
+            LOGGER.error(mue.getMessage());
         }
     }
+
     /**
      * @see NodeModel#configure(DataTableSpec[])
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_file == null) {
             throw new InvalidSettingsException("File is not specified.");
         }
         try {
-            return new DataTableSpec[]{
-                ARFFTable.createDataTableSpecFromARFFfile(m_file, null)};
+            return new DataTableSpec[]{ARFFTable
+                    .createDataTableSpecFromARFFfile(m_file, null)};
         } catch (IOException ioe) {
-            throw new InvalidSettingsException(
-                    "ARFFReader: I/O Error", ioe);
+            throw new InvalidSettingsException("ARFFReader: I/O Error", ioe);
         } catch (InvalidSettingsException ise) {
-            throw new InvalidSettingsException(
-                    "ARFFReader: ARFF Header Error", ise);
+            throw new InvalidSettingsException("ARFFReader: ARFF Header Error",
+                    ise);
         } catch (CanceledExecutionException cee) {
             // never flies
             throw new InvalidSettingsException(
@@ -108,20 +115,21 @@ public class ARFFReaderNodeModel extends NodeModel {
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
-    protected BufferedDataTable[] execute(
-            final BufferedDataTable[] inData, final ExecutionContext exec) 
-            throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
 
         assert m_file != null;
         if (m_file == null) {
-            throw new NullPointerException("Initialize ARFF reader before you"
-                    + " execute it.");
+            throw new NullPointerException("Configure the ARFF reader before"
+                    + " you execute it, please.");
         }
-
-        BufferedDataTable out = exec.createBufferedDataTable(
-                new ARFFTable(m_file,
-                        ARFFTable.createDataTableSpecFromARFFfile(m_file, exec),
-                        m_rowPrefix), exec);
+        // now that we actually read it, add it to the history.
+        ARFFReaderNodeModel.addToFileHistory(m_file.toString());
+        
+        BufferedDataTable out = exec.createBufferedDataTable(new ARFFTable(
+                m_file,
+                ARFFTable.createDataTableSpecFromARFFfile(m_file, exec),
+                m_rowPrefix), exec);
         return new BufferedDataTable[]{out};
     }
 
@@ -148,27 +156,27 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveInternals(java.io.File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-        throws IOException, CanceledExecutionException {
-     
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
     }
-    
+
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #loadInternals(java.io.File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-     
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
     }
-    
+
     /**
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
@@ -181,7 +189,7 @@ public class ARFFReaderNodeModel extends NodeModel {
             settings.addString(CFGKEY_FILEURL, null);
         }
         settings.addString(CFGKEY_ROWPREFIX, m_rowPrefix);
- 
+
     }
 
     /**
@@ -190,7 +198,11 @@ public class ARFFReaderNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getString(CFGKEY_FILEURL);
+        try {
+            stringToURL(settings.getString(CFGKEY_FILEURL));
+        } catch (MalformedURLException mue) {
+            throw new InvalidSettingsException(mue);
+        }
         settings.getString(CFGKEY_ROWPREFIX);
     }
 
@@ -220,6 +232,90 @@ public class ARFFReaderNodeModel extends NodeModel {
             newURL = tmp.getAbsoluteFile().toURL();
         }
         return newURL;
+    }
+
+    /**
+     * @param removeNotExistingFiles if true the returned list will not contain
+     *            files that doesn't exist (they will not be removed from the
+     *            global history though
+     * @return the current file history associated with the ARFF reader/writer.
+     */
+    public static String[] getFileHistory(
+            final boolean removeNotExistingFiles) {
+
+        StringHistory h = StringHistory.getInstance(ARFF_HISTORY_ID);
+        Vector<String> allLocs = new Vector<String>();
+
+            for (int l = 0; l < h.getHistory().length; l++) {
+            String loc = h.getHistory()[l];
+
+            if (removeNotExistingFiles) {
+                URL url;
+                try {
+                    url = new URL(loc);
+                    if (url.getProtocol().equalsIgnoreCase("FILE")) {
+                        // if we have a file location check its existence
+                        File f = new File(url.getPath());
+                        if ((f != null) && (f.exists())) {
+                            allLocs.add(loc);
+                        } // else ignore old, not existing entries
+                    } else {
+                        // non-file URL we just take over
+                        allLocs.add(loc);
+                    }
+                } catch (MalformedURLException mue) {
+                    // ignore this (invalid) entry in the history
+                }
+            
+            } else {
+                allLocs.add(loc);
+            }
+
+        }
+        return allLocs.toArray(new String[0]);
+        
+    }
+
+    /**
+     * Adds the specified string to the ARFF reader/writer history.
+     * @param filename the filename to add.
+     */
+    public static void addToFileHistory(final String filename) {
+        StringHistory h = StringHistory.getInstance(ARFF_HISTORY_ID);
+        h.add(filename);
+    }
+    
+    /**
+     * FileFilter for the ARFFReader/writer file chooser dialog.
+     * 
+     * @author ohl, University of Konstanz
+     */
+    public static class ARFFFileFilter extends FileFilter {
+
+        /**
+         * @see javax.swing.filechooser.FileFilter#accept(java.io.File)
+         */
+        @Override
+        public boolean accept(final File f) {
+            if (f != null) {
+                if (f.isDirectory()) {
+                    return true;
+                }
+                String lastFive = f.getName().substring(
+                        f.getName().length() - 5, f.getName().length());
+                return lastFive.equalsIgnoreCase(".arff");
+            }
+            return true;
+
+        }
+
+        /**
+         * @see javax.swing.filechooser.FileFilter#getDescription()
+         */
+        @Override
+        public String getDescription() {
+            return "ARFF data files (*.arff)";
+        }
     }
 
 }

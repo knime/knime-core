@@ -19,10 +19,17 @@
 package de.unikn.knime.base.node.io.arffreader;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,13 +39,17 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.filechooser.FileFilter;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.node.InvalidSettingsException;
@@ -52,7 +63,8 @@ import de.unikn.knime.core.node.NotConfigurableException;
  * 
  * @author ohl, University of Konstanz
  */
-public class ARFFReaderNodeDialog extends NodeDialogPane {
+public class ARFFReaderNodeDialog extends NodeDialogPane 
+        implements ItemListener {
 
     private static final int VERT_SPACE = 5;
 
@@ -62,7 +74,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
 
     private static final int TEXTFIELD_WIDTH = 350;
 
-    private JTextField m_url;
+    private JComboBox m_url;
 
     private JLabel m_urlError;
 
@@ -103,8 +115,13 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
 
         sumOfCompHeigth += COMPONENT_HEIGHT;
 
-        m_url = new JTextField();
+        m_url = new JComboBox();
         m_url.setMaximumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
+        m_url.setMinimumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
+        m_url.setPreferredSize(new Dimension(TEXTFIELD_WIDTH, 
+                COMPONENT_HEIGHT));
+        m_url.setEditable(true);
+        m_url.setRenderer(new MyComboBoxRenderer());
         fileBox.add(m_url);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
 
@@ -163,16 +180,28 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         filePanel.add(Box.createGlue());
 
         // set a filter to the filename that fills the error text label
-        m_url.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(final DocumentEvent e) {
-                updateFileError();
-            }
+        Component editor = m_url.getEditor().getEditorComponent();
+        if (editor instanceof JTextComponent) {
+            Document d = ((JTextComponent)editor).getDocument();
+            d.addDocumentListener(new DocumentListener() {
+                public void changedUpdate(final DocumentEvent e) {
+                    updateFileError();
+                }
 
-            public void insertUpdate(final DocumentEvent e) {
-                updateFileError();
-            }
+                public void insertUpdate(final DocumentEvent e) {
+                    updateFileError();
+                }
 
-            public void removeUpdate(final DocumentEvent e) {
+                public void removeUpdate(final DocumentEvent e) {
+                    updateFileError();
+                }
+            });
+        }
+        // itemListener must be this in order to be able to remove and reset it.
+        m_url.addItemListener(this);
+        m_url.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(final FocusEvent e) {
                 updateFileError();
             }
         });
@@ -181,20 +210,29 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
     }
 
     /**
+     * @see java.awt.event.ItemListener
+     *      #itemStateChanged(java.awt.event.ItemEvent)
+     */
+    public void itemStateChanged(final ItemEvent e) {
+        updateFileError();
+    }
+
+    /**
      * updates the file error label whenever the fileURL entered changed.
      */
     protected void updateFileError() {
+        String urlInput = m_url.getEditor().getItem().toString();
         URL urli = null;
         String text = null;
 
-        if ((m_url.getText() == null) || m_url.getText().equals("")) {
+        if ((urlInput == null) || urlInput.equals("")) {
             text = "";
             m_urlError.setText("Specify valid file location");
             return;
         }
 
         try {
-            urli = ARFFReaderNodeModel.stringToURL(m_url.getText());
+            urli = ARFFReaderNodeModel.stringToURL(urlInput);
             if (urli != null) {
                 try {
                     InputStream is = urli.openStream();
@@ -231,7 +269,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         // be specified already:
         String startingDir = "";
         try {
-            URL newURL = ARFFReaderNodeModel.stringToURL(m_url.getText());
+            URL newURL = ARFFReaderNodeModel.stringToURL(
+                    m_url.getEditor().getItem().toString());
             if (newURL.getProtocol().equals("file")) {
                 File tmpFile = new File(newURL.getPath());
                 startingDir = tmpFile.getAbsolutePath();
@@ -242,7 +281,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
 
         JFileChooser chooser;
         chooser = new JFileChooser(startingDir);
-        chooser.setFileFilter(new ARFFReaderFileFilter());
+        chooser.setFileFilter(new ARFFReaderNodeModel.ARFFFileFilter());
         int returnVal = chooser.showOpenDialog(getPanel().getParent());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
@@ -252,7 +291,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
-            m_url.setText(path);
+            m_url.setSelectedItem(path);
+            updateFileError();
         }
         // user canceled - do nothing.
     }
@@ -263,12 +303,25 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_url.setText(settings
+        m_url.setSelectedItem(settings
                 .getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
         m_rowPrefix.setText(settings.getString(
                 ARFFReaderNodeModel.CFGKEY_ROWPREFIX, ""));
 
+        // set the file history for the combo box.
+        // disconnect the ItemChangelistener first
+        m_url.removeItemListener(this);
+        m_url.removeAllItems();
+        for (String str : ARFFReaderNodeModel.getFileHistory(
+                /*removeNotExistingFiles*/true)) {
+            m_url.addItem(str);
+        }
+        m_url.addItemListener(this);
+        
+        updateFileError();
+
     }
+    
 
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
@@ -281,41 +334,78 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
             throw new InvalidSettingsException("Specify valid file location. "
                     + "Or press 'Cancel'.");
         }
-        settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, m_url.getText());
+        settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, 
+                m_url.getEditor().getItem().toString());
         settings.addString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, m_rowPrefix
                 .getText());
     }
 
-    /**
-     * FileFilter for the ARFFReader file chooser dialog.
-     * 
-     * @author ohl, University of Konstanz
-     */
-    private class ARFFReaderFileFilter extends FileFilter {
+    
+    /** Renderer that also supports to show customized tooltip. */
+    private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
 
         /**
-         * @see javax.swing.filechooser.FileFilter#accept(java.io.File)
+         * @see BasicComboBoxRenderer#getListCellRendererComponent(
+         *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
          */
         @Override
-        public boolean accept(final File f) {
-            if (f != null) {
-                if (f.isDirectory()) {
-                    return true;
-                }
-                String lastFive = f.getName().substring(
-                        f.getName().length() - 5, f.getName().length());
-                return lastFive.equalsIgnoreCase(".arff");
+        public Component getListCellRendererComponent(final JList list,
+                final Object value, final int index, final boolean isSelected,
+                final boolean cellHasFocus) {
+            if (index > -1) {
+                list.setToolTipText(value.toString());
             }
-            return true;
-
+            return super.getListCellRendererComponent(list, value, index,
+                    isSelected, cellHasFocus);
         }
 
         /**
-         * @see javax.swing.filechooser.FileFilter#getDescription()
+         * Does the clipping automatically, clips off characters from the middle
+         * of the string.
+         * 
+         * @see JLabel#getText()
          */
         @Override
-        public String getDescription() {
-            return "ARFF data files (*.arff)";
+        public String getText() {
+            Insets ins = getInsets();
+            int width = getWidth() - ins.left - ins.right;
+            String s = super.getText();
+            FontMetrics fm = getFontMetrics(getFont());
+            String clipped = s;
+            while (clipped.length() > 5 && fm.stringWidth(clipped) > width) {
+                clipped = format(s, clipped.length() - 3);
+            }
+            return clipped;
+        }
+
+        /*
+         * builds strings with the following pattern: if size is smaller than
+         * 30, return the last 30 chars in the string; if the size is larger
+         * than 30: return the first 12 chars + ... + chars from the end. Size
+         * more than 55: the first 28 + ... + rest from the end.
+         */
+        private String format(final String str, final int size) {
+            String result;
+            if (str.length() <= size) {
+                // short enough - return it unchanged
+                return str;
+            }
+            if (size <= 30) {
+                result = "..."
+                        + str.substring(str.length() - size + 3, str.length());
+            } else if (size <= 55) {
+                result = str.substring(0, 12)
+                        + "..."
+                        + str.subSequence(str.length() - size + 15, str
+                                .length());
+            } else {
+                result = str.substring(0, 28)
+                        + "..."
+                        + str.subSequence(str.length() - size + 31, str
+                                .length());
+            }
+            return result;
         }
     }
+
 }
