@@ -232,8 +232,9 @@ public class TableNodeView extends NodeView {
             if (!tableName.equals("default")) {
                 title.append(" \"");
                 title.append(tableName);
-                title.append("\" (");
+                title.append("\"");
             }
+            title.append(" (");
             int rowCount = model.getRowCount();
             boolean isFinal = model.isRowCountFinal();
             title.append(rowCount);
