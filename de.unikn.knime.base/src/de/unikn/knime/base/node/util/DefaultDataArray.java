@@ -202,8 +202,11 @@ public class DefaultDataArray implements DataArray  {
             if (execMon != null) {
                 // will throw an exception if we are supposed to cancel
                 execMon.checkCanceled();
-                execMon.setProgress((double)m_rows.size() / (double)numOfRows,
+                if (rowNumber % 100 == 0) {
+                    execMon.setProgress(
+                            (double)m_rows.size() / (double)numOfRows,
                         "read row " + m_rows.size() + " of max. " + numOfRows);
+                }
             }
 
         } // while ((!rIter.atEnd()) && (numOfRowsRead < numOfRows))
