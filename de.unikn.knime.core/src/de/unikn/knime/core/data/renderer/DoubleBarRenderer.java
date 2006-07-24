@@ -105,8 +105,10 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
                 max = 1.0;
             }
             d = (float)((val - min) / (max - min));
+            setIconValue(d);
+        } else {
+            setIconValue(Double.NaN);
         }
-        setIconValue(d);
     }
     
     /** Returns "Gray Scale".
@@ -148,20 +150,27 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         }
         
         /**
-         * @see javax.swing.Icon#paintIcon(
-         *      java.awt.Component, java.awt.Graphics, int, int)
+         * @see javax.swing.Icon#paintIcon( java.awt.Component,
+         *      java.awt.Graphics, int, int)
          */
-        public void paintIcon(
-                final Component c, final Graphics g, final int x, final int y) {
-            int normwidth = getIconWidth();
-            int width = (int) (m_value * normwidth);
-            GradientPaint redtogreen = new GradientPaint(x, y, Color.red,
-                    normwidth , y, Color.green);
-            ((Graphics2D)g).setPaint(redtogreen);
-            g.draw3DRect(x , y + (getIconHeight() / 4),
-                    width, getIconHeight() / 2, true);
-            ((Graphics2D)g).fill(new Rectangle2D.Double(
-                    x , y + (getIconHeight() / 4), width, getIconHeight() / 2));
+        public void paintIcon(final Component c, final Graphics g, final int x,
+                final int y) {
+            int iconWidth = getIconWidth();
+            if (Double.isNaN(m_value)) {
+                g.setColor(Color.BLACK);
+                ((Graphics2D)g).fill(new Rectangle2D.Double(x, y
+                        + (getIconHeight() / 4), iconWidth - 4,
+                        getIconHeight() / 2));
+            } else {
+                int width = (int)(m_value * iconWidth);
+                GradientPaint redtogreen = new GradientPaint(x, y, Color.red,
+                        iconWidth, y, Color.green);
+                ((Graphics2D)g).setPaint(redtogreen);
+                g.draw3DRect(x, y + (getIconHeight() / 4), width,
+                        getIconHeight() / 2, true);
+                ((Graphics2D)g).fill(new Rectangle2D.Double(x, y
+                        + (getIconHeight() / 4), width, getIconHeight() / 2));
+            }
         }
     } // end class BarIcon
 }
