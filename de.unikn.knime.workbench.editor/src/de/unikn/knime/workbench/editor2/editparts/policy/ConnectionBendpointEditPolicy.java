@@ -305,9 +305,14 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
             }
         }
 
-        points.getPoint(ref1, bpIndex - 1);
+        if (bpIndex > 0) {
+            points.getPoint(ref1, bpIndex - 1);
+        }
         getConnection().translateToAbsolute(ref1);
-        points.getPoint(ref2, bpIndex + 1);
+
+        if (bpIndex < points.size() - 1) {
+            points.getPoint(ref2, bpIndex + 1);
+        }
         getConnection().translateToAbsolute(ref2);
     }
 
