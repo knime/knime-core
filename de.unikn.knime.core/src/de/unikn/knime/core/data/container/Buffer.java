@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -721,11 +719,10 @@ class Buffer {
      * @see Object#finalize()
      */
     @Override
-    protected void finalize() throws Throwable {
+    protected void finalize() {
         if (m_hasCreatedTempFile) {
             clear();
         }
-        super.finalize();
     }
     
     /**
@@ -739,6 +736,11 @@ class Buffer {
                     f.clear();
                 }
             }
+            // note: altough all input streams are closed, the file
+            // can't be deleted. If we call the gc, it works. No clue.
+            // That only happens under windows!
+            // http://forum.java.sun.com/thread.jspa?forumID=31&threadID=609458
+            System.gc();
             if (m_outFile.delete()) {
                 LOGGER.debug("Deleted temp file \"" 
                         + m_outFile.getAbsolutePath() + "\"");
@@ -757,7 +759,7 @@ class Buffer {
     private class FromFileIterator extends RowIterator {
         
         private int m_pointer;
-        private final DCObjectInputStream m_inStream;
+        private DCObjectInputStream m_inStream;
         
         /**
          * Inits the input stream.
@@ -796,6 +798,7 @@ class Buffer {
             if (!hasNext) {
                 try {
                     m_inStream.close();
+                    m_inStream = null;
                 } catch (IOException ioe) {
                     LOGGER.warn("Unable to close stream from DataContainer: " 
                             + ioe.getMessage(), ioe);
@@ -822,7 +825,7 @@ class Buffer {
                 for (int i = 0; i < colCount; i++) {
                     cells[i] = readDataCell(inStream);
                 }
-                char eoRow = m_inStream.readChar();
+                char eoRow = inStream.readChar();
                 if (eoRow != ROW_SEPARATOR) {
                     throw new IOException("Exptected end of row character, " 
                             + "got '" + eoRow + "'");
@@ -839,13 +842,20 @@ class Buffer {
         
         private synchronized void clear() {
             m_pointer = Buffer.this.m_size; // mark it as end of file
+            // already closed (clear has been called before)
+            if (m_inStream == null) {
+                return;
+            }
+            String closeMes = "Closing input stream on \""
+                + m_outFile.getAbsolutePath() + "\", "; 
             try {
                 m_inStream.close();
+                m_nrOpenInputStreams--;
+                LOGGER.debug(closeMes + m_nrOpenInputStreams + " remaining");
+                m_inStream = null;
             } catch (IOException ioe) {
-                LOGGER.warn("Unable to close stream on file \""
-                        + m_outFile.getAbsolutePath() + "\"" 
-                        + ioe.getMessage(), ioe);
-            } 
+                LOGGER.debug(closeMes + "failed!", ioe);
+            }
         }
         
         /**
@@ -857,18 +867,7 @@ class Buffer {
              * deleted under windows. It seems that there are open streams
              * when the VM closes.
              */
-            String closeMes = "Closing input stream on \""
-                + m_outFile.getAbsolutePath() + "\", "; 
-            try {
-                m_inStream.close();
-                m_nrOpenInputStreams--;
-                LOGGER.debug(closeMes + m_nrOpenInputStreams + " remaining");
-            } catch (IOException ioe) {
-                LOGGER.debug(closeMes + "failed!", ioe);
-                throw ioe;
-            } finally {
-                super.finalize();
-            }
+            clear();
         }
     }
     
