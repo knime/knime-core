@@ -44,7 +44,7 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
 
         super.init(workbench, currentSelection);
 
-        setWindowTitle("Import a Knime workflow project");
+        setWindowTitle("Import");
 
     }
 
@@ -54,7 +54,7 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
     public void addPages() {
         super.addPages();
 
-        getPages()[0].setTitle("Import Knime workflow projects");
+        getPages()[0].setTitle("Knime workflow projects");
         getPages()[0]
                 .setDescription("This wizard imports Knime workflow projects"
                         + " given as an archive or given as a folder within"
