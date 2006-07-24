@@ -709,10 +709,10 @@ class Buffer {
     void saveToFile(final File f, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
         if (!usesOutFile()) {
+            initOutFile(null);
             close(m_spec); // will also use this file for subsequent iterations
-        } else {
-            FileUtil.copy(m_outFile, f, exec);
-        }
+        } 
+        FileUtil.copy(m_outFile, f, exec);
     }
     
     /** Deletes the file underlying this buffer.
