@@ -37,6 +37,7 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PrecisionPoint;
@@ -94,7 +95,6 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
 
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
-import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.NodeLogger;
@@ -108,7 +108,6 @@ import de.unikn.knime.core.node.workflow.WorkflowEvent;
 import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.core.node.workflow.WorkflowManager;
-import de.unikn.knime.core.util.MutableInteger;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
 import de.unikn.knime.workbench.editor2.actions.CancelAllAction;
 import de.unikn.knime.workbench.editor2.actions.CopyAction;
@@ -183,6 +182,12 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Indicates if this editor has been closed.
      */
     private boolean m_closed;
+
+    /**
+     * Indicates if this editor should be closed after the init. Happens, if the
+     * workflow loading has been canceled.
+     */
+    private boolean m_closeAfterInit;
 
     /**
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
@@ -671,6 +676,11 @@ public class WorkflowEditor extends GraphicalEditor implements
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
 
+        // it is assumed that the editor should not be closed after
+        // initializiation. only if canceled, this value is set to
+        // true. Workaround to close the not fully initiallized editor.
+        m_closeAfterInit = false;
+
         setDefaultInput(input);
         // we only support file inputs
         m_fileResource = ((IFileEditorInput)input).getFile();
@@ -692,14 +702,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             assert m_manager == null;
 
-            // If something fails an empty workflow is created
-            // except when cancalation occured
-            final MutableInteger createEmptyWorkflow = new MutableInteger(0);
-
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
             ps.busyCursorWhile(new IRunnableWithProgress() {
                 public void run(final IProgressMonitor pm) {
+                    CheckThread checkThread = null;
                     try {
                         // create progress monitor
                         ProgressHandler progressHandler = new ProgressHandler(
@@ -707,8 +714,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
                         progressMonitor.addProgressListener(progressHandler);
 
-                        CheckThread checkThread = new CheckThread(pm,
-                                progressMonitor);
+                        checkThread = new CheckThread(pm, progressMonitor);
 
                         checkThread.start();
 
@@ -717,7 +723,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         m_manager = new WorkflowManager(file, progressMonitor);
                         pm.subTask("Finished.");
                         pm.done();
-                        checkThread.finished();
+
                     } catch (FileNotFoundException fnfe) {
                         LOGGER.fatal("File not found", fnfe);
                     } catch (IOException ioe) {
@@ -734,12 +740,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                         LOGGER.info("Canceled loading worflow: "
                                 + file.getName());
                         m_manager = null;
-                        createEmptyWorkflow.setValue(1);
+                        m_closeAfterInit = true;
                     } catch (Exception e) {
                         LOGGER.info("Workflow could not be loaded. "
                                 + file.getName());
                         m_manager = null;
                     } finally {
+                        // terminate the check thread
+                        checkThread.finished();
                         // create empty WFM if loading failed
 
                         if (m_manager == null) {
@@ -751,11 +759,10 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             });
 
-            if (createEmptyWorkflow.intValue() == 1) {
-                throw new RuntimeException("Opening workflow canceled.");
+            // check if the editor should be closed
+            if (m_closeAfterInit) {
+                throw new OperationCanceledException("Loading workflow canceled by user.");
             }
-            
-            
 
             m_manager.addListener(this);
         } catch (InterruptedException ie) {
@@ -791,6 +798,7 @@ public class WorkflowEditor extends GraphicalEditor implements
          */
         public CheckThread(final IProgressMonitor pm,
                 final DefaultNodeProgressMonitor progressMonitor) {
+            super("CheckThread");
             m_pm = pm;
             m_progressMonitor = progressMonitor;
         }
@@ -801,6 +809,7 @@ public class WorkflowEditor extends GraphicalEditor implements
          */
         public void finished() {
             m_finished = true;
+
         }
 
         public void run() {
@@ -990,40 +999,105 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void doSave(final IProgressMonitor monitor) {
-        LOGGER.debug("Saving workflow ....");
+        LOGGER.debug("Saving workflow ...");
 
-        // create progress monitor
-        ProgressHandler progressHandler = new ProgressHandler(monitor,
-                m_manager.getNodes().size());
-        DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
-        progressMonitor.addProgressListener(progressHandler);
-        ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
+        monitor.beginTask("Save workflow...", 10);
+        monitor.worked(2);
+        // // create progress monitor
+        // EventLoopProgressMonitor monitor2 =
+        // (EventLoopProgressMonitor)monitor;
+        //
+        // ProgressHandler progressHandler = new ProgressHandler(monitor,
+        // m_manager.getNodes().size());
+        // DefaultNodeProgressMonitor progressMonitor = new
+        // DefaultNodeProgressMonitor();
+        // progressMonitor.addProgressListener(progressHandler);
+        // ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
 
         try {
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
-            File file = m_fileResource.getLocation().toFile();
-            m_manager.save(file, exec);
-            monitor.worked(8);
+            final File file = m_fileResource.getLocation().toFile();
+
+            // If something fails an empty workflow is created
+            // except when cancalation occured
+            IWorkbench wb = PlatformUI.getWorkbench();
+            IProgressService ps = wb.getProgressService();
+            ps.busyCursorWhile(new IRunnableWithProgress() {
+                public void run(final IProgressMonitor pm) {
+                    CheckThread checkThread = null;
+                    try {
+                        // create progress monitor
+                        ProgressHandler progressHandler = new ProgressHandler(
+                                pm, 1);
+                        final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
+                        progressMonitor.addProgressListener(progressHandler);
+
+                        checkThread = new CheckThread(pm, progressMonitor);
+
+                        checkThread.start();
+
+                        pm.beginTask("Save workflow...", 10);
+                        m_manager.save(file, progressMonitor);
+                        pm.subTask("Finished.");
+                        pm.done();
+                    } catch (FileNotFoundException fnfe) {
+                        LOGGER.fatal("File not found", fnfe);
+                    } catch (IOException ioe) {
+                        if (file.length() == 0) {
+                            LOGGER.info("New workflow created.");
+                        } else {
+                            LOGGER.error("Could not load workflow from: "
+                                    + file.getName(), ioe);
+                        }
+                    } catch (CanceledExecutionException cee) {
+                        LOGGER.info("Canceled loading worflow: "
+                                + file.getName());
+                        monitor.setCanceled(true);
+                    } catch (WorkflowInExecutionException e) {
+
+                        // inform the user
+                        MessageBox mb = new MessageBox(Display.getDefault()
+                                .getActiveShell(), SWT.ICON_INFORMATION
+                                | SWT.OK);
+                        mb.setText("Workflow could not be saved ...");
+                        mb.setMessage("Execution in progress! "
+                                + "The workflow could not be saved.");
+                        mb.open();
+
+                        LOGGER.warn("Could not save workflow");
+                        monitor.setCanceled(true);
+
+                    } catch (Exception e) {
+                        LOGGER.debug("Could not save workflow");
+
+                        // inform the user
+                        MessageBox mb = new MessageBox(Display.getDefault()
+                                .getActiveShell(), SWT.ICON_INFORMATION
+                                | SWT.OK);
+                        mb.setText("Workflow could not be saved ...");
+                        mb.setMessage("The workflow could not be saved. "
+                                + "Possibly the file was removed fromt"
+                                + " the file "
+                                + "system, or the file is set read-only.");
+                        mb.open();
+                    } finally {
+                        checkThread.finished();
+                    }
+
+                }
+
+            });
+
             // mark command stack (no undo beyond this point)
             getCommandStack().markSaveLocation();
 
-        } catch (CanceledExecutionException cee) {
-            LOGGER.debug("Saving of workflow canceled");
-        } catch (WorkflowInExecutionException e) {
-
-            // inform the user
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
-            mb.setText("Workflow could not be saved ...");
-            mb.setMessage("Execution in progress! The workflow could not be "
-                    + "saved.");
-            mb.open();
-
-            LOGGER.warn("Could not save workflow");
-            monitor.setCanceled(true);
-
         } catch (Exception e) {
+
+            // if canceld return without changing the sates
+            if (monitor.isCanceled()) {
+                return;
+            }
             LOGGER.debug("Could not save workflow");
 
             // inform the user
@@ -1034,6 +1108,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     + "Possibly the file was removed fromt the file "
                     + "system, or the file is set read-only.");
             mb.open();
+
+            return;
         }
 
         try {
