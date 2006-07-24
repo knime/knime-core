@@ -335,7 +335,7 @@ public class NodeContainer implements NodeStateListener {
     public void closeAllViews() {
         m_node.closeAllViews();
     }
-    
+
     /**
      * @see Node#closeAllPortViews()
      */
@@ -377,13 +377,13 @@ public class NodeContainer implements NodeStateListener {
         m_node.detach();
     }
 
-    /** 
+    /**
      * @see Node#cleanup()
      */
     void cleanup() {
         m_node.cleanup();
     }
-    
+
     /**
      * Disconnets the inport with the given id from its predecessor.
      * 
@@ -803,7 +803,6 @@ public class NodeContainer implements NodeStateListener {
         return m_node.isModelContentOutPort(portNumber);
     }
 
-    
     /**
      * Loads the settings (but not any data) from the given settings. They are
      * also passed to the underlying node.
@@ -812,7 +811,7 @@ public class NodeContainer implements NodeStateListener {
      * @throws InvalidSettingsException if an expected setting is missing
      */
     public void loadSettings(final NodeSettingsRO settings)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         m_customName = settings.getString(KEY_CUSTOM_NAME);
         m_description = settings.getString(KEY_CUSTOM_DESCRIPTION);
         m_deletable = settings.getBoolean(KEY_IS_DELETABLE);
@@ -820,27 +819,26 @@ public class NodeContainer implements NodeStateListener {
         setExtraInfo(createExtraInfo(settings));
         m_node.loadSettings(settings);
     }
-    
+
     /**
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
      * 
-     * @param loadID Forwared to the node. This id serves as loading id, 
-     * it helps to distinguish between two workflows being loaded at the same
-     * time. This id is passed on to the 
-     * {@link de.unikn.knime.core.node.BufferedDataTable#getDataTable(
-     * int, Integer)}.
+     * @param loadID Forwared to the node. This id serves as loading id, it
+     *            helps to distinguish between two workflows being loaded at the
+     *            same time. This id is passed on to the
+     *            {@link de.unikn.knime.core.node.BufferedDataTable#getDataTable(
+     *            int, Integer)}.
      * @param nodeFile The node settings location.
-     * @param prog The monitor reporting progress during reading structure.
+     * @param progMon The monitor reporting progress during reading structure.
      * @throws IOException If the node settings file can't be found or read.
      * @throws InvalidSettingsException If the settings are wrong.
      * @throws CanceledExecutionException If loading was canceled.
      */
-    public void load(final int loadID, final File nodeFile, 
-            final NodeProgressMonitor prog)
-            throws IOException, InvalidSettingsException,
-            CanceledExecutionException {
-        ExecutionContext context = new ExecutionContext(prog, m_node);
+    public void load(final int loadID, final File nodeFile,
+            final NodeProgressMonitor progMon) throws IOException,
+            InvalidSettingsException, CanceledExecutionException {
+        ExecutionContext context = new ExecutionContext(progMon, m_node);
         m_node.load(loadID, nodeFile, context);
     }
 
@@ -916,10 +914,9 @@ public class NodeContainer implements NodeStateListener {
         m_node.resetAndConfigure();
     }
 
-    
     /**
-     * Saves only the settings (including the ones from the underlying node)
-     * but not its data.
+     * Saves only the settings (including the ones from the underlying node) but
+     * not its data.
      * 
      * @param settings a settings object
      */
@@ -944,13 +941,15 @@ public class NodeContainer implements NodeStateListener {
      * 
      * @param settings To write settings to.
      * @param nodeFile To write node settings to.
-     * @param exec Used to report progress during saving.
+     * @param progMon Used to report progress during saving.
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
     public void save(final NodeSettingsWO settings, final File nodeFile,
-            final ExecutionMonitor exec) throws IOException,
+            final NodeProgressMonitor progMon) throws IOException,
             CanceledExecutionException {
+
+        ExecutionContext exec = new ExecutionContext(progMon, m_node);
         saveSettings(settings);
         m_node.save(nodeFile, exec);
     }
@@ -993,8 +992,9 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * Opens the NodeView for the given index. Views for each index can be 
+     * Opens the NodeView for the given index. Views for each index can be
      * opened multiple times.
+     * 
      * @param viewIndex The view's index.
      * @see Node#showView(int)
      */
@@ -1131,7 +1131,7 @@ public class NodeContainer implements NodeStateListener {
     public void retrieveModel(final MetaNodeModel metaModel) {
         m_node.retrieveModel(metaModel);
     }
-    
+
     /**
      * @see Node#isFullyConnected()
      */

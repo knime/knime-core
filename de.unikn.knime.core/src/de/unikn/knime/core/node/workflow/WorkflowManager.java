@@ -39,7 +39,6 @@ import java.util.Set;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
-import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.Node;
 import de.unikn.knime.core.node.NodeFactory;
@@ -1577,7 +1576,7 @@ public class WorkflowManager implements WorkflowListener {
      *             executed
      */
     public synchronized void save(final File workflowFile,
-            final ExecutionMonitor exec) throws IOException,
+            final NodeProgressMonitor progMon) throws IOException,
             CanceledExecutionException, WorkflowInExecutionException {
         checkForRunningNodes("Workflow cannot be saved");
 
@@ -1606,7 +1605,7 @@ public class WorkflowManager implements WorkflowListener {
         for (NodeContainer nextNode : m_nodesByID.values()) {
 
             nodeNum++;
-            exec.setProgress((double)nodeNum / m_nodesByID.size());
+            progMon.setProgress((double)nodeNum / m_nodesByID.size());
 
             // create node directory based on the nodes name and id
             // all chars which are not letter or number are replaced by '_'
@@ -1623,7 +1622,7 @@ public class WorkflowManager implements WorkflowListener {
             if (!nodeDir.isDirectory() && !nodeDir.mkdir()) {
                 throw new IOException("Unable to create dir: " + nodeDir);
             }
-            nextNode.save(nextNodeConfig, nodeFile, exec);
+            nextNode.save(nextNodeConfig, nodeFile, progMon);
         }
 
         NodeSettingsWO connections = settings.addNodeSettings(KEY_CONNECTIONS);
@@ -1754,9 +1753,9 @@ public class WorkflowManager implements WorkflowListener {
             entry.getKey().closeAllViews();
             entry.getKey().closeAllPortViews();
         }
-        
+
         List<NodeContainer> sortedNodes = topSortNodes();
-        
+
         for (int i = sortedNodes.size() - 1; i >= 0; i--) {
             sortedNodes.get(i).cleanup();
         }
