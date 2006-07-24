@@ -27,6 +27,7 @@ import javax.swing.Icon;
 
 import de.unikn.knime.core.data.DataColumnDomain;
 import de.unikn.knime.core.data.DataColumnSpec;
+import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
 import de.unikn.knime.core.data.def.DoubleCell;
 
@@ -39,8 +40,7 @@ import de.unikn.knime.core.data.def.DoubleCell;
  */
 public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     
-    /** The color to be used when the cell represents a missing cell. */
-    private static final Color MISSING_COLOR = Color.RED;
+    private final Icon m_icon = new GrayIcon();
     
     /** Creates new instance given a column spec. This object will get the
      * information about min/max from the spec and do the normalization 
@@ -61,14 +61,21 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     public void setText(final String text) {
     }
     
+    /** Internal setter. */
+    private void setTextInternal(final String text) {
+        super.setText(text);
+    }
+    
     /** Sets the color in the icon.
      * @param c The color to be used.
      */
     public void setIconColor(final Color c) {
         Icon icon = getIcon();
-        if (icon instanceof GrayIcon) {
-            ((GrayIcon)icon).setColor(c);
+        if (icon == null) {
+            super.setIcon(m_icon);
+            icon = m_icon;
         }
+        ((GrayIcon)icon).setColor(c);
     }
     
     /**
@@ -109,10 +116,12 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
             gray = Math.min(1.0f, gray);
             gray = 1.0f - gray;
             c = new Color(gray, gray, gray);
+            setIconColor(c);
+            setTextInternal(null);
         } else {
-            c = MISSING_COLOR;
+            setIcon(null);
+            setTextInternal(DataType.getMissingCell().toString());
         }
-        setIconColor(c);
     }
     
     /** Returns "Gray Scale".
