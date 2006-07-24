@@ -16,7 +16,7 @@
 package de.unikn.knime.base.node.io.filereader;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.NoSuchElementException;
 
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizer;
@@ -27,10 +27,11 @@ import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
+import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.DoubleCell;
 import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.DefaultRow;
 import de.unikn.knime.core.data.def.StringCell;
+import de.unikn.knime.core.util.MutableInteger;
 
 /**
  * Row iterator for the FileTable.
@@ -59,9 +60,13 @@ final class FileRowIterator extends RowIterator {
     // resolves all possible user settings and default values and sets this.
     private final String m_rowHeaderPrefix;
 
-    // a hash set where we store row header read in - to ensure ID uniquity
-    private final HashSet<String> m_rowIDhash;
+    // a hash set where we store row header read in - to ensure ID uniquity, and
+    // we associate with it the last used suffix, to make it unique
+    private final HashMap<String, Number> m_rowIDhash;
 
+    // Used in the above hash to indicate that duplicate of that row was found. 
+    private static final Integer NOSUFFIX = new Integer(0);
+    
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
 
@@ -110,7 +115,7 @@ final class FileRowIterator extends RowIterator {
             }
         }
 
-        m_rowIDhash = new HashSet<String>();
+        m_rowIDhash = new HashMap<String, Number>();
 
         // if the column headers are stored in the data file, we must read
         // them (the first line) and discard them (if they are actually used
@@ -355,7 +360,8 @@ final class FileRowIterator extends RowIterator {
     private StringCell createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
-        assert (m_frSettings.getFileHasRowHeaders() || (m_rowHeaderPrefix != null));
+        assert (m_frSettings.getFileHasRowHeaders() 
+                || (m_rowHeaderPrefix != null));
 
         // if there is a row header in the file we must read it - independend
         // of if we are going to use it or not.
@@ -404,28 +410,34 @@ final class FileRowIterator extends RowIterator {
      */
     private String uniquifyRowHeader(final String newRowHeader) {
 
-        String unique;
-
-        if (!m_rowIDhash.contains(newRowHeader)) {
-            unique = newRowHeader;
-        } else {
-            // add the line number to the suffix - and if that didn't help, add
-            // a running index until it is unique.
-            unique = newRowHeader;
-            String prefix = unique;
-            int idx = 2;
-            while (m_rowIDhash.contains(unique)) {
-                unique = prefix + "_" + idx;
-                idx++;
-            }
+        Number oldSuffix = m_rowIDhash.put(newRowHeader, NOSUFFIX);
+        
+        if (oldSuffix == null) {
+            // haven't seen the rowID so far. 
+            return newRowHeader;
         }
 
-        assert !m_rowIDhash.contains(unique);
-        m_rowIDhash.add(unique);
+        // we have seen this rowID before!
+        int idx = oldSuffix.intValue();
+            
+        assert idx >= NOSUFFIX.intValue();
 
-        return unique;
+        idx++;
 
-    }
+        if (oldSuffix == NOSUFFIX) {
+            // until now the NOSUFFIX placeholder was in the hash
+            assert idx - 1 == NOSUFFIX.intValue();
+            m_rowIDhash.put(newRowHeader, new MutableInteger(idx));
+        } else {
+            assert oldSuffix instanceof MutableInteger;
+            ((MutableInteger)oldSuffix).inc();
+            assert idx == oldSuffix.intValue();
+            // put back the old (incr.) suffix (overriden with NOSUFFIX).
+            m_rowIDhash.put(newRowHeader, oldSuffix);
+        }
+     
+        return newRowHeader + "_" + idx;
+    }        
 
     /*
      * !!!!!!!!!! Creates the exception object (storing the last read items in
