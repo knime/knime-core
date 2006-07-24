@@ -949,7 +949,6 @@ public class TableContentModel extends AbstractTableModel
         }
         final int cacheSize = getCacheSize();
         final int oldRowCount = getRowCount();
-        final boolean wasRowCountFinal = isRowCountFinal();
         if (showsHiLitedOnly()) {
             /* what follows: run through the DataTable to the last 
              * cached row, count the number of rows that have been 
@@ -985,9 +984,13 @@ public class TableContentModel extends AbstractTableModel
                     fireTableRowsUpdated(0, getRowCount());
                 }
             }
+//            if (oldRowCount == 0) {
+//                assert changedCount == 0;
+//                if (cacheNextRow()) {
+//            }
             // there may be more rows after the last known one when 
             // isHiLite is true (only more rows are added - check for that)
-            if (oldRowCount == getRowCount() && isHiLite && wasRowCountFinal) {
+            if (oldRowCount == getRowCount() && isHiLite) {
                 if (oldRowCount > 0) { // that would fail if there were 0 rows
                     getRow(oldRowCount - 1); // move it to the last known
                 }
