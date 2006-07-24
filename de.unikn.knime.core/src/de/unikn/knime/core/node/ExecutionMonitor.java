@@ -54,7 +54,7 @@ public class ExecutionMonitor {
     /**
      * @return The progress monitor used here.
      */
-    final NodeProgressMonitor getProgressMonitor() {
+    public final NodeProgressMonitor getProgressMonitor() {
         return m_progress;
     }
 
