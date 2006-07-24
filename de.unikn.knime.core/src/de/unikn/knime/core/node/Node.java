@@ -340,7 +340,7 @@ public final class Node {
                     "Unable to load internals: " + ioe.getMessage());
                 notifyStateListeners(m_status);
             } catch (Exception e) {
-                m_logger.coding("Coding problem: loadInternals() "
+                m_logger.coding("loadInternals() "
                         + "should only cause IOException.");
                 m_status = new NodeStatus.Error(
                         "Unable to load internals: " + e.getMessage());
@@ -1595,7 +1595,7 @@ public final class Node {
                                     + "internals: " + ioe.getMessage());
                             notifyStateListeners(m_status);
                         } catch (Exception e) {
-                            m_logger.coding("Coding problem: saveInternals() "
+                            m_logger.coding("saveInternals() "
                                     + "should only cause IOException.");
                             m_status = new NodeStatus.Error("Unable to save " 
                                     + "internals: " + e.getMessage());
