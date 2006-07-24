@@ -1016,7 +1016,10 @@ public final class Node {
      */
     public void cleanup() {
         for (DataOutPort o : m_outDataPorts) {
-            o.clearData();
+            BufferedDataTable t = o.getBufferedDataTable();
+            if (t != null) {
+                t.clear(this);
+            }
         }
     }
     

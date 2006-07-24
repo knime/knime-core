@@ -98,9 +98,7 @@ public final class DataOutPort extends NodeOutPort
         if (dataTable == m_dataTable) {
             return;
         }
-        if (m_dataTable != null) {
-            m_dataTable.clear();
-        }
+        clearData();
         //  (tg) also set the new spec here
         if (dataTable != null) {
             setDataTableSpec(dataTable.getDataTableSpec());
@@ -183,7 +181,7 @@ public final class DataOutPort extends NodeOutPort
      */
     public void clearData() {
         if (m_dataTable != null) {
-            m_dataTable.clear();
+            m_dataTable.clear(getNode());
         }
     }
     

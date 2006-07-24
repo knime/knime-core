@@ -388,11 +388,18 @@ public final class BufferedDataTable implements DataTable {
         }
     }
     
-    /** Clears any associated storage, for instance temp files. */
-    void clear() {
+    /** Clears any associated storage, for instance temp files.
+     * @param dataOwner The owner of the tables. If 
+     * getOwner() != dataOwner, we return immediately.
+     */
+    void clear(final Node dataOwner) {
+        // only take responsibilty for our data tables
+        if (dataOwner != getOwner()) {
+            return;
+        }
         BufferedDataTable reference = getReferenceTable();
-        if (reference != null && reference.getOwner() == getOwner()) {
-            reference.clear();
+        if (reference != null) {
+            reference.clear(dataOwner);
         }
         m_delegate.clear();
     }
