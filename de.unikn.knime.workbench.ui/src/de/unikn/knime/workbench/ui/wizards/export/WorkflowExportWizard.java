@@ -65,6 +65,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
      */
     public WorkflowExportWizard() {
         super();
+        setWindowTitle("Export");
         setNeedsProgressMonitor(true);
     }
 

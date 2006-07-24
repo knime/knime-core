@@ -71,8 +71,8 @@ public class WorkflowExportPage extends WizardPage {
      */
     public WorkflowExportPage(final ISelection selection) {
         super("wizardPage");
-        setTitle("Export KNIME Workflow project");
-        setDescription("This wizard exports a KNIME workflow project.");
+        setTitle("Knime Workflow project");
+        setDescription("This wizard exports a Knime workflow project.");
         this.m_selection = selection;
     }
 
@@ -205,7 +205,7 @@ public class WorkflowExportPage extends WizardPage {
 
     private void handleExportFileBrowse() {
 
-        FileDialog fileDialog = new FileDialog(getShell());
+        FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
         fileDialog.setFilterExtensions(FILTER_EXTENSION);
         fileDialog.setText("Specify export file.");
 
