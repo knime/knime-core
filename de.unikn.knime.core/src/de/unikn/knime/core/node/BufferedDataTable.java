@@ -69,9 +69,9 @@ public final class BufferedDataTable implements DataTable {
      * loading process unique.
      */
     public static void initRepository(final int loadID) {
+        LOADER_HASH.put(loadID, new HashMap<Integer, BufferedDataTable>());
         LOGGER.debug("Adding new table repository for id " + loadID + ", ("
                 + LOADER_HASH.size() + " in total)");
-        LOADER_HASH.put(loadID, new HashMap<Integer, BufferedDataTable>());
     }
     
     /**
