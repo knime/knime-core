@@ -86,6 +86,15 @@ public final class FilterColumnPanel extends JPanel {
     
     /** Hilight all search hits in the exclude model.*/
     private final JCheckBox m_markAllHitsExcl;
+    
+    /** Remove all button. */
+    private final JButton m_remAllButton;
+    /** Remove button. */
+    private final JButton m_remButton;
+    /** Add all button. */
+    private final JButton m_addAllButton;
+    /** Add button. */
+    private final JButton m_addButton;
 
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
     private final LinkedHashSet<DataColumnSpec> m_order = 
@@ -152,40 +161,40 @@ public final class FilterColumnPanel extends JPanel {
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(new JPanel());
 
-        final JButton remButton = new JButton("remove >>");
-        remButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(remButton);
-        remButton.addActionListener(new ActionListener() {
+        m_remButton = new JButton("remove >>");
+        m_remButton.setMaximumSize(new Dimension(125, 25));
+        buttonPan.add(m_remButton);
+        m_remButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onRemIt();
             }
         });
         buttonPan.add(new JPanel());
 
-        final JButton remAllButton = new JButton("remove all >>");
-        remAllButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(remAllButton);
-        remAllButton.addActionListener(new ActionListener() {
+        m_remAllButton = new JButton("remove all >>");
+        m_remAllButton.setMaximumSize(new Dimension(125, 25));
+        buttonPan.add(m_remAllButton);
+        m_remAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onRemAll();
             }
         });
         buttonPan.add(new JPanel());
 
-        final JButton addButton = new JButton("<< add");
-        addButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(addButton);
-        addButton.addActionListener(new ActionListener() {
+        m_addButton = new JButton("<< add");
+        m_addButton.setMaximumSize(new Dimension(125, 25));
+        buttonPan.add(m_addButton);
+        m_addButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onAddIt();
             }
         });
         buttonPan.add(new JPanel());
         
-        final JButton addAllButton = new JButton("<< add all");
-        addAllButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(addAllButton);
-        addAllButton.addActionListener(new ActionListener() {
+        m_addAllButton = new JButton("<< add all");
+        m_addAllButton.setMaximumSize(new Dimension(125, 25));
+        buttonPan.add(m_addAllButton);
+        m_addAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onAddAll();
             }
@@ -694,5 +703,37 @@ public final class FilterColumnPanel extends JPanel {
      */
     public final void setExcludeTitle(final String title) {
         m_excludeBorder.setTitle(title);
+    }
+    
+    /**
+     * Setter for the original "remove All" button.
+     * @param text The new button title.
+     */
+    public void setRemoveAllButtonText(final String text) {
+       m_remAllButton.setText(text); 
+    }
+    
+    /**
+     * Setter for the original "add All" button.
+     * @param text The new button title.
+     */
+    public void setAddAllButtonText(final String text) {
+        m_addAllButton.setText(text); 
+    }
+    
+    /**
+     * Setter for the original "remove" button.
+     * @param text The new button title.
+     */
+    public void setRemoveButtonText(final String text) {
+        m_remButton.setText(text);
+    }
+    
+    /**
+     * Setter for the original "Add" button.
+     * @param text The new button title.
+     */
+    public void setAddButtonText(final String text) {
+        m_addButton.setText(text);
     }
 }
