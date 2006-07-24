@@ -21,6 +21,8 @@
  */
 package de.unikn.knime.workbench.ui.wizards.export;
 
+import java.io.File;
+
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -214,6 +216,8 @@ public class WorkflowExportPage extends WizardPage {
         }
 
         String filePath = fileDialog.open();
+        File pathAsFile = new File(filePath);
+        filePath = pathAsFile.getAbsoluteFile().toString();
 
         if (filePath.trim().length() > 0) {
 
