@@ -31,7 +31,6 @@ import de.unikn.knime.core.data.container.ContainerTable;
 import de.unikn.knime.core.data.container.DataContainer;
 import de.unikn.knime.core.data.container.RearrangeColumnsTable;
 import de.unikn.knime.core.data.container.TableSpecReplacerTable;
-import de.unikn.knime.core.util.FileUtil;
 
 /**
  * DataTable implementation that is passed along the KNIME workflow. This 
@@ -274,7 +273,6 @@ public final class BufferedDataTable implements DataTable {
         NodeSettingsWO s = settings.addNodeSettings(CFG_TABLE_META);
         s.addInt(CFG_TABLE_ID, getBufferedTableId());
         File outFile = new File(dir, TABLE_FILE);
-        s.addString(CFG_TABLE_FILE_NAME, TABLE_FILE);
         m_delegate.saveToFile(outFile, s, exec);
         if (m_delegate instanceof ContainerTable) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
@@ -299,6 +297,12 @@ public final class BufferedDataTable implements DataTable {
             } else {
                 s.addString(CFG_TABLE_REFERENCE, null);
             }
+        }
+        // only write the data file to the spec if it has been created
+        if (outFile.exists()) {
+            s.addString(CFG_TABLE_FILE_NAME, TABLE_FILE);
+        } else {
+            s.addString(CFG_TABLE_FILE_NAME, null);
         }
     }
     
@@ -329,14 +333,16 @@ public final class BufferedDataTable implements DataTable {
         NodeSettingsRO s = settings.getNodeSettings(CFG_TABLE_META);
         int id = s.getInt(CFG_TABLE_ID);
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
-        File file = new File(dir, fileName);
-        File dest = DataContainer.createTempFile();
-        dest.deleteOnExit();
-        FileUtil.copy(file, dest, exec);
+        File file;
+        if (fileName != null) {
+            file = new File(dir, fileName);
+        } else {
+            file = null; // for instance for a column filter node this is null.
+        }
         String tableType = s.getString(CFG_TABLE_TYPE);
         BufferedDataTable t;
         if (tableType.equals(TABLE_TYPE_CONTAINER)) {
-            ContainerTable fromContainer = DataContainer.readFromZip(dest); 
+            ContainerTable fromContainer = DataContainer.readFromZip(file); 
             t = new BufferedDataTable(fromContainer);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
                 || (tableType.equals(TABLE_TYPE_NEW_SPEC))) {
@@ -347,10 +353,10 @@ public final class BufferedDataTable implements DataTable {
             }
             if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
                 t = new BufferedDataTable(
-                        new RearrangeColumnsTable(dest, s, loadID));
+                        new RearrangeColumnsTable(file, s, loadID));
             } else {
                 t = new BufferedDataTable(
-                        new TableSpecReplacerTable(dest, s, loadID));
+                        new TableSpecReplacerTable(file, s, loadID));
             }
         } else {
             throw new InvalidSettingsException("Unknown table identifier: "

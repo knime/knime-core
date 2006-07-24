@@ -95,14 +95,18 @@ public class DataContainer implements RowAppender {
     /** Table to return. Not null when close() is called. */
     private ContainerTable m_table;
     
-    /** The number of possible values to be memorized. */
-    private int m_maxPossibleValues;
-    
     /** For each column, memorize the possible values. For detailed information
      * regarding the possible values and range determination, refer to the
      * class description.
      */
     private LinkedHashSet<DataCell>[] m_possibleValues;
+    
+    /**
+     * For each column, memorize how many possible values need to be stored. 
+     * Important when the domain is initialized on the argument spec. For those
+     * columns, this value will be very high!
+     */
+    private int[] m_possibleValuesSizes;
     
     /** The min values in each column, we keep these values only for numerical
      * column (i.e. double, int).  For non-numerical columns the respective
@@ -167,7 +171,6 @@ public class DataContainer implements RowAppender {
                     "Cell count must be positive: " + maxCellsInMemory); 
         }
         m_maxCellsInMemory = maxCellsInMemory;
-        m_maxPossibleValues = MAX_POSSIBLE_VALUES;
         if (spec == null) {
             throw new NullPointerException("Spec must not be null!");
         }
@@ -181,6 +184,7 @@ public class DataContainer implements RowAppender {
         // figure out for which columns it's worth to keep the list of possible
         // values and min/max ranges
         m_possibleValues = new LinkedHashSet[m_spec.getNumColumns()];
+        m_possibleValuesSizes = new int[m_spec.getNumColumns()];
         m_minCells = new DataCell[m_spec.getNumColumns()];
         m_maxCells = new DataCell[m_spec.getNumColumns()];
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
@@ -195,15 +199,21 @@ public class DataContainer implements RowAppender {
                 Set<DataCell> values = colSpec.getDomain().getValues();
                 if (values != null) {
                     m_possibleValues[i] = new LinkedHashSet<DataCell>(values);
+                    // negative value means: store all!
+                    m_possibleValuesSizes[i] = -1;
                 } else if (colType.isCompatible(StringValue.class)) {
                     m_possibleValues[i] = new LinkedHashSet<DataCell>();
+                    m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
                 } else {
                     m_possibleValues[i] = null;
+                    m_possibleValuesSizes[i] = -1;
                 }
             } else if (colType.isCompatible(StringValue.class)) {
                 m_possibleValues[i] = new LinkedHashSet<DataCell>();
+                m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
             } else {
                 m_possibleValues[i] = null;
+                m_possibleValuesSizes[i] = -1;
             }
             
             // do now for min/max
@@ -250,13 +260,6 @@ public class DataContainer implements RowAppender {
         return new Buffer(rowsInMemory);
     }
     
-    /** Get the number of possible values that are being kept.
-     * @return This number.
-     */
-    public int getMaxPossibleValues() {
-        return m_maxPossibleValues;
-    }
-    
     /** Define a new threshold for number of possible values to memorize.
      * It makes sense to call this method before any rows are added.
      * @param maxPossibleValues The new number.
@@ -267,7 +270,15 @@ public class DataContainer implements RowAppender {
             throw new IllegalArgumentException(
                     "number < 0: " + maxPossibleValues);
         }
-        m_maxPossibleValues = maxPossibleValues;
+        for (int i = 0; i < m_possibleValuesSizes.length; i++) {
+            if (m_possibleValuesSizes[i] >= 0) {
+                m_possibleValuesSizes[i] = maxPossibleValues;
+                if (m_possibleValues[i].size() > maxPossibleValues) {
+                    m_possibleValuesSizes[i] = -1; // invalid
+                    m_possibleValues[i] = null;
+                }
+            }
+        }
     }
     
     /**
@@ -440,9 +451,10 @@ public class DataContainer implements RowAppender {
             return;
         } 
         m_possibleValues[col].add(value);
-        if (m_possibleValues[col].size() > m_maxPossibleValues) {
+        if (m_possibleValues[col].size() > m_possibleValuesSizes[col]) {
             // forget possible values
             m_possibleValues[col] = null;
+            m_possibleValuesSizes[col] = -1;
         }
     }
     

@@ -133,8 +133,8 @@ class Buffer {
      * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4722539): Temp files
      * are not deleted on windows when there are open streams. 
      */
-    private static final HashSet<WeakReference<FromFileIterator>> 
-        OPENSTREAMS = new HashSet<WeakReference<FromFileIterator>>();
+    private static final HashSet<WeakReference<Buffer>> 
+        OPENBUFFERS = new HashSet<WeakReference<Buffer>>();
 
     /** the file to write to. */
     private File m_outFile;
@@ -172,24 +172,25 @@ class Buffer {
      * This object is null unles close() has been called.  
      */
     private Class<? extends DataCell>[] m_shortCutsLookup;
+    
+    /**
+     * List of file iterators that look at this buffer. Need to close them
+     * when the node is reset and the file shall be deleted.
+     */
+    private final HashSet<WeakReference<FromFileIterator>> m_openIteratorSet;
 
     /** Adds a shutdown hook to the runtime that closes all open input streams
-     * @see #OPENSTREAMS
+     * @see #OPENBUFFERS
      */
     static {
         try {
             Thread hook = new Thread() {
                 @Override
                 public void run() {
-                    for (WeakReference<FromFileIterator> ref : OPENSTREAMS) {
-                        FromFileIterator it = ref.get();
+                    for (WeakReference<Buffer> ref : OPENBUFFERS) {
+                        Buffer it = ref.get();
                         if (it != null) {
-                            try {
-                                it.m_inStream.close();
-                            } catch (IOException ioe) {
-                                LOGGER.warn("Unable to close input stream on " 
-                                        + "file " + it.getOutFileName(), ioe);
-                            }
+                            it.clear();
                         }
                     }
                 }
@@ -214,6 +215,7 @@ class Buffer {
         m_list = new LinkedList<DataRow>();
         m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
         m_list = new LinkedList<DataRow>();
+        m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
         m_size = 0;
     }
     
@@ -244,8 +246,14 @@ class Buffer {
      */
     Buffer(final File inFile, final boolean ignored) throws IOException {
         assert ignored == ignored;
+        // copy the file to temp first, we will delete it when done
+        LOGGER.debug("Copying \"" + inFile.getAbsolutePath() 
+                + "\" to temp directory.");
+        m_outFile = DataContainer.createTempFile();
+        m_hasCreatedTempFile = true;
+        FileUtil.copy(inFile, m_outFile);
         m_maxRowsInMem = 0;
-        ZipFile zipFile = new ZipFile(inFile);
+        ZipFile zipFile = new ZipFile(m_outFile);
         String errorFile = "";
         try {
             errorFile = "spec";
@@ -271,7 +279,7 @@ class Buffer {
         if (dataInput == null) {
             throw new IOException("Invalid file: No data entry");
         }
-        m_outFile = inFile;
+        m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
     }
     
     /** Get the version string to write to the meta file, may be overridden.
@@ -672,6 +680,7 @@ class Buffer {
         ZipOutputStream zipOut = new ZipOutputStream(
                 new BufferedOutputStream(new FileOutputStream(m_outFile)));
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
+        OPENBUFFERS.add(new WeakReference<Buffer>(this));
         m_outStream = new DCObjectOutputStream(zipOut);
     } // initOutFile()
     
@@ -724,6 +733,12 @@ class Buffer {
      */
     void clear() {
         if (m_outFile != null) {
+            for (WeakReference<FromFileIterator> w : m_openIteratorSet) {
+                FromFileIterator f = w.get();
+                if (f != null) {
+                    f.clear();
+                }
+            }
             if (m_outFile.delete()) {
                 LOGGER.debug("Deleted temp file \"" 
                         + m_outFile.getAbsolutePath() + "\"");
@@ -762,7 +777,7 @@ class Buffer {
                 throw new RuntimeException("Cannot read file \"" 
                         + m_outFile.getName() + "\"", ioe);
             }
-            OPENSTREAMS.add(new WeakReference<FromFileIterator>(this));
+            m_openIteratorSet.add(new WeakReference<FromFileIterator>(this));
         }
         
         /** Get the name of the out file that this iterator works on. 
@@ -789,7 +804,7 @@ class Buffer {
             }
             return hasNext;
         }
-
+        
         /**
          * @see de.unikn.knime.core.data.RowIterator#next()
          */
@@ -820,6 +835,17 @@ class Buffer {
             } finally {
                 m_pointer++;
             }
+        }
+        
+        private synchronized void clear() {
+            m_pointer = Buffer.this.m_size; // mark it as end of file
+            try {
+                m_inStream.close();
+            } catch (IOException ioe) {
+                LOGGER.warn("Unable to close stream on file \""
+                        + m_outFile.getAbsolutePath() + "\"" 
+                        + ioe.getMessage(), ioe);
+            } 
         }
         
         /**

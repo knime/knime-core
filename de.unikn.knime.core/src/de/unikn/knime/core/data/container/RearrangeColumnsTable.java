@@ -332,8 +332,6 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         subSettings.addInt(CFG_REFERENCE_ID, m_reference.getBufferedTableId());
         subSettings.addIntArray(CFG_MAP, m_map);
         subSettings.addBooleanArray(CFG_FLAGS, m_isFromRefTable);
-        // create it anyway, even if size is 0
-        f.createNewFile();
         if (m_appendBuffer != null) {
             m_appendBuffer.saveToFile(f, exec);
         }
