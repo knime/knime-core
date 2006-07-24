@@ -25,6 +25,7 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
+import de.unikn.knime.core.data.IntValue;
 
 /**
  * The abstract class for all coordinate classes. A concrete coordinate depends
@@ -43,8 +44,8 @@ public abstract class Coordinate {
     private DataColumnSpec m_columnSpec;
 
     /**
-     * Factory mehtod to create a coordinate for a given column spec. The type
-     * of the column is determined and dependant on that the coresponding
+     * Factory method to create a coordinate for a given column spec. The type
+     * of the column is determined and dependent on that the corresponding
      * coordinate is created.
      * 
      * @param dataColumnSpec the column spec to create the coordinate from
@@ -54,9 +55,13 @@ public abstract class Coordinate {
             final DataColumnSpec dataColumnSpec) {
         // check the column type first it must be compatible to a double
         // value to be a numeric coordinate
+        if (dataColumnSpec == null) {
+            return null;
+        }
         DataType type = dataColumnSpec.getType();
-
-        if (type.isCompatible(DoubleValue.class)) {
+        if (type.isCompatible(IntValue.class)) {
+            return new IntegerCoordinate(dataColumnSpec);
+        } else if (type.isCompatible(DoubleValue.class)) {
             return new NumericCoordinate(dataColumnSpec);
         } else {
             Set possibleValuse = dataColumnSpec.getDomain().getValues();
@@ -75,6 +80,10 @@ public abstract class Coordinate {
      * @param dataColumnSpec the underlying column spec to set
      */
     Coordinate(final DataColumnSpec dataColumnSpec) {
+        if (dataColumnSpec == null) {
+            throw new IllegalArgumentException("Column specification shouldn't"
+                    + " be null.");
+        }
         m_columnSpec = dataColumnSpec;
     }
 
@@ -86,14 +95,14 @@ public abstract class Coordinate {
     }
 
     /**
-     * Returns an array with the possition of all ticks and their corresponding
-     * domain values given an absolut length.
+     * Returns an array with the position of all ticks and their corresponding
+     * domain values given an absolute length.
      * 
      * @param absolutLength the absolute length the domain is mapped on
      * @param naturalMapping if true the mapping values are rounded to the next
      *            integer equivalent.
      * 
-     * @return the mapping of tick positions and coresponding domain values
+     * @return the mapping of tick positions and corresponding domain values
      */
     public abstract CoordinateMapping[] getTickPositions(
             final double absolutLength, final boolean naturalMapping);
@@ -125,8 +134,8 @@ public abstract class Coordinate {
 
     /**
      * Returns the range according to the mapping in which no values can have
-     * values. This distance will not occure in floating point numbers. For
-     * nominal values it is most likely to occure. For discrete values like
+     * values. This distance will not occur in floating point numbers. For
+     * nominal values it is most likely to occur. For discrete values like
      * integers, it will happen when the integer range is smaller than the
      * available pixels.
      * 
