@@ -915,10 +915,10 @@ public class WorkflowManager implements WorkflowListener {
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
 
         for (String nodeKey : nodes.keySet()) {
-            NodeSettings nodeSetting = null;
+            NodeSettings nodeSetting = new NodeSettings(nodeKey);
             try {
                 // retrieve config object for each node
-                nodeSetting = nodes.getNodeSettings(nodeKey);
+                nodes.getNodeSettings(nodeKey).copyTo(nodeSetting);
                 // create NodeContainer based on NodeSettings object
 
                 // remember temporarily the old id
