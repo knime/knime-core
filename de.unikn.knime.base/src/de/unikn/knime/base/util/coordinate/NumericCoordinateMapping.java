@@ -40,7 +40,7 @@ public class NumericCoordinateMapping extends CoordinateMapping {
      */
     NumericCoordinateMapping(final String stringDomainValue,
             final double domainValue, final double mappingValue) {
-        
+
         super(stringDomainValue, mappingValue);
         m_domainValue = domainValue;
     }

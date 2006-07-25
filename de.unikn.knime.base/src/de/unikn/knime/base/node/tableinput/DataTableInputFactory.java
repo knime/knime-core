@@ -24,7 +24,7 @@ import de.unikn.knime.core.node.NodeView;
 
 /**
  * This is a factory for the datatable input node model.
- *  
+ * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class DataTableInputFactory extends NodeFactory {
@@ -36,8 +36,7 @@ public class DataTableInputFactory extends NodeFactory {
         return 0;
     }
 
-    
-    /** 
+    /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
     @Override
@@ -45,10 +44,9 @@ public class DataTableInputFactory extends NodeFactory {
         return new DataTableInputNodeModel();
     }
 
-    
     /**
-     * @see de.unikn.knime.core.node.NodeFactory
-     *  #createNodeView(int, de.unikn.knime.core.node.NodeModel)
+     * @see de.unikn.knime.core.node.NodeFactory #createNodeView(int,
+     *      de.unikn.knime.core.node.NodeModel)
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
@@ -56,7 +54,6 @@ public class DataTableInputFactory extends NodeFactory {
         return null;
     }
 
-    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
@@ -65,7 +62,6 @@ public class DataTableInputFactory extends NodeFactory {
         return false;
     }
 
-    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
      */

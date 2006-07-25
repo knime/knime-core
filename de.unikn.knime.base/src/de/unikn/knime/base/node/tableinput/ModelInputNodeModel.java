@@ -145,5 +145,4 @@ public class ModelInputNodeModel extends NodeModel {
             CanceledExecutionException {
 
     }
-
 }

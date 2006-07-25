@@ -53,8 +53,8 @@ public class ModelInputFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory
-     *  #createNodeView(int, de.unikn.knime.core.node.NodeModel)
+     * @see de.unikn.knime.core.node.NodeFactory #createNodeView(int,
+     *      de.unikn.knime.core.node.NodeModel)
      */
     @Override
     public NodeView createNodeView(final int viewIndex,

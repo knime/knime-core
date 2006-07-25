@@ -29,20 +29,20 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.NoSettingsNodeModel;
 
 /**
- * This class represents a silly node model that can be given a data table
- * (and its spec) which is then output upon execute of the node. This class
- * is only useful if you can get your hand on the model of course.
+ * This class represents a silly node model that can be given a data table (and
+ * its spec) which is then output upon execute of the node. This class is only
+ * useful if you can get your hand on the model of course.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class DataTableInputNodeModel extends NoSettingsNodeModel {
     private DataTableSpec m_spec;
+
     private BufferedDataTable m_datatable;
 
-    
     /**
-     * Creates a new data table input model with no input ports and one 
-     * data output node. 
+     * Creates a new data table input model with no input ports and one data
+     * output node.
      */
     public DataTableInputNodeModel() {
         super(0, 1);
@@ -54,14 +54,14 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
      * 
      * @param inData the input data table array
      * @param exec the execution monitor
-     * @return the datatable set by 
-     *  {@link #setBufferedDataTable(BufferedDataTable)}
+     * @return the datatable set by
+     *         {@link #setBufferedDataTable(BufferedDataTable)}
      * @throws Exception actually, no exception is thrown
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        return new BufferedDataTable[] {m_datatable};
+        return new BufferedDataTable[]{m_datatable};
     }
 
     /**
@@ -70,15 +70,14 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
      * 
      * @param inSpecs the input specs
      * @return the datatable spec set by
-     * {@link #setDataTableSpec(DataTableSpec)}
+     *         {@link #setDataTableSpec(DataTableSpec)}
      * @throws InvalidSettingsException actually, no exception is thrown
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[] {m_spec};
+        return new DataTableSpec[]{m_spec};
     }
-
 
     /**
      * Sets the data table spec that should be returned by
@@ -89,37 +88,36 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
     public void setDataTableSpec(final DataTableSpec spec) {
         m_spec = spec;
     }
-    
-    
+
     /**
      * Sets the data table that should be returned by
      * {@link #execute(BufferedDataTable[], ExecutionContext)}.
-     *  
+     * 
      * @param table the data table
      */
     public void setBufferedDataTable(final BufferedDataTable table) {
         m_datatable = table;
     }
-    
+
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #loadInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         // nothing to do here
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         // nothing to do here
     }
 }

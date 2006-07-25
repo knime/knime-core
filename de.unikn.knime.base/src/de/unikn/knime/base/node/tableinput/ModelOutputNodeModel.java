@@ -132,7 +132,7 @@ public class ModelOutputNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        // nothing to do here
     }
 
     /**
@@ -143,7 +143,6 @@ public class ModelOutputNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        // nothing to do here
     }
-
 }

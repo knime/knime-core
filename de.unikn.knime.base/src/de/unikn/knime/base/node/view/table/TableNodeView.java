@@ -55,11 +55,11 @@ import de.unikn.knime.core.node.tableview.TableContentView;
 import de.unikn.knime.core.node.tableview.TableView;
 
 /**
- * Table View on a <code>DataTable</code>. It simply uses a
- * <code>JTable</code> to display a <code>DataTable</code>. If the node has
- * not been executed or is reset, the view will print "&lt;no data&gt;". The
- * view adds also a menu entry to the menu bar where the user can synchronize
- * the selection with a global hilite handler.
+ * Table view on a {@link de.unikn.knime.core.data.DataTable}. It simply uses a
+ * {@link javax.swing.JTable} to display the data table. If the node has not
+ * been executed or is reset, the view will print "&lt;no data&gt;". The view
+ * adds also a menu entry to the menu bar where the user can synchronize the
+ * selection with a global hilite handler.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -70,10 +70,10 @@ public class TableNodeView extends NodeView {
 
     /**
      * Starts a new <code>TableNodeView</code> displaying "&lt;no data&gt;".
-     * The content comes up when the super class <code>NodeView</code> calls
-     * the <code>modelChanged(Object)</code> method.
+     * The content comes up when the super class {@link NodeView} calls the
+     * {@link #modelChanged()} method.
      * 
-     * @param nodeModel The underlying model.
+     * @param nodeModel the underlying model
      */
     public TableNodeView(final TableNodeModel nodeModel) {
         super(nodeModel);
@@ -83,9 +83,9 @@ public class TableNodeView extends NodeView {
         m_tableView = new TableView(cntModel);
         cntModel.addTableModelListener(new TableModelListener() {
             public void tableChanged(final TableModelEvent e) {
-               // fired when new rows have been seen (refer to description 
-               // of caching strategy of the model)
-               updateTitle();
+                // fired when new rows have been seen (refer to description
+                // of caching strategy of the model)
+                updateTitle();
             }
         });
         getJMenuBar().add(m_tableView.createHiLiteMenu());
@@ -99,11 +99,11 @@ public class TableNodeView extends NodeView {
 
     /**
      * Checks if there is data to display. That is: The model's content model
-     * (keeping the cache and so on) needs to have a <code>DataTable</code> to
-     * show. This method returns <code>true</code> when the node was executed
-     * and <code>false</code> otherwise.
+     * (keeping the cache and so on) needs to have a {@link DataTable} to show.
+     * This method returns <code>true</code> when the node was executed and
+     * <code>false</code> otherwise.
      * 
-     * @return <code>true</code> if there is data to display.
+     * @return <code>true</code> if there is data to display
      */
     public boolean hasData() {
         return m_tableView.hasData();
@@ -112,7 +112,7 @@ public class TableNodeView extends NodeView {
     /**
      * Checks is property handler is set.
      * 
-     * @return <code>true</code> If property handler set.
+     * @return <code>true</code> if property handler set
      * @see TableContentView#hasHiLiteHandler()
      */
     public boolean hasHiLiteHandler() {
@@ -122,8 +122,8 @@ public class TableNodeView extends NodeView {
     /**
      * Sets a new handler for this view.
      * 
-     * @param hiLiteHdl New handler to set, may be <code>null</code> to
-     *            disable any brushing.
+     * @param hiLiteHdl the new handler to set, may be <code>null</code> to
+     *            disable any brushing
      */
     public void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
         m_tableView.setHiLiteHandler(hiLiteHdl);
@@ -132,8 +132,8 @@ public class TableNodeView extends NodeView {
     /**
      * Control behaviour to show only hilited rows.
      * 
-     * @param showOnlyHilit <code>true</code> Filter and display only rows
-     *            whose hiLite status is set.
+     * @param showOnlyHilit <code>true</code> filter and display only rows
+     *            whose hiLite status is set
      * @see TableContentModel#showHiLitedOnly(boolean)
      */
     public final void showHiLitedOnly(final boolean showOnlyHilit) {
@@ -144,7 +144,7 @@ public class TableNodeView extends NodeView {
      * Get status of filtering for hilited rows.
      * 
      * @return <code>true</code> only hilited rows are shown,
-     *         <code>false</code> all rows are shown.
+     *         <code>false</code> all rows are shown
      * @see TableContentModel#showsHiLitedOnly()
      */
     public boolean showsHiLitedOnly() {
@@ -155,7 +155,7 @@ public class TableNodeView extends NodeView {
      * Shall row header encode the color information in an icon.
      * 
      * @param isShowColor <code>true</code> for show icon (and thus the
-     *            color), <code>false</code> ignore colors.
+     *            color), <code>false</code> ignore colors
      * @see de.unikn.knime.core.node.tableview.TableRowHeaderView
      *      #setShowColorInfo(boolean)
      */
@@ -166,7 +166,7 @@ public class TableNodeView extends NodeView {
     /**
      * Is the color info shown.
      * 
-     * @return <code>true</code> Icon with the color is present.
+     * @return <code>true</code> Icon with the color is present
      */
     public boolean isShowColorInfo() {
         return m_tableView.getHeaderTable().isShowColorInfo();
@@ -175,7 +175,7 @@ public class TableNodeView extends NodeView {
     /**
      * Get row height from table.
      * 
-     * @return Current row height
+     * @return current row height
      * @see javax.swing.JTable#getRowHeight()
      */
     public int getRowHeight() {
@@ -185,7 +185,7 @@ public class TableNodeView extends NodeView {
     /**
      * Set a new row height in the table.
      * 
-     * @param newHeight The new height.
+     * @param newHeight the new height
      * @see javax.swing.JTable#setRowHeight(int)
      */
     public void setRowHeight(final int newHeight) {
@@ -245,7 +245,7 @@ public class TableNodeView extends NodeView {
             title.append(" <no data>");
         }
         super.setViewTitle(title.toString());
-    } // updateTitle()
+    }
 
     /**
      * Called from the super class when a property of the node has been changed.
@@ -319,7 +319,7 @@ public class TableNodeView extends NodeView {
      * Called by the JMenu item "Write to CVS", it write the table as shown in
      * table view to a CSV file.
      * 
-     * @param file The file to write to.
+     * @param file the file to write to
      */
     private void writeToCSV(final File file) {
         // CSV Writer supports ExecutionMonitor. Some table may be big.
@@ -362,8 +362,8 @@ public class TableNodeView extends NodeView {
         /**
          * Creates instance.
          * 
-         * @param file The file to write to
-         * @param exec The execution monitor.
+         * @param file the file to write to
+         * @param exec the execution monitor
          */
         public CSVWriterThread(final File file, final ExecutionMonitor exec) {
             m_file = file;
@@ -409,10 +409,10 @@ public class TableNodeView extends NodeView {
     }
 
     /**
-     * RowFilter that filters non-hilited rows - it's the most convenient way to
-     * write only the hilited rows.
+     * Row filter that filters non-hilited rows - it's the most convenient way
+     * to write only the hilited rows.
      * 
-     * @author wiswedel, University of Konstanz
+     * @author Bernd Wiswedel, University of Konstanz
      */
     private static final class HilightOnlyRowFilter extends RowFilter {
 
@@ -421,7 +421,7 @@ public class TableNodeView extends NodeView {
         /**
          * Creates new instance given a hilight handler.
          * 
-         * @param handler The handler to get the hilite info from.
+         * @param handler the handler to get the hilite info from
          */
         public HilightOnlyRowFilter(final HiLiteHandler handler) {
             m_handler = handler;
@@ -450,4 +450,4 @@ public class TableNodeView extends NodeView {
             return m_handler.isHiLit(row.getKey().getId());
         }
     }
-} // TableNodeView
+}

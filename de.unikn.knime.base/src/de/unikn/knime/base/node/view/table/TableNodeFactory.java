@@ -21,15 +21,14 @@ import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
-/** 
- * Factory to create model and view for a table node. 
+/**
+ * Factory to create model and view for a table node.
  * 
- * @author Bernd Wiswedel, University of Konstanz 
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableNodeFactory extends NodeFactory {
-    
+
     /**
-     * @return <b>false</b>.
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
     @Override
@@ -38,12 +37,8 @@ public class TableNodeFactory extends NodeFactory {
     }
 
     /**
-     * The <code>TableNode</code> has no Dialog (i.e. Controller) - it is
-     * incorporated in the view.
-     * @return Nothing as this method throws an exception.
-     * @throws IllegalStateException Always.
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
-     */ 
+     */
     @Override
     public NodeDialogPane createNodeDialogPane() {
         throw new InternalError();
@@ -75,5 +70,4 @@ public class TableNodeFactory extends NodeFactory {
     public int getNrNodeViews() {
         return 1;
     }
-
 }

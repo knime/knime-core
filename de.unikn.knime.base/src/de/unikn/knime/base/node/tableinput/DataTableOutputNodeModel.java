@@ -65,7 +65,7 @@ public class DataTableOutputNodeModel extends NodeModel {
 
     /**
      * @see de.unikn.knime.core.node.NodeModel
-     * #loadValidatedSettingsFrom(NodeSettingsRO)
+     *      #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)

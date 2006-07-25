@@ -49,9 +49,9 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * provides a list of all values seen for each string column (i.e. a list of all
  * values appearing in the rows stored - not the entire data table).
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
-public class DefaultDataArray implements DataArray  {
+public class DefaultDataArray implements DataArray {
 
     /* this is where we store the rows. */
     private ArrayList<DataRow> m_rows;
@@ -77,11 +77,11 @@ public class DefaultDataArray implements DataArray  {
     /**
      * Constructs a random access container holding a certain number of rows
      * from the data table passed in. It will store the specified amount of rows
-     * starting from the row specified in the "<code>first</code>"
+     * starting from the row specified in the "<code>firstRow</code>"
      * parameter. The rows can be accessed by index later on always starting
      * with index zero.
      * 
-     * @param dTable the data table to read the rows from.
+     * @param dTable the data table to read the rows from
      * @param firstRow the first row to store (must be greater than zero)
      * @param numOfRows the number of rows to store (must be zero or more)
      */
@@ -95,10 +95,10 @@ public class DefaultDataArray implements DataArray  {
     }
 
     /**
-     * Same, but allows for user cancelation from a progressmonitor, while the
+     * Same, but allows for user cancelation from a progress monitor, while the
      * container is filled.
      * 
-     * @param dTable the data table to read the rows from.
+     * @param dTable the data table to read the rows from
      * @param firstRow the first row to store (must be greater than zero)
      * @param numOfRows the number of rows to store (must be zero or more)
      * @param execMon the object listening to our progress and providing cancel
@@ -141,8 +141,8 @@ public class DefaultDataArray implements DataArray  {
         m_possVals = new Vector<LinkedHashSet<DataCell>>();
         m_possVals.setSize(numOfColumns);
         for (int c = 0; c < numOfColumns; c++) {
-            if (tSpec.getColumnSpec(c).getType().isCompatible(
-                    StringValue.class)) {
+            if (tSpec.getColumnSpec(c).getType()
+                    .isCompatible(StringValue.class)) {
                 m_possVals.set(c, new LinkedHashSet<DataCell>());
             }
         }
@@ -203,15 +203,15 @@ public class DefaultDataArray implements DataArray  {
                 // will throw an exception if we are supposed to cancel
                 execMon.checkCanceled();
                 if (rowNumber % 100 == 0) {
-                    execMon.setProgress(
-                            (double)m_rows.size() / (double)numOfRows,
-                        "read row " + m_rows.size() + " of max. " + numOfRows);
+                    execMon.setProgress((double)m_rows.size()
+                            / (double)numOfRows, "read row " + m_rows.size()
+                            + " of max. " + numOfRows);
                 }
             }
 
         } // while ((!rIter.atEnd()) && (numOfRowsRead < numOfRows))
 
-        // make sure that the table spec's domain is set properly. 
+        // make sure that the table spec's domain is set properly.
         // Use as is when there is information available, otherwise set it.
         DataColumnSpec[] colSpecs = new DataColumnSpec[numOfColumns];
         boolean changed = false; // do we need to set our own table spec
@@ -219,12 +219,12 @@ public class DefaultDataArray implements DataArray  {
             boolean colChanged = false;
             DataColumnSpec origColSpec = tSpec.getColumnSpec(i);
             DataType type = origColSpec.getType();
-            DataColumnSpecCreator creator = 
-                new DataColumnSpecCreator(origColSpec);
+            DataColumnSpecCreator creator = new DataColumnSpecCreator(
+                    origColSpec);
             DataColumnDomain origColDomain = origColSpec.getDomain();
-            DataColumnDomainCreator domainCreator = 
-                new DataColumnDomainCreator(origColDomain);
-            if (type.isCompatible(StringValue.class) 
+            DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(
+                    origColDomain);
+            if (type.isCompatible(StringValue.class)
                     && !origColDomain.hasValues()) {
                 domainCreator.setValues(m_possVals.get(i));
                 colChanged = true;
@@ -255,17 +255,7 @@ public class DefaultDataArray implements DataArray  {
     }
 
     /**
-     * Returns the row from the container with index <code>idx</code>. Index
-     * starts at zero and must be less than the size of the container (which
-     * could be less than the number of rows requested at construction time as
-     * the table could be shorter than that). The original row number in the
-     * table can be reconstructed by adding the index to the result of the
-     * <code>getFirstRowNumber</code> method.
-     * 
-     * @param idx the index of the row to return (must be between 0 and size of
-     *            the row container)
-     * @return the row from the container with index <code>idx</code> or
-     *         throws an IndexOutOfBounds exception.
+     * @see de.unikn.knime.base.node.util.DataArray#getRow(int)
      */
     public DataRow getRow(final int idx) {
         return m_rows.get(idx);
@@ -273,42 +263,21 @@ public class DefaultDataArray implements DataArray  {
     }
 
     /**
-     * returns a list of all different values seen in the specified column. Will
-     * always return null if the idx doesn't specifiy a column of type
-     * <code>StringCell</code> (or derived from that). The list will be in the
-     * order the values appeared in the rows read in. It contains only the
-     * values showing in these rows, the complete table may contain more values.
-     * The list doesn't contain "missing value" cells.
-     * 
-     * @param colIdx the index of the column to return the possible values for
-     * @return a list of possible values of the specified column in the order
-     *         they appear in the rows read. The list includes only values seen
-     *         in the rows stored in the container. Returns null for non-string
-     *         columns.
+     * @see de.unikn.knime.base.node.util.DataArray#getValues(int)
      */
     public Set<DataCell> getValues(final int colIdx) {
         return m_possVals.get(colIdx);
     }
 
     /**
-     * @param colIdx the index of the column to return the min value for
-     * @return the minimum value seen in the specified column in the rows read
-     *         in (the entire table could contain a smaller value). Or the min
-     *         value set with the corresponding setter method. Will return null
-     *         if the number of rows actually stored is zero, or the column
-     *         contains only missing cells.
+     * @see de.unikn.knime.base.node.util.DataArray#getMinValue(int)
      */
     public DataCell getMinValue(final int colIdx) {
         return m_minVal[colIdx];
     }
 
     /**
-     * @param colIdx the index of the column to return the max value for
-     * @return the maximum value seen in the specified column in the rows read
-     *         in (the entire table could contain a larger value). Or the max
-     *         value set with the corresponding setter method. Will return null
-     *         if the number of rows actually stored is zero, or the column
-     *         contains only missing cells.
+     * @see de.unikn.knime.base.node.util.DataArray#getMaxValue(int)
      */
     public DataCell getMaxValue(final int colIdx) {
         return m_maxVal[colIdx];
@@ -317,9 +286,9 @@ public class DefaultDataArray implements DataArray  {
     /**
      * Sets a new max value for the specified column.
      * 
-     * @param colIdx the index of the column to set the new max value for.
+     * @param colIdx the index of the column to set the new max value for
      * @param newMaxValue the new max value for the specified column. Must not
-     *            be null. Must fit the type of the column.
+     *            be <code>null</code> and must fit the type of the column.
      */
     public void setMaxValue(final int colIdx, final DataCell newMaxValue) {
         if (newMaxValue == null) {
@@ -327,8 +296,7 @@ public class DefaultDataArray implements DataArray  {
         }
         if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
                 newMaxValue.getType())) {
-            throw new IllegalArgumentException(
-                    "new max value is of wrong type");
+            throw new IllegalArgumentException("new max value is of wrong type");
         }
         m_maxVal[colIdx] = newMaxValue;
     }
@@ -339,7 +307,7 @@ public class DefaultDataArray implements DataArray  {
      * @param colIdx the index of the column to set the new min value for. Must
      *            be between zero and the size of this container.
      * @param newMinValue the new min value for the specified column. Must not
-     *            be null. Must fit the type of the column.
+     *            be <code>null</code> and must fit the type of the column.
      */
     public void setMinValue(final int colIdx, final DataCell newMinValue) {
         if (newMinValue == null) {
@@ -347,35 +315,27 @@ public class DefaultDataArray implements DataArray  {
         }
         if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
                 newMinValue.getType())) {
-            throw new IllegalArgumentException(
-                    "new min value is of wrong type");
+            throw new IllegalArgumentException("new min value is of wrong type");
         }
         m_minVal[colIdx] = newMinValue;
     }
 
     /**
-     * @return the size of the container, i.e. the number of rows actually
-     *         stored. Could be different from the number fo rows requested, if
-     *         the table is shorter than the sum of the first row and the number
-     *         of rows specified to the constructor.
+     * @see de.unikn.knime.base.node.util.DataArray#size()
      */
     public int size() {
         return m_rows.size();
     }
 
     /**
-     * @return the number of the row with index 0 - i.e. the original row number
-     *         in the underlying data table of any row with index i in the
-     *         container can be reconstructed by i + getFirstRowNumber().
+     * @see de.unikn.knime.base.node.util.DataArray#getFirstRowNumber()
      */
     public int getFirstRowNumber() {
         return m_firstRow;
     }
 
     /**
-     * @return an iterator to traverse the container. Unfortunately the iterator
-     *         returns objects, i.e. you would have to use a typecast to
-     *         <code>DataRow</code> to obtain the real type of the object.
+     * @see java.lang.Iterable#iterator()
      */
     public RowIterator iterator() {
         return new DefaultRowIterator(m_rows);

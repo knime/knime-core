@@ -32,11 +32,11 @@ import de.unikn.knime.core.data.DoubleValue;
 
 /**
  * This class represents a numeric coordinate defined by a given
- * <code>DataColumnSpec</code>. The class provides functionality for
- * extension of coordinates beyond the domain length. Furthermore the label
- * ticks can be determined dependant on given properties. All these sizes are
- * normalized (0-1) but there are also methods to convert them to absolut values
- * given an absolut maximum length.
+ * {@link de.unikn.knime.core.data.DataColumnSpec}. The class provides
+ * functionality for extension of coordinates beyond the domain length.
+ * Furthermore the label ticks can be determined dependant on given properties.
+ * All these sizes are normalized (0-1) but there are also methods to convert
+ * them to absolut values given an absolut maximum length.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
@@ -144,8 +144,7 @@ public class NumericCoordinate extends Coordinate {
     NumericCoordinate(final DataColumnSpec dataColumnSpec,
             final double coordinatePrefix, final double coordinatePostfix,
             final double absoluteTickDistance,
-            final NumericTickPolicy tickPolicy,
-            final int maxDomainLableLenght) {
+            final NumericTickPolicy tickPolicy, final int maxDomainLableLenght) {
 
         super(dataColumnSpec);
 
@@ -226,8 +225,8 @@ public class NumericCoordinate extends Coordinate {
      * influences the tick positions.
      * 
      * @param absolutLength the absolute length the domain is mapped on
-     * @param naturalMapping if true the mapping values are rounded to the next
-     *            integer equivalent.
+     * @param naturalMapping if <code>true</code> the mapping values are
+     *            rounded to the next integer equivalent
      * 
      * @return the mapping of tick positions and coresponding domain values
      */
@@ -332,10 +331,8 @@ public class NumericCoordinate extends Coordinate {
             startOfDomain = startOfDomain * Math.pow(10, exponent);
 
             // no create the tick mapping
-            ArrayList<NumericCoordinateMapping> mappingArray =
-                new ArrayList<NumericCoordinateMapping>();
-            for (int i = 0;
-                startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
+            ArrayList<NumericCoordinateMapping> mappingArray = new ArrayList<NumericCoordinateMapping>();
+            for (int i = 0; startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
 
                 double domainValue = startOfDomain + i * domainTickStep;
                 double mappingValue = (domainValue - m_minDomainValue)
@@ -362,8 +359,7 @@ public class NumericCoordinate extends Coordinate {
          * 
          * @see NumericTickPolicy#START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE
          */
-        if (m_tickPolicy == 
-            NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
+        if (m_tickPolicy == NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
 
             // add one for the last tick
             numberTicks++;
@@ -500,10 +496,12 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * Calculates a numeric mapping assuming a <code>DoubleDataCell</code>.
+     * Calculates a numeric mapping assuming a
+     * {@link de.unikn.knime.core.data.def.DoubleCell}.
      * 
      * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *  #calculateMappedValue(de.unikn.knime.core.data.DataCell,double, boolean)
+     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell,double,
+     *      boolean)
      */
     @Override
     public double calculateMappedValue(final DataCell domainValueCell,
@@ -546,7 +544,7 @@ public class NumericCoordinate extends Coordinate {
      * A numeric coordinate does not has a unused distance range.
      * 
      * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *  #getUnusedDistBetweenTicks(double)
+     *      #getUnusedDistBetweenTicks(double)
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {
@@ -555,7 +553,7 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * @return true if the lower domain range is set properly
+     * @return <code>true</code> if the lower domain range is set properly
      */
     public boolean isLowerDomainValueSet() {
         if (m_minDomainValue != Double.NaN) {
@@ -566,7 +564,7 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * @return true if the upper domain range is set properly
+     * @return <code>true</code> if the upper domain range is set properly
      */
     public boolean isUpperDomainValueSet() {
         if (m_maxDomainValue != Double.NaN) {

@@ -16,7 +16,6 @@
  */
 package de.unikn.knime.base.node.view.table;
 
-
 import java.io.File;
 import java.io.IOException;
 
@@ -32,12 +31,13 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.tableview.TableContentModel;
 
-/** 
- * Node Model for a table view. This class is implemented in first place to
+/**
+ * Node model for a table view. This class is implemented in first place to
  * comply with the model-view-controller concept. Thus, this implementation does
- * not have any further functionality than its super class
- * <code>NodeModel</code>. The content itself resides in 
- * <code>TableContentModel</code>. 
+ * not have any further functionality than its super class {@link NodeModel}.
+ * The content itself resides in
+ * {@link de.unikn.knime.core.node.tableview.TableContentModel}.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  * @see de.unikn.knime.core.node.tableview.TableContentModel
  */
@@ -46,12 +46,15 @@ public class TableNodeModel extends NodeModel {
     /** Index of the input port (only one anyway). */
     protected static final int INPORT = 0;
 
-    /** This model serves as wrapper for a TableContentModel,
-     * this will be the "real" data structure. */
+    /**
+     * This model serves as wrapper for a TableContentModel, this will be the
+     * "real" data structure.
+     */
     private final TableContentModel m_contModel;
 
-    /** Constructs a new (but empty) model. The model has one input port and
-     * no output port.
+    /**
+     * Constructs a new (but empty) model. The model has one input port and no
+     * output port.
      */
     public TableNodeModel() {
         super(1, 0);
@@ -60,30 +63,32 @@ public class TableNodeModel extends NodeModel {
         super.setAutoExecutable(true);
     }
 
-    /** 
+    /**
      * Get reference to the underlying content model. This model will be the
      * same for successive calls and never be <code>null</code>.
-     * @return Reference to underlying <code>TableContentModel</code>.
+     * 
+     * @return reference to underlying content model
      */
     public TableContentModel getContentModel() {
         return m_contModel;
     }
 
-    /** 
+    /**
      * Called when new data is available. Accesses the input data table and the
-     * property handler, sets them in the <code>TableContentModel</code> and 
-     * starts event firing to inform listeners. Do not call this method 
-     * separately, it is invoked by this model's node.
-     * @param data The DataTable at the (single) input port, wrapped in 
-     *        a one-dimensional array.
-     * @param exec The execution monitor.
-     * @return Empty table.
+     * property handler, sets them in the {@link TableContentModel} and starts
+     * event firing to inform listeners. Do not call this method separately, it
+     * is invoked by this model's node.
+     * 
+     * @param data the data table at the (single) input port, wrapped in a
+     *            one-dimensional array
+     * @param exec the execution monitor
+     * @return an empty table
      * 
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
-    protected BufferedDataTable[] execute(
-            final BufferedDataTable[] data, final ExecutionContext exec) {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+            final ExecutionContext exec) {
         assert (data != null);
         assert (data.length == 1);
         final DataTable in = data[0];
@@ -96,13 +101,8 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * Load internals.
-     * @param internDir The intern node directory to load table from.
-     * @param exec Used to report progress or cancel loading.
-     * @throws IOException Always, since this method has not been implemented 
-     *         yet.
-     * @see de.unikn.knime.core.node.NodeModel
-     *          #loadInternals(java.io.File,ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel#loadInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File internDir,
@@ -110,35 +110,25 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * Save internals.
-     * @param internDir The intern node directory to save table to.
-     * @param exec Used to report progress or cancel loading.
-     * @throws IOException Always, since this method has not been implemented 
-     *         yet.
-     * @see de.unikn.knime.core.node.NodeModel
-     *          #saveInternals(java.io.File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel#saveInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File internDir, 
+    protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
     }
 
-    /** 
-     * Invoked when data is reset. Removes the data from the underlying
-     * <code>TableContentModel</code>. Do not call this method, it is called
-     * from the node's <code>reset()</code> method.
+    /**
      * @see de.unikn.knime.core.node.NodeModel#reset()
-     */ 
+     */
     @Override
     protected void reset() {
         m_contModel.setDataTable(null);
         m_contModel.setHiLiteHandler(null);
         assert (!m_contModel.hasData());
     }
-    
+
     /**
-     * Returns <code>true</code> as this node is always executable as long
-     * as it has an input (otherwise this method is never being called).
      * @see NodeModel#configure(DataTableSpec[])
      */
     @Override
@@ -150,7 +140,7 @@ public class TableNodeModel extends NodeModel {
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
 
@@ -165,8 +155,7 @@ public class TableNodeModel extends NodeModel {
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) 
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
-
 }

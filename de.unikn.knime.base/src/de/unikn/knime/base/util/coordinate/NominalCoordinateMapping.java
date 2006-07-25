@@ -32,9 +32,7 @@ public class NominalCoordinateMapping extends CoordinateMapping {
      * @param domainValue the domain value
      * @param mappingValue the corresponding mapped value
      */
-    NominalCoordinateMapping(final String domainValue,
-            final double mappingValue) {
+    NominalCoordinateMapping(final String domainValue, final double mappingValue) {
         super(domainValue, mappingValue);
     }
-
 }

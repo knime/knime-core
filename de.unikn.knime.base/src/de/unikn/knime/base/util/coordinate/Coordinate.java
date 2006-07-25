@@ -29,16 +29,15 @@ import de.unikn.knime.core.data.DoubleValue;
 /**
  * The abstract class for all coordinate classes. A concrete coordinate depends
  * on whether it is nominal or numeric, etc. All coordinates have an underlying
- * <code>DataColumnSpec</code>. Ticks have to be created and mapped to their
- * domain values.
+ * {@link de.unikn.knime.core.data.DataColumnSpec}. Ticks have to be created
+ * and mapped to their domain values.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class Coordinate {
 
     /**
-     * The underlying <code>DataColumnSpec</code> of this
-     * <code>Coordinate</code>.
+     * The underlying data column spec of this coordinate.
      */
     private DataColumnSpec m_columnSpec;
 
@@ -48,7 +47,7 @@ public abstract class Coordinate {
      * coordinate is created.
      * 
      * @param dataColumnSpec the column spec to create the coordinate from
-     * @return the created coordinate, null if not possible
+     * @return the created coordinate, <code>null</code> if not possible
      */
     public static Coordinate createCoordinate(
             final DataColumnSpec dataColumnSpec) {
@@ -58,9 +57,9 @@ public abstract class Coordinate {
             return null;
         }
         DataType type = dataColumnSpec.getType();
-//        if (type.isCompatible(IntValue.class)) {
-//            return new IntegerCoordinate(dataColumnSpec);
-//        } else 
+        // if (type.isCompatible(IntValue.class)) {
+        // return new IntegerCoordinate(dataColumnSpec);
+        // } else
         if (type.isCompatible(DoubleValue.class)) {
             return new NumericCoordinate(dataColumnSpec);
         } else {
@@ -75,7 +74,7 @@ public abstract class Coordinate {
     }
 
     /**
-     * Creates a coordinate from a <code>DataColumnSpec</code>.
+     * Creates a coordinate from a data column spec.
      * 
      * @param dataColumnSpec the underlying column spec to set
      */
@@ -88,7 +87,7 @@ public abstract class Coordinate {
     }
 
     /**
-     * @return the underlying column spec of this coordinate.
+     * @return the underlying column spec of this coordinate
      */
     DataColumnSpec getDataColumnSpec() {
         return m_columnSpec;
@@ -99,8 +98,8 @@ public abstract class Coordinate {
      * domain values given an absolute length.
      * 
      * @param absolutLength the absolute length the domain is mapped on
-     * @param naturalMapping if true the mapping values are rounded to the next
-     *            integer equivalent.
+     * @param naturalMapping if <code>true</code> the mapping values are
+     *            rounded to the next integer equivalent
      * 
      * @return the mapping of tick positions and corresponding domain values
      */
@@ -128,7 +127,7 @@ public abstract class Coordinate {
      * nominal values are very likely to be drawn above each other which
      * requires jittering.
      * 
-     * @return true, if this coordinate is a nominal one
+     * @return <code>true</code>, if this coordinate is a nominal one
      */
     public abstract boolean isNominal();
 

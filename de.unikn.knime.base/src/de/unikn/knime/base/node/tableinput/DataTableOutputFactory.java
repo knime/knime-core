@@ -36,8 +36,7 @@ public class DataTableOutputFactory extends NodeFactory {
         return 0;
     }
 
-    
-    /** 
+    /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
     @Override
@@ -45,10 +44,9 @@ public class DataTableOutputFactory extends NodeFactory {
         return new DataTableOutputNodeModel();
     }
 
-    
     /**
-     * @see de.unikn.knime.core.node.NodeFactory
-     *  #createNodeView(int, de.unikn.knime.core.node.NodeModel)
+     * @see de.unikn.knime.core.node.NodeFactory #createNodeView(int,
+     *      de.unikn.knime.core.node.NodeModel)
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
@@ -56,7 +54,6 @@ public class DataTableOutputFactory extends NodeFactory {
         return null;
     }
 
-    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
@@ -65,7 +62,6 @@ public class DataTableOutputFactory extends NodeFactory {
         return false;
     }
 
-    
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
      */

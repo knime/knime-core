@@ -80,38 +80,40 @@ public final class FilterColumnPanel extends JPanel {
 
     /** Exclude model. */
     private final DefaultListModel m_exclMdl;
-    
-    /** Hilight all search hits in the include model.*/
+
+    /** Hilight all search hits in the include model. */
     private final JCheckBox m_markAllHitsIncl;
-    
-    /** Hilight all search hits in the exclude model.*/
+
+    /** Hilight all search hits in the exclude model. */
     private final JCheckBox m_markAllHitsExcl;
-    
+
     /** Remove all button. */
     private final JButton m_remAllButton;
+
     /** Remove button. */
     private final JButton m_remButton;
+
     /** Add all button. */
     private final JButton m_addAllButton;
+
     /** Add button. */
     private final JButton m_addButton;
 
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
-    private final LinkedHashSet<DataColumnSpec> m_order = 
-        new LinkedHashSet<DataColumnSpec>();
+    private final LinkedHashSet<DataColumnSpec> m_order = new LinkedHashSet<DataColumnSpec>();
 
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_includeBorder;
 
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_excludeBorder;
-    
-    /** Show only columns of types that are compatible 
-     * to one of theses classes. */
+
+    /**
+     * Show only columns of types that are compatible to one of theses classes.
+     */
     private final Class<? extends DataValue>[] m_filterClasses;
-    
-    private final HashSet<DataColumnSpec> m_hideColumns =
-        new HashSet<DataColumnSpec>();
+
+    private final HashSet<DataColumnSpec> m_hideColumns = new HashSet<DataColumnSpec>();
 
     /**
      * Creates a new filter column panel with three component which are the
@@ -125,17 +127,17 @@ public final class FilterColumnPanel extends JPanel {
     public FilterColumnPanel() {
         this(DataValue.class);
     }
-    
+
     /* Only used to init the filter class array. */
     private static Class<? extends DataValue>[] init(
             final Class<? extends DataValue>... filterValueClasses) {
         if (filterValueClasses == null || filterValueClasses.length == 0) {
             throw new NullPointerException("Classes must not be null");
         }
-        List<Class<? extends DataValue>> list = 
-            Arrays.asList(filterValueClasses);
+        List<Class<? extends DataValue>> list = Arrays
+                .asList(filterValueClasses);
         if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not " 
+            throw new NullPointerException("List of value classes must not "
                     + "contain null elements.");
         }
         return filterValueClasses;
@@ -146,8 +148,9 @@ public final class FilterColumnPanel extends JPanel {
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The include list then will contain all values to
      * filter.
-     * @param filterValueClasses An array of type <code>DataValue</code> classes
-     *        only allowed for selection. Will be check during update.
+     * 
+     * @param filterValueClasses an array of type {@link DataValue} classes only
+     *            allowed for selection. Will be check during update
      * 
      * @see #update(DataTableSpec, boolean, Set)
      * @see #update(DataTableSpec, boolean, String...)
@@ -190,7 +193,7 @@ public final class FilterColumnPanel extends JPanel {
             }
         });
         buttonPan.add(new JPanel());
-        
+
         m_addAllButton = new JButton("<< add all");
         m_addAllButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_addAllButton);
@@ -205,8 +208,8 @@ public final class FilterColumnPanel extends JPanel {
         m_inclMdl = new DefaultListModel();
         m_inclMdl.addElement("<empty>");
         m_inclList = new JList(m_inclMdl);
-        m_inclList.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclList
+                .setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         final JScrollPane jspIncl = new JScrollPane(m_inclList);
         jspIncl.setMinimumSize(new Dimension(150, 155));
 
@@ -214,7 +217,7 @@ public final class FilterColumnPanel extends JPanel {
         JButton searchButtonIncl = new JButton("Search");
         ActionListener actionListenerIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                onSearch(m_inclList, m_inclMdl, searchFieldIncl, 
+                onSearch(m_inclList, m_inclMdl, searchFieldIncl,
                         m_markAllHitsIncl.isSelected());
             }
         };
@@ -222,15 +225,15 @@ public final class FilterColumnPanel extends JPanel {
         searchButtonIncl.addActionListener(actionListenerIncl);
         JPanel inclSearchPanel = new JPanel(new BorderLayout());
         inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
-        inclSearchPanel.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
+                15));
         inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(searchButtonIncl, BorderLayout.EAST);
         m_markAllHitsIncl = new JCheckBox("Highlight all search hits");
         ActionListener actionListenerAllIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
-                onSearch(m_inclList, m_inclMdl, searchFieldIncl, 
+                onSearch(m_inclList, m_inclMdl, searchFieldIncl,
                         m_markAllHitsIncl.isSelected());
             }
         };
@@ -246,8 +249,8 @@ public final class FilterColumnPanel extends JPanel {
         m_exclMdl = new DefaultListModel();
         m_exclMdl.addElement("<empty>");
         m_exclList = new JList(m_exclMdl);
-        m_exclList.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_exclList
+                .setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         setListCellRenderer(new DataColumnSpecListCellRenderer());
         final JScrollPane jspExcl = new JScrollPane(m_exclList);
         jspExcl.setMinimumSize(new Dimension(150, 155));
@@ -256,15 +259,15 @@ public final class FilterColumnPanel extends JPanel {
         JButton searchButtonExcl = new JButton("Search");
         ActionListener actionListenerExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                onSearch(m_exclList, m_exclMdl, searchFieldExcl, 
+                onSearch(m_exclList, m_exclMdl, searchFieldExcl,
                         m_markAllHitsExcl.isSelected());
             }
         };
         searchFieldExcl.addActionListener(actionListenerExcl);
         searchButtonExcl.addActionListener(actionListenerExcl);
         JPanel exclSearchPanel = new JPanel(new BorderLayout());
-        exclSearchPanel.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
+                15));
         exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
@@ -272,7 +275,7 @@ public final class FilterColumnPanel extends JPanel {
         ActionListener actionListenerAllExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
-                onSearch(m_exclList, m_exclMdl, searchFieldExcl, 
+                onSearch(m_exclList, m_exclMdl, searchFieldExcl,
                         m_markAllHitsExcl.isSelected());
             }
         };
@@ -288,7 +291,7 @@ public final class FilterColumnPanel extends JPanel {
         Border border = BorderFactory.createTitledBorder(" Select ");
         buttonPan2.setBorder(border);
         buttonPan2.add(buttonPan);
-        
+
         // adds include, button, exclude component
         JPanel center = new JPanel(new BorderLayout());
         super.setLayout(new BorderLayout());
@@ -377,18 +380,19 @@ public final class FilterColumnPanel extends JPanel {
      * include and exclude list. The include list will contains all column names
      * from the spec afterwards.
      * 
-     * @param spec The spec to retrieve the column names from.
-     * @param exclude The flag if <code>excl</code> contains the columns to
+     * @param spec the spec to retrieve the column names from
+     * @param exclude the flag if <code>excl</code> contains the columns to
      *            exclude otherwise include.
-     * @param cells An array of data cell to either in- or exclude.
+     * @param cells an array of data cells to either in- or exclude.
      */
     public void update(final DataTableSpec spec, final boolean exclude,
             final String... cells) {
         this.update(spec, exclude, Arrays.asList(cells));
     }
-    
-    /* Checks if the given type is included in the list of allowed types. If 
-     * the list is empty, all types are valid.
+
+    /*
+     * Checks if the given type is included in the list of allowed types. If the
+     * list is empty, all types are valid.
      */
     private boolean typeAllowed(final DataType type) {
         for (Class<? extends DataValue> cl : m_filterClasses) {
@@ -404,14 +408,14 @@ public final class FilterColumnPanel extends JPanel {
      * include and exclude list. The include list will contains all column names
      * from the spec afterwards.
      * 
-     * @param spec The spec to retrieve the column names from.
-     * @param exclude The flag if <code>excl</code> contains the columns to
-     *            exclude otherwise include.
-     * @param excl The list of columns to exclude or include.
+     * @param spec the spec to retrieve the column names from
+     * @param exclude the flag if <code>excl</code> contains the columns to
+     *            exclude otherwise include
+     * @param excl the list of columns to exclude or include
      */
     public void update(final DataTableSpec spec, final boolean exclude,
             final Set<String> excl) {
-        this.update(spec, exclude, (Collection<String>) excl);
+        this.update(spec, exclude, (Collection<String>)excl);
     }
 
     /**
@@ -419,10 +423,10 @@ public final class FilterColumnPanel extends JPanel {
      * include and exclude list. The include list will contains all column names
      * from the spec afterwards.
      * 
-     * @param spec The spec to retrieve the column names from.
-     * @param exclude The flag if <code>excl</code> contains the columns to
-     *            exclude otherwise include.
-     * @param excl The list of columns to exclude or include.
+     * @param spec the spec to retrieve the column names from
+     * @param exclude the flag if <code>excl</code> contains the columns to
+     *            exclude otherwise include
+     * @param excl the list of columns to exclude or include
      */
     private void update(final DataTableSpec spec, final boolean exclude,
             final Collection<String> excl) {
@@ -453,12 +457,12 @@ public final class FilterColumnPanel extends JPanel {
             }
         }
         repaint();
-     }
-    
+    }
+
     /**
      * Returns all columns from the exclude list.
      * 
-     * @return A set of all columns from the exclude list.
+     * @return a set of all columns from the exclude list
      */
     public Set<String> getExcludedColumnList() {
         return getColumnList(m_exclMdl);
@@ -467,7 +471,7 @@ public final class FilterColumnPanel extends JPanel {
     /**
      * Returns all columns from the include list.
      * 
-     * @return A list of all columns from the include list.
+     * @return a list of all columns from the include list
      */
     public Set<String> getIncludedColumnList() {
         return getColumnList(m_inclMdl);
@@ -487,12 +491,14 @@ public final class FilterColumnPanel extends JPanel {
         }
         return list;
     }
-    
+
     /**
-     * Returns the DataType for the given cell retrieving it from the
-     * initial DataTableSpec. If this name could not found, return null.
-     * @param name The column name to get the DataType for.
-     * @return The DataType or null.
+     * Returns the data type for the given cell retrieving it from the initial
+     * {@link DataTableSpec}. If this name could not found, return
+     * <code>null</code>.
+     * 
+     * @param name the column name to get the data type for
+     * @return the data type or <code>null</code>
      */
     public DataType getType(final String name) {
         for (DataColumnSpec spec : m_order) {
@@ -502,23 +508,23 @@ public final class FilterColumnPanel extends JPanel {
         }
         return null;
     }
-    
+
     /**
-     * This method is called when the user wants to search the given 
-     * <code>JList</code> for the text of the given <code>JTextField</code>.
+     * This method is called when the user wants to search the given
+     * {@link JList} for the text of the given {@link JTextField}.
      * 
-     * @param list the <code>JList</code> to search in
-     * @param model the <code>DefaultListModel</code> on which the 
-     * <code>JList</code> based on
-     * @param searchField The <code>JTextField</code> with the text to search 
-     * for
+     * @param list the list to search in
+     * @param model the list model on which the list is based on
+     * @param searchField the text field with the text to search for
      * @param markAllHits if set to <code>true</code> the method will mark all
-     * occurrences of the given search text in the given list. If set to
-     * <code>false</code> the method will mark the next occurrences of the 
-     * search text after the current marked list element
+     *            occurrences of the given search text in the given list. If set
+     *            to <code>false</code> the method will mark the next
+     *            occurrences of the search text after the current marked list
+     *            element.
      */
-    private static void onSearch(final JList list, final DefaultListModel model,
-            final JTextField searchField, final boolean markAllHits) {
+    private static void onSearch(final JList list,
+            final DefaultListModel model, final JTextField searchField,
+            final boolean markAllHits) {
         if (list == null || model == null || searchField == null) {
             return;
         }
@@ -530,26 +536,24 @@ public final class FilterColumnPanel extends JPanel {
             int[] searchHits = getAllSearchHits(list, searchStr);
             if (searchHits.length > 0) {
                 list.setSelectedIndices(searchHits);
-                list.scrollRectToVisible(
-                        list.getCellBounds(searchHits[0], 
-                                searchHits[0]));
+                list.scrollRectToVisible(list.getCellBounds(searchHits[0],
+                        searchHits[0]));
             }
         } else {
             int start = Math.max(0, list.getSelectedIndex() + 1);
             if (start >= model.getSize()) {
                 start = 0;
-            } 
+            }
             int f = searchInList(list, searchStr, start);
             if (f >= 0) {
-                list.scrollRectToVisible(
-                        list.getCellBounds(f, f));
+                list.scrollRectToVisible(list.getCellBounds(f, f));
                 list.setSelectedIndex(f);
             }
         }
     }
 
-    /* 
-     * Finds in the list any occurrence of the argument string (as substring). 
+    /*
+     * Finds in the list any occurrence of the argument string (as substring).
      */
     private static int searchInList(final JList list, final String str,
             final int startIndex) {
@@ -573,7 +577,7 @@ public final class FilterColumnPanel extends JPanel {
             if (o != null) {
                 String string;
                 if (o instanceof String) {
-                    string = ((String) o).toUpperCase();
+                    string = ((String)o).toUpperCase();
                 } else if (o instanceof DataColumnSpec) {
                     string = ((DataColumnSpec)o).getName().toString()
                             .toUpperCase();
@@ -592,40 +596,40 @@ public final class FilterColumnPanel extends JPanel {
         } while (index != startIndex);
         return -1;
     }
-    
+
     /**
-     * Uses the <code>searchInList(JList, String, int)</code> method to
-     * get all occurrences of the given <code>String</code> in the given 
-     * <code>JList</code> and returns the index off all occurrences as a
-     * <code>int[]</code>.
-     * @see #searchInList(JList, String, int) 
-     * @param list the <code>JList</code> to search in
-     * @param str the <code>String</code> to search for
+     * Uses the {@link #searchInList(JList, String, int)} method to get all
+     * occurrences of the given string in the given list and returns the index
+     * off all occurrences as a <code>int[]</code>.
+     * 
+     * @see #searchInList(JList, String, int)
+     * @param list the list to search in
+     * @param str the string to search for
      * @return <code>int[]</code> with the indices off all objects from the
-     * given <code>JList</code> which match the given <code>String</code>. If 
-     * no hits exists the method returns an empty <code>int[]</code>.
+     *         given list which match the given string. If no hits exists the
+     *         method returns an empty <code>int[]</code>.
      * 
      */
     private static int[] getAllSearchHits(final JList list, final String str) {
-       
+
         ListModel model = list.getModel();
         int max = model.getSize();
         final ArrayList<Integer> hits = new ArrayList<Integer>(max);
         int index = 0;
         do {
             int tempIndex = searchInList(list, str, index);
-            //if the search returns no hit or returns a hit before the
-            //current search position exit the while loop
+            // if the search returns no hit or returns a hit before the
+            // current search position exit the while loop
             if (tempIndex < index || tempIndex < 0) {
                 break;
             }
             index = tempIndex;
             hits.add(new Integer(index));
-            //increase the index to start the search from the next position 
-            //after the current hit
+            // increase the index to start the search from the next position
+            // after the current hit
             index++;
         } while (index < max);
-        
+
         if (hits.size() > 0) {
             final int[] resultArray = new int[hits.size()];
             for (int i = 0, length = hits.size(); i < length; i++) {
@@ -639,19 +643,20 @@ public final class FilterColumnPanel extends JPanel {
     /**
      * Set the renderer that is used for both list in this panel.
      * 
-     * @param renderer New renderer being used.
+     * @param renderer the new renderer being used
      * @see JList#setCellRenderer(javax.swing.ListCellRenderer)
      */
     protected final void setListCellRenderer(final ListCellRenderer renderer) {
         m_inclList.setCellRenderer(renderer);
         m_exclList.setCellRenderer(renderer);
     }
-    
+
     /**
      * Removes the given columns form either include or exclude list and notfies
-     * all listeners. Does not throw an exception if the argument contains 
+     * all listeners. Does not throw an exception if the argument contains
      * <code>null</code> elements or is not contained in any of the lists.
-     * @param columns The columns to remove.
+     * 
+     * @param columns the columns to remove
      */
     public final void hideColumns(final DataColumnSpec... columns) {
         for (DataColumnSpec column : columns) {
@@ -664,7 +669,7 @@ public final class FilterColumnPanel extends JPanel {
             }
         }
     }
-    
+
     /**
      * Re-adds all remove/hidden columns to the exclude list.
      */
@@ -690,7 +695,7 @@ public final class FilterColumnPanel extends JPanel {
     /**
      * Sets the title of the include panel.
      * 
-     * @param title The new title
+     * @param title the new title
      */
     public final void setIncludeTitle(final String title) {
         m_includeBorder.setTitle(title);
@@ -699,39 +704,43 @@ public final class FilterColumnPanel extends JPanel {
     /**
      * Sets the title of the exclude panel.
      * 
-     * @param title The new title
+     * @param title the new title
      */
     public final void setExcludeTitle(final String title) {
         m_excludeBorder.setTitle(title);
     }
-    
+
     /**
      * Setter for the original "remove All" button.
-     * @param text The new button title.
+     * 
+     * @param text the new button title
      */
     public void setRemoveAllButtonText(final String text) {
-       m_remAllButton.setText(text); 
+        m_remAllButton.setText(text);
     }
-    
+
     /**
      * Setter for the original "add All" button.
-     * @param text The new button title.
+     * 
+     * @param text the new button title
      */
     public void setAddAllButtonText(final String text) {
-        m_addAllButton.setText(text); 
+        m_addAllButton.setText(text);
     }
-    
+
     /**
      * Setter for the original "remove" button.
-     * @param text The new button title.
+     * 
+     * @param text the new button title
      */
     public void setRemoveButtonText(final String text) {
         m_remButton.setText(text);
     }
-    
+
     /**
      * Setter for the original "Add" button.
-     * @param text The new button title.
+     * 
+     * @param text the new button title
      */
     public void setAddButtonText(final String text) {
         m_addButton.setText(text);

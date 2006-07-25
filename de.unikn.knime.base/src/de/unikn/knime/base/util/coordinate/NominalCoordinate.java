@@ -28,8 +28,9 @@ import de.unikn.knime.core.data.DataColumnSpec;
 
 /**
  * This class represents a nominal coordinate defined by a given
- * <code>DataColumnSpec</code>. The nominal values are aranged equidistant
- * and in the order given in the <code>DataColumnSpec</code>.
+ * {@link de.unikn.knime.core.data.DataColumnSpec}. The nominal values are
+ * aranged equidistant and in the order given in the
+ * {@link de.unikn.knime.core.data.DataColumnSpec}.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
@@ -84,8 +85,7 @@ public class NominalCoordinate extends Coordinate {
      * @param nominalValue the value to replace
      * @param index the position to set the value
      */
-    public void changeValuePosition(final DataCell nominalValue,
-            final int index) {
+    public void changeValuePosition(final DataCell nominalValue, final int index) {
 
         // first remove the value to relocate
         m_possibleValues.remove(nominalValue);
@@ -101,8 +101,8 @@ public class NominalCoordinate extends Coordinate {
      * coordinate and half the distance at the end.
      * 
      * @param absolutLength the absolute length the domain is mapped on
-     * @param naturalMapping if true the mapping values are rounded to the next
-     *            integer equivalent.
+     * @param naturalMapping if <code>true</code> the mapping values are
+     *            rounded to the next integer equivalent
      * 
      * @return the mapping of tick positions and coresponding domain values
      */
@@ -155,7 +155,8 @@ public class NominalCoordinate extends Coordinate {
      * possible values.
      * 
      * @see de.unikn.knime.base.util.coordinate.Coordinate
-     * #calculateMappedValue(de.unikn.knime.core.data.DataCell, double, boolean)
+     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
+     *      boolean)
      */
     @Override
     public double calculateMappedValue(final DataCell domainValueCell,
@@ -203,5 +204,4 @@ public class NominalCoordinate extends Coordinate {
     public double getUnusedDistBetweenTicks(final double absoluteLength) {
         return absoluteLength / m_numberPossibleValues;
     }
-
 }
