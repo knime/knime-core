@@ -1014,24 +1014,6 @@ public final class FileAnalyzer {
                 // seems they've added ',' as comment before - alright then.
             }
 
-            // Try tab, ignoring additional tabs at the end of each line
-            try {
-                result.removeAllDelimiters();
-                // make sure '\n' is a row delimiter. Always.
-                result.addRowDelimiter("\n", true);
-                
-                result.addDelimiterPattern("\t", true, false, false);
-                result.setIgnoreEmptyTokensAtEndOfRow(true);
-
-                if (testDelimiterSettingsSetColNum(result)) {
-                    return;
-                }                
-            } catch (IllegalArgumentException iae) {
-                // seems they've added '\t' as comment before - alright then.
-            }
-            // restore it to false
-            result.setIgnoreEmptyTokensAtEndOfRow(false);   
-                            
             //
             // try tab seperated columns
             //
@@ -1040,7 +1022,7 @@ public final class FileAnalyzer {
                 // make sure '\n' is a row delimiter. Always.
                 result.addRowDelimiter("\n", true);
                 
-                result.addDelimiterPattern("\t", true, false, false);
+                result.addDelimiterPattern("\t", false, false, false);
                 
                 if (testDelimiterSettingsSetColNum(result)) {
                     return;

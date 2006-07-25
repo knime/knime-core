@@ -97,7 +97,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             new Delimiter("<none>", false, false, false),
             new Delimiter(",", false, false, false),
             new Delimiter(" ", true, false, false),
-            new Delimiter("\t", true, false, false),
+            new Delimiter("\t", false, false, false),
             new Delimiter(";", false, false, false)};
 
     /*
