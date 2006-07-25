@@ -22,6 +22,8 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -302,6 +304,9 @@ public abstract class NodeFactory {
         }
     }
 
+    
+    private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");
+    
     /**
      * Reads the icon tag from the xml and returns the icon. If not available or
      * the icon is not readable, an default icon is returned. This method is
@@ -314,12 +319,20 @@ public abstract class NodeFactory {
      */
     private URL readIconFromXML() {
         String imagePath = m_knimeNode.getAttribute("icon");
+        imagePath = imagePath.replaceAll("//", "/");
+        
         if (imagePath.startsWith("./")) {
             imagePath = imagePath.substring("./".length());
         }
         if (!imagePath.startsWith("/")) {
             imagePath = getClass().getPackage().getName().replace('.', '/')
                     + "/" + imagePath;
+            
+            Matcher m = ICON_PATH_PATTERN.matcher(imagePath);
+            while (m.find()) {
+                imagePath = imagePath.replaceAll("[^./]+/../", "");
+                m = ICON_PATH_PATTERN.matcher(imagePath);
+            }
         }
 
         URL iconURL = getClass().getClassLoader().getResource(imagePath);
