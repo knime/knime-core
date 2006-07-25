@@ -1568,7 +1568,7 @@ public class WorkflowManager implements WorkflowListener {
      * parent path) to save the node internals.
      * 
      * @param workflowFile To write workflow manager settings to.
-     * @param exec The execution monitor for the workflow saving progress
+     * @param progMon The monitor for the workflow saving progress.
      * @throws IOException If the workflow file can't be found.
      * @throws CanceledExecutionException If the saving process has been
      *             canceled.

@@ -33,7 +33,6 @@ import java.util.concurrent.Future;
 import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.Node;
@@ -233,7 +232,7 @@ public class NodeContainer implements NodeStateListener {
      * @throws IllegalAccessException if the factory class is not acessible
      * @throws InstantiationException if a factory object could not be created
      * 
-     * @see #save(NodeSettingsWO, File, ExecutionMonitor)
+     * @see #save(NodeSettingsWO, File, NodeProgressMonitor)
      */
     public NodeContainer(final NodeSettingsRO setts, final WorkflowManager wfm)
             throws InvalidSettingsException, InstantiationException,
@@ -362,7 +361,7 @@ public class NodeContainer implements NodeStateListener {
         m_node.getInPort(inPort)
                 .connectPort(outNode.m_node.getOutPort(outPort));
     }
-    
+
     /**
      * @see Node#removeInternals()
      */
@@ -445,6 +444,7 @@ public class NodeContainer implements NodeStateListener {
 
     /**
      * @see Node#getDialogPane()
+     * @throws NotConfigurableException If dialog is not configurable.
      */
     public NodeDialogPane getDialogPane() throws NotConfigurableException {
         return m_node.getDialogPane();
@@ -658,7 +658,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getView(int)
+     * @see Node#getView(int, String)
      */
     public NodeView getView(final int viewIndex) {
         return m_node.getView(viewIndex, getNameWithID());

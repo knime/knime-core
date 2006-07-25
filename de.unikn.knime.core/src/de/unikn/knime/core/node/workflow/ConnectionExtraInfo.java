@@ -27,6 +27,6 @@ package de.unikn.knime.core.node.workflow;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public interface ConnectionExtraInfo extends ExtraInfo{
+public interface ConnectionExtraInfo extends ExtraInfo {
    
 }
