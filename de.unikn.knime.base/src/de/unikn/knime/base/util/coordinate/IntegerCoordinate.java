@@ -128,8 +128,8 @@ public class IntegerCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#
-     *      getTickPositions(double, boolean)
+     * @see de.unikn.knime.base.util.coordinate.Coordinate#getTickPositions(double,
+     *      boolean)
      */
     @Override
     public CoordinateMapping[] getTickPositions(final double absolutLength,
@@ -212,8 +212,8 @@ public class IntegerCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#
-     *      calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
+     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
      *      boolean)
      */
     @Override
@@ -250,8 +250,8 @@ public class IntegerCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#
-     *      getUnusedDistBetweenTicks(double)
+     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     *      #getUnusedDistBetweenTicks(double)
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {

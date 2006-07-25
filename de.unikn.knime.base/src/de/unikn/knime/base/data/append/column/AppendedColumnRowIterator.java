@@ -23,7 +23,8 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 
 /**
- * The Iterator implementation for an {@lin AppendColumnTable}.
+ * The Iterator implementation for an
+ * {@link de.unikn.knime.base.data.append.column.AppendedColumnTable}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
