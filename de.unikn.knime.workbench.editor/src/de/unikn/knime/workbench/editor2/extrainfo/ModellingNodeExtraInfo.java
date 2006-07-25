@@ -66,16 +66,11 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     private int[] m_bounds = new int[]{0, 0, -1, -1};
 
-    private String m_loadedVersion;
-
     /**
      * Constructs a <code>ModellingConnectionExtraInfo</code>.
      * 
      */
     public ModellingNodeExtraInfo() {
-        // initiallizes this extra info with the implementation version
-        // given in the constant
-        m_loadedVersion = VERSION;
     }
 
     /**
@@ -84,7 +79,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      */
     public void save(final NodeSettingsWO config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
-        config.addString(KEY_VERSION, getVersion());
     }
 
     /**
@@ -92,7 +86,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      *      #load(NodeSettingsRO)
      */
     public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
-        m_loadedVersion = conf.getString(KEY_VERSION, "0.0");
         m_bounds = conf.getIntArray(KEY_BOUNDS);
     }
 
@@ -103,7 +96,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         if (m_bounds == null) {
             return false;
         }
-
         return true;
     }
 
@@ -161,10 +153,4 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         return newObject;
     }
 
-    /**
-     * @see de.unikn.knime.core.node.workflow.ExtraInfo#getVersion()
-     */
-    public String getVersion() {
-        return m_loadedVersion;
-    }
 }
