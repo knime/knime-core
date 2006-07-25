@@ -61,7 +61,7 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     public void setText(final String text) {
     }
     
-    /** Internal setter. */
+    /* Internal setter. */
     private void setTextInternal(final String text) {
         super.setText(text);
     }

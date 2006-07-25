@@ -119,7 +119,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         }
     }
 
-    /** Internal setter. */
+    /* Internal setter. */
     private void setTextInternal(final String text) {
         super.setText(text);
     }

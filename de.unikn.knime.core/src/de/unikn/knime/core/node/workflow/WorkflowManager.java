@@ -406,11 +406,11 @@ public class WorkflowManager implements WorkflowListener {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowManager.class);
-    
+
     /** Workflow version. */
     private static final String CFG_VERSION = "version";
+
     private String m_loadedVersion = KNIMEConstants.VERSION;
-    
 
     /**
      * Identifier for KNIME workflows.
@@ -441,9 +441,8 @@ public class WorkflowManager implements WorkflowListener {
 
     // internal variables to allow generation of unique indices
     private final MutableInteger m_runningNodeID;
-    
-    private final List<NodeContainer> m_detachedNodes = 
-        new ArrayList<NodeContainer>();
+
+    private final List<NodeContainer> m_detachedNodes = new ArrayList<NodeContainer>();
 
     /**
      * Create new Workflow.
@@ -463,7 +462,9 @@ public class WorkflowManager implements WorkflowListener {
      * into each node.
      * 
      * @param workflowFile the location of the workflow file,
-     *            <code>WORKFLOW_FILE</code>
+     *            {@link #WORKFLOW_FILE}
+     * @param progMon a progress monitor that is used to report progress while
+     *            loading the workflow
      * @throws InvalidSettingsException if settings cannot be read
      * @throws CanceledExecutionException if loading was canceled
      * @throws IOException if the workflow file can not be found or files to
@@ -1301,7 +1302,7 @@ public class WorkflowManager implements WorkflowListener {
         // load workflow topology
         NodeSettingsRO settings = NodeSettings.loadFromXML(new FileInputStream(
                 workflowFile));
-        m_loadedVersion = settings.getString(CFG_VERSION, 
+        m_loadedVersion = settings.getString(CFG_VERSION,
                 KNIMEConstants.VERSION);
         load(settings);
 
@@ -1593,7 +1594,7 @@ public class WorkflowManager implements WorkflowListener {
             throw new IOException("File must be named: \"" + WORKFLOW_FILE
                     + "\": " + workflowFile);
         }
-        
+
         // remove internals of all detached nodes first
         for (NodeContainer cont : m_detachedNodes) {
             cont.removeInternals();
