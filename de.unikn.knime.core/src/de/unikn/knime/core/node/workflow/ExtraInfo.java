@@ -51,13 +51,4 @@ public interface ExtraInfo {
      */
     void load(final NodeSettingsRO config) throws InvalidSettingsException;
 
-    /**
-     * Returns the version of this object.
-     * This need not be equal to the version constant of the extra info
-     * implementation. The version is set by either the constructor or 
-     * the load method.
-     * 
-     * @return the version of this extrainfo implementation
-     */
-    public String getVersion();
 }

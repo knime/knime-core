@@ -34,6 +34,9 @@ import de.unikn.knime.core.util.ThreadPool;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class KNIMEConstants {
+    
+    /** Workflow file version. */
+    public static final String VERSION = "1.0";
 
     /**
      * The directory where knime will put log files and configuration files.

@@ -40,6 +40,7 @@ import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
+import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.Node;
 import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.core.node.NodeLogger;
@@ -405,6 +406,11 @@ public class WorkflowManager implements WorkflowListener {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowManager.class);
+    
+    /** Workflow version. */
+    private static final String CFG_VERSION = "version";
+    private String m_loadedVersion = KNIMEConstants.VERSION;
+    
 
     /**
      * Identifier for KNIME workflows.
@@ -1295,6 +1301,8 @@ public class WorkflowManager implements WorkflowListener {
         // load workflow topology
         NodeSettingsRO settings = NodeSettings.loadFromXML(new FileInputStream(
                 workflowFile));
+        m_loadedVersion = settings.getString(CFG_VERSION, 
+                KNIMEConstants.VERSION);
         load(settings);
 
         File parentDir = workflowFile.getParentFile();
@@ -1595,6 +1603,8 @@ public class WorkflowManager implements WorkflowListener {
         File parentDir = workflowFile.getParentFile();
         // workflow settings
         NodeSettings settings = new NodeSettings(WORKFLOW_FILE);
+        // save workflow version
+        settings.addString(CFG_VERSION, m_loadedVersion);
         // save current running id
         settings.addInt(KEY_RUNNING_NODE_ID, m_runningNodeID.intValue());
         // save current connection id
