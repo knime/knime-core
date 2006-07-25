@@ -795,7 +795,7 @@ class Buffer {
         @Override
         public boolean hasNext() {
             boolean hasNext = m_pointer < Buffer.this.m_size;
-            if (!hasNext) {
+            if (!hasNext && (m_inStream != null)) {
                 try {
                     m_inStream.close();
                     m_inStream = null;
