@@ -40,9 +40,10 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  * Contains all settings needed to read in a ASCII data file. This includes the
  * location of the data file, the settings for the tokenizer (like column
  * delimiter, comment patterns etc.) as well as the row headers and more. This
- * object combined with a <code>DataTableSpec</code> can be used to create a
- * <code>FileTable</code> from. A <code>FileTable</code> will represent then
- * the data of the file in a <code>DataTable</code>.
+ * object combined with a {@link de.unikn.knime.core.data.DataTableSpec} can be
+ * used to create a {@link FileTable} from. A <code>FileTable</code> will
+ * represent then the data of the file in a
+ * {@link de.unikn.knime.core.data.DataTable}.
  * 
  * @author ohl, University of Konstanz
  */
@@ -70,7 +71,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * if set, the reader will eat all surplus empty tokens at the end of a row.
      */
     private boolean m_ignoreEmptyTokensAtEOR;
-    
+
     /*
      * if set, the first row in the file will be considered column names - and
      * discarded (we read rows, not column headers!)
@@ -99,12 +100,12 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private Vector<String> m_missingPatterns;
 
     /**
-     * this will be used if the file has not row headers and no row prefix is
+     * This will be used if the file has not row headers and no row prefix is
      * set.
      */
     public static final String DEF_ROWPREFIX = "Row";
 
-    /** key used to store data file location in a config object. */
+    /** Key used to store data file location in a config object. */
     public static final String CFGKEY_DATAURL = "DataURL";
 
     private static final String CFGKEY_DECIMALSEP = "DecimalSeparator";
@@ -118,7 +119,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private static final String CFGKEY_IGNOREEMPTY = "ignoreEmptyLines";
 
     private static final String CFGKEY_IGNOREATEOR = "ignEmtpyTokensAtEOR";
-    
+
     private static final String CFGKEY_ROWDELIMS = "RowDelims";
 
     private static final String CFGKEY_ROWDELIM = "RDelim";
@@ -154,7 +155,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_fileHasRowHeaders = false;
         m_ignoreEmptyLines = false;
         m_ignoreEmptyTokensAtEOR = false;
-        
+
         m_rowHeaderPrefix = null;
 
         m_rowDelimiters = new HashSet<String>();
@@ -166,9 +167,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * the passed config object.
      * 
      * @param cfg the config object containing all settings this object will be
-     *            initialized with.
-     * @throws InvalidSettingsException if the passed conf object contains
-     *             invalid or insufficient settings.
+     *            initialized with
+     * @throws InvalidSettingsException if the passed config object contains
+     *             invalid or insufficient settings
      */
     public FileReaderSettings(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
@@ -260,12 +261,12 @@ public class FileReaderSettings extends FileTokenizerSettings {
             // get the decimal separator.
             // It's optional for backward compatibility and defaults to '.'
             m_decimalSeparator = cfg.getChar(CFGKEY_DECIMALSEP, '.');
-            
-            // ignore empty tokens at end of row? 
+
+            // ignore empty tokens at end of row?
             // It'S optional and default to false, for backward compatibility.
-            m_ignoreEmptyTokensAtEOR = cfg.getBoolean(CFGKEY_IGNOREATEOR, 
-                    false);
-            
+            m_ignoreEmptyTokensAtEOR = cfg
+                    .getBoolean(CFGKEY_IGNOREATEOR, false);
+
             readRowDelimitersFromConfig(rowDelimConf);
 
         } // if (cfg != null)
@@ -273,11 +274,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * Saves all settings into a <code>NodeSettings</code> object. Using the
-     * cfg object to construct a new FileReaderSettings object should lead to an
-     * object identical to this.
+     * Saves all settings into a {@link de.unikn.knime.core.node.NodeSettingsWO}
+     * object. Using the cfg object to construct a new FileReaderSettings object
+     * should lead to an object identical to this.
      * 
-     * @param cfg the config object the settings are stored into.
+     * @param cfg the config object the settings are stored into
      */
     @Override
     public void saveToConfiguration(final NodeSettingsWO cfg) {
@@ -310,8 +311,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * read the patterns, one for each column, that will be replaced by missing
      * cells from the configuration object.
      */
-    private void readMissingPatternsFromConfig(
-            final NodeSettingsRO missPattConf) {
+    private void readMissingPatternsFromConfig(final NodeSettingsRO missPattConf) {
         if (missPattConf == null) {
             throw new NullPointerException(
                     "Can't read missing patterns from null config object");
@@ -454,8 +454,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * 
      * @param dataFileLocation the URL of the data file these settings are for
      */
-    public void setDataFileLocationAndUpdateTableName(
-            final URL dataFileLocation) {
+    public void setDataFileLocationAndUpdateTableName(final URL dataFileLocation) {
         if (dataFileLocation == null) {
             setTableName("");
         } else {
@@ -472,7 +471,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * @return the location of the file these settings are meant for.
+     * @return the location of the file these settings are meant for
      */
     public URL getDataFileLocation() {
         return m_dataFileLocation;
@@ -482,7 +481,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * @return a new reader to read from the data file location. It will create
      *         a buffered reader, and for locations ending on ".gz" a GZIP one.
      *         If the data location is not set an exception will fly.
-     * @throws NullPointerException if the data location is not set.
+     * @throws NullPointerException if the data location is not set
      * @throws IOException if an IO Error occured when opening the stream
      */
     public BufferedReader createNewInputReader() throws IOException {
@@ -514,9 +513,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * sets a new name for the table created by this node.
+     * Sets a new name for the table created by this node.
      * 
-     * @param newName the new name to set. Valid names are not null.
+     * 
+     * @param newName the new name to set. Valid names are not <code>null</code>.
      */
     public void setTableName(final String newName) {
         m_tableName = newName;
@@ -524,8 +524,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /**
      * @return the currently set name of the table created by this node. Valid
-     *         names are not null, but the method could return null, if no name
-     *         was set yet.
+     *         names are not <code>null</code>, but the method could return
+     *         null, if no name was set yet.
      */
     public String getTableName() {
         return m_tableName;
@@ -533,8 +533,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /**
      * @param loc the location to extract the filename from.
-     * @return the filename part of the URL without path. Or null if the URL is
-     *         null.
+     * @return the filename part of the URL without path. Or <code>null</code>
+     *         if the URL is <code>null</code>.
      */
     private String getPureFileNameWithExtension(final URL loc) {
         if (loc != null) {
@@ -553,9 +553,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * Tells whether the first line in the file should be considered column
      * headers, or not.
      * 
-     * @param flag if true the first line in the file will not be considered
-     *            data, but either ignored or used as column headers, depending
-     *            on the column headers set (or not) in this object.
+     * @param flag if <code>true</code> the first line in the file will not be
+     *            considered data, but either ignored or used as column headers,
+     *            depending on the column headers set (or not) in this object.
      */
     public void setFileHasColumnHeaders(final boolean flag) {
         m_fileHasColumnHeaders = flag;
@@ -574,10 +574,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * Tells whether the first token in each line in the file should be
      * considered row header, or not.
      * 
-     * @param flag if true the first item in each line in the file will not be
-     *            considered data, but either ignored or used as row header,
-     *            depending on the row header prefix set (or not) in this
-     *            object.
+     * @param flag if <code>true</code> the first item in each line in the
+     *            file will not be considered data, but either ignored or used
+     *            as row header, depending on the row header prefix set (or not)
+     *            in this object.
      */
     public void setFileHasRowHeaders(final boolean flag) {
         m_fileHasRowHeaders = flag;
@@ -610,7 +610,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * @return the string that will be used to construct the header for each
      *         row. The actual row header will have the row number added. If
      *         this returns <code>null</code>, the row header from the file
-     *         will be used - if any, otherwise the DEF_ROWPREFIX.
+     *         will be used - if any, otherwise the {@link #DEF_ROWPREFIX}.
      */
     public String getRowHeaderPrefix() {
         return m_rowHeaderPrefix;
@@ -622,13 +622,13 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * returned as separate token by the filereader. You can define a row
      * delimiter that was previously defined a token delimiter. But only, if the
      * delimiter was not set to be included in the token. Otherwise you will get
-     * a IllegalArgumentException.
+     * a {@link IllegalArgumentException}.
      * 
      * @param rowDelimPattern the row delimiter pattern. Row delimiters will
      *            always be token delimiters and will always be returned as
      *            separate token.
-     * @param skipEmptyRows if set true, multiple consecutive row delimiters
-     *            will be combined and returned as one.
+     * @param skipEmptyRows if set <code>true</code>, multiple consecutive
+     *            row delimiters will be combined and returned as one
      */
     public void addRowDelimiter(final String rowDelimPattern,
             final boolean skipEmptyRows) {
@@ -657,16 +657,16 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * Removes the row delimiter with the specified pattern. Eventhough the
+     * Removes the row delimiter with the specified pattern. Even though the
      * above method changes an existing column delimiter to being a row delim,
      * this function completely deletes the row delimiter (instead of being
      * aware that it might have been a col delim before and changing it back to
      * a col delim).
      * 
-     * @param pattern the row delimiter to delete must not be null. Null is
-     *            always a row delimiter.
-     * @return a Delimiter object specifying the deleted delimiter, or null if
-     *         no row delimiter with the pattern existed.
+     * @param pattern the row delimiter to delete must not be null.
+     *            <code>null</code> is always a row delimiter.
+     * @return a delimiter object specifying the deleted delimiter, or
+     *         <code>null</code> if no row delimiter with the pattern existed
      */
     public Delimiter removeRowDelimiter(final String pattern) {
         if (pattern == null) {
@@ -681,7 +681,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /**
      * Blows away all defined row delimiters! After a call to this function no
-     * row delimiter will be defined (except null).
+     * row delimiter will be defined (except <code>null</code>).
      */
     public void removeAllRowDelimiters() {
         for (String delim : m_rowDelimiters) {
@@ -692,8 +692,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /**
      * @param pattern the pattern to test
-     * @return true if the pattern is a row delimiter. null is always a row
-     *         delimiter.
+     * @return <code>true</code> if the pattern is a row delimiter.
+     *         <code>null</code> is always a row delimiter.
      */
     public boolean isRowDelimiter(final String pattern) {
         if (pattern == null) {
@@ -706,28 +706,28 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * @return true if the file reader ignores empty lines.
+     * @return <code>true</code> if the file reader ignores empty lines
      */
     public boolean getIgnoreEmtpyLines() {
         return m_ignoreEmptyLines;
     }
 
     /**
-     * @param ignoreEm pass true to have the file reader not return empty lines
-     *            from the data file.
+     * @param ignoreEm pass <code>true</code> to have the file reader not
+     *            return empty lines from the data file
      */
     public void setIgnoreEmptyLines(final boolean ignoreEm) {
         m_ignoreEmptyLines = ignoreEm;
     }
 
     /**
-     * returns true if the file reader combines multiple consecutive row
-     * delimiters with this pattern (i.e. it skips empty rows if it finds
-     * multiple if these (and only these) row delimiters). The method throws an
-     * IllegalArgumentException at you if the specified pattern is not a row
-     * delimiter.
+     * Returns <code>true</code> if the file reader combines multiple
+     * consecutive row delimiters with this pattern (i.e. it skips empty rows if
+     * it finds multiple if these (and only these) row delimiters). The method
+     * throws an {@link IllegalArgumentException} at you if the specified
+     * pattern is not a row delimiter.
      * 
-     * @param pattern the pattern to test for.
+     * @param pattern the pattern to test for
      * @return true if the filereader skips empty rows for this row delimiter
      */
     public boolean combinesMultipleRowDelimiters(final String pattern) {
@@ -745,13 +745,12 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * considered placeholder for a missing value, and the data table will
      * contain a missing cell instead of that value then.
      * 
-     * @param colIdx the index of the column this missing value is set for.
+     * @param colIdx the index of the column this missing value is set for
      * @param pattern the pattern specifying the missing value in the data file
-     *            for the specified column. Can be null to delete a previously
-     *            set pattern.
+     *            for the specified column. Can be <code>null</code> to delete
+     *            a previously set pattern.
      */
-    public void setMissingValueForColumn(final int colIdx, 
-            final String pattern) {
+    public void setMissingValueForColumn(final int colIdx, final String pattern) {
         if (m_missingPatterns.size() <= colIdx) {
             m_missingPatterns.setSize(colIdx + 1);
         }
@@ -763,10 +762,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * considered placeholder for a missing value, and the data table will
      * contain a missing cell instead of that value then.
      * 
-     * @param colIdx the index of the column the missing value is asked for.
+     * @param colIdx the index of the column the missing value is asked for
      * @return the pattern that will be considered placeholder for a missing
-     *         value in the specified column. Or null if no patern is set for
-     *         that column.
+     *         value in the specified column. Or <code>null</code> if no
+     *         patern is set for that column.
      */
     public String getMissingValueOfColumn(final int colIdx) {
         if (m_missingPatterns.size() <= colIdx) {
@@ -794,8 +793,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * @return true if additional empty tokens should be ignored at the end of a
-     *         row (if they are not needed to build the row).
+     * @return <code>true</code> if additional empty tokens should be ignored
+     *         at the end of a row (if they are not needed to build the row)
      */
     public boolean ignoreEmptyTokensAtEndOfRow() {
         return m_ignoreEmptyTokensAtEOR;
@@ -804,28 +803,29 @@ public class FileReaderSettings extends FileTokenizerSettings {
     /**
      * Sets this flag.
      * 
-     * @param ignoreThem if true, additional empty tokens will be ignored at the
-     *            end of a row (if they are not needed to build the row).
+     * @param ignoreThem if <code>true</code>, additional empty tokens will
+     *            be ignored at the end of a row (if they are not needed to
+     *            build the row)
      */
     public void setIgnoreEmptyTokensAtEndOfRow(final boolean ignoreThem) {
         m_ignoreEmptyTokensAtEOR = ignoreThem;
     }
-    
+
     /**
      * Method to check consistency and completeness of the current settings. It
-     * will return a <code>SettingsStatus</code> object which contains info,
-     * warning and error messages. Or if the settings are alright it will return
-     * null.
+     * will return a {@link SettingsStatus} object which contains info, warning
+     * and error messages. Or if the settings are alright it will return null.
      * 
      * @param openDataFile tells wether or not this method should try to access
-     *            the data file. This will - if set true - verify the
-     *            accessability of the data.
+     *            the data file. This will - if set <code>true</code> - verify
+     *            the accessability of the data.
      * @param tableSpec the spec of the DataTable these settings are for. If set
-     *            null only a few checks will be performed - the ones that are
-     *            possible without the knowledge of the structure of the table
+     *            <code>null</code> only a few checks will be performed - the
+     *            ones that are possible without the knowledge of the structure
+     *            of the table
      * @return a SettingsStatus object containing info, warning and error
-     *         messages, or null if no messages were generated (i.e. all
-     *         settings are just fine).
+     *         messages, or <code>null</code> if no messages were generated
+     *         (i.e. all settings are just fine).
      */
     public SettingsStatus getStatusOfSettings(final boolean openDataFile,
             final DataTableSpec tableSpec) {
@@ -838,8 +838,6 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * Overriding super's method.
-     * 
      * @see FileTokenizerSettings#getStatusOfSettings()
      */
     @Override
@@ -848,14 +846,15 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * adds its status messages to a passed status object.
+     * Adds its status messages to a passed status object.
      * 
-     * @param status the object to add messages to - if any.
+     * @param status the object to add messages to - if any
      * @param openDataFile specifies if we should check the accessability of the
-     *            data file.
+     *            data file
      * @param tableSpec the spec of the DataTable these settings are for. If set
-     *            null only a few checks will be performed - the ones that are
-     *            possible without the knowledge of the structure of the table
+     *            <code>null</code> only a few checks will be performed - the
+     *            ones that are possible without the knowledge of the structure
+     *            of the table
      */
     protected void addStatusOfSettings(final SettingsStatus status,
             final boolean openDataFile, final DataTableSpec tableSpec) {
@@ -886,7 +885,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                     try {
                         reader.close();
                     } catch (IOException ioe) {
-                        // then don't close it. 
+                        // then don't close it.
                     }
                 }
             }
@@ -958,8 +957,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 }
             }
         } else {
-            for (Iterator pIter = m_missingPatterns.iterator(); 
-                    pIter.hasNext();) {
+            for (Iterator pIter = m_missingPatterns.iterator(); pIter.hasNext();) {
                 if (pIter.next() == null) {
                     status.addInfo("Not all columns have patterns for missing"
                             + " values assigned.");

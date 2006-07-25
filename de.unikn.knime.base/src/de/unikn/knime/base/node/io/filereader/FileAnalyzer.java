@@ -41,11 +41,11 @@ import de.unikn.knime.core.node.NodeLogger;
  * settings. It tries to figure out what kind of delimiters and comments the
  * file contains - honoring fixed presettings passed in.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public final class FileAnalyzer {
 
-    /** the number of lines the analyzer examines. */
+    /** The number of lines the analyzer examines. */
     static final int NUMOFLINES = 1000;
 
     /** The node logger for this class. */
@@ -68,7 +68,7 @@ public final class FileAnalyzer {
      * @return settings that supposably provide more or less useful results. It
      *         will always be a non-null object - but may not contain any
      *         settings if guessing was just too hard.
-     * @throws IOException if there was an error reading from the URL.
+     * @throws IOException if there was an error reading from the URL
      */
     static FileReaderNodeSettings analyze(
             final FileReaderNodeSettings userSettings) throws IOException {
@@ -195,9 +195,9 @@ public final class FileAnalyzer {
      * 
      * @param userSettings settings user provided. Must be honored!
      * @param result the settings so far, must contain data url, delimiters,
-     *            comments, quotes, colNumber, and rowHeader flag.
+     *            comments, quotes, colNumber, and rowHeader flag
      * @return a vector of colProperty objects, having the columnSpec set and
-     *         the useFileHeader flag.
+     *         the useFileHeader flag
      * @throws IOException if an I/O error occurs
      */
     private static Vector<ColProperty> createColumnProperties(
@@ -246,7 +246,7 @@ public final class FileAnalyzer {
             columnHeaders[c] = token;
         }
         tokenizer.closeSourceStream();
-        
+
         Vector<ColProperty> userColProps = userSettings.getColumnProperties();
         if (userColProps == null) {
             // that saves us quite some checkings later
@@ -258,7 +258,7 @@ public final class FileAnalyzer {
             // check first if we get off easy: If we didn't get enough column
             // headers, we assume the rowHeader is a data column header.
             if (result.getFileHasRowHeaders()
-                 // && (the last token is empty)
+            // && (the last token is empty)
                     && (columnHeaders.length > 0)
                     && (columnHeaders[columnHeaders.length - 1] == null)) {
                 result.setFileHasColumnHeaders(true);
@@ -315,8 +315,7 @@ public final class FileAnalyzer {
             }
             // and now, see if the headers to be are nicely formatted - that is
             // all have the same prefix and a growing index.
-            if ((columnHeaders.length > 0) 
-                    && consecutiveHeaders(columnHeaders)) {
+            if ((columnHeaders.length > 0) && consecutiveHeaders(columnHeaders)) {
                 result.setFileHasColumnHeaders(true);
                 return createColProps(columnHeaders, userColProps, columnTypes);
             }
@@ -324,7 +323,7 @@ public final class FileAnalyzer {
             // pass an array with null strings and it will create headers for us
             result.setFileHasColumnHeaders(false);
             String[] colNames = new String[columnHeaders.length]; // null
-                                                                    // array
+            // array
             return createColProps(colNames, userColProps, columnTypes);
         } else {
             // user set fileHasColHeaders - see if it's true or false
@@ -359,7 +358,7 @@ public final class FileAnalyzer {
      * followed by a constantly incremented number.
      * 
      * @param settings the file to look at with corresponding settings
-     * @return true if it's reasonable to assume the file has row headers.
+     * @return true if it's reasonable to assume the file has row headers
      * @throws IOException if an I/O error occurs
      */
     private static boolean checkRowHeader(final FileReaderNodeSettings settings)
@@ -407,7 +406,7 @@ public final class FileAnalyzer {
 
         }
         tokenizer.closeSourceStream();
-        
+
         String[] rowHeadersWOfirstLine = new String[rowHeaders.length - 1];
         System.arraycopy(rowHeaders, 1, rowHeadersWOfirstLine, 0,
                 rowHeadersWOfirstLine.length);
@@ -415,12 +414,13 @@ public final class FileAnalyzer {
     }
 
     /**
-     * returns true if all items in the array are prefixed by the same (possibly
-     * empty) string followed by a constantly incremented number.
+     * Returns <code>true</code> if all items in the array are prefixed by the
+     * same (possibly empty) string followed by a constantly incremented number.
      * 
      * @param headers the headers to look at, an emtpy item is considered end of
-     *            list.
-     * @return true if it's reasonable to assume that these are headers.
+     *            list
+     * @return <code>true</code> if it's reasonable to assume that these are
+     *         headers
      */
     private static boolean consecutiveHeaders(final String[] headers) {
 
@@ -502,10 +502,11 @@ public final class FileAnalyzer {
      * specified name is null it will create a name like 'col' + colNumber (also
      * falseing the flag, if the file has col headers).
      * 
-     * @param colNames the names of the columns. Items can be null.
+     * @param colNames the names of the columns. Items can be <code>null</code>.
      * @param userProps ColProperty objects preset by the user. Used, if not
      *            null, instead of a generated col property.
-     * @param colTypes the type of the columns. Items can NOT be null.
+     * @param colTypes the type of the columns. Items can NOT be
+     *            <code>null</code>.
      * @return a Vector of ColProperties. colTypes.length in number.
      */
     private static Vector<ColProperty> createColProps(final String[] colNames,
@@ -565,7 +566,7 @@ public final class FileAnalyzer {
             // make ColName unique
             boolean unique;
             int count = 2; // used to count duplicates. Added as postfix to
-                            // name
+            // name
             String name = colProp.getColumnSpec().getName().toString();
 
             do {
@@ -581,14 +582,14 @@ public final class FileAnalyzer {
                         }
                     } else if (i > c) {
                         // compare it with the preset names
-                        if ((userNames[i] != null) 
+                        if ((userNames[i] != null)
                                 && (userNames[i].equals(name))) {
                             unique = false;
                         }
                     }
                     if (!unique) {
                         name = colProp.getColumnSpec().getName().toString()
-                                    + "(" + count + ")";
+                                + "(" + count + ")";
                         count++;
                         // start all over, compare the new name with all others
                         break;
@@ -671,8 +672,8 @@ public final class FileAnalyzer {
             }
             if (!result.isRowDelimiter(token)) {
                 if ((linesRead < 1)
-                        && (!userSettings.isFileHasColumnHeadersUserSet() 
-                                || userSettings.getFileHasColumnHeaders())) {
+                        && (!userSettings.isFileHasColumnHeadersUserSet() || userSettings
+                                .getFileHasColumnHeaders())) {
                     // skip the first line - could be column headers - unless
                     // we know it's not
                     continue;
@@ -715,8 +716,10 @@ public final class FileAnalyzer {
                                 dblData = token.replace(result
                                         .getDecimalSeparator(), '.');
                             }
-                            /* weird thing: parseDouble accepts strings with
-                             * leading spaces. We don't. */
+                            /*
+                             * weird thing: parseDouble accepts strings with
+                             * leading spaces. We don't.
+                             */
                             if (dblData.indexOf(' ') >= 0) {
                                 throw new NumberFormatException();
                             }
@@ -963,7 +966,7 @@ public final class FileAnalyzer {
         }
 
         tokenizer.closeSourceStream();
-        
+
         if (useDoubleQuotes) {
             if (escapeDoubleQuotes) {
                 settings.addQuotePattern("\"", "\"", '\\');
@@ -998,7 +1001,7 @@ public final class FileAnalyzer {
         assert result.getDataFileLocation() != null;
 
         if (!userSettings.isDelimiterUserSet()) {
-            
+
             //
             // Try out comma delimiter
             //
@@ -1021,9 +1024,9 @@ public final class FileAnalyzer {
                 result.removeAllDelimiters();
                 // make sure '\n' is a row delimiter. Always.
                 result.addRowDelimiter("\n", true);
-                
+
                 result.addDelimiterPattern("\t", false, false, false);
-                
+
                 if (testDelimiterSettingsSetColNum(result)) {
                     return;
                 }
@@ -1031,25 +1034,24 @@ public final class FileAnalyzer {
                 // seems they've added '\t' as comment before - alright then.
             }
 
-
             // Try space, ignoring additional tabs at the end of each line
             try {
                 result.removeAllDelimiters();
                 // make sure '\n' is a row delimiter. Always.
                 result.addRowDelimiter("\n", true);
-                
+
                 result.addDelimiterPattern(" ", true, false, false);
                 result.setIgnoreEmptyTokensAtEndOfRow(true);
 
                 if (testDelimiterSettingsSetColNum(result)) {
                     return;
-                }                
+                }
             } catch (IllegalArgumentException iae) {
                 // seems they've added ' ' as comment before - alright then.
-            } 
+            }
             // restore it to false
-            result.setIgnoreEmptyTokensAtEndOfRow(false);   
-            
+            result.setIgnoreEmptyTokensAtEndOfRow(false);
+
             //
             // try space seperated columns
             //
@@ -1065,7 +1067,6 @@ public final class FileAnalyzer {
             } catch (IllegalArgumentException iae) {
                 // seems we've added ' ' as comment before - alright then.
             }
-                        
 
             //
             // now also try the semicolon seperated columns, if
@@ -1106,11 +1107,11 @@ public final class FileAnalyzer {
             }
 
             result.setDelimiterUserSet(true);
-            result.setIgnoreEmptyTokensAtEndOfRow(
-                    userSettings.ignoreEmptyTokensAtEndOfRow());
+            result.setIgnoreEmptyTokensAtEndOfRow(userSettings
+                    .ignoreEmptyTokensAtEndOfRow());
             if (userSettings.ignoreDelimsAtEORUserSet()) {
-                result.setIgnoreDelimsAtEndOfRowUserValue(
-                        userSettings.ignoreDelimsAtEORUserValue());
+                result.setIgnoreDelimsAtEndOfRowUserValue(userSettings
+                        .ignoreDelimsAtEORUserValue());
             }
             // set the number of cols that we read in with user presets.
             // take the maximum if rows have different num of cols.
@@ -1122,14 +1123,13 @@ public final class FileAnalyzer {
     }
 
     /*
-     * With the new "ignore empty tokens at end of row" option this got a bit 
-     * more complicated: We need to keep a range of numberOfColumns that we
-     * can accept. The lower bound will be the number of non-empty columns we
-     * read so far (because this is the minimum all rows must have), the 
-     * maximum will be the non-empty plus empty columns we have seen so far. 
-     * The reason for that is, we may need some of these empty tokens at the end
-     * of a row to fill the row, in case a later row has more (non-empty) 
-     * tokens. 
+     * With the new "ignore empty tokens at end of row" option this got a bit
+     * more complicated: We need to keep a range of numberOfColumns that we can
+     * accept. The lower bound will be the number of non-empty columns we read
+     * so far (because this is the minimum all rows must have), the maximum will
+     * be the non-empty plus empty columns we have seen so far. The reason for
+     * that is, we may need some of these empty tokens at the end of a row to
+     * fill the row, in case a later row has more (non-empty) tokens.
      */
     private static boolean testDelimiterSettingsSetColNum(
             final FileReaderNodeSettings settings) throws IOException {
@@ -1157,7 +1157,7 @@ public final class FileAnalyzer {
         int columns = 0; // column counter per line
         int numOfCols = -1; // num of cols with these settings
         int maxNumOfCols = -1; // num of cols including some emtpy tokens at
-                                // EOR
+        // EOR
         boolean useSettings = false; // set it true to use these settings.
         int consEmptyTokens = 0; // consecutive empty tokens read
 
@@ -1201,8 +1201,7 @@ public final class FileAnalyzer {
                             }
                         } else {
                             if (settings.ignoreEmptyTokensAtEndOfRow()) {
-                                if ((columns - consEmptyTokens) 
-                                        > maxNumOfCols) {
+                                if ((columns - consEmptyTokens) > maxNumOfCols) {
                                     // we read more non-emtpy columns than we
                                     // could
                                     // fill (in other rows) with emtpy tokens
@@ -1257,9 +1256,9 @@ public final class FileAnalyzer {
             }
 
         }
-        
+
         tokenizer.closeSourceStream();
-        
+
         if (useSettings) {
             settings.setNumberOfColumns(numOfCols);
         }
@@ -1294,7 +1293,7 @@ public final class FileAnalyzer {
         int colCount = 0; // the counter per line
         int numOfCols = 0; // the maximum
         int consEmptyTokens = 0; // consecutive emtpy tokens
-        
+
         while (true) {
 
             String token = tokenizer.nextToken();
@@ -1329,7 +1328,7 @@ public final class FileAnalyzer {
 
                 colCount = 0;
                 consEmptyTokens = 0;
-                
+
                 if (token == null) {
                     break;
                 }
@@ -1342,8 +1341,7 @@ public final class FileAnalyzer {
 
         }
         tokenizer.closeSourceStream();
-        
-        return numOfCols;
 
+        return numOfCols;
     }
 }

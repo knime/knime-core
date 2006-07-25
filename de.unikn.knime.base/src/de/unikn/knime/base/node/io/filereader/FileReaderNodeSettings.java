@@ -47,7 +47,7 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderNodeSettings extends FileReaderSettings {
 
@@ -90,14 +90,14 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     /**
      * Creates a new settings object for the file reader note and initializes it
-     * from the config object passed. If null is passed default settings will be
-     * applied where applicable. The default setting are not valid in the sense
-     * that they can't be used without modification.
+     * from the config object passed. If <code>null</code> is passed default
+     * settings will be applied where applicable. The default setting are not
+     * valid in the sense that they can't be used without modification.
      * 
-     * @param cfg a config object containing all settings or null to create
-     *            default settings.
+     * @param cfg a config object containing all settings or <code>null</code>
+     *            to create default settings
      * @throws InvalidSettingsException if the settings in the config object are
-     *             incomplete, inconsistent or in any other was invalid.
+     *             incomplete, inconsistent or in any other was invalid
      */
     FileReaderNodeSettings(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
@@ -154,7 +154,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * writes all settings into the passed configuration object. Except for the
+     * Writes all settings into the passed configuration object. Except for the
      * analyzedAllRows flag.
      * 
      * @see de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings
@@ -230,7 +230,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * stores a copy of the vector of properties in the structure.
+     * Stores a copy of the vector of properties in the structure.
      * 
      * @param colProps the column properties to store
      */
@@ -244,8 +244,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return a copy of the Vector storing <code>ColProperty</code> objects
-     *         or null if not set.
+     * @return a copy of the Vector storing {@link ColProperty} objects or
+     *         <code>null</code> if not set
      */
     public Vector<ColProperty> getColumnProperties() {
 
@@ -288,8 +288,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * stores the number of columns set by the user. (Must not be the same as
-     * the number of column properties stored in this object.
+     * Stores the number of columns set by the user. (Must not be the same as
+     * the number of column properties stored in this object).
      * 
      * @param numOfCols the number of columns to store
      */
@@ -306,11 +306,11 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * derives a DataTableSpec from the current settings. The spec will not
+     * Derives a DataTableSpec from the current settings. The spec will not
      * contain any domain information.
      * 
-     * @return a DataTableSpec corresponding to the current settings or null if
-     *         the current settings are invalid.
+     * @return a DataTableSpec corresponding to the current settings or
+     *         <code>null</code> if the current settings are invalid
      * 
      */
     DataTableSpec createDataTableSpec() {
@@ -332,7 +332,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         }
 
         return new DataTableSpec(getTableName(), cSpec);
-
     }
 
     /**
@@ -368,7 +367,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * reads the FileReaderNodeSettings from the specified XML file and returns
+     * Reads the FileReaderNodeSettings from the specified XML file and returns
      * a new settings object. It throws an exception if something goes wrong.
      * The settings are not checked. They could be incomplete or invalid. It
      * also reads possible values from the data file - but only if the settings
@@ -376,8 +375,9 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * 
      * @param xmlLocation location of the xml file to read. Must be a valid URL.
      * @return a new settings object containing the settings read fromt the
-     *         specified XML file. throws IllegalStateEception if something goes
-     *         wrong.
+     *         specified XML file.
+     * 
+     * @throws IllegalStateException if something goes wrong
      */
     public static FileReaderNodeSettings readSettingsFromXMLFile(
             final String xmlLocation) {
@@ -506,12 +506,12 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * reads the column headers from the file setting the column name in the
+     * Reads the column headers from the file setting the column name in the
      * colProperty objects - if the useFileHeader flag is set in there. All
      * settings must be set properly to enable file reading. Column names will
      * be made unique by adding an increasing index to duplicate names.
      * 
-     * @throws IOException if there was an error reading the data file.
+     * @throws IOException if there was an error reading the data file
      */
     public void readColumnHeadersFromFile() throws IOException {
         /*
@@ -608,7 +608,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      *            The method will add a number in parantheses to make it unique.
      * @return a column name prefixed by the specified prelimName, that is
      *         unique with respect to all colums with idx less than the
-     *         specified colIdx.
+     *         specified colIdx
      */
     String uniquifyColName(final int colIdx, final String prelimName) {
 
@@ -648,16 +648,16 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true is the value was set by the user, false if it's still at
-     *         constructor's default value.
+     * @return <code>true</code> if the value was set by the user,
+     *         <code>false</code> if it's still at constructor's default value
      */
     public boolean isIgnoreEmptyLinesUserSet() {
         return m_ignoreEmptyLinesIsSet;
     }
 
     /**
-     * Set true to indicate that the flag is actually set and is not still the
-     * default value.
+     * Set <code>true</code> to indicate that the flag is actually set and is
+     * not still the default value.
      * 
      * @param s the new value of the flag
      */
@@ -666,16 +666,16 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true is the value was set, false if it's still at constructor's
-     *         default value.
+     * @return <code>true</code> is the value was set, <code>false</code> if
+     *         it's still at constructor's default value
      */
     public boolean isFileHasRowHeadersUserSet() {
         return m_hasRowHeadersIsSet;
     }
 
     /**
-     * Set true to indicate that the flag is actually set and is not still the
-     * default value.
+     * Set <code>true</code> to indicate that the flag is actually set and is
+     * not still the default value.
      * 
      * @param s the new value of the flag
      */
@@ -684,16 +684,16 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true is the value was set, false if it's still at constructor's
-     *         default value.
+     * @return <code>true</code> is the value was set, <code>false</code> if
+     *         it's still at constructor's default value
      */
     public boolean isFileHasColumnHeadersUserSet() {
         return m_hasColHeadersIsSet;
     }
 
     /**
-     * Set true to indicate that the flag is actually set and is not still the
-     * default value.
+     * Set <code>true</code> to indicate that the flag is actually set and is
+     * not still the default value.
      * 
      * @param s the new value of the flag
      */
@@ -702,16 +702,16 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true is the value was set by the user, false if it's still at
-     *         constructor's default value.
+     * @return <code>true</code> is the value was set by the user,
+     *         <code>false</code> if it's still at constructor's default value
      */
     public boolean isCommentUserSet() {
         return m_commentIsSet;
     }
 
     /**
-     * Set true to indicate that the flag is actually set and is not still the
-     * default value.
+     * Set <code>true</code> to indicate that the flag is actually set and is
+     * not still the default value.
      * 
      * @param s the new value of the flag
      */
@@ -720,16 +720,16 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true is the value was set by the user, false if it's still at
-     *         constructor's default value.
+     * @return <code>true</code> is the value was set by the user,
+     *         <code>false</code> if it's still at constructor's default value
      */
     public boolean isDelimiterUserSet() {
         return m_delimIsSet;
     }
 
     /**
-     * Set true to indicate that the flag is actually set and is not still the
-     * default value.
+     * Set <code>true</code> to indicate that the flag is actually set and is
+     * not still the default value.
      * 
      * @param s the new value of the flag
      */
@@ -738,16 +738,16 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true is the value was set by the user, false if it's still at
-     *         constructor's default value.
+     * @return <code>true</code> is the value was set by the user,
+     *         <code>false</code> if it's still at constructor's default value
      */
     public boolean isQuoteUserSet() {
         return m_quoteIsSet;
     }
 
     /**
-     * Set true to indicate that the flag is actually set and is not still the
-     * default value.
+     * Set <code>true</code> to indicate that the flag is actually set and is
+     * not still the default value.
      * 
      * @param s the new value of the flag
      */
@@ -756,8 +756,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true is the value was set by the user, false if it's still at
-     *         constructor's default value.
+     * @return <code>true</code> is the value was set by the user,
+     *         <code>false</code> if it's still at constructor's default value
      */
     public boolean isWhiteSpaceUserSet() {
         return m_whiteIsSet;
@@ -766,8 +766,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Sets the "is user set" flag and stores the user value.
      * 
-     * @param ignoreEm if true extra delims at the end of the row (in case of a
-     *            tab or space delim) will be ignored.
+     * @param ignoreEm if <code>true</code> extra delims at the end of the row
+     *            (in case of a tab or space delim) will be ignored.
      */
     public void setIgnoreDelimsAtEndOfRowUserValue(final boolean ignoreEm) {
         m_ignoreDelimsAtEndOfRowIsSet = true;
@@ -775,7 +775,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return true, if user set the value for "ignore delims at end of row"
+     * @return <code>true</code>, if user set the value for "ignore delims at
+     *         end of row"
      */
     public boolean ignoreDelimsAtEORUserSet() {
         return m_ignoreDelimsAtEndOfRowIsSet;
@@ -789,18 +790,18 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @return the value of the analyze flag previously set. Or false by
-     *         default.
+     * @return the value of the analyze flag previously set. Or
+     *         <code>false</code> by default.
      */
     boolean analyzeUsedAllRows() {
         return m_analyzedAllRows;
     }
 
     /**
-     * sets the value of the flag which is used to indicate if the FileAnalyzer
-     * looked at all rows when it extracts the default settings. The value of
-     * the flag is not stored when the settings are saved into a config, and is
-     * not recovered from a config object.
+     * Sets the value of the flag which is used to indicate if the
+     * {@link FileAnalyzer} looked at all rows when it extracts the default
+     * settings. The value of the flag is not stored when the settings are saved
+     * into a config, and is not recovered from a config object.
      * 
      * @param val the new value of the flag
      */
@@ -819,8 +820,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     /**
      * Method to check consistency and completeness of the current settings. It
-     * will return a <code>SettingsStatus</code> object which contains info,
-     * warning and error messages, if something is fishy with the settings.
+     * will return a {@link SettingsStatus} object which contains info, warning
+     * and error messages, if something is fishy with the settings.
      * 
      * @see FileReaderSettings#getStatusOfSettings(boolean, DataTableSpec)
      */
@@ -942,14 +943,14 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                 }
             }
 
-        } // for all column properties
+        }
 
         if (m_numOfColumns < m_columnProperties.size()) {
             status.addInfo("More column properties specified "
                     + "than number of columns - extra props are unchecked");
 
         }
-    } // addColumnPropertiesStatus(SettingsStatus)
+    }
 
     /**
      * @see java.lang.Object#toString()
@@ -963,4 +964,4 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         }
         return res.toString();
     }
-} // class FileReaderNodeSettings
+}

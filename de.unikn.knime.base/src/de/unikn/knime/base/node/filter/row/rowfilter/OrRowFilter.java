@@ -44,12 +44,13 @@ public class OrRowFilter extends RowFilter {
 
     /**
      * Implements a RowFilter that takes two other RowFilters and combines their
-     * results with a logical OR. If filter in1 returns a match the matches()
-     * method of filter in2 is not invoked!
+     * results with a logical OR. If filter <code>in1</code> returns a match
+     * the {@link RowFilter#matches(DataRow, int)} method of filter
+     * <code>in2</code> is not invoked!
      * 
-     * @param in1 RowFilter as first input into the OR result
-     * @param in2 RowFilter for the second input of the OR result. Might be
-     *            short cutted.
+     * @param in1 row filter as first input into the OR result
+     * @param in2 row filter for the second input of the OR result; might be
+     *            short cutted
      */
     public OrRowFilter(final RowFilter in1, final RowFilter in2) {
         if (in1 == null) {
@@ -66,7 +67,7 @@ public class OrRowFilter extends RowFilter {
 
     /**
      * The row filter created by this contructor can not be used without setting
-     * two input filters by loading settings from a congif object.
+     * two input filters by loading settings from a config object.
      */
     public OrRowFilter() {
         m_in1 = null;

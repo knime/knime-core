@@ -14,11 +14,12 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 
 /**
  * Row iterator of the row filter table. Wraps a given row iterator and forwards
- * only rows that are approved by a given RowFilter. Also a range of row numbers
- * can be specified and a flag to only include or exclude rows within that
- * range. (The range feature is ANDed to the filter match result. If another
- * operation on the row number is required an appropreate filter has to be
- * created.) <br>
+ * only rows that are approved by a given
+ * {@link de.unikn.knime.base.node.filter.row.rowfilter.RowFilter}. Also a
+ * range of row numbers can be specified and a flag to only include or exclude
+ * rows within that range. (The range feature is ANDed to the filter match
+ * result. If another operation on the row number is required an appropreate
+ * filter has to be created.) <br>
  * The order of which the conditions are evaluated is as follows: If a range is
  * specified, the row number is checked against the specified range, only if it
  * matches the filter is asked to do its match. If the row number range fails it
@@ -30,13 +31,12 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * <p>
  * Note: Iterating may be slow as the iterator must potentially skip many rows
  * until it encounters a row to be returned. This iterator does also support
- * cancelation/progress information using an ExecutionMonitor. This iterator may
- * throw a
+ * cancelation/progress information using an
+ * {@link de.unikn.knime.core.node.ExecutionMonitor}.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterIterator extends RowIterator {
-
     // the filter
     private final RowFilter m_filter;
 
@@ -65,10 +65,10 @@ public class RowFilterIterator extends RowIterator {
      * rows that match the specified conditions.
      * 
      * @param origTable the original table from which we get the iterator and
-     *            the row count, if any.
+     *            the row count, if any
      * @param filter a filter object that will decide whether rows are included
-     *            in the result or filtered out.
-     * @param exec To report progress to and to check for cancel status.
+     *            in the result or filtered out
+     * @param exec to report progress to and to check for cancel status
      */
     public RowFilterIterator(final DataTable origTable, final RowFilter filter,
             final ExecutionMonitor exec) {
@@ -96,9 +96,9 @@ public class RowFilterIterator extends RowIterator {
      * status is available.
      * 
      * @param orig the original table from which we get the iterator and the row
-     *            count, if any.
+     *            count, if any
      * @param filter a filter object that will decide whether rows are included
-     *            in the result or filtered out.
+     *            in the result or filtered out
      */
     public RowFilterIterator(final DataTable orig, final RowFilter filter) {
         this(orig, filter, null);
@@ -177,7 +177,8 @@ public class RowFilterIterator extends RowIterator {
 
     /**
      * Runtime exception that's thrown when the execution monitor's
-     * <code>checkCanceled</code> method throws an CanceledExecutionException.
+     * {@link ExecutionMonitor#checkCanceled} method throws a
+     * {@link CanceledExecutionException}.
      */
     public static final class RuntimeCanceledExecutionException extends
             RuntimeException {
@@ -202,5 +203,4 @@ public class RowFilterIterator extends RowIterator {
             return (CanceledExecutionException)super.getCause();
         }
     }
-
 }

@@ -27,7 +27,7 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 /**
  * A row filter for the row filter data table ANDing two other row filters.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class AndRowFilter extends RowFilter {
 
@@ -45,13 +45,15 @@ public class AndRowFilter extends RowFilter {
     private boolean m_in2True;
 
     /**
-     * Implements a RowFilter that takes two other RowFilters and combines their
-     * results with a logical AND. If filter in1 returns a no match the
-     * matches() method of filter in2 will not be invoked!
+     * Implements a {@link RowFilter} that takes two other
+     * {@link RowFilter}s and combines their results with a logical AND. If
+     * filter <code>in1</code> returns a no match the
+     * {@link RowFilter#matches(DataRow, int)} method of filter <code>in2</code>
+     * will not be invoked!
      * 
-     * @param in1 RowFilter as first input into the AND result
-     * @param in2 RowFilter for the second input of the AND result. Might be
-     *            short cutted.
+     * @param in1 row filter as first input into the AND result
+     * @param in2 row filter for the second input of the AND result; might be
+     *            short cutted
      */
     public AndRowFilter(final RowFilter in1, final RowFilter in2) {
         if (in1 == null) {

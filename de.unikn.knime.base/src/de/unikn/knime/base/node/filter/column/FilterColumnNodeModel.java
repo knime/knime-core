@@ -32,7 +32,8 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * The model for the column filter which extracts certain columns from the input
- * <code>DataTable</code> using a list of columns to exclude.
+ * {@link de.unikn.knime.core.data.DataTable} using a list of columns to
+ * exclude.
  * 
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
@@ -78,13 +79,6 @@ final class FilterColumnNodeModel extends NodeModel {
     }
 
     /**
-     * Creates a new <code>ColumnFilterTable</code> and returns it.
-     * 
-     * @param data The table for which to create the filtered output table
-     * @param exec The execution monitor.
-     * @return The filtered table.
-     * @throws Exception if current settings are invalid
-     * 
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
@@ -99,26 +93,24 @@ final class FilterColumnNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
         // nothing to be done
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      de.unikn.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
         // nothing to be done
     }
 
@@ -126,11 +118,11 @@ final class FilterColumnNodeModel extends NodeModel {
      * Excludes a number of columns from the input spec and generates a new
      * ouput spec.
      * 
-     * @param inSpecs The input table spec.
-     * @return outSpecs The output table spec with some excluded columns.
+     * @param inSpecs the input table spec
+     * @return outSpecs the output table spec with some excluded columns
      * 
-     * @throws InvalidSettingsException If the selected column is not available
-     *             in the DataTableSpec.
+     * @throws InvalidSettingsException if the selected column is not available
+     *             in the table spec.
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -176,10 +168,10 @@ final class FilterColumnNodeModel extends NodeModel {
     }
 
     /**
-     * Writes number of filtered columns, and the names as <code>DataCell</code>
-     * to the given settings.
+     * Writes number of filtered columns, and the names as
+     * {@link de.unikn.knime.core.data.DataCell} to the given settings.
      * 
-     * @param settings The object to save the settings into.
+     * @param settings the object to save the settings into
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -189,9 +181,9 @@ final class FilterColumnNodeModel extends NodeModel {
     /**
      * Reads the filtered columns.
      * 
-     * @param settings to read from.
-     * @throws InvalidSettingsException If the settings does not contain the
-     *             size or a particular column key.
+     * @param settings to read from
+     * @throws InvalidSettingsException if the settings does not contain the
+     *             size or a particular column key
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -215,5 +207,4 @@ final class FilterColumnNodeModel extends NodeModel {
         // true because the filter model does not care if there are columns to
         // exclude are available
     }
-
-} // FilterColumnNodeModel
+}

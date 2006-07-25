@@ -25,13 +25,14 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * Negates the match results from the filter passed. Unfortunately EndOfTable
- * exceptions (indicating that matches from now on will always fail) will be
- * caught and swallowed by this filter. Thus using this filter in a filter
- * hierarchy will cause the row filter table to always iterate through the end
- * of the original table before it flags an EOT.
+ * Negates the match results from the filter passed. Unfortunately
+ * {@link de.unikn.knime.base.node.filter.row.rowfilter.EndOfTableException}s
+ * (indicating that matches from now on will always fail) will be caught and
+ * swallowed by this filter. Thus using this filter in a filter hierarchy will
+ * cause the row filter table to always iterate through the end of the original
+ * table before it flags an EOT.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class NegRowFilter extends RowFilter {
 
@@ -40,7 +41,7 @@ public class NegRowFilter extends RowFilter {
     private RowFilter m_inFilter;
 
     /**
-     * default constructor of the NegFilter. Don't use it until you've loaded
+     * Default constructor of the NegFilter. Don't use it until you've loaded
      * settings.
      */
     NegRowFilter() {
@@ -50,7 +51,7 @@ public class NegRowFilter extends RowFilter {
     /**
      * Creates a new row filter negating the match results of the input filter.
      * 
-     * @param inFilter the input filter to negate.
+     * @param inFilter the input filter to negate
      */
     public NegRowFilter(final RowFilter inFilter) {
         if (inFilter == null) {
@@ -61,7 +62,7 @@ public class NegRowFilter extends RowFilter {
     }
 
     /**
-     * @return the row filter connected to the input of this.
+     * @return the row filter connected to the input of this
      */
     public RowFilter getInput() {
         return m_inFilter;

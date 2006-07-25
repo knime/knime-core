@@ -44,7 +44,7 @@ import de.unikn.knime.base.node.io.filetokenizer.Quote;
 /**
  * Dialog for the expert settings of the file reader dialog.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class QuotePanel extends JPanel {
 
@@ -458,7 +458,7 @@ public class QuotePanel extends JPanel {
      * listed quotes from the JList and adds them to the settings object.
      * 
      * @param settings the settings object to replace the quotes in with the
-     *            quotes currently defined in the panel.
+     *            quotes currently defined in the panel
      */
     void overrideSettings(final FileReaderNodeSettings settings) {
         settings.removeAllQuotes();
@@ -477,10 +477,10 @@ public class QuotePanel extends JPanel {
     }
 
     /**
-     * transfers the values from the specified object into the components of the
+     * Transfers the values from the specified object into the components of the
      * panel.
      * 
-     * @param settings the object containing the settings to display.
+     * @param settings the object containing the settings to display
      */
     private void loadSettings(final FileReaderNodeSettings settings) {
 
@@ -504,5 +504,4 @@ public class QuotePanel extends JPanel {
 
         clearErrorText();
     }
-
-} // @jve:decl-index=0:visual-constraint="10,10"
+}

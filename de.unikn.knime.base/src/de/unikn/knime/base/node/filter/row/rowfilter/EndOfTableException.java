@@ -19,26 +19,26 @@
 package de.unikn.knime.base.node.filter.row.rowfilter;
 
 /**
- * Used by RowFilters to tell that no more rows will fulfill their criteria
- * and the RowFilterTable iterator can flag the end of table.
+ * Used by {@link RowFilter}s to tell that no more rows will fulfill their
+ * criteria and the {@link de.unikn.knime.base.node.filter.row.RowFilterTable}
+ * iterator can flag the end of table.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class EndOfTableException extends Exception {
-    
     /**
      * Creates a new Exception with no message.
      */
     public EndOfTableException() {
         super();
     }
-    
+
     /**
      * Creates a new exception object with a message.
+     * 
      * @param msg the message to store in the exception object.
      */
     public EndOfTableException(final String msg) {
         super(msg);
     }
-
 }

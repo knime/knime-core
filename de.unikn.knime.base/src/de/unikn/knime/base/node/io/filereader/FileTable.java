@@ -32,12 +32,12 @@ import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
- * Implements a <code>DataTable</code> that reads data from an ASCII file.
+ * Implements a {@link DataTable} that reads data from an ASCII file.
  * 
- * To instantiate the <code>FileTable</code> you need to specify
- * <code>FileReaderSettings</code> and a <code>DataTableSpec</code>. File
- * reader settings define from where and how to read the data, the table spec
- * specifies the structure of the table to create.
+ * To instantiate this table you need to specify {@link FileReaderSettings} and
+ * a {@link de.unikn.knime.core.data.DataTableSpec}. File reader settings
+ * define from where and how to read the data, the table spec specifies the
+ * structure of the table to create.
  * 
  * @author Peter Ohl, University of Konstanz
  */
@@ -57,10 +57,10 @@ public class FileTable implements DataTable {
      * Inits a new file table with the structure defined in tableSpec and using
      * the settings in frSettings when the file is read.
      * 
-     * @param tableSpec a DataTableSpec defining the structure of the table to
-     *            create.
+     * @param tableSpec a table spec defining the structure of the table to
+     *            create
      * @param frSettings FileReaderSettings specifying the wheres and hows for
-     *            reading the ASCII data file.
+     *            reading the ASCII data file
      */
     public FileTable(final DataTableSpec tableSpec,
             final FileReaderSettings frSettings) {
@@ -87,7 +87,7 @@ public class FileTable implements DataTable {
         }
         return null;
     }
-        
+
     /**
      * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
      */
@@ -97,16 +97,15 @@ public class FileTable implements DataTable {
 
     /**
      * Method to check consistency and completeness of the current settings. It
-     * will return a <code>SettingsStatus</code> object which contains info,
-     * warning and error messages. Or if the settings are alright it will return
-     * null.
+     * will return a {@link SettingsStatus} object which contains info, warning
+     * and error messages. Or if the settings are alright it will return null.
      * 
      * @param openDataFile tells wether or not this method should try to access
-     *            the data file. This will - if set true - verify the
-     *            accessability of the data.
+     *            the data file. This will - if set <code>true</code> - verify
+     *            the accessability of the data.
      * @return a SettingsStatus object containing info, warning and error
-     *         messages, or null if no messages were generated (i.e. all
-     *         settings are just fine).
+     *         messages, or <code>null</code> if no messages were generated
+     *         (i.e. all settings are just fine)
      */
     public SettingsStatus getStatusOfSettings(final boolean openDataFile) {
 
@@ -118,7 +117,7 @@ public class FileTable implements DataTable {
     }
 
     /**
-     * adds its status messages to a passed status object.
+     * Adds its status messages to a passed status object.
      * 
      * @param status the object to add messages to - if any.
      * @param openDataFile specifies if we should check the accessability of the
@@ -186,8 +185,7 @@ public class FileTable implements DataTable {
                             // if our own column has the same name that's okay
                             continue;
                         }
-                        if (tableSpec.getColumnSpec(n).getName()
-                                .equals(cName)) {
+                        if (tableSpec.getColumnSpec(n).getName().equals(cName)) {
                             status.addError("Column with index '" + c
                                     + "' has the same name assigned as "
                                     + "column '" + n + "' ('" + cName + "').");
@@ -209,9 +207,11 @@ public class FileTable implements DataTable {
                     // if set they must be not null
                     for (DataCell v : values) {
                         if (v == null) {
-                            status.addError("One of the possible values set for"
-                                    + " the column with index '"
-                                    + c + "' is" + " null.");
+                            status
+                                    .addError("One of the possible values set for"
+                                            + " the column with index '"
+                                            + c
+                                            + "' is" + " null.");
                             // adding this message once for each col is enough
                             break;
                         }
@@ -238,12 +238,11 @@ public class FileTable implements DataTable {
         StringBuffer result = new StringBuffer();
 
         // Create a column header
-        //      Cell (0,0)
+        // Cell (0,0)
         result.append(sprintDataCell(new StringCell(" "), colLength));
-        //      "<ColName>[Type]"
+        // "<ColName>[Type]"
         for (int i = 0; i < m_tableSpec.getNumColumns(); i++) {
-            if (m_tableSpec.getColumnSpec(i).getType().equals(
-                    StringCell.TYPE)) {
+            if (m_tableSpec.getColumnSpec(i).getType().equals(StringCell.TYPE)) {
                 result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Str]"), colLength));
@@ -290,5 +289,4 @@ public class FileTable implements DataTable {
         }
         return result.toString();
     }
-
-} // FileTable
+}

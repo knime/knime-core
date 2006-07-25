@@ -22,33 +22,30 @@ import java.util.HashMap;
 
 import de.unikn.knime.core.data.DataCell;
 
-/** Allow a mapping of arbitrary DataCells to unique, well-behaved
- * strings, for example for usage with external executables that may
- * frown upon parsing arbitrary strings.
- * Keeps two HashMaps for each direction (DataCell <-> String) and
- * creates new, unique Strings for unknown DataCells.
+/**
+ * Allow a mapping of arbitrary {@link de.unikn.knime.core.data.DataCell}s to
+ * unique, well-behaved strings, for example for usage with external executables
+ * that may frown upon parsing arbitrary strings. Keeps two maps for each
+ * direction ({@link DataCell} <-> {@link String}) and creates new, unique
+ * Strings for unknown DataCells.
  * 
- * @author mb, University of Konstanz
+ * @author Michael Berthold, University of Konstanz
  */
 public class DataCellStringMapper {
 
-    private HashMap<DataCell, String> m_cellToString = 
-        new HashMap<DataCell, String>();
+    private HashMap<DataCell, String> m_cellToString = new HashMap<DataCell, String>();
 
-    private HashMap<String, String> m_origstringToString =
-        new HashMap<String, String>();
+    private HashMap<String, String> m_origstringToString = new HashMap<String, String>();
 
-    private HashMap<String, DataCell> m_stringToCell = 
-        new HashMap<String, DataCell>();
+    private HashMap<String, DataCell> m_stringToCell = new HashMap<String, DataCell>();
 
-    private HashMap<String, String> m_stringToOrigstring = 
-        new HashMap<String, String>();
+    private HashMap<String, String> m_stringToOrigstring = new HashMap<String, String>();
 
     private int m_uniqueIndex = 0;
 
     /**
-     * @param cell DataCell to be replaced
-     * @return unique String representation
+     * @param cell {@link DataCell} to be replaced
+     * @return unique string representation
      */
     public String dataCellToString(final DataCell cell) {
         // check if this cell already has a mapping:
@@ -74,8 +71,8 @@ public class DataCellStringMapper {
     }
 
     /**
-     * @param origString the original 'ugly' string.
-     * @return unique String representation
+     * @param origString the original 'ugly' string
+     * @return unique string representation
      */
     public String origStringToString(final String origString) {
         // check if this cell already has a mapping:
@@ -103,7 +100,7 @@ public class DataCellStringMapper {
 
     /**
      * @param str string representation
-     * @return DataCell represented by the string
+     * @return {@link DataCell} represented by the string
      */
     public DataCell stringToDataCell(final String str) {
         DataCell c = m_stringToCell.get(str);
@@ -112,8 +109,8 @@ public class DataCellStringMapper {
     }
 
     /**
-     * @param str string representation.
-     * @return string original string.
+     * @param str string representation
+     * @return string original string
      */
     public String stringToOrigString(final String str) {
         String s = m_stringToOrigstring.get(str);
@@ -135,5 +132,4 @@ public class DataCellStringMapper {
         }
         return newNameBuffer.toString();
     }
-
 }

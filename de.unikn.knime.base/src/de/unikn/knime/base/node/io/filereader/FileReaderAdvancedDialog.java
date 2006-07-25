@@ -33,7 +33,7 @@ import javax.swing.JTabbedPane;
 /**
  * Dialog for the expert settings of the file reader dialog.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderAdvancedDialog extends JDialog {
 
@@ -69,7 +69,7 @@ public class FileReaderAdvancedDialog extends JDialog {
     /**
      * This is the default constructor.
      * 
-     * @param parent the parent frame for all dialogs this dialog opens.
+     * @param parent the parent frame for all dialogs this dialog opens
      * @param settings the current settings to take over and show in this dialog
      */
     FileReaderAdvancedDialog(final Frame parent,
@@ -93,7 +93,7 @@ public class FileReaderAdvancedDialog extends JDialog {
     }
 
     /**
-     * overrides the settings in the passed argument with the settings from this
+     * Overrides the settings in the passed argument with the settings from this
      * dialog.
      * 
      * @param settings the settings to modify. Settings from the dialog will
@@ -200,8 +200,7 @@ public class FileReaderAdvancedDialog extends JDialog {
                                     + "settings and read new setings "
                                     + "from the file.\n" + "DO YOU WANT THIS?",
                             "Override confirm", JOptionPane.YES_NO_OPTION,
-                            JOptionPane.WARNING_MESSAGE, null) 
-                                == JOptionPane.YES_OPTION) {
+                            JOptionPane.WARNING_MESSAGE, null) == JOptionPane.YES_OPTION) {
                         // we just close the dialog and expect the main dlg
                         // to read our result.
                         m_closedViaReadXML = true;
@@ -215,27 +214,29 @@ public class FileReaderAdvancedDialog extends JDialog {
     }
 
     /**
-     * after the dialog closes this will return true if the user closed the
-     * dialog with the (confirmed) "read from XML file" button).
+     * After the dialog closes this will return <code>true</code> if the user
+     * closed the dialog with the (confirmed) "read from XML file" button).
      * 
-     * @return true if the dialog was closed via the "read from XML file" button
+     * @return <code>true</code> if the dialog was closed via the "read from
+     *         XML file" button
      */
     boolean closedViaReadXML() {
         return m_closedViaReadXML;
     }
 
     /**
-     * after the dialog closes this will return true if the user okayed the
-     * dialog and settings should be taken over.
+     * After the dialog closes this will return <code>true</code> if the user
+     * okayed the dialog and settings should be taken over.
      * 
-     * @return true if the dialog was closed through the OK button.
+     * @return <code>true</code> if the dialog was closed through the OK
+     *         button
      */
     boolean closedViaOk() {
         return m_closedViaOK;
     }
 
     /**
-     * This method initializes mainPanel. the MainPanel contains all tabs.
+     * This method initializes mainPanel which contains all tabs.
      * 
      * @return javax.swing.JPanel
      */
@@ -260,23 +261,23 @@ public class FileReaderAdvancedDialog extends JDialog {
     }
 
     /**
-     * @return the panel for the decimal separator settings.
+     * @return the panel for the decimal separator settings
      */
     private DecSepPanel getDecSepPanel() {
         if (m_decSepPanel == null) {
             m_decSepPanel = new DecSepPanel(m_settings);
         }
         return m_decSepPanel;
-        
+
     }
-    
+
     private IgnoreDelimsPanel getIngoreWSatEORPanel() {
         if (m_ignoreDelimsPanel == null) {
             m_ignoreDelimsPanel = new IgnoreDelimsPanel(m_settings);
         }
         return m_ignoreDelimsPanel;
     }
-    
+
     /**
      * This method initializes jTabbedPane.
      * 
@@ -287,9 +288,10 @@ public class FileReaderAdvancedDialog extends JDialog {
             m_jTabbedPane = new JTabbedPane();
             m_jTabbedPane.addTab("Quote support", null, getQuotePanel(),
                     "Adjust settings for quote characters here");
-            m_jTabbedPane.addTab("Decimal Separator", null, getDecSepPanel(), 
+            m_jTabbedPane.addTab("Decimal Separator", null, getDecSepPanel(),
                     "Set the decimal separator here");
-            m_jTabbedPane.addTab("Ingore spaces", null, getIngoreWSatEORPanel(),
+            m_jTabbedPane.addTab("Ingore spaces", null,
+                    getIngoreWSatEORPanel(),
                     "Ignore extra whitespaces at end of rows.");
         }
         return m_jTabbedPane;
@@ -306,5 +308,4 @@ public class FileReaderAdvancedDialog extends JDialog {
         dlg.setVisible(true);
         dlg.dispose();
     }
-
-} // @jve:decl-index=0:visual-constraint="10,10"
+}

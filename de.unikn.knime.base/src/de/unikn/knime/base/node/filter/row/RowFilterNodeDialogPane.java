@@ -43,7 +43,7 @@ import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterNodeDialogPane extends NodeDialogPane {
 
@@ -74,7 +74,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
     private JPanel m_filterPanel;
 
     /**
-     * creates a new panel for the row filter node dialog.
+     * Creates a new panel for the row filter node dialog.
      */
     public RowFilterNodeDialogPane() {
         super();
@@ -152,7 +152,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * activates the corresponding panel. Called by the radio button listeners.
+     * Activates the corresponding panel. Called by the radio button listeners.
      * 
      * @param activeFilterMethod the active filter method
      */
@@ -309,6 +309,5 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
 
         theFilter.saveSettingsTo(settings
                 .addNodeSettings(RowFilterNodeModel.CFGFILTER));
-
     }
 }

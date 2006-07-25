@@ -151,5 +151,4 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         settings
                 .addBoolean(CSVWriterNodeModel.CFGKEY_ROWHEADER, writeRowHeader);
     }
-
 }

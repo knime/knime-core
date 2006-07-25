@@ -28,10 +28,9 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  * Row filter that always matches all rows. Not really usefull - but used if the
  * user absolutly wants it.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class TrueRowFilter extends RowFilter {
-
     /**
      * @see RowFilter#matches(DataRow, int)
      */
@@ -76,5 +75,4 @@ public class TrueRowFilter extends RowFilter {
     public String toString() {
         return "TRUE-Filter";
     }
-
 }

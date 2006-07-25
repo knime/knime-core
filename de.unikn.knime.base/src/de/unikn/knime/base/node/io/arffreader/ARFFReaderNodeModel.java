@@ -41,20 +41,21 @@ import de.unikn.knime.core.node.util.StringHistory;
 
 /**
  * The model of the ARFF reader node. The interesting work is done in the
- * <code>ARFFTable</code> and <code>ARFFRowIterator</code>.
+ * {@link de.unikn.knime.base.node.io.arffreader.ARFFTable} and
+ * {@link de.unikn.knime.base.node.io.arffreader.ARFFRowIterator}.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ARFFReaderNodeModel extends NodeModel {
 
-    /** The node logger fot this class. */
+    /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ARFFReaderNodeModel.class);
 
-    /** key used to store the ARFF file location in the settings object. */
+    /** Key used to store the ARFF file location in the settings object. */
     static final String CFGKEY_FILEURL = "FileURL";
 
-    /** key used to store the row prefix in the settings object. */
+    /** Key used to store the row prefix in the settings object. */
     static final String CFGKEY_ROWPREFIX = "RowPrefix";
 
     private static final String ARFF_HISTORY_ID = "ARFFFiles";
@@ -64,7 +65,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     private URL m_file;
 
     /**
-     * creates a new ARFF reader model.
+     * Creates a new ARFF reader model.
      */
     public ARFFReaderNodeModel() {
         super(0, 1);
@@ -74,9 +75,9 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * creates a new ARFF reader with a default file.
+     * Creates a new ARFF reader with a default file.
      * 
-     * @param arffFileLocation URL to the ARFF file to read.
+     * @param arffFileLocation URL to the ARFF file to read
      */
     public ARFFReaderNodeModel(final String arffFileLocation) {
         this();
@@ -125,7 +126,7 @@ public class ARFFReaderNodeModel extends NodeModel {
         }
         // now that we actually read it, add it to the history.
         ARFFReaderNodeModel.addToFileHistory(m_file.toString());
-        
+
         BufferedDataTable out = exec.createBufferedDataTable(new ARFFTable(
                 m_file,
                 ARFFTable.createDataTableSpecFromARFFfile(m_file, exec),
@@ -235,18 +236,17 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @param removeNotExistingFiles if true the returned list will not contain
-     *            files that doesn't exist (they will not be removed from the
-     *            global history though
-     * @return the current file history associated with the ARFF reader/writer.
+     * @param removeNotExistingFiles if <code>true</code> the returned list
+     *            will not contain files that doesn't exist (they will not be
+     *            removed from the global history though
+     * @return the current file history associated with the ARFF reader/writer
      */
-    public static String[] getFileHistory(
-            final boolean removeNotExistingFiles) {
+    public static String[] getFileHistory(final boolean removeNotExistingFiles) {
 
         StringHistory h = StringHistory.getInstance(ARFF_HISTORY_ID);
         Vector<String> allLocs = new Vector<String>();
 
-            for (int l = 0; l < h.getHistory().length; l++) {
+        for (int l = 0; l < h.getHistory().length; l++) {
             String loc = h.getHistory()[l];
 
             if (removeNotExistingFiles) {
@@ -266,29 +266,30 @@ public class ARFFReaderNodeModel extends NodeModel {
                 } catch (MalformedURLException mue) {
                     // ignore this (invalid) entry in the history
                 }
-            
+
             } else {
                 allLocs.add(loc);
             }
 
         }
         return allLocs.toArray(new String[0]);
-        
+
     }
 
     /**
      * Adds the specified string to the ARFF reader/writer history.
-     * @param filename the filename to add.
+     * 
+     * @param filename the filename to add
      */
     public static void addToFileHistory(final String filename) {
         StringHistory h = StringHistory.getInstance(ARFF_HISTORY_ID);
         h.add(filename);
     }
-    
+
     /**
      * FileFilter for the ARFFReader/writer file chooser dialog.
      * 
-     * @author ohl, University of Konstanz
+     * @author Peter Ohl, University of Konstanz
      */
     public static class ARFFFileFilter extends FileFilter {
 
@@ -317,5 +318,4 @@ public class ARFFReaderNodeModel extends NodeModel {
             return "ARFF data files (*.arff)";
         }
     }
-
 }

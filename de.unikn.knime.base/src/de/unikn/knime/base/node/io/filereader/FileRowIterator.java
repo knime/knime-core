@@ -34,7 +34,7 @@ import de.unikn.knime.core.data.def.StringCell;
 import de.unikn.knime.core.util.MutableInteger;
 
 /**
- * Row iterator for the FileTable.
+ * Row iterator for the {@link FileTable}.
  * <p>
  * The iterator provides a method
  * 
@@ -64,9 +64,9 @@ final class FileRowIterator extends RowIterator {
     // we associate with it the last used suffix, to make it unique
     private final HashMap<String, Number> m_rowIDhash;
 
-    // Used in the above hash to indicate that duplicate of that row was found. 
+    // Used in the above hash to indicate that duplicate of that row was found.
     private static final Integer NOSUFFIX = new Integer(0);
-    
+
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
 
@@ -78,9 +78,9 @@ final class FileRowIterator extends RowIterator {
     /**
      * The RowIterator for the FileTable.
      * 
-     * @param tableSpec The spec defining the structure of the rows to create.
+     * @param tableSpec the spec defining the structure of the rows to create
      * @param frSettings object containing the wheres and hows to read the data
-     * @throws IOException If it couldn't open the data file.
+     * @throws IOException if it couldn't open the data file
      */
     FileRowIterator(final FileReaderSettings frSettings,
             final DataTableSpec tableSpec) throws IOException {
@@ -200,11 +200,10 @@ final class FileRowIterator extends RowIterator {
             try {
                 token = m_tokenizer.nextToken();
             } catch (FileTokenizerException fte) {
-                throw prepareForException(fte.getMessage() + " (line: " 
-                        + m_tokenizer.getLineNumber()
-                        + " (" + rowHeader + ") source: '"
-                        + m_frSettings.getDataFileLocation() + "')", 
-                        m_tokenizer.getLineNumber(), rowHeader, row);
+                throw prepareForException(fte.getMessage() + " (line: "
+                        + m_tokenizer.getLineNumber() + " (" + rowHeader
+                        + ") source: '" + m_frSettings.getDataFileLocation()
+                        + "')", m_tokenizer.getLineNumber(), rowHeader, row);
             }
             // row delims are returned as token
             if ((token == null) || m_frSettings.isRowDelimiter(token)) {
@@ -243,9 +242,9 @@ final class FileRowIterator extends RowIterator {
         }
         if (createdCols < noOfCols) {
             throw prepareForException("Too few data elements in row "
-                    + "(line: " + lineNr + " (" + rowHeader + "), source: '" 
-                    + m_frSettings.getDataFileLocation()
-                    + "')", lineNr, rowHeader, row);
+                    + "(line: " + lineNr + " (" + rowHeader + "), source: '"
+                    + m_frSettings.getDataFileLocation() + "')", lineNr,
+                    rowHeader, row);
         }
 
         token = m_tokenizer.nextToken();
@@ -257,19 +256,19 @@ final class FileRowIterator extends RowIterator {
             try {
                 token = m_tokenizer.nextToken();
             } catch (FileTokenizerException fte) {
-                throw prepareForException(fte.getMessage() 
-                        + "(line: " + lineNr + " (" + rowHeader + "), source: '"
-                        + m_frSettings.getDataFileLocation() + "')", 
-                        lineNr, rowHeader, row);
+                throw prepareForException(fte.getMessage() + "(line: " + lineNr
+                        + " (" + rowHeader + "), source: '"
+                        + m_frSettings.getDataFileLocation() + "')", lineNr,
+                        rowHeader, row);
             }
         }
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
         if (!m_frSettings.isRowDelimiter(token)) {
             throw prepareForException("Too many data elements in row "
-                    + "(line: " + lineNr + " (" + rowHeader + "), source: '" 
-                    + m_frSettings.getDataFileLocation() + "')", 
-                    lineNr, rowHeader, row);
+                    + "(line: " + lineNr + " (" + rowHeader + "), source: '"
+                    + m_frSettings.getDataFileLocation() + "')", lineNr,
+                    rowHeader, row);
         }
         m_rowNumber++;
 
@@ -277,26 +276,24 @@ final class FileRowIterator extends RowIterator {
     } // next()
 
     /**
-     * The method creates a default <code>DataCell</code> of the type passed
-     * in, and initializes its value from the <code>data</code> string
-     * (converting it to the corresponding type). Throws a
-     * java.lang.NumberFormatException if the <code>data</code> argument
-     * couldn't be converted to the appropriate type or a
-     * <code> IllegalStateException
-     * </code> if the <code> type </code> passed in
-     * is not supported.
+     * The method creates a default {@link DataCell} of the type passed in, and
+     * initializes its value from the <code>data</code> string (converting it
+     * to the corresponding type). Throws a {@link NumberFormatException} if the
+     * <code>data</code> argument couldn't be converted to the appropriate
+     * type or a {@link IllegalStateException} if the <code> type </code> passed
+     * in is not supported.
      * 
      * @param type the type of DataCell to be created, supported are Double-,
-     *            Int-, and StringTypes.
+     *            Int-, and StringTypes
      * @param data the string representation of the value that will be set in
-     *            the DataCell created.
-     * @param createMissingCell If set true a missing cell of the passed type
-     *            will be created. The <code> data </code> parameter is ignored
-     *            then.
-     * @param rowHeader the rowID - for nice error messages only.
+     *            the DataCell created
+     * @param createMissingCell If set <code>true</code> a missing cell of the
+     *            passed type will be created. The <code>data</code> parameter
+     *            is ignored then.
+     * @param rowHeader the rowID - for nice error messages only
      * @param row the cells of the row created so far. Used for messages only.
-     * @return <code> DataCell </code> of the type specified in <code> type
-     * </code> .
+     * @return data cell of the type specified in <code> type </code>
+     * 
      */
     private DataCell createNewDataCellOfType(final DataType type,
             final String data, final boolean createMissingCell,
@@ -360,8 +357,7 @@ final class FileRowIterator extends RowIterator {
     private StringCell createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
-        assert (m_frSettings.getFileHasRowHeaders() 
-                || (m_rowHeaderPrefix != null));
+        assert (m_frSettings.getFileHasRowHeaders() || (m_rowHeaderPrefix != null));
 
         // if there is a row header in the file we must read it - independend
         // of if we are going to use it or not.
@@ -411,15 +407,15 @@ final class FileRowIterator extends RowIterator {
     private String uniquifyRowHeader(final String newRowHeader) {
 
         Number oldSuffix = m_rowIDhash.put(newRowHeader, NOSUFFIX);
-        
+
         if (oldSuffix == null) {
-            // haven't seen the rowID so far. 
+            // haven't seen the rowID so far.
             return newRowHeader;
         }
 
         // we have seen this rowID before!
         int idx = oldSuffix.intValue();
-            
+
         assert idx >= NOSUFFIX.intValue();
 
         idx++;
@@ -435,9 +431,9 @@ final class FileRowIterator extends RowIterator {
             // put back the old (incr.) suffix (overriden with NOSUFFIX).
             m_rowIDhash.put(newRowHeader, oldSuffix);
         }
-     
+
         return newRowHeader + "_" + idx;
-    }        
+    }
 
     /*
      * !!!!!!!!!! Creates the exception object (storing the last read items in
@@ -473,5 +469,4 @@ final class FileRowIterator extends RowIterator {
         return new FileReaderException(msg, errRow, lineNumber);
 
     }
-
-} // FileRowIterator
+}

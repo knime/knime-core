@@ -24,12 +24,12 @@ import de.unikn.knime.core.data.DataTableSpec;
 import de.unikn.knime.core.data.RowIterator;
 
 /**
- * A DataTable which "contains" only rows that don't fall through the specified
- * filter. The table wrapps the original table and forwards only rows that meet
- * the filter criteria. Any <code>RowFilter</code> can be passed. It will
- * decide whether a row is part of this table or not.
+ * A {@link de.unikn.knime.core.data.DataTable} which "contains" only rows that
+ * don't fall through the specified filter. The table wrapps the original table
+ * and forwards only rows that meet the filter criteria. Any {@link RowFilter}
+ * can be passed. It will decide whether a row is part of this table or not.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterTable implements DataTable {
 
@@ -38,15 +38,14 @@ public class RowFilterTable implements DataTable {
     private final RowFilter m_filter;
 
     /**
-     * Creates a new DataTable which contains only rows that are not filtered
+     * Creates a new data table which contains only rows that are not filtered
      * out by the specified filter.
      * 
      * @param origTable the table to filter the rows from
-     * @param filter a RowFilter that will be consulted for each row to decide
-     *            whether to include it or not.
+     * @param filter a row filter that will be consulted for each row to decide
+     *            whether to include it or not
      */
-    public RowFilterTable(
-            final DataTable origTable, final RowFilter filter) {
+    public RowFilterTable(final DataTable origTable, final RowFilter filter) {
         if (origTable == null) {
             throw new NullPointerException("Source table can't be null");
         }
@@ -68,7 +67,6 @@ public class RowFilterTable implements DataTable {
      * @see de.unikn.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
-        return new RowFilterIterator(m_table, 
-                (RowFilter)m_filter.clone());
+        return new RowFilterIterator(m_table, (RowFilter)m_filter.clone());
     }
 }

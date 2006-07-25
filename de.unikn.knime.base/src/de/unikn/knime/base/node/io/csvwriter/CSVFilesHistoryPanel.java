@@ -46,7 +46,7 @@ import de.unikn.knime.core.node.util.StringHistory;
  * have been recently used.
  * 
  * @see de.unikn.knime.core.node.util.StringHistory
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class CSVFilesHistoryPanel extends JPanel {
 
@@ -105,7 +105,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
     /**
      * Get currently selected file.
      * 
-     * @return The current file url.
+     * @return the current file url
      * @see javax.swing.JComboBox#getSelectedItem()
      */
     public String getSelectedFile() {
@@ -115,7 +115,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
     /**
      * Set the file url as default.
      * 
-     * @param url The file to choose.
+     * @param url the file to choose
      * @see javax.swing.JComboBox#setSelectedItem(java.lang.Object)
      */
     public void setSelectedFile(final String url) {
@@ -153,7 +153,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * Tries to create a File from the passed string.
      * 
      * @param url the string to transform into an File
-     * @return File if entered value could be properly tranformed, or
+     * @return File if entered value could be properly tranformed
      * @throws MalformedURLException if the value passed was invalid
      */
     private static File textToFile(final String url)
@@ -181,8 +181,8 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * Return a file object for the given fileName. It makes sure that if the
      * fileName is not absolute it will be relative to the user's home dir.
      * 
-     * @param fileName The file name to convert to a file.
-     * @return A file representing fileName.
+     * @param fileName the file name to convert to a file
+     * @return a file representing fileName
      */
     public static final File getFile(final String fileName) {
         File f = new File(fileName);
@@ -209,5 +209,4 @@ public final class CSVFilesHistoryPanel extends JPanel {
                     isSelected, cellHasFocus);
         }
     }
-
 }

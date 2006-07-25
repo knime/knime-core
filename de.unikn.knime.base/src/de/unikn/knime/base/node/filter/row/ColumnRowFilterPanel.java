@@ -58,7 +58,7 @@ import de.unikn.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ColumnRowFilterPanel extends RowFilterPanel {
 
@@ -95,7 +95,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * Craetes a new panel for column content filter settings.
      * 
      * @param tSpec table spec containing column specs to select from
-     * @throws NotConfigurableException it tspec is null or emtpy
+     * @throws NotConfigurableException it tspec is <code>null</code> or emtpy
      */
     ColumnRowFilterPanel(final DataTableSpec tSpec)
             throws NotConfigurableException {
@@ -208,8 +208,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         for (int c = 0; c < tSpec.getNumColumns(); c++) {
             colNames.add(tSpec.getColumnSpec(c).getName());
         }
-        m_colCombo = new ColumnSelectionComboxBox((Border)null, 
-                DataValue.class);
+        m_colCombo = new ColumnSelectionComboxBox((Border)null, DataValue.class);
         m_colCombo.update(tSpec, null);
         m_colCombo.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -300,7 +299,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * called when user pushes the buttons.
+     * Called when user pushes the buttons.
      */
     protected void radiosChanged() {
 
@@ -323,7 +322,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * called when user changes the values for the lower or upper bounds.
+     * Called when user changes the values for the lower or upper bounds.
      */
     protected void boundsChanged() {
         // check if the entered value somehow goes along with the selected col.
@@ -374,7 +373,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * called when the user selects a new column.
+     * Called when the user selects a new column.
      */
     protected void selectedColChanged() {
         // we trigger 'boundsChanged' to get bounds checked against the new
@@ -383,7 +382,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * called when the user changes the regular expresion.
+     * Called when the user changes the regular expresion.
      */
     protected void regExprChanged() {
         setErrMsg("");

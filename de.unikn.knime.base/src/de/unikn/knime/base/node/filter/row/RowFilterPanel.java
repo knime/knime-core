@@ -33,14 +33,14 @@ import de.unikn.knime.core.node.InvalidSettingsException;
  * horizontal and vertical struts so that the size of the panel doesn't change,
  * even if everything is disabled.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public abstract class RowFilterPanel extends JPanel {
 
     private JPanel m_panel;
 
     /**
-     * a rowfilter panel.
+     * A rowfilter panel.
      * 
      * @param width minimum width of the panel
      * @param height minimum height of the panel
@@ -78,11 +78,12 @@ public abstract class RowFilterPanel extends JPanel {
     }
 
     /**
-     * makes all components contained in the panel in/visible, depending on the
+     * Makes all components contained in the panel in/visible, depending on the
      * value passed in.
      * 
-     * @param visible if set true all components in the panel will be made
-     *            visible, if false they will be invisible.
+     * @param visible if set <code>true</code> all components in the panel
+     *            will be made visible, if <code>false</code> they will be
+     *            invisible
      */
     public void setComponentsVisible(final boolean visible) {
         Component[] compos = m_panel.getComponents();

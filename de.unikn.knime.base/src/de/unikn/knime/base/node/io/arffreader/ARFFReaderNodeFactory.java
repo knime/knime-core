@@ -25,21 +25,21 @@ import de.unikn.knime.core.node.NodeView;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ARFFReaderNodeFactory extends NodeFactory {
 
     private final String m_fileURL;
 
     /**
-     * will deliver a model with no default file set.
+     * Will deliver a model with no default file set.
      */
     public ARFFReaderNodeFactory() {
         m_fileURL = null;
     }
 
     /**
-     * this factory will create a model with the file set as default file.
+     * This factory will create a model with the file set as default file.
      * 
      * @param fileURL a valid URL to the default ARFF file.
      */

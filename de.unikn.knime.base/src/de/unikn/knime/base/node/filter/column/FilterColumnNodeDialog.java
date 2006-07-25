@@ -26,8 +26,8 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
- * This is the dialog for the column filter. The user can specify
- * which columns should be excluded in the output table.
+ * This is the dialog for the column filter. The user can specify which columns
+ * should be excluded in the output table.
  * 
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
@@ -38,10 +38,10 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      * The tab's name.
      */
     private static final String TAB = "Column Filter";
-    
+
     /**
-     * Creates a new <code>NodeDialogPane</code> for the column filter in order
-     * to set the desired columns. 
+     * Creates a new {@link NodeDialogPane} for the column filter in order to
+     * set the desired columns.
      */
     FilterColumnNodeDialog() {
         super();
@@ -49,26 +49,25 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * Calls the update method of the underlying filter panel using the input 
-     * data table spec from this <code>FilterColumnNodeModel</code>.
-     *  
-     * @param settings The <code>NodeSettings</code> to read from.
-     * @param specs The input specs.
-     * @throws NotConfigurableException If no columns are available for
-     *         filtering.
+     * Calls the update method of the underlying filter panel using the input
+     * data table spec from this {@link FilterColumnNodeModel}.
+     * 
+     * @param settings the node settings to read from
+     * @param specs the input specs
+     * @throws NotConfigurableException if no columns are available for
+     *             filtering
      */
     @Override
-    protected void loadSettingsFrom(
-            final NodeSettingsRO settings, final DataTableSpec[] specs) 
-            throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
         assert (settings != null && specs.length == 1);
         if (specs[FilterColumnNodeModel.INPORT] == null
                 || specs[FilterColumnNodeModel.INPORT].getNumColumns() == 0) {
             throw new NotConfigurableException("No columns available for "
                     + "selection.");
         }
-        String[] columns = settings.getStringArray(
-                FilterColumnNodeModel.KEY, new String[0]); 
+        String[] columns = settings.getStringArray(FilterColumnNodeModel.KEY,
+                new String[0]);
         HashSet<String> list = new HashSet<String>();
         for (int i = 0; i < columns.length; i++) {
             if (specs[FilterColumnNodeModel.INPORT].containsName(columns[i])) {
@@ -76,24 +75,23 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
             }
         }
         // set exclusion list on the panel
-        FilterColumnPanel p = (FilterColumnPanel) getTab(TAB);
+        FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
         p.update(specs[FilterColumnNodeModel.INPORT], true, list);
-    } 
-    
+    }
+
     /**
      * Sets the list of columns to exclude inside the underlying
-     * <code>FilterColumnNodeModel</code> retrieving them from the filter panel.
-     * @param settings The <code>NodeSettings</code> to write into.
-     *
+     * {@link FilterColumnNodeModel} retrieving them from the filter panel.
+     * 
+     * @param settings the node settings to write into
+     * 
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        FilterColumnPanel p = 
-            (FilterColumnPanel) getTab(TAB);
+        FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
         Set<String> list = p.getExcludedColumnList();
-        settings.addStringArray(FilterColumnNodeModel.KEY, 
-                list.toArray(new String[0]));
+        settings.addStringArray(FilterColumnNodeModel.KEY, list
+                .toArray(new String[0]));
     }
-    
-}   // FilterColumnNodeDialog
+}

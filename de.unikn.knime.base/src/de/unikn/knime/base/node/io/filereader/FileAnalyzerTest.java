@@ -31,12 +31,12 @@ import de.unikn.knime.base.node.io.filetokenizer.Quote;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class FileAnalyzerTest extends TestCase {
 
     /**
-     * tests the analyze TODO: test all features!
+     * Tests the analyze TODO: test all features!
      */
     public void testAnalyze() {
         colHeaderTest();

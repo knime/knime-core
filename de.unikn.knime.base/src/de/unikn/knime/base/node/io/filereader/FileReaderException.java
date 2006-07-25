@@ -21,12 +21,13 @@ package de.unikn.knime.base.node.io.filereader;
 import de.unikn.knime.core.data.DataRow;
 
 /**
- * The exception the FileReader (more specificaly the FileRowIterator) throws if
+ * The exception the {@link java.io.FileReader} (more specificaly the
+ * {@link de.unikn.knime.base.node.io.filereader.FileRowIterator}) throws if
  * something goes wrong.
  * 
  * This is a runtime exception for now.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderException extends RuntimeException {
 
@@ -37,7 +38,7 @@ public class FileReaderException extends RuntimeException {
     /**
      * Always provide a good user message why things go wrong.
      * 
-     * @param msg the message to store in the exception.
+     * @param msg the message to store in the exception
      */
     FileReaderException(final String msg) {
         super(msg);
@@ -49,8 +50,8 @@ public class FileReaderException extends RuntimeException {
      * Constructor for an exception that stores the last (partial) row where
      * things went wrong.
      * 
-     * @param msg the message what went wrong.
-     * @param faultyRow the row as far as it got read.
+     * @param msg the message what went wrong
+     * @param faultyRow the row as far as it got read
      * @param lineNumber the lineNumber the error occured
      */
     FileReaderException(final String msg, final DataRow faultyRow,
@@ -62,7 +63,7 @@ public class FileReaderException extends RuntimeException {
 
     /**
      * @return the row that was (possibly partially!) read before things went
-     *         wrong. Could be null, if not set.
+     *         wrong. Could be <code>null</code>, if not set.
      */
     DataRow getErrorRow() {
         return m_row;

@@ -43,7 +43,7 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  * mismatch because the row number is out of the valid range) - which could
  * potentially take a while...
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterNodeModel extends NodeModel {
 
@@ -187,5 +187,4 @@ public class RowFilterNodeModel extends NodeModel {
             return new DataTableSpec[]{newSpec};
         }
     }
-
 }

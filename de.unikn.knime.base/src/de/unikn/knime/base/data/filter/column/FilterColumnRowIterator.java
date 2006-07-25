@@ -19,12 +19,12 @@ package de.unikn.knime.base.data.filter.column;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.RowIterator;
 
-/** 
- * Filter column row iterator needed to wrap the filter column's original row 
+/**
+ * Filter column row iterator needed to wrap the filter column's original row
  * iterator.
  * 
  * @see FilterColumnTable
- *  
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
 final class FilterColumnRowIterator extends RowIterator {
@@ -33,20 +33,21 @@ final class FilterColumnRowIterator extends RowIterator {
      * Original row iterator.
      */
     private final RowIterator m_it;
-        
-    /* 
+
+    /*
      * Array of column indices.
      */
     private final int[] m_columns;
-    
-    /** 
-     * Creates a new filter <code>RowIterator</code> using the original row
-     * iterator and an array of column indices.
-     * @param it      The original row iterator.
-     * @param columns An array of column indices.
-     */    
+
+    /**
+     * Creates a new filter iterator using the original row iterator and an
+     * array of column indices.
+     * 
+     * @param it the original row iterator
+     * @param columns an array of column indices
+     */
     FilterColumnRowIterator(final RowIterator it, final int[] columns) {
-        m_it      = it;
+        m_it = it;
         m_columns = columns;
     }
 
@@ -65,5 +66,4 @@ final class FilterColumnRowIterator extends RowIterator {
     public DataRow next() {
         return new FilterColumnRow(m_it.next(), m_columns);
     }
-
-}   // FilterColumnRowIterator
+}

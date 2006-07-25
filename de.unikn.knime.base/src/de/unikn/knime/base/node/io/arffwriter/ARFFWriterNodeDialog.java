@@ -60,10 +60,10 @@ import de.unikn.knime.core.node.NotConfigurableException;
 /**
  * Contains the dialog for the ARFF file writer.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
-public class ARFFWriterNodeDialog extends NodeDialogPane 
-        implements ItemListener {
+public class ARFFWriterNodeDialog extends NodeDialogPane implements
+        ItemListener {
 
     private static final int VERT_SPACE = 5;
 
@@ -86,7 +86,6 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
         super();
 
         addTab("Specify ARFF file", createFilePanel());
-
     }
 
     private JPanel createFilePanel() {
@@ -103,9 +102,10 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
 
         JPanel fPanel = new JPanel();
         fPanel.setLayout(new BoxLayout(fPanel, BoxLayout.X_AXIS));
-        fPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), 
-                "Enter location to write ARFF file to:"));
+        fPanel
+                .setBorder(BorderFactory.createTitledBorder(BorderFactory
+                        .createEtchedBorder(),
+                        "Enter location to write ARFF file to:"));
         Container fileBox = Box.createHorizontalBox();
         fileBox.add(Box.createHorizontalStrut(20));
         fileBox.add(new JLabel("valid location:"));
@@ -116,8 +116,9 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
         m_url = new JComboBox();
         m_url.setMaximumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
         m_url.setMinimumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
-        m_url.setPreferredSize(new Dimension(TEXTFIELD_WIDTH, 
-                COMPONENT_HEIGHT));
+        m_url
+                .setPreferredSize(new Dimension(TEXTFIELD_WIDTH,
+                        COMPONENT_HEIGHT));
         m_url.setEditable(true);
         m_url.setRenderer(new MyComboBoxRenderer());
         fileBox.add(m_url);
@@ -199,7 +200,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
     }
 
     /**
-     * updates the file error label whenever the fileURL entered changed.
+     * Updates the file error label whenever the fileURL entered changed.
      */
     protected void updateFileError() {
         String urlInput = m_url.getEditor().getItem().toString();
@@ -226,10 +227,10 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
                                         + "\" is a directory.");
                             }
                             if (f.exists() && !f.canWrite()) {
-                                    text = "Cannot write to file \""
-                                            + f.getAbsolutePath() + "\".";
+                                text = "Cannot write to file \""
+                                        + f.getAbsolutePath() + "\".";
                             }
-                        } 
+                        }
                     }
                 } catch (Exception e) {
                     text = "Invalid file location";
@@ -244,11 +245,10 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
             m_urlError.setText(text);
             m_urlError.setVisible(true);
         }
-
     }
 
     /**
-     * pops up the file selection dialog and sets the selected file path into
+     * Pops up the file selection dialog and sets the selected file path into
      * the m_url text field.
      */
     protected void popupFileChooser() {
@@ -256,8 +256,8 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
         // be specified already:
         String startingDir = "";
         try {
-            URL newURL = ARFFReaderNodeModel.stringToURL(
-                    m_url.getEditor().getItem().toString());
+            URL newURL = ARFFReaderNodeModel.stringToURL(m_url.getEditor()
+                    .getItem().toString());
             if (newURL.getProtocol().equals("file")) {
                 File tmpFile = new File(newURL.getPath());
                 startingDir = tmpFile.getAbsolutePath();
@@ -295,9 +295,9 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
             throw new InvalidSettingsException("Specify valid file location. "
                     + "Or press 'Cancel'.");
         }
-        
-        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME,
-                m_url.getEditor().getItem().toString());
+
+        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_url
+                .getEditor().getItem().toString());
     }
 
     /**
@@ -312,7 +312,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
         m_url.removeItemListener(this);
         m_url.removeAllItems();
         for (String str : ARFFReaderNodeModel.getFileHistory(
-                /*removeNotExistingFiles*/false)) {
+        /* removeNotExistingFiles */false)) {
             m_url.addItem(str);
         }
 
@@ -320,13 +320,12 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
         m_url.setSelectedItem(settings.getString(
                 ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
 
-        
         m_url.addItemListener(this);
 
         updateFileError();
     }
 
-     /** Renderer that also supports to show customized tooltip. */
+    /** Renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
 
         /**
@@ -392,5 +391,4 @@ public class ARFFWriterNodeDialog extends NodeDialogPane
             return result;
         }
     }
-
 }

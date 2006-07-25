@@ -36,7 +36,7 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ARFFTableTest extends TestCase {
 

@@ -24,6 +24,7 @@ import de.unikn.knime.core.node.NodeView;
 
 /**
  * Factory to create nodes that concatenate input tables to one output table.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsNodeFactory extends NodeFactory {
@@ -48,8 +49,8 @@ public class AppendedRowsNodeFactory extends NodeFactory {
      * @see NodeFactory#createNodeView(int, NodeModel)
      */
     @Override
-    public NodeView createNodeView(
-            final int viewIndex, final NodeModel nodeModel) {
+    public NodeView createNodeView(final int viewIndex,
+            final NodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 
@@ -66,6 +67,6 @@ public class AppendedRowsNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new AppendedRowsNodeDialog(); 
+        return new AppendedRowsNodeDialog();
     }
 }

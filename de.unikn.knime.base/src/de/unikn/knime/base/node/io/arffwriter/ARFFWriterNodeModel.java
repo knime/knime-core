@@ -47,7 +47,7 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ARFFWriterNodeModel extends NodeModel {
 
@@ -55,10 +55,10 @@ public class ARFFWriterNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ARFFWriterNodeModel.class);
 
-    /** the key used to store the filename in the model spec. */
+    /** The key used to store the filename in the model spec. */
     static final String CFGKEY_FILENAME = "ARFFoutput";
 
-    /** the key used to store the filename in the model spec. */
+    /** The key used to store the filename in the model spec. */
     static final String CFGKEY_SPARSE = "sparseARFF";
 
     /* the file we write to. Must be writable! */
@@ -81,7 +81,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * creates an immediately executable model.
+     * Creates an immediately executable model.
      * 
      * @param outFileName the file name to write the data to. Must specify a
      *            writable file.
@@ -387,7 +387,7 @@ public class ARFFWriterNodeModel extends NodeModel {
      * Helper that checks some properties for the file argument.
      * 
      * @param file The file to check
-     * @throws InvalidSettingsException If that fails.
+     * @throws InvalidSettingsException if that fails
      */
     private void checkFileAccess(final File file)
             throws InvalidSettingsException {
@@ -443,5 +443,4 @@ public class ARFFWriterNodeModel extends NodeModel {
         }
         return result;
     }
-
 }

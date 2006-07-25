@@ -46,17 +46,14 @@ public class FilterColumnNodeFactory extends NodeFactory {
     }
 
     /**
-     * This node has no view.
-     * 
      * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
      */
     @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
         throw new InternalError();
     }
-    
+
     /**
-     * @return <b>true</b>.
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
     @Override

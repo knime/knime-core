@@ -34,12 +34,11 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.util.StringHistory;
 
 /**
- * @author ohl University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderNodeModel extends NodeModel {
-
     /**
-     * the id this objects uses to store its file history in the
+     * The id this objects uses to store its file history in the
      * <code>StringHistory</code> object. Don't reuse this id unless you want
      * to share the history list.
      */
@@ -59,12 +58,12 @@ public class FileReaderNodeModel extends NodeModel {
      */
     public FileReaderNodeModel() {
         super(0, 1); // tell the super we need no inputs and one output,
-                        // please.
+        // please.
         m_frSettings = null;
     }
 
     /**
-     * creates a new model and either read its settings from the specified file,
+     * Creates a new model and either read its settings from the specified file,
      * if the filename ends with ".xml", or set the specified file name as
      * default data file name for the configuration dialog. Settings in the
      * model resulting from this constructor must not necessarily be correct or
@@ -144,7 +143,8 @@ public class FileReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @return the current settings for the file reader. Could be null.
+     * @return the current settings for the file reader. Could be
+     *         <code>null</code>.
      */
     FileReaderSettings getFileReaderSettings() {
         return m_frSettings;
@@ -202,11 +202,12 @@ public class FileReaderNodeModel extends NodeModel {
     }
 
     /**
-     * reads in all user settings of the model. If they are incomplete,
+     * Reads in all user settings of the model. If they are incomplete,
      * inconsistent, or in any way invalid it will throw an exception.
      * 
      * @param settings the object to read the user settings from. Must not be
-     *            null. And must be validated with the validate method below.
+     *            <code>null</code> and must be validated with the validate
+     *            method below.
      * @throws InvalidSettingsException if the settings are incorrect - which
      *             should not happen as they are supposed to be validated
      *             before.
@@ -241,12 +242,12 @@ public class FileReaderNodeModel extends NodeModel {
     }
 
     /**
-     * checks all user settings in the specified spec object. If they are
+     * Checks all user settings in the specified spec object. If they are
      * incomplete, inconsistent, or in any way invalid it will throw an
      * exception.
      * 
      * @param settings the object to read the user settings from. Must not be
-     *            null.
+     *            <code>null</code>.
      * @throws InvalidSettingsException if the settings in the specified object
      *             are incomplete, inconsistent, or in any way invalid.
      * @see NodeModel#validateSettings(NodeSettingsRO)
@@ -313,10 +314,9 @@ public class FileReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @return the current file history associated with the file reader.
+     * @return the current file history associated with the file reader
      */
     static String[] getFileHistory() {
-
         StringHistory h = StringHistory.getInstance(FILEREADER_HISTORY_ID);
         Vector<String> validLoc = new Vector<String>();
         // dismiss not existing files
@@ -340,7 +340,5 @@ public class FileReaderNodeModel extends NodeModel {
             }
         }
         return validLoc.toArray(new String[0]);
-
     }
-
 }

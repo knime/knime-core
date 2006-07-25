@@ -39,26 +39,29 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * <code>NodeModel</code> that concatenates its two input table to one output
- * table.
+ * {@link de.unikn.knime.core.node.NodeModel} that concatenates its two input
+ * table to one output table.
  * 
  * @see de.unikn.knime.base.data.append.row.AppendedRowsTable
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsNodeModel extends NodeModel {
 
-    /** NodeSettings key if to append suffix (boolean). 
-     * If false, skip the rows. */
+    /**
+     * NodeSettings key if to append suffix (boolean). If false, skip the rows.
+     */
     static final String CFG_APPEND_SUFFIX = "append_suffix";
 
     /** NodeSettings key: suffix to append. */
     static final String CFG_SUFFIX = "suffix";
-    
+
     /** NodeSettings key: Use only the intersection of columns. */
     static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
 
     private boolean m_isAppendSuffix = false;
+
     private String m_suffix = null;
+
     private boolean m_isIntersection;
 
     /**
@@ -69,7 +72,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#execute( BufferedDataTable[],
+     * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
      *      ExecutionContext)
      */
     @Override
@@ -93,11 +96,11 @@ public class AppendedRowsNodeModel extends NodeModel {
         }
 
         AppendedRowsTable out = new AppendedRowsTable(
-                (m_isAppendSuffix ? m_suffix : null), (DataTable[])corrected);
+                (m_isAppendSuffix ? m_suffix : null), corrected);
         // note, this iterator throws runtime exceptions when canceled.
         RowIterator it = out.iterator(exec, totalRowCount);
-        BufferedDataContainer c = 
-            exec.createDataContainer(out.getDataTableSpec());
+        BufferedDataContainer c = exec.createDataContainer(out
+                .getDataTableSpec());
         try {
             while (it.hasNext()) {
                 // may throw exception, also sets progress
@@ -108,7 +111,7 @@ public class AppendedRowsNodeModel extends NodeModel {
         } finally {
             c.close();
         }
-        return new BufferedDataTable[] {c.getTable()};
+        return new BufferedDataTable[]{c.getTable()};
     }
 
     /**
@@ -132,10 +135,12 @@ public class AppendedRowsNodeModel extends NodeModel {
         outSpecs[0] = AppendedRowsTable.generateDataTableSpec(corrected);
         return outSpecs;
     }
-    
-    /** Determines the names of columns that appear in all specs.
-     * @param specs Specs to check
-     * @return Column names that appear in all columns.
+
+    /**
+     * Determines the names of columns that appear in all specs.
+     * 
+     * @param specs specs to check
+     * @return column names that appear in all columns
      */
     static String[] getIntersection(final DataTableSpec... specs) {
         LinkedHashSet<String> hash = new LinkedHashSet<String>();
@@ -205,25 +210,24 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #loadInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #loadInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveInternals(File, ExecutionMonitor)
+     * @see de.unikn.knime.core.node.NodeModel #saveInternals(File,
+     *      ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-            throws IOException, CanceledExecutionException {
-        
-    }
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
 
+    }
 }

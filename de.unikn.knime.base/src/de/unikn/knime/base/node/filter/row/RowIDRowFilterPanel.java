@@ -38,13 +38,9 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 class RowIDRowFilterPanel extends RowFilterPanel {
-
-    /** object version for serialization. */
-    static final long serialVersionUID = 1;
-
     private JLabel m_errText;
 
     private JTextField m_regExpr;
@@ -54,7 +50,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     private JCheckBox m_startsWith;
 
     /**
-     * creates a new panel for a row ID filter.
+     * Creates a new panel for a row ID filter.
      */
     RowIDRowFilterPanel() {
         super(400, 350);
@@ -107,7 +103,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * called when the textfield content changes.
+     * Called when the textfield content changes.
      */
     protected void regExprChanged() {
         updateErrText();
@@ -128,7 +124,8 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @return true if an error message is currently displayed in the panel
+     * @return <code>true</code> if an error message is currently displayed in
+     *         the panel
      */
     boolean hasErrors() {
         return m_errText.getText().length() != 0;
@@ -170,5 +167,4 @@ class RowIDRowFilterPanel extends RowFilterPanel {
                 .isSelected(), m_startsWith.isSelected());
 
     }
-
 }

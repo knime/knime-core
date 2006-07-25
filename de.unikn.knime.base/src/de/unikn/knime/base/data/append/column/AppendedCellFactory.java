@@ -21,18 +21,21 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataRow;
 
 /**
- * Factory for a AppendedColummTable that serves to generate the cells of the
- * new columns.
+ * Factory for an
+ * {@link de.unikn.knime.base.data.append.column.AppendedColumnTable} that
+ * serves to generate the cells of the new columns.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface AppendedCellFactory {
 
     /**
-     * Get the new cells for a given row. These cells are appended to the 
+     * Get the new cells for a given row. These cells are appended to the
      * existing row.
+     * 
      * @param row The row of interest.
      * @return The appended cells to that row.
-     * @throws IllegalArgumentException  If there is no mapping available.
+     * @throws IllegalArgumentException If there is no mapping available.
      */
     DataCell[] getAppendedCell(final DataRow row);
 }

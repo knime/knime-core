@@ -33,12 +33,9 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * 
- * @author ohl, University of Konstanz
- */
-
-/**
  * Stores the properties for one column.
+ * 
+ * @author Peter Ohl, University of Konstanz
  */
 class ColProperty {
     /* stores most of the parameters */
@@ -47,12 +44,16 @@ class ColProperty {
     /* the pattern causing a missing cell to be created */
     private String m_missValuePattern;
 
-    /* if true the object contains values set by the user - otherwise its all
-     * default settings. */
+    /*
+     * if true the object contains values set by the user - otherwise its all
+     * default settings.
+     */
     private boolean m_userSettings;
 
-    /* indicates if we should read possible values from the file (used for
-     * integer columns only) */
+    /*
+     * indicates if we should read possible values from the file (used for
+     * integer columns only)
+     */
     private boolean m_readPossValsFromFile;
 
     private static final String CFGKEY_USERSETTINGS = "UserSetValues";
@@ -74,7 +75,7 @@ class ColProperty {
     private static final String CFGKEY_LOWERBOUND = "LowerBound";
 
     /**
-     * creates an empty column properties object.
+     * Creates an empty column properties object.
      */
     ColProperty() {
         m_colSpec = null;
@@ -137,24 +138,23 @@ class ColProperty {
         // constructor. In case somebody changes it in the future.
         assert (new DataColumnDomainCreator(null, null) != null);
 
-        DataColumnSpecCreator dcsc = 
-            new DataColumnSpecCreator(colName, colType);
+        DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName, colType);
         if ((posValues != null) && (posValues.size() > 0)) {
-            dcsc.setDomain(new DataColumnDomainCreator(
-                    posValues, lowerBound, upperBound).createDomain());
+            dcsc.setDomain(new DataColumnDomainCreator(posValues, lowerBound,
+                    upperBound).createDomain());
         } else {
-            dcsc.setDomain(new DataColumnDomainCreator(
-                    lowerBound, upperBound).createDomain());
+            dcsc.setDomain(new DataColumnDomainCreator(lowerBound, upperBound)
+                    .createDomain());
         }
         m_colSpec = dcsc.createSpec();
 
     }
 
     /**
-     * writes all settings from this object into the passed configuration
+     * Writes all settings from this object into the passed configuration
      * object.
      * 
-     * @param cfg the configuration object to write the settings into.
+     * @param cfg the configuration object to write the settings into
      */
     void saveToConfiguration(final NodeSettingsWO cfg) {
 
@@ -181,10 +181,10 @@ class ColProperty {
         }
         if ((m_colSpec.getDomain().getLowerBound() != null)
                 || (m_colSpec.getDomain().getUpperBound() != null)) {
-            cfg.addDataCell(CFGKEY_LOWERBOUND, m_colSpec.getDomain().
-                    getLowerBound());
-            cfg.addDataCell(CFGKEY_UPPERBOUND, m_colSpec.getDomain().
-                    getUpperBound());
+            cfg.addDataCell(CFGKEY_LOWERBOUND, m_colSpec.getDomain()
+                    .getLowerBound());
+            cfg.addDataCell(CFGKEY_UPPERBOUND, m_colSpec.getDomain()
+                    .getUpperBound());
         }
     }
 
@@ -217,8 +217,9 @@ class ColProperty {
     }
 
     /**
-     * @return true if settings in this property object are set by the user,
-     *         false if all settings are default/guessed values.
+     * @return <code>true</code> if settings in this property object are set
+     *         by the user, <code>false</code> if all settings are
+     *         default/guessed values.
      */
     boolean getUserSettings() {
         return m_userSettings;
@@ -234,8 +235,8 @@ class ColProperty {
     }
 
     /**
-     * @return true if the possible values should be read from file. This is set
-     *         only for integer columns.
+     * @return <code>true</code> if the possible values should be read from
+     *         file. This is set only for integer columns.
      */
     boolean getReadPossibleValuesFromFile() {
         return m_readPossValsFromFile;
@@ -245,15 +246,16 @@ class ColProperty {
      * Determines if the possible values of this column will be read from file
      * (used only with integer columns).
      * 
-     * @param readThem the new value of the flag. True if possible values should
-     *            be read. False otherwise.
+     * @param readThem the new value of the flag. <code>true</code> if
+     *            possible values should be read, <code>false</code>
+     *            otherwise.
      */
     void setReadPossibleValuesFromFile(final boolean readThem) {
         m_readPossValsFromFile = readThem;
     }
 
     /**
-     * sets a new column name for this column.
+     * Sets a new column name for this column.
      * 
      * @param colName the new name
      */
@@ -265,7 +267,7 @@ class ColProperty {
     }
 
     /**
-     * sets a new column type for this column.
+     * Sets a new column type for this column.
      * 
      * @param newType the new type
      */
@@ -277,7 +279,7 @@ class ColProperty {
     }
 
     /**
-     * replaces the list of possible values for this columns.
+     * Replaces the list of possible values for this columns.
      * 
      * @param newDomain the new domain to set in the column spec of this col
      *            property
@@ -287,7 +289,6 @@ class ColProperty {
         dcsc.setDomain(newDomain);
         m_colSpec = dcsc.createSpec();
     }
-
 
     /**
      * @see java.lang.Object#toString()
@@ -307,23 +308,22 @@ class ColProperty {
     }
 
     /**
-     * returns a new ColProperty object containing a deep copy of this one.
+     * Returns a new ColProperty object containing a deep copy of this one.
+     * 
      * @see java.lang.Object#clone()
      */
     @Override
     public Object clone() {
-        
+
         ColProperty result = new ColProperty();
         // column specs are read only, we reuse it
         result.m_colSpec = m_colSpec;
         // Strings as well
         result.m_missValuePattern = m_missValuePattern;
-        
+
         result.m_userSettings = m_userSettings;
         result.m_readPossValsFromFile = m_readPossValsFromFile;
 
         return result;
     }
-    
-} // class ColProperty
-
+}

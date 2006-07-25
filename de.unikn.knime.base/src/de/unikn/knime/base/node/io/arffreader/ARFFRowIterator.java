@@ -41,10 +41,9 @@ import de.unikn.knime.core.node.NodeLogger;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ARFFRowIterator extends RowIterator {
-
     /** The node logger fot this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ARFFRowIterator.class);
@@ -70,13 +69,13 @@ public class ARFFRowIterator extends RowIterator {
     private static final int MAX_ERR_MSG = 10;
 
     /**
-     * Create a new DataTable reading its content from an ARFF file at the
+     * Create a new row iterator reading the rows from an ARFF file at the
      * specified location.
      * 
-     * @param fileLocation valid URL of the file to read.
-     * @param tSpec the structure of the table to create.
-     * @param rowKeyPrefix row keys are constructed like rowKeyPrefix + lineNo.
-     * @throws IOException if the ARFF file location couldn't be opened.
+     * @param fileLocation valid URL of the file to read
+     * @param tSpec the structure of the table to create
+     * @param rowKeyPrefix row keys are constructed like rowKeyPrefix + lineNo
+     * @throws IOException if the ARFF file location couldn't be opened
      */
     public ARFFRowIterator(final URL fileLocation, final DataTableSpec tSpec,
             final String rowKeyPrefix) throws IOException {
@@ -222,8 +221,7 @@ public class ARFFRowIterator extends RowIterator {
 
             // now get that new cell (it throws something at us if it couldn't)
             rowCells[createdCols] = createNewDataCellOfType(m_tSpec
-                    .getColumnSpec(createdCols).getType(), token, 
-                                    isMissingCell);
+                    .getColumnSpec(createdCols).getType(), token, isMissingCell);
 
             createdCols++;
 
@@ -357,6 +355,5 @@ public class ARFFRowIterator extends RowIterator {
             throw new IllegalStateException("Cannot create DataCell of type"
                     + type.toString());
         }
-    } // createNewDataCellOfType(Class,String,boolean)
-
+    }
 }

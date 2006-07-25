@@ -25,16 +25,17 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * Row Filter that includes or excludes a certain range of rows. It will throw a
- * EndOfTableException if the row number is beyond the include range. An EOT
- * constant is available to use for the range-end-parameter.
+ * Row filter that includes or excludes a certain range of rows. It will throw a
+ * {@link de.unikn.knime.base.node.filter.row.rowfilter.EndOfTableException} if
+ * the row number is beyond the include range. An EOT constant is available to
+ * use for the range-end-parameter.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowNoRowFilter extends RowFilter {
 
     /**
-     * use this value for the range-end parameter to specify a range reaching to
+     * Use this value for the range-end parameter to specify a range reaching to
      * the end of the table.
      */
     public static final int EOT = -1;
@@ -83,7 +84,7 @@ public class RowNoRowFilter extends RowFilter {
     }
 
     /**
-     * default constructor used by the row filter factory. Don't use it without
+     * Default constructor used by the row filter factory. Don't use it without
      * loading settings.
      */
     public RowNoRowFilter() {
@@ -105,8 +106,8 @@ public class RowNoRowFilter extends RowFilter {
     }
 
     /**
-     * @return true if rows in the range are included (match) or excluded (won't
-     *         match)
+     * @return <code>true</code> if rows in the range are included (match) or
+     *         excluded (won't match)
      */
     public boolean getInclude() {
         return m_include;
@@ -211,5 +212,4 @@ public class RowNoRowFilter extends RowFilter {
         result += (m_end == RowNoRowFilter.EOT) ? " EOT" : " " + m_end;
         return result;
     }
-
 }

@@ -25,22 +25,26 @@ import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.def.DefaultCellIterator;
 
 /**
- * <code>DataRow</code> that is extended by one or more cells.
+ * A {@link de.unikn.knime.core.data.DataRow} that is extended by one or more
+ * cells.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedColumnRow implements DataRow {
-    
+
     private final DataRow m_baseRow;
+
     private final DataCell[] m_appendCell;
 
     /**
-     * Creates new Row with <code>baseRow</code> providing the first cells
-     * and <code>appendCell</code> as last cells.
+     * Creates new Row with <code>baseRow</code> providing the first cells and
+     * <code>appendCell</code> as last cells.
+     * 
      * @param baseRow Containing the first cells
      * @param appendCell The last cells (to be appended).
      */
-    public AppendedColumnRow(
-            final DataRow baseRow, final DataCell... appendCell) {
+    public AppendedColumnRow(final DataRow baseRow,
+            final DataCell... appendCell) {
         m_baseRow = baseRow;
         m_appendCell = appendCell;
     }
@@ -64,20 +68,19 @@ public class AppendedColumnRow implements DataRow {
      */
     public DataCell getCell(final int index) {
         if (index < 0 || index >= getNumCells()) {
-            throw new IndexOutOfBoundsException("Index " + index + " out of " 
-                    + "range [" + 0 + ", " + (getNumCells() - 1) + "]"); 
+            throw new IndexOutOfBoundsException("Index " + index + " out of "
+                    + "range [" + 0 + ", " + (getNumCells() - 1) + "]");
         }
         if (index < m_baseRow.getNumCells()) {
             return m_baseRow.getCell(index);
         }
         return m_appendCell[index - m_baseRow.getNumCells()];
     }
-    
+
     /**
      * @see java.lang.Iterable#iterator()
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
     }
-
 }

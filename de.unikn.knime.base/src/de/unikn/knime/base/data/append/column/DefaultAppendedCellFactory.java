@@ -24,22 +24,25 @@ import de.unikn.knime.core.data.DataRow;
 
 /**
  * A default factory that generates cells based on an underlying Map. This
- * default implementation only allows the extension by one column.
+ * default implementation only allows extension by one column.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DefaultAppendedCellFactory implements AppendedCellFactory {
-    
+
     private final Map<DataCell, DataCell> m_map;
-    
+
     /**
-     * Creates new factory. The mapping is based on the argument. It has to
-     * map the row key to the new (to be appended) cell. 
+     * Creates new factory. The mapping is based on the argument. It has to map
+     * the row key to the new (to be appended) cell.
      * 
-     * <p>If the map does not contain requested keys the factory method will
-     * throw an <code>NoSuchElementException</code>. Thus, make sure you provide
+     * <p>
+     * If the map does not contain requested keys the factory method will throw
+     * an {@link java.util.NoSuchElementException}. Thus, make sure you provide
      * a complete list.
-     * @param map Mapping <code>DataCell</code> --&gt; <code>DataCell</code>. 
-     * @throws NullPointerException If argument is <code>null</code>.
+     * 
+     * @param map mapping {@link DataCell} --&gt; {@link DataCell}
+     * @throws NullPointerException if the map is <code>null</code>
      */
     public DefaultAppendedCellFactory(final Map<DataCell, DataCell> map) {
         if (map == null) {
@@ -49,12 +52,13 @@ public class DefaultAppendedCellFactory implements AppendedCellFactory {
     }
 
     /**
-     * Get the value to row's key. 
-     * @param row Where to get the key from.
-     * @return The cell from the underlying map.
-     * @throws NullPointerException If argument is null.
-     * @throws IllegalArgumentException If the key is not contained in the map 
-     *         or the value to the key is not instance of DataCell. 
+     * Get the value to row's key.
+     * 
+     * @param row where to get the key from
+     * @return the cell from the underlying map
+     * @throws NullPointerException if the argument is <code>null</code>
+     * @throws IllegalArgumentException if the key is not contained in the map
+     *             or the value to the key is not instance of {@link DataCell}
      * @see AppendedCellFactory#getAppendedCell(DataRow)
      */
     public DataCell[] getAppendedCell(final DataRow row) {
@@ -62,5 +66,4 @@ public class DefaultAppendedCellFactory implements AppendedCellFactory {
         DataCell val = m_map.get(key);
         return new DataCell[]{val};
     }
-
 }

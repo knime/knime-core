@@ -23,7 +23,7 @@ import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.RowIterator;
 
 /**
- * The Iterator implementation to a <code>AppendColumnTable</code>.
+ * The Iterator implementation for an {@lin AppendColumnTable}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -38,7 +38,7 @@ public class AppendedColumnRowIterator extends RowIterator {
     /**
      * Creates new row iterator based on the parameters of the table argument.
      * 
-     * @param table The Table backing this iterator.
+     * @param table the table backing this iterator
      */
     AppendedColumnRowIterator(final AppendedColumnTable table) {
         m_colType = table.getAppendedColumnClasses();
@@ -76,5 +76,4 @@ public class AppendedColumnRowIterator extends RowIterator {
         }
         return new AppendedColumnRow(base, append);
     }
-
 }

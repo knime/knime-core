@@ -61,10 +61,10 @@ import de.unikn.knime.core.node.NotConfigurableException;
 /**
  * Contains the dialog for the ARFF file reader.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
-public class ARFFReaderNodeDialog extends NodeDialogPane 
-        implements ItemListener {
+public class ARFFReaderNodeDialog extends NodeDialogPane implements
+        ItemListener {
 
     private static final int VERT_SPACE = 5;
 
@@ -118,8 +118,9 @@ public class ARFFReaderNodeDialog extends NodeDialogPane
         m_url = new JComboBox();
         m_url.setMaximumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
         m_url.setMinimumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
-        m_url.setPreferredSize(new Dimension(TEXTFIELD_WIDTH, 
-                COMPONENT_HEIGHT));
+        m_url
+                .setPreferredSize(new Dimension(TEXTFIELD_WIDTH,
+                        COMPONENT_HEIGHT));
         m_url.setEditable(true);
         m_url.setRenderer(new MyComboBoxRenderer());
         fileBox.add(m_url);
@@ -218,7 +219,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane
     }
 
     /**
-     * updates the file error label whenever the fileURL entered changed.
+     * Updates the file error label whenever the file URL entered changed.
      */
     protected void updateFileError() {
         String urlInput = m_url.getEditor().getItem().toString();
@@ -261,16 +262,16 @@ public class ARFFReaderNodeDialog extends NodeDialogPane
     }
 
     /**
-     * pops up the file selection dialog and sets the selected file path into
-     * the m_url text field.
+     * Pops up the file selection dialog and sets the selected file path into
+     * the url combox box.
      */
     protected void popupFileChooser() {
         // before opening the dialog, try extracting the file that might
         // be specified already:
         String startingDir = "";
         try {
-            URL newURL = ARFFReaderNodeModel.stringToURL(
-                    m_url.getEditor().getItem().toString());
+            URL newURL = ARFFReaderNodeModel.stringToURL(m_url.getEditor()
+                    .getItem().toString());
             if (newURL.getProtocol().equals("file")) {
                 File tmpFile = new File(newURL.getPath());
                 startingDir = tmpFile.getAbsolutePath();
@@ -303,8 +304,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_url.setSelectedItem(settings
-                .getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
+        m_url.setSelectedItem(settings.getString(
+                ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
         m_rowPrefix.setText(settings.getString(
                 ARFFReaderNodeModel.CFGKEY_ROWPREFIX, ""));
 
@@ -313,15 +314,14 @@ public class ARFFReaderNodeDialog extends NodeDialogPane
         m_url.removeItemListener(this);
         m_url.removeAllItems();
         for (String str : ARFFReaderNodeModel.getFileHistory(
-                /*removeNotExistingFiles*/true)) {
+        /* removeNotExistingFiles */true)) {
             m_url.addItem(str);
         }
         m_url.addItemListener(this);
-        
+
         updateFileError();
 
     }
-    
 
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
@@ -334,16 +334,14 @@ public class ARFFReaderNodeDialog extends NodeDialogPane
             throw new InvalidSettingsException("Specify valid file location. "
                     + "Or press 'Cancel'.");
         }
-        settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, 
-                m_url.getEditor().getItem().toString());
+        settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, m_url
+                .getEditor().getItem().toString());
         settings.addString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, m_rowPrefix
                 .getText());
     }
 
-    
     /** Renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
-
         /**
          * @see BasicComboBoxRenderer#getListCellRendererComponent(
          *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
@@ -407,5 +405,4 @@ public class ARFFReaderNodeDialog extends NodeDialogPane
             return result;
         }
     }
-
 }

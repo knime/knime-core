@@ -26,14 +26,12 @@ import de.unikn.knime.core.data.DataValue;
 import de.unikn.knime.core.data.RowIterator;
 
 /**
- * This <code>DataTable</code> filters (includes or excludes) a specified
- * number of columns from a given table by just wrapping the underlying data
- * table.
+ * This {@link DataTable} filters (includes or excludes) a specified number of
+ * columns from a given table by just wrapping the underlying data table.
  * <p>
- * These columns can be either filtered by a particular column
- * <code>DataType</code>, by a list of column names, or indices whereby the
- * ordering is maintained. Note, it is not possible to select a column twice
- * from the given table.
+ * These columns can be either filtered by a particular column {@link DataType},
+ * by a list of column names, or indices whereby the ordering is maintained.
+ * Note, it is not possible to select a column twice from the given table.
  * <p>
  * The ordering of the final table is depending on the order of the column names
  * resp. column indices.
@@ -58,18 +56,18 @@ public final class FilterColumnTable implements DataTable {
     private final DataTableSpec m_tableSpec;
 
     /**
-     * Inits a new filter column table based on a <code>DataTable</code> and
-     * an unique, unordered number of column indices.
+     * Inits a new filter column table based on a {@link DataTable} and an
+     * unique, unordered number of column indices.
      * 
-     * @param data The underlying data table.
-     * @param columns The column indices to INCLUDE or EXCLUDE from the table.
-     * @param include If <code>true</code> the columns are INCLUDE otherwise
-     *            EXCLUDED.
-     * @throws ArrayIndexOutOfBoundsException If one of the column indices lies
-     *             not within the table's column range.
-     * @throws IllegalArgumentException If the <i>data</i> or <i>columns</i> are
-     *         <code>null</code>, or column indices are out of range or appear 
-     *         as duplicates in the array.
+     * @param data the underlying data table
+     * @param columns the column indices to INCLUDE or EXCLUDE from the table
+     * @param include if <code>true</code> the columns are INCLUDEd otherwise
+     *            EXCLUDEd
+     * @throws ArrayIndexOutOfBoundsException if one of the column indices lies
+     *             not within the table's column range
+     * @throws IllegalArgumentException if the <code>data</code> or
+     *             <code>columns</code> are <code>null</code>, or column
+     *             indices are out of range or appear as duplicates in the array
      */
     public FilterColumnTable(final DataTable data, final boolean include,
             final int... columns) {
@@ -94,32 +92,32 @@ public final class FilterColumnTable implements DataTable {
     }
 
     /**
-     * Inits a new filter column table based on a <code>DataTable</code> and
-     * an unique, unordered number of column indices.
+     * Inits a new filter column table based on a {@link DataTable} and an
+     * unique, unordered number of column indices.
      * 
-     * @param data The underlying data table.
-     * @param columns The column indices to INCLUDE in the new table.
-     * @throws NullPointerException If one of the args is <code>null</code>.
-     * @throws ArrayIndexOutOfBoundsException If one of the column indices lies
-     *             not within the table's column range.
-     * @throws IllegalArgumentException If the column indices are empty or one
-     *             of the column indices is used twice.
+     * @param data the underlying data table
+     * @param columns the column indices to INCLUDE in the new table
+     * @throws NullPointerException if one of the args is <code>null</code>
+     * @throws ArrayIndexOutOfBoundsException if one of the column indices lies
+     *             not within the table's column range
+     * @throws IllegalArgumentException if the column indices are empty or one
+     *             of the column indices is used twice
      */
     public FilterColumnTable(final DataTable data, final int... columns) {
         this(data, true, columns);
     }
 
     /**
-     * Calls <code>createFilterTableSpec(DataTableSpec, int[])</code>
-     * arguments with the correct values in the int[] argument, i.e. it will
+     * Calls {@link #createFilterTableSpec(DataTableSpec, int[])} arguments with
+     * the correct values in the <code>int[]</code> argument, i.e. it will
      * locate the columns and assign the "right" values.
      * 
-     * @param spec The input spec.
-     * @param columns The names of the columns that should survive.
-     * @return A new spec with extracted columns.
-     * @throws IndexOutOfBoundsException If columns not available.
-     * @throws NullPointerException If either argument is null or contains null
-     *             values.
+     * @param spec the input spec
+     * @param columns the names of the columns that should survive
+     * @return a new spec with extracted columns
+     * @throws IndexOutOfBoundsException if columns are no available
+     * @throws NullPointerException if either argument is <code>null</code> or
+     *             contains <code>null</code> values
      */
     public static final DataTableSpec createFilterTableSpec(
             final DataTableSpec spec, final String... columns) {
@@ -136,16 +134,16 @@ public final class FilterColumnTable implements DataTable {
      * accordingly. It stores references in the new table spec pointing to
      * objects referenced to by the passed table spec.
      * 
-     * @param spec The input spec.
-     * @param include Whether the column indices are to include or exclude.
-     * @param columns The output column indices to extract from the input spec.
-     * @return A new spec with extracted columns.
-     * @throws IndexOutOfBoundsException If columns not available.
-     * @throws NullPointerException If either argument is null or contains null
-     *             values.
+     * @param spec the input spec
+     * @param include whether the column indices are to include or exclude
+     * @param columns the output column indices to extract from the input spec
+     * @return a new spec with extracted columns
+     * @throws IndexOutOfBoundsException if columns not available
+     * @throws NullPointerException if either argument is <code>null</code> or
+     *             contains <code>null</code> values
      */
     public static final DataTableSpec createFilterTableSpec(
-            final DataTableSpec spec, final boolean include, 
+            final DataTableSpec spec, final boolean include,
             final int... columns) {
         // if column indices refer to the include list
         if (include) {
@@ -182,12 +180,12 @@ public final class FilterColumnTable implements DataTable {
      * accordingly. It stores references in the new table spec pointing to
      * objects referenced to by the passed table spec.
      * 
-     * @param spec The input spec.
-     * @param columns The output column indices to extract from the input spec.
-     * @return A new spec with extracted columns.
-     * @throws IndexOutOfBoundsException If columns not available.
-     * @throws NullPointerException If either argument is null or contains null
-     *             values.
+     * @param spec the input spec
+     * @param columns The output column indices to extract from the input spect
+     * @return a new spec with extracted columns
+     * @throws IndexOutOfBoundsException if columns are not availablea
+     * @throws NullPointerException if either argument is null or contains null
+     *             values
      */
     public static final DataTableSpec createFilterTableSpec(
             final DataTableSpec spec, final int... columns) {
@@ -198,7 +196,7 @@ public final class FilterColumnTable implements DataTable {
         }
         return new DataTableSpec(cspecs);
     }
-    
+
     private static void checkIndices(final int ncols, final int... indices) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < indices.length; i++) {
@@ -213,18 +211,18 @@ public final class FilterColumnTable implements DataTable {
             }
         }
         if (sb.length() > 0) {
-            throw new IllegalArgumentException("column duplicates:" 
+            throw new IllegalArgumentException("column duplicates:"
                     + sb.toString());
         }
     }
 
     /**
-     * Inits a new filter column table based on a <code>DataTable</code> and a
+     * Inits a new filter column table based on a {@link DataTable} and a
      * unique, unordered number of column names.
      * 
-     * @param data The underlying data table.
-     * @param columns The column name to filter.
-     * @throws NullPointerException If one of the args is <code>null</code>.
+     * @param data the underlying data table
+     * @param columns the column name to filter
+     * @throws NullPointerException if one of the args is <code>null</code>
      * @throws IllegalArgumentException if one of the column name is already is
      *             use or the column name does not exist in the table.
      */
@@ -262,14 +260,14 @@ public final class FilterColumnTable implements DataTable {
     }
 
     /**
-     * Inits a new filter column table based on a <code>DataTable</code> and
-     * one type (<code>DataCell</code>) using <code>java.lang.Class</code>
-     * to extract these columns.
+     * Inits a new filter column table based on a {@link DataTable} and one
+     * type ({@link de.unikn.knime.core.data.DataCell}))
+     * using {@link java.lang.Class} to extract these columns.
      * 
-     * @param data The underlying table.
-     * @param type The column type to be extracted.
-     * @throws IllegalArgumentException If the given type does not appear in the
-     *             table.
+     * @param data the underlying table
+     * @param type the column type to be extractedt
+     * @throws IllegalArgumentException if the given type does not appear in the
+     *             table
      */
     public FilterColumnTable(final DataTable data, final DataType type) {
         if (data == null) {
@@ -303,14 +301,13 @@ public final class FilterColumnTable implements DataTable {
     } // FilterColumnTable(DataTable,DataType)
 
     /**
-     * Inits a new filter column table based on a <code>DataTable</code> and a
-     * <code>DataValue</code> class as value. This table will contain all
-     * columns from <code>data</code> which are compatible to
-     * <code>value</code>.
+     * Inits a new filter column table based on a {@link DataTable} and a
+     * {@link DataValue} class as value. This table will contain all columns
+     * from <code>data</code> which are compatible to <code>value</code>.
      * 
-     * @param data The underlying table.
-     * @param value The compatible value type to be included.
-     * @throws NullPointerException If any argument is <code>null</code>.
+     * @param data the underlying table
+     * @param value the compatible value type to be included
+     * @throws NullPointerException if any argument is <code>null</code>
      */
     public FilterColumnTable(final DataTable data,
             final Class<? extends DataValue> value) {
@@ -335,7 +332,7 @@ public final class FilterColumnTable implements DataTable {
     }
 
     /**
-     * @return A copy of the used column indices from the filtered data table.
+     * @return a copy of the used column indices from the filtered data table
      */
     public int[] getColumnIndices() {
         int[] copiedIndices = new int[m_columns.length];
@@ -355,6 +352,5 @@ public final class FilterColumnTable implements DataTable {
      */
     public RowIterator iterator() {
         return new FilterColumnRowIterator(m_data.iterator(), m_columns);
-    }    
-    
-} // FilterColumnTable
+    }
+}

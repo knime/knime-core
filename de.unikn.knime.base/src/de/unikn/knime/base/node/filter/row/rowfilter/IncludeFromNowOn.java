@@ -22,7 +22,7 @@ package de.unikn.knime.base.node.filter.row.rowfilter;
  * An exception thrown by a row filter to indicate that the current and all
  * following rows from now on are to be included into the result table.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class IncludeFromNowOn extends Exception {
     /**
@@ -35,7 +35,7 @@ public class IncludeFromNowOn extends Exception {
     /**
      * Creates a new exception object with a message.
      * 
-     * @param msg the message to store in the exception object.
+     * @param msg the message to store in the exception object
      */
     public IncludeFromNowOn(final String msg) {
         super(msg);

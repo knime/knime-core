@@ -36,12 +36,12 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
- * <code>DataTable</code> that concatenates a set of <code>DataTable</code>
+ * {@link DataTable} implementation that concatenates a set of {@link DataTable}
  * objects. All tables should have the same columns (identified by their column
  * name). Missing columns in tables are tried to be filled with missing cells
  * (where it is possible - so far for string, double, int). Non matching column
  * types are adjusted such that they match (if not possible, the column's type
- * is <code>DataCell</code>).
+ * is {@link DataCell}).
  * 
  * <p>
  * The order of colums of this table is determined by the order of the top table
@@ -51,8 +51,8 @@ import de.unikn.knime.core.node.NodeLogger;
  */
 public class AppendedRowsTable implements DataTable {
 
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(AppendedRowsTable.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(AppendedRowsTable.class);
 
     /**
      * Tables that make up this table. The first entry contains the the top part
@@ -73,10 +73,10 @@ public class AppendedRowsTable implements DataTable {
     private final String m_suffix;
 
     /**
-     * Concatenates a set of tables. Duplicate entries are skip.
+     * Concatenates a set of tables. Duplicate entries are skipped.
      * 
-     * @param tables Containing all tables to be appended.
-     * @throws NullPointerException If argument is <code>null</code> or
+     * @param tables all tables to be appended
+     * @throws NullPointerException if argument is <code>null</code> or
      *             contains <code>null</code> elements.
      */
     public AppendedRowsTable(final DataTable... tables) {
@@ -84,17 +84,17 @@ public class AppendedRowsTable implements DataTable {
     } // AppendedRowsTable(DataTable[])
 
     /**
-     * Concatenates a set of tables. Duplicate keys may be skipped 
-     * (<code>suffix</code> argument is <code>null</code>) or may be 
-     * avoided by appending a fixed suffix to any subsequent occurence 
-     * of a duplicate.
+     * Concatenates a set of tables. Duplicate keys may be skipped (<code>suffix</code>
+     * argument is <code>null</code>) or may be avoided by appending a fixed
+     * suffix to any subsequent occurence of a duplicate.
      * 
-     * @param tables Containing all tables to be appended.
-     * @param suffix Suffix to append to duplicate keys or <code>null</code>
+     * @param tables all tables to be appended
+     * @param suffix suffix to append to duplicate keys or <code>null</code>
      *            to skip them
-     * @throws NullPointerException If argument is <code>null</code> or
-     *             contains <code>null</code> elements.
-     * @throws IllegalArgumentException If suffix is empty (null is ok)
+     * @throws NullPointerException if argument is <code>null</code> or
+     *             contains <code>null</code> elements
+     * @throws IllegalArgumentException if suffix is empty (<code>null</code>
+     *             is ok)
      */
     public AppendedRowsTable(final String suffix, final DataTable... tables) {
         m_spec = generateDataTableSpec(tables);
@@ -120,42 +120,41 @@ public class AppendedRowsTable implements DataTable {
     public RowIterator iterator() {
         return new AppendedRowsIterator(m_tables, m_spec, m_suffix);
     }
-    
+
     /**
-     * Get an iterator whose next() method may throw an exception if the 
-     * execution is canceled. In particular if you try to concatenate a table
-     * to itself and do not allow duplicates, the next() method runs _very_
-     * long (scanning the entire table to just figure out that there are only
-     * duplicates).
-     * @param exec The execution monitor for cancel / progress
-     * @param totalRowCount The total number rows or negative if unknown
-     * @return An iterator which reacts on cancel events.
+     * Get an iterator whose {@link RowIterator#next()} method may throw an
+     * exception if the execution is canceled. In particular if you try to
+     * concatenate a table to itself and do not allow duplicates, the
+     * {@link RowIterator#next()} method runs <b>very</b> long (scanning the
+     * entire table to just figure out that there are only duplicates).
+     * 
+     * @param exec the execution monitor for cancel / progress
+     * @param totalRowCount the total number rows or negative if unknown
+     * @return an iterator which reacts on cancel events
      * @see AppendedRowsIterator.RuntimeCanceledExecutionException
      */
-    public RowIterator iterator(
-            final ExecutionMonitor exec, final int totalRowCount) {
-        return new AppendedRowsIterator(
-                m_tables, m_spec, m_suffix, exec, totalRowCount);
+    public RowIterator iterator(final ExecutionMonitor exec,
+            final int totalRowCount) {
+        return new AppendedRowsIterator(m_tables, m_spec, m_suffix, exec,
+                totalRowCount);
     }
-    
+
     /**
-     * Factory method that determines the final DataTableSpec given the tables.
+     * Factory method that determines the final {@link DataTableSpec} given the
+     * tables.
      * 
-     * @param tableSpecs The table specs as in the constructor
-     * @return The outcoming <code>DataTableSpec</code>
+     * @param tableSpecs the table specs as in the constructor
+     * @return the outcoming {qlink DataTableSpec}
      * @see #AppendedRowsTable(DataTable[])
      */
     public static final DataTableSpec generateDataTableSpec(
             final DataTableSpec... tableSpecs) {
-        // memorize the first column spec in the argument array for 
+        // memorize the first column spec in the argument array for
         // each column name, we use it later on to initialize the column
         // spec creator.
-        LinkedHashMap<String, DataColumnSpec> columnSet = 
-            new LinkedHashMap<String, DataColumnSpec>();
-        LinkedHashMap<String, DataType> typeSet = 
-            new LinkedHashMap<String, DataType>();
-        LinkedHashMap<String, DataColumnDomain> domainSet = 
-            new LinkedHashMap<String, DataColumnDomain>();
+        LinkedHashMap<String, DataColumnSpec> columnSet = new LinkedHashMap<String, DataColumnSpec>();
+        LinkedHashMap<String, DataType> typeSet = new LinkedHashMap<String, DataType>();
+        LinkedHashMap<String, DataColumnDomain> domainSet = new LinkedHashMap<String, DataColumnDomain>();
 
         // create final data table spec
         for (int i = 0; i < tableSpecs.length; i++) {
@@ -188,8 +187,8 @@ public class AppendedRowsTable implements DataTable {
                         // that must not change the order.
                         typeSet.put(colName, type);
                     }
-                    DataColumnDomain newDomain = merge(
-                            oldDomain, colDomain, type.getComparator());
+                    DataColumnDomain newDomain = merge(oldDomain, colDomain,
+                            type.getComparator());
                     domainSet.put(colName, newDomain);
                 } else { // doesn't contain the key
                     typeSet.put(colName, colType);
@@ -201,14 +200,14 @@ public class AppendedRowsTable implements DataTable {
         DataColumnSpec[] colSpecs = new DataColumnSpec[typeSet.size()];
         int i = 0;
         for (Map.Entry<String, DataType> entry : typeSet.entrySet()) {
-            String   name = entry.getKey();
+            String name = entry.getKey();
             DataType type = entry.getValue();
             // domain is null, if we did not remember it (e.g. "keepDomain" was
             // false)
             DataColumnDomain domain = domainSet.get(name);
             DataColumnSpec initSpec = columnSet.get(name);
-            DataColumnSpecCreator specCreator = 
-                new DataColumnSpecCreator(initSpec);
+            DataColumnSpecCreator specCreator = new DataColumnSpecCreator(
+                    initSpec);
             specCreator.setDomain(domain);
             specCreator.setType(type);
             colSpecs[i++] = specCreator.createSpec();
@@ -228,20 +227,19 @@ public class AppendedRowsTable implements DataTable {
         }
         return generateDataTableSpec(tableSpecs);
     }
-    
-    /* 
+
+    /*
      * Merges two domains of the same column, i.e. emerging from different
-     * tables, min max will be updated (if possible) and the possible value
-     * set. 
+     * tables, min max will be updated (if possible) and the possible value set.
      */
-    private static final DataColumnDomain merge(final DataColumnDomain d1, 
+    private static final DataColumnDomain merge(final DataColumnDomain d1,
             final DataColumnDomain d2, final DataValueComparator comp) {
         final DataCell d1Min = d1.getLowerBound();
         final DataCell d1Max = d1.getUpperBound();
         final DataCell d2Min = d2.getLowerBound();
         final DataCell d2Max = d2.getUpperBound();
-        final Set<DataCell> d1Poss = d1.getValues(); 
-        final Set<DataCell> d2Poss = d2.getValues(); 
+        final Set<DataCell> d1Poss = d1.getValues();
+        final Set<DataCell> d2Poss = d2.getValues();
         final DataCell newMin;
         if (d1Min == null || d2Min == null) {
             newMin = null;
@@ -261,8 +259,7 @@ public class AppendedRowsTable implements DataTable {
             newPoss = new LinkedHashSet<DataCell>(d1Poss);
             newPoss.addAll(d2Poss);
         }
-        return 
-            new DataColumnDomainCreator(newPoss, newMin, newMax).createDomain();
+        return new DataColumnDomainCreator(newPoss, newMin, newMax)
+                .createDomain();
     }
-
 }

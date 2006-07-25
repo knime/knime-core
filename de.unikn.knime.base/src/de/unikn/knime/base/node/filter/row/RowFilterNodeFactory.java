@@ -25,10 +25,9 @@ import de.unikn.knime.core.node.NodeView;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterNodeFactory extends NodeFactory {
-
     /**
      * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
      */
@@ -70,5 +69,4 @@ public class RowFilterNodeFactory extends NodeFactory {
     public NodeDialogPane createNodeDialogPane() {
         return new RowFilterNodeDialogPane();
     }
-
 }

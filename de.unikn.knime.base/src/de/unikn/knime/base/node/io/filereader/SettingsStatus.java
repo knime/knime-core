@@ -26,7 +26,7 @@ import de.unikn.knime.core.node.NodeLogger;
  * An object to pass messages. It supports information, warning, and error
  * messages.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class SettingsStatus {
 
@@ -50,7 +50,7 @@ public class SettingsStatus {
     /**
      * Adds an informational message to the status object.
      * 
-     * @param msg the info message to add.
+     * @param msg the info message to add
      */
     public void addInfo(final String msg) {
         m_infos.add(msg);
@@ -131,8 +131,8 @@ public class SettingsStatus {
     }
 
     /**
-     * prints all error messages into the logger as error. It will print 
-     * "Error: ", the error message and a new line character.
+     * Prints all error messages into the logger as error. It will print "Error: ",
+     * the error message and a new line character.
      */
     public void printErrors() {
         for (int e = 0; e < getNumOfErrors(); e++) {
@@ -141,7 +141,7 @@ public class SettingsStatus {
     }
 
     /**
-     * prints all warning messages into the logger as warning. It will print
+     * Prints all warning messages into the logger as warning. It will print
      * "Warning: ", the message and a new line character.
      */
     public void printWarnings() {
@@ -151,8 +151,8 @@ public class SettingsStatus {
     }
 
     /**
-     * prints all info messages into the logger as info. It will print 
-     * "Info: ", the message and a new line character.
+     * Prints all info messages into the logger as info. It will print "Info: ",
+     * the message and a new line character.
      */
     public void printInfos() {
         for (int i = 0; i < getNumOfInfos(); i++) {
@@ -162,13 +162,13 @@ public class SettingsStatus {
     }
 
     /**
-     * Creates a String containing concatenated error messages, separated by a
+     * Creates a string containing concatenated error messages, separated by a
      * new line ('\n') character. The maximum number of error messages included
      * is determined by the parameter maxMsg. If more error than maxMsg messages
      * are stored in the status object, the subset of messages included in the
      * string is determined by the order the messages were added to the status
      * object. The first maxMsg messages will be used. Result could be an empty
-     * string, never null.
+     * string, never <code>null</code>.
      * 
      * @param maxMsg the max number of error messages to include in the result.
      *            If set to a number less than or equal 0 all error messages are
@@ -184,12 +184,11 @@ public class SettingsStatus {
                 result.append('\n');
             }
             result.append(getErrorMessage(e));
-            
+
             if ((maxMsg > 0) && ((e + 1) >= maxMsg)) {
                 break;
             }
         }
         return result.toString();
     }
-
 }

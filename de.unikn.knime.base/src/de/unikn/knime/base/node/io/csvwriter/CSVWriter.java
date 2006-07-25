@@ -38,57 +38,64 @@ import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.NodeLogger;
 
 /**
- * Class to write a <code>DataTable</code> to a file or an output 
- * stream. Only known types can be written to it, i.e. each column must
- * be compatible to either <code>DoubleValue</code>, <code>IntValue</code>,
- *  or <code>StringValue</code>. 
- * @author wiswedel, University of Konstanz
+ * Class to write a {@link de.unikn.knime.core.data.DataTable} to a file or an
+ * output stream. Only known types can be written to it, i.e. each column must
+ * be compatible to either {@link de.unikn.knime.core.data.DoubleValue},
+ * {@link de.unikn.knime.core.data.IntValue}, or {@link StringValue}.
+ * 
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriter extends BufferedWriter {
-    
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(CSVWriter.class);
-    
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(CSVWriter.class);
+
     /** true for: write also the row header values. */
     private boolean m_isWriteRowHeader = true;
+
     /** true for: write also the column header values. */
     private boolean m_isWriteColHeader = true;
+
     /** The string that's written when missing cells are encountered. */
     private String m_missing = "";
+
     /** Separation character. */
     private char m_sepChar = ',';
+
     /** Remove separation character if it appears inside a string (Excel...). */
     private boolean m_removeSepCharInStrings = false;
 
-    /** Creates new instance which writes tables to the given writer class.
-     * An immediate write operation, will write the table headers (both column
-     * and row headers) and will write missing values as "" (empty string).
-     * @param writer To write to
+    /**
+     * Creates new instance which writes tables to the given writer class. An
+     * immediate write operation, will write the table headers (both column and
+     * row headers) and will write missing values as "" (empty string).
+     * 
+     * @param writer to write to
      */
     public CSVWriter(final Writer writer) {
         super(writer);
     }
-    
-    
+
     /**
      * Writes <code>table</code> with current settings.
-     * @param table The table to write to the file.
-     * @param exec An execution monitor where to check for canceled status
-     * and report progress to. (In case of cancellation, the file will be 
-     * deleted.)
-     * @throws IOException If any related I/O error occurs.
-     * @throws CanceledExecutionException If execution in <code>exec</code>
-     * has been canceled.
-     * @throws NullPointerException If table is <code>null</code>. 
+     * 
+     * @param table the table to write to the file
+     * @param exec an execution monitor where to check for canceled status and
+     *            report progress to. (In case of cancellation, the file will be
+     *            deleted.)
+     * @throws IOException if any related I/O error occurs
+     * @throws CanceledExecutionException if execution in <code>exec</code>
+     *             has been canceled
+     * @throws NullPointerException if table is <code>null</code>
      */
-    public void write(final DataTable table, final ExecutionMonitor exec) 
-        throws IOException, CanceledExecutionException {
+    public void write(final DataTable table, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
         DataTableSpec inSpec = table.getDataTableSpec();
         final int colCount = inSpec.getNumColumns();
         boolean first; // is it the first entry in the row (skip comma then)
         // write column names
         if (m_isWriteColHeader) {
-            String debugmessage = "Writing Header (" + colCount + " columns)."; 
+            String debugmessage = "Writing Header (" + colCount + " columns).";
             LOGGER.debug(debugmessage);
             exec.setMessage(debugmessage);
             if (m_isWriteRowHeader) {
@@ -121,8 +128,8 @@ public class CSVWriter extends BufferedWriter {
         for (RowIterator it = table.iterator(); it.hasNext(); i++) {
             final DataRow next = it.next();
             String rowKey = next.getKey().toString();
-            String debugMessage = "Writing row " + (i + 1) 
-                + " (\"" + rowKey + "\") of " + rowCnt; 
+            String debugMessage = "Writing row " + (i + 1) + " (\"" + rowKey
+                    + "\") of " + rowCnt;
             if (rowCnt > 0) {
                 exec.setProgress(i / (double)rowCnt, debugMessage);
             } else {
@@ -171,64 +178,60 @@ public class CSVWriter extends BufferedWriter {
         }
     }
 
-
     /**
-     * @return Returns the isWriteColHeader.
+     * @return the isWriteColHeader
      */
     public boolean isWriteColHeader() {
         return m_isWriteColHeader;
     }
 
-
     /**
-     * @param isWriteColHeader The isWriteColHeader to set.
+     * @param isWriteColHeader the isWriteColHeader to set
      */
     public void setWriteColHeader(final boolean isWriteColHeader) {
         m_isWriteColHeader = isWriteColHeader;
     }
 
-
     /**
-     * @return Returns the isWriteRowHeader.
+     * @return the isWriteRowHeader
      */
     public boolean isWriteRowHeader() {
         return m_isWriteRowHeader;
     }
 
-
     /**
-     * @param isWriteRowHeader The isWriteRowHeader to set.
+     * @param isWriteRowHeader the isWriteRowHeader to set
      */
     public void setWriteRowHeader(final boolean isWriteRowHeader) {
         m_isWriteRowHeader = isWriteRowHeader;
     }
 
-    /** use other than the usual "," charater inbetween columns. (Excel
-     * says hi).
+    /**
+     * Use other than the usual "," charater inbetween columns. (Excel says hi).
      * 
      * @param sepChar new separation character
-     * @param removeFromStrings remove sep chars from strings (another
-     *   Excel feature)
+     * @param removeFromStrings remove sep chars from strings (another Excel
+     *            feature)
      */
-    public void setSepChar(final char sepChar, final boolean removeFromStrings)
-    {
+    public void setSepChar(final char sepChar, final boolean removeFromStrings) {
         m_sepChar = sepChar;
         m_removeSepCharInStrings = removeFromStrings;
     }
 
     /**
-     * @return Returns the missing.
+     * @return the missing
      */
     public String getMissing() {
         return m_missing;
     }
 
-
     /**
      * The string for missing cells. Must not contain ',' (comma) as that serves
      * to separate fields. Also new line characters are not permitted.
-     * <p><code>null</code> is ok (uses "" string).
-     * @param missing The missing to set.
+     * <p>
+     * <code>null</code> is ok (uses "" string).
+     * 
+     * @param missing the missing to set
      */
     public void setMissing(final String missing) {
         String newMissing = missing == null ? "" : missing;
@@ -237,10 +240,9 @@ public class CSVWriter extends BufferedWriter {
                     "Comma not allowed as separator: " + newMissing);
         }
         if (newMissing.indexOf('\n') >= 0) {
-            throw new IllegalArgumentException(
-                    "\\n not allowed as separator: " + newMissing);
+            throw new IllegalArgumentException("\\n not allowed as separator: "
+                    + newMissing);
         }
         m_missing = missing;
     }
-    
 }

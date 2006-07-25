@@ -21,15 +21,14 @@ package de.unikn.knime.base.node.io.filereader;
 import de.unikn.knime.core.data.DataRow;
 import de.unikn.knime.core.data.RowIterator;
 
-
-
 /**
- * The iterator for the <code>FileReaderPreviewTable</code>. Wraps the
- * iterator of the underlying file table. Catches exceptions thrown by the
+ * The iterator for the
+ * {@link de.unikn.knime.base.node.io.filereader.FileReaderPreviewTable}. Wraps
+ * the iterator of the underlying file table. Catches exceptions thrown by the
  * underlying iterator, returns an "error row" instead and will end the table.
  * If an error occures it sets an error message in the underlying table.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter, University of Konstanz
  */
 class FileReaderPreviewRowIterator extends RowIterator {
 
@@ -42,7 +41,7 @@ class FileReaderPreviewRowIterator extends RowIterator {
     private boolean m_done;
 
     /**
-     * a new non-failing file row iterator. It wrappes the passed iterator and
+     * A new non-failing file row iterator. It wraps the passed iterator and
      * catches its exceptions, converting them into rows with error messages.
      * 
      * @param rowIterator the row iterator to wrap
@@ -79,10 +78,9 @@ class FileReaderPreviewRowIterator extends RowIterator {
             m_done = true;
             m_table.setError(fre.getMessage(), fre.getErrorLineNumber());
             nextRow = fre.getErrorRow();
-            
+
         }
 
         return nextRow;
     }
-
 }

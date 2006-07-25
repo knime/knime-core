@@ -55,7 +55,7 @@ import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class DomainDialog extends JDialog {
 
@@ -81,10 +81,10 @@ public class DomainDialog extends JDialog {
     private ColProperty m_result;
 
     /**
-     * creates a new dialog for user domain settings of one column. Provide
+     * Creates a new dialog for user domain settings of one column. Provide
      * current column name and type in the colProp object, and call the
-     * showDialog method to get user input. After showDialog returns the method
-     * getDomainSettings will return the new settings.
+     * {@link #showDialog} method to get user input. After {@link #showDialog}
+     * returns the method getDomainSettings will return the new settings.
      * 
      * @param colProp current column settings. The column type will be used to
      *            determine required settings, values in the domain will be used
@@ -126,7 +126,6 @@ public class DomainDialog extends JDialog {
 
         setModal(true);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-
     }
 
     private JPanel createDomainPanel() {
@@ -149,7 +148,7 @@ public class DomainDialog extends JDialog {
             });
             nomBox.add(m_containsVals);
             nomBox.add(Box.createHorizontalGlue());
-            
+
             // part for the nominal values
             Box valueBox = Box.createHorizontalBox();
             valueBox.add(createIntValuesPanel());
@@ -175,10 +174,9 @@ public class DomainDialog extends JDialog {
                 + "automatically."));
         panel.add(new JLabel("Enter values you want additional in the list "
                 + "here only"));
-        
+
         return panel;
     }
-
 
     /*
      * returns the bordered possible values box. It contains a box with the edit
@@ -311,14 +309,14 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * called when the state of the "contains nominal values" box changes.
+     * Called when the state of the "contains nominal values" box changes.
      */
     void containsValsChanged() {
         setEnableStatus();
     }
 
     /**
-     * called when user pressed "Remove" to remove selected item from the list
+     * Called when user pressed "Remove" to remove selected item from the list
      * of possible values. The Range settings are not changed.
      */
     protected void remSelPosValues() {
@@ -352,7 +350,7 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * called when the user pressed the "Add" button to add an integer value to
+     * Called when the user pressed the "Add" button to add an integer value to
      * the list of possible values. Will add the number entered, or set the
      * error text, if user input is invalid. It will adjust the range settings
      * (if any) to include the new value.
@@ -383,7 +381,7 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * called when the user pressed the "Add" button to add a string value to
+     * Called when the user pressed the "Add" button to add a string value to
      * the list of possible values.
      */
     protected void addStringPosValue() {
@@ -436,20 +434,21 @@ public class DomainDialog extends JDialog {
 
     /**
      * Shows the dialog with the passed default settings (passed to the
-     * constructor). It will not return until the user closes the dialog.
-     * If the dialog was canceled, null will be returned as result, otherwise
-     * the column property passed to the constructor with a modified domain and 
-     * nominal value flag will be returned.
+     * constructor). It will not return until the user closes the dialog. If the
+     * dialog was canceled, <code>null</code> will be returned as result,
+     * otherwise the column property passed to the constructor with a modified
+     * domain and nominal value flag will be returned.
      * 
-     * @return a modified col property object, or null if user canceled.
+     * @return a modified col property object, or <code>null</code> if user
+     *         canceled
      */
     public ColProperty showDialog() {
 
         // fill in the values from the passed col property object
-        
+
         if (m_colProp.getColumnSpec().getType().isCompatible(IntValue.class)) {
-            m_containsVals.setSelected(
-                    m_colProp.getReadPossibleValuesFromFile());
+            m_containsVals.setSelected(m_colProp
+                    .getReadPossibleValuesFromFile());
         }
 
         // and the possible values - if set
@@ -516,17 +515,15 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * @return an object with domain values set by the user. Or null if settings
-     *         are invalid. Then, a error message box is displayed.
+     * @return an object with domain values set by the user. Or
+     *         <code>null</code> if settings are invalid. Then, a error
+     *         message box is displayed.
      */
     private ColProperty takeOverSettings() {
 
         ColProperty result = new ColProperty();
-        DataColumnSpecCreator dcsc = 
-            new DataColumnSpecCreator(
-                m_colProp.getColumnSpec().getName(), 
-                m_colProp.getColumnSpec().getType());
-        
+        DataColumnSpecCreator dcsc = new DataColumnSpecCreator(m_colProp
+                .getColumnSpec().getName(), m_colProp.getColumnSpec().getType());
 
         if (m_containsVals != null) {
             result.setReadPossibleValuesFromFile(m_containsVals.isSelected());
@@ -543,16 +540,16 @@ public class DomainDialog extends JDialog {
                 DataCell val = (DataCell)m_valueList.getModel().getElementAt(i);
                 pVals.add(val);
             }
-        
+
             if (pVals.size() > 0) {
-                DataColumnDomainCreator domainCreator = 
-                    new DataColumnDomainCreator(pVals);
+                DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(
+                        pVals);
                 dcsc.setDomain(domainCreator.createDomain());
             }
         }
-        
+
         result.setColumnSpec(dcsc.createSpec());
-            
+
         return result;
 
     }
@@ -591,5 +588,4 @@ public class DomainDialog extends JDialog {
             m_errorLabel.setEnabled(enable);
         }
     }
-
 }

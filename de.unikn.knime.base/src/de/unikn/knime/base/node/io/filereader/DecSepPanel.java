@@ -31,7 +31,7 @@ import javax.swing.JTextField;
  * Implements the tab panel for the decimal separator settings (in the advaced
  * settings dialog).
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class DecSepPanel extends JPanel {
 
@@ -41,7 +41,7 @@ public class DecSepPanel extends JPanel {
      * Creates a panel to set the decimal separator and initializes it from the
      * passed object.
      * 
-     * @param settings the settings to initialize to panel from.
+     * @param settings the settings to initialize to panel from
      */
     DecSepPanel(final FileReaderSettings settings) {
         this.setSize(520, 375);
@@ -53,7 +53,7 @@ public class DecSepPanel extends JPanel {
         add(getPanel());
         add(Box.createVerticalGlue());
         add(Box.createVerticalStrut(20));
-        
+
         loadSettings(settings);
 
     }
@@ -71,7 +71,7 @@ public class DecSepPanel extends JPanel {
         result.add(Box.createHorizontalGlue());
         return result;
     }
-    
+
     private Container getTextBox() {
         Box result = Box.createHorizontalBox();
         result.add(Box.createHorizontalGlue());
@@ -80,17 +80,17 @@ public class DecSepPanel extends JPanel {
         result.add(Box.createHorizontalGlue());
         return result;
     }
-    
+
     private void loadSettings(final FileReaderSettings settings) {
-        m_decSep.setText("" + settings.getDecimalSeparator());        
+        m_decSep.setText("" + settings.getDecimalSeparator());
     }
-    
+
     /**
      * Writes the current settings of the panel into the passed settings object.
+     * 
      * @param settings the object to write settings in
      */
     void overrideSettings(final FileReaderSettings settings) {
         settings.setDecimalSeparator(m_decSep.getText().charAt(0));
     }
-    
 }

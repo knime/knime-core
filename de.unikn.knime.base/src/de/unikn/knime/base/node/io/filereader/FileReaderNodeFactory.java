@@ -21,7 +21,7 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * @author ohl University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderNodeFactory extends NodeFactory {
 
@@ -30,14 +30,16 @@ public class FileReaderNodeFactory extends NodeFactory {
     /**
      * @param defXMLFileName this string will be set as default path to a XML
      *            file containing settings for the dialog. Won't be supported in
-     *            the future anymore. _@_deprecated
+     *            the future anymore.
+     * @deprecated use the standard constructor instead
      */
+    @Deprecated
     public FileReaderNodeFactory(final String defXMLFileName) {
         m_defaultXMLFile = defXMLFileName;
     }
 
     /**
-     * default constructor for the Filereader node factory.
+     * Default constructor.
      */
     public FileReaderNodeFactory() {
         m_defaultXMLFile = null;
@@ -72,7 +74,6 @@ public class FileReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @return <b>true </b>.
      * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
      */
     @Override
@@ -87,5 +88,4 @@ public class FileReaderNodeFactory extends NodeFactory {
     public NodeDialogPane createNodeDialogPane() {
         return new FileReaderNodeDialog();
     }
-
 }

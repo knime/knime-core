@@ -25,23 +25,23 @@ import de.unikn.knime.core.node.NodeView;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ARFFWriterNodeFactory extends NodeFactory {
 
     private final String m_file;
 
     /**
-     * new factory - no default file.
+     * New factory - no default file.
      */
     public ARFFWriterNodeFactory() {
         m_file = null;
     }
 
     /**
-     * new ARFF factory with default output file.
+     * New ARFF factory with default output file.
      * 
-     * @param defFile the default file to write to.
+     * @param defFile the default file to write to
      */
     public ARFFWriterNodeFactory(final String defFile) {
         m_file = defFile;

@@ -63,5 +63,4 @@ public class PreviewTableContentView extends TableContentView {
         int modelIndex = convertColumnIndexToModel(column);
         firePropertyChange(PROPERTY_SPEC_CHANGED, null, modelIndex);
     }
-
 }

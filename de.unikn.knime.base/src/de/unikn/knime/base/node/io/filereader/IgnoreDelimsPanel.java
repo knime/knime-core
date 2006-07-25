@@ -32,7 +32,7 @@ import de.unikn.knime.base.node.io.filetokenizer.Delimiter;
  * Dialog panel for the expert dialog of the filereader. Panel for the flag
  * "ignore extra delimiters at the end of the rows".
  * 
- * @author ohl
+ * @author Peter Ohl, University of Konstanz
  * 
  */
 public class IgnoreDelimsPanel extends JPanel {
@@ -43,7 +43,7 @@ public class IgnoreDelimsPanel extends JPanel {
      * Constructs the panels and loads it with the settings from the passed
      * object.
      * 
-     * @param settings containing the settings to show in the panel.
+     * @param settings containing the settings to show in the panel
      */
     IgnoreDelimsPanel(final FileReaderNodeSettings settings) {
         initialize();
@@ -95,46 +95,44 @@ public class IgnoreDelimsPanel extends JPanel {
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
      * 
-     * @param settings the settings object to fill in the currently set values.
+     * @param settings the settings object to fill in the currently set values
      */
     void overrideSettings(final FileReaderNodeSettings settings) {
-        
+
         boolean ignoreEm = m_ignoreThem.isSelected();
-        // set the user set value 
+        // set the user set value
         settings.setIgnoreDelimsAtEndOfRowUserValue(ignoreEm);
-        
-        // and set he actual flag, if the delimiter is a whitespace (THIS 
+
+        // and set he actual flag, if the delimiter is a whitespace (THIS
         // DEPENDS on delimiters are being set before this is called!!!!) (!)
         for (Delimiter delim : settings.getAllDelimiters()) {
             String delStr = delim.getDelimiter();
-            if (!settings.isRowDelimiter(delStr)) { 
+            if (!settings.isRowDelimiter(delStr)) {
                 if (delStr.equals(" ") || delStr.equals("\t")) {
                     settings.setIgnoreEmptyTokensAtEndOfRow(ignoreEm);
                     break;
                 }
-                
+
             }
-            
+
         }
-        
-        
+
         // also fix the delimiter settings
-        // I guess that is what they would expect...? 
+        // I guess that is what they would expect...?
         settings.setDelimiterUserSet(true);
     }
 
     /**
      * Transfers the corresponding values from the passed object into the panel.
      * 
-     * @param settings object holding the values to display in the panel.
+     * @param settings object holding the values to display in the panel
      */
     private void loadSettings(final FileReaderNodeSettings settings) {
         if (settings.ignoreDelimsAtEORUserSet()) {
             m_ignoreThem.setSelected(settings.ignoreDelimsAtEORUserValue());
         } else {
-            // default is ignoring tabs and spaces 
+            // default is ignoring tabs and spaces
             m_ignoreThem.setSelected(true);
         }
     }
-
 }

@@ -25,11 +25,15 @@ import de.unikn.knime.core.node.NodeModel;
 import de.unikn.knime.core.node.NodeView;
 
 /**
- * Its the factory for a DefaultTableNodeModel. It will produce a NodeModel with
- * a constant DataTable which was defined by the parameters passed to the
- * factory's constructor. No NodeDialogPane or NodeView is available.
+ * Its the factory for a
+ * {@link de.unikn.knime.base.node.io.def.DefaultTableNodeModel}. It will
+ * produce a {@link de.unikn.knime.core.node.NodeModel} with a constant
+ * {@link de.unikn.knime.core.data.DataTable} which was defined by the
+ * parameters passed to the factory's constructor. No
+ * {@link de.unikn.knime.core.node.NodeDialogPane} or
+ * {@link de.unikn.knime.core.node.NodeView} is available.
  * 
- * @author ohl University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class DefaultTableNodeFactory extends NodeFactory {
 
@@ -52,7 +56,8 @@ public class DefaultTableNodeFactory extends NodeFactory {
     private String[] m_colHeader;
 
     /**
-     * we provide the same constructors as the DefaultTable.
+     * We provide the same constructors as the
+     * {@link de.unikn.knime.core.data.def.DefaultTable}.
      * 
      * @see de.unikn.knime.core.data.def.DefaultTable
      * @param rows see DefaultTable constructor
@@ -65,10 +70,13 @@ public class DefaultTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * Also this constructor is available in <code>DefaultTable</code>.
+     * Also this constructor is available in
+     * {@link de.unikn.knime.core.data.def.DefaultTable}.
      * 
-     * @param rows Passed to constructor of <code>DefaultTable</code>
-     * @param spec Passed to constructor of <code>DefaultTable</code>
+     * @param rows Passed to constructor of
+     *            {@link de.unikn.knime.core.data.def.DefaultTable}
+     * @param spec Passed to constructor of
+     *            {@link de.unikn.knime.core.data.def.DefaultTable}
      * @see de.unikn.knime.core.data.def.DefaultTable#DefaultTable( DataRow[],
      *      DataTableSpec)
      */
@@ -80,7 +88,8 @@ public class DefaultTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * we provide the same constructors as the DefaultTable.
+     * We provide the same constructors as the
+     * {@link de.unikn.knime.core.data.def.DefaultTable}.
      * 
      * @see de.unikn.knime.core.data.def.DefaultTable
      * @param data see DefaultTable constructor
@@ -144,5 +153,4 @@ public class DefaultTableNodeFactory extends NodeFactory {
     public NodeDialogPane createNodeDialogPane() {
         throw new InternalError();
     }
-
 }

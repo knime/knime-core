@@ -48,7 +48,7 @@ import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public final class ColPropertyDialog extends JDialog {
 
@@ -93,11 +93,11 @@ public final class ColPropertyDialog extends JDialog {
         assert false;
     }
 
-    private ColPropertyDialog(final Frame parent, 
-            final int colIdx, final Vector<ColProperty> allColProps) {
+    private ColPropertyDialog(final Frame parent, final int colIdx,
+            final Vector<ColProperty> allColProps) {
 
         super(parent, true);
-        
+
         m_colIdx = colIdx;
         m_allColProps = allColProps;
         m_result = null;
@@ -170,8 +170,8 @@ public final class ColPropertyDialog extends JDialog {
         // group components nicely - without those buttons
         JPanel dlgPanel = new JPanel();
         dlgPanel.setLayout(new BoxLayout(dlgPanel, BoxLayout.Y_AXIS));
-        dlgPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.
-                createEtchedBorder(), "Column Properties"));
+        dlgPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Column Properties"));
         dlgPanel.add(namePanel);
         dlgPanel.add(typePanel);
         dlgPanel.add(missPanel);
@@ -191,26 +191,26 @@ public final class ColPropertyDialog extends JDialog {
     }
 
     /**
-     * called when "domain..." button is pressed. Opens the dialog for domain
+     * Called when "domain..." button is pressed. Opens the dialog for domain
      * settings, with components depending on the currently selected type.
      */
     void openDomainDialog() {
 
         // prepare a colProp with the default settings for the dialog
-        ColProperty domainProperty = 
-            (ColProperty)m_allColProps.get(m_colIdx).clone();
+        ColProperty domainProperty = (ColProperty)m_allColProps.get(m_colIdx)
+                .clone();
 
         // set the new name and type - regardless of their correctness
         domainProperty.changeColumnName(m_colNameField.getText());
-        domainProperty.changeColumnType(getTypeFromComboIndex(m_typeChooser.
-                getSelectedIndex()));
+        domainProperty.changeColumnType(getTypeFromComboIndex(m_typeChooser
+                .getSelectedIndex()));
 
         if (m_userDomainSettings != null) {
             // calling this dialog for the 2nd time. Use vals from first call.
-            domainProperty.changeDomain(m_userDomainSettings.getColumnSpec().
-                    getDomain());
-            domainProperty.setReadPossibleValuesFromFile(m_userDomainSettings.
-                    getReadPossibleValuesFromFile());
+            domainProperty.changeDomain(m_userDomainSettings.getColumnSpec()
+                    .getDomain());
+            domainProperty.setReadPossibleValuesFromFile(m_userDomainSettings
+                    .getReadPossibleValuesFromFile());
 
         }
         DomainDialog domDlg = new DomainDialog(domainProperty);
@@ -221,7 +221,7 @@ public final class ColPropertyDialog extends JDialog {
     }
 
     /**
-     * called whenever the selected type of the column changes. Will reset
+     * Called whenever the selected type of the column changes. Will reset
      * domain settings to default values for the new type.
      */
     protected void typeSelectionChanged() {
@@ -236,13 +236,13 @@ public final class ColPropertyDialog extends JDialog {
         if (selectedType == null) {
             m_domainButton.setEnabled(false);
         } else {
-//            if (selectedType.isCompatible(StringValue.class)
-//                    || selectedType.isCompatible(IntValue.class)) {
-            /* TODO: The DataContainer doesn't support nominal values for 
-             *       integer columns yet. If it does, replace the if stmt below
-             *       with the one above (the domain dialog already supports
-             *       int types). Also, somehow, tell the data container about
-             *       the user's decision.
+            // if (selectedType.isCompatible(StringValue.class)
+            // || selectedType.isCompatible(IntValue.class)) {
+            /*
+             * TODO: The DataContainer doesn't support nominal values for
+             * integer columns yet. If it does, replace the if stmt below with
+             * the one above (the domain dialog already supports int types).
+             * Also, somehow, tell the data container about the user's decision.
              */
             if (selectedType.isCompatible(StringValue.class)) {
                 m_domainButton.setEnabled(true);
@@ -254,13 +254,13 @@ public final class ColPropertyDialog extends JDialog {
     }
 
     /**
-     * opens a Dialog to recieve user settings for column name, type, missing
+     * Opens a Dialog to receive user settings for column name, type, missing
      * value pattern, and domain. If the user cancels the dialog no changes will
-     * be made and null is returned. If okay is pressed, the settings from the
-     * dialog will be stored in a new ColProperty object. A new Vector will be
-     * returned, containing references to the old unchanged objects and to one
-     * new colProperty object containing the new settings (at index colIdx).
-     * <br>
+     * be made and <code>null</code> is returned. If okay is pressed, the
+     * settings from the dialog will be stored in a new {@link ColProperty}
+     * object. A new {@link Vector} will be returned, containing references to
+     * the old unchanged objects and to one new colProperty object containing
+     * the new settings (at index colIdx). <br>
      * If the column type has changed, domain values will be cleared. On success
      * the 'set by user' flag is set. If user's settings are incorrect an error
      * dialog pops up and the user values are discarded.
@@ -275,7 +275,7 @@ public final class ColPropertyDialog extends JDialog {
      *         properties. (Currently only the index colIdx will be changed). Or
      *         null if the user canceled, or entered invalid settings.
      */
-    static Vector<ColProperty> openUserDialog(final Frame parent, 
+    static Vector<ColProperty> openUserDialog(final Frame parent,
             final int colIdx, final Vector<ColProperty> allColProps) {
 
         assert colIdx < allColProps.size();
@@ -309,7 +309,7 @@ public final class ColPropertyDialog extends JDialog {
 
         setTitle("New settings for column '" + theColSpec.getName().toString()
                 + "'");
-        
+
         pack();
         centerDialog();
 
@@ -320,7 +320,7 @@ public final class ColPropertyDialog extends JDialog {
     }
 
     /**
-     * called when user presses the ok button.
+     * Called when user presses the ok button.
      */
     void onOK() {
         m_result = takeOverSettings();
@@ -330,7 +330,7 @@ public final class ColPropertyDialog extends JDialog {
     }
 
     /**
-     * called when user presses the cancel button or closes the window.
+     * Called when user presses the cancel button or closes the window.
      */
     void onCancel() {
         m_result = null;
@@ -390,14 +390,15 @@ public final class ColPropertyDialog extends JDialog {
                 ColProperty colProp = m_allColProps.get(c);
                 String otherName = colProp.getColumnSpec().getName().toString();
                 if (newName.equals(otherName)) {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Specified column name ('"
-                            + newName
-                            + "') is already in use for another column."
-                            + " Enter unique name or press cancel.",
-                            "Duplicate column names",
-                            JOptionPane.ERROR_MESSAGE);
+                    JOptionPane
+                            .showMessageDialog(
+                                    this,
+                                    "Specified column name ('"
+                                            + newName
+                                            + "') is already in use for another column."
+                                            + " Enter unique name or press cancel.",
+                                    "Duplicate column names",
+                                    JOptionPane.ERROR_MESSAGE);
                     return null;
                 }
             }
@@ -409,13 +410,14 @@ public final class ColPropertyDialog extends JDialog {
             DataType type = getTypeFromComboIndex(newType);
             if (type == null) {
                 // internal error - shouldn't happen
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Unexpected and invalid type (looks like an "
-                        + "internal error!). "
-                        + "Try selecting another type or press cancel.",
-                        "Internal Error: Unexpected type",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane
+                        .showMessageDialog(
+                                this,
+                                "Unexpected and invalid type (looks like an "
+                                        + "internal error!). "
+                                        + "Try selecting another type or press cancel.",
+                                "Internal Error: Unexpected type",
+                                JOptionPane.ERROR_MESSAGE);
                 return null;
 
             }
@@ -436,10 +438,10 @@ public final class ColPropertyDialog extends JDialog {
 
         if (m_userDomainSettings != null) {
             // user changed domain. take it over
-            newColProp.changeDomain(m_userDomainSettings.getColumnSpec().
-                    getDomain());
-            newColProp.setReadPossibleValuesFromFile(m_userDomainSettings.
-                    getReadPossibleValuesFromFile());
+            newColProp.changeDomain(m_userDomainSettings.getColumnSpec()
+                    .getDomain());
+            newColProp.setReadPossibleValuesFromFile(m_userDomainSettings
+                    .getReadPossibleValuesFromFile());
         }
 
         // construct the result vector - which is a copy of the colProperties
@@ -473,7 +475,5 @@ public final class ColPropertyDialog extends JDialog {
             assert (type.equals(StringCell.TYPE));
             return TYPE_STRING;
         }
-
     }
-
 }

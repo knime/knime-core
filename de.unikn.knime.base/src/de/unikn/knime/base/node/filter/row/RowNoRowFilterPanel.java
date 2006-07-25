@@ -40,13 +40,9 @@ import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowNoRowFilterPanel extends RowFilterPanel {
-
-    /** object version for serialization. */
-    static final long serialVersionUID = 1;
-
     private final JSpinner m_first;
 
     private final JCheckBox m_tilEOT;
@@ -125,7 +121,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * sets the enabled status of the 'lastRow' spinner depending on the checked
+     * Sets the enabled status of the 'lastRow' spinner depending on the checked
      * status of the 'until the end' box.
      */
     protected void tilEOTChanged() {
@@ -161,7 +157,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
         // the spinner show the numbers, so we need to add 1 here.
         m_first.setValue(new Integer(first + 1));
         m_tilEOT.setSelected(last == RowNoRowFilter.EOT); // en/disables
-                                                            // m_last
+        // m_last
         if (last != RowNoRowFilter.EOT) {
             m_last.setValue(new Integer(last + 1));
         }
@@ -211,8 +207,8 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @return true if the settings in the panel are invalid, false if they are
-     *         consistent and usable.
+     * @return <code>true</code> if the settings in the panel are invalid,
+     *         <code>false</code> if they are consistent and usable
      */
     public boolean hasErrors() {
         return m_errText.getText().length() > 0;

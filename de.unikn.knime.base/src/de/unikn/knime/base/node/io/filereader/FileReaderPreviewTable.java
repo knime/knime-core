@@ -28,30 +28,29 @@ import de.unikn.knime.core.data.RowIterator;
 
 /**
  * The data table displayed in the file reader's dialog's preview. We need an
- * extra incarnation of a data table (different from from the
- * <code>FileReaderTable</code>), because if settings are not correct yet,
- * the table in the preview must not throw any exception on unexpected or
- * invalid data it reads (which the "normal" file table does). Thus, this table
- * returns a row iterator that will create an error row when a error occurs
- * during file reading. It will end the table after the errornous element was
- * read.
+ * extra incarnation of a data table (different from from the {@link FileTable}),
+ * because if settings are not correct yet, the table in the preview must not
+ * throw any exception on unexpected or invalid data it reads (which the
+ * "normal" file table does). Thus, this table returns a row iterator that will
+ * create an error row when a error occurs during file reading. It will end the
+ * table after the errornous element was read.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderPreviewTable extends FileTable {
 
     private String m_errorMsg;
 
     private int m_errorLine;
-    
+
     private final LinkedList<ChangeListener> m_listeners;
 
     /**
-     * Creates a new table, its like the "normal" <code>FileTable</code>,
-     * just not failing on invalid data files.
+     * Creates a new table, its like the "normal" {@link FileTable}, just not
+     * failing on invalid data files.
      * 
-     * @param settings settings for the underlying <code>FileTable</code>.
-     * @param tableSpec table spec for the underlying <code>FileTable</code>.
+     * @param settings settings for the underlying <code>FileTable</code>
+     * @param tableSpec table spec for the underlying <code>FileTable</code>
      * @see FileTable
      */
     FileReaderPreviewTable(final DataTableSpec tableSpec,
@@ -71,11 +70,11 @@ public class FileReaderPreviewTable extends FileTable {
     }
 
     /**
-     * this sets the flag indicating that the row iterator ended the table with
+     * This sets the flag indicating that the row iterator ended the table with
      * an error.
      * 
-     * @param msg the message to store.
-     * @param lineNumber the line in which the error occured.
+     * @param msg the message to store
+     * @param lineNumber the line in which the error occured
      */
     void setError(final String msg, final int lineNumber) {
         if (msg == null) {
@@ -87,15 +86,16 @@ public class FileReaderPreviewTable extends FileTable {
         }
         m_errorMsg = msg;
         m_errorLine = lineNumber;
-        // notify all interested 
+        // notify all interested
         fireErrorOccuredEvent();
     }
 
     /**
-     * @return true if an error occured in an underlying row iterator. Meaning
-     *         the table contains invalid data. NOTE: if false is returned it is
-     *         not guaranteed that all data in the table is valid. It could be
-     *         that no row iterator reached the invalid data yet.
+     * @return <code>true</code> if an error occured in an underlying row
+     *         iterator. Meaning the table contains invalid data. NOTE: if
+     *         <code>false</code> is returned it is not guaranteed that all
+     *         data in the table is valid. It could be that no row iterator
+     *         reached the invalid data yet.
      */
     boolean getErrorOccured() {
         return m_errorMsg != null;
@@ -103,7 +103,7 @@ public class FileReaderPreviewTable extends FileTable {
 
     /**
      * @return the error msg set by a row iterator that came accross an error in
-     *         the table. This is null if not set.
+     *         the table. This is <code>null</code> if not set.
      */
     String getErrorMsg() {
         return m_errorMsg;

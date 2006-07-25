@@ -38,7 +38,7 @@ import de.unikn.knime.core.node.NodeSettingsWO;
  * included or excluded. RegExpr match can be done case sensitive or
  * insensitive.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ColValRowFilter extends RowFilter {
 
@@ -85,8 +85,8 @@ public class ColValRowFilter extends RowFilter {
      * Creates a new filter which matches the string representation of the
      * specified column against a given regular expression.
      * 
-     * @param regExpr a valid regular expression. Causes an exception to fly if
-     *            its not a valid reg expr.
+     * @param regExpr a valid regular expression; causes an exception to fly if
+     *            its not a valid reg expr
      * @param colName the name of the column to test in the row
      * @param include flag indicating whether to include or exclude rows with a
      *            matching value
@@ -134,10 +134,10 @@ public class ColValRowFilter extends RowFilter {
      *            with the bounds of the range.
      * @param lowerBound if the comparator doesn't return a negative number when
      *            the cell is compared with this value, the cell is above the
-     *            lower bound. If null no minimum is set.
+     *            lower bound. If <code>null</code> no minimum is set.
      * @param upperBound if the comparator doesn't return a positive number when
      *            the cell is compared with this value, the cell is below the
-     *            upper bound. If null, no maximum is set.
+     *            upper bound. If <code>null</code>, no maximum is set.
      * @param colName the name of the column to test in the row
      * @param include determines whether to include or exclude rows with a value
      *            inside the range
@@ -193,35 +193,36 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * sets a new comparator used to check the range if lower and upper bounds
+     * Sets a new comparator used to check the range if lower and upper bounds
      * are set. This MUST be called after settings have been loaded from a
      * config object and upper/lower bounds were set. It is always save to set a
      * comparator. Its only used if at least one bound is set.
      * 
      * @param dcComp the comparator used to compare the column's value with the
-     *            upper and lower range.
+     *            upper and lower range
      */
     public void setDataValueComparator(final DataValueComparator dcComp) {
         m_dcComp = dcComp;
     }
 
     /**
-     * @return true if rows inside the specified range or matching the specified
-     *         regular expression will be included, false if they are excluded.
+     * @return <code>true</code> if rows inside the specified range or
+     *         matching the specified regular expression will be included,
+     *         <code>false</code> if they are excluded
      */
     public boolean includeMatchingLines() {
         return m_include;
     }
 
     /**
-     * @return the index of the column whose value is tested.
+     * @return the index of the column whose value is tested
      */
     public String getColumnName() {
         return m_colName;
     }
 
     /**
-     * @return true if the range of the column is tested.
+     * @return true if the range of the column is tested
      */
     public boolean rangeSet() {
         // if we have a comparator and at least one bound is specified
@@ -230,8 +231,8 @@ public class ColValRowFilter extends RowFilter {
 
     /**
      * @return the lower bound of the range the value of the specified column is
-     *         tested against. Null if no range testing is happening or if no
-     *         minimum is set.
+     *         tested against. <code>null</code> if no range testing is
+     *         happening or if no minimum is set
      */
     public DataCell getLowerBound() {
         if (rangeSet()) {
@@ -243,8 +244,8 @@ public class ColValRowFilter extends RowFilter {
 
     /**
      * @return the upper bound of the range the value of the specified column is
-     *         tested against. Null if no range testing is happening or if no
-     *         maximum is set.
+     *         tested against. <code>null</code> if no range testing is
+     *         happening or if no maximum is set
      */
     public DataCell getUpperBound() {
         if (rangeSet()) {
@@ -255,16 +256,16 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @return true if the string representation of the column's value is tested
-     *         against a regular expression.
+     * @return <code>true</code> if the string representation of the column's
+     *         value is tested against a regular expression
      */
     public boolean testingStringPattern() {
         return (m_pattern != null);
     }
 
     /**
-     * @return the reg expr the column's value is tested against, or null if no
-     *         pattern matching is happening.
+     * @return the reg expr the column's value is tested against, or
+     *         <code>null</code> if no pattern matching is happening
      */
     public String getRegExpr() {
         if (m_pattern != null) {
@@ -275,15 +276,17 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @return true if the value pattern must entirely match the reg expr, false
-     *         if it can also only start with the expression.
+     * @return <code>true</code> if the value pattern must entirely match the
+     *         reg expr, <code>false</code> if it can also only start with the
+     *         expression
      */
     public boolean mustEntirelyMatch() {
         return !m_startsWith;
     }
 
     /**
-     * @return true if the reg expr match is done in a case sensitive way.
+     * @return <code>true</code> if the reg expr match is done in a case
+     *         sensitive way
      */
     public boolean caseSensitiveMatch() {
         return m_caseSensitive;
@@ -301,8 +304,7 @@ public class ColValRowFilter extends RowFilter {
          * if this goes off you propably didn't set a comparator after loading a
          * range from a config object. Which is not good.
          */
-        assert (((m_lowerBound == null) && (m_upperBound == null)) 
-                || m_dcComp != null);
+        assert (((m_lowerBound == null) && (m_upperBound == null)) || m_dcComp != null);
 
         DataCell theCell = row.getCell(m_colIndex);
         boolean match = false;
@@ -411,7 +413,7 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * the column value filter grabs the comparator from the table spec (if
+     * The column value filter grabs the comparator from the table spec (if
      * available) and checks settings against the latest spec.
      * 
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
@@ -502,5 +504,4 @@ public class ColValRowFilter extends RowFilter {
         }
         return result;
     }
-
 }

@@ -29,11 +29,11 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * A RowFilter that matches the row ID against a regular expression. It allows
- * for including or excluding matching rows, supports case sensitivity, and
- * supports entire row ID matches vs. starts with.
+ * A {@link RowFilter} that matches the row ID against a regular expression. It
+ * allows for including or excluding matching rows, supports case sensitivity,
+ * and supports entire row ID matches vs. starts with.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class RowIDRowFilter extends RowFilter {
 
@@ -58,10 +58,11 @@ public class RowIDRowFilter extends RowFilter {
      * expression.
      * 
      * @param regExpr the regular expression
-     * @param include flag inverting the match if set false
-     * @param caseSensitive case ignoring match if set false
-     * @param startsWith if false, the entire row ID must match the reg expr, if
-     *            set true it only has to start with the reg expr.
+     * @param include flag inverting the match if set <code>false</code>
+     * @param caseSensitive case ignoring match if set <code>false</code>
+     * @param startsWith if <code>false</code>, the entire row ID must match
+     *            the reg expr, if set <code>true</code> it only has to start
+     *            with the reg expr
      */
     public RowIDRowFilter(final String regExpr, final boolean include,
             final boolean caseSensitive, final boolean startsWith) {
@@ -102,24 +103,26 @@ public class RowIDRowFilter extends RowFilter {
     }
 
     /**
-     * @return true if the rowID must start with the regExpr pattern, false if
-     *         it only has to start with it
+     * @return <code>true</code> if the rowID must start with the regExpr
+     *         pattern, <code>false</code> if it only has to start with it
      */
     public boolean getStartsWith() {
         return m_startsWith;
     }
 
     /**
-     * @return true if matching row IDs are included (match method returns true)
-     *         or false, if they are excluded (matches method returns false, if
-     *         rowID matches the reg expr.)
+     * @return <code>true</code> if matching row IDs are included (match
+     *         method returns true) or <code>false</code>, if they are
+     *         excluded (matches method returns false, if rowID matches the reg
+     *         expr.)
      */
     public boolean getInclude() {
         return m_include;
     }
 
     /**
-     * @return true if the match is case sensitive, false if not.
+     * @return <code>true</code> if the match is case sensitive,
+     *         <code>false</code> if not
      */
     public boolean getCaseSensitivity() {
         return m_caseSensitive;
@@ -203,5 +206,4 @@ public class RowIDRowFilter extends RowFilter {
         result += m_startsWith ? "prefixed)" : "entire)";
         return result;
     }
-
 }

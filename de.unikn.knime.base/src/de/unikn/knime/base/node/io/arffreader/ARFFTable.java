@@ -47,7 +47,7 @@ import de.unikn.knime.core.node.NodeLogger;
 
 /**
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ARFFTable implements DataTable {
 
@@ -65,9 +65,9 @@ public class ARFFTable implements DataTable {
      * Create a new DataTable reading its content from an ARFF file at the
      * specified location.
      * 
-     * @param arffFileLocation valid URL which points to the ARFF file to read.
-     * @param tSpec the structure of the table to create.
-     * @param rowKeyPrefix row keys are constructed like rowKeyPrefix + lineNo.
+     * @param arffFileLocation valid URL which points to the ARFF file to read
+     * @param tSpec the structure of the table to create
+     * @param rowKeyPrefix row keys are constructed like rowKeyPrefix + lineNo
      */
     public ARFFTable(final URL arffFileLocation, final DataTableSpec tSpec,
             final String rowKeyPrefix) {
@@ -102,15 +102,15 @@ public class ARFFTable implements DataTable {
     }
 
     /**
-     * reads in the header of the specified ARFF file and returns a
-     * corresponding <code>DataTableSpec</code> object.
+     * Reads in the header of the specified ARFF file and returns a
+     * corresponding table spec object.
      * 
-     * @param fileLoc the location of the ARFF file to read.
-     * @param exec to enable users to cancel this process.
-     * @return a table spec reflecting the settings in the file header.
-     * @throws IOException if the file location couldn't be opened.
+     * @param fileLoc the location of the ARFF file to read
+     * @param exec to enable users to cancel this process
+     * @return a table spec reflecting the settings in the file header
+     * @throws IOException if the file location couldn't be opened
      * @throws InvalidSettingsException if the file contains an invalid format
-     * @throws CanceledExecutionException if user canceled.
+     * @throws CanceledExecutionException if user canceled
      */
     public static DataTableSpec createDataTableSpecFromARFFfile(
             final URL fileLoc, final ExecutionMonitor exec) throws IOException,
@@ -241,8 +241,7 @@ public class ARFFTable implements DataTable {
         for (int c = 0; c < colSpecs.size(); c++) {
             // compare it with all specs with higher index
             for (int h = c + 1; h < colSpecs.size(); h++) {
-                if (colSpecs.get(c).getName().equals(
-                        colSpecs.get(h).getName())) {
+                if (colSpecs.get(c).getName().equals(colSpecs.get(h).getName())) {
                     throw new InvalidSettingsException("Two attributes with "
                             + "equal names defined in header of file '"
                             + fileLoc + "'.");
@@ -347,7 +346,6 @@ public class ARFFTable implements DataTable {
      */
     private static void readUntilEOL(final FileTokenizer tizer,
             final String filename) {
-
         boolean msgPrinted = false;
         String token = tizer.nextToken();
 
@@ -359,7 +357,5 @@ public class ARFFTable implements DataTable {
                         + "' line " + tizer.getLineNumber() + ".");
             }
         }
-
     }
-
 }

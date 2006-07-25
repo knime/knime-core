@@ -27,7 +27,6 @@ import de.unikn.knime.core.node.NodeView;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriterNodeFactory extends NodeFactory {
-
     /**
      * Creates new factory proposing a default file in the user's home directory
      * as target.
@@ -75,5 +74,4 @@ public class CSVWriterNodeFactory extends NodeFactory {
     public NodeDialogPane createNodeDialogPane() {
         return new CSVWriterNodeDialog();
     }
-
 }

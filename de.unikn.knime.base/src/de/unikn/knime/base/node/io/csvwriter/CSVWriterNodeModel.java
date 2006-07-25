@@ -114,7 +114,7 @@ public class CSVWriterNodeModel extends NodeModel {
         }
         String fileName = settings.getString(CFGKEY_FILE);
         checkFileAccess(fileName);
-    } // validateSettings(NodeSettings)
+    }
 
     /**
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
@@ -169,7 +169,7 @@ public class CSVWriterNodeModel extends NodeModel {
         writer.close();
         // execution succefull return empty array
         return new BufferedDataTable[0];
-    } // execute(DataTable[])
+    }
 
     /**
      * Ignored.
@@ -230,8 +230,8 @@ public class CSVWriterNodeModel extends NodeModel {
     /**
      * Helper that checks some properties for the file argument.
      * 
-     * @param fileName The file to check
-     * @throws InvalidSettingsException If that fails.
+     * @param fileName the file to check
+     * @throws InvalidSettingsException if that fails
      */
     private void checkFileAccess(final String fileName)
             throws InvalidSettingsException {
@@ -256,7 +256,5 @@ public class CSVWriterNodeModel extends NodeModel {
         // here it exists and we can write it: warn user!
         setWarningMessage("Selected output file exists and will be "
                 + "overwritten!");
-
     }
-
 }

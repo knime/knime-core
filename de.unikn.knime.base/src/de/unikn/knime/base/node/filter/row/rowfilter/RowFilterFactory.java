@@ -23,12 +23,12 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * Used to create RowFilterObjects from NodeSettings settings objects. 
- * Each row filter must be registered here (i.e. code must be added). 
- * Scan the file for "CHANGE HERE". 
+ * Used to create {@link RowFilter} objects from
+ * {@link de.unikn.knime.core.node.NodeSettings}. Each row filter must be
+ * registered here (i.e. code must be added). Scan the file for "CHANGE HERE".
  * RowFilter must provide the default constructor.
  * 
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public final class RowFilterFactory {
 
@@ -61,16 +61,17 @@ public final class RowFilterFactory {
 
     /**
      * @param filter the filter for which the config object will be used to
-     *            store the settings.
+     *            store the settings
      * @param cfg will be modified to be able to recreate the corresponding
      *            filter type from it
      * @return the config object passed in, modified in a way the
-     *         <code>createRowFilter</code> method will be able to recreate
-     *         the row filter object (with the corresponding type) from it. The
-     *         method adds a row filter type identifier to the config. Passing
-     *         the returned object to the createRowFilter method will recreate
-     *         the filter. If null is returned the row filter type was not
-     *         properly added to this factory - which should not happen.
+     *         {@link #createRowFilter(NodeSettingsRO)} method will be able to
+     *         recreate the row filter object (with the corresponding type) from
+     *         it. The method adds a row filter type identifier to the config.
+     *         Passing the returned object to the
+     *         {@link #createRowFilter(NodeSettingsRO)} method will recreate the
+     *         filter. If <code>null</code> is returned the row filter type
+     *         was not properly added to this factory - which should not happen.
      */
     public static NodeSettingsWO prepareConfigFor(final NodeSettingsWO cfg,
             final RowFilter filter) {
@@ -140,37 +141,36 @@ public final class RowFilterFactory {
             throw new InvalidSettingsException("No row filter type specified"
                     + "in config object");
         }
-        
+
         RowFilter newFilter = null;
-        
+
         if (typeID == null) {
             throw new InvalidSettingsException("Invalid row filter type in"
                     + " config object");
         } else if (typeID.equals(ROWFILTER_AND)) {
-            newFilter =  new AndRowFilter();
+            newFilter = new AndRowFilter();
         } else if (typeID.equals(ROWFILTER_OR)) {
-            newFilter =  new OrRowFilter();
+            newFilter = new OrRowFilter();
         } else if (typeID.equals(ROWFILTER_ROWID)) {
-            newFilter =  new RowIDRowFilter();
+            newFilter = new RowIDRowFilter();
         } else if (typeID.equals(ROWFILTER_ROWNO)) {
-            newFilter =  new RowNoRowFilter();
+            newFilter = new RowNoRowFilter();
         } else if (typeID.equals(ROWFILTER_TRUE)) {
-            newFilter =  new TrueRowFilter();
+            newFilter = new TrueRowFilter();
         } else if (typeID.equals(ROWFILTER_FALSE)) {
-            newFilter =  new FalseRowFilter();
+            newFilter = new FalseRowFilter();
         } else if (typeID.equals(ROWFILTER_INV)) {
-            newFilter =  new NegRowFilter();
+            newFilter = new NegRowFilter();
         } else if (typeID.equals(ROWFILTER_COLVAL)) {
-            newFilter =  new ColValRowFilter();
+            newFilter = new ColValRowFilter();
         } else {
             throw new InvalidSettingsException("Invalid row filter type in"
                     + " config object");
         }
 
         assert newFilter != null;
-        
+
         newFilter.loadSettingsFrom(cfg);
         return newFilter;
     }
-
 }

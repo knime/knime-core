@@ -38,20 +38,25 @@ import de.unikn.knime.core.node.NodeSettingsWO;
 import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
- * Dialog that allows for treatment of duplicate row keys. Possible options
- * are: (1) skip duplicate rows, (2) append suffix to key.
+ * Dialog that allows for treatment of duplicate row keys. Possible options are:
+ * (1) skip duplicate rows, (2) append suffix to key.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsNodeDialog extends NodeDialogPane {
-    
+
     private final JRadioButton m_appendSuffixButton;
+
     private final JRadioButton m_skipRowButton;
+
     private final JTextField m_suffixField;
+
     private final JRadioButton m_useInterSectionButton;
+
     private final JRadioButton m_useUnionButton;
-    
+
     /**
-     * Constructor to init the gui and set a title. 
+     * Constructor to init the gui and set a title.
      */
     public AppendedRowsNodeDialog() {
         ActionListener actionListener = new ActionListener() {
@@ -73,8 +78,8 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         buttonGroup.add(m_appendSuffixButton);
         JPanel panel = new JPanel(new GridLayout(0, 1));
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
-        centerPanel.setBorder(BorderFactory.createTitledBorder(
-        "Duplicate row key handling"));
+        centerPanel.setBorder(BorderFactory
+                .createTitledBorder("Duplicate row key handling"));
         JPanel skipButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         skipButtonPanel.add(m_skipRowButton);
         centerPanel.add(skipButtonPanel);
@@ -84,16 +89,16 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         centerPanel.add(suffixButtonPanel);
         m_skipRowButton.doClick();
         panel.add(centerPanel);
-        
+
         ButtonGroup bGroup = new ButtonGroup();
-        m_useInterSectionButton = 
-            new JRadioButton("Use intersection of columns");
+        m_useInterSectionButton = new JRadioButton(
+                "Use intersection of columns");
         m_useUnionButton = new JRadioButton("Use union of columns");
         bGroup.add(m_useInterSectionButton);
         bGroup.add(m_useUnionButton);
         JPanel intersectPanel = new JPanel(new GridLayout(0, 1));
-        intersectPanel.setBorder(BorderFactory.createTitledBorder(
-            "Column handling"));
+        intersectPanel.setBorder(BorderFactory
+                .createTitledBorder("Column handling"));
         JPanel intersectButPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         intersectButPanel.add(m_useInterSectionButton);
         intersectPanel.add(intersectButPanel);
@@ -108,20 +113,19 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
     @Override
-    protected void loadSettingsFrom(
-            final NodeSettingsRO settings, final DataTableSpec[] specs) 
-            throws NotConfigurableException {
-        boolean appendSuffix = 
-            settings.getBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, false);
-        String suffix = 
-            settings.getString(AppendedRowsNodeModel.CFG_SUFFIX, "x");
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        boolean appendSuffix = settings.getBoolean(
+                AppendedRowsNodeModel.CFG_APPEND_SUFFIX, false);
+        String suffix = settings.getString(AppendedRowsNodeModel.CFG_SUFFIX,
+                "x");
         if (appendSuffix) {
             m_appendSuffixButton.doClick();
         } else {
             m_skipRowButton.doClick();
         }
         m_suffixField.setText(suffix);
-        
+
         boolean isUseIntersection = settings.getBoolean(
                 AppendedRowsNodeModel.CFG_INTERSECT_COLUMNS, false);
         if (isUseIntersection) {
@@ -142,8 +146,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         String suffix = m_suffixField.getText();
         settings.addBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, isSuffix);
         settings.addString(AppendedRowsNodeModel.CFG_SUFFIX, suffix);
-        settings.addBoolean(
-                AppendedRowsNodeModel.CFG_INTERSECT_COLUMNS, isIntersection);
+        settings.addBoolean(AppendedRowsNodeModel.CFG_INTERSECT_COLUMNS,
+                isIntersection);
     }
-    
 }

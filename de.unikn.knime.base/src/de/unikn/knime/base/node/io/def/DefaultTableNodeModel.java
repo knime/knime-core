@@ -34,8 +34,10 @@ import de.unikn.knime.core.node.NodeSettingsRO;
 import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * This is the model for the DefaultTable node. It only holds the DefaultTable.
- * It provides similar cosntructors as the DefaultTable.
+ * This is the model for the {@link de.unikn.knime.core.data.def.DefaultTable}
+ * node. It only holds the {@link de.unikn.knime.core.data.def.DefaultTable}.
+ * It provides similar cosntructors as the
+ * {@link de.unikn.knime.core.data.def.DefaultTable}.
  * 
  * @author ohl University of Konstanz
  */
@@ -55,10 +57,13 @@ public class DefaultTableNodeModel extends NodeModel {
     }
 
     /**
-     * Also this constructor is available in <code>DefaultTable</code>.
+     * Also this constructor is available in
+     * {@link de.unikn.knime.core.data.def.DefaultTable}.
      * 
-     * @param rows Passed to constructor of <code>DefaultTable</code>
-     * @param spec Passed to constructor of <code>DefaultTable</code>
+     * @param rows Passed to constructor of
+     *            {@link de.unikn.knime.core.data.def.DefaultTable}
+     * @param spec Passed to constructor of
+     *            {@link de.unikn.knime.core.data.def.DefaultTable}
      * @see de.unikn.knime.core.data.def.DefaultTable#DefaultTable( DataRow[],
      *      DataTableSpec)
      */
@@ -99,8 +104,8 @@ public class DefaultTableNodeModel extends NodeModel {
     }
 
     /**
-     * The standard table can always provide a DataTableSpec, that's why it is
-     * also executable: returns true (so to say).
+     * The standard table can always provide a table spec, that's why it is also
+     * executable: returns <code>true</code> (so to say).
      * 
      * @see NodeModel#configure(DataTableSpec[])
      */
@@ -153,5 +158,4 @@ public class DefaultTableNodeModel extends NodeModel {
             CanceledExecutionException {
 
     }
-
 }
