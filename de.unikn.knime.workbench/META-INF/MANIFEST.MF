@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Konstanz Information Miner
 Bundle-SymbolicName: de.unikn.knime.workbench
-Bundle-Version: 0.9.0
+Bundle-Version: 1.0.0
 Bundle-Vendor: ALTANA Chair for Applied Computer Science, University of Konstanz
 Bundle-Localization: plugin
