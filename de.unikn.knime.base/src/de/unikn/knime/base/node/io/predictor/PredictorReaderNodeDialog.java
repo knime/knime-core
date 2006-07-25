@@ -32,7 +32,7 @@ public class PredictorReaderNodeDialog extends DefaultNodeDialogPane {
      * the file chooser entry.
      */
     public PredictorReaderNodeDialog() {
-        super("Reader Options");
+        super();
         DialogComponentFileChooser fcComp
             = new DialogComponentFileChooser(PredictorReaderNodeModel.FILENAME, 
                 ".pmml.gz", ".pmml");

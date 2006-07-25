@@ -33,7 +33,7 @@ public class ReadTableNodeDialogPane extends DefaultNodeDialogPane {
     /**
      */
     public ReadTableNodeDialogPane() {
-        super("Table Reader");
+        super();
         addDialogComponent(new DialogComponentFileChooser(
                 ReadTableNodeModel.CFG_FILENAME, JFileChooser.OPEN_DIALOG, 
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));

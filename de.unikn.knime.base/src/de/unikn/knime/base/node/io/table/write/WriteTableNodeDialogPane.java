@@ -36,7 +36,7 @@ public class WriteTableNodeDialogPane extends DefaultNodeDialogPane {
      * Creates new dialog.
      */
     public WriteTableNodeDialogPane() {
-        super("Table Writer");
+        super();
         addDialogComponent(new DialogComponentFileChooser(
                 WriteTableNodeModel.CFG_FILENAME, JFileChooser.SAVE_DIALOG, 
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));

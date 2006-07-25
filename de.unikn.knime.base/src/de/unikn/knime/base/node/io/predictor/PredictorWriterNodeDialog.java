@@ -35,7 +35,7 @@ public class PredictorWriterNodeDialog extends DefaultNodeDialogPane {
      * the file chooser entry.
      */
     public PredictorWriterNodeDialog() {
-        super("Writer Options");
+        super();
         DialogComponentFileChooser fcComp
         = new DialogComponentFileChooser(PredictorWriterNodeModel.FILENAME, 
                 JFileChooser.SAVE_DIALOG, ".pmml.gz", ".pmml");
