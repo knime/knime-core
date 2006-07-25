@@ -25,7 +25,6 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 import de.unikn.knime.core.data.DataType;
 import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntValue;
 
 /**
  * The abstract class for all coordinate classes. A concrete coordinate depends
@@ -59,9 +58,10 @@ public abstract class Coordinate {
             return null;
         }
         DataType type = dataColumnSpec.getType();
-        if (type.isCompatible(IntValue.class)) {
-            return new IntegerCoordinate(dataColumnSpec);
-        } else if (type.isCompatible(DoubleValue.class)) {
+//        if (type.isCompatible(IntValue.class)) {
+//            return new IntegerCoordinate(dataColumnSpec);
+//        } else 
+        if (type.isCompatible(DoubleValue.class)) {
             return new NumericCoordinate(dataColumnSpec);
         } else {
             Set possibleValuse = dataColumnSpec.getDomain().getValues();
