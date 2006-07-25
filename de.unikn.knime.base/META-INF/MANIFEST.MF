@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Framework Basic Nodes
 Bundle-SymbolicName: de.unikn.knime.base
-Bundle-Version: 0.9.0
+Bundle-Version: 1.0.0
 Bundle-ClassPath: knime-base.jar
 Bundle-Vendor: ALTANA Chair for Applied Computer Science
 Bundle-Localization: plugin
