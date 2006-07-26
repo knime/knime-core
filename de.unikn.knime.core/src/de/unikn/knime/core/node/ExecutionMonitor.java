@@ -135,6 +135,7 @@ public class ExecutionMonitor {
         private final double m_maxProg;
         private double m_lastProg;
         private final String m_parentMessage;
+        private String m_lastMessage;
         
         /**
          * Creates new sub progress monitor.
@@ -167,11 +168,10 @@ public class ExecutionMonitor {
         }
 
         /**
-         * Must not be called. Throws IllegalStateException.
          * @see NodeProgressMonitor#getMessage()
          */
         public String getMessage() {
-            throw new IllegalStateException("This method must not be called.");
+            return m_lastMessage;
         }
 
         /**
@@ -211,7 +211,8 @@ public class ExecutionMonitor {
          * @see NodeProgressMonitor#setMessage(String)
          */
         public void setMessage(final String message) {
-            m_parent.setMessage(m_parentMessage + " - " + message);
+            String subMessage = calcNewMessage(message);
+            m_parent.setMessage(m_parentMessage + " - " + subMessage);
         }
 
         /**
@@ -221,7 +222,8 @@ public class ExecutionMonitor {
                 final double progress, final String message) {
             synchronized (m_parent) {
                 double subProgress = calcSubProgress(progress);
-                m_parent.setProgress(subProgress, message);
+                String subMessage = calcNewMessage(message);
+                m_parent.setProgress(subProgress, subMessage);
             }
         }
 
@@ -243,6 +245,11 @@ public class ExecutionMonitor {
             m_lastProg = progress;
             // scaled to our sub range
             return progressOfParent + diff * m_maxProg;
+        }
+        
+        private String calcNewMessage(final String message) {
+            m_lastMessage = m_parentMessage + " - " + message;
+            return m_lastMessage;
         }
     }
 
