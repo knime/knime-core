@@ -35,15 +35,15 @@ public abstract class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * Returns an array with the possition of all ticks and their corresponding
-     * domain values given an absolut length. The prespecified tick policy also
+     * Returns an array with the position of all ticks and their corresponding
+     * domain values given an absolute length. The prespecified tick policy also
      * influences the tick positions.
      * 
      * @param absolutLength the absolute length the domain is mapped on
      * @param naturalMapping if <code>true</code> the mapping values are
      *            rounded to the next integer equivalent
      * 
-     * @return the mapping of tick positions and coresponding domain values
+     * @return the mapping of tick positions and corresponding domain values
      */
     @Override
     public abstract CoordinateMapping[] getTickPositions(
