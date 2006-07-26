@@ -39,6 +39,7 @@ import java.util.Set;
 import de.unikn.knime.core.node.BufferedDataTable;
 import de.unikn.knime.core.node.CanceledExecutionException;
 import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
+import de.unikn.knime.core.node.ExecutionMonitor;
 import de.unikn.knime.core.node.InvalidSettingsException;
 import de.unikn.knime.core.node.KNIMEConstants;
 import de.unikn.knime.core.node.Node;
@@ -1317,10 +1318,11 @@ public class WorkflowManager implements WorkflowListener {
         // get all keys in there
         try {
             double nodeCounter = 1.0;
-            for (NodeContainer newNode : topSortNodes()) {
+            ExecutionMonitor execMon = new ExecutionMonitor(progMon);
+            for (int i = 0; i < topSortNodes().size(); i++) {
+                NodeContainer newNode = topSortNodes().get(i);
                 progMon.checkCanceled();
-                progMon.setProgress(nodeCounter / topSortNodes().size());
-                nodeCounter += 1.0;
+                progMon.setMessage("Loading node: " + newNode.getNameWithID());
                 try {
                     NodeSettingsRO nodeSetting = settings.getNodeSettings(
                             KEY_NODES).getNodeSettings(
@@ -1328,7 +1330,9 @@ public class WorkflowManager implements WorkflowListener {
                     String nodeFileName = nodeSetting
                             .getString(KEY_NODE_SETTINGS_FILE);
                     File nodeFile = new File(parentDir, nodeFileName);
-                    newNode.load(loadID, nodeFile, progMon);
+                    NodeProgressMonitor subProgMon = execMon.createSubProgress(
+                            1.0 / topSortNodes().size()).getProgressMonitor();
+                    newNode.load(loadID, nodeFile, subProgMon);
                 } catch (IOException ioe) {
                     String msg = "Unable to load node: "
                             + newNode.getNameWithID()
@@ -1344,6 +1348,10 @@ public class WorkflowManager implements WorkflowListener {
                     LOGGER.debug("", ise);
                     failedNodes.add(newNode);
                 }
+                progMon.setProgress(nodeCounter / topSortNodes().size());
+                // progMon.setMessage("Prog: " + nodeCounter
+                // / topSortNodes().size());
+                nodeCounter += 1.0;
             }
         } finally {
             // put into a finally block because that may release much of memory
@@ -1613,11 +1621,11 @@ public class WorkflowManager implements WorkflowListener {
         // save nodes in an own sub-config object as a series of configs
         NodeSettingsWO nodes = settings.addNodeSettings(KEY_NODES);
         int nodeNum = 0;
+        
+        ExecutionMonitor execMon = new ExecutionMonitor(progMon);
         for (NodeContainer nextNode : m_nodesByID.values()) {
 
-            nodeNum++;
-            progMon.setProgress((double)nodeNum / m_nodesByID.size());
-
+            progMon.setMessage("Saving node: " + nextNode.getNameWithID());
             // create node directory based on the nodes name and id
             // all chars which are not letter or number are replaced by '_'
             String nodeDirID = nextNode.getName().replaceAll("[^a-zA-Z0-9 ]",
@@ -1633,7 +1641,12 @@ public class WorkflowManager implements WorkflowListener {
             if (!nodeDir.isDirectory() && !nodeDir.mkdir()) {
                 throw new IOException("Unable to create dir: " + nodeDir);
             }
-            nextNode.save(nextNodeConfig, nodeFile, progMon);
+            
+            NodeProgressMonitor subProgMon = execMon.createSubProgress(
+                    1.0 / m_nodesByID.size()).getProgressMonitor();
+            nextNode.save(nextNodeConfig, nodeFile, subProgMon);
+            nodeNum++;
+            progMon.setProgress((double)nodeNum / m_nodesByID.size());
         }
 
         NodeSettingsWO connections = settings.addNodeSettings(KEY_CONNECTIONS);
