@@ -1408,11 +1408,11 @@ public class WorkflowManager implements WorkflowListener {
             try {
                 cc = new ConnectionContainer(m_runningConnectionID.inc(),
                         connectionConfig, this);
-            } catch (InvalidSettingsException ise) {
+            } catch (Exception ex) {
                 LOGGER.warn("Could not create connection: " + connectionKey
-                        + " reason: " + ise.getMessage());
-                LOGGER.debug(connectionConfig, ise);
-            }
+                        + " reason: " + ex.getMessage());
+                LOGGER.debug(connectionConfig, ex);
+            } 
             try {
                 addConnection(cc);
             } catch (Exception ex) {

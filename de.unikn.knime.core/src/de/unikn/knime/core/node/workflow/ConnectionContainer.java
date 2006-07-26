@@ -68,8 +68,7 @@ public class ConnectionContainer {
 
     // listeners for changes to the extra info can register here. Other
     // information (source/destination) can not change!
-    private final ArrayList<WorkflowListener> m_listeners =
-        new ArrayList<WorkflowListener>();
+    private final ArrayList<WorkflowListener> m_listeners = new ArrayList<WorkflowListener>();
 
     /**
      * Creates a new container holding a connection of a workflow, storing both
@@ -98,43 +97,41 @@ public class ConnectionContainer {
         m_extraInfo = null;
     }
 
-    
     /**
-     * Creates a new connection container by reading the connection settings
-     * out of the settings object. The workflow manager is needed to retrieve
-     * the node container from the id stored in the settings.
+     * Creates a new connection container by reading the connection settings out
+     * of the settings object. The workflow manager is needed to retrieve the
+     * node container from the id stored in the settings.
      * 
      * @param id the unique id of the new connection
      * @param config the saved connection configuration
      * @param wfm the workflow manager that manages this connection
      * @throws InvalidSettingsException if the settings do not contain a valid
-     * connection
+     *             connection
      */
     ConnectionContainer(final int id, final NodeSettingsRO config,
             final WorkflowManager wfm) throws InvalidSettingsException {
-        this (id, config, wfm, null);
+        this(id, config, wfm, null);
     }
 
-    
     /**
-     * Creates a new connection container by reading the connection settings
-     * out of the settings object. The workflow manager is needed to retrieve
-     * the node container from the id stored in the settings. The translation
-     * map is used for translating between node ids in the settings object and
-     * actual node ids in the workflow manager. This can be handy when creating
-     * sub workflows.
-     *  
+     * Creates a new connection container by reading the connection settings out
+     * of the settings object. The workflow manager is needed to retrieve the
+     * node container from the id stored in the settings. The translation map is
+     * used for translating between node ids in the settings object and actual
+     * node ids in the workflow manager. This can be handy when creating sub
+     * workflows.
+     * 
      * @param id the id of the new connection
      * @param config the saved connection configuration
      * @param wfm the workflow manager that manages this connection
      * @param translationMap a map between node ids, e.g. for sub workflows
      * @throws InvalidSettingsException if the settings do not contain a valid
-     * connection
+     *             connection
      */
     ConnectionContainer(final int id, final NodeSettingsRO config,
             final WorkflowManager wfm,
             final Map<Integer, Integer> translationMap)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         m_id = id;
         int sourceID = getSourceIdFromConfig(config);
         int targetID = getTargetIdFromConfig(config);
@@ -143,11 +140,19 @@ public class ConnectionContainer {
             targetID = translationMap.get(targetID);
         }
         m_sourceNode = wfm.getNodeContainerById(sourceID);
+        if (m_sourceNode == null) {
+            throw new IllegalArgumentException(
+                    "Source node does not exist in workflow");
+        }
         m_sourcePort = config.getInt(KEY_SOURCE_PORT);
-        m_targetNode = wfm.getNodeContainerById(targetID);        
+
+        m_targetNode = wfm.getNodeContainerById(targetID);
+        if (m_targetNode == null) {
+            throw new IllegalArgumentException(
+                    "Target node does not exist in workflow");
+        }
         m_targetPort = config.getInt(KEY_TARGET_PORT);
 
-        
         // check if extrainfo exists
         ConnectionExtraInfo extraInfo = null;
         if (config.containsKey(KEY_EXTRAINFOCLASS)) {
@@ -168,7 +173,7 @@ public class ConnectionContainer {
             }
         }
     }
-    
+
     // //////////////////////
     // Getter/Setter Methods
     // //////////////////////
@@ -264,8 +269,8 @@ public class ConnectionContainer {
      * Notifies listeners about extra info changes.
      */
     private void fireExtraInfoChanged() {
-        WorkflowEvent event = new WorkflowEvent.ConnectionExtrainfoChanged(
-                -1, null, getExtraInfo());
+        WorkflowEvent event = new WorkflowEvent.ConnectionExtrainfoChanged(-1,
+                null, getExtraInfo());
         for (int i = 0; i < m_listeners.size(); i++) {
             m_listeners.get(i).workflowChanged(event);
         }
@@ -312,90 +317,90 @@ public class ConnectionContainer {
         }
     }
 
-//    /**
-//     * Creates a new ConnectionContainer by adding a new connection to the
-//     * workflow, which will then create the ConnectionContainer and add all
-//     * required information to the source and target NodeContainers.
-//     * 
-//     * @param config Retrieve the data for new connection from config
-//     * @param workflowMgr <code>WorkflowManager</code> to add connection to
-//     * @throws InvalidSettingsException If the required keys are not available
-//     *             in the NodeSettings. Also throws exception if for whatever
-//     *             reason the connection can not be added to the Workflow.
-//     * 
-//     * @see #save
-//     */
-//    public static void insertNewConnectionIntoWorkflow(
-//            final NodeSettings config, final WorkflowManager workflowMgr)
-//            throws InvalidSettingsException {
-//        // read ids and port indices
-//        int newSourceID = getSourceIdFromConfig(config);
-//        int newTargetID = getTargetIdFromConfig(config);
-//
-//        insertNewConnectionIntoWorkflow(config, workflowMgr, newSourceID,
-//                newTargetID);
-//
-//    } // end insertNewConnectionIntoWorkflow()
-//
-//    /**
-//     * Creates a new ConnectionContainer by adding a new connection to the
-//     * workflow, which will then create the ConnectionContainer and add all
-//     * required information to the source and target NodeContainers.
-//     * 
-//     * @param config Retrieve the data for new connection from config
-//     * @param workflowMgr <code>WorkflowManager</code> to add connection to
-//     * @param sourceId the id of the source node of the new connection
-//     * @param targetId the id of the target node of the new connection
-//     * 
-//     * @return the id of the new connection
-//     * @throws InvalidSettingsException If the required keys are not available
-//     *             in the NodeSettings. Also throws exception if for whatever
-//     *             reason the connection can not be added to the Workflow.
-//     * 
-//     * @see #save
-//     */
-//    public static int insertNewConnectionIntoWorkflow(
-//            final NodeSettings config, final WorkflowManager workflowMgr,
-//            final int sourceId, final int targetId)
-//            throws InvalidSettingsException {
-//
-//        // read ids and port indices
-//        int newSourceID = sourceId;
-//        int newSourcePort = config.getInt(KEY_SOURCE_PORT);
-//        int newTargetID = targetId;
-//        int newTargetPort = config.getInt(KEY_TARGET_PORT);
-//        // check if extrainfo exists
-//        ConnectionExtraInfo extraInfo = null;
-//        if (config.containsKey(KEY_EXTRAINFOCLASS)) {
-//            // if it does determine type of extrainfo
-//            String extraInfoClassName = config.getString(KEY_EXTRAINFOCLASS);
-//            try {
-//                // extraInfo = (ConnectionExtraInfo) (Class
-//                // .forName(extraInfoClassName)
-//                // .newInstance());
-//                extraInfo = (ConnectionExtraInfo)GlobalClassCreator
-//                        .createClass(extraInfoClassName).newInstance();
-//                // and load content of extrainfo
-//                extraInfo.load(config);
-//            } catch (Exception e) {
-//                LOGGER.warn("ExtraInfoClass could not " + "be loaded "
-//                        + extraInfoClassName + " reason: " + e.getMessage());
-//            }
-//
-//        }
-//        // create new connection in workflow (which will generate the
-//        // corresponding ConnectionContainer)
-//        try {
-//            ConnectionContainer newCC = workflowMgr.addConnection(newSourceID,
-//                    newSourcePort, newTargetID, newTargetPort);
-//            newCC.setExtraInfo(extraInfo);
-//
-//            return newCC.getID();
-//
-//        } catch (Exception e) {
-//            throw new InvalidSettingsException(e.getMessage());
-//        }
-//    } // end insertNewConnectionIntoWorkflow()
+    // /**
+    // * Creates a new ConnectionContainer by adding a new connection to the
+    // * workflow, which will then create the ConnectionContainer and add all
+    // * required information to the source and target NodeContainers.
+    // *
+    // * @param config Retrieve the data for new connection from config
+    // * @param workflowMgr <code>WorkflowManager</code> to add connection to
+    // * @throws InvalidSettingsException If the required keys are not available
+    // * in the NodeSettings. Also throws exception if for whatever
+    // * reason the connection can not be added to the Workflow.
+    // *
+    // * @see #save
+    // */
+    // public static void insertNewConnectionIntoWorkflow(
+    // final NodeSettings config, final WorkflowManager workflowMgr)
+    // throws InvalidSettingsException {
+    // // read ids and port indices
+    // int newSourceID = getSourceIdFromConfig(config);
+    // int newTargetID = getTargetIdFromConfig(config);
+    //
+    // insertNewConnectionIntoWorkflow(config, workflowMgr, newSourceID,
+    // newTargetID);
+    //
+    // } // end insertNewConnectionIntoWorkflow()
+    //
+    // /**
+    // * Creates a new ConnectionContainer by adding a new connection to the
+    // * workflow, which will then create the ConnectionContainer and add all
+    // * required information to the source and target NodeContainers.
+    // *
+    // * @param config Retrieve the data for new connection from config
+    // * @param workflowMgr <code>WorkflowManager</code> to add connection to
+    // * @param sourceId the id of the source node of the new connection
+    // * @param targetId the id of the target node of the new connection
+    // *
+    // * @return the id of the new connection
+    // * @throws InvalidSettingsException If the required keys are not available
+    // * in the NodeSettings. Also throws exception if for whatever
+    // * reason the connection can not be added to the Workflow.
+    // *
+    // * @see #save
+    // */
+    // public static int insertNewConnectionIntoWorkflow(
+    // final NodeSettings config, final WorkflowManager workflowMgr,
+    // final int sourceId, final int targetId)
+    // throws InvalidSettingsException {
+    //
+    // // read ids and port indices
+    // int newSourceID = sourceId;
+    // int newSourcePort = config.getInt(KEY_SOURCE_PORT);
+    // int newTargetID = targetId;
+    // int newTargetPort = config.getInt(KEY_TARGET_PORT);
+    // // check if extrainfo exists
+    // ConnectionExtraInfo extraInfo = null;
+    // if (config.containsKey(KEY_EXTRAINFOCLASS)) {
+    // // if it does determine type of extrainfo
+    // String extraInfoClassName = config.getString(KEY_EXTRAINFOCLASS);
+    // try {
+    // // extraInfo = (ConnectionExtraInfo) (Class
+    // // .forName(extraInfoClassName)
+    // // .newInstance());
+    // extraInfo = (ConnectionExtraInfo)GlobalClassCreator
+    // .createClass(extraInfoClassName).newInstance();
+    // // and load content of extrainfo
+    // extraInfo.load(config);
+    // } catch (Exception e) {
+    // LOGGER.warn("ExtraInfoClass could not " + "be loaded "
+    // + extraInfoClassName + " reason: " + e.getMessage());
+    // }
+    //
+    // }
+    // // create new connection in workflow (which will generate the
+    // // corresponding ConnectionContainer)
+    // try {
+    // ConnectionContainer newCC = workflowMgr.addConnection(newSourceID,
+    // newSourcePort, newTargetID, newTargetPort);
+    // newCC.setExtraInfo(extraInfo);
+    //
+    // return newCC.getID();
+    //
+    // } catch (Exception e) {
+    // throw new InvalidSettingsException(e.getMessage());
+    // }
+    // } // end insertNewConnectionIntoWorkflow()
 
     /**
      * Retrieves the source id from a given <code>NodeSettings</code> object.
