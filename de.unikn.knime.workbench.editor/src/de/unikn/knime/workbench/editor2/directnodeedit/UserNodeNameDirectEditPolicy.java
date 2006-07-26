@@ -25,7 +25,6 @@ import org.eclipse.gef.requests.DirectEditRequest;
 
 import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import de.unikn.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
  * The edit policy to edit the user node name of a node directly in the figure.
@@ -52,11 +51,6 @@ public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
      * @see DirectEditPolicy#showCurrentEditValue(DirectEditRequest)
      */
     protected void showCurrentEditValue(final DirectEditRequest request) {
-        
-        // get the value of the cell editor representing the new user node name
-        String value = (String)request.getCellEditor().getValue();
-        
-        ((NodeContainerFigure)getHostFigure()).setCustomName(value);
         
         // hack to prevent async layout from placing the cell editor twice.
         getHostFigure().getUpdateManager().performUpdate();
