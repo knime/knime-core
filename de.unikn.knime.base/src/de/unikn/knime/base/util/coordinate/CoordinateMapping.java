@@ -43,9 +43,10 @@ public abstract class CoordinateMapping {
      * domain value and its mapping value.
      * 
      * @param stringDomainValue the domain value as a string
-     * @param mappingValue the coresponding mapping
+     * @param mappingValue the corresponding mapping
      */
-    CoordinateMapping(final String stringDomainValue, final double mappingValue) {
+    CoordinateMapping(final String stringDomainValue, 
+            final double mappingValue) {
         m_stringDomainValue = stringDomainValue;
         m_mappingValue = mappingValue;
     }
@@ -60,7 +61,7 @@ public abstract class CoordinateMapping {
     }
 
     /**
-     * A coordinate mapping must also return the coresponding domain value as a
+     * A coordinate mapping must also return the corresponding domain value as a
      * string.
      * 
      * @return the domain value as string
@@ -81,6 +82,7 @@ public abstract class CoordinateMapping {
      */
     @Override
     public String toString() {
-        return ("Dom. String Value: " + m_stringDomainValue + ", Map. Value: " + m_mappingValue);
+        return ("Dom. String Value: " + m_stringDomainValue 
+                + ", Map. Value: " + m_mappingValue);
     }
 }

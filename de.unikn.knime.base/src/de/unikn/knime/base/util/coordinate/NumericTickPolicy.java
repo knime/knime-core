@@ -21,7 +21,7 @@ package de.unikn.knime.base.util.coordinate;
 
 /**
  * Enumeration of all available policies determine the position of ticks of a
- * {@link de.unikn.knime.base.util.coordinate.NumericCoordinate}.
+ * {@link de.unikn.knime.base.util.coordinate.DoubleCoordinate}.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
@@ -30,7 +30,7 @@ public enum NumericTickPolicy {
     /**
      * The policy which sets a tick at the first and last domain value. In
      * between the ticks are distributed equally with a minimum distance defined
-     * in {@link NumericCoordinate#DEFAULT_ABSOLUTE_TICK_DIST}.
+     * in {@link DoubleCoordinate#DEFAULT_ABSOLUTE_TICK_DIST}.
      */
     START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE,
 

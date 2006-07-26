@@ -24,7 +24,7 @@ package de.unikn.knime.base.util.coordinate;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class NumericCoordinateMapping extends CoordinateMapping {
+public class DoubleCoordinateMapping extends CoordinateMapping {
 
     /**
      * The original domain value.
@@ -38,7 +38,7 @@ public class NumericCoordinateMapping extends CoordinateMapping {
      * @param domainValue the domain value
      * @param mappingValue the corresponding mapped value
      */
-    NumericCoordinateMapping(final String stringDomainValue,
+    DoubleCoordinateMapping(final String stringDomainValue,
             final double domainValue, final double mappingValue) {
 
         super(stringDomainValue, mappingValue);

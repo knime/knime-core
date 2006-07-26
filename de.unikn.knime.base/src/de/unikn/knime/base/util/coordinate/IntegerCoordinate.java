@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
- * -------------------------------------------------------------------
+/* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
@@ -38,19 +35,23 @@ import de.unikn.knime.core.data.IntValue;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class IntegerCoordinate extends Coordinate {
+class IntegerCoordinate extends NumericCoordinate {
     private static final int DEFAULT_TICK_DIST = 20;
 
-    private final int m_minDomainValue;
+    /**The minimum value covered by this coordinate object.*/
+    private int m_minDomainValue;
+    /**The maximum value covered by this coordinate object.*/
+    private int m_maxDomainValue;
 
-    private final int m_maxDomainValue;
-
-    // private final long m_domainRange;
-
+    /**The <code>List</code> of values which should be returned as
+     * tick positions by this coordinate.*/
     private final List<DataCell> m_values;
 
-    private final long m_domainLength;
+    /**The range which is covered by this coordinate object.*/
+    private long m_domainRange;
 
+    /**The basic value which is used to calculate the position in pixel for
+     * a given value.*/
     private int m_baseVal;
 
     /**
@@ -114,40 +115,31 @@ public class IntegerCoordinate extends Coordinate {
                         .getDoubleValue();
             }
         }
-        m_domainLength = createDomainRange(m_minDomainValue, m_maxDomainValue);
-        // the basic value for calculating the height needed for negative values
-        m_baseVal = 0;
-        if (m_minDomainValue < 0) {
-            m_baseVal = m_minDomainValue;
-        }
-    }
-
-    private int createDomainRange(final int minValue, final int maxValue) {
-        int range = Math.abs(maxValue - minValue);
-        return roundRange(range);
+        updateInternalData();
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#getTickPositions(double,
-     *      boolean)
+     * @see de.unikn.knime.base.util.coordinate.Coordinate#
+     * getTickPositions(double, boolean)
      */
     @Override
     public CoordinateMapping[] getTickPositions(final double absolutLength,
             final boolean naturalMapping) {
         CoordinateMapping[] mapping = null;
         // do a special treatment if the domain range is zero
-        if (m_domainLength == 0.0) {
+        if (m_domainRange == 0.0) {
             // just one mapping is created in the middle of the available
             // absolute length
             double mappingValue = Math.round(absolutLength / 2);
             mapping = new IntegerCoordinateMapping[1];
-            mapping[0] = new IntegerCoordinateMapping(Integer
-                    .toString(m_minDomainValue), m_minDomainValue, mappingValue);
+            mapping[0] = 
+                new IntegerCoordinateMapping(Integer.toString(
+                        m_minDomainValue), m_minDomainValue, mappingValue);
             return mapping;
         }
 
         // the height per 1 value in pixel
-        double heightPerVal = absolutLength / m_domainLength;
+        double heightPerVal = absolutLength / m_domainRange;
         if (m_values != null && m_values.size() > 0) {
             // the user has predefined values which he want to have displayed
             mapping = new CoordinateMapping[m_values.size()];
@@ -163,7 +155,7 @@ public class IntegerCoordinate extends Coordinate {
         } else {
             int noOfTicks = (int)Math.ceil(absolutLength
                     / IntegerCoordinate.DEFAULT_TICK_DIST);
-            double range = Math.ceil(m_domainLength / noOfTicks);
+            double range = Math.ceil(m_domainRange / noOfTicks);
             range = roundRange(range);
             while ((m_minDomainValue + noOfTicks * range) < m_maxDomainValue) {
                 // this should never happen
@@ -200,6 +192,10 @@ public class IntegerCoordinate extends Coordinate {
             } else if (range > 1000) {
                 addition = 100;
                 divider = 100;
+                while ((range / 10) > divider) {
+                    divider *= 10;
+                    addition *= 5;
+                }
             }
 
             while (range / divider > 1) {
@@ -224,7 +220,7 @@ public class IntegerCoordinate extends Coordinate {
             throw new IllegalArgumentException("Value cell not compatible.");
         }
         // the height per 1 value in pixel
-        double heightPerVal = absolutLength / m_domainLength;
+        double heightPerVal = absolutLength / m_domainRange;
         int value = (int)((DoubleValue)domainValueCell).getDoubleValue();
         double position = calculatePosition(heightPerVal, value, m_baseVal);
         return position;
@@ -242,19 +238,98 @@ public class IntegerCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#isNominal()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * isMinDomainValueSet()
      */
     @Override
-    public boolean isNominal() {
-        return false;
+    public boolean isMinDomainValueSet() {
+        return true;
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *      #getUnusedDistBetweenTicks(double)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * isMaxDomainValueSet()
      */
     @Override
-    public double getUnusedDistBetweenTicks(final double absoluteLength) {
-        return 0;
+    public boolean isMaxDomainValueSet() {
+        return true;
     }
+    
+    /**
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * getMaxDomainValue()
+     */
+    @Override
+    public double getMaxDomainValue() {
+        return m_maxDomainValue;
+    }
+
+    /**
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * getMinDomainValue()
+     */
+    @Override
+    public double getMinDomainValue() {
+        return m_minDomainValue;
+    }
+
+    /**
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * setMinDomainValue(double)
+     */
+    @Override
+    public void setMinDomainValue(final double value) {
+        if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
+            throw new IllegalArgumentException("Value to big or small for " 
+                    + IntegerCoordinate.class.getName());
+        }
+        m_minDomainValue = (int) value;
+        updateInternalData();
+    }
+
+    /**
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * setMaxDomainValue(double)
+     */
+    @Override
+    public void setMaxDomainValue(final double value) {
+        if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
+            throw new IllegalArgumentException("Value to big or small for " 
+                    + IntegerCoordinate.class.getName());
+        }
+        m_maxDomainValue = (int) value;
+        updateInternalData();
+    }
+    /**
+     * @param minValue the minimum value to map on the coordinate
+     * @param maxValue the maximum value to map on the coordinate
+     * @return the range which is covered by this coordinate
+     */
+    private int createDomainRange(final int minValue, final int maxValue) {
+        int range = Math.abs(maxValue - minValue);
+        return roundRange(range);
+    }
+
+    /**
+     * @param minValue the minimum value of this coordinate
+     * @return the base value which is used to calculate the position
+     */
+    private static int getBaseVal(final int minValue) {
+        if (minValue < 0) {
+            return minValue;
+        } else {
+            return 0;
+        }
+    }
+    
+    /**
+     * This method is called every time a domain range (min or max) changes to
+     * set the domain range and base value.
+     */
+    private void updateInternalData() {
+        m_domainRange = createDomainRange(m_minDomainValue, m_maxDomainValue);
+        m_baseVal = getBaseVal(m_minDomainValue);
+    }
+
+    
 }

@@ -40,7 +40,7 @@ import de.unikn.knime.core.data.DoubleValue;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class NumericCoordinate extends Coordinate {
+ class DoubleCoordinate extends NumericCoordinate {
 
     /**
      * The default value for <code>m_coordPrefix</code>.
@@ -117,7 +117,7 @@ public class NumericCoordinate extends Coordinate {
      * 
      * @param dataColumnSpec the column spec to create this coordinate from
      */
-    NumericCoordinate(final DataColumnSpec dataColumnSpec) {
+    protected DoubleCoordinate(final DataColumnSpec dataColumnSpec) {
         this(dataColumnSpec, DEFAULT_COORDINATE_PREFIX,
                 DEFAULT_COORDINATE_POSTFIX, DEFAULT_ABSOLUTE_TICK_DIST,
                 NumericTickPolicy.LABLE_WITH_ROUNDED_NUMBERS,
@@ -141,11 +141,11 @@ public class NumericCoordinate extends Coordinate {
      * @param maxDomainLableLenght the number digits after the decimal dot for
      *            rounding accuracy
      */
-    NumericCoordinate(final DataColumnSpec dataColumnSpec,
+    DoubleCoordinate(final DataColumnSpec dataColumnSpec,
             final double coordinatePrefix, final double coordinatePostfix,
             final double absoluteTickDistance,
-            final NumericTickPolicy tickPolicy, final int maxDomainLableLenght) {
-
+            final NumericTickPolicy tickPolicy, 
+            final int maxDomainLableLenght) {
         super(dataColumnSpec);
 
         // check the column type first it must be compatible to a double
@@ -220,22 +220,14 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * Returns an array with the possition of all ticks and their corresponding
-     * domain values given an absolut length. The prespecified tick policy also
-     * influences the tick positions.
-     * 
-     * @param absolutLength the absolute length the domain is mapped on
-     * @param naturalMapping if <code>true</code> the mapping values are
-     *            rounded to the next integer equivalent
-     * 
-     * @return the mapping of tick positions and coresponding domain values
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#getTickPositions(double, boolean)
      */
     @Override
     public CoordinateMapping[] getTickPositions(final double absolutLength,
             final boolean naturalMapping) {
 
         // the mapping to create and return
-        NumericCoordinateMapping[] mapping = null;
+        DoubleCoordinateMapping[] mapping = null;
 
         double absoluteTickDistance = m_absoluteTickDistance;
         // round the absolute tick distance if integer equivalent mapping
@@ -263,8 +255,8 @@ public class NumericCoordinate extends Coordinate {
 
             double domainValue = startOfDomain;
             double mappingValue = Math.round(absolutLength / 2);
-            mapping = new NumericCoordinateMapping[1];
-            mapping[0] = new NumericCoordinateMapping(
+            mapping = new DoubleCoordinateMapping[1];
+            mapping[0] = new DoubleCoordinateMapping(
                     formatNumber(domainValue), domainValue, mappingValue);
             return mapping;
         }
@@ -331,8 +323,10 @@ public class NumericCoordinate extends Coordinate {
             startOfDomain = startOfDomain * Math.pow(10, exponent);
 
             // no create the tick mapping
-            ArrayList<NumericCoordinateMapping> mappingArray = new ArrayList<NumericCoordinateMapping>();
-            for (int i = 0; startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
+            ArrayList<DoubleCoordinateMapping> mappingArray = 
+                new ArrayList<DoubleCoordinateMapping>();
+            for (int i = 0; 
+                startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
 
                 double domainValue = startOfDomain + i * domainTickStep;
                 double mappingValue = (domainValue - m_minDomainValue)
@@ -343,12 +337,12 @@ public class NumericCoordinate extends Coordinate {
                     mappingValue = Math.round(mappingValue);
                 }
 
-                mappingArray.add(new NumericCoordinateMapping(
+                mappingArray.add(new DoubleCoordinateMapping(
                         formatNumber(domainValue), domainValue, mappingValue));
             }
 
             // convert the array list to an mapping array
-            mapping = new NumericCoordinateMapping[mappingArray.size()];
+            mapping = new DoubleCoordinateMapping[mappingArray.size()];
 
             mapping = mappingArray.toArray(mapping);
         }
@@ -359,13 +353,15 @@ public class NumericCoordinate extends Coordinate {
          * 
          * @see NumericTickPolicy#START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE
          */
-        if (m_tickPolicy == NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
+        if (m_tickPolicy 
+                == 
+              NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
 
             // add one for the last tick
             numberTicks++;
 
             // create the mappings for each tick
-            mapping = new NumericCoordinateMapping[numberTicks];
+            mapping = new DoubleCoordinateMapping[numberTicks];
             for (int i = 0; i < numberTicks - 1; i++) {
 
                 double mappingValue = absoluteTickDistance * i;
@@ -374,12 +370,12 @@ public class NumericCoordinate extends Coordinate {
                 // absolut mapping value starting at zero
                 double domainValue = startOfDomain + mappingValue
                         / absolutLength * domainLength;
-                mapping[i] = new NumericCoordinateMapping(
+                mapping[i] = new DoubleCoordinateMapping(
                         formatNumber(domainValue), domainValue, mappingValue);
             }
 
             // the last tick is added manually
-            mapping[numberTicks - 1] = new NumericCoordinateMapping(
+            mapping[numberTicks - 1] = new DoubleCoordinateMapping(
                     formatNumber(endOfDomain), endOfDomain, absolutLength);
         }
 
@@ -469,26 +465,6 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * Sets the max domain value.
-     * 
-     * @param maxDomainValue the max value to set
-     */
-    public void setMaxDomainValue(final double maxDomainValue) {
-        m_maxDomainValue = maxDomainValue;
-        updateDomainRange();
-    }
-
-    /**
-     * Sets the min domain value.
-     * 
-     * @param minDomainValue the min value to set
-     */
-    public void setMinDomainValue(final double minDomainValue) {
-        m_minDomainValue = minDomainValue;
-        updateDomainRange();
-    }
-
-    /**
      * Precomputes the domain range from the min and max domain value.
      */
     private void updateDomainRange() {
@@ -496,12 +472,8 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * Calculates a numeric mapping assuming a
-     * {@link de.unikn.knime.core.data.def.DoubleCell}.
-     * 
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell,double,
-     *      boolean)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * calculateMappedValue(de.unikn.knime.core.data.DataCell, double, boolean)
      */
     @Override
     public double calculateMappedValue(final DataCell domainValueCell,
@@ -533,29 +505,26 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#isNominal()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * getMaxDomainValue()
      */
-    @Override
-    public boolean isNominal() {
-        return false;
+    public double getMaxDomainValue() {
+        return m_maxDomainValue;
     }
 
     /**
-     * A numeric coordinate does not has a unused distance range.
-     * 
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *      #getUnusedDistBetweenTicks(double)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * getMinDomainValue()
      */
-    @Override
-    public double getUnusedDistBetweenTicks(final double absoluteLength) {
-
-        return 0;
+    public double getMinDomainValue() {
+        return m_minDomainValue;
     }
-
+    
     /**
-     * @return <code>true</code> if the lower domain range is set properly
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * isMinDomainValueSet()
      */
-    public boolean isLowerDomainValueSet() {
+    public boolean isMinDomainValueSet() {
         if (m_minDomainValue != Double.NaN) {
             return true;
         }
@@ -564,9 +533,10 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * @return <code>true</code> if the upper domain range is set properly
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * isMaxDomainValueSet()
      */
-    public boolean isUpperDomainValueSet() {
+    public boolean isMaxDomainValueSet() {
         if (m_maxDomainValue != Double.NaN) {
             return true;
         }
@@ -575,34 +545,20 @@ public class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * Sets the lower domain value.
-     * 
-     * @param value the lower value
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * setMaxDomainValue(double)
      */
-    public void setLowerDomainValue(final double value) {
-        m_minDomainValue = value;
+    public void setMaxDomainValue(final double maxDomainValue) {
+        m_maxDomainValue = maxDomainValue;
+        updateDomainRange();
     }
 
     /**
-     * Sets the upper domain value.
-     * 
-     * @param value the upper value
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
+     * setMinDomainValue(double)
      */
-    public void setUpperDomainValue(final double value) {
-        m_maxDomainValue = value;
-    }
-
-    /**
-     * @return Returns the maxDomainValue.
-     */
-    public double getMaxDomainValue() {
-        return m_maxDomainValue;
-    }
-
-    /**
-     * @return Returns the minDomainValue.
-     */
-    public double getMinDomainValue() {
-        return m_minDomainValue;
+    public void setMinDomainValue(final double minDomainValue) {
+        m_minDomainValue = minDomainValue;
+        updateDomainRange();
     }
 }

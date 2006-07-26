@@ -61,7 +61,7 @@ public abstract class Coordinate {
         // return new IntegerCoordinate(dataColumnSpec);
         // } else
         if (type.isCompatible(DoubleValue.class)) {
-            return new NumericCoordinate(dataColumnSpec);
+            return new DoubleCoordinate(dataColumnSpec);
         } else {
             Set possibleValuse = dataColumnSpec.getDomain().getValues();
             if (possibleValuse != null && possibleValuse.size() > 0) {
