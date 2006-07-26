@@ -451,7 +451,8 @@ public class DataContainer implements RowAppender {
             return;
         } 
         m_possibleValues[col].add(value);
-        if (m_possibleValues[col].size() > m_possibleValuesSizes[col]) {
+        if (m_possibleValuesSizes[col] >= 0 
+                && m_possibleValues[col].size() > m_possibleValuesSizes[col]) {
             // forget possible values
             m_possibleValues[col] = null;
             m_possibleValuesSizes[col] = -1;
