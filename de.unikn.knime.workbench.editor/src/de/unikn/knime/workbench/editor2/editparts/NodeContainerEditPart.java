@@ -152,10 +152,23 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             m_figureInitialized = false;
             // create default extra info and set it
             // NOTE: This is done for nodes that are created from code
-            // e.g. cross validation node creates a partitioner and 
+            // e.g. cross validation node creates a partitioner and
             // has no knowledge about a extrainfo
             ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
             info.setNodeLocation(0, 0, -1, -1);
+            
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // TODO: very bad hack for version 1.0.0!!!!
+            // just to set the x-partitioner of the x-validation meta node
+            // to a suitable position; this is done as the meta nodes
+            // can not determine locations and set them for a node 
+            // which is (like the x-partitioner) created from the code (not
+            // from the user)
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (getNodeContainer().getName().equals("X-Partitioner")) {
+                info.setNodeLocation(120, 0, -1, -1);
+            }
+
             getNodeContainer().setExtraInfo(info);
 
         }
