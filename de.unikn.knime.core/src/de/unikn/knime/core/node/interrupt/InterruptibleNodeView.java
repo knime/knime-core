@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 178 $ $Date: 2006-02-15 09:52:11 +0100 (Mi, 15 Feb 2006) $ 
- * $Author: ohl $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   11.10.2005 (Normal): created
+ *   11.10.2005 (dill): created
  */
 package de.unikn.knime.core.node.interrupt;
 

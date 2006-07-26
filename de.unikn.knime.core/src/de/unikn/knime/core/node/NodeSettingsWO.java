@@ -26,7 +26,7 @@ import de.unikn.knime.core.node.config.ConfigWO;
 /**
  * Write-only <code>NodeSettingsWO</code> interface.
  * 
- * @author gabriel, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 public interface NodeSettingsWO extends ConfigWO {
 

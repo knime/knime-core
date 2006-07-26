@@ -207,8 +207,6 @@ public abstract class Config extends AbstractConfigEntry
         
         /**
          * <code>ComplexNumberCell</code> entry.
-         * 
-         * @author gabriel, University of Konstanz
          */
         public static final class ComplexNumberCellEntry 
                 implements DataCellEntry {

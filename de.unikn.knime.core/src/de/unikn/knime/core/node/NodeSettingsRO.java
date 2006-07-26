@@ -24,7 +24,7 @@ import de.unikn.knime.core.node.config.ConfigRO;
 /**
  * Read-only interface for <code>NodeSettingsRO</code> objects.
  * 
- * @author gabriel, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 public interface NodeSettingsRO extends ConfigRO {
 
