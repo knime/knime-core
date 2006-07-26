@@ -114,10 +114,12 @@ public class RowFilterIterator extends RowIterator {
     }
 
     /**
+     * This implementation may throw an RuntimeCanceledExecutionException
+     * if this class has been initialized with a non-null execution monitor.
      * @see de.unikn.knime.core.data.RowIterator#next()
      */
     @Override
-    public DataRow next() {
+    public DataRow next() throws RuntimeCanceledExecutionException {
         if (m_nextRow == null) {
             throw new NoSuchElementException(
                     "The row filter iterator proceeded beyond the last row.");
