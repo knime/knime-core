@@ -134,8 +134,9 @@ public class MetaNodeModel extends SpecialNodeModel implements
             if (m_dataOutContainer[i] != null) {
                 outspecs[i] = m_dataOutModels[i].getDataTableSpec();
                 if ((outspecs[i] == null) || (outspecs[i].getNumColumns() == 0)) {
-                    throw new InvalidSettingsException("Inner workflow is not"
-                            + " fully connected yet");
+                    throw new InvalidSettingsException(
+                            "Inner workflow is not"
+                                    + " fully connected yet, please open the meta-workflow editor");
                 }
             }
         }
