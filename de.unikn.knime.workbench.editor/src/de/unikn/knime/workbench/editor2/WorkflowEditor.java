@@ -184,12 +184,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     private boolean m_closed;
 
     /**
-     * Indicates if this editor should be closed after the init. Happens, if the
-     * workflow loading has been canceled.
-     */
-    private boolean m_closeAfterInit;
-
-    /**
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
@@ -676,11 +670,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
 
-        // it is assumed that the editor should not be closed after
-        // initializiation. only if canceled, this value is set to
-        // true. Workaround to close the not fully initiallized editor.
-        m_closeAfterInit = false;
-
         setDefaultInput(input);
         // we only support file inputs
         m_fileResource = ((IFileEditorInput)input).getFile();
@@ -714,7 +703,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                         // create progress monitor
                         ProgressHandler progressHandler = new ProgressHandler(
-                                pm, 1);
+                                pm, 101, "Loading workflow...");
                         final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
                         progressMonitor.addProgressListener(progressHandler);
 
@@ -722,8 +711,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                         checkThread.start();
 
-                        pm.beginTask("Load workflow...", 10);
-                        pm.subTask("Load nodes...");
                         m_manager = new WorkflowManager(file, progressMonitor);
                         pm.subTask("Finished.");
                         pm.done();
@@ -745,7 +732,6 @@ public class WorkflowEditor extends GraphicalEditor implements
                         LOGGER.info("Canceled loading worflow: "
                                 + file.getName());
                         m_manager = null;
-                        m_closeAfterInit = true;
                     } catch (Exception e) {
                         LOGGER.info("Workflow could not be loaded. "
                                 + e.getMessage());
@@ -768,7 +754,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             });
 
             // check if the editor should be closed
-            if (m_closeAfterInit) {
+            if (m_manager == null) {
                 throw new OperationCanceledException(
                         "Loading workflow canceled by user.");
             }
@@ -977,16 +963,21 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         private int m_totalWork;
 
+        private int m_workedSoFar;
+
         /**
          * Handles progress changes during saving the workflow.
          * 
          * @param monitor the eclipse progressmonitor
+         * @param totalWork the total amount of work to do
+         * @param task the main task name to display
          */
         public ProgressHandler(final IProgressMonitor monitor,
-                final int totalWork) {
-            monitor.beginTask("Saving workflow...", totalWork);
+                final int totalWork, final String task) {
+            monitor.beginTask(task, totalWork);
             m_progressMonitor = monitor;
             m_totalWork = totalWork;
+            m_workedSoFar = 0;
         }
 
         /**
@@ -995,10 +986,15 @@ public class WorkflowEditor extends GraphicalEditor implements
          */
         public void progressChanged(final double progress, final String message) {
 
-            m_progressMonitor.worked((int)(progress * m_totalWork));
+            int worked = (int)(progress * m_totalWork);
+
+            m_progressMonitor.worked(worked - m_workedSoFar);
             if (message != null) {
                 m_progressMonitor.subTask(message);
             }
+
+            // remember the work done so far
+            m_workedSoFar = worked;
         }
     }
 
@@ -1041,7 +1037,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     try {
                         // create progress monitor
                         ProgressHandler progressHandler = new ProgressHandler(
-                                pm, 1);
+                                pm, m_manager.getNodes().size(),
+                                "Saving workflow...");
                         final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
                         progressMonitor.addProgressListener(progressHandler);
 
@@ -1049,7 +1046,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                         checkThread.start();
 
-                        pm.beginTask("Save workflow...", 10);
                         m_manager.save(file, progressMonitor);
                         pm.subTask("Finished.");
                         pm.done();
