@@ -59,7 +59,7 @@ public class NewProjectWizardPage extends WizardPage {
     public NewProjectWizardPage() {
         super("wizardPage");
         setTitle("New KNIME Project Wizard");
-        setDescription("Create a new project for Knime data analysis workflows.");
+        setDescription("Create a new Knime workflow project.");
         setImageDescriptor(ResourceManager.getPluginImageDescriptor(
                 KNIMEUIPlugin.getDefault(), "icons/logo32x32.png"));
     }
