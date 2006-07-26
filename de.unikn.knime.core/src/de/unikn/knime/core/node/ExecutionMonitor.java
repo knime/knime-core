@@ -134,6 +134,7 @@ public class ExecutionMonitor {
         private final NodeProgressMonitor m_parent;
         private final double m_maxProg;
         private double m_lastProg;
+        private final String m_parentMessage;
         
         /**
          * Creates new sub progress monitor.
@@ -146,6 +147,7 @@ public class ExecutionMonitor {
                 final NodeProgressMonitor parent, final double max) {
             m_maxProg = max;
             m_parent = parent;
+            m_parentMessage = parent.getMessage();
         }
 
         /**
@@ -209,7 +211,7 @@ public class ExecutionMonitor {
          * @see NodeProgressMonitor#setMessage(String)
          */
         public void setMessage(final String message) {
-            m_parent.setMessage(message);
+            m_parent.setMessage(m_parentMessage + " - " + message);
         }
 
         /**
