@@ -173,6 +173,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private PropertySheetPage m_undoablePropertySheetPage;
 
+    private boolean m_loadingCanceled;
+
     /**
      * Keeps all meta workflow editors which were opend from this editor.
      */
@@ -321,6 +323,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // initialize actions (can't be in init(), as setInput is called before)
         createActions();
+
+        m_loadingCanceled = false;
 
     }
 
@@ -699,6 +703,10 @@ public class WorkflowEditor extends GraphicalEditor implements
                     // indicates whether to create an empty workflow
                     // this is done if the file is empty
                     boolean createEmptyWorkflow = false;
+
+                    // set the loading canceled variable to false
+                    m_loadingCanceled = false;
+
                     try {
 
                         // create progress monitor
@@ -732,6 +740,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         LOGGER.info("Canceled loading worflow: "
                                 + file.getName());
                         m_manager = null;
+                        m_loadingCanceled = true;
                     } catch (Exception e) {
                         LOGGER.info("Workflow could not be loaded. "
                                 + e.getMessage());
@@ -745,18 +754,21 @@ public class WorkflowEditor extends GraphicalEditor implements
                             // && createEmptyWorkflow.intValue() == 0) {
                             m_manager = new WorkflowManager();
                             m_isDirty = false;
-                        } else if (m_manager == null) {
-                            throw new RuntimeException(
-                                    "Workflow could not be created.");
                         }
                     }
                 }
             });
 
-            // check if the editor should be closed
+            // check if the editor should be disposed
+            // TODO: At the moment the editor is opended with an error message
+            // should be closed instead!!
             if (m_manager == null) {
-                throw new OperationCanceledException(
-                        "Loading workflow canceled by user.");
+                if (m_loadingCanceled) {
+                    throw new OperationCanceledException(
+                            "Loading workflow canceled by user.");
+                } else {
+                    throw new RuntimeException("Workflow could not be loaded");
+                }
             }
 
             m_manager.addListener(this);
