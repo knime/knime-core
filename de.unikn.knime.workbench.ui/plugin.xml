@@ -103,7 +103,7 @@
             project="true"
             preferredPerspectives="de.unikn.knime.workbench.ui.ModellerPerspective">
          <description>
-            This wizard creates a new KNIME project that can contain several Workflows.
+            This wizard creates a new KNIME workflow project.
          </description>
       </wizard>
       <!--wizard
