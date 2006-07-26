@@ -22,6 +22,10 @@ import de.unikn.knime.core.data.DataCell;
 import de.unikn.knime.core.data.DataColumnSpec;
 
 /**
+ * The abstract class which should be implemented by all coordinates which map
+ * numeric values. Examples: 
+ * @see de.unikn.knime.base.util.coordinate.DoubleCoordinate and the 
+ * @see de.unikn.knime.base.util.coordinate.IntegerCoordinate
  * 
  * @author Tobias Koetter, University of Konstanz
  */
@@ -76,8 +80,7 @@ public abstract class NumericCoordinate extends Coordinate {
      *      #getUnusedDistBetweenTicks(double)
      */
     @Override
-    public double getUnusedDistBetweenTicks(
-            final double absoluteLength) {
+    public double getUnusedDistBetweenTicks(final double absoluteLength) {
         return 0;
     }
 
