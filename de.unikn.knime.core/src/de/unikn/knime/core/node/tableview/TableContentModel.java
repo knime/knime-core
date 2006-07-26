@@ -20,6 +20,7 @@ package de.unikn.knime.core.node.tableview;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -38,6 +39,7 @@ import de.unikn.knime.core.data.RowIterator;
 import de.unikn.knime.core.data.RowKey;
 import de.unikn.knime.core.data.property.ColorAttr;
 import de.unikn.knime.core.node.BufferedDataTable;
+import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
 import de.unikn.knime.core.node.property.hilite.HiLiteListener;
 import de.unikn.knime.core.node.property.hilite.KeyEvent;
@@ -234,7 +236,33 @@ public class TableContentModel extends AbstractTableModel
      * 
      * @param data the new data being displayed or <code>null</code>
      */
-    public synchronized void setDataTable(final DataTable data) {
+    public void setDataTable(final DataTable data) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            setDataTableIntern(data);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                   public void run() {
+                       setDataTableIntern(data);
+                   } 
+                });
+            } catch (InterruptedException ie) {
+                NodeLogger.getLogger(getClass()).warn(
+                        "Exception while setting new table.", ie);
+            } catch (InvocationTargetException ite) {
+                NodeLogger.getLogger(getClass()).warn(
+                        "Exception while setting new table.", ite);
+            }
+        }
+    }
+
+    /**
+     * Sets new data for this table. The argument may be <code>null</code> to
+     * indicate invalid data (nothing displayed).
+     * 
+     * @param data the new data being displayed or <code>null</code>
+     */
+    private synchronized void setDataTableIntern(final DataTable data) {
         if (m_data == data) {
             return;  // do not start event storm
         }
@@ -289,7 +317,7 @@ public class TableContentModel extends AbstractTableModel
             fireTableStructureChanged();
         }
         m_propertySupport.firePropertyChange(PROPERTY_DATA, oldData, m_data);
-    } // setDataTable(DataTable)
+    }
     
     /** 
      * Starts a new internal thread that will iterate over the table
