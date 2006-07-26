@@ -85,8 +85,10 @@ public class CancelAllAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     protected boolean calculateEnabled() {
-
-        return getEditor().getWorkflowManager().executionInProgress();
+        if (getManager() == null) {
+            return false;
+        }
+        return getManager().executionInProgress();
     }
 
     /**
@@ -97,7 +99,7 @@ public class CancelAllAction extends AbstractNodeAction {
      *      editparts.NodeContainerEditPart[])
      */
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        
+
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                 SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
         mb.setText("Confirm cancel all...");
