@@ -715,7 +715,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
                         progressMonitor.addProgressListener(progressHandler);
 
-                        checkThread = new CheckThread(pm, progressMonitor);
+                        checkThread = new CheckThread(pm, progressMonitor, true);
 
                         checkThread.start();
 
@@ -797,17 +797,24 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         private DefaultNodeProgressMonitor m_progressMonitor;
 
+        private boolean m_cancelable;
+
         /**
          * Creates a new cancel execution checker.
          * 
          * @param pm the eclipse progress monitor
          * @param progressMonitor the knime progress monitor
+         * @param cancelable if true the progress is cancelable by the user if
+         *            false a dialog informs the user that the progress is not
+         *            cancelable
          */
         public CheckThread(final IProgressMonitor pm,
-                final DefaultNodeProgressMonitor progressMonitor) {
+                final DefaultNodeProgressMonitor progressMonitor,
+                final boolean cancelable) {
             super("CheckThread");
             m_pm = pm;
             m_progressMonitor = progressMonitor;
+            m_cancelable = cancelable;
         }
 
         /**
@@ -824,7 +831,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             while (!m_finished) {
 
                 if (m_pm.isCanceled()) {
-                    m_progressMonitor.setExecuteCanceled();
+
+                    if (m_cancelable) {
+
+                        m_progressMonitor.setExecuteCanceled();
+                    }
                 }
                 try {
                     Thread.sleep(1000);
@@ -1048,11 +1059,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                         // create progress monitor
                         ProgressHandler progressHandler = new ProgressHandler(
                                 pm, m_manager.getNodes().size(),
-                                "Saving workflow...");
+                                "Saving workflow... (can not be canceled)");
                         final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
                         progressMonitor.addProgressListener(progressHandler);
 
-                        checkThread = new CheckThread(pm, progressMonitor);
+                        checkThread = new CheckThread(pm, progressMonitor,
+                                false);
 
                         checkThread.start();
 
@@ -1106,7 +1118,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             });
 
-
             // mark command stack (no undo beyond this point)
             getCommandStack().markSaveLocation();
 
@@ -1152,7 +1163,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private void showInfoMessage(final String message) {
         // inform the user
-        
+
         MessageBox mb = new MessageBox(this.getSite().getShell(),
                 SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Workflow could not be saved ...");
