@@ -220,8 +220,7 @@ PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
 6. General.
 
-This License is governed by the laws of the State of California,
-U.S.A., excluding choice of law rules.
+This License is governed by german laws.
 
 If any part of this License is found to be in conflict with the law,
 that part shall be interpreted in its broadest meaning consistent with

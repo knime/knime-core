@@ -188,7 +188,10 @@ public final class NodeLogger {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
         l.info("#                                                           #");
-        l.info("# KNIME Logging " + new Date());
+        l.info("# Welcome to KNIME v1.0.0 (Build July 28, 2006)             #");
+        l.info("# the Konstanz Information Miner                            #");
+        l.info("# Based on Eclipse 3.1.2, www.eclipse.org                   #");
+        l.info("# Uses: Java5, GEF, Log4J, Weka, JFreeChart                 #");
         l.info("#                                                           #");
         l.info("#############################################################");
         l.info("#                                                           #");
@@ -199,15 +202,13 @@ public final class NodeLogger {
         l.info("# " + KNIMEConstants.KNIME_HOME_DIR + File.separator
                         + LOG_FILE);
         l.info("#-----------------------------------------------------------#");
-        // logger.info("user.name=" + System.getProperty("user.name"));
+        l.info("# logging date=" + new Date());
         l.info("# java.version=" + System.getProperty("java.version"));
         l.info("# java.vm.version=" + System.getProperty("java.vm.version"));
         l.info("# os.name=" + System.getProperty("os.name"));
         l.info("# number of CPUs=" 
                 + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (ASSERT ? "on" : "off"));
-        l.info("# KNIME is making use of the following external tools: ");
-        l.info("# Eclipse, GEF, and Log4J");
         l.info("#############################################################");
     }
 
@@ -218,7 +219,7 @@ public final class NodeLogger {
         l.info("# University of Konstanz, Germany.                          #");
         l.info("# Chair for Bioinformatics and Information Mining           #");
         l.info("# Prof. Dr. Michael R. Berthold                             #");
-        l.info("# website: www.knime.org                                    #");
+        l.info("# website: http://www.knime.org                             #");
         l.info("# email: contact@knime.org                                  #");
     }
 
