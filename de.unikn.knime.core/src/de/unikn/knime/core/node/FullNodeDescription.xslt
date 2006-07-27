@@ -9,7 +9,7 @@
 	<body style="font-family: Tahoma, Arial, Helvetica; font-size: 80%;">
 		<h2 align="center"><xsl:value-of select="name" /></h2><br />
 		<p style="text-align: justify">
-			<xsl:apply-templates select="fullDescription/intro/node()" mode="copy" />
+			<xsl:apply-templates select="fullDescription/intro/node()" />
 		</p>
 		
 		<xsl:if test="fullDescription/option">
@@ -17,7 +17,7 @@
 			<xsl:for-each select="fullDescription/option">
 				<div style="font-weight: bold;"><xsl:value-of select="@name" /></div>
 				<div style="margin-left: 5mm; margin-top: 1mm; margin-bottom: 3mm;">
-					<xsl:apply-templates select="node()" mode="copy" />
+					<xsl:apply-templates select="node()" />
 				</div>
 			</xsl:for-each>
 		</xsl:if>
@@ -87,8 +87,18 @@
 	</xsl:if>					
 </xsl:template>
 	
+<xsl:template match="a[@href]">
+	<xsl:apply-templates select="node()" /> (<span style="font-style: italic;"><xsl:value-of select="@href" />)</span>
+</xsl:template>
+	
+	
 <xsl:template match="@*|node()" priority="-1" mode="copy">
         <xsl:copy><xsl:apply-templates select="@*|node()" mode="copy" /></xsl:copy>
+</xsl:template>
+
+
+<xsl:template match="@*|node()" priority="-1">
+        <xsl:copy><xsl:apply-templates select="@*|node()" /></xsl:copy>
 </xsl:template>
 
 </xsl:stylesheet>
