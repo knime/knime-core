@@ -40,7 +40,7 @@ import de.unikn.knime.core.data.DoubleValue;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
- class DoubleCoordinate extends NumericCoordinate {
+class DoubleCoordinate extends NumericCoordinate {
 
     /**
      * The default value for <code>m_coordPrefix</code>.
@@ -144,8 +144,7 @@ import de.unikn.knime.core.data.DoubleValue;
     DoubleCoordinate(final DataColumnSpec dataColumnSpec,
             final double coordinatePrefix, final double coordinatePostfix,
             final double absoluteTickDistance,
-            final NumericTickPolicy tickPolicy, 
-            final int maxDomainLableLenght) {
+            final NumericTickPolicy tickPolicy, final int maxDomainLableLenght) {
         super(dataColumnSpec);
 
         // check the column type first it must be compatible to a double
@@ -220,7 +219,8 @@ import de.unikn.knime.core.data.DoubleValue;
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#getTickPositions(double, boolean)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#getTickPositions(double,
+     *      boolean)
      */
     @Override
     public CoordinateMapping[] getTickPositions(final double absolutLength,
@@ -256,8 +256,8 @@ import de.unikn.knime.core.data.DoubleValue;
             double domainValue = startOfDomain;
             double mappingValue = Math.round(absolutLength / 2);
             mapping = new DoubleCoordinateMapping[1];
-            mapping[0] = new DoubleCoordinateMapping(
-                    formatNumber(domainValue), domainValue, mappingValue);
+            mapping[0] = new DoubleCoordinateMapping(formatNumber(domainValue),
+                    domainValue, mappingValue);
             return mapping;
         }
 
@@ -323,10 +323,8 @@ import de.unikn.knime.core.data.DoubleValue;
             startOfDomain = startOfDomain * Math.pow(10, exponent);
 
             // no create the tick mapping
-            ArrayList<DoubleCoordinateMapping> mappingArray = 
-                new ArrayList<DoubleCoordinateMapping>();
-            for (int i = 0; 
-                startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
+            ArrayList<DoubleCoordinateMapping> mappingArray = new ArrayList<DoubleCoordinateMapping>();
+            for (int i = 0; startOfDomain + i * domainTickStep <= m_maxDomainValue; i++) {
 
                 double domainValue = startOfDomain + i * domainTickStep;
                 double mappingValue = (domainValue - m_minDomainValue)
@@ -353,9 +351,7 @@ import de.unikn.knime.core.data.DoubleValue;
          * 
          * @see NumericTickPolicy#START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE
          */
-        if (m_tickPolicy 
-                == 
-              NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
+        if (m_tickPolicy == NumericTickPolicy.START_WITH_FIRST_END_WITH_LAST_DOMAINE_VALUE) {
 
             // add one for the last tick
             numberTicks++;
@@ -472,8 +468,9 @@ import de.unikn.knime.core.data.DoubleValue;
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * calculateMappedValue(de.unikn.knime.core.data.DataCell, double, boolean)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
+     *      boolean)
      */
     @Override
     public double calculateMappedValue(final DataCell domainValueCell,
@@ -505,25 +502,28 @@ import de.unikn.knime.core.data.DoubleValue;
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * getMaxDomainValue()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #getMaxDomainValue()
      */
+    @Override
     public double getMaxDomainValue() {
         return m_maxDomainValue;
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * getMinDomainValue()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #getMinDomainValue()
      */
+    @Override
     public double getMinDomainValue() {
         return m_minDomainValue;
     }
-    
+
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * isMinDomainValueSet()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #isMinDomainValueSet()
      */
+    @Override
     public boolean isMinDomainValueSet() {
         if (m_minDomainValue != Double.NaN) {
             return true;
@@ -533,9 +533,10 @@ import de.unikn.knime.core.data.DoubleValue;
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * isMaxDomainValueSet()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #isMaxDomainValueSet()
      */
+    @Override
     public boolean isMaxDomainValueSet() {
         if (m_maxDomainValue != Double.NaN) {
             return true;
@@ -545,18 +546,20 @@ import de.unikn.knime.core.data.DoubleValue;
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * setMaxDomainValue(double)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #setMaxDomainValue(double)
      */
+    @Override
     public void setMaxDomainValue(final double maxDomainValue) {
         m_maxDomainValue = maxDomainValue;
         updateDomainRange();
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * setMinDomainValue(double)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #setMinDomainValue(double)
      */
+    @Override
     public void setMinDomainValue(final double minDomainValue) {
         m_minDomainValue = minDomainValue;
         updateDomainRange();

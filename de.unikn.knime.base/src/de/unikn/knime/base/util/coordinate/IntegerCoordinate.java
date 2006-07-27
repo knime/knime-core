@@ -38,20 +38,25 @@ import de.unikn.knime.core.data.IntValue;
 class IntegerCoordinate extends NumericCoordinate {
     private static final int DEFAULT_TICK_DIST = 20;
 
-    /**The minimum value covered by this coordinate object.*/
+    /** The minimum value covered by this coordinate object. */
     private int m_minDomainValue;
-    /**The maximum value covered by this coordinate object.*/
+
+    /** The maximum value covered by this coordinate object. */
     private int m_maxDomainValue;
 
-    /**The <code>List</code> of values which should be returned as
-     * tick positions by this coordinate.*/
+    /**
+     * The <code>List</code> of values which should be returned as tick
+     * positions by this coordinate.
+     */
     private final List<DataCell> m_values;
 
-    /**The range which is covered by this coordinate object.*/
+    /** The range which is covered by this coordinate object. */
     private long m_domainRange;
 
-    /**The basic value which is used to calculate the position in pixel for
-     * a given value.*/
+    /**
+     * The basic value which is used to calculate the position in pixel for a
+     * given value.
+     */
     private int m_baseVal;
 
     /**
@@ -119,8 +124,8 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#
-     * getTickPositions(double, boolean)
+     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     *  #getTickPositions(double, boolean)
      */
     @Override
     public CoordinateMapping[] getTickPositions(final double absolutLength,
@@ -132,9 +137,8 @@ class IntegerCoordinate extends NumericCoordinate {
             // absolute length
             double mappingValue = Math.round(absolutLength / 2);
             mapping = new IntegerCoordinateMapping[1];
-            mapping[0] = 
-                new IntegerCoordinateMapping(Integer.toString(
-                        m_minDomainValue), m_minDomainValue, mappingValue);
+            mapping[0] = new IntegerCoordinateMapping(Integer
+                    .toString(m_minDomainValue), m_minDomainValue, mappingValue);
             return mapping;
         }
 
@@ -238,8 +242,8 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * isMinDomainValueSet()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #isMinDomainValueSet()
      */
     @Override
     public boolean isMinDomainValueSet() {
@@ -247,17 +251,17 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * isMaxDomainValueSet()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #isMaxDomainValueSet()
      */
     @Override
     public boolean isMaxDomainValueSet() {
         return true;
     }
-    
+
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * getMaxDomainValue()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #getMaxDomainValue()
      */
     @Override
     public double getMaxDomainValue() {
@@ -265,8 +269,8 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * getMinDomainValue()
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #getMinDomainValue()
      */
     @Override
     public double getMinDomainValue() {
@@ -274,32 +278,33 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * setMinDomainValue(double)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #setMinDomainValue(double)
      */
     @Override
     public void setMinDomainValue(final double value) {
         if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
-            throw new IllegalArgumentException("Value to big or small for " 
+            throw new IllegalArgumentException("Value to big or small for "
                     + IntegerCoordinate.class.getName());
         }
-        m_minDomainValue = (int) value;
+        m_minDomainValue = (int)value;
         updateInternalData();
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#
-     * setMaxDomainValue(double)
+     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     *      #setMaxDomainValue(double)
      */
     @Override
     public void setMaxDomainValue(final double value) {
         if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
-            throw new IllegalArgumentException("Value to big or small for " 
+            throw new IllegalArgumentException("Value to big or small for "
                     + IntegerCoordinate.class.getName());
         }
-        m_maxDomainValue = (int) value;
+        m_maxDomainValue = (int)value;
         updateInternalData();
     }
+
     /**
      * @param minValue the minimum value to map on the coordinate
      * @param maxValue the maximum value to map on the coordinate
@@ -321,7 +326,7 @@ class IntegerCoordinate extends NumericCoordinate {
             return 0;
         }
     }
-    
+
     /**
      * This method is called every time a domain range (min or max) changes to
      * set the domain range and base value.
@@ -331,5 +336,4 @@ class IntegerCoordinate extends NumericCoordinate {
         m_baseVal = getBaseVal(m_minDomainValue);
     }
 
-    
 }
