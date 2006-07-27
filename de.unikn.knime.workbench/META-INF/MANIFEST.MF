@@ -2,5 +2,5 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench
 Bundle-SymbolicName: de.unikn.knime.workbench
 Bundle-Version: 1.0.0
-Bundle-Vendor: Prof. Dr. Michael R. Berthold, University of Konstanz, Germany
+Bundle-Vendor: University of Konstanz, Germany
 Bundle-Localization: plugin
