@@ -125,10 +125,33 @@ public class ExecutionMonitor {
         return new ExecutionMonitor(subProgress);
     }
     
+    /** Creates an execution monitor with a partial progress range,  which
+     * ignores any message set.
+     * Classes that use a progress monitor and report in the range of [0,1]
+     * should get such a sub-progress monitor when their job is only partially
+     * contributing to the entire progress. The progress of such sub-jobs is
+     * then automatically scaled to the "right" range. This method
+     * differs from the {@link #createSubProgress(double)} message in that it
+     * does not report any message but rather ignores any new string message.  
+     * @param maxProg The fraction of the progress this sub progress
+     * contributes to the whole progress 
+     * @return A new execution monitor ready to use in sub jobs.
+     * @throws IllegalArgumentException If the argument is not in (0, 1].
+     */ 
+    public ExecutionMonitor createSilentSubProgress(final double maxProg) {
+        if (maxProg > 1.0 || maxProg < 0.0) {
+            throw new IllegalArgumentException(
+                    "Invalid sub progress size: " + maxProg);
+        }
+        SilentSubNodeProgressMonitor subProgress = 
+            new SilentSubNodeProgressMonitor(m_progress, maxProg);
+        return new ExecutionMonitor(subProgress);
+    }
+    
     /** Progress monitor that is used by "sub-progresses", it doesn't have
      * the range [0, 1] but only [0, b] where b is user-defined. 
      */
-    private static final class SubNodeProgressMonitor 
+    private static class SubNodeProgressMonitor 
         implements NodeProgressMonitor {
         
         private final NodeProgressMonitor m_parent;
@@ -250,6 +273,37 @@ public class ExecutionMonitor {
         private String calcNewMessage(final String message) {
             m_lastMessage = m_parentMessage + " - " + message;
             return m_lastMessage;
+        }
+    }
+    
+    private static final class SilentSubNodeProgressMonitor extends
+            SubNodeProgressMonitor {
+
+        /**
+         * @see SubNodeProgressMonitor#SubNodeProgressMonitor(
+         *      NodeProgressMonitor,double)
+         * @param parent
+         * @param max
+         */
+        private SilentSubNodeProgressMonitor(final NodeProgressMonitor parent,
+                final double max) {
+            super(parent, max);
+        }
+        
+        /**
+         * @see NodeProgressMonitor#setProgress(double, java.lang.String)
+         */
+        @Override
+        public void setProgress(final double prog, final String message) {
+            super.setProgress(prog);
+        }
+        
+        /**
+         * @see NodeProgressMonitor#setMessage(java.lang.String)
+         */
+        @Override
+        public void setMessage(final String arg0) {
+            // do nothing here
         }
     }
 
