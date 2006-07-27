@@ -4,7 +4,7 @@ Bundle-SymbolicName: de.unikn.knime.workbench.editor; singleton=true
 Bundle-Version: 1.0.0
 Bundle-ClassPath: workbench-editor.jar
 Bundle-Activator: de.unikn.knime.workbench.KNIMEEditorPlugin
-Bundle-Vendor: Prof. Dr. Michael R. Berthold, University of Konstanz, Germany
+Bundle-Vendor: University of Konstanz, Germany
 Bundle-Localization: plugin
 Provide-Package: de.unikn.knime.workbench,
  de.unikn.knime.workbench.editor2,
