@@ -1063,6 +1063,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                         final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
                         progressMonitor.addProgressListener(progressHandler);
 
+                        // this task can not be canceled as the underlying
+                        // system does not support this yet (false)
                         checkThread = new CheckThread(pm, progressMonitor,
                                 false);
 
