@@ -1018,8 +1018,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void doSave(final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ...");
 
-        monitor.beginTask("Save workflow...", 10);
-        monitor.worked(2);
         // // create progress monitor
         // EventLoopProgressMonitor monitor2 =
         // (EventLoopProgressMonitor)monitor;
@@ -1072,15 +1070,17 @@ public class WorkflowEditor extends GraphicalEditor implements
                         if (file.length() == 0) {
                             LOGGER.info("New workflow created.");
                         } else {
-                            LOGGER.error("Could not load workflow from: "
+                            LOGGER.error("Could not save workflow: "
                                     + file.getName(), ioe);
                             exceptionMessage.append("File access problems: "
                                     + ioe.getMessage());
                             monitor.setCanceled(true);
                         }
                     } catch (CanceledExecutionException cee) {
-                        LOGGER.info("Canceled loading worflow: "
+                        LOGGER.info("Canceled saving worflow: "
                                 + file.getName());
+                        exceptionMessage.append("Saving workflow"
+                                + " was canceled.");
                         monitor.setCanceled(true);
                     } catch (WorkflowInExecutionException e) {
 
@@ -1105,6 +1105,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
 
             });
+
 
             // mark command stack (no undo beyond this point)
             getCommandStack().markSaveLocation();
@@ -1151,7 +1152,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private void showInfoMessage(final String message) {
         // inform the user
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
+        
+        MessageBox mb = new MessageBox(this.getSite().getShell(),
                 SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Workflow could not be saved ...");
         mb.setMessage(message);
