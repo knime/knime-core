@@ -99,6 +99,7 @@ public class ThreadPool {
         @Override
         public void run() {
             while (!isInterrupted()) {
+                ThreadPool startedFrom;
                 synchronized (m_lock) {
                     if (m_runnable == null) {
                         try {
@@ -112,6 +113,7 @@ public class ThreadPool {
                             return;
                         }
                     }
+                    startedFrom = m_startedFrom;
 
                     try {
                         m_runnable.run();
@@ -121,8 +123,8 @@ public class ThreadPool {
                                 + "a runnable.", ex);
                     }
                     m_runnable = null;
-                    m_startedFrom.workerFinished(this);
                 }
+                startedFrom.workerFinished(this);
             }
         }
 
