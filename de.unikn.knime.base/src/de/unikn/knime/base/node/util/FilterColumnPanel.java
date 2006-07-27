@@ -100,7 +100,8 @@ public final class FilterColumnPanel extends JPanel {
     private final JButton m_addButton;
 
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
-    private final LinkedHashSet<DataColumnSpec> m_order = new LinkedHashSet<DataColumnSpec>();
+    private final LinkedHashSet<DataColumnSpec> m_order = 
+        new LinkedHashSet<DataColumnSpec>();
 
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_includeBorder;
@@ -113,7 +114,8 @@ public final class FilterColumnPanel extends JPanel {
      */
     private final Class<? extends DataValue>[] m_filterClasses;
 
-    private final HashSet<DataColumnSpec> m_hideColumns = new HashSet<DataColumnSpec>();
+    private final HashSet<DataColumnSpec> m_hideColumns = 
+        new HashSet<DataColumnSpec>();
 
     /**
      * Creates a new filter column panel with three component which are the
@@ -208,8 +210,8 @@ public final class FilterColumnPanel extends JPanel {
         m_inclMdl = new DefaultListModel();
         m_inclMdl.addElement("<empty>");
         m_inclList = new JList(m_inclMdl);
-        m_inclList
-                .setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclList.setSelectionMode(
+                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         final JScrollPane jspIncl = new JScrollPane(m_inclList);
         jspIncl.setMinimumSize(new Dimension(150, 155));
 
@@ -249,8 +251,8 @@ public final class FilterColumnPanel extends JPanel {
         m_exclMdl = new DefaultListModel();
         m_exclMdl.addElement("<empty>");
         m_exclList = new JList(m_exclMdl);
-        m_exclList
-                .setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_exclList.setSelectionMode(
+                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         setListCellRenderer(new DataColumnSpecListCellRenderer());
         final JScrollPane jspExcl = new JScrollPane(m_exclList);
         jspExcl.setMinimumSize(new Dimension(150, 155));

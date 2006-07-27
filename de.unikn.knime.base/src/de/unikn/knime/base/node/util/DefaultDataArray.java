@@ -202,11 +202,9 @@ public class DefaultDataArray implements DataArray {
             if (execMon != null) {
                 // will throw an exception if we are supposed to cancel
                 execMon.checkCanceled();
-                if (rowNumber % 100 == 0) {
-                    execMon.setProgress((double)m_rows.size()
+                execMon.setProgress((double)m_rows.size()
                             / (double)numOfRows, "read row " + m_rows.size()
                             + " of max. " + numOfRows);
-                }
             }
 
         } // while ((!rIter.atEnd()) && (numOfRowsRead < numOfRows))
@@ -296,7 +294,8 @@ public class DefaultDataArray implements DataArray {
         }
         if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
                 newMaxValue.getType())) {
-            throw new IllegalArgumentException("new max value is of wrong type");
+            throw new IllegalArgumentException(
+                    "new max value is of wrong type");
         }
         m_maxVal[colIdx] = newMaxValue;
     }
@@ -315,7 +314,8 @@ public class DefaultDataArray implements DataArray {
         }
         if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
                 newMinValue.getType())) {
-            throw new IllegalArgumentException("new min value is of wrong type");
+            throw new IllegalArgumentException(
+                    "new min value is of wrong type");
         }
         m_minVal[colIdx] = newMinValue;
     }
