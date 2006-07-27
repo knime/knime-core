@@ -34,9 +34,9 @@ import java.io.Serializable;
  * <p>This class implements Serializable. However, if you define a custom
  * <code>DataCell</code> implementation, consider to implement a factory that 
  * takes care of reading/writing a cell to a {@link java.io.DataInput} or 
- * {@link java.io.DataOutput} source. Ordinary Java serialization is considerably
- * slower than using such a factory. To register such a factory, define a 
- * static method having the following signature:
+ * {@link java.io.DataOutput} source. Ordinary Java serialization is 
+ * considerably slower than using such a factory. To register such a factory, 
+ * define a static method having the following signature:
  * <pre>
  *  public static final DataCellSerializer&lt;YourCellClass&gt; 
  *      getCellSerializer() {
