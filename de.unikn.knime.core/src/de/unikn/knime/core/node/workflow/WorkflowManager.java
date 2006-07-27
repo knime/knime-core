@@ -1321,8 +1321,8 @@ public class WorkflowManager implements WorkflowListener {
             ExecutionMonitor execMon = new ExecutionMonitor(progMon);
             for (int i = 0; i < topSortNodes().size(); i++) {
                 NodeContainer newNode = topSortNodes().get(i);
-                progMon.checkCanceled();
-                progMon.setMessage("Loading node: " + newNode.getNameWithID());
+                execMon.checkCanceled();
+                execMon.setMessage("Loading node: " + newNode.getNameWithID());
                 try {
                     NodeSettingsRO nodeSetting = settings.getNodeSettings(
                             KEY_NODES).getNodeSettings(

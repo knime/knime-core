@@ -269,16 +269,16 @@ public final class Node {
      * {@link de.unikn.knime.core.node.BufferedDataTable#getDataTable(
      * int, Integer)}.
      * @param nodeFile The node settings location.
-     * @param exec The execution monitor reporting progress during reading
+     * @param execMon The execution monitor reporting progress during reading
      *        structure.
      * @throws IOException If the node settings file can't be found or read.
      * @throws InvalidSettingsException If the settings are wrong.
      * @throws CanceledExecutionException If loading was canceled. 
      */
     public void load(final int loadID, final File nodeFile, 
-            final ExecutionContext exec) throws IOException, 
+            final ExecutionContext execMon) throws IOException, 
             InvalidSettingsException, CanceledExecutionException {
-        assert exec != null;
+        assert execMon != null;
         
         if (!nodeFile.isFile() || !nodeFile.canRead()) {
             m_model.setExecuted(false);
@@ -297,8 +297,9 @@ public final class Node {
         try {
             NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
             if (m_model instanceof SpecialNodeModel) {
+                ExecutionMonitor execSub = execMon.createSubProgress(0.25);
                 ((SpecialNodeModel) m_model).loadSettingsFrom(nodeFile,
-                        modelSettings, exec);
+                        modelSettings, execSub);
             } else {
                 m_model.loadSettingsFrom(modelSettings);
             }            
@@ -312,8 +313,6 @@ public final class Node {
         } catch (Error e) {
             throw new InvalidSettingsException(e);
         }
-
-        
 
         m_status = null;
         // read configured flag
@@ -333,7 +332,8 @@ public final class Node {
         if (isExecuted()) {
             File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
             try {
-                m_model.loadInternals(internDir, exec);
+                ExecutionMonitor execSub = execMon.createSilentSubProgress(0.5);
+                m_model.loadInternals(internDir, execSub);
                 processModelWarnings();
             } catch (IOException ioe) {
                 m_status = new NodeStatus.Error(
@@ -350,7 +350,8 @@ public final class Node {
             if (getNrDataOutPorts() > 0) {
                 String dataConfigFileName = settings.getString(CFG_DATA_FILE);
                 File dataConfigFile = new File(m_nodeDir, dataConfigFileName);
-                loadData(loadID, dataConfigFile, exec);
+                ExecutionMonitor execSub = execMon.createSubProgress(0.9);
+                loadData(loadID, dataConfigFile, execSub);
             }
             // load models
             NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
@@ -380,7 +381,7 @@ public final class Node {
         }
         
         if (wasExecuted && m_model.isAutoExecutable()) {
-            execute(exec);
+            execute(execMon);
         }
     }
 
@@ -1529,22 +1530,22 @@ public final class Node {
      * Saves the node, node settings, and all internal structures, spec, data,
      * and models, to the given node directory (located at the node file).
      * @param nodeFile To write node settings to.
-     * @param exec Used to report progress during saving.
+     * @param execMon Used to report progress during saving.
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
-    public void save(final File nodeFile, final ExecutionMonitor exec)
+    public void save(final File nodeFile, final ExecutionMonitor execMon)
             throws IOException, CanceledExecutionException {
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveSettings(settings);
-    
         m_nodeDir = nodeFile.getParentFile();
         
         if (m_model instanceof SpecialNodeModel) {
             try {
+                ExecutionMonitor execSub = execMon.createSubProgress(0.25);
                 NodeSettings model = settings.getNodeSettings(CFG_MODEL);
                 ((SpecialNodeModel) m_model).saveSettingsTo(m_nodeDir, model,
-                        exec);
+                        execSub);
             } catch (InvalidSettingsException ex) {
                 // this should never happen as we have added the model
                 // in saveSettings(...) above
@@ -1588,7 +1589,9 @@ public final class Node {
                     internDir.mkdir();
                     if (internDir.canWrite()) {
                         try {
-                            m_model.saveInternals(internDir, exec);
+                            ExecutionMonitor execSub = 
+                                execMon.createSilentSubProgress(0.50);
+                            m_model.saveInternals(internDir, execSub);
                             processModelWarnings();
                         } catch (IOException ioe) {
                             m_status = new NodeStatus.Error("Unable to save " 
@@ -1606,7 +1609,9 @@ public final class Node {
                 if (getNrDataOutPorts() > 0) {
                     settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
                     File dataSettingsFile = new File(m_nodeDir, DATA_FILE_NAME);
-                    saveData(dataSettingsFile, exec);
+                    ExecutionMonitor execSub = 
+                        execMon.createSubProgress(1.0);
+                    saveData(dataSettingsFile, execSub);
                 }
                 NodeSettingsWO models = 
                     settings.addNodeSettings(CFG_MODEL_FILES);

@@ -200,6 +200,8 @@ public final class NodeLogger {
         l.info("# number of CPUs=" 
                 + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (ASSERT ? "on" : "off"));
+        l.info("# KNIME is making use of the following external tools: ");
+        l.info("# Eclipse, GEF, and Log4J");
         l.info("#############################################################");
     }
 
@@ -210,6 +212,8 @@ public final class NodeLogger {
         l.info("# University of Konstanz, Germany.                          #");
         l.info("# Chair for Bioinformatics and Information Mining           #");
         l.info("# Prof. Dr. Michael R. Berthold                             #");
+        l.info("# website: www.knime.org                                    #");
+        l.info("# email: contact@knime.org                                  #");
     }
 
     /** The Log4J logger to which all messages are logged. */
