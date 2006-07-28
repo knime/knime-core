@@ -62,6 +62,7 @@ public class KNIMECorePlugin extends Plugin {
      * @param context The OSGI bundle context
      * @throws Exception If this plugin could not be started
      */
+    @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
 
@@ -73,6 +74,7 @@ public class KNIMECorePlugin extends Plugin {
      * @param context The OSGI bundle context
      * @throws Exception If this plugin could not be stopped
      */
+    @Override
     public void stop(final BundleContext context) throws Exception {
         super.stop(context);
         plugin = null;
