@@ -826,6 +826,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         }
 
+        @Override
         public void run() {
 
             while (!m_finished) {
@@ -844,7 +845,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             }
         }
-    };
+    }
 
     /**
      * Sets the input in the super class for defaults.
@@ -1079,7 +1080,6 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 + fnfe.getMessage());
 
                         monitor.setCanceled(true);
-
                     } catch (IOException ioe) {
                         if (file.length() == 0) {
                             LOGGER.info("New workflow created.");
@@ -1097,21 +1097,19 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 + " was canceled.");
                         monitor.setCanceled(true);
                     } catch (WorkflowInExecutionException e) {
-
                         // inform the user
                         exceptionMessage.append("Execution in progress! "
                                 + "The workflow could not be saved.");
 
-                        LOGGER.warn("Could not save workflow");
+                        LOGGER.warn("Could not save workflow,"
+                                + " node execution in progress");
                         monitor.setCanceled(true);
-
                     } catch (Exception e) {
-                        LOGGER.debug("Could not save workflow");
+                        LOGGER.error("Could not save workflow", e);
 
                         exceptionMessage.append("Could not save workflow: "
                                 + e.getMessage());
                         monitor.setCanceled(true);
-
                     } finally {
                         checkThread.finished();
                     }
@@ -1124,8 +1122,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             getCommandStack().markSaveLocation();
 
         } catch (Exception e) {
-
-            LOGGER.debug("Could not save workflow: " + exceptionMessage);
+            LOGGER.error("Could not save workflow: " + exceptionMessage, e);
 
             // inform the user
             if (exceptionMessage.toString().trim().length() > 0) {
