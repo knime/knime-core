@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="javadoc">
 	<target name="javadoc">
-	<javadoc destdir="doc"
+	<javadoc destdir="doc" sourcepath="src"
 		classpath="lib/ij.jar:../de.unikn.knime.core/bin:../de.unikn.knime.core/lib/log4j.jar:../de.unikn.knime.core/lib/junit.jar"
 		access="package"
 		locale="en_US" encoding="utf-8" use="true" author="true"
 		source="1.5">
-		<fileset dir="src" />
+
+		<package name="de.unikn.knime.base.*" />
 		<link href="http://java.sun.com/j2se/1.5.0/docs/api/" />
-        <link href="http://logging.apache.org/log4j/docs/api/" />
-        <link href="http://junit.sourceforge.net/javadoc/" />		
-        <link href="http://rsbweb.nih.gov/ij/developer/api/" />
+	        <link href="http://logging.apache.org/log4j/docs/api/" />
+	        <link href="http://junit.sourceforge.net/javadoc/" />		
+	        <link href="http://rsbweb.nih.gov/ij/developer/api/" />
 	</javadoc>
 	</target>
 </project>
