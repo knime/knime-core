@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,7 +32,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Florian Georg, University of Konstanz
  */
 public class InPortConnectionAnchor extends ChopboxAnchor {
-
     /**
      * @param figure The owner
      */
@@ -45,6 +42,7 @@ public class InPortConnectionAnchor extends ChopboxAnchor {
     /**
      * @return The chop box for the in port figure
      */
+    @Override
     protected Rectangle getBox() {
         Rectangle b = getOwner().getBounds().getCopy();
 
@@ -65,13 +63,12 @@ public class InPortConnectionAnchor extends ChopboxAnchor {
      * @param reference The reference point
      * @return The anchor location
      */
+    @Override
     public Point getLocation(final Point reference) {
-        
         Point point = getBox().getLeft().getCopy().getTranslated(-2, 0);
         getOwner().translateToAbsolute(point);
         // get the box of the input port and get the left middle point
         // translate it one pixel to the left to better see the arrow
         return point;
     }
-
 }

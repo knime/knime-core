@@ -69,10 +69,11 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      * 
      * @see org.eclipse.gef.tools.AbstractTool#getCommand()
      */
+    @Override
     protected Command getCommand() {
 
         CompoundCommand command = new CompoundCommand();
-        command.setDebugLabel("Drag Object Tracker");//$NON-NLS-1$
+        command.setDebugLabel("Drag Object Tracker");
 
         Iterator iter = getOperationSet().iterator();
 
@@ -94,7 +95,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         }
 
         // now add the commands for the node-embraced connections
-        ConnectionContainerEditPart[] connectionsToAdapt = getEmbracedConnections((List<EditPart>)getOperationSet());
+        ConnectionContainerEditPart[] connectionsToAdapt = getEmbracedConnections(getOperationSet());
         for (ConnectionContainerEditPart connectionPart : connectionsToAdapt) {
             
             command.add(connectionPart.getBendpointAdaptionCommand(request));

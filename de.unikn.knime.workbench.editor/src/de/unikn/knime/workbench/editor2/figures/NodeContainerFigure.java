@@ -460,8 +460,8 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
      */
+    @Override
     public void paintFigure(Graphics graphics) {
-
         graphics.setBackgroundColor(getBackgroundColor());
         super.paintFigure(graphics);
     }
@@ -472,7 +472,6 @@ public class NodeContainerFigure extends RectangleFigure {
      * @author Florian Georg, University of Konstanz
      */
     private class ContentFigure extends Figure {
-
         private Label m_iconFigure;
 
         private Label m_deleteIcon;
@@ -592,7 +591,6 @@ public class NodeContainerFigure extends RectangleFigure {
          * @see de.unikn.knime.workbench.repository.model.NodeTemplate
          */
         void setType(final NodeType type) {
-
             m_backgroundIcon.setIcon(getBackgroundForType(type));
         }
 
@@ -603,7 +601,6 @@ public class NodeContainerFigure extends RectangleFigure {
          * @param type the concrete promblem type to display (info/warn/error)
          */
         public void setWarning(final String message, final int type) {
-
             // overlay the image with the warning sign
             Image icon = m_baseIcon;
 
@@ -615,7 +612,6 @@ public class NodeContainerFigure extends RectangleFigure {
             m_iconFigure.setIcon(overlayImage.createImage());
 
             m_iconFigure.setToolTip(new WarnErrorToolTip(message, type));
-
         }
 
         /**

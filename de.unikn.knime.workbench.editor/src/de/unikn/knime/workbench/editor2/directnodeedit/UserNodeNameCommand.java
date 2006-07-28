@@ -1,4 +1,4 @@
-/* @(#)$RCSfile$ 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -29,7 +29,6 @@ import de.unikn.knime.core.node.workflow.NodeContainer;
  * @author Christoph Sieb, University of Konstanz
  */
 public class UserNodeNameCommand extends Command {
-
     private String m_newName, m_oldName;
 
     private NodeContainer m_nodeContainer;
@@ -43,7 +42,6 @@ public class UserNodeNameCommand extends Command {
      */
     public UserNodeNameCommand(final NodeContainer nodeContainer,
             final String newName) {
-
         m_nodeContainer = nodeContainer;
 
         if (newName != null) {
@@ -60,8 +58,8 @@ public class UserNodeNameCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
-
         m_oldName = m_nodeContainer.getCustomName();
         m_nodeContainer.setCustomName(m_newName);
     }
@@ -71,8 +69,8 @@ public class UserNodeNameCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#undo()
      */
+    @Override
     public void undo() {
-
         m_nodeContainer.setCustomName(m_oldName);
     }
 }

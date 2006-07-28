@@ -87,7 +87,7 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
      * @return all bendpoints
      */
     public int[][] getAllBendpoints() {
-        return (int[][])m_bendpoints.toArray(new int[m_bendpoints.size()][]);
+        return m_bendpoints.toArray(new int[m_bendpoints.size()][]);
     }
 
     /**
@@ -97,7 +97,7 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
     public void save(final NodeSettingsWO config) {
         config.addInt(KEY_BENDPOINTS + "_size", m_bendpoints.size());
         for (int i = 0; i < m_bendpoints.size(); i++) {
-            config.addIntArray(KEY_BENDPOINTS + "_" + i, (int[])m_bendpoints
+            config.addIntArray(KEY_BENDPOINTS + "_" + i, m_bendpoints
                     .get(i));
         }
 

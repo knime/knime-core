@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Display;
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractNodePortFigure extends Shape {
-
     /** width of a port figure. * */
     public static final int WIDTH = 9;
 
@@ -69,6 +68,7 @@ public abstract class AbstractNodePortFigure extends Shape {
      * @return The background color, depending on the current state
      * @see org.eclipse.draw2d.IFigure#getBackgroundColor()
      */
+    @Override
     public Color getBackgroundColor() {
         return (m_hasData ? ColorConstants.green : ColorConstants.white);
     }
@@ -80,6 +80,7 @@ public abstract class AbstractNodePortFigure extends Shape {
      * @return The foreground color, depending on the current state
      * @see org.eclipse.draw2d.IFigure#getForegroundColor()
      */
+    @Override
     public Color getForegroundColor() {
         // return (m_isConnected ? ColorConstants.green : ColorConstants.red);
         return ColorConstants.black;
@@ -120,8 +121,8 @@ public abstract class AbstractNodePortFigure extends Shape {
      * 
      * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
      */
+    @Override
     protected void fillShape(final Graphics graphics) {
-
         if (isModelPort()) {
             graphics.setBackgroundColor(Display.getCurrent().getSystemColor(
                     SWT.COLOR_BLUE));
@@ -148,8 +149,8 @@ public abstract class AbstractNodePortFigure extends Shape {
      * 
      * @see org.eclipse.draw2d.Shape#outlineShape(org.eclipse.draw2d.Graphics)
      */
+    @Override
     protected void outlineShape(final Graphics graphics) {
-
         if (isModelPort()) {
             graphics.setForegroundColor(Display.getCurrent().getSystemColor(
                     SWT.COLOR_BLUE));
@@ -167,7 +168,6 @@ public abstract class AbstractNodePortFigure extends Shape {
         // PointList points = createShapePoints(r);
 
         // graphics.drawPolygon(points);
-
     }
 
     /**

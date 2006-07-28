@@ -32,7 +32,6 @@ import de.unikn.knime.workbench.editor2.ImageRepository;
  * @author Florian Georg, University of Konstanz
  */
 public class OpenPortViewAction extends Action {
-
     private NodeContainer m_nodeContainer;
 
     private int m_index;
@@ -55,6 +54,7 @@ public class OpenPortViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/openView.gif");
     }
@@ -62,6 +62,7 @@ public class OpenPortViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Opens a view on outport #" + m_index;
     }
@@ -69,6 +70,7 @@ public class OpenPortViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
 
         // the name is constructed like "Model outport <specificIndex>"
@@ -91,6 +93,7 @@ public class OpenPortViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.Action#run()
      */
+    @Override
     public void run() {
         LOGGER.debug("Open Port View " + m_nodeContainer.nodeToString() + " (#"
                 + m_index + ")");

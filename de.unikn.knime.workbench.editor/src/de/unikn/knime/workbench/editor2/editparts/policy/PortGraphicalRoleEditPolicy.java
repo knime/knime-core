@@ -45,7 +45,6 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
-
     /**
      * This tries to initialize the command to create a connection as far as
      * possible. However, it is completed by
@@ -55,6 +54,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      *      #getConnectionCreateCommand(
      *      org.eclipse.gef.requests.CreateConnectionRequest)
      */
+    @Override
     protected Command getConnectionCreateCommand(
             final CreateConnectionRequest req) {
         CreateConnectionCommand cmd = new CreateConnectionCommand();
@@ -98,6 +98,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      *      getConnectionCompleteCommand(
      *      org.eclipse.gef.requests.CreateConnectionRequest)
      */
+    @Override
     protected Command getConnectionCompleteCommand(
             final CreateConnectionRequest request) {
 
@@ -149,6 +150,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      *      #getReconnectSourceCommand(
      *      org.eclipse.gef.requests.ReconnectRequest)
      */
+    @Override
     protected Command getReconnectSourceCommand(final ReconnectRequest req) {
 
 //        // get the connection to change
@@ -177,9 +179,9 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      *      #getReconnectTargetCommand(
      *      org.eclipse.gef.requests.ReconnectRequest)
      */
+    @Override
     protected Command getReconnectTargetCommand(final ReconnectRequest req) {
         
         return null;
     }
-
 }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -88,6 +86,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /**
      * @see org.eclipse.gef.EditPart#activate()
      */
+    @Override
     public void activate() {
         super.activate();
         ((ConnectionContainer)getModel()).addWorkflowListener(this);
@@ -96,6 +95,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /**
      * @see org.eclipse.gef.EditPart#deactivate()
      */
+    @Override
     public void deactivate() {
         super.deactivate();
         ((ConnectionContainer)getModel()).removeWorkflowListener(this);
@@ -104,6 +104,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /**
      * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
      */
+    @Override
     protected void createEditPolicies() {
 
         installEditPolicy(EditPolicy.CONNECTION_ENDPOINTS_ROLE,
@@ -121,6 +122,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /**
      * @see org.eclipse.gef.editparts.AbstractConnectionEditPart#createFigure()
      */
+    @Override
     protected IFigure createFigure() {
 
         PolylineConnection conn = (PolylineConnection)super.createFigure();
@@ -155,6 +157,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /**
      * @see org.eclipse.gef.editparts.AbstractEditPart#refreshVisuals()
      */
+    @Override
     protected void refreshVisuals() {
         super.refreshVisuals();
         ModellingConnectionExtraInfo ei = null;

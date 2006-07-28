@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -38,11 +36,11 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeContainerComponentEditPolicy extends ComponentEditPolicy {
-
     /**
      * @see org.eclipse.gef.editpolicies.ComponentEditPolicy
      *      #getDeleteCommand(org.eclipse.gef.requests.GroupRequest)
      */
+    @Override
     protected Command getDeleteCommand(final GroupRequest request) {
 
         // we need the parent WFM ...
@@ -51,6 +49,5 @@ public class NodeContainerComponentEditPolicy extends ComponentEditPolicy {
 
         NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost();
         return new DeleteNodeContainerCommand(nodePart, manager);
-
     }
 }

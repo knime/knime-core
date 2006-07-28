@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -43,7 +41,6 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ReconnectConnectionCommand extends Command {
-
     private DeleteConnectionCommand m_deleteCommand;
 
     private CreateConnectionCommand m_createCommand;
@@ -66,10 +63,6 @@ public class ReconnectConnectionCommand extends Command {
 
         // create the create command
         CreateConnectionCommand cmd = new CreateConnectionCommand();
-
-        if (!(host instanceof AbstractPortEditPart)) {
-            return;
-        }
 
         NodeContainerEditPart nodePart = (NodeContainerEditPart)host
                 .getParent();
@@ -132,6 +125,7 @@ public class ReconnectConnectionCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
+    @Override
     public boolean canExecute() {
         return m_deleteCommand.canExecute() && m_createCommand.canExecute();
 
@@ -140,6 +134,7 @@ public class ReconnectConnectionCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                 SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);

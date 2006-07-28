@@ -102,12 +102,12 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 return null;
             }
             if (snapStrategies.size() == 1) {
-                return (SnapToHelper)snapStrategies.get(0);
+                return snapStrategies.get(0);
             }
 
             SnapToHelper[] ss = new SnapToHelper[snapStrategies.size()];
             for (int i = 0; i < snapStrategies.size(); i++) {
-                ss[i] = (SnapToHelper)snapStrategies.get(i);
+                ss[i] = snapStrategies.get(i);
             }
             return new CompoundSnapToHelper(ss);
         }

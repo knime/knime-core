@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -72,8 +70,8 @@ public class NewBendpointCreateCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
-        
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
         
@@ -88,8 +86,8 @@ public class NewBendpointCreateCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#redo()
      */
+    @Override
     public void redo() {
-        
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
         
@@ -102,6 +100,7 @@ public class NewBendpointCreateCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#undo()
      */
+    @Override
     public void undo() {
         m_extraInfo.removeBendpoint(m_index);
 

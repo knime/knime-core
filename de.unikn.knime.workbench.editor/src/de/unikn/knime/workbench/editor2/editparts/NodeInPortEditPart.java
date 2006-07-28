@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -45,9 +43,10 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * @see de.unikn.knime.workbench.editor2.editparts.AbstractPortEditPart#
-     *      isModelPort()
+     * @see de.unikn.knime.workbench.editor2.editparts.AbstractPortEditPart
+     *  #isModelPort()
      */
+    @Override
     public boolean isModelPort() {
         return getNodeContainer().isPredictorInPort(getId());
     }
@@ -55,8 +54,8 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
     /**
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
      */
+    @Override
     protected IFigure createFigure() {
-
         // Create the figure, we need the number of ports from the parent
         // container
         NodeContainer container = getNodeContainer();
@@ -76,8 +75,8 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      * 
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
      */
+    @Override
     public List getModelTargetConnections() {
-
         ConnectionContainer container = getManager().getIncomingConnectionAt(
                 getNodeContainer(), getId());
 
@@ -86,7 +85,6 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
         }
 
         return Collections.EMPTY_LIST;
-
     }
 
     /**
@@ -95,8 +93,8 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
      *      #getModelSourceConnections()
      */
+    @Override
     protected List getModelSourceConnections() {
         return Collections.EMPTY_LIST;
     }
-
 }

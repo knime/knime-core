@@ -35,7 +35,7 @@ import org.eclipse.gef.tools.ConnectionBendpointTracker;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class ConnectionBendpointMoveHandel extends BendpointMoveHandle{
+public class ConnectionBendpointMoveHandel extends BendpointMoveHandle {
 
     /**
      * Creates a new BendpointMoveHandle.
@@ -49,7 +49,7 @@ public class ConnectionBendpointMoveHandel extends BendpointMoveHandle{
      * @param owner the ConnectionEditPart owner
      * @param index the index
      */
-    public ConnectionBendpointMoveHandel(ConnectionEditPart owner, int index) {
+    public ConnectionBendpointMoveHandel(final ConnectionEditPart owner, final int index) {
         super(owner, index);
     }
 
@@ -61,7 +61,7 @@ public class ConnectionBendpointMoveHandel extends BendpointMoveHandle{
      * @param index the index
      * @param locatorIndex the index to use for the locator
      */
-    public ConnectionBendpointMoveHandel(ConnectionEditPart owner, int index, int locatorIndex) {
+    public ConnectionBendpointMoveHandel(final ConnectionEditPart owner, final int index, final int locatorIndex) {
         super(owner, index, locatorIndex);
     }
 
@@ -73,7 +73,7 @@ public class ConnectionBendpointMoveHandel extends BendpointMoveHandle{
      * @param index the index
      * @param locator the Locator
      */
-    public ConnectionBendpointMoveHandel(ConnectionEditPart owner, int index, Locator locator) {
+    public ConnectionBendpointMoveHandel(final ConnectionEditPart owner, final int index, final Locator locator) {
         super(owner, index, locator);
     }
     
@@ -81,6 +81,7 @@ public class ConnectionBendpointMoveHandel extends BendpointMoveHandle{
      * Creates and returns a new {@link ConnectionBendpointTracker}.
      * @return the new ConnectionBendpointTracker
      */
+    @Override
     protected DragTracker createDragTracker() {
         ConnectionBendpointTracker tracker;
         tracker = new WorkflowConnectionBendpointTracker(
@@ -90,5 +91,4 @@ public class ConnectionBendpointMoveHandel extends BendpointMoveHandle{
         tracker.setDefaultCursor(getCursor());
         return tracker;
     }
-
 }

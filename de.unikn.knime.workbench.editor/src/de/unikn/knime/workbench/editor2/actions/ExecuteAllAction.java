@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 280 $ $Date: 2006-02-21 17:39:37 +0100 (Di, 21 Feb 2006) $ $Author: sieb $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -38,7 +36,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph sieb, University of Konstanz
  */
 public class ExecuteAllAction extends AbstractNodeAction {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ExecuteAllAction.class);
 
@@ -56,6 +53,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getId()
      */
+    @Override
     public String getId() {
         return ID;
     }
@@ -63,6 +61,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Execute all";
     }
@@ -70,6 +69,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/executeAll.gif");
     }
@@ -77,6 +77,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Execute all executable nodes.";
     }
@@ -86,6 +87,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      *         as possible
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getAllNodeParts();
 
@@ -109,6 +111,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      *      #runOnNodes(de.unikn.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
+    @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
 
         NodeContainerEditPart[] allNodeParts = getAllNodeParts();
@@ -134,6 +137,5 @@ public class ExecuteAllAction extends AbstractNodeAction {
         job.setSystem(true);
         job.setPriority(Job.LONG);
         job.schedule();
-
     }
 }

@@ -47,13 +47,14 @@ public class SnapOffBendPointConnectionRouter extends BendpointConnectionRouter 
      * 
      * @param conn The connection to route
      */
-    public void route(Connection conn) {
+    public void route(final Connection conn) {
         PointList points = conn.getPoints();
         points.removeAllPoints();
 
         List bendpoints = (List)getConstraint(conn);
-        if (bendpoints == null)
+        if (bendpoints == null) {
             bendpoints = Collections.EMPTY_LIST;
+        }
 
         Point ref1, ref2;
 

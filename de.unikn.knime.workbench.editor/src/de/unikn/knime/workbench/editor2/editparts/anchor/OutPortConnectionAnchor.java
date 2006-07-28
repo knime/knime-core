@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -46,6 +44,7 @@ public class OutPortConnectionAnchor extends ChopboxAnchor {
     /**
      * @return The chop box for the out-port figure
      */
+    @Override
     protected Rectangle getBox() {
         Rectangle b = getOwner().getBounds().getCopy();
         // set width
@@ -63,6 +62,7 @@ public class OutPortConnectionAnchor extends ChopboxAnchor {
      * @param reference The reference point
      * @return The anchor location
      */
+    @Override
     public Point getLocation(final Point reference) {
 
         Point point = getBox().getRight().getCopy().getTranslated(-2, 0);
@@ -71,5 +71,4 @@ public class OutPortConnectionAnchor extends ChopboxAnchor {
         // translate it one pixel to the left to better see the arrow
         return point;
     }
-
 }

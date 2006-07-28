@@ -211,18 +211,17 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
      *      stateChanged(de.unikn.knime.core.node.NodeStatus, int)
      */
     public void stateChanged(final NodeStatus state, final int id) {
-
         if (state instanceof NodeStatus.CustomName) {
             // Editor name (title)
             setPartName(EDITOR_TITLE + ": "
                     + m_metaNodeContainer.getCustomName());
         }
-
     }
 
     /**
      * Marks this editor as diry and notifies the parent editor.
      */
+    @Override
     public void markDirty() {
         super.markDirty();
 
@@ -230,5 +229,4 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
             m_parent.markDirty();
         }
     }
-
 }

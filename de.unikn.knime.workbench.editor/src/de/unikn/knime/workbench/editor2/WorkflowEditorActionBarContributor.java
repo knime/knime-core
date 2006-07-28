@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -44,6 +42,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
     /**
      * @see org.eclipse.gef.ui.actions.ActionBarContributor#buildActions()
      */
+    @Override
     protected void buildActions() {
         addRetargetAction(new UndoRetargetAction());
         addRetargetAction(new RedoRetargetAction());
@@ -57,6 +56,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
      * @see org.eclipse.gef.ui.actions.ActionBarContributor
      *      #declareGlobalActionKeys()
      */
+    @Override
     protected void declareGlobalActionKeys() {
         addGlobalActionKey(ActionFactory.PRINT.getId());
         addGlobalActionKey(ActionFactory.SELECT_ALL.getId());
@@ -69,6 +69,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
      * @see org.eclipse.ui.part.EditorActionBarContributor
      *      #contributeToToolBar(IToolBarManager)
      */
+    @Override
     public void contributeToToolBar(final IToolBarManager tbm) {
         tbm.add(getAction(ActionFactory.UNDO.getId()));
         tbm.add(getAction(ActionFactory.REDO.getId()));
@@ -83,6 +84,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
      * @see org.eclipse.ui.part.EditorActionBarContributor
      *      #contributeToMenu(IMenuManager)
      */
+    @Override
     public void contributeToMenu(final IMenuManager menubar) {
         super.contributeToMenu(menubar);
 

@@ -42,7 +42,7 @@ public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
         NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost();
 
         UserNodeNameCommand command = new UserNodeNameCommand(
-                (NodeContainer)nodePart.getNodeContainer(), labelText);
+                nodePart.getNodeContainer(), labelText);
         
         return command;
     }

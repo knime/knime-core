@@ -31,7 +31,7 @@ import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.ui.views.EmbeddedNodeView;
 
 /**
- * Opens a node view embedded inside the Workbench - "Node View"
+ * Opens a node view embedded inside the Workbench - "Node View".
  * 
  * @author Florian Georg, University of Konstanz
  */

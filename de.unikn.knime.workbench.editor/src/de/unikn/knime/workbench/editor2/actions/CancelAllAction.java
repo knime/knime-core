@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 280 $ $Date: 2006-02-21 17:39:37 +0100 (Di, 21 Feb 2006) $ $Author: sieb $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -37,7 +35,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph sieb, University of Konstanz
  */
 public class CancelAllAction extends AbstractNodeAction {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CancelAllAction.class);
 
@@ -55,6 +52,7 @@ public class CancelAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getId()
      */
+    @Override
     public String getId() {
         return ID;
     }
@@ -62,6 +60,7 @@ public class CancelAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Cancel all";
     }
@@ -69,6 +68,7 @@ public class CancelAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/executeAll.PNG");
     }
@@ -76,6 +76,7 @@ public class CancelAllAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Cancel all running nodes.";
     }
@@ -84,6 +85,7 @@ public class CancelAllAction extends AbstractNodeAction {
      * @return <code>true</code>, if at least one node is running
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
         if (getManager() == null) {
             return false;
@@ -98,8 +100,8 @@ public class CancelAllAction extends AbstractNodeAction {
      *      #runOnNodes(de.unikn.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
+    @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                 SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
         mb.setText("Confirm cancel all...");

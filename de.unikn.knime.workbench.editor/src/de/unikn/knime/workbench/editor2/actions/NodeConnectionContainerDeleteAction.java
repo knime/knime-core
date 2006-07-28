@@ -62,6 +62,7 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
      * @param objects The objects to be deleted.
      * @return The command to remove the selected objects.
      */
+    @Override
     public Command createDeleteCommand(final List objects) {
         if (objects.isEmpty()) {
             return null;

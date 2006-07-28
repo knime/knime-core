@@ -77,7 +77,7 @@ public abstract class AbstractClipboardAction extends AbstractNodeAction {
             }
         }
 
-        final ConnectionContainerEditPart[] parts = (ConnectionContainerEditPart[])objects
+        final ConnectionContainerEditPart[] parts = objects
                 .toArray(new ConnectionContainerEditPart[objects.size()]);
 
         return parts;

@@ -40,7 +40,7 @@ import de.unikn.knime.core.node.workflow.NodeExtraInfo;
  */
 public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
-    /** Version id of this extra info implementation */
+    /** Version id of this extra info implementation. */
     public static final String VERSION = "1.0";
 
     /** The key under which the type is registered. * */

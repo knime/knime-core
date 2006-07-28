@@ -1,4 +1,4 @@
-/* @(#)$RCSfile$ 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -49,7 +49,6 @@ import de.unikn.knime.workbench.editor2.figures.NodeContainerFigure;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NodeEditManager extends DirectEditManager {
-
     private IActionBars m_actionBars;
 
     private CellEditorActionHandler m_actionHandler;
@@ -74,6 +73,7 @@ public class NodeEditManager extends DirectEditManager {
     /**
      * @see org.eclipse.gef.tools.DirectEditManager#bringDown()
      */
+    @Override
     protected void bringDown() {
 
         if (m_actionHandler != null) {
@@ -99,6 +99,7 @@ public class NodeEditManager extends DirectEditManager {
      * @see org.eclipse.gef.tools.DirectEditManager#
      *      createCellEditorOn(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     protected CellEditor createCellEditorOn(final Composite composite) {
         return new TextCellEditor(composite, SWT.SINGLE);
     }
@@ -108,6 +109,7 @@ public class NodeEditManager extends DirectEditManager {
      * 
      * @see org.eclipse.gef.tools.DirectEditManager#initCellEditor()
      */
+    @Override
     protected void initCellEditor() {
 
         Text text = (Text)getCellEditor().getControl();

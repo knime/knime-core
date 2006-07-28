@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -36,7 +34,6 @@ import de.unikn.knime.workbench.editor2.ImageRepository;
  * @author Florian Georg, University of Konstanz
  */
 public class OpenViewAction extends Action {
-
     private NodeContainer m_nodeContainer;
 
     private int m_index;
@@ -58,6 +55,7 @@ public class OpenViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/openView.gif");
     }
@@ -65,6 +63,7 @@ public class OpenViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Opens node view " + m_index + ": "
                 + m_nodeContainer.getViewName(m_index);
@@ -73,6 +72,7 @@ public class OpenViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "View: " + m_nodeContainer.getViewName(m_index);
     }
@@ -80,10 +80,10 @@ public class OpenViewAction extends Action {
     /**
      * @see org.eclipse.jface.action.Action#run()
      */
+    @Override
     public void run() {
         LOGGER.debug("Open Node View " + m_nodeContainer.nodeToString() + " (#"
                 + m_index + ")");
         m_nodeContainer.showView(m_index);
     }
-
 }

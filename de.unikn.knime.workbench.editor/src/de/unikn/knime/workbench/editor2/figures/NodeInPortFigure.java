@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,7 +30,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeInPortFigure extends AbstractNodePortFigure {
-
     private int m_id;
 
     private boolean m_isModelPort;
@@ -59,7 +56,8 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
 
     /**
      * 
-     * @see de.unikn.knime.workbench.editor2.figures.AbstractNodePortFigure#isModelPort()
+     * @see de.unikn.knime.workbench.editor2.figures.AbstractNodePortFigure
+     *  #isModelPort()
      */
     protected boolean isModelPort() {
         return m_isModelPort;
@@ -74,6 +72,7 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
      * @param r The bounds
      * @return the pointlist (size=3)
      */
+    @Override
     protected PointList createShapePoints(final Rectangle r) {
         if (!m_isModelPort) {
             PointList points = new PointList(3);
@@ -94,7 +93,6 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
             points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
                     ((HEIGHT - 1) / 2 - 1)));
             return points;
-
         }
     }
 
@@ -105,25 +103,23 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
      * 
      * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
      */
+    @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
         Dimension d = new Dimension();
 
         d.height = (getParent().getBounds().height) / getNumPorts();
         d.width = WIDTH;
         return d;
-
     }
 
     /**
      * @return The <code>RelativeLocator</code> that places this figure on the
      *         left side (y offset corresponds to the number of the port).
      */
+    @Override
     public Locator getLocator() {
-
         return new PortLocator((NodeContainerFigure)getParent().getParent(),
                 PortLocator.TYPE_INPORT, getNumModelPorts(), getNumDataPorts(),
                 m_id, m_isModelPort);
-
     }
-
 }

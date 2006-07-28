@@ -40,11 +40,11 @@ import de.unikn.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
  * @author Florian Georg, University of Konstanz
  */
 public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
-
     /**
      * @see org.eclipse.gef.editpolicies.ConstrainedLayoutEditPolicy
      *      #createAddCommand(org.eclipse.gef.EditPart, java.lang.Object)
      */
+    @Override
     protected Command createAddCommand(final EditPart child,
             final Object constraint) {
         return null;
@@ -58,6 +58,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
      *      #createChangeConstraintCommand(org.eclipse.gef.EditPart,
      *      java.lang.Object)
      */
+    @Override
     protected Command createChangeConstraintCommand(final EditPart child,
             final Object constraint) {
 
@@ -90,6 +91,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
      * @see org.eclipse.gef.editpolicies.LayoutEditPolicy
      *      #getCreateCommand(org.eclipse.gef.requests.CreateRequest)
      */
+    @Override
     protected Command getCreateCommand(final CreateRequest request) {
         return null;
     }
@@ -100,8 +102,8 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
      * @see org.eclipse.gef.editpolicies.LayoutEditPolicy
      *      #getDeleteDependantCommand(org.eclipse.gef.Request)
      */
+    @Override
     protected Command getDeleteDependantCommand(final Request request) {
         return null;
     }
-
 }

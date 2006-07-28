@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -56,35 +54,34 @@ public class NewBendpointDeleteCommand extends Command {
     /**
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
-
         m_point = m_extraInfo.getBendpoint(m_index);
         m_extraInfo.removeBendpoint(m_index);
 
         // issue notfication
         m_connection.setExtraInfo(m_extraInfo);
-
     }
 
     /**
      * @see org.eclipse.gef.commands.Command#redo()
      */
+    @Override
     public void redo() {
         m_extraInfo.removeBendpoint(m_index);
 
         // issue notfication
         m_connection.setExtraInfo(m_extraInfo);
-
     }
 
     /**
      * @see org.eclipse.gef.commands.Command#undo()
      */
+    @Override
     public void undo() {
         m_extraInfo.addBendpoint(m_point[0], m_point[1], m_index);
 
         // issue notfication
         m_connection.setExtraInfo(m_extraInfo);
-
     }
 }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -39,7 +37,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class CutAction extends AbstractClipboardAction {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CutAction.class);
 
@@ -65,6 +62,7 @@ public class CutAction extends AbstractClipboardAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
 
         ISharedImages sharedImages = PlatformUI.getWorkbench()
@@ -75,6 +73,7 @@ public class CutAction extends AbstractClipboardAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Cut";
     }
@@ -84,6 +83,7 @@ public class CutAction extends AbstractClipboardAction {
      * 
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
 
@@ -93,7 +93,8 @@ public class CutAction extends AbstractClipboardAction {
     /**
      * Invokes the copy action followed by the delete command.
      * 
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction#runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
+     *  #runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {

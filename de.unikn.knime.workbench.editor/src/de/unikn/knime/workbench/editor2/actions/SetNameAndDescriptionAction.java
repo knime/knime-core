@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 280 $ $Date: 2006-02-21 17:39:37 +0100 (Di, 21 Feb 2006) $ $Author: sieb $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,6 +20,7 @@
 package de.unikn.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
@@ -39,7 +38,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class SetNameAndDescriptionAction extends AbstractNodeAction {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(SetNameAndDescriptionAction.class);
 
@@ -58,6 +56,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getId()
      */
+    @Override
     public String getId() {
         return ID;
     }
@@ -65,6 +64,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Node name and description";
     }
@@ -72,6 +72,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/setNameDescription.PNG");
     }
@@ -79,6 +80,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "To set/view the user specified node name and a context dependant description.";
     }
@@ -88,6 +90,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      * 
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
 
         NodeContainerEditPart[] parts = getSelectedNodeParts();
@@ -109,8 +112,8 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      *      runOnNodes(de.unikn.knime.workbench.editor2.editparts.
      *      NodeContainerEditPart[])
      */
+    @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-
         // if more than one node part is selected
         if (nodeParts.length != 1) {
             LOGGER.debug("Execution denied as more than one node is "
@@ -145,8 +148,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
         int result = dialog.open();
 
         // check if ok was pressed
-        if (result == NameDescriptionDialog.OK) {
-
+        if (result == Window.OK) {
             // if the name or description have been changed
             // the editor must be set dirty
             String description = dialog.getDescription();
@@ -161,9 +163,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
                 }
                 container.setCustomName(null);
                 container.setDescription(null);
-
             } else {
-
                 // if name or description is different mark editor dirty
                 if (!userName.equals(container.getCustomName())
                         || !description.equals(container.getDescription())) {
@@ -174,7 +174,6 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
                 container.setDescription(description);
             }
         }
-
         // else do nothing
     }
 }

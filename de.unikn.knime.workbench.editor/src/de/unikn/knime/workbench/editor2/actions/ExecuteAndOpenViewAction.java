@@ -39,7 +39,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ExecuteAndOpenViewAction extends AbstractNodeAction {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ExecuteAndOpenViewAction.class);
 
@@ -58,6 +57,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getId()
      */
+    @Override
     public String getId() {
         return ID;
     }
@@ -65,6 +65,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getText()
      */
+    @Override
     public String getText() {
         return "Execute and open view";
     }
@@ -72,6 +73,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/executeAndView.PNG");
     }
@@ -79,6 +81,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return "Execute the selected node and open its first view.";
     }
@@ -89,8 +92,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      * 
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
+    @Override
     protected boolean calculateEnabled() {
-
         NodeContainerEditPart[] parts = getSelectedNodeParts();
 
         // only if just one node part is selected
@@ -118,8 +121,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      *      #runOnNodes(de.unikn.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
+    @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-
         // if more than one node part is selected
         if (nodeParts.length != 1) {
             LOGGER.debug("Execution denied as more than one node is "
@@ -167,6 +170,5 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                 }
             }
         }).start();
-
     }
 }

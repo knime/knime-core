@@ -114,7 +114,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * indicating where the snapping is occurring. This is used for feedback
      * purposes.
      */
-    public static final String KEY_EAST_ANCHOR = "SnapToGeometry.EastAnchor"; //$NON-NLS-1$
+    public static final String KEY_EAST_ANCHOR = "SnapToGeometry.EastAnchor";
 
     /**
      * A vertical or horizontal snapping point. since 3.0
@@ -125,20 +125,20 @@ public class SnapToPortGeometry extends SnapToHelper {
          * left or top, 0 indicates the middle or center, and 1 indicates right
          * or bottom.
          */
-        int side;
+        int m_side;
 
         /**
          * The location of the entry, in the container's coordinates.
          */
-        int offset;
+        int m_offset;
 
         /**
-         * Wheather this is an inport value
+         * Wheather this is an inport value.
          */
         boolean m_inport;
 
         /**
-         * Wheather this is a model port
+         * Wheather this is a model port.
          */
         boolean m_modelPort;
 
@@ -148,9 +148,9 @@ public class SnapToPortGeometry extends SnapToHelper {
          * @param side an integer indicating T/L, B/R, or C/M
          * @param offset the location
          */
-        Entry(int side, int offset) {
-            this.side = side;
-            this.offset = offset;
+        Entry(final int side, final int offset) {
+            this.m_side = side;
+            this.m_offset = offset;
         }
 
         /**
@@ -160,9 +160,10 @@ public class SnapToPortGeometry extends SnapToHelper {
          * @param offset the location
          * @param inport wheather this entry belongs to an inport
          */
-        Entry(int side, int offset, boolean inport, boolean modelPort) {
-            this.side = side;
-            this.offset = offset;
+        Entry(final int side, final int offset, final boolean inport,
+                final boolean modelPort) {
+            this.m_side = side;
+            this.m_offset = offset;
             m_inport = inport;
             m_modelPort = modelPort;
         }
@@ -170,8 +171,9 @@ public class SnapToPortGeometry extends SnapToHelper {
         /**
          * @see java.lang.Object#toString()
          */
+        @Override
         public String toString() {
-            return "Offset: " + offset + "Inport: " + m_inport;
+            return "Offset: " + m_offset + "Inport: " + m_inport;
         }
     }
 
@@ -181,17 +183,17 @@ public class SnapToPortGeometry extends SnapToHelper {
      */
     protected static final double THRESHOLD = 5.0001;
 
-    boolean cachedCloneBool;
+    boolean m_cachedCloneBool;
 
     /**
      * The horizontal rows being snapped to.
      */
-    protected Entry rows[];
+    protected Entry m_rows[];
 
     /**
      * The vertical columnd being snapped to.
      */
-    protected Entry cols[];
+    protected Entry m_cols[];
 
     /**
      * The y port values of the dragged node.
@@ -202,7 +204,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * The container editpart providing the coordinates and the children to
      * which snapping occurs.
      */
-    protected GraphicalEditPart container;
+    protected GraphicalEditPart m_container;
 
     private ZoomManager m_zoomManager;
 
@@ -215,7 +217,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @param container the container editpart
      */
     public SnapToPortGeometry(GraphicalEditPart container) {
-        this.container = container;
+        this.m_container = container;
 
         m_zoomManager = (ZoomManager)container.getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
@@ -232,7 +234,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      */
     protected List generateSnapPartsList(List exclusions) {
         // Don't snap to any figure that is being dragged
-        List children = new ArrayList(container.getChildren());
+        List children = new ArrayList(m_container.getChildren());
         children.removeAll(exclusions);
 
         // Don't snap to hidden figures
@@ -308,7 +310,7 @@ public class SnapToPortGeometry extends SnapToHelper {
                 }
 
                 // System.out.println("y val: " + (y.offset + moveDelta));
-                double diff = entry.offset - (y.offset + moveDelta);
+                double diff = entry.m_offset - (y.m_offset + moveDelta);
                 if (Math.abs(diff) < Math.abs(result)) {
                     result = diff;
                 }
@@ -329,42 +331,43 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @param side which sides should be considered
      * @return the correction or THRESHOLD if no correction was made
      */
-    protected double getCorrectionFor(final Entry entries[],
+    protected double getCorrectionFor(final Entry[] entries,
             final Map extendedData, final boolean vert, final double value,
             final int side) {
         double resultMag = THRESHOLD;
         double result = THRESHOLD;
 
         String property;
-        if (side == -1)
+        if (side == -1) {
             property = vert ? KEY_WEST_ANCHOR : KEY_NORTH_ANCHOR;
-        else
+        } else {
             property = vert ? KEY_EAST_ANCHOR : KEY_SOUTH_ANCHOR;
+        }
 
         for (int i = 0; i < entries.length; i++) {
             Entry entry = entries[i];
             double magnitude;
 
-            if (entry.side == -1 && side != 0) {
-                magnitude = Math.abs(value - entry.offset);
+            if (entry.m_side == -1 && side != 0) {
+                magnitude = Math.abs(value - entry.m_offset);
                 if (magnitude < resultMag) {
                     resultMag = magnitude;
-                    result = entry.offset - value;
-                    extendedData.put(property, new Integer(entry.offset));
+                    result = entry.m_offset - value;
+                    extendedData.put(property, new Integer(entry.m_offset));
                 }
-            } else if (entry.side == 0 && side == 0) {
-                magnitude = Math.abs(value - entry.offset);
+            } else if (entry.m_side == 0 && side == 0) {
+                magnitude = Math.abs(value - entry.m_offset);
                 if (magnitude < resultMag) {
                     resultMag = magnitude;
-                    result = entry.offset - value;
-                    extendedData.put(property, new Integer(entry.offset));
+                    result = entry.m_offset - value;
+                    extendedData.put(property, new Integer(entry.m_offset));
                 }
-            } else if (entry.side == 1 && side != 0) {
-                magnitude = Math.abs(value - entry.offset);
+            } else if (entry.m_side == 1 && side != 0) {
+                magnitude = Math.abs(value - entry.m_offset);
                 if (magnitude < resultMag) {
                     resultMag = magnitude;
-                    result = entry.offset - value;
-                    extendedData.put(property, new Integer(entry.offset));
+                    result = entry.m_offset - value;
+                    extendedData.put(property, new Integer(entry.m_offset));
                 }
             }
         }
@@ -379,14 +382,15 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @param part the child
      * @return the rectangular guide for that part
      */
-    protected Rectangle getFigureBounds(GraphicalEditPart part) {
+    protected Rectangle getFigureBounds(final GraphicalEditPart part) {
         IFigure fig = part.getFigure();
-        if (fig instanceof HandleBounds)
+        if (fig instanceof HandleBounds) {
             return ((HandleBounds)fig).getHandleBounds();
+        }
         return fig.getBounds();
     }
 
-    private List<AbstractPortEditPart> getPorts(List parts) {
+    private List<AbstractPortEditPart> getPorts(final List parts) {
         // add the port edit parts to a list
         List<AbstractPortEditPart> portList = new ArrayList<AbstractPortEditPart>();
 
@@ -425,7 +429,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         // create all row relevant points fromt the port list
         Vector<Entry> rowVector = new Vector<Entry>();
         for (int i = 0; i < portList.size(); i++) {
-            GraphicalEditPart child = (GraphicalEditPart)portList.get(i);
+            GraphicalEditPart child = portList.get(i);
             Rectangle bounds = getFigureBounds(child);
 
             // get information is this is an inport
@@ -454,7 +458,8 @@ public class SnapToPortGeometry extends SnapToHelper {
                 Point p = ((Connection)conPart.getFigure()).getPoints()
                         .getPoint(2);
 
-                rowVector.add(new Entry(0, p.y - 1, true, portPart.isModelPort()));
+                rowVector.add(new Entry(0, p.y - 1, true, portPart
+                        .isModelPort()));
             }
 
             List targetConnections = portPart.getTargetConnections();
@@ -465,7 +470,8 @@ public class SnapToPortGeometry extends SnapToHelper {
                 PointList pList = ((Connection)conPart.getFigure()).getPoints();
                 Point p = pList.getPoint(pList.size() - 3);
 
-                rowVector.add(new Entry(0, p.y - 1, false, portPart.isModelPort()));
+                rowVector.add(new Entry(0, p.y - 1, false, portPart
+                        .isModelPort()));
             }
         }
 
@@ -477,27 +483,26 @@ public class SnapToPortGeometry extends SnapToHelper {
             colVector.add(new Entry(0, bounds.x + (bounds.width - 1) / 2));
         }
 
-        rows = rowVector.toArray(new Entry[rowVector.size()]);
-        cols = colVector.toArray(new Entry[colVector.size()]);
+        m_rows = rowVector.toArray(new Entry[rowVector.size()]);
+        m_cols = colVector.toArray(new Entry[colVector.size()]);
     }
 
     /**
      * @see SnapToHelper#snapRectangle(Request, int, PrecisionRectangle,
      *      PrecisionRectangle)
      */
-    public int snapRectangle(Request request, int snapOrientation,
-            PrecisionRectangle baseRect, PrecisionRectangle result) {
-
+    public int snapRectangle(final Request request, int snapOrientation,
+            PrecisionRectangle baseRect, final PrecisionRectangle result) {
         baseRect = baseRect.getPreciseCopy();
-        makeRelative(container.getContentPane(), baseRect);
+        makeRelative(m_container.getContentPane(), baseRect);
         PrecisionRectangle correction = new PrecisionRectangle();
-        makeRelative(container.getContentPane(), correction);
+        makeRelative(m_container.getContentPane(), correction);
 
         // Recalculate snapping locations if needed
         boolean isClone = request.getType().equals(RequestConstants.REQ_CLONE);
         List exclusionSet = null;
-        if (rows == null || cols == null || isClone != cachedCloneBool) {
-            cachedCloneBool = isClone;
+        if (m_rows == null || m_cols == null || isClone != m_cachedCloneBool) {
+            m_cachedCloneBool = isClone;
             exclusionSet = Collections.EMPTY_LIST;
             if (!isClone && request instanceof GroupRequest) {
                 exclusionSet = ((GroupRequest)request).getEditParts();
@@ -508,8 +513,8 @@ public class SnapToPortGeometry extends SnapToHelper {
 
         if ((snapOrientation & HORIZONTAL) != 0) {
             double xcorrect = THRESHOLD;
-            xcorrect = getCorrectionFor(cols, request.getExtendedData(), true,
-                    baseRect.preciseX, baseRect.preciseRight());
+            xcorrect = getCorrectionFor(m_cols, request.getExtendedData(),
+                    true, baseRect.preciseX, baseRect.preciseRight());
             if (xcorrect != THRESHOLD) {
                 snapOrientation &= ~HORIZONTAL;
                 correction.preciseX += xcorrect;
@@ -544,7 +549,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         int moveDelta = moveDeltaPoint.y;
         if ((snapOrientation & VERTICAL) != 0) {
             double ycorrect = THRESHOLD;
-            ycorrect = getCorrectionForY(rows, request.getExtendedData(),
+            ycorrect = getCorrectionForY(m_rows, request.getExtendedData(),
                     m_yValues, moveDelta);
             if (Math.abs(ycorrect) < THRESHOLD) {
                 snapOrientation &= ~VERTICAL;
@@ -556,7 +561,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         if ((snapOrientation & EAST) != 0) {
-            double rightCorrection = getCorrectionFor(cols, request
+            double rightCorrection = getCorrectionFor(m_cols, request
                     .getExtendedData(), true, baseRect.preciseRight() - 1, 1);
             if (rightCorrection != THRESHOLD) {
                 snapOrientation &= ~EAST;
@@ -565,7 +570,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         if ((snapOrientation & WEST) != 0) {
-            double leftCorrection = getCorrectionFor(cols, request
+            double leftCorrection = getCorrectionFor(m_cols, request
                     .getExtendedData(), true, baseRect.preciseX, -1);
             if (leftCorrection != THRESHOLD) {
                 snapOrientation &= ~WEST;
@@ -575,7 +580,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         if ((snapOrientation & SOUTH) != 0) {
-            double bottom = getCorrectionFor(rows, request.getExtendedData(),
+            double bottom = getCorrectionFor(m_rows, request.getExtendedData(),
                     false, baseRect.preciseBottom() - 1, 1);
             if (bottom != THRESHOLD) {
                 snapOrientation &= ~SOUTH;
@@ -584,7 +589,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         if ((snapOrientation & NORTH) != 0) {
-            double topCorrection = getCorrectionFor(rows, request
+            double topCorrection = getCorrectionFor(m_rows, request
                     .getExtendedData(), false, baseRect.preciseY, -1);
             if (topCorrection != THRESHOLD) {
                 snapOrientation &= ~NORTH;
@@ -594,7 +599,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         correction.updateInts();
-        makeAbsolute(container.getContentPane(), correction);
+        makeAbsolute(m_container.getContentPane(), correction);
         result.preciseX += correction.preciseX;
         result.preciseY += correction.preciseY;
         result.preciseWidth += correction.preciseWidth;
