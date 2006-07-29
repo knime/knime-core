@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -28,13 +26,13 @@ import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
 /**
- * Help plugin class
+ * Help plugin class.
  * 
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEHelpPlugin extends Plugin {
     // Make sure that this *always* matches the ID in plugin.xml
-    /** The plugin ID */
+    /** The plugin ID. */
     public static final String PLUGIN_ID = "de.unikn.knime.workbench.help";
 
     // The shared instance.
@@ -52,21 +50,23 @@ public class KNIMEHelpPlugin extends Plugin {
     }
 
     /**
-     * This method is called upon plug-in activation
+     * This method is called upon plug-in activation.
      * 
      * @param context The bundle context
      * @throws Exception If failed
      */
+    @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
     }
 
     /**
-     * This method is called when the plug-in is stopped
+     * This method is called when the plug-in is stopped.
      * 
      * @param context The bundle context
      * @throws Exception If failed
      */
+    @Override
     public void stop(final BundleContext context) throws Exception {
         super.stop(context);
         plugin = null;
