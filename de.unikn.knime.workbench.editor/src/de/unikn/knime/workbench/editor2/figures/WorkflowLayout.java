@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,10 +30,10 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowLayout extends FreeformLayout {
-
     /**
      * @see org.eclipse.draw2d.LayoutManager#layout(org.eclipse.draw2d.IFigure)
      */
+    @Override
     public void layout(final IFigure container) {
         super.layout(container);
     }
@@ -47,6 +45,7 @@ public class WorkflowLayout extends FreeformLayout {
      * @see org.eclipse.draw2d.LayoutManager#
      *      getConstraint(org.eclipse.draw2d.IFigure)
      */
+    @Override
     public Object getConstraint(final IFigure child) {
         Object constraint = constraints.get(child);
 
@@ -58,6 +57,5 @@ public class WorkflowLayout extends FreeformLayout {
         // determine constraint from figures bounds
         Rectangle currentBounds = child.getBounds();
         return new Rectangle(currentBounds.x, currentBounds.y, -1, -1);
-
     }
 }

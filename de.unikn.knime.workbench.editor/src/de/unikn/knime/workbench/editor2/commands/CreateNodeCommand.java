@@ -39,7 +39,6 @@ import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
  * @author Florian Georg, University of Konstanz
  */
 public class CreateNodeCommand extends Command {
-    
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(CreateNodeCommand.class);
 
@@ -119,5 +118,4 @@ public class CreateNodeCommand extends Command {
             mb.open();            
         }
     }
-
 }

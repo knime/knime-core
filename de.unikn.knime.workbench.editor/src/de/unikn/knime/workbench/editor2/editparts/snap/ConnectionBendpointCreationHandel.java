@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,7 +20,6 @@
 package de.unikn.knime.workbench.editor2.editparts.snap;
 
 import org.eclipse.draw2d.Locator;
-import org.eclipse.draw2d.MidpointLocator;
 import org.eclipse.gef.ConnectionEditPart;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.RequestConstants;
@@ -46,27 +43,28 @@ public class ConnectionBendpointCreationHandel extends BendpointCreationHandle {
     /**
      * Creates a new BendpointCreationHandle, sets its owner to
      * <code>owner</code> and its index to <code>index</code>, and sets its
-     * locator to a new {@link MidpointLocator}.
+     * locator to a new {@link org.eclipse.draw2d.MidpointLocator}.
      * 
      * @param owner the ConnectionEditPart owner
      * @param index the index
      */
-    public ConnectionBendpointCreationHandel(ConnectionEditPart owner, int index) {
+    public ConnectionBendpointCreationHandel(final ConnectionEditPart owner,
+            final int index) {
         super(owner, index);
     }
 
     /**
      * Creates a new BendpointCreationHandle, sets its owner to
      * <code>owner</code> and its index to <code>index</code>, and sets its
-     * locator to a new {@link MidpointLocator} with the given
-     * <code>locatorIndex</code>.
+     * locator to a new {@link org.eclipse.draw2d.MidpointLocator} with the
+     * given <code>locatorIndex</code>.
      * 
      * @param owner the ConnectionEditPart owner
      * @param index the index
      * @param locatorIndex the locator index
      */
-    public ConnectionBendpointCreationHandel(ConnectionEditPart owner,
-            int index, int locatorIndex) {
+    public ConnectionBendpointCreationHandel(final ConnectionEditPart owner,
+            final int index, final int locatorIndex) {
         super(owner, index, locatorIndex);
     }
 
@@ -79,8 +77,8 @@ public class ConnectionBendpointCreationHandel extends BendpointCreationHandle {
      * @param index the index
      * @param locator the Locator
      */
-    public ConnectionBendpointCreationHandel(ConnectionEditPart owner,
-            int index, Locator locator) {
+    public ConnectionBendpointCreationHandel(final ConnectionEditPart owner,
+            final int index, final Locator locator) {
         super(owner, index, locator);
     }
 
@@ -89,6 +87,7 @@ public class ConnectionBendpointCreationHandel extends BendpointCreationHandle {
      * 
      * @return the new ConnectionBendpointTracker
      */
+    @Override
     protected DragTracker createDragTracker() {
         ConnectionBendpointTracker tracker;
         tracker = new WorkflowConnectionBendpointTracker(

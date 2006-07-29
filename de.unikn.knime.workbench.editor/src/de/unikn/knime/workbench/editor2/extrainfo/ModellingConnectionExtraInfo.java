@@ -34,7 +34,6 @@ import de.unikn.knime.core.node.workflow.ConnectionExtraInfo;
  * @author Florian Georg, University of Konstanz
  */
 public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
-
     /** The key under which the type is registered. * */
     public static final String KEY_VERSION = "extrainfo.conn.version";
 
@@ -114,5 +113,4 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
             m_bendpoints.add(i, config.getIntArray(KEY_BENDPOINTS + "_" + i));
         }
     }
-
 }

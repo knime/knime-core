@@ -57,6 +57,7 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
      * @param monitor the progress monitor to listen to
      * @param manager the workflow manage responsole for the node
      * @param node the node that should be monitored
+     * @param initMessage an initial messge for the progress bar
      */
     public ProgressMonitorJob(final String name,
             final NodeProgressMonitor monitor, final WorkflowManager manager,

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,7 +29,6 @@ import de.unikn.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ExecuteAndOpenViewEditorAction extends AbstractEditorAction {
-
     /**
      * @see 
      * de.unikn.knime.workbench.editor2.actions.delegates.AbstractEditorAction
@@ -41,5 +38,4 @@ public class ExecuteAndOpenViewEditorAction extends AbstractEditorAction {
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
         return new ExecuteAndOpenViewAction(editor);
     }
-
 }

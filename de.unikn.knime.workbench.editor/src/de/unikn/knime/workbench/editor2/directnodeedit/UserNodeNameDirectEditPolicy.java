@@ -1,4 +1,4 @@
-/* @(#)$RCSfile$ 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,12 +31,11 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
-
     /**
      * @see DirectEditPolicy#getDirectEditCommand(DirectEditRequest)
      */
+    @Override
     protected Command getDirectEditCommand(final DirectEditRequest edit) {
-
         String labelText = (String)edit.getCellEditor().getValue();
         NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost();
 
@@ -49,8 +48,8 @@ public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
     /**
      * @see DirectEditPolicy#showCurrentEditValue(DirectEditRequest)
      */
+    @Override
     protected void showCurrentEditValue(final DirectEditRequest request) {
-        
         // hack to prevent async layout from placing the cell editor twice.
         getHostFigure().getUpdateManager().performUpdate();
     }

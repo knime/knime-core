@@ -1,7 +1,5 @@
 
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -35,7 +33,6 @@ import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
  * @author Florian Georg, University of Konstanz
  */
 public class ChangeNodeBoundsCommand extends Command {
-
     private int[] m_oldBounds;
 
     private int[] m_newBounds;
@@ -66,6 +63,7 @@ public class ChangeNodeBoundsCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
         m_extraInfo.setBounds(m_newBounds);
         // must set explicitly so that event is fired by container
@@ -77,11 +75,11 @@ public class ChangeNodeBoundsCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void undo() {
         m_extraInfo.setBounds(m_oldBounds);
         // must set explicitly so that event is fired by container
         m_container.setExtraInfo(m_extraInfo);
     }
-
 }
 

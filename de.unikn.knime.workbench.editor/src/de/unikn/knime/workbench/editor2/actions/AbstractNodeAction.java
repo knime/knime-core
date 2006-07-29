@@ -129,7 +129,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
         return getNodeParts(getAllObjects());
     }
 
-    /**
+    /*
      * @return The all <code>NodeContainerEditParts</code>, may be empty
      */
     private NodeContainerEditPart[] getNodeParts(final List nodeObjects) {

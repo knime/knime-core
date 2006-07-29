@@ -36,13 +36,11 @@ import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class DeleteConnectionCommand extends Command {
-
     private ConnectionContainerEditPart m_connection;
 
     private WorkflowManager m_manager;
 
     /**
-     * 
      * @param connection The edit part of the connection to delete
      * @param manager The hosting workflow manager
      */
@@ -54,7 +52,6 @@ public class DeleteConnectionCommand extends Command {
     }
 
     /**
-     * 
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
     @Override
@@ -63,7 +60,6 @@ public class DeleteConnectionCommand extends Command {
     }
 
     /**
-     * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
     @Override
@@ -81,5 +77,4 @@ public class DeleteConnectionCommand extends Command {
             mb.open();            
         }
     }
-
 }

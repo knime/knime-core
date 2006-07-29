@@ -40,7 +40,6 @@ import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
  */
 public class MetaWorkflowEditor extends WorkflowEditor implements
         NodeStateListener {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MetaWorkflowEditor.class);
 

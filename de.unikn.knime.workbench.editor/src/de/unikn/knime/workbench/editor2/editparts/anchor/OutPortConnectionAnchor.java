@@ -33,7 +33,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Florian Georg, University of Konstanz
  */
 public class OutPortConnectionAnchor extends ChopboxAnchor {
-
     /**
      * @param figure The owner
      */

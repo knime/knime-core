@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -37,7 +35,6 @@ import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ChangeBendPointLocationCommand extends Command {
-
     private Point m_locationShift;
 
     private ConnectionContainer m_container;
@@ -53,7 +50,6 @@ public class ChangeBendPointLocationCommand extends Command {
      */
     public ChangeBendPointLocationCommand(final ConnectionContainer container,
             final Point locationShift, final ZoomManager zoomManager) {
-
         if (container == null
                 || container.getExtraInfo() == null
                 || !(container.getExtraInfo() instanceof ModellingConnectionExtraInfo)) {
@@ -72,8 +68,8 @@ public class ChangeBendPointLocationCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
-
         changeBendpointsExtraInfo(false);
     }
 
@@ -82,13 +78,12 @@ public class ChangeBendPointLocationCommand extends Command {
      * 
      * @see org.eclipse.gef.commands.Command#undo()
      */
+    @Override
     public void undo() {
-
         changeBendpointsExtraInfo(true);
     }
 
     private void changeBendpointsExtraInfo(final boolean shiftBack) {
-
         if (m_extraInfo == null) {
             return;
         }

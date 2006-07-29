@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -36,7 +34,6 @@ import de.unikn.knime.workbench.editor2.ImageRepository;
  * @author Florian Georg, University of Konstanz
  */
 public class NewToolTipFigure extends Figure {
-
     private static final Border TOOL_TIP_BORDER = new MarginBorder(0, 2, 0, 2);
 
     private String m_text;
@@ -49,7 +46,6 @@ public class NewToolTipFigure extends Figure {
      * @param text The text to display
      */
     public NewToolTipFigure(final String text) {
-
         this.setLayoutManager(new ToolbarLayout(true));
 
         m_tooltip = new Label("???");
@@ -59,7 +55,6 @@ public class NewToolTipFigure extends Figure {
         this.add(m_tooltip);
 
         this.setText(text);
-
     }
 
     /**
@@ -73,7 +68,5 @@ public class NewToolTipFigure extends Figure {
         m_tooltip.setText(m_text);
         m_tooltip.setSize(m_tooltip.getPreferredSize().expand(10, 10));
         this.setSize(m_tooltip.getSize().expand(5, 7));
-
     }
-
 }

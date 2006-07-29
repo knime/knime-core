@@ -36,7 +36,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class DeleteNodeContainerCommand extends Command {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DeleteConnectionCommand.class);
 

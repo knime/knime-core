@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -36,12 +34,11 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class NewConnectionComponentEditPolicy extends ComponentEditPolicy {
-
     /**
-     * 
      * @see org.eclipse.gef.editpolicies.ComponentEditPolicy
      *      #createDeleteCommand(org.eclipse.gef.requests.GroupRequest)
      */
+    @Override
     protected Command createDeleteCommand(final GroupRequest deleteRequest) {
 
         ConnectionContainerEditPart c = (ConnectionContainerEditPart) getHost();

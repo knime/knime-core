@@ -64,7 +64,6 @@ import de.unikn.knime.workbench.ui.wrapper.WrappedNodeDialog;
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateListener, MouseListener {
-
     /**
      * The time (in ms) within two clicks are treated as double click. TODO: get
      * the system double click time
@@ -697,5 +696,4 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     // action.run();
     //
     // }
-
 }

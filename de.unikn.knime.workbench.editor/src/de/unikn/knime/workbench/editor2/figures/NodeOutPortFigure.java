@@ -30,7 +30,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortFigure extends AbstractNodePortFigure {
-
     private int m_id;
 
     private boolean m_isModelPort;

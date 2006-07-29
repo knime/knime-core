@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -42,7 +40,6 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public final class NewWorkflowEditPartFactory implements EditPartFactory {
-
     /**
      * Singleton instance for this factory.
      */
@@ -103,5 +100,4 @@ public final class NewWorkflowEditPartFactory implements EditPartFactory {
 
         return part;
     }
-
 }

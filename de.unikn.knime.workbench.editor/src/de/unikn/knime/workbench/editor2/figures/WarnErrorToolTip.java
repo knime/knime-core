@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -36,7 +34,6 @@ import de.unikn.knime.workbench.editor2.ImageRepository;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WarnErrorToolTip extends Figure {
-
     /**
      * The constant to define a warning tool tip.
      */

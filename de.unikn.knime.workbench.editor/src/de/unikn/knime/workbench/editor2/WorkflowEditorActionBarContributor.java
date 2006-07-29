@@ -38,7 +38,6 @@ import org.eclipse.ui.actions.ActionFactory;
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowEditorActionBarContributor extends ActionBarContributor {
-
     /**
      * @see org.eclipse.gef.ui.actions.ActionBarContributor#buildActions()
      */

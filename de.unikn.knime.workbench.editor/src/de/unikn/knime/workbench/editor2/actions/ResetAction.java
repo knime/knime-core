@@ -36,7 +36,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class ResetAction extends AbstractNodeAction {
-    
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(ResetAction.class);
 
@@ -141,5 +140,4 @@ public class ResetAction extends AbstractNodeAction {
         }
         return false;
     }
-
 }

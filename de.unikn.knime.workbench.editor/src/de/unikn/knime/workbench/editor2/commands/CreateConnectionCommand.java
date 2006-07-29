@@ -35,7 +35,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class CreateConnectionCommand extends Command {
-
     private NodeContainerEditPart m_sourceNode;
 
     private NodeContainerEditPart m_targetNode;
@@ -170,7 +169,6 @@ public class CreateConnectionCommand extends Command {
     }
 
     /**
-     * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
     @Override
@@ -181,7 +179,6 @@ public class CreateConnectionCommand extends Command {
     }
 
     /**
-     * 
      * @see org.eclipse.gef.commands.Command#undo()
      */
     @Override
@@ -199,5 +196,4 @@ public class CreateConnectionCommand extends Command {
             mb.open();            
         }
     }
-
 }

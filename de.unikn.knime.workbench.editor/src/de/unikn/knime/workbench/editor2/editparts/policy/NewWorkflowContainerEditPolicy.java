@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -43,7 +41,6 @@ import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NewWorkflowContainerEditPolicy.class);
 
@@ -51,6 +48,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      * @see ContainerEditPolicy#
      *      getCreateCommand(org.eclipse.gef.requests.CreateRequest)
      */
+    @Override
     protected Command getCreateCommand(final CreateRequest request) {
 
         Object obj = request.getNewObject();
@@ -108,6 +106,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      * @see org.eclipse.gef.EditPolicy
      *      #getTargetEditPart(org.eclipse.gef.Request)
      */
+    @Override
     public EditPart getTargetEditPart(final Request request) {
         if (REQ_CREATE.equals(request.getType())) {
             return getHost();
@@ -120,5 +119,4 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         }
         return super.getTargetEditPart(request);
     }
-
 }

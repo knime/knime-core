@@ -34,7 +34,6 @@ import de.unikn.knime.workbench.editor2.figures.NodeContainerFigure;
  * @author Christoph Sieb, University of Konstanz
  */
 public class UserNodeNameCellEditorLocator implements CellEditorLocator {
-
     private NodeContainerFigure m_nodeContainerFigure;
 
     /**

@@ -56,7 +56,6 @@ import de.unikn.knime.workbench.ui.preferences.PreferenceConstants;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowContextMenuProvider extends ContextMenuProvider {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowContextMenuProvider.class);
 
@@ -80,7 +79,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 + "needs an action registry !";
 
         m_actionRegistry = actionRegistry;
-
     }
 
     /**
@@ -203,6 +201,5 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         }
 
         manager.updateAll(true);
-
     }
 }

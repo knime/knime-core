@@ -45,7 +45,6 @@ import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteAction extends AbstractClipboardAction {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(PasteAction.class);
 

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -42,7 +40,6 @@ import org.eclipse.ui.IEditorSite;
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowGraphicalViewerCreator {
-
     /** the viewer. * */
     private GraphicalViewer m_viewer;
 
@@ -112,7 +109,6 @@ public class WorkflowGraphicalViewerCreator {
         viewer.setEditPartFactory(NewWorkflowEditPartFactory.INSTANCE);
 
         return viewer;
-
     }
 
     /**
@@ -121,5 +117,4 @@ public class WorkflowGraphicalViewerCreator {
     public GraphicalViewer getViewer() {
         return m_viewer;
     }
-
 }

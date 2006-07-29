@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 274 $ $Date: 2006-02-21 16:16:21 +0100 (Di, 21 Feb 2006) $ $Author: wiswedel $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -41,7 +39,6 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NameDescriptionDialog extends Dialog {
-
     private String m_initName;
 
     private String m_initDescription;

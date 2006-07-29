@@ -38,7 +38,6 @@ import org.eclipse.draw2d.geometry.PrecisionPoint;
  * @author Christoph Sieb, University of Konstanz
  */
 public class SnapOffBendPointConnectionRouter extends BendpointConnectionRouter {
-
     private static final PrecisionPoint A_POINT = new PrecisionPoint();
 
     /**
@@ -47,6 +46,7 @@ public class SnapOffBendPointConnectionRouter extends BendpointConnectionRouter 
      * 
      * @param conn The connection to route
      */
+    @Override
     public void route(final Connection conn) {
         PointList points = conn.getPoints();
         points.removeAllPoints();
@@ -95,5 +95,4 @@ public class SnapOffBendPointConnectionRouter extends BendpointConnectionRouter 
         points.addPoint(A_POINT);
         conn.setPoints(points);
     }
-
 }

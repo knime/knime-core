@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 174 $ $Date: 2006-02-14 20:34:50 +0100 (Di, 14 Feb 2006) $ $Author: ohl $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,7 +29,6 @@ import de.unikn.knime.workbench.editor2.actions.ExecuteAllAction;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ExecuteAllEditorAction extends AbstractEditorAction {
-
     /**
      * @see 
      * de.unikn.knime.workbench.editor2.actions.delegates.AbstractEditorAction
@@ -41,5 +38,4 @@ public class ExecuteAllEditorAction extends AbstractEditorAction {
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
         return new ExecuteAllAction(editor);
     }
-
 }

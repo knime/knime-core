@@ -38,7 +38,6 @@ import de.unikn.knime.workbench.ui.wrapper.WrappedNodeDialog;
  * @author Florian Georg, University of Konstanz
  */
 public class OpenDialogAction extends AbstractNodeAction {
-    
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(OpenDialogAction.class);
 
@@ -130,5 +129,4 @@ public class OpenDialogAction extends AbstractNodeAction {
             mb.open();            
         }
     }
-
 }

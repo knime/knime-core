@@ -44,7 +44,7 @@ public class NewBendpointCreateCommand extends Command {
     private AbsoluteBendpoint m_bendpoint;
 
     private ConnectionContainer m_connection;
-    
+
     private ZoomManager m_zoomManager;
 
     /**
@@ -55,15 +55,15 @@ public class NewBendpointCreateCommand extends Command {
      * @param location where ?
      */
     public NewBendpointCreateCommand(final ConnectionContainer connection,
-            final int index, final Point location, ZoomManager zoomManager) {
+            final int index, final Point location, final ZoomManager zoomManager) {
         m_connection = connection;
-        m_extraInfo = (ModellingConnectionExtraInfo) connection.getExtraInfo();
+        m_extraInfo = (ModellingConnectionExtraInfo)connection.getExtraInfo();
         if (m_extraInfo == null) {
             m_extraInfo = new ModellingConnectionExtraInfo();
         }
         m_index = index;
         m_location = location;
-        
+
         m_zoomManager = zoomManager;
     }
 
@@ -74,7 +74,7 @@ public class NewBendpointCreateCommand extends Command {
     public void execute() {
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
-        
+
         m_bendpoint = new AbsoluteBendpoint(location);
         m_bendpoint.setLocation(location);
         m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
@@ -90,7 +90,7 @@ public class NewBendpointCreateCommand extends Command {
     public void redo() {
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
-        
+
         m_extraInfo.addBendpoint(location.x, location.y, m_index);
 
         // we need this to fire some update event up

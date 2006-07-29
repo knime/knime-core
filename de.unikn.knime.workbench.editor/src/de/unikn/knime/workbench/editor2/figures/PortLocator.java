@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,7 +32,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Florian Georg, University of Konstanz
  */
 public class PortLocator implements Locator {
-
     /** in-port type. */
     public static final int TYPE_INPORT = 0;
 

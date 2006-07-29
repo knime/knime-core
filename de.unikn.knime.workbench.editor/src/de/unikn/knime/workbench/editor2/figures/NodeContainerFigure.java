@@ -64,7 +64,6 @@ import de.unikn.knime.workbench.editor2.ImageRepository;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NodeContainerFigure extends RectangleFigure {
-
     /** absolute width of this figure. * */
     public static final int WIDTH = 80;
 
@@ -461,7 +460,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
      */
     @Override
-    public void paintFigure(Graphics graphics) {
+    public void paintFigure(final Graphics graphics) {
         graphics.setBackgroundColor(getBackgroundColor());
         super.paintFigure(graphics);
     }

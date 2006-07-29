@@ -34,7 +34,6 @@ import de.unikn.knime.workbench.editor2.figures.NodeOutPortFigure;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortEditPart extends AbstractPortEditPart {
-
     /**
      * @param portID The ID of this out port
      */
@@ -85,6 +84,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      * @see de.unikn.knime.workbench.editor2.editparts.AbstractPortEditPart#
      *      isModelPort()
      */
+    @Override
     public boolean isModelPort() {
         return getNodeContainer().isPredictorOutPort(getId());
     }

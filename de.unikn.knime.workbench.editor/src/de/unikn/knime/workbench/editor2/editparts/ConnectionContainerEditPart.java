@@ -52,7 +52,6 @@ import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         implements WorkflowListener {
-
     private final boolean m_isModelPortConnection;
 
     /**
@@ -177,6 +176,5 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         }
 
         fig.setRoutingConstraint(constraint);
-
     }
 }

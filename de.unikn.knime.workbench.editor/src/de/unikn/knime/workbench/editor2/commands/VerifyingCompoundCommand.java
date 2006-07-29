@@ -75,8 +75,8 @@ public class VerifyingCompoundCommand extends CompoundCommand {
      * 
      * @see org.eclipse.gef.commands.Command#execute()
      */
+    @Override
     public void execute() {
-
         // before showing the confirmation dialog, mark the node part figures
         for (NodeContainerEditPart nodePart : m_nodeParts) {
             
@@ -117,7 +117,7 @@ public class VerifyingCompoundCommand extends CompoundCommand {
      * 
      * @param nodeParts the affected parts.
      */
-    public void setNodeParts(List<NodeContainerEditPart> nodeParts) {
+    public void setNodeParts(final List<NodeContainerEditPart> nodeParts) {
         this.m_nodeParts = nodeParts;
     }
 }

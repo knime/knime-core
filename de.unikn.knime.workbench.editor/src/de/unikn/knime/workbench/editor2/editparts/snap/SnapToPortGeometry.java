@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,7 +32,6 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.PrecisionRectangle;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
@@ -80,7 +77,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * should be an instance of Boolean. Currently, this class does not check to
      * see if the viewer property is set to <code>true</code>.
      * 
-     * @see EditPartViewer#setProperty(String, Object)
+     * @see org.eclipse.gef.EditPartViewer#setProperty(String, Object)
      */
     public static final String PROPERTY_SNAP_ENABLED = "SnapToGeometry.isEnabled"; //$NON-NLS-1$
 
@@ -188,12 +185,12 @@ public class SnapToPortGeometry extends SnapToHelper {
     /**
      * The horizontal rows being snapped to.
      */
-    protected Entry m_rows[];
+    protected Entry[] m_rows;
 
     /**
      * The vertical columnd being snapped to.
      */
-    protected Entry m_cols[];
+    protected Entry[] m_cols;
 
     /**
      * The y port values of the dragged node.
@@ -216,7 +213,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @since 3.0
      * @param container the container editpart
      */
-    public SnapToPortGeometry(GraphicalEditPart container) {
+    public SnapToPortGeometry(final GraphicalEditPart container) {
         this.m_container = container;
 
         m_zoomManager = (ZoomManager)container.getRoot().getViewer()
@@ -232,17 +229,18 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @param exclusions the children to exclude
      * @return a list of parts which should be snapped to
      */
-    protected List generateSnapPartsList(List exclusions) {
+    protected List generateSnapPartsList(final List exclusions) {
         // Don't snap to any figure that is being dragged
-        List children = new ArrayList(m_container.getChildren());
+        List<Object> children = new ArrayList<Object>(m_container.getChildren());
         children.removeAll(exclusions);
 
         // Don't snap to hidden figures
         List hiddenChildren = new ArrayList();
         for (Iterator iter = children.iterator(); iter.hasNext();) {
             GraphicalEditPart child = (GraphicalEditPart)iter.next();
-            if (!child.getFigure().isVisible())
+            if (!child.getFigure().isVisible()) {
                 hiddenChildren.add(child);
+            }
         }
         children.removeAll(hiddenChildren);
 
@@ -260,8 +258,9 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @param far the right/bottom side of the rectangle
      * @return the correction amount or THRESHOLD if no correction was made
      */
-    protected double getCorrectionFor(Entry entries[], Map extendedData,
-            boolean vert, double near, double far) {
+    protected double getCorrectionFor(final Entry[] entries,
+            final Map<String, Integer> extendedData, final boolean vert,
+            final double near, double far) {
         far -= 1.0;
         double total = near + far;
         // If the width is even (i.e., odd right now because we have reduced one
@@ -269,14 +268,17 @@ public class SnapToPortGeometry extends SnapToHelper {
         // far) there is no middle pixel so favor the left-most/top-most pixel
         // (which is what
         // populateRowsAndCols() does by using int precision).
-        if ((int)(near - far) % 2 != 0)
+        if ((int)(near - far) % 2 != 0) {
             total -= 1.0;
+        }
         double result = getCorrectionFor(entries, extendedData, vert,
                 total / 2, 0);
-        if (result == THRESHOLD)
+        if (result == THRESHOLD) {
             result = getCorrectionFor(entries, extendedData, vert, near, -1);
-        if (result == THRESHOLD)
+        }
+        if (result == THRESHOLD) {
             result = getCorrectionFor(entries, extendedData, vert, far, 1);
+        }
         return result;
     }
 
@@ -332,8 +334,8 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @return the correction or THRESHOLD if no correction was made
      */
     protected double getCorrectionFor(final Entry[] entries,
-            final Map extendedData, final boolean vert, final double value,
-            final int side) {
+            final Map<String, Integer> extendedData, final boolean vert,
+            final double value, final int side) {
         double resultMag = THRESHOLD;
         double result = THRESHOLD;
 
@@ -491,6 +493,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * @see SnapToHelper#snapRectangle(Request, int, PrecisionRectangle,
      *      PrecisionRectangle)
      */
+    @Override
     public int snapRectangle(final Request request, int snapOrientation,
             PrecisionRectangle baseRect, final PrecisionRectangle result) {
         baseRect = baseRect.getPreciseCopy();

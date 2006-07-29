@@ -26,7 +26,6 @@ package de.unikn.knime.workbench.editor2;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ClipboardObject {
-
     /**
      * The content to hold in the clipboard.
      */
@@ -64,5 +63,4 @@ public class ClipboardObject {
     public void incrementRetrievalCounter() {
         m_retrievalCounter++;
     }
-
 }

@@ -96,7 +96,7 @@ public class CopyAction extends AbstractClipboardAction {
         return parts.length > 0;
     }
 
-    /**
+    /*
      * Creates a <code>NodesSettings</code> object from the given edit parts.
      * 
      * @return the node settings representing the selected nodes

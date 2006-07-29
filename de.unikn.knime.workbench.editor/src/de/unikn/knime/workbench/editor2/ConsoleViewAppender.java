@@ -40,7 +40,6 @@ import de.unikn.knime.core.node.NodeLogger;
  * @author Florian Georg, University of Konstanz
  */
 public final class ConsoleViewAppender extends Writer {
-
     /** Name for the console view. * */
     public static final String CONSOLE_NAME = "KNIME Console";
     

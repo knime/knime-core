@@ -45,7 +45,6 @@ import de.unikn.knime.workbench.repository.view.NodeTemplateTransfer;
  */
 public class NodeTemplateDropTargetListener extends
         AbstractTransferDropTargetListener {
-
     /**
      * Create a new drop listener for that viewer, using
      * <code>NodeTemplateTransfer</code>.

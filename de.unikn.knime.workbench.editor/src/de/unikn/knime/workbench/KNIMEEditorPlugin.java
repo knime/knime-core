@@ -31,7 +31,6 @@ import org.osgi.framework.BundleContext;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEEditorPlugin extends AbstractUIPlugin {
-
     // Make sure that this *always* matches the ID in plugin.xml
     /** The Plugin ID. */
     public static final String PLUGIN_ID = "de.unikn.knime.workbench.editor";
@@ -117,5 +116,4 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
         }
         return m_resourceBundle;
     }
-
 }

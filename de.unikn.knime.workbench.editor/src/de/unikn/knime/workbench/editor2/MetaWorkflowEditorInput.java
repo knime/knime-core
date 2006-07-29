@@ -34,7 +34,6 @@ import de.unikn.knime.core.node.workflow.NodeContainer;
  * @author Christoph Sieb, University of Konstanz
  */
 public class MetaWorkflowEditorInput implements IEditorInput {
-
     private NodeContainer m_nodeContainer;
 
     /**

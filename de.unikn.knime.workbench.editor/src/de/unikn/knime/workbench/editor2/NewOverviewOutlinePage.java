@@ -44,7 +44,6 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
  */
 public class NewOverviewOutlinePage extends Page 
         implements IContentOutlinePage {
-
     /** the control of the overview. */
     private Canvas m_overview;
 

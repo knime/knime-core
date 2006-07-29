@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -27,11 +25,9 @@ import java.util.List;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.Request;
-import org.eclipse.gef.RequestConstants;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.gef.commands.UnexecutableCommand;
-import org.eclipse.gef.tools.AbstractTool;
 import org.eclipse.gef.tools.DragEditPartsTracker;
 
 import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -53,16 +49,17 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      * 
      * @param sourceEditPart the source edit part
      */
-    public WorkflowSelectionDragEditPartsTracker(EditPart sourceEditPart) {
+    public WorkflowSelectionDragEditPartsTracker(final EditPart sourceEditPart) {
         super(sourceEditPart);
     }
 
     /**
      * Asks each edit part in the
-     * {@link AbstractTool#getOperationSet() operation set} to contribute to a
-     * {@link CompoundCommand} after first setting the request type to either
-     * {@link RequestConstants#REQ_MOVE} or {@link RequestConstants#REQ_ORPHAN},
-     * depending on the result of {@link #isMove()}.
+     * {@link org.eclipse.gef.tools.AbstractTool#getOperationSet() operation set}
+     * to contribute to a {@link CompoundCommand} after first setting the
+     * request type to either {@link org.eclipse.gef.RequestConstants#REQ_MOVE}
+     * or {@link org.eclipse.gef.RequestConstants#REQ_ORPHAN}, depending on the
+     * result of {@link #isMove()}.
      * 
      * Aditionally the method creats a command to adapt connections where both
      * node container are include in the drag operation.
@@ -97,7 +94,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         // now add the commands for the node-embraced connections
         ConnectionContainerEditPart[] connectionsToAdapt = getEmbracedConnections(getOperationSet());
         for (ConnectionContainerEditPart connectionPart : connectionsToAdapt) {
-            
+
             command.add(connectionPart.getBendpointAdaptionCommand(request));
         }
 

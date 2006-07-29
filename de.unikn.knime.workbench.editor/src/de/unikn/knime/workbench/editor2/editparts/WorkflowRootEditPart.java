@@ -52,7 +52,6 @@ import de.unikn.knime.workbench.editor2.figures.WorkflowLayout;
  */
 public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         WorkflowListener, CommandStackListener {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowRootEditPart.class);
 
@@ -79,6 +78,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     /**
      * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
      */
+    @Override
     public Object getAdapter(final Class adapter) {
         if (adapter == SnapToHelper.class) {
             List<SnapToHelper> snapStrategies = new ArrayList<SnapToHelper>();

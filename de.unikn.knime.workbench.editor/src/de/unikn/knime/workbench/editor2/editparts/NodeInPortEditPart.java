@@ -34,7 +34,6 @@ import de.unikn.knime.workbench.editor2.figures.NodeInPortFigure;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeInPortEditPart extends AbstractPortEditPart {
-
     /**
      * @param portID The id for this incoming port
      */

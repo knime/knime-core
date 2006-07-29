@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -53,7 +51,8 @@ public class WorkflowConnectionBendpointTracker extends
      * @param editpart the connection
      * @param i the index of the bendpoint
      */
-    public WorkflowConnectionBendpointTracker(ConnectionEditPart editpart, int i) {
+    public WorkflowConnectionBendpointTracker(
+            final ConnectionEditPart editpart, final int i) {
         super(editpart, i);
         m_zoomManager = (ZoomManager)editpart.getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
@@ -63,6 +62,7 @@ public class WorkflowConnectionBendpointTracker extends
     /**
      * @see org.eclipse.gef.tools.SimpleDragTracker#updateSourceRequest()
      */
+    @Override
     protected void updateSourceRequest() {
         BendpointRequest request = (BendpointRequest)getSourceRequest();
 
