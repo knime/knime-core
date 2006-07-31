@@ -29,8 +29,8 @@ import de.unikn.knime.core.data.DataColumnSpec;
 
 /**
  * The abstract class which should be implemented by all coordinates which map
- * numeric values. Examples: 
- * @see de.unikn.knime.base.util.coordinate.DoubleCoordinate and the 
+ * numeric values.
+ * @see de.unikn.knime.base.util.coordinate.DoubleCoordinate 
  * @see de.unikn.knime.base.util.coordinate.IntegerCoordinate
  * 
  * @author Tobias Koetter, University of Konstanz
