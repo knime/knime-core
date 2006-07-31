@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -29,7 +27,6 @@ import org.eclipse.core.runtime.IAdaptable;
  * @author Florian Georg, University of Konstanz
  */
 public interface IRepositoryObject extends IAdaptable {
-
     /**
      * Returns an ID for this object.The semantics may differ in the concrete
      * implementations.
@@ -52,5 +49,4 @@ public interface IRepositoryObject extends IAdaptable {
      * @param newParent The new parent.
      */
     public void move(IContainerObject newParent);
-
 }

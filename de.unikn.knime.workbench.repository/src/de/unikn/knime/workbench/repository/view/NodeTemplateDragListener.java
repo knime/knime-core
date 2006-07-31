@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,7 +32,6 @@ import de.unikn.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeTemplateDragListener implements DragSourceListener {
-
     private TreeViewer m_viewer;
 
     /**
@@ -52,7 +49,7 @@ public class NodeTemplateDragListener implements DragSourceListener {
      *      #dragStart(org.eclipse.swt.dnd.DragSourceEvent)
      */
     public void dragStart(final DragSourceEvent event) {
-        IStructuredSelection sel = (IStructuredSelection) m_viewer
+        IStructuredSelection sel = (IStructuredSelection)m_viewer
                 .getSelection();
 
         // cancel event, if not an NodeTemplate, or not exactly one element
@@ -61,7 +58,6 @@ public class NodeTemplateDragListener implements DragSourceListener {
                 || (sel.size() != 1)) {
             event.doit = false;
         }
-
     }
 
     /**
@@ -69,11 +65,10 @@ public class NodeTemplateDragListener implements DragSourceListener {
      *      #dragSetData(org.eclipse.swt.dnd.DragSourceEvent)
      */
     public void dragSetData(final DragSourceEvent event) {
-        IStructuredSelection sel = (IStructuredSelection) m_viewer
+        IStructuredSelection sel = (IStructuredSelection)m_viewer
                 .getSelection();
 
         event.data = sel.getFirstElement();
-
     }
 
     /**
@@ -82,7 +77,5 @@ public class NodeTemplateDragListener implements DragSourceListener {
      */
     public void dragFinished(final DragSourceEvent event) {
         // TODO Auto-generated method stub
-
     }
-
 }

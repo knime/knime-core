@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -36,13 +34,12 @@ import de.unikn.knime.workbench.repository.model.ISimpleObject;
  */
 public class RepositoryContentProvider implements IStructuredContentProvider,
         ITreeContentProvider {
-
     /**
      * @see org.eclipse.jface.viewers.IStructuredContentProvider#
      *      getElements(java.lang.Object)
      */
     public Object[] getElements(final Object inputElement) {
-        return ((IContainerObject) inputElement).getChildren();
+        return ((IContainerObject)inputElement).getChildren();
     }
 
     /**
@@ -51,7 +48,7 @@ public class RepositoryContentProvider implements IStructuredContentProvider,
      */
     public Object[] getChildren(final Object parentElement) {
         if (parentElement instanceof IContainerObject) {
-            return ((IContainerObject) parentElement).getChildren();
+            return ((IContainerObject)parentElement).getChildren();
         }
         return null;
     }
@@ -61,7 +58,7 @@ public class RepositoryContentProvider implements IStructuredContentProvider,
      *      getParent(java.lang.Object)
      */
     public Object getParent(final Object element) {
-        return ((IRepositoryObject) element).getParent();
+        return ((IRepositoryObject)element).getParent();
     }
 
     /**
@@ -74,7 +71,7 @@ public class RepositoryContentProvider implements IStructuredContentProvider,
             return false;
         }
 
-        return ((IContainerObject) element).hasChildren();
+        return ((IContainerObject)element).hasChildren();
 
     }
 
@@ -98,7 +95,5 @@ public class RepositoryContentProvider implements IStructuredContentProvider,
             throw new IllegalArgumentException(
                     "ContentProvider needs an 'IContainerObject' as input");
         }
-
     }
-
 }

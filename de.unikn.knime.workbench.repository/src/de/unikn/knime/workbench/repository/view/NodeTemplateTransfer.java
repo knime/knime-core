@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -32,7 +30,6 @@ import de.unikn.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public final class NodeTemplateTransfer extends ByteArrayTransfer {
-
     private static final NodeTemplateTransfer INSTANCE;
     static {
         INSTANCE = new NodeTemplateTransfer();
@@ -72,6 +69,7 @@ public final class NodeTemplateTransfer extends ByteArrayTransfer {
     /**
      * @return This returns the transfer ids that this agent supports.
      */
+    @Override
     protected int[] getTypeIds() {
         return new int[] {TYPE_ID};
     }
@@ -79,6 +77,7 @@ public final class NodeTemplateTransfer extends ByteArrayTransfer {
     /**
      * @return This returns the transfer names that this agent supports.
      */
+    @Override
     public String[] getTypeNames() {
         return new String[] {TYPE_NAME};
     }
@@ -90,6 +89,7 @@ public final class NodeTemplateTransfer extends ByteArrayTransfer {
      * @param object The NodeTemplate object
      * @param transferData The transfer data
      */
+    @Override
     public void javaToNative(final Object object,
             final TransferData transferData) {
         m_startTime = System.currentTimeMillis();
@@ -107,6 +107,7 @@ public final class NodeTemplateTransfer extends ByteArrayTransfer {
      * @param transferData The data to transfer
      * @return The object
      */
+    @Override
     public Object nativeToJava(final TransferData transferData) {
         byte[] bytes = (byte[]) super.nativeToJava(transferData);
         if (bytes == null) {
@@ -120,5 +121,4 @@ public final class NodeTemplateTransfer extends ByteArrayTransfer {
             return null;
         }
     }
-
 }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -33,7 +31,6 @@ import de.unikn.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public class NodePropertySource implements IPropertySource {
-
     private static final PropertyDescriptor NAME_DESC = new PropertyDescriptor(
             "name", "Name");
 
@@ -153,7 +150,5 @@ public class NodePropertySource implements IPropertySource {
      */
     public void setPropertyValue(final Object id, final Object value) {
         // TODO Auto-generated method stub
-
     }
-
 }

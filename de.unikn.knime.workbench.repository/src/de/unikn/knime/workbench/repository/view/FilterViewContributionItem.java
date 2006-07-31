@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -45,7 +43,6 @@ import org.eclipse.swt.widgets.Control;
  */
 public class FilterViewContributionItem extends ControlContribution implements
         KeyListener {
-
     private TreeViewer m_viewer;
 
     private Combo m_combo;
@@ -53,7 +50,7 @@ public class FilterViewContributionItem extends ControlContribution implements
     private RepositoryViewFilter m_filter;
 
     /**
-     * Creates the contribution item
+     * Creates the contribution item.
      * 
      * @param viewer The viewer.
      */
@@ -70,13 +67,14 @@ public class FilterViewContributionItem extends ControlContribution implements
      * @see org.eclipse.jface.action.ControlContribution
      *      #createControl(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     protected Control createControl(final Composite parent) {
         m_combo = new Combo(parent, SWT.DROP_DOWN);
         m_combo.addKeyListener(this);
         m_combo.addSelectionListener(new SelectionAdapter() {
 
             @Override
-            public void widgetSelected(SelectionEvent e) {
+            public void widgetSelected(final SelectionEvent e) {
                 m_filter.setQueryString(m_combo.getText());
                 m_viewer.refresh();
                 if (m_combo.getText().length() > 0) {
@@ -90,9 +88,13 @@ public class FilterViewContributionItem extends ControlContribution implements
         return m_combo;
     }
     
+    /**
+     * @see org.eclipse.jface.action.ControlContribution
+     *  #computeWidth(org.eclipse.swt.widgets.Control)
+     */
     @Override
     protected int computeWidth(final Control control) {
-        return Math.max(super.computeWidth(control),150);
+        return Math.max(super.computeWidth(control), 150);
     }
 
     /**
@@ -136,7 +138,5 @@ public class FilterViewContributionItem extends ControlContribution implements
         if (shouldExpand) {
             m_viewer.expandAll();
         }
-
     }
-
 }

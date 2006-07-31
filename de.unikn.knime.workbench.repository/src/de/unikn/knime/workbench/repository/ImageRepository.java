@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -43,7 +41,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
  * @author Florian Georg, University of Konstanz
  */
 public final class ImageRepository {
-
     private ImageRepository() {
         // hidden, dude !
     }
@@ -204,5 +201,4 @@ public final class ImageRepository {
 
         return registry.getDescriptor(relPath);
     }
-
 }

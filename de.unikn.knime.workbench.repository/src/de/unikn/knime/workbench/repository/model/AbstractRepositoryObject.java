@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -28,7 +26,6 @@ package de.unikn.knime.workbench.repository.model;
  */
 public abstract class AbstractRepositoryObject implements IRepositoryObject,
         Comparable<AbstractRepositoryObject> {
-
     private IContainerObject m_parent;
 
     private String m_name;

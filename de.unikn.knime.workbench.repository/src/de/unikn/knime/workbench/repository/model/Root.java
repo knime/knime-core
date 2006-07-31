@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,11 +29,6 @@ import java.util.List;
  * @author Florian Georg, University of Konstanz
  */
 public class Root extends AbstractContainerObject {
-
-    /**
-     * 
-     * 
-     */
     public Root() {
     }
 
@@ -44,6 +37,7 @@ public class Root extends AbstractContainerObject {
      * 
      * @see de.unikn.knime.workbench.repository.model.IRepositoryObject#getID()
      */
+    @Override
     public String getID() {
         return "/";
     }
@@ -53,6 +47,7 @@ public class Root extends AbstractContainerObject {
      * @see de.unikn.knime.workbench.repository.model.AbstractRepositoryObject#
      *      getParent()
      */
+    @Override
     public IContainerObject getParent() {
         return null;
     }
@@ -64,6 +59,7 @@ public class Root extends AbstractContainerObject {
      *      setParent
      *      (de.unikn.knime.workbench.repository.model.IContainerObject)
      */
+    @Override
     public void setParent(final IContainerObject parent) {
         throw new UnsupportedOperationException(
                 "Can't set parent of a root object");
@@ -109,5 +105,4 @@ public class Root extends AbstractContainerObject {
         
         return problemCategories;
     }
-
 }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -35,7 +33,6 @@ import de.unikn.knime.workbench.repository.model.Root;
  * @author Florian Georg, University of Konstanz
  */
 public class RepositoryViewFilter extends ViewerFilter {
-
     private String m_query;
 
     /**
@@ -82,7 +79,7 @@ public class RepositoryViewFilter extends ViewerFilter {
             }
             // we must also check towards root, as we want to include all
             // children of a selected category
-            IRepositoryObject temp = (IRepositoryObject)parentElement;
+            IRepositoryObject temp = parentElement;
             while (!(temp instanceof Root)) {
 
                 // check parent category, but do *not* recurse !!!!
@@ -107,7 +104,7 @@ public class RepositoryViewFilter extends ViewerFilter {
                 IRepositoryObject[] children = category.getChildren();
                 for (int i = 0; i < children.length; i++) {
                     // recursivly check. return true on first matching child
-                    if (doSelect((IRepositoryObject)category, children[i], true)) {
+                    if (doSelect(category, children[i], true)) {
                         return true;
                     }
 
@@ -139,5 +136,4 @@ public class RepositoryViewFilter extends ViewerFilter {
     public void setQueryString(final String query) {
         m_query = query;
     }
-
 }

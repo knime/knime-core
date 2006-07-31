@@ -1,3 +1,7 @@
+/*
+ * ---------------------------------------------------------------------------
+ * ---------------------------------------------------------------------------
+ */
 package de.unikn.knime.workbench.repository;
 
 import java.util.MissingResourceException;
@@ -17,7 +21,6 @@ import de.unikn.knime.workbench.core.WorkbenchErrorLogger;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMERepositoryPlugin extends AbstractUIPlugin {
-
     // Make sure that this *always* matches the ID in plugin.xml
     /** The plugin-id. */
     public static final String PLUGIN_ID = "de.unikn.knime.workbench."
@@ -48,6 +51,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
      * @param context The context
      * @throws Exception some startup exception
      */
+    @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
 
@@ -107,6 +111,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
      * @param context The context
      * @throws Exception some stopping exception
      */
+    @Override
     public void stop(final BundleContext context) throws Exception {
         super.stop(context);
         plugin = null;
@@ -220,5 +225,4 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
             final String filename) {
         return AbstractUIPlugin.imageDescriptorFromPlugin(pluginID, filename);
     }
-
 }

@@ -50,7 +50,6 @@ import de.unikn.knime.workbench.repository.model.Root;
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryManager {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RepositoryManager.class);
 
@@ -73,10 +72,6 @@ public final class RepositoryManager {
 
     private Root m_root;
 
-    /**
-     * 
-     * 
-     */
     private RepositoryManager() {
         // Singleton constructor
 

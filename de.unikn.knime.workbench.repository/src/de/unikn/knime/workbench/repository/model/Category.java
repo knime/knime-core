@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,7 +32,6 @@ import de.unikn.knime.workbench.repository.model.props.CategoryPropertySource;
  * @author Florian Georg, University of Konstanz
  */
 public class Category extends AbstractContainerObject {
-
     private String m_description;
 
     private String m_path;
@@ -141,6 +138,7 @@ public class Category extends AbstractContainerObject {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "Id: " + getID() + " Name: " + getName() + " After-id: "
                 + m_afterID;

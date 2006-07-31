@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,10 +32,10 @@ import de.unikn.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public class RepositoryLabelProvider extends LabelProvider {
-
     /**
      * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
      */
+    @Override
     public String getText(final Object element) {
         if (element instanceof NodeTemplate) {
             return ((NodeTemplate) element).getName();
@@ -51,6 +49,7 @@ public class RepositoryLabelProvider extends LabelProvider {
     /**
      * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
      */
+    @Override
     public Image getImage(final Object element) {
         if (element instanceof NodeTemplate) {
             return ((NodeTemplate) element).getIcon();

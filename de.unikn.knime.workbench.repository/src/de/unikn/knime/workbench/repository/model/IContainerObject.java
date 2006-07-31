@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -27,7 +25,6 @@ package de.unikn.knime.workbench.repository.model;
  * @author Florian Georg, University of Konstanz
  */
 public interface IContainerObject extends IRepositoryObject {
-
     /**
      * Constant indicating that the finder method should look at "infinite"
      * depth.

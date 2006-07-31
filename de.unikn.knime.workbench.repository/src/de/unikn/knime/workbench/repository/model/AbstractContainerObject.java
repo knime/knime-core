@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,7 +32,6 @@ import java.util.List;
  */
 public abstract class AbstractContainerObject extends AbstractRepositoryObject
         implements IContainerObject {
-
     /**
      * The list of categories and nodes.
      */
@@ -94,8 +91,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         // Collections.sort(m_children, m_comparator);
         m_children = sortChildren(m_children);
 
-        return (IRepositoryObject[])m_children
-                .toArray(new IRepositoryObject[m_children.size()]);
+        return m_children.toArray(new IRepositoryObject[m_children.size()]);
     }
 
     /**
@@ -116,13 +112,9 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         ArrayList<Category> categoryChildren = new ArrayList<Category>();
         ArrayList<NodeTemplate> nodeChildren = new ArrayList<NodeTemplate>();
         for (AbstractRepositoryObject object : children) {
-
             if (object instanceof Category) {
-
                 categoryChildren.add((Category)object);
-
             } else if (object instanceof NodeTemplate) {
-
                 nodeChildren.add((NodeTemplate)object);
             }
         }
@@ -144,7 +136,6 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         // or missing after-relationship information
         Collections.sort(categoryChildren);
         for (Category category : categoryChildren) {
-
             m_problemCategories.add(category);
             result.add(category);
         }
@@ -152,7 +143,6 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         // Finally append all nodes in lexicographically order
         Collections.sort(nodeChildren);
         for (NodeTemplate node : nodeChildren) {
-
             result.add(node);
         }
 
@@ -168,9 +158,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      */
     private void createSortedList(final TreeEntry entry,
             final ArrayList<AbstractRepositoryObject> result) {
-
         for (TreeEntry treeEntry : entry.getChildren()) {
-
             result.add(treeEntry.m_category);
             createSortedList(treeEntry, result);
         }
@@ -196,7 +184,6 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
                 parent.addChildCategory(new TreeEntry(child));
                 childIter.remove();
             }
-
         }
 
         // sort the child entries
@@ -208,7 +195,6 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         for (TreeEntry childCategory : parent.getChildren()) {
             addSuccessors(childCategory, children);
         }
-
     }
 
     /**
@@ -218,7 +204,6 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * @author Christoph Sieb, University of Konstanz
      */
     private class TreeEntry implements Comparable<TreeEntry> {
-
         private Category m_category;
 
         private List<TreeEntry> m_treeChildren;
@@ -302,6 +287,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      *      move(de.unikn.knime.workbench.repository.model.IContainerObject)
      * @param newParent The container to move this object to
      */
+    @Override
     public void move(final IContainerObject newParent) {
         this.getParent().removeChild(this);
         this.setParent(newParent);
@@ -371,13 +357,13 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * @param problemList the list to which the problem categories are appended
      */
     protected void appendProblemCategories(final List<Category> problemList) {
-        
+
         problemList.addAll(m_problemCategories);
-        
+
         for (AbstractRepositoryObject repositoryObject : m_children) {
-            
+
             if (repositoryObject instanceof AbstractContainerObject) {
-                
+
                 ((AbstractContainerObject)repositoryObject)
                         .appendProblemCategories(problemList);
             }

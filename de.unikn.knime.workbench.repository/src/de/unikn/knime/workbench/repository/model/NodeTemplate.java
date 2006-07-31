@@ -40,7 +40,6 @@ import de.unikn.knime.workbench.repository.model.props.NodePropertySource;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeTemplate extends AbstractSimpleObject {
-
     /** Type for nodes that read data. */
     public static final String TYPE_DATA_READER = "data reader";
 

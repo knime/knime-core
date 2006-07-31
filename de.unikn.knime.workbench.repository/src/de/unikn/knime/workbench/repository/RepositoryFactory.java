@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -39,7 +37,6 @@ import de.unikn.knime.workbench.repository.model.Root;
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryFactory {
-
     private RepositoryFactory() {
         // hidden constructor (utility class)
     }
@@ -110,7 +107,6 @@ public final class RepositoryFactory {
      */
     public static Category createCategory(final Root root,
             final IConfigurationElement element) {
-
         String id = element.getAttribute("level-id");
 
         // get the id of the contributing plugin
@@ -196,5 +192,4 @@ public final class RepositoryFactory {
     private static String str(final String s, final String defaultString) {
         return s == null ? defaultString : s;
     }
-
 }

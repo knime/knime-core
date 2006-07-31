@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -95,8 +93,8 @@ public class RepositoryView extends ViewPart {
      * @see org.eclipse.ui.IWorkbenchPart
      *      #createPartControl(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     public void createPartControl(final Composite parent) {
-
         this.initialize();
 
         //
@@ -180,7 +178,6 @@ public class RepositoryView extends ViewPart {
     }
 
     private void contributeToActionBars() {
-
         // Create drill down adapter
         m_drillDownAdapter = new DrillDownAdapter(m_viewer);
 
@@ -191,7 +188,6 @@ public class RepositoryView extends ViewPart {
     }
 
     private void fillLocalPullDown(final IMenuManager manager) {
-
         // register drill down actions
         m_drillDownAdapter.addNavigationActions(manager);
 
@@ -211,7 +207,6 @@ public class RepositoryView extends ViewPart {
     }
 
     private void fillLocalToolBar(final IToolBarManager manager) {
-
         // create the combo contribution item that can filter our view
 
         m_toolbarFilterCombo = new FilterViewContributionItem(m_viewer);
@@ -225,6 +220,7 @@ public class RepositoryView extends ViewPart {
     /**
      * Passing the focus request to the m_viewer's control.
      */
+    @Override
     public void setFocus() {
         m_viewer.getControl().setFocus();
     }
@@ -232,6 +228,7 @@ public class RepositoryView extends ViewPart {
     /**
      * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
      */
+    @Override
     public Object getAdapter(final Class adapter) {
         if (adapter == IPropertySourceProvider.class) {
             return m_propertyProvider;
@@ -263,8 +260,6 @@ public class RepositoryView extends ViewPart {
 
             // well, no :-(
             return null;
-
         }
     }
-
 }
