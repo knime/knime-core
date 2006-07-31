@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -38,7 +36,6 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEProjectBuilder extends IncrementalProjectBuilder {
-    
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(KNIMEProjectBuilder.class);
 
@@ -62,6 +59,7 @@ public class KNIMEProjectBuilder extends IncrementalProjectBuilder {
      * @see org.eclipse.core.internal.events.InternalBuilder #build(int,
      *      java.util.Map, org.eclipse.core.runtime.IProgressMonitor)
      */
+    @Override
     protected IProject[] build(final int kind, final Map args,
             final IProgressMonitor monitor) throws CoreException {
 
@@ -69,5 +67,4 @@ public class KNIMEProjectBuilder extends IncrementalProjectBuilder {
 
         return new IProject[0];
     }
-
 }

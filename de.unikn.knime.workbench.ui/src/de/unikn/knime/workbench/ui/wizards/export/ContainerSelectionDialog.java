@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 3253 $ $Date: 2006-07-05 16:11:05 +0200 (Mi, 05 Jul 2006) $ $Author: sieb $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -68,22 +66,22 @@ import org.eclipse.ui.internal.ide.IIDEHelpContextIds;
  */
 public class ContainerSelectionDialog extends SelectionDialog {
     // the widget group;
-    ContainerSelectionGroup group;
+    ContainerSelectionGroup m_group;
 
     // the root resource to populate the viewer with
-    private IContainer initialSelection;
+    private IContainer m_initialSelection;
 
     // allow the user to type in a new container name
-    private boolean allowNewContainerName = true;
+    private boolean m_allowNewContainerName = true;
 
     // the validation message
-    Label statusMessage;
+    Label m_statusMessage;
 
     // for validating the selection
-    ISelectionValidator validator;
+    ISelectionValidator m_validator;
 
     // show closed projects by default
-    private boolean showClosedProjects = true;
+    private boolean m_showClosedProjects = true;
 
     /**
      * Creates a resource container selection dialog rooted at the given
@@ -97,47 +95,53 @@ public class ContainerSelectionDialog extends SelectionDialog {
      * @param message the message to be displayed at the top of this dialog, or
      *            <code>null</code> to display a default message
      */
-    public ContainerSelectionDialog(Shell parentShell, IContainer initialRoot,
-            boolean allowNewContainerName, String message) {
+    public ContainerSelectionDialog(final Shell parentShell,
+            final IContainer initialRoot, final boolean allowNewContainerName,
+            final String message) {
         super(parentShell);
         setTitle(IDEWorkbenchMessages.ContainerSelectionDialog_title);
-        this.initialSelection = initialRoot;
-        this.allowNewContainerName = allowNewContainerName;
-        if (message != null)
+        this.m_initialSelection = initialRoot;
+        this.m_allowNewContainerName = allowNewContainerName;
+        if (message != null) {
             setMessage(message);
-        else
+        } else {
             setMessage(IDEWorkbenchMessages.ContainerSelectionDialog_message);
+        }
         setShellStyle(getShellStyle() | SWT.RESIZE);
     }
 
-    /*
-     * (non-Javadoc) Method declared in Window.
+    /**
+     * @see org.eclipse.jface.window.Window
+     *  #configureShell(org.eclipse.swt.widgets.Shell)
      */
-    protected void configureShell(Shell shell) {
+    @Override
+    protected void configureShell(final Shell shell) {
         super.configureShell(shell);
         PlatformUI.getWorkbench().getHelpSystem().setHelp(shell,
                 IIDEHelpContextIds.CONTAINER_SELECTION_DIALOG);
     }
 
-    /*
-     * (non-Javadoc) Method declared on Dialog.
+    /**
+     * @see org.eclipse.jface.dialogs.Dialog
+     *  #createDialogArea(org.eclipse.swt.widgets.Composite)
      */
-    protected Control createDialogArea(Composite parent) {
+    @Override
+    protected Control createDialogArea(final Composite parent) {
         // create composite
         Composite area = (Composite)super.createDialogArea(parent);
 
         Listener listener = new Listener() {
-            public void handleEvent(Event event) {
-                if (statusMessage != null && validator != null) {
-                    String errorMsg = validator.isValid(group
+            public void handleEvent(final Event event) {
+                if (m_statusMessage != null && m_validator != null) {
+                    String errorMsg = m_validator.isValid(m_group
                             .getContainerFullPath());
                     if (errorMsg == null || errorMsg.equals("")) { //$NON-NLS-1$
-                        statusMessage.setText(""); //$NON-NLS-1$
+                        m_statusMessage.setText(""); //$NON-NLS-1$
                         getOkButton().setEnabled(true);
                     } else {
-                        statusMessage.setForeground(JFaceColors
-                                .getErrorText(statusMessage.getDisplay()));
-                        statusMessage.setText(errorMsg);
+                        m_statusMessage.setForeground(JFaceColors
+                                .getErrorText(m_statusMessage.getDisplay()));
+                        m_statusMessage.setText(errorMsg);
                         getOkButton().setEnabled(false);
                     }
                 }
@@ -145,15 +149,15 @@ public class ContainerSelectionDialog extends SelectionDialog {
         };
 
         // container selection group
-        group = new ContainerSelectionGroup(area, listener,
-                allowNewContainerName, getMessage(), showClosedProjects);
-        if (initialSelection != null) {
-            group.setSelectedContainer(initialSelection);
+        m_group = new ContainerSelectionGroup(area, listener,
+                m_allowNewContainerName, getMessage(), m_showClosedProjects);
+        if (m_initialSelection != null) {
+            m_group.setSelectedContainer(m_initialSelection);
         }
 
-        statusMessage = new Label(parent, SWT.NONE);
-        statusMessage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        statusMessage.setFont(parent.getFont());
+        m_statusMessage = new Label(parent, SWT.NONE);
+        m_statusMessage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        m_statusMessage.setFont(parent.getFont());
 
         return dialogArea;
     }
@@ -163,12 +167,14 @@ public class ContainerSelectionDialog extends SelectionDialog {
      * <code>Dialog</code> method builds a list of the selected resource
      * containers for later retrieval by the client and closes this dialog.
      */
+    @Override
     protected void okPressed() {
 
         List chosenContainerPathList = new ArrayList();
-        IPath returnValue = group.getContainerFullPath();
-        if (returnValue != null)
+        IPath returnValue = m_group.getContainerFullPath();
+        if (returnValue != null) {
             chosenContainerPathList.add(returnValue);
+        }
         setResult(chosenContainerPathList);
         super.okPressed();
     }
@@ -178,8 +184,8 @@ public class ContainerSelectionDialog extends SelectionDialog {
      * 
      * @param validator A selection validator
      */
-    public void setValidator(ISelectionValidator validator) {
-        this.validator = validator;
+    public void setValidator(final ISelectionValidator validator) {
+        this.m_validator = validator;
     }
 
     /**
@@ -188,7 +194,7 @@ public class ContainerSelectionDialog extends SelectionDialog {
      * 
      * @param show Whether or not to show closed projects.
      */
-    public void showClosedProjects(boolean show) {
-        this.showClosedProjects = show;
+    public void showClosedProjects(final boolean show) {
+        this.m_showClosedProjects = show;
     }
 }

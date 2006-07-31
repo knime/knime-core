@@ -556,6 +556,7 @@ public final class ResourceManager {
             CoolItem item = items[i];
             if (item.getControl() == null) {
                 item.setControl(new Canvas(bar, SWT.NONE) {
+                    @Override
                     public Point computeSize(final int wHint, final int hHint,
                             final boolean changed) {
                         return new Point(20, 20);

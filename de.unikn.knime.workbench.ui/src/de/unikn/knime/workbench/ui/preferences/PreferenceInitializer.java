@@ -29,9 +29,7 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class PreferenceInitializer extends
-        AbstractPreferenceInitializer {
-
+public class PreferenceInitializer extends AbstractPreferenceInitializer {
     /**
      * @see org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
      *      #initializeDefaultPreferences()
@@ -51,12 +49,11 @@ public class PreferenceInitializer extends
 
         store.setDefault(PreferenceConstants.P_LOGLEVEL_LOG_FILE,
                 PreferenceConstants.P_LOGLEVEL_DEBUG);
-        
-        store.setDefault(PreferenceConstants.P_MAXIMUM_THREADS, 
-                2 * Runtime.getRuntime().availableProcessors());
 
-        store.setDefault(PreferenceConstants.P_TEMP_DIR,
-                System.getProperty("java.io.tmpdir"));
+        store.setDefault(PreferenceConstants.P_MAXIMUM_THREADS, 2 * Runtime
+                .getRuntime().availableProcessors());
+
+        store.setDefault(PreferenceConstants.P_TEMP_DIR, System
+                .getProperty("java.io.tmpdir"));
     }
-
 }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 3253 $ $Date: 2006-07-05 16:11:05 +0200 (Mi, 05 Jul 2006) $ $Author: sieb $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -63,21 +61,21 @@ import de.unikn.knime.workbench.navigator.view.KnimeResourcePatternFilter;
 public class ContainerSelectionGroup extends Composite {
     
     // The listener to notify of events
-    private Listener listener;
+    private Listener m_listener;
 
     // Enable user to type in new container name
-    private boolean allowNewContainerName = true;
+    private boolean m_allowNewContainerName = true;
 
     // show all projects by default
-    private boolean showClosedProjects = true;
+    private boolean m_showClosedProjects = true;
 
     // Last selection made by user
-    private IContainer selectedContainer;
+    private IContainer m_selectedContainer;
 
     // handle on parts
-    private Text containerNameField;
+    private Text m_containerNameField;
 
-    TreeViewer treeViewer;
+    TreeViewer m_treeViewer;
 
     // the message to display at the top of this dialog
     private static final String DEFAULT_MSG_NEW_ALLOWED = IDEWorkbenchMessages.ContainerGroup_message;
@@ -98,8 +96,8 @@ public class ContainerSelectionGroup extends Composite {
      * @param allowNewContainerName Enable the user to type in a new container
      *            name instead of just selecting from the existing ones.
      */
-    public ContainerSelectionGroup(Composite parent, Listener listener,
-            boolean allowNewContainerName) {
+    public ContainerSelectionGroup(final Composite parent, final Listener listener,
+            final boolean allowNewContainerName) {
         this(parent, listener, allowNewContainerName, null);
     }
 
@@ -113,8 +111,8 @@ public class ContainerSelectionGroup extends Composite {
      *            name instead of just selecting from the existing ones.
      * @param message The text to present to the user.
      */
-    public ContainerSelectionGroup(Composite parent, Listener listener,
-            boolean allowNewContainerName, String message) {
+    public ContainerSelectionGroup(final Composite parent, final Listener listener,
+            final boolean allowNewContainerName, final String message) {
         this(parent, listener, allowNewContainerName, message, true);
     }
 
@@ -129,9 +127,9 @@ public class ContainerSelectionGroup extends Composite {
      * @param message The text to present to the user.
      * @param showClosedProjects Whether or not to show closed projects.
      */
-    public ContainerSelectionGroup(Composite parent, Listener listener,
-            boolean allowNewContainerName, String message,
-            boolean showClosedProjects) {
+    public ContainerSelectionGroup(final Composite parent, final Listener listener,
+            final boolean allowNewContainerName, final String message,
+            final boolean showClosedProjects) {
         this(parent, listener, allowNewContainerName, message,
                 showClosedProjects, SIZING_SELECTION_PANE_HEIGHT);
     }
@@ -148,45 +146,47 @@ public class ContainerSelectionGroup extends Composite {
      * @param showClosedProjects Whether or not to show closed projects.
      * @param heightHint height hint for the drill down composite
      */
-    public ContainerSelectionGroup(Composite parent, Listener listener,
-            boolean allowNewContainerName, String message,
-            boolean showClosedProjects, int heightHint) {
+    public ContainerSelectionGroup(final Composite parent, final Listener listener,
+            final boolean allowNewContainerName, final String message,
+            final boolean showClosedProjects, final int heightHint) {
         super(parent, SWT.NONE);
-        this.listener = listener;
-        this.allowNewContainerName = allowNewContainerName;
-        this.showClosedProjects = showClosedProjects;
-        if (message != null)
+        this.m_listener = listener;
+        this.m_allowNewContainerName = allowNewContainerName;
+        this.m_showClosedProjects = showClosedProjects;
+        if (message != null) {
             createContents(message, heightHint);
-        else if (allowNewContainerName)
+        } else if (allowNewContainerName) {
             createContents(DEFAULT_MSG_NEW_ALLOWED, heightHint);
-        else
+        } else {
             createContents(DEFAULT_MSG_SELECT_ONLY, heightHint);
+        }
     }
 
     /**
      * The container selection has changed in the tree view. Update the
      * container name field value and notify all listeners.
      */
-    public void containerSelectionChanged(IContainer container) {
-        selectedContainer = container;
+    public void containerSelectionChanged(final IContainer container) {
+        m_selectedContainer = container;
 
-        if (allowNewContainerName) {
-            if (container == null)
-                containerNameField.setText("");//$NON-NLS-1$
-            else
-                containerNameField.setText(container.getFullPath()
+        if (m_allowNewContainerName) {
+            if (container == null) {
+                m_containerNameField.setText("");
+            } else {
+                m_containerNameField.setText(container.getFullPath()
                         .makeRelative().toString());
+            }
         }
 
         // fire an event so the parent can update its controls
-        if (listener != null) {
+        if (m_listener != null) {
             Event changeEvent = new Event();
             changeEvent.type = SWT.Selection;
             changeEvent.widget = this;
-            listener.handleEvent(changeEvent);
+            m_listener.handleEvent(changeEvent);
         }
         
-        treeViewer.expandAll();
+        m_treeViewer.expandAll();
     }
 
     /**
@@ -201,7 +201,7 @@ public class ContainerSelectionGroup extends Composite {
      * 
      * @param heightHint height hint for the drill down composite
      */
-    public void createContents(String message, int heightHint) {
+    public void createContents(final String message, final int heightHint) {
         GridLayout layout = new GridLayout();
         layout.marginWidth = 0;
         setLayout(layout);
@@ -211,12 +211,12 @@ public class ContainerSelectionGroup extends Composite {
         label.setText(message);
         label.setFont(this.getFont());
 
-        if (allowNewContainerName) {
-            containerNameField = new Text(this, SWT.SINGLE | SWT.BORDER);
-            containerNameField.setLayoutData(new GridData(
+        if (m_allowNewContainerName) {
+            m_containerNameField = new Text(this, SWT.SINGLE | SWT.BORDER);
+            m_containerNameField.setLayoutData(new GridData(
                     GridData.FILL_HORIZONTAL));
-            containerNameField.addListener(SWT.Modify, listener);
-            containerNameField.setFont(this.getFont());
+            m_containerNameField.addListener(SWT.Modify, m_listener);
+            m_containerNameField.setFont(this.getFont());
         } else {
             // filler...
             new Label(this, SWT.NONE);
@@ -232,7 +232,7 @@ public class ContainerSelectionGroup extends Composite {
      * @param heightHint height hint for the drill down composite
      * @return a new drill down viewer
      */
-    protected void createTreeViewer(int heightHint) {
+    protected void createTreeViewer(final int heightHint) {
         // Create drill down.
         DrillDownComposite drillDown = new DrillDownComposite(this, SWT.BORDER);
         GridData spec = new GridData(SWT.FILL, SWT.FILL, true, true);
@@ -241,40 +241,41 @@ public class ContainerSelectionGroup extends Composite {
         drillDown.setLayoutData(spec);
 
         // Create tree viewer inside drill down.
-        treeViewer = new TreeViewer(drillDown, SWT.NONE);
-        treeViewer.addFilter(new KnimeResourcePatternFilter());
-        treeViewer.setLabelProvider(new KnimeResourceLableProvider());
-        drillDown.setChildTree(treeViewer);
+        m_treeViewer = new TreeViewer(drillDown, SWT.NONE);
+        m_treeViewer.addFilter(new KnimeResourcePatternFilter());
+        m_treeViewer.setLabelProvider(new KnimeResourceLableProvider());
+        drillDown.setChildTree(m_treeViewer);
         ContainerContentProvider cp = new ContainerContentProvider();
-        cp.showClosedProjects(showClosedProjects);
-        treeViewer.setContentProvider(cp);
+        cp.showClosedProjects(m_showClosedProjects);
+        m_treeViewer.setContentProvider(cp);
 //        treeViewer.setLabelProvider(WorkbenchLabelProvider
 //                .getDecoratingWorkbenchLabelProvider());
-        treeViewer.setSorter(new ViewerSorter());
-        treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-            public void selectionChanged(SelectionChangedEvent event) {
+        m_treeViewer.setSorter(new ViewerSorter());
+        m_treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            public void selectionChanged(final SelectionChangedEvent event) {
                 IStructuredSelection selection = (IStructuredSelection)event
                         .getSelection();
                 containerSelectionChanged((IContainer)selection
                         .getFirstElement()); // allow null
             }
         });
-        treeViewer.addDoubleClickListener(new IDoubleClickListener() {
-            public void doubleClick(DoubleClickEvent event) {
+        m_treeViewer.addDoubleClickListener(new IDoubleClickListener() {
+            public void doubleClick(final DoubleClickEvent event) {
                 ISelection selection = event.getSelection();
                 if (selection instanceof IStructuredSelection) {
                     Object item = ((IStructuredSelection)selection)
                             .getFirstElement();
-                    if (treeViewer.getExpandedState(item))
-                        treeViewer.collapseToLevel(item, 1);
-                    else
-                        treeViewer.expandToLevel(item, 1);
+                    if (m_treeViewer.getExpandedState(item)) {
+                        m_treeViewer.collapseToLevel(item, 1);
+                    } else {
+                        m_treeViewer.expandToLevel(item, 1);
+                    }
                 }
             }
         });
 
         // This has to be done after the viewer has been laid out
-        treeViewer.setInput(ResourcesPlugin.getWorkspace());
+        m_treeViewer.setInput(ResourcesPlugin.getWorkspace());
     }
 
     /**
@@ -283,18 +284,20 @@ public class ContainerSelectionGroup extends Composite {
      * container name in the field.
      */
     public IPath getContainerFullPath() {
-        if (allowNewContainerName) {
-            String pathName = containerNameField.getText();
-            if (pathName == null || pathName.length() < 1)
+        if (m_allowNewContainerName) {
+            String pathName = m_containerNameField.getText();
+            if (pathName == null || pathName.length() < 1) {
                 return null;
-            else
+            } else {
                 // The user may not have made this absolute so do it for them
                 return (new Path(pathName)).makeAbsolute();
+            }
         } else {
-            if (selectedContainer == null)
+            if (m_selectedContainer == null) {
                 return null;
-            else
-                return selectedContainer.getFullPath();
+            } else {
+                return m_selectedContainer.getFullPath();
+            }
         }
     }
 
@@ -303,17 +306,18 @@ public class ContainerSelectionGroup extends Composite {
      * group.
      */
     public void setInitialFocus() {
-        if (allowNewContainerName)
-            containerNameField.setFocus();
-        else
-            treeViewer.getTree().setFocus();
+        if (m_allowNewContainerName) {
+            m_containerNameField.setFocus();
+        } else {
+            m_treeViewer.getTree().setFocus();
+        }
     }
 
     /**
      * Sets the selected existing container.
      */
-    public void setSelectedContainer(IContainer container) {
-        selectedContainer = container;
+    public void setSelectedContainer(final IContainer container) {
+        m_selectedContainer = container;
 
         // expand to and select the specified container
         List itemsToExpand = new ArrayList();
@@ -322,7 +326,7 @@ public class ContainerSelectionGroup extends Composite {
             itemsToExpand.add(0, parent);
             parent = parent.getParent();
         }
-        treeViewer.setExpandedElements(itemsToExpand.toArray());
-        treeViewer.setSelection(new StructuredSelection(container), true);
+        m_treeViewer.setExpandedElements(itemsToExpand.toArray());
+        m_treeViewer.setSelection(new StructuredSelection(container), true);
     }
 }

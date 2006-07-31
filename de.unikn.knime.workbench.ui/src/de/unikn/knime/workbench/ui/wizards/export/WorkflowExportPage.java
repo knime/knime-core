@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -51,7 +49,6 @@ import de.unikn.knime.core.node.workflow.WorkflowManager;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowExportPage extends WizardPage {
-
     private static final String[] FILTER_EXTENSION = {"*.zip"};
 
     private static String exportPath;
@@ -101,6 +98,7 @@ public class WorkflowExportPage extends WizardPage {
         Button selectProjectButton = new Button(container, SWT.PUSH);
         selectProjectButton.setText("Select...");
         selectProjectButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 handleBrowse();
             }
@@ -121,6 +119,7 @@ public class WorkflowExportPage extends WizardPage {
         Button selectExportFilebutton = new Button(container, SWT.PUSH);
         selectExportFilebutton.setText("Select...");
         selectExportFilebutton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 handleExportFileBrowse();
             }

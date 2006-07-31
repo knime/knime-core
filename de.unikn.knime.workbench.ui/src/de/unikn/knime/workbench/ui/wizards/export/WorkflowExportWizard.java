@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -72,6 +70,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
     /**
      * Adding the page to the wizard.
      */
+    @Override
     public void addPages() {
         m_page = new WorkflowExportPage(m_selection);
         addPage(m_page);
@@ -83,6 +82,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
      * 
      * @return If finished successfully
      */
+    @Override
     public boolean performFinish() {
         final String containerName = m_page.getContainerName();
         final String fileName = m_page.getFileName().trim();
@@ -292,6 +292,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
      * @see org.eclipse.ui.IWorkbenchWizard# init(org.eclipse.ui.IWorkbench,
      *      org.eclipse.jface.viewers.IStructuredSelection)
      */
+    @Override
     public void init(final IWorkbench workbench,
             final IStructuredSelection selection) {
         this.m_selection = selection;

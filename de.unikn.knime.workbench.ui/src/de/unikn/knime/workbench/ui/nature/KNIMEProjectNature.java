@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,7 +29,6 @@ import org.eclipse.core.runtime.CoreException;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEProjectNature implements IProjectNature {
-
     private IProject m_project;
 
     /**
@@ -65,5 +62,4 @@ public class KNIMEProjectNature implements IProjectNature {
         m_project = project;
 
     }
-
 }

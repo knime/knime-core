@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -45,8 +43,7 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  * @author Florian Georg, University of Konstanz
  */
 public class NewProjectWizardPage extends WizardPage {
-
-    private final static String INITIAL_PROJECT_NAME = "Knime_project";
+    private static final String INITIAL_PROJECT_NAME = "Knime_project";
 
     private Button m_checkAddDataset;
 

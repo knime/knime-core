@@ -43,7 +43,6 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  */
 public class MainPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
-
     /**
      * Constructor .
      */
@@ -78,8 +77,8 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
 
         // Specify the minimum log level for the console
         addField(new RadioGroupFieldEditor(
-                PreferenceConstants.P_LOGLEVEL_CONSOLE, "Console Log Level", 
-                4, new String[][]{
+                PreferenceConstants.P_LOGLEVEL_CONSOLE, "Console Log Level", 4,
+                new String[][]{
                         {"&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG},
 
                         {"&INFO", PreferenceConstants.P_LOGLEVEL_INFO},
@@ -91,30 +90,29 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
 
         // Specify the minimum log level
         addField(new RadioGroupFieldEditor(
-                PreferenceConstants.P_LOGLEVEL_LOG_FILE, "Log File Log Level", 
+                PreferenceConstants.P_LOGLEVEL_LOG_FILE, "Log File Log Level",
                 4, new String[][]{
                         {"&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG},
-                        
+
                         {"&INFO", PreferenceConstants.P_LOGLEVEL_INFO},
-                        
+
                         {"&WARN", PreferenceConstants.P_LOGLEVEL_WARN},
-                        
+
                         {"&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR}},
-                        parent));
-        
-        IntegerFieldEditor maxThreadEditor = 
-            new IntegerFieldEditor(PreferenceConstants.P_MAXIMUM_THREADS,
+                parent));
+
+        IntegerFieldEditor maxThreadEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_MAXIMUM_THREADS,
                 "Maximum working threads for all nodes", parent, 3);
-        maxThreadEditor.setValidRange(1, 
-                Math.max(100, Runtime.getRuntime().availableProcessors() * 4));
+        maxThreadEditor.setValidRange(1, Math.max(100, Runtime.getRuntime()
+                .availableProcessors() * 4));
         maxThreadEditor.setTextLimit(3);
         addField(maxThreadEditor);
-        
-        
-        DirectoryFieldEditor tempDirEditor =
-            new DirectoryFieldEditor(PreferenceConstants.P_TEMP_DIR,
-            "Directory for temporary files\n(you should restart KNIME after"
-                    + " changing this value)", parent);
+
+        DirectoryFieldEditor tempDirEditor = new DirectoryFieldEditor(
+                PreferenceConstants.P_TEMP_DIR,
+                "Directory for temporary files\n(you should restart KNIME after"
+                        + " changing this value)", parent);
         addField(tempDirEditor);
     }
 

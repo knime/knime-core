@@ -29,7 +29,6 @@ import de.unikn.knime.core.node.NodeLogger.LEVEL;
  * @author Florian Georg, University of Konstanz
  */
 public class PreferenceConstants {
-
     /** Peference constant: select default view mode. */
     public static final String P_CHOICE_VIEWMODE = "choice.view.mode";
 
@@ -40,19 +39,17 @@ public class PreferenceConstants {
     public static final String P_CHOICE_VIEWMODE_VIEW = "eclipse.jframe";
 
     /** Preference constant: log level for console appender. */
-    public static final String P_LOGLEVEL_CONSOLE = 
-        "logging.loglevel.console";
+    public static final String P_LOGLEVEL_CONSOLE = "logging.loglevel.console";
 
     /** Preference constant: log level for console appender. */
-    public static final String P_LOGLEVEL_LOG_FILE = 
-        "logging.loglevel.logfile";
+    public static final String P_LOGLEVEL_LOG_FILE = "logging.loglevel.logfile";
 
     /** Preference constant: maximum threads to use. */
     public static final String P_MAXIMUM_THREADS = "knime.maxThreads";
-    
+
     /** Preference constant: directory for temporary files. */
     public static final String P_TEMP_DIR = "knime.tempDir";
-    
+
     /** Choice: log >= debug events. */
     public static final String P_LOGLEVEL_DEBUG = LEVEL.DEBUG.toString();
 
@@ -64,5 +61,4 @@ public class PreferenceConstants {
 
     /** Choice: log >= error events. */
     public static final String P_LOGLEVEL_ERROR = LEVEL.ERROR.toString();
-
 }

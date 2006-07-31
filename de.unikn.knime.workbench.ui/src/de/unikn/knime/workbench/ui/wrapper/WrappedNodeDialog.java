@@ -60,7 +60,6 @@ import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
  * @author Florian Georg, University of Konstanz
  */
 public class WrappedNodeDialog extends Dialog {
-
     private Composite m_container;
 
     private final NodeContainer m_nodeContainer; 
@@ -401,5 +400,4 @@ public class WrappedNodeDialog extends Dialog {
         m_container.setSize(size);
         return size;
     }
-
 }

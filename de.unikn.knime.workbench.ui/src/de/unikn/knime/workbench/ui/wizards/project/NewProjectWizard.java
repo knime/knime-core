@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -66,7 +64,6 @@ import de.unikn.knime.workbench.ui.nature.KNIMEProjectNature;
  * @author Florian Georg, University of Konstanz
  */
 public class NewProjectWizard extends Wizard implements INewWizard {
-
     /**
      * Build command invoking KNIME project builder.
      */
@@ -107,6 +104,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     /**
      * Adding the page to the wizard.
      */
+    @Override
     public void addPages() {
         m_page = new NewProjectWizardPage();
         addPage(m_page);
@@ -117,8 +115,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * 
      * @see org.eclipse.jface.wizard.IWizard#performFinish()
      */
+    @Override
     public boolean performFinish() {
-
         final String projectName = m_page.getProjectName();
         // final boolean addDataset = m_page.getAddDataset();
 
@@ -232,6 +230,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 try {
                     IDE.openEditor(page, defaultFile, true);
                 } catch (PartInitException e) {
+                    // ignore it
                 }
             }
         });
@@ -245,5 +244,4 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 "de.unikn.knime.workbench.ui", IStatus.OK, message, null);
         throw new CoreException(status);
     }
-
 }

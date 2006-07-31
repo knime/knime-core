@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Composite;
  * @author Florian Georg, University of Konstanz
  */
 public class Panel2CompositeWrapper extends Composite {
-
     private Frame m_awtFrame;
 
     private JPanel m_awtPanel;
@@ -81,6 +80,7 @@ public class Panel2CompositeWrapper extends Composite {
     /**
      * @see org.eclipse.swt.widgets.Widget#dispose()
      */
+    @Override
     public void dispose() {
         super.dispose();
     }
@@ -88,6 +88,7 @@ public class Panel2CompositeWrapper extends Composite {
     /**
      * @see org.eclipse.swt.widgets.Widget#checkSubclass()
      */
+    @Override
     protected void checkSubclass() {
     }
 
@@ -97,6 +98,4 @@ public class Panel2CompositeWrapper extends Composite {
     public JPanel getAwtPanel() {
         return m_awtPanel;
     }
-
-    
 }

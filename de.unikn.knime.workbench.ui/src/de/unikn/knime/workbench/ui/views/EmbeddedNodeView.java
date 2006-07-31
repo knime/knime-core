@@ -46,12 +46,11 @@ import de.unikn.knime.core.node.NodeView;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class EmbeddedNodeView extends ViewPart 
-    implements PropertyChangeListener {
+public class EmbeddedNodeView extends ViewPart implements
+        PropertyChangeListener {
 
     /** The view ID, needed to open instances of this view programatically. */
-    public static final String ID = 
-        "de.unikn.knime.workbench.ui.views.EmbeddedNodeView";
+    public static final String ID = "de.unikn.knime.workbench.ui.views.EmbeddedNodeView";
 
     private Action m_action1;
 
@@ -77,6 +76,7 @@ public class EmbeddedNodeView extends ViewPart
      * @see org.eclipse.ui.IWorkbenchPart
      *      #createPartControl(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     public void createPartControl(final Composite parent) {
 
         m_viewContainer = new Composite(parent, SWT.EMBEDDED);
@@ -134,6 +134,7 @@ public class EmbeddedNodeView extends ViewPart
 
     private void makeActions() {
         m_action1 = new Action() {
+            @Override
             public void run() {
                 showMessage("Action 1 executed");
             }
@@ -145,6 +146,7 @@ public class EmbeddedNodeView extends ViewPart
                         ISharedImages.IMG_OBJS_INFO_TSK));
 
         m_action2 = new Action() {
+            @Override
             public void run() {
                 showMessage("Action 2 executed");
             }
@@ -164,12 +166,14 @@ public class EmbeddedNodeView extends ViewPart
     /**
      * Passing the focus request to the viewer's control.
      */
+    @Override
     public void setFocus() {
         m_viewContainer.setFocus();
     }
-    
+
     /**
      * releases the underlying node view, i.e. unregistering from node model.
+     * 
      * @see org.eclipse.ui.IWorkbenchPart#dispose()
      */
     @Override
@@ -177,7 +181,7 @@ public class EmbeddedNodeView extends ViewPart
         releaseNodeView();
         super.dispose();
     }
-    
+
     /** Calls m_nodeView.closeViewComponent(). */
     private void releaseNodeView() {
         if (m_nodeView != null) {
@@ -188,11 +192,13 @@ public class EmbeddedNodeView extends ViewPart
         m_nodeView = null;
         m_content = null;
     }
-    
-    /** Cares about events that come from the node view (more precisely from
-     * the content pane m_content and will close this view.
+
+    /**
+     * Cares about events that come from the node view (more precisely from the
+     * content pane m_content and will close this view.
+     * 
      * @see PropertyChangeListener
-     *       #propertyChange(java.beans.PropertyChangeEvent)
+     *      #propertyChange(java.beans.PropertyChangeEvent)
      */
     public void propertyChange(final PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals(NodeView.PROP_CHANGE_CLOSE)) {
