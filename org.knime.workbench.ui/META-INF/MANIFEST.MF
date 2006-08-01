@@ -21,3 +21,14 @@ Provide-Package: org.knime.workbench.ui,
  org.knime.workbench.ui.wizards.project,
  org.knime.workbench.ui.wrapper
 Bundle-ManifestVersion: 2
+Export-Package: com.swtdesigner,
+ org.knime.workbench.ui,
+ org.knime.workbench.ui.builder,
+ org.knime.workbench.ui.nature,
+ org.knime.workbench.ui.perspective,
+ org.knime.workbench.ui.preferences,
+ org.knime.workbench.ui.views,
+ org.knime.workbench.ui.wizards.export,
+ org.knime.workbench.ui.wizards.imports,
+ org.knime.workbench.ui.wizards.project,
+ org.knime.workbench.ui.wrapper
