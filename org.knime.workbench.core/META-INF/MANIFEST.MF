@@ -9,6 +9,6 @@ Bundle-Localization: plugin
 Provide-Package: de.unikn.knime.workbench.core
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jface,
- de.unikn.knime.core;reprovide=true,
+ org.knime.core;reprovide=true,
  org.eclipse.platform;reprovide=true
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
