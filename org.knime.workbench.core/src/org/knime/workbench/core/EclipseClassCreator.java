@@ -19,7 +19,7 @@
  * History
  *   04.07.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.core;
+package org.knime.workbench.core;
 
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;

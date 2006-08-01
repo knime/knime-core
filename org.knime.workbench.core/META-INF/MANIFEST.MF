@@ -1,12 +1,12 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Core
-Bundle-SymbolicName: de.unikn.knime.workbench.core
+Bundle-SymbolicName: org.knime.workbench.core
 Bundle-Version: 1.0.0
 Bundle-ClassPath: workbench-core.jar
-Bundle-Activator: de.unikn.knime.workbench.core.KNIMECorePlugin
+Bundle-Activator: org.knime.workbench.core.KNIMECorePlugin
 Bundle-Vendor: University of Konstanz, Germany
 Bundle-Localization: plugin
-Provide-Package: de.unikn.knime.workbench.core
+Provide-Package: org.knime.workbench.core
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jface,
  org.knime.core;reprovide=true,

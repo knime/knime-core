@@ -19,7 +19,7 @@
  * History
  *   ${date} (${user}): created
  */
-package de.unikn.knime.workbench.core;
+package org.knime.workbench.core;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.ErrorDialog;

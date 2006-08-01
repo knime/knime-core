@@ -19,7 +19,7 @@
  * History
  *   ${date} (${user}): created
  */
-package de.unikn.knime.workbench.core;
+package org.knime.workbench.core;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
