@@ -874,7 +874,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                 m_numMdl.addElement(cspec);
             }
         }
-        String[] columns = settings.getStringArray(NUMERIC_COLUMNS,
+        String[] columns = settings.getStringArray(BinnerNodeModel.NUMERIC_COLUMNS,
                 (String[])null);
         // if numeric columns in settings, select first
         if (columns != null && columns.length > 0) {
@@ -893,9 +893,9 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     continue;
                 }
                 String appendedColumn = null;
-                if (settings.containsKey(columns[i].toString() + IS_APPENDED)) {
+                if (settings.containsKey(columns[i].toString() + BinnerNodeModel.IS_APPENDED)) {
                     appendedColumn = settings.getString(columns[i].toString()
-                            + IS_APPENDED, null);
+                            + BinnerNodeModel.IS_APPENDED, null);
                 }
                 IntervalPanel p = new IntervalPanel(columns[i], appendedColumn,
                         m_numList, type);
@@ -953,10 +953,10 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                                             + " matches other column.");
                         }
                     }
-                    settings.addString(cell.toString() + IS_APPENDED,
+                    settings.addString(cell.toString() + BinnerNodeModel.IS_APPENDED,
                             appendedName);
                 } else {
-                    settings.addString(cell.toString() + IS_APPENDED, null);
+                    settings.addString(cell.toString() + BinnerNodeModel.IS_APPENDED, null);
                 }
                 for (int j = 0; j < p.getNumIntervals(); j++) {
                     IntervalItemPanel item = p.getInterval(j);
@@ -975,6 +975,6 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         }
         // add binned columns
         String[] columns = colList.toArray(new String[0]);
-        settings.addStringArray(NUMERIC_COLUMNS, columns);
+        settings.addStringArray(BinnerNodeModel.NUMERIC_COLUMNS, columns);
     }
 }

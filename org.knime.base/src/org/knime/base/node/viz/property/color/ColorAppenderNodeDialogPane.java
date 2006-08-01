@@ -41,7 +41,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
-
 /**
  * Dialog to select column to apply colors to.
  * 
@@ -84,7 +83,8 @@ public class ColorAppenderNodeDialogPane extends NodeDialogPane {
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
             m_columns.addItem(cspec);
         }
-        String selColumn = settings.getString(SELECTED_COLUMN, null);
+        String selColumn = settings.getString(
+                ColorManagerNodeModel.SELECTED_COLUMN, null);
         if (selColumn != null) {
             DataColumnSpec cspec = specs[0].getColumnSpec(selColumn);
             m_columns.setSelectedItem(cspec);
@@ -106,6 +106,7 @@ public class ColorAppenderNodeDialogPane extends NodeDialogPane {
         if (o == null) {
             throw new InvalidSettingsException("No column selected.");
         }
-        settings.addString(SELECTED_COLUMN, ((DataColumnSpec)o).getName());
+        settings.addString(ColorManagerNodeModel.SELECTED_COLUMN,
+                ((DataColumnSpec)o).getName());
     }
 }

@@ -48,7 +48,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
-
 /**
  * Color manager dialog which shows all columns of the input data and its
  * corresponding values inside two combo boxes divided by range and nominal
@@ -185,11 +184,13 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
         int hasNominals = -1;
         int hasRanges = -1;
         // read settings and write into the map
-        String target = settings.getString(SELECTED_COLUMN, null);
+        String target = settings.getString(
+                ColorManagerNodeModel.SELECTED_COLUMN, null);
         // null = not specified, true = nominal, and false = range
         Boolean nominalSelected = null;
         try {
-            nominalSelected = settings.getBoolean(IS_NOMINAL);
+            nominalSelected = settings
+                    .getBoolean(ColorManagerNodeModel.IS_NOMINAL);
         } catch (InvalidSettingsException ise) {
             ColorManagerNodeModel.LOGGER.debug("Nominal/Range selection flag"
                     + " not available.");
@@ -299,14 +300,15 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
             throws InvalidSettingsException {
         assert (settings != null);
         String cell = getSelectedItem();
-        settings.addString(SELECTED_COLUMN, cell);
+        settings.addString(ColorManagerNodeModel.SELECTED_COLUMN, cell);
         if (cell != null) {
             if (m_buttonNominal.isSelected() && m_buttonNominal.isEnabled()) {
-                settings.addBoolean(IS_NOMINAL, true);
+                settings.addBoolean(ColorManagerNodeModel.IS_NOMINAL, true);
                 m_nominal.saveSettings(settings);
             } else {
                 if (m_buttonRange.isSelected() && m_buttonRange.isEnabled()) {
-                    settings.addBoolean(IS_NOMINAL, false);
+                    settings
+                            .addBoolean(ColorManagerNodeModel.IS_NOMINAL, false);
                     m_range.saveSettings(settings);
                 } else {
                     throw new InvalidSettingsException("No color settings for "

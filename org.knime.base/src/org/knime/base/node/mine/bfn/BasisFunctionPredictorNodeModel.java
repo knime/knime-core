@@ -235,7 +235,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         }
         // dont know class
         try {
-            settings.getDouble(DONT_KNOW_PROP);
+            settings.getDouble(BasisFunctionPredictorNodeDialog.DONT_KNOW_PROP);
         } catch (InvalidSettingsException ise) {
             sb.append(ise.getMessage());
         }
