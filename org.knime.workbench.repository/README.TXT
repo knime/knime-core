@@ -7,7 +7,7 @@
 
 Plugin
 ----------------
-de.unikn.knime.workbench.repository
+org.knime.workbench.repository
 
 Description
 ----------------
