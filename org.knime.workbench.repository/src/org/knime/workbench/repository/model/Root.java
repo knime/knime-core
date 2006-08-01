@@ -35,7 +35,7 @@ public class Root extends AbstractContainerObject {
     /**
      * This returns the '/' as ID for the root repository element.
      * 
-     * @see de.unikn.knime.workbench.repository.model.IRepositoryObject#getID()
+     * @see org.knime.workbench.repository.model.IRepositoryObject#getID()
      */
     @Override
     public String getID() {
@@ -44,7 +44,7 @@ public class Root extends AbstractContainerObject {
 
     /**
      * @return always <code>null</code>
-     * @see de.unikn.knime.workbench.repository.model.AbstractRepositoryObject#
+     * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
      *      getParent()
      */
     @Override
@@ -55,9 +55,9 @@ public class Root extends AbstractContainerObject {
     /**
      * Throws a <code>UnsupportedOperationException</code>.
      * 
-     * @see de.unikn.knime.workbench.repository.model.AbstractRepositoryObject#
+     * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
      *      setParent
-     *      (de.unikn.knime.workbench.repository.model.IContainerObject)
+     *      (org.knime.workbench.repository.model.IContainerObject)
      */
     @Override
     public void setParent(final IContainerObject parent) {

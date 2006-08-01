@@ -57,11 +57,11 @@ public final class RepositoryManager {
     public static final RepositoryManager INSTANCE = new RepositoryManager();
 
     // ID of "node" extension point
-    private static final String ID_NODE = "de.unikn.knime.workbench.repository"
+    private static final String ID_NODE = "org.knime.workbench.repository"
             + ".nodes";
 
     // ID of "category" extension point
-    private static final String ID_CATEGORY = "de.unikn.knime.workbench."
+    private static final String ID_CATEGORY = "org.knime.workbench."
             + "repository.categories";
 
     // set the eclipse class creator into the static global class creator class

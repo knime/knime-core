@@ -45,7 +45,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * Return true, if there are children contained in this cotainer.
      * 
-     * @see de.unikn.knime.workbench.repository.model.IContainerObject#
+     * @see org.knime.workbench.repository.model.IContainerObject#
      *      hasChildren()
      */
     public final boolean hasChildren() {
@@ -55,8 +55,8 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * Add a child to this container.
      * 
-     * @see de.unikn.knime.workbench.repository.model.IContainerObject#
-     *      addChild(de.unikn.knime.workbench.repository.model.
+     * @see org.knime.workbench.repository.model.IContainerObject#
+     *      addChild(org.knime.workbench.repository.model.
      *      AbstractRepositoryObject)
      */
     public void addChild(final AbstractRepositoryObject child) {
@@ -83,7 +83,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * after-relationship defined in the plugin-xml and lexicographically.
      * 
      * @return The children (category and nodes of current level)
-     * @see de.unikn.knime.workbench.repository.model.IContainerObject#
+     * @see org.knime.workbench.repository.model.IContainerObject#
      *      getChildren()
      */
     public IRepositoryObject[] getChildren() {
@@ -266,7 +266,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * Removes a child.
      * 
      * @param child The child to remove
-     * @see de.unikn.knime.workbench.repository.model.IContainerObject#
+     * @see org.knime.workbench.repository.model.IContainerObject#
      *      removeChild(AbstractRepositoryObject)
      */
     public void removeChild(final AbstractRepositoryObject child) {
@@ -283,8 +283,8 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * Moves this object to a different parent.
      * 
-     * @see de.unikn.knime.workbench.repository.model.IRepositoryObject#
-     *      move(de.unikn.knime.workbench.repository.model.IContainerObject)
+     * @see org.knime.workbench.repository.model.IRepositoryObject#
+     *      move(org.knime.workbench.repository.model.IContainerObject)
      * @param newParent The container to move this object to
      */
     @Override
@@ -295,7 +295,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     }
 
     /**
-     * @see de.unikn.knime.workbench.repository.model.IContainerObject#
+     * @see org.knime.workbench.repository.model.IContainerObject#
      *      getChildByID(String, boolean)
      */
     public IRepositoryObject getChildByID(final String id, final boolean rec) {

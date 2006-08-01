@@ -159,7 +159,7 @@ public class RepositoryView extends ViewPart {
 
         // add Help context
         WorkbenchHelpSystem.getInstance().setHelp(m_viewer.getControl(),
-                "de.unikn.knime.workbench.help.repository_view_context");
+                "org.knime.workbench.help.repository_view_context");
 
     }
 

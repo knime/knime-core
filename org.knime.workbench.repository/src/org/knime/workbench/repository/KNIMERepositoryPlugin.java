@@ -23,7 +23,7 @@ import org.knime.workbench.core.WorkbenchErrorLogger;
 public class KNIMERepositoryPlugin extends AbstractUIPlugin {
     // Make sure that this *always* matches the ID in plugin.xml
     /** The plugin-id. */
-    public static final String PLUGIN_ID = "de.unikn.knime.workbench."
+    public static final String PLUGIN_ID = "org.knime.workbench."
             + "repository";
 
     // The shared instance.
@@ -153,7 +153,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
         try {
             if (m_resourceBundle == null) {
                 m_resourceBundle = ResourceBundle
-                        .getBundle("de.unikn.knime.workbench.repository."
+                        .getBundle("org.knime.workbench.repository."
                                 + "Resources");
             }
         } catch (MissingResourceException x) {

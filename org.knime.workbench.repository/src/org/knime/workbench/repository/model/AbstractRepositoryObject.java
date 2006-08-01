@@ -61,7 +61,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     /**
      * @return returns the parent object
      * 
-     * @see de.unikn.knime.workbench.repository.model.IRepositoryObject#
+     * @see org.knime.workbench.repository.model.IRepositoryObject#
      *      getParent()
      */
     public IContainerObject getParent() {
@@ -71,8 +71,8 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     /**
      * Moves this object to another parent.
      * 
-     * @see de.unikn.knime.workbench.repository.model.IRepositoryObject#
-     *      move(de.unikn.knime.workbench.repository.model.IContainerObject)
+     * @see org.knime.workbench.repository.model.IRepositoryObject#
+     *      move(org.knime.workbench.repository.model.IContainerObject)
      */
     public void move(final IContainerObject newParent) {
         this.getParent().removeChild(this);

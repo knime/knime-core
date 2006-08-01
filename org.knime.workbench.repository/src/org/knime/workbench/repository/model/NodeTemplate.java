@@ -144,7 +144,7 @@ public class NodeTemplate extends AbstractSimpleObject {
     }
 
     /**
-     * @see de.unikn.knime.workbench.repository.model.AbstractRepositoryObject#
+     * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
      *      getAdapter(java.lang.Class)
      */
     @Override

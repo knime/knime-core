@@ -94,7 +94,7 @@ public class Category extends AbstractContainerObject {
     }
 
     /**
-     * @see de.unikn.knime.workbench.repository.model.AbstractRepositoryObject#
+     * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
      *      getAdapter(java.lang.Class)
      */
     public Object getAdapter(final Class adapter) {
