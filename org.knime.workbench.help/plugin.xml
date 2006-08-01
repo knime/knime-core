@@ -20,17 +20,17 @@
       <intro
             class="org.eclipse.ui.intro.config.CustomizableIntroPart"
             icon="icons/intro.png"
-            id="de.unikn.knime.workbench.help.intro"/>
+            id="org.knime.workbench.help.intro"/>
       <introProductBinding
-            introId="de.unikn.knime.workbench.help.intro"
-            productId="de.unikn.knime.workbench.product.KNIME_PRODUCT"/>
+            introId="org.knime.workbench.help.intro"
+            productId="org.knime.workbench.product.KNIME_PRODUCT"/>
    </extension>
    <extension
          point="org.eclipse.ui.intro.config">
       <config
             content="intro/introContent.xml"
-            id="de.unikn.knime.workbench.help.intro.config"
-            introId="de.unikn.knime.workbench.help.intro">
+            id="org.knime.workbench.help.intro.config"
+            introId="org.knime.workbench.help.intro">
          <presentation
                home-page-id="root"
                standby-page-id="standby">
