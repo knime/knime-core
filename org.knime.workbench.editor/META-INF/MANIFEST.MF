@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Flow-Editor
-Bundle-SymbolicName: de.unikn.knime.workbench.editor; singleton=true
+Bundle-SymbolicName: de.unikn.knime.workbench.editor;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-ClassPath: workbench-editor.jar
 Bundle-Activator: de.unikn.knime.workbench.KNIMEEditorPlugin
@@ -30,6 +30,7 @@ Require-Bundle: org.eclipse.core.resources,
  de.unikn.knime.workbench.core,
  de.unikn.knime.workbench.repository,
  de.unikn.knime.workbench.ui,
- de.unikn.knime.base,
+ org.knime.base,
  org.eclipse.ui.console
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
+Bundle-ManifestVersion: 2
