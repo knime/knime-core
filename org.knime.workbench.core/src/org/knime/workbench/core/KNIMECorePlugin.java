@@ -40,7 +40,7 @@ import org.osgi.framework.BundleContext;
 public class KNIMECorePlugin extends Plugin {
 
     /** Make sure that this *always* matches the ID in plugin.xml. */
-    public static final String PLUGIN_ID = "de.unikn.knime.workbench.core";
+    public static final String PLUGIN_ID = "org.knime.workbench.core";
 
     // The shared instance.
     private static KNIMECorePlugin plugin;

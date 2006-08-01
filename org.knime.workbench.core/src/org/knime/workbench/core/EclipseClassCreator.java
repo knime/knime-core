@@ -80,7 +80,7 @@ public class EclipseClassCreator implements ClassCreator {
         } catch (Exception ex) {
             try {
                 Bundle p = Platform
-                        .getBundle("de.unikn.knime.workbench.editor");
+                        .getBundle("org.knime.workbench.editor");
                 clazz = p.loadClass(className);
                 return clazz;
             } catch (Exception e) {
