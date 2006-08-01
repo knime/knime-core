@@ -29,7 +29,7 @@ import org.knime.core.data.RowIterator;
 
 /**
  * The iterator for the
- * {@link de.unikn.knime.base.node.io.filereader.FileReaderPreviewTable}. Wraps
+ * {@link FileReaderPreviewTable}. Wraps
  * the iterator of the underlying file table. Catches exceptions thrown by the
  * underlying iterator, returns an "error row" instead and will end the table.
  * If an error occures it sets an error message in the underlying table.

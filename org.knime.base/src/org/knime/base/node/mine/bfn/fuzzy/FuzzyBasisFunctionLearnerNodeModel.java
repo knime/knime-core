@@ -38,7 +38,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * The fuzzy basis function model training
- * {@link de.unikn.knime.dev.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerRow}s.
+ * {@link FuzzyBasisFunctionLearnerRow}s.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -74,7 +74,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
     }
 
     /**
-     * @see de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerNodeModel
+     * @see BasisFunctionLearnerNodeModel
      *      #getFactory(org.knime.core.data.DataTableSpec)
      */
     @Override

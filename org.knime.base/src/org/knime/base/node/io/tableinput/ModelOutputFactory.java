@@ -29,7 +29,7 @@ import org.knime.core.node.NodeView;
 
 /**
  * This factory creates
- * {@link de.unikn.knime.base.node.tableinput.ModelOutputNodeModel}s.
+ * {@link ModelOutputNodeModel}s.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */

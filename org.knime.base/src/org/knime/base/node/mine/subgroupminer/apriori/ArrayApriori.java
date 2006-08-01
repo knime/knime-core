@@ -40,7 +40,7 @@ import org.knime.core.node.ExecutionMonitor;
 
 /**
  * The array apriori uses the
- * {@link de.unikn.knime.dev.node.subgroupminer.apriori.ArrayPrefixTreeNode}
+ * {@link ArrayPrefixTreeNode}
  * data structure to find frequent itemsets. Based on these it constructs a
  * prefix tree. In a prefix tree each child of an item has the path in the tree
  * to that item in common. The path is its prefix. The transactions are
@@ -160,7 +160,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      * those itemsets, which might become frequent in the next level, that is,
      * itemsets with one item more.
      * 
-     * @see de.unikn.knime.dev.node.subgroupminer.apriori.AprioriAlgorithm
+     * @see AprioriAlgorithm
      *      #findFrequentItemSets(java.util.List, int, int,
      *      FrequentItemSet.Type, org.knime.core.node.ExecutionMonitor)
      */
@@ -277,7 +277,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      */
     /**
      * 
-     * @see de.unikn.knime.dev.node.subgroupminer.apriori.AprioriAlgorithm
+     * @see AprioriAlgorithm
      *      #getAssociationRules(double)
      */
     public List<AssociationRule> getAssociationRules(final double confidence) {
@@ -336,8 +336,8 @@ public class ArrayApriori implements AprioriAlgorithm {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.subgroupminer.apriori.AprioriAlgorithm#getFrequentItemSets(
-     *      de.unikn.knime.dev.node.subgroupminer.freqitemset.FrequentItemSet.Type)
+     * @see AprioriAlgorithm#getFrequentItemSets(
+     *      FrequentItemSet.Type)
      */
     public List<FrequentItemSet> getFrequentItemSets(final Type type) {
         List<FrequentItemSet> list = new ArrayList<FrequentItemSet>();

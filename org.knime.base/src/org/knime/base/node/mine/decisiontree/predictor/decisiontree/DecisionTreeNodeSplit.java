@@ -181,7 +181,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     private transient int m_previousIndex = -1;
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #getClassCounts(org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
      */
@@ -248,7 +248,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             throws Exception;
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @seeDecisionTreeNode
      *      #addCoveredPattern(org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
      */
@@ -296,14 +296,14 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             DataTableSpec spec) throws Exception;
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #coveredPattern()
      */
     @Override
     public abstract Set<DataCell> coveredPattern();
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #saveNodeInternalsToPredParams(org.knime.core.node.ModelContentWO)
      */
     @Override
@@ -327,7 +327,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             final ModelContentWO pConf);
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #loadNodeInternalsFromPredParams(org.knime.core.node.ModelContentRO)
      */
     @Override

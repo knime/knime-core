@@ -7,7 +7,7 @@
 		locale="en_US" encoding="utf-8" use="true" author="true"
 		source="1.5">
 
-		<package name="de.unikn.knime.base.*" />
+		<package name="org.knime.base.*" />
 		<link href="http://java.sun.com/j2se/1.5.0/docs/api/" />
 	        <link href="http://logging.apache.org/log4j/docs/api/" />
 	        <link href="http://junit.sourceforge.net/javadoc/" />		

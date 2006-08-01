@@ -3,7 +3,7 @@
 	<name>org.knime.base</name>
 	<comment>@key 32303034313032372D31302064652E756E696B6E2E68616465732E62617365 </comment>
 	<projects>
-		<project>de.unikn.knime.core</project>
+		<project>org.knime.core</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

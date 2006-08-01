@@ -481,7 +481,7 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerRow
+     * @see BasisFunctionLearnerRow
      *      #computeActivation(org.knime.core.data.DataRow)
      */
     @Override

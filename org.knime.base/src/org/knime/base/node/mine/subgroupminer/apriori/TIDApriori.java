@@ -222,9 +222,9 @@ public class TIDApriori implements AprioriAlgorithm {
 
     /**
      * 
-     * @see de.unikn.knime.dev.node.subgroupminer.apriori.AprioriAlgorithm
+     * @see AprioriAlgorithm
      *      #findFrequentItemSets( java.util.List, int, int,
-     *      de.unikn.knime.dev.node.subgroupminer.freqitemset.FrequentItemSet.Type,
+     *      FrequentItemSet.Type,
      *      org.knime.core.node.ExecutionMonitor)
      */
     public void findFrequentItemSets(final List<BitSet> transactions,
@@ -245,8 +245,8 @@ public class TIDApriori implements AprioriAlgorithm {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.subgroupminer.apriori.AprioriAlgorithm
-     *      #getFrequentItemSets(de.unikn.knime.dev.node.subgroupminer.freqitemset.FrequentItemSet.Type)
+     * @see AprioriAlgorithm
+     *      #getFrequentItemSets(FrequentItemSet.Type)
      */
     public List<FrequentItemSet> getFrequentItemSets(
             final FrequentItemSet.Type type) {
@@ -321,7 +321,7 @@ public class TIDApriori implements AprioriAlgorithm {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.subgroupminer.apriori.AprioriAlgorithm
+     * @see AprioriAlgorithm
      *      #getAssociationRules(double)
      */
     public List<AssociationRule> getAssociationRules(final double confidence) {

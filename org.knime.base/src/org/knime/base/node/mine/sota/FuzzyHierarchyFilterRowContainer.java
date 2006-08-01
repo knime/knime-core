@@ -206,7 +206,7 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getRow(int)
+     * @see DataArray#getRow(int)
      */
     public DataRow getRow(final int idx) {
         if (idx >= m_meta.get(m_hierarchyLevel).getSize()) {
@@ -228,7 +228,7 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getValues(int)
+     * @see DataArray#getValues(int)
      */
     public Set<DataCell> getValues(final int colIdx) {
         // TODO Auto-generated method stub
@@ -236,7 +236,7 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getMinValue(int)
+     * @see DataArray#getMinValue(int)
      */
     public DataCell getMinValue(final int colIdx) {
         DataCell cell = null;
@@ -249,7 +249,7 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getMaxValue(int)
+     * @see DataArray#getMaxValue(int)
      */
     public DataCell getMaxValue(final int colIdx) {
         DataCell cell = null;
@@ -262,14 +262,14 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#size()
+     * @see DataArray#size()
      */
     public int size() {
         return m_meta.get(m_hierarchyLevel).getSize();
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getFirstRowNumber()
+     * @see DataArray#getFirstRowNumber()
      */
     public int getFirstRowNumber() {
         return 0;
@@ -283,7 +283,7 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getDataTableSpec()
+     * @see DataArray#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_rc.getDataTableSpec();

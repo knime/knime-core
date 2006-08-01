@@ -33,7 +33,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * The {@link org.knime.core.node.NodeModel} for radial
- * {@link de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerRow}s.
+ * {@link BasisFunctionLearnerRow}s.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -63,7 +63,7 @@ class RadialBasisFunctionLearnerNodeModel extends BasisFunctionLearnerNodeModel 
     }
 
     /**
-     * @see de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerNodeModel
+     * @see BasisFunctionLearnerNodeModel
      *      #getFactory(org.knime.core.data.DataTableSpec)
      */
     @Override
@@ -141,7 +141,7 @@ class RadialBasisFunctionLearnerNodeModel extends BasisFunctionLearnerNodeModel 
     }
 
     /**
-     * @see de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerNodeModel
+     * @see BasisFunctionLearnerNodeModel
      *      #getModelType()
      */
     @Override

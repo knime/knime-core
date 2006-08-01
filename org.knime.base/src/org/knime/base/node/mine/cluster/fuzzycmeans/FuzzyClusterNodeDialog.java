@@ -48,7 +48,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.base.node.util.FilterColumnPanel;
 
 /**
- * Dialog for {@link de.unikn.knime.dev.node.mine.cluster.kmeans.ClusterNodeModel}- allows to adjust number of
+ * Dialog for {@link ClusterNodeModel}- allows to adjust number of
  * clusters and other properties.
  * 
  * @author Michael Berthold, Konstanz University

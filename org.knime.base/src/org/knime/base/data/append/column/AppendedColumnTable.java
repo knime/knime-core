@@ -35,7 +35,7 @@ import org.knime.core.data.RowIterator;
 /**
  * A table that appends columns to a given input table. The new columns' values
  * are provided by an
- * {@link de.unikn.knime.base.data.append.column.AppendedCellFactory}.
+ * {@link AppendedCellFactory}.
  * 
  * <p>
  * This implementation does not verify that the generated cells (from the

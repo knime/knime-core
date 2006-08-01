@@ -29,7 +29,7 @@ import org.knime.core.data.DataRow;
 
 /**
  * Convenience class that should be used if your
- * {@link de.unikn.knime.dev.data.replace.ReplacedCellsFactory} replaces only
+ * {@link ReplacedCellsFactory} replaces only
  * one column.
  * 
  * @author Nicolas Cebron, University of Konstanz
@@ -39,7 +39,7 @@ public abstract class ReplacedCellFactory implements ReplacedCellsFactory {
      * Returns an array of length 1 containing the replacement of the data cell
      * at the position given in the first element of the columns array.
      * 
-     * @see de.unikn.knime.dev.data.replace.ReplacedCellsFactory
+     * @see ReplacedCellsFactory
      *      #getReplacement(org.knime.core.data.DataRow, int[])
      */
     public final DataCell[] getReplacement(final DataRow row,

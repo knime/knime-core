@@ -34,7 +34,7 @@ import org.knime.core.node.BufferedDataTable;
 
 /**
  * This iterator joins two tables (given by a
- * {@link de.unikn.knime.dev.data.join.JoinedTable}) in memory and is therfore
+ * {@link JoinedTable}) in memory and is therfore
  * magnituded faster than the standard joiner. However, it needs more memory,
  * depending on the number and size of the data rows in the smaller table.
  * 

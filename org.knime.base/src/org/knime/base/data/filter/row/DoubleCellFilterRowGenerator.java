@@ -30,7 +30,7 @@ import org.knime.core.data.DoubleValue;
 
 /**
  * This class implements the
- * {@link de.unikn.knime.dev.data.filter.row.FilterRowGenerator} interface for
+ * {@link FilterRowGenerator} interface for
  * {@link org.knime.core.data.def.DoubleCell} objects and checks if they
  * are within a certain interval.
  * 

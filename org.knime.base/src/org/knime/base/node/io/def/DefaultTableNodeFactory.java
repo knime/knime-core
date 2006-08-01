@@ -31,7 +31,7 @@ import org.knime.core.node.NodeView;
 
 /**
  * Its the factory for a
- * {@link de.unikn.knime.base.node.io.def.DefaultTableNodeModel}. It will
+ * {@link DefaultTableNodeModel}. It will
  * produce a {@link org.knime.core.node.NodeModel} with a constant
  * {@link org.knime.core.data.DataTable} which was defined by the
  * parameters passed to the factory's constructor. No

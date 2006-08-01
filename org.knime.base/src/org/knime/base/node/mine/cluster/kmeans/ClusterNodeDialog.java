@@ -39,7 +39,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  * Dialog for
- * {@link de.unikn.knime.dev.node.mine.cluster.kmeans.ClusterNodeModel} - allows
+ * {@link ClusterNodeModel} - allows
  * to adjust number of clusters and other properties.
  * 
  * @author Michael Berthold, Konstanz University

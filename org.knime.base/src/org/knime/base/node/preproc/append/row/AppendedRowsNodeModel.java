@@ -47,7 +47,7 @@ import org.knime.core.node.NodeSettingsWO;
  * {@link org.knime.core.node.NodeModel} that concatenates its two input
  * table to one output table.
  * 
- * @see de.unikn.knime.base.data.append.row.AppendedRowsTable
+ * @see AppendedRowsTable
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsNodeModel extends NodeModel {

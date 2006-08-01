@@ -170,7 +170,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue,
 
     /**
      * 
-     * @see de.unikn.knime.dev.data.bitvector.BitVectorValue#getNaming()
+     * @see BitVectorValue#getNaming()
      */
     public List<String> getNaming() {
         if (m_nameMapping != null) {

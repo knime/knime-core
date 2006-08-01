@@ -27,7 +27,7 @@ import org.knime.core.data.DataRow;
 
 /**
  * Factory for an
- * {@link de.unikn.knime.base.data.append.column.AppendedColumnTable} that
+ * {@link AppendedColumnTable} that
  * serves to generate the cells of the new columns.
  * 
  * @author Bernd Wiswedel, University of Konstanz

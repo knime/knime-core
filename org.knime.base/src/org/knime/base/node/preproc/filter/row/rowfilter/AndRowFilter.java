@@ -181,7 +181,7 @@ public class AndRowFilter extends RowFilter {
     }
 
     /**
-     * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
+     * @see RowFilter
      *      #configure(org.knime.core.data.DataTableSpec)
      */
     @Override

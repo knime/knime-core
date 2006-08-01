@@ -168,7 +168,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #coveredColors()
      */
     @Override
@@ -177,7 +177,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode#coveredPattern()
+     * @see DecisionTreeNode#coveredPattern()
      */
     @Override
     public Set<DataCell> coveredPattern() {
@@ -201,7 +201,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #getStringSummary()
      */
     @Override
@@ -211,8 +211,8 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
-     *      #addNodeToTreeDepthFirst(de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode,
+     * @see DecisionTreeNode
+     *      #addNodeToTreeDepthFirst(DecisionTreeNode,
      *      int)
      */
     @Override
@@ -233,7 +233,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
+     * @see DecisionTreeNodeSplit
      *      #saveNodeSplitInternalsToPredParams(org.knime.core.node.ModelContentWO)
      */
     @Override
@@ -243,7 +243,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
 
     /**
      * 
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
+     * @see DecisionTreeNodeSplit
      *      #loadNodeSplitInternalsFromPredParams(org.knime.core.node.ModelContentRO)
      */
     @Override

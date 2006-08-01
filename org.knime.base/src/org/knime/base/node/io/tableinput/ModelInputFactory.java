@@ -29,7 +29,7 @@ import org.knime.core.node.NodeView;
 
 /**
  * This class creates
- * {@link de.unikn.knime.base.node.tableinput.ModelInputNodeModel}s.
+ * {@link ModelInputNodeModel}s.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */

@@ -348,7 +348,7 @@ public class ColValRowFilter extends RowFilter {
     /**
      * A comparator MUST be set if a range is specified in the config object!!
      * 
-     * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
+     * @see RowFilter
      *      #loadSettingsFrom(NodeSettingsRO)
      */
     @Override
@@ -401,7 +401,7 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
+     * @see RowFilter
      *      #saveSettings(NodeSettingsWO)
      */
     @Override
@@ -423,7 +423,7 @@ public class ColValRowFilter extends RowFilter {
      * The column value filter grabs the comparator from the table spec (if
      * available) and checks settings against the latest spec.
      * 
-     * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
+     * @see RowFilter
      *      #configure(org.knime.core.data.DataTableSpec)
      */
     @Override

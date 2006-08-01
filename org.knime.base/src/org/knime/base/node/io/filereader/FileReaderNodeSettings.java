@@ -162,7 +162,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Writes all settings into the passed configuration object. Except for the
      * analyzedAllRows flag.
      * 
-     * @see de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings
+     * @see FileTokenizerSettings
      *      #saveToConfiguration(NodeSettingsWO)
      */
     @Override
@@ -815,7 +815,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @see de.unikn.knime.base.node.io.filereader.FileReaderSettings
+     * @see FileReaderSettings
      *      #getStatusOfSettings()
      */
     @Override
@@ -845,7 +845,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Call this from derived classes to add the status of all super classes.
      * For parameters:
      * 
-     * @see de.unikn.knime.base.node.io.filereader.FileReaderSettings
+     * @see FileReaderSettings
      *      #addStatusOfSettings(SettingsStatus, boolean, DataTableSpec)
      */
     @Override

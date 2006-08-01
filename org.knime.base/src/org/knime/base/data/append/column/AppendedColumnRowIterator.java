@@ -29,7 +29,7 @@ import org.knime.core.data.RowIterator;
 
 /**
  * The Iterator implementation for an
- * {@link de.unikn.knime.base.data.append.column.AppendedColumnTable}.
+ * {@link AppendedColumnTable}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */

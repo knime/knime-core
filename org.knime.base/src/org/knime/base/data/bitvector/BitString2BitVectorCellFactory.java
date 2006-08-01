@@ -47,7 +47,7 @@ public class BitString2BitVectorCellFactory extends ReplacedCellFactory {
     private int m_nrOfNotSetBits = 0;
 
     /**
-     * @see de.unikn.knime.dev.data.replace.ReplacedCellFactory#getReplacement(
+     * @see ReplacedCellFactory#getReplacement(
      *      org.knime.core.data.DataRow, int)
      */
     @Override

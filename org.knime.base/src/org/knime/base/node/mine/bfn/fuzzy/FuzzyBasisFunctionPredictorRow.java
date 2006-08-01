@@ -79,7 +79,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.mine.bfn.BasisFunctionPredictorRow
+     * @see BasisFunctionPredictorRow
      *      #save(org.knime.core.node.ModelContentWO)
      */
     @Override

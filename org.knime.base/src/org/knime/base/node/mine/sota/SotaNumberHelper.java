@@ -69,7 +69,7 @@ public class SotaNumberHelper extends SotaHelper {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.SotaHelper#initializeTree()
+     * @see SotaHelper#initializeTree()
      */
     @Override
     public SotaTreeCell initializeTree() {

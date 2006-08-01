@@ -42,7 +42,7 @@ import org.knime.base.data.append.column.AppendedColumnRow;
 
 /**
  * Iterator over an
- * {@link de.unikn.knime.base.data.append.row.AppendedRowsTable}.
+ * {@link AppendedRowsTable}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */

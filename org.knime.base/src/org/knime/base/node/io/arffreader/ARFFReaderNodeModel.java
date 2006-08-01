@@ -47,8 +47,8 @@ import org.knime.core.node.util.StringHistory;
 
 /**
  * The model of the ARFF reader node. The interesting work is done in the
- * {@link de.unikn.knime.base.node.io.arffreader.ARFFTable} and
- * {@link de.unikn.knime.base.node.io.arffreader.ARFFRowIterator}.
+ * {@link ARFFTable} and
+ * {@link ARFFRowIterator}.
  * 
  * @author Peter Ohl, University of Konstanz
  */

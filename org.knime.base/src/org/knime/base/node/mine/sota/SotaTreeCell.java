@@ -416,70 +416,70 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#getStartX()
+     * @see Locatable#getStartX()
      */
     public int getStartX() {
         return m_startX;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#getStartY()
+     * @see Locatable#getStartY()
      */
     public int getStartY() {
         return m_startY;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#getEndX()
+     * @see Locatable#getEndX()
      */
     public int getEndX() {
         return m_endX;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#getEndY()
+     * @see Locatable#getEndY()
      */
     public int getEndY() {
         return m_endY;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#setStartX(int)
+     * @see Locatable#setStartX(int)
      */
     public void setStartX(final int x) {
         m_startX = x;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#setStartY(int)
+     * @see Locatable#setStartY(int)
      */
     public void setStartY(final int y) {
         m_startY = y;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#setEndX(int)
+     * @see Locatable#setEndX(int)
      */
     public void setEndX(final int x) {
         m_endX = x;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Locatable#setEndY(int)
+     * @see Locatable#setEndY(int)
      */
     public void setEndY(final int y) {
         m_endY = y;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Hiliteable#isHilited()
+     * @see Hiliteable#isHilited()
      */
     public boolean isHilited() {
         return m_hilited;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Hiliteable#setHilited(boolean)
+     * @see Hiliteable#setHilited(boolean)
      */
     public void setHilited(final boolean hilit) {
         setHilitedRec(this, hilit);
@@ -560,14 +560,14 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Selectable#isSelected()
+     * @see Selectable#isSelected()
      */
     public boolean isSelected() {
         return m_selected;
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.view.Selectable#setSelected(boolean)
+     * @see Selectable#setSelected(boolean)
      */
     public void setSelected(final boolean select) {
         setSelectedRec(this, select);

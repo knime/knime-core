@@ -30,7 +30,7 @@ import org.knime.core.data.RowKey;
 
 /**
  * This class extends the general
- * {@link de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerRow} in order to
+ * {@link BasisFunctionLearnerRow} in order to
  * use radial basis function prototypes for training. This prototype keeps an
  * gaussian functions is internal representation. This function is created
  * infinity which means cover the entrie domain. During training the function is
@@ -75,7 +75,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerRow
+     * @see BasisFunctionLearnerRow
      *      #getPredictorRow()
      */
     @Override
@@ -288,7 +288,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerRow
+     * @see BasisFunctionLearnerRow
      *      #computeActivation(org.knime.core.data.DataRow)
      */
     @Override

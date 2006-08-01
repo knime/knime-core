@@ -151,7 +151,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #saveNodeInternalsToPredParams(org.knime.core.node.ModelContentWO)
      */
     @Override
@@ -159,7 +159,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
+     * @see DecisionTreeNode
      *      #loadNodeInternalsFromPredParams(org.knime.core.node.ModelContentRO)
      */
     @Override

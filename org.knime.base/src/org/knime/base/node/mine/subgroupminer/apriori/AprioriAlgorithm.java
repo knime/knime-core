@@ -36,7 +36,7 @@ import org.knime.core.node.ExecutionMonitor;
  * This is an interface to hide the different implementations of the apriori
  * algorithm to the Nodes. If a class implements this interface and the user
  * should be able to select this type of algorithm, you should also change the
- * {@link de.unikn.knime.dev.node.subgroupminer.apriori.AprioriAlgorithmFactory}.
+ * {@link AprioriAlgorithmFactory}.
  * 
  * @author Fabian Dill, University of Konstanz
  */

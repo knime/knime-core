@@ -31,7 +31,7 @@ import org.knime.core.data.RowIterator;
 /**
  * This class filters a given number of rows from a
  * {@link org.knime.core.data.DataTable} using the
- * {@link de.unikn.knime.dev.data.filter.row.FilterRowGenerator} interface to
+ * {@link FilterRowGenerator} interface to
  * check the criteria.
  * 
  * @see FilterRowGenerator

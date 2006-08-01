@@ -30,7 +30,7 @@ import org.knime.core.data.RowIterator;
 /**
  * This class wraps the {@link org.knime.core.data.RowIterator} which
  * includes only {@link org.knime.core.data.DataRow}s which satify the
- * {@link de.unikn.knime.dev.data.filter.row.FilterRowGenerator} criteria.
+ * {@link FilterRowGenerator} criteria.
  * 
  * @see FilterRowIterator
  * 

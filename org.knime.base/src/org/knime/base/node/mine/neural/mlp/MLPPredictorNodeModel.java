@@ -282,8 +282,7 @@ public class MLPPredictorNodeModel extends NodeModel {
 
         /**
          * 
-         * @see de.unikn.knime.base.data.append.column.
-         *      AppendedCellFactory#getAppendedCell(org.knime.core.data.DataRow)
+         * @see AppendedCellFactory#getAppendedCell(org.knime.core.data.DataRow)
          */
         public DataCell[] getAppendedCell(final DataRow row) {
             double[] inputs = new double[m_faccolumns.length];

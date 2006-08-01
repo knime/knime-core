@@ -123,7 +123,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
+     * @see DecisionTreeNodeSplit
      *      #addCoveredPattern(org.knime.core.data.DataCell,
      *      org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
@@ -153,7 +153,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode#coveredColors()
+     * @see DecisionTreeNode#coveredColors()
      */
     @Override
     public HashMap<Color, Double> coveredColors() {
@@ -161,7 +161,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode#coveredPattern()
+     * @see DecisionTreeNode#coveredPattern()
      */
     @Override
     public Set<DataCell> coveredPattern() {
@@ -177,7 +177,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode#getStringSummary()
+     * @seeDecisionTreeNode#getStringSummary()
      */
     @Override
     public String getStringSummary() {
@@ -185,8 +185,8 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode
-     *      #addNodeToTreeDepthFirst(de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNode,
+     * @see DecisionTreeNode
+     *      #addNodeToTreeDepthFirst(DecisionTreeNode,
      *      int)
      */
     @Override
@@ -205,7 +205,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
+     * @see DecisionTreeNodeSplit
      *      #saveNodeSplitInternalsToPredParams(org.knime.core.node.ModelContentWO)
      */
     @Override
@@ -214,7 +214,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
+     * @see DecisionTreeNodeSplit
      *      #loadNodeSplitInternalsFromPredParams(org.knime.core.node.ModelContentRO)
      */
     @Override

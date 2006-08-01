@@ -64,7 +64,7 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.sota.SotaCell#getValue()
+     * @see SotaCell#getValue()
      */
     public double getValue() {
         return getDoubleValue();

@@ -34,7 +34,7 @@ import org.knime.core.data.RowIterator;
 
 /**
  * Iterator over all
- * {@link de.unikn.knime.dev.node.mine.bfn.BasisFunctionLearnerRow}s within the
+ * {@link BasisFunctionLearnerRow}s within the
  * model.
  * 
  * Supports to skip certain classes.
