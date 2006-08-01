@@ -7,8 +7,8 @@
       <perspective
             name="Konstanz Information Miner"
             icon="icons/perspective.png"
-            class="de.unikn.knime.workbench.ui.perspective.ModellerPerspectiveFactory"
-            id="de.unikn.knime.workbench.ui.ModellerPerspective">
+            class="org.knime.workbench.ui.perspective.ModellerPerspectiveFactory"
+            id="org.knime.workbench.ui.ModellerPerspective">
          <description>
             Konstanz Information Miner
          </description>
@@ -17,17 +17,17 @@
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
-            targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
+            targetID="org.knime.workbench.ui.ModellerPerspective">
          <view
-               id="de.unikn.knime.workbench.navigator.view.KnimeResourceNavigator"
+               id="org.knime.workbench.navigator.view.KnimeResourceNavigator"
                ratio="0.2"
                relationship="left"
                relative="org.eclipse.ui.editorss"/>
          <view
-               id="de.unikn.knime.workbench.repository.view.RepositoryView"
+               id="org.knime.workbench.repository.view.RepositoryView"
                ratio="0.3"
                relationship="bottom"
-               relative="de.unikn.knime.workbench.navigator.view.KnimeResourceNavigator"/>
+               relative="org.knime.workbench.navigator.view.KnimeResourceNavigator"/>
          <view
                closeable="false"
                visible="true"
@@ -48,26 +48,26 @@
                id="org.eclipse.ui.views.ProgressView"/>
          <view
                closeable="true"
-               id="de.unikn.knime.workbench.helpview"
+               id="org.knime.workbench.helpview"
                moveable="true"
                ratio="0.7"
                relationship="right"
                relative="org.eclipse.ui.editorss"/>
       </perspectiveExtension>
       <perspectiveExtension
-            targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
+            targetID="org.knime.workbench.ui.ModellerPerspective">
          <viewShortcut id="org.eclipse.ui.console.ConsoleView"/>
          <viewShortcut id="org.eclipse.ui.views.ProgressView"/>
          <viewShortcut
                id="org.eclipse.ui.views.ContentOutline">
          </viewShortcut>
-         <viewShortcut id="de.unikn.knime.workbench.helpview"/>
+         <viewShortcut id="org.knime.workbench.helpview"/>
          <viewShortcut
                id="org.eclipse.pde.runtime.LogView">
          </viewShortcut>
       </perspectiveExtension>
       <perspectiveExtension
-            targetID="de.unikn.knime.workbench.ui.ModellerPerspective">
+            targetID="org.knime.workbench.ui.ModellerPerspective">
          <perspectiveShortcut
                id="org.eclipse.jdt.ui.JavaPerspective">
          </perspectiveShortcut>
@@ -75,47 +75,47 @@
                id="org.eclipse.pde.ui.PDEPerspective">
          </perspectiveShortcut>
          <newWizardShortcut
-               id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard">
+               id="org.knime.workbench.ui.wizards.project.NewProjectWizard">
          </newWizardShortcut>
          <!--newWizardShortcut
-               id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard">
+               id="org.knime.workbench.ui.wizards.file.NewWorkflowWizard">
          </newWizardShortcut-->
       </perspectiveExtension>
    </extension>
    <extension
          point="org.eclipse.ui.newWizards">
       <primaryWizard
-            id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard">
+            id="org.knime.workbench.ui.wizards.project.NewProjectWizard">
       </primaryWizard>
-      <!--primaryWizard id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"/-->
+      <!--primaryWizard id="org.knime.workbench.ui.wizards.file.NewWorkflowWizard"/-->
       <category
             name="Konstanz Information Miner"
-            id="de.unikn.knime.workbench.ui.wizards.category">
+            id="org.knime.workbench.ui.wizards.category">
       </category>
       <wizard
             name="New KNIME Project"
-            id="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard"
-            category="de.unikn.knime.workbench.ui.wizards.category"
-            class="de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard"
+            id="org.knime.workbench.ui.wizards.project.NewProjectWizard"
+            category="org.knime.workbench.ui.wizards.category"
+            class="org.knime.workbench.ui.wizards.project.NewProjectWizard"
             descriptionImage="icons/projectWizard32x32.png"
             icon="icons/projectWizard16x16.png"
-            finalPerspective="de.unikn.knime.workbench.ui.ModellerPerspective"
+            finalPerspective="org.knime.workbench.ui.ModellerPerspective"
             project="true"
-            preferredPerspectives="de.unikn.knime.workbench.ui.ModellerPerspective">
+            preferredPerspectives="org.knime.workbench.ui.ModellerPerspective">
          <description>
             This wizard creates a new KNIME workflow project.
          </description>
       </wizard>
       <!--wizard
             name="New KNIME Workflow"
-            id="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"
-            category="de.unikn.knime.workbench.ui.wizards.category"
-            class="de.unikn.knime.workbench.ui.wizards.file.NewWorkflowWizard"
+            id="org.knime.workbench.ui.wizards.file.NewWorkflowWizard"
+            category="org.knime.workbench.ui.wizards.category"
+            class="org.knime.workbench.ui.wizards.file.NewWorkflowWizard"
             descriptionImage="icons/workflowWizard32x32.png"
             icon="icons/workflowWizard16x16.png"
-            finalPerspective="de.unikn.knime.workbench.ui.ModellerPerspective"
+            finalPerspective="org.knime.workbench.ui.ModellerPerspective"
             project="false"
-            preferredPerspectives="de.unikn.knime.workbench.ui.ModellerPerspective">
+            preferredPerspectives="org.knime.workbench.ui.ModellerPerspective">
          <description>
             This wizard creates a new KNIME workflow file (*.knime) inside a given project.
          </description>
@@ -124,15 +124,15 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="de.unikn.knime.workbench.ui.preferences.MainPreferencePage"
-            id="de.unikn.knime.workbench.ui.preferences"
+            class="org.knime.workbench.ui.preferences.MainPreferencePage"
+            id="org.knime.workbench.ui.preferences"
             name="KNIME">
       </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
-            class="de.unikn.knime.workbench.ui.preferences.PreferenceInitializer">
+            class="org.knime.workbench.ui.preferences.PreferenceInitializer">
       </initializer>
    </extension>
    <extension
@@ -141,7 +141,7 @@
          point="org.eclipse.core.resources.builders">
       <builder>
          <run
-               class="de.unikn.knime.workbench.ui.builder.KNIMEProjectBuilder">
+               class="org.knime.workbench.ui.builder.KNIMEProjectBuilder">
          </run>
       </builder>
    </extension>
@@ -151,48 +151,48 @@
          point="org.eclipse.core.resources.natures">
       <runtime>
          <run
-               class="de.unikn.knime.workbench.ui.nature.KNIMEProjectNature">
+               class="org.knime.workbench.ui.nature.KNIMEProjectNature">
          </run>
       </runtime>
    </extension>
    <extension
          point="org.eclipse.ui.views">
       <category
-            id="de.unikn.knime.workbench.ui.category"
+            id="org.knime.workbench.ui.category"
             name="KNIME Views"/>
       <view
             allowMultiple="true"
-            category="de.unikn.knime.workbench.ui.category"
-            class="de.unikn.knime.workbench.ui.views.EmbeddedNodeView"
+            category="org.knime.workbench.ui.category"
+            class="org.knime.workbench.ui.views.EmbeddedNodeView"
             icon="icons/knime.png"
-            id="de.unikn.knime.workbench.ui.views.EmbeddedNodeView"
+            id="org.knime.workbench.ui.views.EmbeddedNodeView"
             name="Node View"/>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="de.unikn.knime.workbench.ui.actionSet1"
-            label="de.unikn.knime.workbench.ui.actionSet1"
+            id="org.knime.workbench.ui.actionSet1"
+            label="org.knime.workbench.ui.actionSet1"
             visible="true">
          <menu
-               id="de.unikn.knime.workbench.ui.menu1"
+               id="org.knime.workbench.ui.menu1"
                label="View2"/>
       </actionSet>
    </extension>
    <extension
          point="org.eclipse.ui.exportWizards">
       <wizard
-            class="de.unikn.knime.workbench.ui.wizards.export.WorkflowExportWizard"
+            class="org.knime.workbench.ui.wizards.export.WorkflowExportWizard"
             icon="icons/projectWizard16x16.png"
-            id="de.unikn.knime.workbench.ui.wizards.export.WorkflowExportWizard"
+            id="org.knime.workbench.ui.wizards.export.WorkflowExportWizard"
             name="Export Knime Workflow"/>
    </extension>
    <extension
          point="org.eclipse.ui.importWizards">
       <wizard
-            class="de.unikn.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
+            class="org.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
             icon="icons/projectWizard16x16.png"
-            id="de.unikn.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
+            id="org.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
             name="Import Knime Workflow"/>
    </extension>
 
