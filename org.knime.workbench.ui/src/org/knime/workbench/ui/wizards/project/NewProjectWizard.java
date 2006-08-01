@@ -52,7 +52,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.navigator.view.KnimeResourceNavigator;
 import org.knime.workbench.ui.builder.KNIMEProjectBuilder;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;

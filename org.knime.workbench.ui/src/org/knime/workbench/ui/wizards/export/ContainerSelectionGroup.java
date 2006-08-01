@@ -47,7 +47,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.misc.ContainerContentProvider;
 import org.eclipse.ui.part.DrillDownComposite;
-
 import org.knime.workbench.navigator.view.KnimeResourceLableProvider;
 import org.knime.workbench.navigator.view.KnimeResourcePatternFilter;
 
