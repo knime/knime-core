@@ -51,11 +51,12 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DataValue;
-import de.unikn.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+
 
 /**
  * Panel is used to select/filter a certain number of columns.

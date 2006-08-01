@@ -24,7 +24,7 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
-import de.unikn.knime.core.data.DataRow;
+import org.knime.core.data.DataRow;
 
 /**
  * The exception the {@link java.io.FileReader} (more specificaly the

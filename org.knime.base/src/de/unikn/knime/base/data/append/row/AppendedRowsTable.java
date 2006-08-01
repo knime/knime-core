@@ -27,18 +27,19 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnDomain;
-import de.unikn.knime.core.data.DataColumnDomainCreator;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataColumnSpecCreator;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DataValueComparator;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.NodeLogger;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.RowIterator;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
+
 
 /**
  * {@link DataTable} implementation that concatenates a set of {@link DataTable}
@@ -113,14 +114,14 @@ public class AppendedRowsTable implements DataTable {
     } // AppendedRowsTable(DataTable[],String,boolean)
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+     * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#iterator()
+     * @see org.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
         return new AppendedRowsIterator(m_tables, m_spec, m_suffix);

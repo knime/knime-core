@@ -30,15 +30,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.InvalidSettingsException;
+
 import junit.framework.TestCase;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * 

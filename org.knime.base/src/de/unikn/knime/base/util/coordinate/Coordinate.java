@@ -26,15 +26,16 @@ package de.unikn.knime.base.util.coordinate;
 
 import java.util.Set;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+
 
 /**
  * The abstract class for all coordinate classes. A concrete coordinate depends
  * on whether it is nominal or numeric, etc. All coordinates have an underlying
- * {@link de.unikn.knime.core.data.DataColumnSpec}. Ticks have to be created
+ * {@link org.knime.core.data.DataColumnSpec}. Ticks have to be created
  * and mapped to their domain values.
  * 
  * @author Christoph Sieb, University of Konstanz

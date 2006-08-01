@@ -40,9 +40,10 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.node.InvalidSettingsException;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowNoRowFilter;
-import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * 

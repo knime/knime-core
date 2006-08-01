@@ -24,10 +24,10 @@
  */
 package de.unikn.knime.base.node.io.arffreader;
 
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeFactory;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
  * 
@@ -62,7 +62,7 @@ public class ARFFReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
+     * @see org.knime.core.node.NodeFactory#createNodeModel()
      */
     @Override
     public NodeModel createNodeModel() {
@@ -84,7 +84,7 @@ public class ARFFReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
+     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
      */
     @Override
     public int getNrNodeViews() {
@@ -92,7 +92,7 @@ public class ARFFReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
+     * @see org.knime.core.node.NodeFactory#hasDialog()
      */
     @Override
     public boolean hasDialog() {

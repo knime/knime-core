@@ -23,10 +23,11 @@ package de.unikn.knime.base.data.filter.column;
 
 import java.util.Iterator;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DefaultCellIterator;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultCellIterator;
+
 
 /**
  * Filter {@link DataRow} which extracts particular cells (columns) from an
@@ -59,14 +60,14 @@ final class FilterColumnRow implements DataRow {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getNumCells()
+     * @see org.knime.core.data.DataRow#getNumCells()
      */
     public int getNumCells() {
         return m_columns.length;
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getKey()
+     * @see org.knime.core.data.DataRow#getKey()
      */
     public RowKey getKey() {
         return m_row.getKey();

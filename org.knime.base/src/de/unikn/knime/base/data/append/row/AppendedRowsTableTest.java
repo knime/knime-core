@@ -22,17 +22,18 @@
  */
 package de.unikn.knime.base.data.append.row;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DefaultTable;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+
 import junit.framework.TestCase;
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.data.def.DefaultTable;
 
 /**
  * Test class for <code>AppendedRowsTable</code>.

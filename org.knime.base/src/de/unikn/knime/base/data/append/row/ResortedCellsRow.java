@@ -24,10 +24,11 @@ package de.unikn.knime.base.data.append.row;
 
 import java.util.Iterator;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DefaultCellIterator;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultCellIterator;
+
 
 /**
  * A row that takes a base row and re-sorts the cells in it according to and
@@ -60,21 +61,21 @@ public class ResortedCellsRow implements DataRow {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getNumCells()
+     * @see org.knime.core.data.DataRow#getNumCells()
      */
     public int getNumCells() {
         return m_row.getNumCells();
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getKey()
+     * @see org.knime.core.data.DataRow#getKey()
      */
     public RowKey getKey() {
         return m_row.getKey();
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getCell(int)
+     * @see org.knime.core.data.DataRow#getCell(int)
      */
     public DataCell getCell(final int index) {
         return m_row.getCell(m_sort[index]);

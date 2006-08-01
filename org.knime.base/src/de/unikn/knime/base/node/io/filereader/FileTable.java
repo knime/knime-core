@@ -24,23 +24,24 @@ package de.unikn.knime.base.node.io.filereader;
 import java.io.IOException;
 import java.util.Set;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.node.NodeLogger;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
+
 
 /**
  * Implements a {@link DataTable} that reads data from an ASCII file.
  * 
  * To instantiate this table you need to specify {@link FileReaderSettings} and
- * a {@link de.unikn.knime.core.data.DataTableSpec}. File reader settings
+ * a {@link org.knime.core.data.DataTableSpec}. File reader settings
  * define from where and how to read the data, the table spec specifies the
  * structure of the table to create.
  * 
@@ -80,7 +81,7 @@ public class FileTable implements DataTable {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#iterator()
+     * @see org.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
         try {
@@ -94,7 +95,7 @@ public class FileTable implements DataTable {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+     * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_tableSpec;

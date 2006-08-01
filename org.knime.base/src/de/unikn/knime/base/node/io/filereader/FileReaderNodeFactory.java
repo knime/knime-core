@@ -21,10 +21,10 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeFactory;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
  * @author Peter Ohl, University of Konstanz
@@ -52,7 +52,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
+     * @see org.knime.core.node.NodeFactory#createNodeModel()
      */
     @Override
     public NodeModel createNodeModel() {
@@ -64,7 +64,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
+     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
      */
     @Override
     public int getNrNodeViews() {
@@ -72,7 +72,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
+     * @see org.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
      */
     @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
@@ -80,7 +80,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
+     * @see org.knime.core.node.NodeFactory#hasDialog()
      */
     @Override
     public boolean hasDialog() {
@@ -88,7 +88,7 @@ public class FileReaderNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
+     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {

@@ -21,22 +21,22 @@
  */
 package de.unikn.knime.base.node.io.def;
 
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeFactory;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeView;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
  * Its the factory for a
  * {@link de.unikn.knime.base.node.io.def.DefaultTableNodeModel}. It will
- * produce a {@link de.unikn.knime.core.node.NodeModel} with a constant
- * {@link de.unikn.knime.core.data.DataTable} which was defined by the
+ * produce a {@link org.knime.core.node.NodeModel} with a constant
+ * {@link org.knime.core.data.DataTable} which was defined by the
  * parameters passed to the factory's constructor. No
- * {@link de.unikn.knime.core.node.NodeDialogPane} or
- * {@link de.unikn.knime.core.node.NodeView} is available.
+ * {@link org.knime.core.node.NodeDialogPane} or
+ * {@link org.knime.core.node.NodeView} is available.
  * 
  * @author Peter Ohl, University of Konstanz
  */
@@ -62,9 +62,9 @@ public class DefaultTableNodeFactory extends NodeFactory {
 
     /**
      * We provide the same constructors as the
-     * {@link de.unikn.knime.core.data.def.DefaultTable}.
+     * {@link org.knime.core.data.def.DefaultTable}.
      * 
-     * @see de.unikn.knime.core.data.def.DefaultTable
+     * @see org.knime.core.data.def.DefaultTable
      * @param rows see DefaultTable constructor
      * @param columnNames see DefaultTable constructor
      * @param columnTypes see DefaultTable constructor
@@ -76,13 +76,13 @@ public class DefaultTableNodeFactory extends NodeFactory {
 
     /**
      * Also this constructor is available in
-     * {@link de.unikn.knime.core.data.def.DefaultTable}.
+     * {@link org.knime.core.data.def.DefaultTable}.
      * 
      * @param rows Passed to constructor of
-     *            {@link de.unikn.knime.core.data.def.DefaultTable}
+     *            {@link org.knime.core.data.def.DefaultTable}
      * @param spec Passed to constructor of
-     *            {@link de.unikn.knime.core.data.def.DefaultTable}
-     * @see de.unikn.knime.core.data.def.DefaultTable#DefaultTable( DataRow[],
+     *            {@link org.knime.core.data.def.DefaultTable}
+     * @see org.knime.core.data.def.DefaultTable#DefaultTable( DataRow[],
      *      DataTableSpec)
      */
     public DefaultTableNodeFactory(final DataRow[] rows,
@@ -94,9 +94,9 @@ public class DefaultTableNodeFactory extends NodeFactory {
 
     /**
      * We provide the same constructors as the
-     * {@link de.unikn.knime.core.data.def.DefaultTable}.
+     * {@link org.knime.core.data.def.DefaultTable}.
      * 
-     * @see de.unikn.knime.core.data.def.DefaultTable
+     * @see org.knime.core.data.def.DefaultTable
      * @param data see DefaultTable constructor
      * @param rowHeader see DefaultTable constructor
      * @param colHeader see DefaultTable constructor
@@ -112,7 +112,7 @@ public class DefaultTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeModel()
+     * @see org.knime.core.node.NodeFactory#createNodeModel()
      */
     @Override
     public NodeModel createNodeModel() {
@@ -127,7 +127,7 @@ public class DefaultTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#getNrNodeViews()
+     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
      */
     @Override
     public int getNrNodeViews() {
@@ -135,7 +135,7 @@ public class DefaultTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
+     * @see org.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
      */
     @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
@@ -144,7 +144,7 @@ public class DefaultTableNodeFactory extends NodeFactory {
 
     /**
      * @return <b>false</b>.
-     * @see de.unikn.knime.core.node.NodeFactory#hasDialog()
+     * @see org.knime.core.node.NodeFactory#hasDialog()
      */
     @Override
     public boolean hasDialog() {
@@ -152,7 +152,7 @@ public class DefaultTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeFactory#createNodeDialogPane()
+     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {

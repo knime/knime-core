@@ -24,12 +24,13 @@ package de.unikn.knime.base.data.append.column;
 
 import java.util.Map;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+
 
 /**
  * A table that appends columns to a given input table. The new columns' values
@@ -95,14 +96,14 @@ public class AppendedColumnTable implements DataTable {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+     * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#iterator()
+     * @see org.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
         return new AppendedColumnRowIterator(this);

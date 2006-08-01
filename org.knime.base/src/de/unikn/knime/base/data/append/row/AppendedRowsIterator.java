@@ -25,19 +25,20 @@ package de.unikn.knime.base.data.append.row;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
+
 import de.unikn.knime.base.data.append.column.AppendedColumnRow;
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.NodeLogger;
 
 /**
  * Iterator over an
@@ -143,7 +144,7 @@ public class AppendedRowsIterator extends RowIterator {
     }
 
     /**
-     * @see de.unikn.knime.core.data.RowIterator#hasNext()
+     * @see org.knime.core.data.RowIterator#hasNext()
      */
     @Override
     public boolean hasNext() {
@@ -151,7 +152,7 @@ public class AppendedRowsIterator extends RowIterator {
     }
 
     /**
-     * @see de.unikn.knime.core.data.RowIterator#next()
+     * @see org.knime.core.data.RowIterator#next()
      */
     @Override
     public DataRow next() {

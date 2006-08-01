@@ -24,8 +24,8 @@
  */
 package de.unikn.knime.base.util.coordinate;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 
 /**
  * The abstract class which should be implemented by all coordinates which map
@@ -61,10 +61,10 @@ public abstract class NumericCoordinate extends Coordinate {
 
     /**
      * Calculates a numeric mapping assuming a
-     * {@link de.unikn.knime.core.data.def.DoubleCell}.
+     * {@link org.knime.core.data.def.DoubleCell}.
      * 
      * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell,double,
+     *      #calculateMappedValue(org.knime.core.data.DataCell,double,
      *      boolean)
      */
     @Override

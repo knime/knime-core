@@ -2,7 +2,7 @@
 <project default="javadoc">
 	<target name="javadoc">
 	<javadoc destdir="doc" sourcepath="src"
-		classpath="lib/ij.jar:../de.unikn.knime.core/bin:../de.unikn.knime.core/lib/log4j.jar:../de.unikn.knime.core/lib/junit.jar"
+		classpath="lib/ij.jar:../org.knime.core/bin:../org.knime.core/lib/log4j.jar:../org.knime.core/lib/junit.jar"
 		access="package"
 		locale="en_US" encoding="utf-8" use="true" author="true"
 		source="1.5">

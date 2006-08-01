@@ -25,19 +25,20 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.util.MutableInteger;
+
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizer;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerException;
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.util.MutableInteger;
 
 /**
  * Row iterator for the {@link FileTable}.
@@ -46,7 +47,7 @@ import de.unikn.knime.core.util.MutableInteger;
  * 
  * @author Peter Ohl, University of Konstanz
  * 
- * @see de.unikn.knime.core.data.RowIterator
+ * @see org.knime.core.data.RowIterator
  */
 final class FileRowIterator extends RowIterator {
 
@@ -138,7 +139,7 @@ final class FileRowIterator extends RowIterator {
     } // FileRowIterator(FileTableSpec)
 
     /**
-     * @see de.unikn.knime.core.data.RowIterator#hasNext()
+     * @see org.knime.core.data.RowIterator#hasNext()
      */
     @Override
     public boolean hasNext() {
@@ -171,7 +172,7 @@ final class FileRowIterator extends RowIterator {
     }
 
     /**
-     * @see de.unikn.knime.core.data.RowIterator#next()
+     * @see org.knime.core.data.RowIterator#next()
      */
     @Override
     public DataRow next() {

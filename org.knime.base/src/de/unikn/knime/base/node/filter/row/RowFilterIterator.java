@@ -23,15 +23,16 @@ package de.unikn.knime.base.node.filter.row;
 
 import java.util.NoSuchElementException;
 
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.EndOfTableException;
 import de.unikn.knime.base.node.filter.row.rowfilter.IncludeFromNowOn;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionMonitor;
 
 /**
  * Row iterator of the row filter table. Wraps a given row iterator and forwards
@@ -53,7 +54,7 @@ import de.unikn.knime.core.node.ExecutionMonitor;
  * Note: Iterating may be slow as the iterator must potentially skip many rows
  * until it encounters a row to be returned. This iterator does also support
  * cancelation/progress information using an
- * {@link de.unikn.knime.core.node.ExecutionMonitor}.
+ * {@link org.knime.core.node.ExecutionMonitor}.
  * 
  * @author Peter Ohl, University of Konstanz
  */
@@ -127,7 +128,7 @@ public class RowFilterIterator extends RowIterator {
     }
 
     /**
-     * @see de.unikn.knime.core.data.RowIterator#hasNext()
+     * @see org.knime.core.data.RowIterator#hasNext()
      */
     @Override
     public boolean hasNext() {
@@ -137,7 +138,7 @@ public class RowFilterIterator extends RowIterator {
     /**
      * This implementation may throw an RuntimeCanceledExecutionException
      * if this class has been initialized with a non-null execution monitor.
-     * @see de.unikn.knime.core.data.RowIterator#next()
+     * @see org.knime.core.data.RowIterator#next()
      */
     @Override
     public DataRow next() throws RuntimeCanceledExecutionException {

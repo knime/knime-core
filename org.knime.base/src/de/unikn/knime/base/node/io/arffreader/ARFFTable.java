@@ -32,23 +32,24 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.Vector;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizer;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnDomainCreator;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataColumnSpecCreator;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeLogger;
 
 /**
  * 
@@ -89,14 +90,14 @@ public class ARFFTable implements DataTable {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+     * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_tSpec;
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#iterator()
+     * @see org.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
         try {

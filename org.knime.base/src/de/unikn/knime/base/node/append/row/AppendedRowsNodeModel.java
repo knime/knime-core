@@ -26,25 +26,26 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 import de.unikn.knime.base.data.append.row.AppendedRowsTable;
 import de.unikn.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
 import de.unikn.knime.base.data.filter.column.FilterColumnTable;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.node.BufferedDataContainer;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
- * {@link de.unikn.knime.core.node.NodeModel} that concatenates its two input
+ * {@link org.knime.core.node.NodeModel} that concatenates its two input
  * table to one output table.
  * 
  * @see de.unikn.knime.base.data.append.row.AppendedRowsTable
@@ -77,7 +78,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
+     * @see org.knime.core.node.NodeModel#execute(BufferedDataTable[],
      *      ExecutionContext)
      */
     @Override
@@ -120,7 +121,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#configure(DataTableSpec[])
+     * @see org.knime.core.node.NodeModel#configure(DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -215,7 +216,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #loadInternals(File,
+     * @see org.knime.core.node.NodeModel #loadInternals(File,
      *      ExecutionMonitor)
      */
     @Override
@@ -226,7 +227,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #saveInternals(File,
+     * @see org.knime.core.node.NodeModel #saveInternals(File,
      *      ExecutionMonitor)
      */
     @Override

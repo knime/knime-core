@@ -23,12 +23,13 @@ package de.unikn.knime.base.data.filter.column;
 
 import java.util.LinkedHashSet;
 
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DataValue;
-import de.unikn.knime.core.data.RowIterator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.RowIterator;
+
 
 /**
  * This {@link DataTable} filters (includes or excludes) a specified number of
@@ -266,7 +267,7 @@ public final class FilterColumnTable implements DataTable {
 
     /**
      * Inits a new filter column table based on a {@link DataTable} and one
-     * type ({@link de.unikn.knime.core.data.DataCell}))
+     * type ({@link org.knime.core.data.DataCell}))
      * using {@link java.lang.Class} to extract these columns.
      * 
      * @param data the underlying table
@@ -346,14 +347,14 @@ public final class FilterColumnTable implements DataTable {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+     * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_tableSpec;
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#iterator()
+     * @see org.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
         return new FilterColumnRowIterator(m_data.iterator(), m_columns);

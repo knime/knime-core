@@ -22,8 +22,8 @@
  */
 package de.unikn.knime.base.data.append.column;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
 
 /**
  * Factory for an

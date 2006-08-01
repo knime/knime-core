@@ -21,8 +21,8 @@
  */
 package de.unikn.knime.base.data.filter.column;
 
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.RowIterator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowIterator;
 
 /**
  * Filter column row iterator needed to wrap the filter column's original row
@@ -57,7 +57,7 @@ final class FilterColumnRowIterator extends RowIterator {
     }
 
     /**
-     * @see de.unikn.knime.core.data.RowIterator#hasNext()
+     * @see org.knime.core.data.RowIterator#hasNext()
      */
     @Override
     public boolean hasNext() {
@@ -65,7 +65,7 @@ final class FilterColumnRowIterator extends RowIterator {
     }
 
     /**
-     * @see de.unikn.knime.core.data.RowIterator#next()
+     * @see org.knime.core.data.RowIterator#next()
      */
     @Override
     public DataRow next() {

@@ -26,9 +26,10 @@ package de.unikn.knime.base.node.io.table.write;
 
 import javax.swing.JFileChooser;
 
+import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
+import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
+
 import de.unikn.knime.base.node.io.table.read.ReadTableNodeModel;
-import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import de.unikn.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
 
 /**
  * Dialog for the node to write arbitrary tables to a file. It only shows

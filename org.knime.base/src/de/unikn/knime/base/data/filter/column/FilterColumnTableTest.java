@@ -21,16 +21,17 @@
  */
 package de.unikn.knime.base.data.filter.column;
 
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+
 import junit.framework.TestCase;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.def.DefaultRow;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
 
 /**
  * JUnit test class for the filter column table which test column indices,
@@ -55,14 +56,14 @@ public final class FilterColumnTableTest extends TestCase {
                 StringCell.TYPE});
 
         /**
-         * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+         * @see org.knime.core.data.DataTable#getDataTableSpec()
          */
         public DataTableSpec getDataTableSpec() {
             return m_spec;
         }
 
         /**
-         * @see de.unikn.knime.core.data.DataTable#iterator()
+         * @see org.knime.core.data.DataTable#iterator()
          */
         public RowIterator iterator() {
             return new MyTestRowIterator(m_spec.getNumColumns());
@@ -98,7 +99,7 @@ public final class FilterColumnTableTest extends TestCase {
         }
 
         /**
-         * @see de.unikn.knime.core.data.RowIterator#hasNext()
+         * @see org.knime.core.data.RowIterator#hasNext()
          */
         @Override
         public boolean hasNext() {
@@ -106,7 +107,7 @@ public final class FilterColumnTableTest extends TestCase {
         }
 
         /**
-         * @see de.unikn.knime.core.data.RowIterator#next()
+         * @see org.knime.core.data.RowIterator#next()
          */
         @Override
         public DataRow next() {
@@ -425,7 +426,7 @@ public final class FilterColumnTableTest extends TestCase {
     }
 
     /**
-     * Column name not in de.unikn.knime.core.data.
+     * Column name not in org.knime.core.data.
      */
     public void testInConstructorException12() {
         try {
@@ -437,7 +438,7 @@ public final class FilterColumnTableTest extends TestCase {
     }
 
     /**
-     * Column name twice in de.unikn.knime.core.data.
+     * Column name twice in org.knime.core.data.
      */
     public void testInConstructorException13() {
         try {

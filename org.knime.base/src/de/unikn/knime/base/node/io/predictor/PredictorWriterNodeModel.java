@@ -31,16 +31,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.ModelContentRO;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 /**
  * Write ModelContent object into file.
@@ -92,7 +93,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * Load ModelContent from input port.
      * 
-     * @see de.unikn.knime.core.node.NodeModel#loadModelContent(int,
+     * @see org.knime.core.node.NodeModel#loadModelContent(int,
      *      ModelContentRO)
      */
     @Override
@@ -145,7 +146,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * Ignored.
      * 
-     * @see de.unikn.knime.core.node.NodeModel#reset()
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -200,8 +201,8 @@ public class PredictorWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#loadInternals(java.io.File, 
-     * de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File, 
+     * org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir, 
@@ -211,8 +212,8 @@ public class PredictorWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#saveInternals(java.io.File, 
-     * de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File, 
+     * org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 

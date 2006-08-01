@@ -44,14 +44,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
-import de.unikn.knime.core.node.util.StringHistory;
+import org.knime.core.node.util.StringHistory;
+
 
 /**
  * Panel that contains an editable Combo Box showing the file to write to and a
  * button to trigger a file chooser. The elements in the combo are files that
  * have been recently used.
  * 
- * @see de.unikn.knime.core.node.util.StringHistory
+ * @see org.knime.core.node.util.StringHistory
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class CSVFilesHistoryPanel extends JPanel {

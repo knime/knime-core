@@ -24,11 +24,11 @@
  */
 package de.unikn.knime.base.node.filter.row.rowfilter;
 
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Row filter that includes or excludes a certain range of rows. It will throw a
@@ -191,7 +191,7 @@ public class RowNoRowFilter extends RowFilter {
 
     /**
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #configure(de.unikn.knime.core.data.DataTableSpec)
+     *      #configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

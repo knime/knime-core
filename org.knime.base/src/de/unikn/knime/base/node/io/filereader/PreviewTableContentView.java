@@ -26,7 +26,8 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.table.JTableHeader;
 
-import de.unikn.knime.core.node.tableview.TableContentView;
+import org.knime.core.node.tableview.TableContentView;
+
 
 /**
  * Extension of an KNIME table view that reacts on mouse events in the header.

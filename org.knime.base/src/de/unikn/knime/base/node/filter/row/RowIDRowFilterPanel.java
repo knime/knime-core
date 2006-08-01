@@ -38,9 +38,10 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.knime.core.node.InvalidSettingsException;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowIDRowFilter;
-import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * 

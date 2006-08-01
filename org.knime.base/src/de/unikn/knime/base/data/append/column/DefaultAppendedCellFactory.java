@@ -24,8 +24,9 @@ package de.unikn.knime.base.data.append.column;
 
 import java.util.Map;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+
 
 /**
  * A default factory that generates cells based on an underlying Map. This

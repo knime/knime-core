@@ -27,11 +27,12 @@ package de.unikn.knime.base.node.io.filetokenizer;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 import de.unikn.knime.base.node.io.filereader.SettingsStatus;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Defines the object holding the configuration for the FileTokenizer. <br>

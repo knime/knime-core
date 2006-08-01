@@ -24,8 +24,8 @@
  */
 package de.unikn.knime.base.node.io.predictor;
 
-import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import de.unikn.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
+import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
 
 /** Dialog for the ModelContent Reader Node - allows user to choose file name
  * and directory.

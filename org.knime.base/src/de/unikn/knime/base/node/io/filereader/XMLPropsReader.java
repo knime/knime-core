@@ -31,15 +31,15 @@ import java.nio.charset.IllegalCharsetNameException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.xml.XMLProperties;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.xml.XMLProperties;
 
 /**
  * Adds support for the old XML property files. It will read the specified XML

@@ -28,14 +28,15 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+
 
 /**
  * This class represents a nominal coordinate defined by a given
- * {@link de.unikn.knime.core.data.DataColumnSpec}. The nominal values are
+ * {@link org.knime.core.data.DataColumnSpec}. The nominal values are
  * aranged equidistant and in the order given in the
- * {@link de.unikn.knime.core.data.DataColumnSpec}.
+ * {@link org.knime.core.data.DataColumnSpec}.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
@@ -160,7 +161,7 @@ public class NominalCoordinate extends Coordinate {
      * possible values.
      * 
      * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
+     *      #calculateMappedValue(org.knime.core.data.DataCell, double,
      *      boolean)
      */
     @Override

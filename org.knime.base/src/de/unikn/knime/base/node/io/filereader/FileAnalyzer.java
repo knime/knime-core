@@ -28,19 +28,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Vector;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
+
 import de.unikn.knime.base.node.io.filetokenizer.Comment;
 import de.unikn.knime.base.node.io.filetokenizer.Delimiter;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizer;
 import de.unikn.knime.base.node.io.filetokenizer.Quote;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataColumnSpecCreator;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.node.NodeLogger;
 
 /**
  * Provides functionality for analyzing an ASCII data file to create default

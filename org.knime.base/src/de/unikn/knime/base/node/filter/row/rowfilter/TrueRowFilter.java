@@ -24,11 +24,11 @@
  */
 package de.unikn.knime.base.node.filter.row.rowfilter;
 
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Row filter that always matches all rows. Not really usefull - but used if the
@@ -66,7 +66,7 @@ public class TrueRowFilter extends RowFilter {
 
     /**
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #configure(de.unikn.knime.core.data.DataTableSpec)
+     *      #configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

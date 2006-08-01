@@ -24,13 +24,14 @@
  */
 package de.unikn.knime.base.node.filter.row;
 
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.RowIterator;
 
 /**
- * A {@link de.unikn.knime.core.data.DataTable} which "contains" only rows that
+ * A {@link org.knime.core.data.DataTable} which "contains" only rows that
  * don't fall through the specified filter. The table wrapps the original table
  * and forwards only rows that meet the filter criteria. Any {@link RowFilter}
  * can be passed. It will decide whether a row is part of this table or not.
@@ -63,14 +64,14 @@ public class RowFilterTable implements DataTable {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#getDataTableSpec()
+     * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
         return m_table.getDataTableSpec();
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataTable#iterator()
+     * @see org.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
         return new RowFilterIterator(m_table, (RowFilter)m_filter.clone());

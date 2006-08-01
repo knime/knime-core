@@ -28,11 +28,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 /**
  * A {@link RowFilter} that matches the row ID against a regular expression. It
@@ -189,7 +190,7 @@ public class RowIDRowFilter extends RowFilter {
 
     /**
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #configure(de.unikn.knime.core.data.DataTableSpec)
+     *      #configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

@@ -24,13 +24,14 @@ package de.unikn.knime.base.data.append.column;
 
 import java.util.Iterator;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.RowKey;
-import de.unikn.knime.core.data.def.DefaultCellIterator;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultCellIterator;
+
 
 /**
- * A {@link de.unikn.knime.core.data.DataRow} that is extended by one or more
+ * A {@link org.knime.core.data.DataRow} that is extended by one or more
  * cells.
  * 
  * @author Bernd Wiswedel, University of Konstanz
@@ -55,21 +56,21 @@ public class AppendedColumnRow implements DataRow {
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getNumCells()
+     * @see org.knime.core.data.DataRow#getNumCells()
      */
     public int getNumCells() {
         return m_baseRow.getNumCells() + m_appendCell.length;
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getKey()
+     * @see org.knime.core.data.DataRow#getKey()
      */
     public RowKey getKey() {
         return m_baseRow.getKey();
     }
 
     /**
-     * @see de.unikn.knime.core.data.DataRow#getCell(int)
+     * @see org.knime.core.data.DataRow#getCell(int)
      */
     public DataCell getCell(final int index) {
         if (index < 0 || index >= getNumCells()) {

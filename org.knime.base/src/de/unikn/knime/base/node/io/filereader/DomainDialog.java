@@ -49,14 +49,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnDomain;
-import de.unikn.knime.core.data.DataColumnDomainCreator;
-import de.unikn.knime.core.data.DataColumnSpecCreator;
-import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.StringValue;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+
 
 /**
  * 

@@ -24,10 +24,10 @@
  */
 package de.unikn.knime.base.node.io.table.read;
 
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeFactory;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
  * Factory for table that reads the file as written from the

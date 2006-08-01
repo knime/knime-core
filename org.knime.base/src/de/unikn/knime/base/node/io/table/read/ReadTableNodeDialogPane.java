@@ -26,8 +26,9 @@ package de.unikn.knime.base.node.io.table.read;
 
 import javax.swing.JFileChooser;
 
-import de.unikn.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import de.unikn.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
+import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
+
 
 /**
  * Simple dialog with just a file browser.

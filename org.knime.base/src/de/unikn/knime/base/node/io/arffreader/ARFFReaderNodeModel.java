@@ -32,17 +32,18 @@ import java.util.Vector;
 
 import javax.swing.filechooser.FileFilter;
 
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
-import de.unikn.knime.core.node.util.StringHistory;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.StringHistory;
+
 
 /**
  * The model of the ARFF reader node. The interesting work is done in the
@@ -154,7 +155,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#reset()
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -162,7 +163,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
+     * @see org.knime.core.node.NodeModel #saveInternals(java.io.File,
      *      ExecutionMonitor)
      */
     @Override
@@ -173,7 +174,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
+     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
      *      ExecutionMonitor)
      */
     @Override

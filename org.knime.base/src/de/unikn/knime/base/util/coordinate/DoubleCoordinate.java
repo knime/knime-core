@@ -29,15 +29,16 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnDomain;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+
 
 /**
  * This class represents a numeric coordinate defined by a given
- * {@link de.unikn.knime.core.data.DataColumnSpec}. The class provides
+ * {@link org.knime.core.data.DataColumnSpec}. The class provides
  * functionality for extension of coordinates beyond the domain length.
  * Furthermore the label ticks can be determined dependant on given properties.
  * All these sizes are normalized (0-1) but there are also methods to convert
@@ -474,7 +475,7 @@ class DoubleCoordinate extends NumericCoordinate {
 
     /**
      * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
-     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
+     *      #calculateMappedValue(org.knime.core.data.DataCell, double,
      *      boolean)
      */
     @Override

@@ -29,13 +29,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnDomain;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DataValueComparator;
-import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+
 
 /**
  * 
@@ -219,7 +220,7 @@ class IntegerCoordinate extends NumericCoordinate {
 
     /**
      * @see de.unikn.knime.base.util.coordinate.Coordinate
-     *      #calculateMappedValue(de.unikn.knime.core.data.DataCell, double,
+     *      #calculateMappedValue(org.knime.core.data.DataCell, double,
      *      boolean)
      */
     @Override

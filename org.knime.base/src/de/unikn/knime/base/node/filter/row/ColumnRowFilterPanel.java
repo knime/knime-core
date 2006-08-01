@@ -45,22 +45,23 @@ import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ColumnSelectionComboxBox;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.ColValRowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DataValue;
-import de.unikn.knime.core.data.DataValueComparator;
-import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.def.DoubleCell;
-import de.unikn.knime.core.data.def.IntCell;
-import de.unikn.knime.core.data.def.StringCell;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NotConfigurableException;
-import de.unikn.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * 

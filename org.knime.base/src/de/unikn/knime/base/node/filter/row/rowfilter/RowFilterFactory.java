@@ -24,13 +24,13 @@
  */
 package de.unikn.knime.base.node.filter.row.rowfilter;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Used to create {@link RowFilter} objects from
- * {@link de.unikn.knime.core.node.NodeSettings}. Each row filter must be
+ * {@link org.knime.core.node.NodeSettings}. Each row filter must be
  * registered here (i.e. code must be added). Scan the file for "CHANGE HERE".
  * RowFilter must provide the default constructor.
  * 

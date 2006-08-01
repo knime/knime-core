@@ -55,13 +55,14 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+
 import de.unikn.knime.base.node.io.arffreader.ARFFReaderNodeModel;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
-import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * Contains the dialog for the ARFF file writer.

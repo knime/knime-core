@@ -27,17 +27,18 @@ package de.unikn.knime.base.node.filter.row;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilterFactory;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Model of a node filtering rows. It keeps an instance of a row filter, which
@@ -145,7 +146,7 @@ public class RowFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#reset()
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -153,8 +154,8 @@ public class RowFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -165,8 +166,8 @@ public class RowFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

@@ -31,8 +31,9 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
+import org.knime.core.node.InvalidSettingsException;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
-import de.unikn.knime.core.node.InvalidSettingsException;
 
 /**
  * They provide a en/disable method which affects all added components. They add

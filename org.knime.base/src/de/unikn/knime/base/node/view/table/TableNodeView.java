@@ -37,30 +37,31 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DefaultNodeProgressMonitor;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeProgressMonitorView;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.tableview.TableContentModel;
+import org.knime.core.node.tableview.TableContentView;
+import org.knime.core.node.tableview.TableView;
+
 import de.unikn.knime.base.node.filter.row.RowFilterTable;
 import de.unikn.knime.base.node.filter.row.rowfilter.EndOfTableException;
 import de.unikn.knime.base.node.filter.row.rowfilter.IncludeFromNowOn;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.base.node.io.csvwriter.CSVFilesHistoryPanel;
 import de.unikn.knime.base.node.io.csvwriter.CSVWriter;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeProgressMonitorView;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
-import de.unikn.knime.core.node.NodeView;
-import de.unikn.knime.core.node.property.hilite.HiLiteHandler;
-import de.unikn.knime.core.node.tableview.TableContentModel;
-import de.unikn.knime.core.node.tableview.TableContentView;
-import de.unikn.knime.core.node.tableview.TableView;
 
 /**
- * Table view on a {@link de.unikn.knime.core.data.DataTable}. It simply uses a
+ * Table view on a {@link org.knime.core.data.DataTable}. It simply uses a
  * {@link javax.swing.JTable} to display the data table. If the node has not
  * been executed or is reset, the view will print "&lt;no data&gt;". The view
  * adds also a menu entry to the menu bar where the user can synchronize the
@@ -161,7 +162,7 @@ public class TableNodeView extends NodeView {
      * 
      * @param isShowColor <code>true</code> for show icon (and thus the
      *            color), <code>false</code> ignore colors
-     * @see de.unikn.knime.core.node.tableview.TableRowHeaderView
+     * @see org.knime.core.node.tableview.TableRowHeaderView
      *      #setShowColorInfo(boolean)
      */
     public void setShowColorInfo(final boolean isShowColor) {
@@ -255,7 +256,7 @@ public class TableNodeView extends NodeView {
     /**
      * Called from the super class when a property of the node has been changed.
      * 
-     * @see de.unikn.knime.core.node.NodeView#modelChanged()
+     * @see org.knime.core.node.NodeView#modelChanged()
      */
     @Override
     protected void modelChanged() {
@@ -265,7 +266,7 @@ public class TableNodeView extends NodeView {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeView#onClose()
+     * @see org.knime.core.node.NodeView#onClose()
      */
     @Override
     protected void onClose() {
@@ -276,7 +277,7 @@ public class TableNodeView extends NodeView {
     /**
      * Does nothing since view is in sync anyway.
      * 
-     * @see de.unikn.knime.core.node.NodeView#onOpen()
+     * @see org.knime.core.node.NodeView#onOpen()
      */
     @Override
     protected void onOpen() {

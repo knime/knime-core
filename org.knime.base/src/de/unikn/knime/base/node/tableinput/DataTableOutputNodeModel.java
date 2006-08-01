@@ -27,16 +27,17 @@ package de.unikn.knime.base.node.tableinput;
 import java.io.File;
 import java.io.IOException;
 
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 /**
  * 
@@ -55,14 +56,14 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#saveSettingsTo( NodeSettingsWO)
+     * @see org.knime.core.node.NodeModel#saveSettingsTo( NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#validateSettings( NodeSettingsRO)
+     * @see org.knime.core.node.NodeModel#validateSettings( NodeSettingsRO)
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -70,7 +71,7 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel
+     * @see org.knime.core.node.NodeModel
      *      #loadValidatedSettingsFrom(NodeSettingsRO)
      */
     @Override
@@ -79,7 +80,7 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#execute(BufferedDataTable[],
+     * @see org.knime.core.node.NodeModel#execute(BufferedDataTable[],
      *      ExecutionContext)
      */
     @Override
@@ -91,7 +92,7 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#reset()
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -99,8 +100,8 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#configure(
-     *      de.unikn.knime.core.data.DataTableSpec[])
+     * @see org.knime.core.node.NodeModel#configure(
+     *      org.knime.core.data.DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -117,7 +118,7 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#loadInternals(File,
+     * @see org.knime.core.node.NodeModel#loadInternals(File,
      *      ExecutionMonitor)
      */
     @Override
@@ -128,7 +129,7 @@ public class DataTableOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#saveInternals(File,
+     * @see org.knime.core.node.NodeModel#saveInternals(File,
      *      ExecutionMonitor)
      */
     @Override

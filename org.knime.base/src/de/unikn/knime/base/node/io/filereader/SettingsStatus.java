@@ -26,7 +26,8 @@ package de.unikn.knime.base.node.io.filereader;
 
 import java.util.Vector;
 
-import de.unikn.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeLogger;
+
 
 /**
  * An object to pass messages. It supports information, warning, and error

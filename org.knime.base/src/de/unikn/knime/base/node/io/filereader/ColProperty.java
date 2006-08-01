@@ -27,15 +27,16 @@ package de.unikn.knime.base.node.io.filereader;
 import java.util.HashSet;
 import java.util.Set;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnDomain;
-import de.unikn.knime.core.data.DataColumnDomainCreator;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataColumnSpecCreator;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 /**
  * Stores the properties for one column.

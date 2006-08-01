@@ -28,25 +28,26 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.RowIterator;
-import de.unikn.knime.core.data.StringValue;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.NodeLogger;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.StringValue;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
+
 
 /**
- * Class to write a {@link de.unikn.knime.core.data.DataTable} to a file or an
+ * Class to write a {@link org.knime.core.data.DataTable} to a file or an
  * output stream. Only known types can be written to it, i.e. each column must
- * be compatible to either {@link de.unikn.knime.core.data.DoubleValue},
- * {@link de.unikn.knime.core.data.IntValue}, or {@link StringValue}.
+ * be compatible to either {@link org.knime.core.data.DoubleValue},
+ * {@link org.knime.core.data.IntValue}, or {@link StringValue}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */

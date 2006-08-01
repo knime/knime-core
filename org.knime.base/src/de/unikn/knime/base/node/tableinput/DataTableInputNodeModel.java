@@ -25,13 +25,14 @@ package de.unikn.knime.base.node.tableinput;
 import java.io.File;
 import java.io.IOException;
 
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NoSettingsNodeModel;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NoSettingsNodeModel;
+
 
 /**
  * This class represents a silly node model that can be given a data table (and
@@ -105,7 +106,7 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #loadInternals(File,
+     * @see org.knime.core.node.NodeModel #loadInternals(File,
      *      ExecutionMonitor)
      */
     @Override
@@ -116,7 +117,7 @@ public class DataTableInputNodeModel extends NoSettingsNodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #saveInternals(File,
+     * @see org.knime.core.node.NodeModel #saveInternals(File,
      *      ExecutionMonitor)
      */
     @Override

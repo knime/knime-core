@@ -26,11 +26,12 @@ package de.unikn.knime.base.node.util;
 
 import java.util.Set;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.RowIterator;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
+
 
 /**
  * Can be used to locally store a certain number of rows. It provides random
@@ -60,7 +61,7 @@ public interface DataArray extends DataTable, Iterable<DataRow> {
     /**
      * Returns a set of all different values seen in the specified column. Will
      * always return null if the idx doesn't specifiy a column of type
-     * {@link de.unikn.knime.core.data.def.StringCell} (or derived from that).
+     * {@link org.knime.core.data.def.StringCell} (or derived from that).
      * The list will be in the order the values appeared in the rows read in. It
      * contains only the values showing in these rows, the complete table may
      * contain more values. The list doesn't contain "missing value" cells.

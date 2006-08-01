@@ -26,10 +26,11 @@ package de.unikn.knime.base.data.util;
 
 import java.util.HashMap;
 
-import de.unikn.knime.core.data.DataCell;
+import org.knime.core.data.DataCell;
+
 
 /**
- * Allow a mapping of arbitrary {@link de.unikn.knime.core.data.DataCell}s to
+ * Allow a mapping of arbitrary {@link org.knime.core.data.DataCell}s to
  * unique, well-behaved strings, for example for usage with external executables
  * that may frown upon parsing arbitrary strings. Keeps two maps for each
  * direction ({@link DataCell} <-> {@link String}) and creates new, unique

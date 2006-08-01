@@ -24,9 +24,9 @@
  */
 package de.unikn.knime.base.node.io.filetokenizer;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Created for each quote pattern in the <code>FileTokenizer</code> keeping

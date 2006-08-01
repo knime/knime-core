@@ -34,22 +34,23 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 import de.unikn.knime.base.node.io.filetokenizer.Delimiter;
 import de.unikn.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * Contains all settings needed to read in a ASCII data file. This includes the
  * location of the data file, the settings for the tokenizer (like column
  * delimiter, comment patterns etc.) as well as the row headers and more. This
- * object combined with a {@link de.unikn.knime.core.data.DataTableSpec} can be
+ * object combined with a {@link org.knime.core.data.DataTableSpec} can be
  * used to create a {@link FileTable} from. A <code>FileTable</code> will
  * represent then the data of the file in a
- * {@link de.unikn.knime.core.data.DataTable}.
+ * {@link org.knime.core.data.DataTable}.
  * 
  * @author ohl, University of Konstanz
  */
@@ -280,7 +281,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * Saves all settings into a {@link de.unikn.knime.core.node.NodeSettingsWO}
+     * Saves all settings into a {@link org.knime.core.node.NodeSettingsWO}
      * object. Using the cfg object to construct a new FileReaderSettings object
      * should lead to an object identical to this.
      * 

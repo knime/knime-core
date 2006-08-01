@@ -27,17 +27,18 @@ package de.unikn.knime.base.node.io.table.read;
 import java.io.File;
 import java.io.IOException;
 
-import de.unikn.knime.core.data.DataTable;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.container.DataContainer;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 /**
  * NodeMode for table that reads the file as written from the
@@ -102,7 +103,7 @@ public class ReadTableNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel#reset()
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -135,8 +136,8 @@ public class ReadTableNodeModel extends NodeModel {
     }
 
     /** 
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #loadInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel
+     *  #loadInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -147,8 +148,8 @@ public class ReadTableNodeModel extends NodeModel {
 
     
     /** 
-     * @see de.unikn.knime.core.node.NodeModel
-     *  #saveInternals(java.io.File, de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel
+     *  #saveInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

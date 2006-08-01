@@ -32,24 +32,25 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 import de.unikn.knime.base.node.io.arffreader.ARFFReaderNodeModel;
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataColumnSpec;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.data.DoubleValue;
-import de.unikn.knime.core.data.IntValue;
-import de.unikn.knime.core.data.StringValue;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
 
 /**
  * 
@@ -338,7 +339,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
     
     /**
-     * @see de.unikn.knime.core.node.NodeModel#reset()
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -346,8 +347,8 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -357,8 +358,8 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

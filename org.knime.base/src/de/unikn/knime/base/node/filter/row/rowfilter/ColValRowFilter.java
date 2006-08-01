@@ -28,14 +28,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import de.unikn.knime.core.data.DataCell;
-import de.unikn.knime.core.data.DataValueComparator;
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.DataType;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 /**
  * A filter selecting rows depending on the content of a column (or cell of the
@@ -300,7 +301,7 @@ public class ColValRowFilter extends RowFilter {
 
     /**
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #matches(de.unikn.knime.core.data.DataRow, int)
+     *      #matches(org.knime.core.data.DataRow, int)
      */
     @Override
     public boolean matches(final DataRow row, final int rowIndex)
@@ -423,7 +424,7 @@ public class ColValRowFilter extends RowFilter {
      * available) and checks settings against the latest spec.
      * 
      * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #configure(de.unikn.knime.core.data.DataTableSpec)
+     *      #configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

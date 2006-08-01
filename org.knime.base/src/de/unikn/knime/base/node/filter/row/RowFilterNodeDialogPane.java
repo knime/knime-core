@@ -35,17 +35,18 @@ import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+
 import de.unikn.knime.base.node.filter.row.rowfilter.ColValRowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowFilterFactory;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowIDRowFilter;
 import de.unikn.knime.base.node.filter.row.rowfilter.RowNoRowFilter;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
-import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * 
@@ -184,9 +185,9 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeDialogPane
+     * @see org.knime.core.node.NodeDialogPane
      *      #loadSettingsFrom(NodeSettingsRO,
-     *      de.unikn.knime.core.data.DataTableSpec[])
+     *      org.knime.core.data.DataTableSpec[])
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -285,7 +286,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeDialogPane
+     * @see org.knime.core.node.NodeDialogPane
      *      #saveSettingsTo(NodeSettingsWO)
      */
     @Override

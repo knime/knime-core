@@ -25,20 +25,21 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.container.ColumnRearranger;
-import de.unikn.knime.core.node.BufferedDataTable;
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.ExecutionContext;
-import de.unikn.knime.core.node.ExecutionMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 /**
  * The model for the column filter which extracts certain columns from the input
- * {@link de.unikn.knime.core.data.DataTable} using a list of columns to
+ * {@link org.knime.core.data.DataTable} using a list of columns to
  * exclude.
  * 
  * @author Christoph Sieb, University of Konstanz
@@ -99,8 +100,8 @@ final class FilterColumnNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #saveInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel #saveInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -110,8 +111,8 @@ final class FilterColumnNodeModel extends NodeModel {
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeModel #loadInternals(java.io.File,
-     *      de.unikn.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -175,7 +176,7 @@ final class FilterColumnNodeModel extends NodeModel {
 
     /**
      * Writes number of filtered columns, and the names as
-     * {@link de.unikn.knime.core.data.DataCell} to the given settings.
+     * {@link org.knime.core.data.DataCell} to the given settings.
      * 
      * @param settings the object to save the settings into
      */

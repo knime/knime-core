@@ -24,12 +24,13 @@ package de.unikn.knime.base.node.filter.column;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+
 import de.unikn.knime.base.node.util.FilterColumnPanel;
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
-import de.unikn.knime.core.node.NotConfigurableException;
 
 /**
  * This is the dialog for the column filter. The user can specify which columns

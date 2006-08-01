@@ -24,8 +24,8 @@
  */
 package de.unikn.knime.base.node.io.filereader;
 
-import de.unikn.knime.core.data.DataRow;
-import de.unikn.knime.core.data.RowIterator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowIterator;
 
 /**
  * The iterator for the

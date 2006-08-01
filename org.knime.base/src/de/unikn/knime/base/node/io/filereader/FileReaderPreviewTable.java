@@ -29,8 +29,9 @@ import java.util.LinkedList;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import de.unikn.knime.core.data.DataTableSpec;
-import de.unikn.knime.core.data.RowIterator;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
+
 
 /**
  * The data table displayed in the file reader's dialog's preview. We need an
