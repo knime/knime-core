@@ -10,9 +10,9 @@
       <view
             name="Node Repository"
             icon="icons/view.png"
-            category="de.unikn.knime.workbench.ui.category"
-            class="de.unikn.knime.workbench.repository.view.RepositoryView"
-            id="de.unikn.knime.workbench.repository.view.RepositoryView">
+            category="org.knime.workbench.ui.category"
+            class="org.knime.workbench.repository.view.RepositoryView"
+            id="org.knime.workbench.repository.view.RepositoryView">
          <description>
             This contains all known nodes, grouped into categories, that can be used to model
 a data &quot;workflow&quot;
