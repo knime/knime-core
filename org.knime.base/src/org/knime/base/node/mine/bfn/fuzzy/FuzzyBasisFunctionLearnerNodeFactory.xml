@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode type="Learner" icon="./fuzzybf.ico">
+	<name>Fuzzy Rule Learner</name>
+	
+	<shortDescription>
+	    Trains a Fuzzy Rule Model on labeled data.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+    	Generates a Fuzzy Rule Model on labeled data using 
+    	<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2003/Bert03_mixedFR_ijar.pdf">
+    	Mixed Fuzzy Rule Formation</a> as underlying trainings algorithm
+    	(see <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2004/GaBe04_mixedFRappendix_ijar.pdf">
+    	Influence of fuzzy norms and other heuristics on "Mixed Fuzzy Rule Formation"</a>
+    	for an extension.<br />
+    	All numeric columns are used as input columns for training. One 
+    	(additional) column is used as a classification target.<br />
+    	The input port contains the training data, the data output port, which the 
+    	trained fuzzy rules as table, and the model output of the Fuzzy Rule model,
+    	which can be used for prediction.<br />
+    	The algorithm generates rules based on input data, which can be described
+    	as fuzzy intervals in higher dimensional spaces. These hyper-rectangles 
+    	are defined by trapezoid fuzzy membership functions for each dimension.
+		</intro>
+	<option name="Target Column">
+		Select the target to be used as a classification attribute.
+	</option>
+	<option name="Missing Values">
+	    Select method to handle missing values.
+	</option>
+	<option name="Properties">
+	    Check, if a shrink should be performed immediately after a new rule
+	    has been introduced. Shrink means the new rule is reduced so that the
+	    conflict with all other conflicting rules is avoided.
+	</option>
+	<option name="Fuzzy Norm">
+	    Choice of fuzzy norm used to compute the rules' fulfillment across all
+	    dimensions and rules. 
+	</option>
+	<option name="Shrink Function">
+	    Shrink procedure which reduces rules to avoid conflict between
+	     rules of different classes based on the defined loss value.
+	</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Training Data">Data used for training. Should contain numeric data, as well as one target attribute for classification.</dataIn>
+		<dataOut index="0" name="Fuzzy Rule Table">Table with generated fuzzy rules, each dimension as fuzzy interval.</dataOut>
+		<predParamOut index="0" name="Fuzzy Rule Model">Generated fuzzy rule model can be used for prediction.</predParamOut>
+	</ports>	
+	<views>
+		<view index="0" name="Fuzzy Rule Model View">
+			Shows a summary of the generated fuzzy rule model.
+		</view>
+	</views>
+	
+</knimeNode>

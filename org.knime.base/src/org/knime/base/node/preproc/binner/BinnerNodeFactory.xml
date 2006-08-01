@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./binner.png" type="Manipulator">
+	<name>Numeric Binner</name>
+	
+	<shortDescription>
+	    Groups values of numeric columns into string-type categories.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    Groups values of numeric columns into string-type categories. 
+	    For each column a number of intervals (bins) can be defined. Each of 
+	    these bins has a unique name 
+	    (for this column), a range, and open or closed interval 
+	    borders. It automatically ensures that the ranges are defined 
+	    in descending order and that interval borders are consistent.
+	    In addition, each column can be either replaced with the binned, 
+	    string-type column or a new binned, string-type column is appended.
+		</intro>
+		
+		<option name="Select Column: ">
+		First select a column and then use the "Add" button to create the 
+		desired number of bins. Each bin can be modified in the lower part of 
+		the panel once it has been selected.
+        Each interval has to be defined independently or can be removed using
+        the "Removed" button. Note that the range as well as bin 
+	    borders are automatically adjusted, if necessary.
+		</option>
+		<option name="Append new Column: ">
+		If selected, a new column name can be specified. This name is used to
+		append a new binned column. The input column is kept.
+		</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Input Data">Data with the columns to bin</dataIn>
+		<dataOut index="0" name="Binned Data Columns">Data with the binned columns</dataOut>
+	</ports>	
+</knimeNode>

@@ -1,0 +1,36 @@
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2006
+ * University of Konstanz, Germany.
+ * Chair for Bioinformatics and Information Mining
+ * Prof. Dr. Michael R. Berthold
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any quesions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+<body>
+Contains the Sota node, which can be used for clustering hirarchically
+numerical and fuzzy data and visualize the resulting cluster tree.
+This node has a dialog, in wich one can choose the winner, ancestor and
+sister learningrate, to adjust the cluster representants with, the 
+minimal resource and variability value to stop the growing of the tree, the
+minimal error, to end a cycle and the distance metric (cosinus, euclidean).
+The node will cluster the given data hirarchically by use of the self
+organizing tree algorithm and will produce a cluster tree, which is
+visualized by the view afterwards similarily like a dendogram.
+The dats is displayed too and can be hilited, as well as each cluster 
+representant.
+See <strong><code>SotaNodeFactory</code></strong> to instanciate this 
+node.   
+</body>

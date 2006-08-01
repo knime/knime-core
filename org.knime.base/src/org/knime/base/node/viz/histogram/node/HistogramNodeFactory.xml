@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./histogram.gif" type="Visualizer">
+	<name>Interactive Histogram</name>	
+	<shortDescription>
+		Interactive Histogram view.
+	</shortDescription>	
+	<fullDescription>
+		<intro>
+		<p>Displays an interactive histogram view with different viewing options.</p>
+		<p>The user can change the following properties on the fly:
+			<ol>
+			<li>X axis</li>
+			<li>Aggregation column (Y axis)</li>
+			<li>Aggregation method (count, summary, average)</li>
+			<li>Number of bins for numerical attributes</li>
+			<li>The width of the bars</li>
+			<li>Shows empty intervals option</li>
+			<li>Shows missing value bar option</li>
+			<li>Zooming</li>
+			<li>Crosshair cursor</li>
+			<li>...</li>
+			</ol>
+		</p>
+		<p><b>Please note: This node caches all data in the main memory to 
+		provide interactive functions.</b></p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Data in port">The data table that should be displayed.</dataIn>
+	</ports>	
+	<views>
+		<view index="0" name="Histogram View">
+			Interactive histogram view
+		</view>
+	</views>
+</knimeNode>

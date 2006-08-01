@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode type="Sink" icon="./database_writer.png">
+	<name>Database Writer</name>
+	
+	<shortDescription>
+	    Establishes and opens a database access connection to which data can be written.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	     Establishes and opens a database access connection to which the entire input data can be written. 
+	     Make sure you have your personal database driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
+	     by default only but you can use the load button to register additional drivers from Zip or Jar.
+		</intro>
+		
+	<option name="Database Driver: ">
+		Enter the database driver here; it is a Java class (including the
+		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+	</option>
+	<option name="Load: ">
+	    Register additional driver from Zip or Jar files.
+	</option>
+	<option name="Database Name: ">
+        Enter the database name here, for example: 
+        jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+	</option>
+	<option name="User Name: ">
+        Your log-in user name for the database.
+	</option>
+	<option name="Password: ">
+        Your log-in password for the database. Note, the password is
+        de- and encryted everytime before handling it internally and is not 
+        stored inside the settings.
+	</option>
+	<option name="Table Name: ">
+        Enter the name of the table to which data should be written. Note, if this table
+        exists, the table is dropped before writing.
+	</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Data to Database">Table with data to write into database</dataIn>
+	</ports>	
+</knimeNode>

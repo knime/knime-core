@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./smote.png" type="Manipulator">         
+    <name>SMOTE</name>         
+    <shortDescription>Oversamples data using the SMOTE algorithm by Chawla et. al.</shortDescription>
+    <fullDescription>
+        <intro>
+			Oversamples data using the 
+			<a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">
+			SMOTE (Synthetic Minority Over-sampling Technique)</a> algorithm by 
+			Chawla et al. The algorithm creates synthetic examples for classes
+			of interest by extrapolating between a real sample of the class and
+			one of the sample's neighbors. The paper describing this technique 
+			is available online at
+			<a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">
+			http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf</a>.
+		</intro>
+		<option name="Class Column">
+		    Pick the column that contains the class information.
+		</option>
+		<option name="Nearest neighbor">
+			An option that determines how many nearest neighbors shall be considered.
+			The algorithm picks an object from the target class, randomly selects 
+			one of its neighbors and draws the new synthetic example along the 
+			line between the sample and the neighbor.
+		</option>
+		<option name="Oversample by">
+			Checking this option oversamples each class equally. You need to 
+			specify how much synthetic data is introduced, e.g. a value of 2 
+			will introduce two more portions for each class (if there are 50 
+			rows in the input table labeled as "A"; the output will contain 
+			150 rows belonging to "A").  
+		</option>
+		<option name="Oversample minority classes">
+		    This option adds synthetic examples to all classes that are
+			not the majority class. The output contains the same number
+			of rows for each of the possible classes. 
+		</option>
+	</fullDescription>
+    <ports>                 
+        <dataIn index="0" name="Input data">Table containing labeled data for oversampling</dataIn>
+        <dataOut index="0" name="Oversampled data">Oversampled data (input table with appended rows).</dataOut>
+	</ports>
+</knimeNode>

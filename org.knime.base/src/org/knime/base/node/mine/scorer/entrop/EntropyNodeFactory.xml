@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode type="Other" icon="./entropyscore.png">         
+    <name>Entropy Scorer</name>         
+    <shortDescription>Scorer for clustering results given a reference clustering.</shortDescription>
+    <fullDescription>
+        <intro>
+			Scorer for clustering results given a reference clustering. Connect the table
+		    containing the reference clustering to the first input port (the table should
+		    contain a column with the cluster IDs) and the table with the clustering results
+		    to the second input port (it should also contain a column with some cluster IDs).
+		    Select the respective columns in both tables from the dialog. After successful execution, 
+		    the view will show entropy values (the smaller the better) and some
+		    quality value (in [0,1] - with 1 being the best possible value, as used in
+		    <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2006/WiBe06_fcum_ijar.pdf">
+		      Fuzzy Clustering in Parallel Universes</a>, section 6: "Experimental results").
+		</intro>
+	</fullDescription>
+    <ports>                 
+        <dataIn index="0" name="Reference clustering">Table containing reference clustering.</dataIn>
+        <dataIn index="1" name="Clustering to score">Table containing clustering (to score).</dataIn>
+	</ports>
+	<views>
+		<view index="0" name="Statistics View">
+			Simple statistics on the clustering such as number of clusters being 
+			found, number of objects in clusters, number of reference clusters,
+            and total number of objects.
+		</view>
+	</views>
+</knimeNode>

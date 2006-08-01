@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode type="Learner" icon="./rbf_small.ico">
+	<name>PNN Learner</name>
+	
+	<shortDescription>
+	    Trains a Probabilistic Neural Network (PNN) on labeled data.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+  		Generates a Probabilistic Neural Network (PNN) on labeled data using
+		<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers1998/BeDi98_dda_neurocomp.pdf">
+		Constructive Training of Probabilistic Neural Networks</a> as underlying
+		algorithm.<br />
+		All numeric columns are used as input columns for training. One 
+    	additional column is used as a classification target.
+    	The input port contains the training data, the data output port contains 
+    	the center vectors of the PNN rules.
+    	The algorithm uses high-dimensional Gaussian functions to cover 
+    	instances that are adjusted by two thresholds, theta minus and plus, 
+    	during the learning process. New prototypes are commited until all
+    	examples have been correctly covered.
+		</intro>
+		
+	<option name="Target Column">
+		Select column to be used as classification attribute.
+	</option>
+	<option name="Missing Values">
+	    Select method to handle missing values.
+	</option>
+	<option name="Properties">
+	    Check, if a shrink should be performed immediately after a new rule
+	    has been introduced. Shrink means the new rule is reduced so that a
+	    conflict with all other rules is avoided.
+	</option>
+	<option name="Theta Minus">
+	    Default theta minus value is 0.2. This is the upper bound of
+		activation for conflicting rules.
+	</option>
+	<option name="Theta Plus">
+	    Default theta plus value is 0.4. This is the lower bound of
+		activation for non-conflicting rules.
+	</option>
+	</fullDescription>
+	
+	<views>
+		<view index="0" name="PNN Rule Model View">
+			Shows a summary of the generated PNN rule model.
+		</view>
+	</views>
+	
+	<ports>
+		<dataIn index="0" name="Training Data">Data used for training. Should contain numeric data, 
+		as well as one target attribute for classification.</dataIn>
+		<dataOut index="0" name="PNN Rule Table">Table with generated center vectors and a classification attribute.</dataOut>
+		<predParamOut index="0" name="PNN Rule Model">Generated PNN model can be used for prediction.</predParamOut>
+	</ports>	
+</knimeNode>
+

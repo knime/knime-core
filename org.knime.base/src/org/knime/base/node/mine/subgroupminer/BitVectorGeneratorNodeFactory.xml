@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./bitvector.png" type="Manipulator">
+	<name>Bitvector Generator</name>
+	
+	<shortDescription>
+			    Generates bitvectors either from a table containing only numerical values, or from 
+			    a string column containing the ids to be set.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Generates bitvectors either from a table containing only numerical values or from
+		a string column. In the case of numerical values, a threshold must be 
+		defined. Assuming you have an n x m matrix A of numerical values: the 
+		ouput would be n x 1, where the only column contains bitvectors of 
+		length m. If the value in row n and column m is above the threshold, the
+		m-th bit in the n-th bitvector is set.
+		In the case of a string column, the string column is considered to consist
+		of item ids present in this transaction, therefore, the string is parsed and
+		for every id, the referring bit is set in the bitvector. Finally, all 
+		bitvectors are of the length of the highest id+1.
+		</intro>
+		<option name="Parse ids from string column">
+			Check, if the input for the bitvectors is a string column with the item 
+			ids present in the referring transaction. Uncheck, if the data is a 
+			table with numerical data only and all values above a certain threshold 
+			should be set bits in the resulting bitvectors.
+		</option>		
+		<option name="String column containing the item ids">
+			If the "parse from string column" is checked, select the column
+			containing the item ids.
+		</option>
+		<option key="Threshold above bits are set">
+			If the "parse from string column" is unchecked, definition of the threshold
+			above the values is considered to be set bits. 
+			The threshold is inclusive.
+		</option>	
+        <option name="Use a percentage of the mean values as threshold">
+            Check, if a percentage of the mean of each column should serve as 
+            threshold above which the bits are set.
+        </option>	
+        <option name="Percentage of the mean">
+            Specify which percentage of the mean should have a value that is set to the 
+            referring bit.
+        </option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Input data to create bit vectors from">Datatable with numerical data or a string column to be parsed.</dataIn>
+		<dataOut index="0" name="Bit vector data">Datatable with the generated bitvectors.</dataOut>
+	</ports>	
+	<views>
+		<view index="0" name="Statistics View">
+			 Provides information about the generation of the bitsets from  
+			 the data. In particular this is the number of processed rows, 
+			 the resulting bitvector length, the total number of generated 
+			 zeros and ones and the resulting ratio from 1s to 0s.
+		</view>
+	</views>
+</knimeNode>

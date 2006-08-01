@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./sampler.png" type="Source">         
+    <name>Data Generator</name>         
+    <shortDescription>Creates random data with clusters.</shortDescription>
+    <fullDescription>
+        <intro>
+			Creates random data containing some clusters for Parallel Universes.
+		    The data contains a certain fraction of noise patterns and data that
+		    is generated to clusters (all clusters have the same size). The data is
+		    normalized in [0, 1].
+		</intro>
+		<option name="Cluster Count">
+			The number of clusters for each universe (comma separated).
+		</option>
+		<option name="Universe Sizes">
+			The number of attributes for each universe (comma separated).
+		</option>
+		<option name="Pattern Count">
+			Number of patterns (overall).
+		</option>
+		<option name="Standard Deviation">
+			Std. dev. for each cluster.
+		</option>
+		<option name="Noise Fraction">
+			Fraction of the overall data to be noise, i.e. randomly drawn data. 
+			This value must be in [0, 1].
+		</option>
+		<option name="Random Seed">
+			Seed for "deterministic" data generation.
+		</option>
+	</fullDescription>
+    <ports>                 
+		<dataOut index="0">Contains the data with the cluster id as last column</dataOut>
+		<dataOut index="1">Contains the cluster centers. The attributes in the universes where
+			the cluster is not located, are filled with missing values.</dataOut>
+	</ports>
+</knimeNode>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./partition.png" type="Manipulator">         
+    <name>Partitioning</name>         
+    <shortDescription>Splits table into two partitions.</shortDescription>
+    <fullDescription>
+        <intro>
+	        The input table is split into two partitions (i.e. row-wise),
+			e.g. train and test data. The two partitions are available at the
+			two output ports. The following options are available in the dialog:
+		</intro>
+		<option name="Absolute">
+			Specify the absolute number of rows in the first partition. If there are
+			less rows than specified here, all rows are entered into the first 
+			table, while the second table contains no rows.
+		</option>
+		<option name="Relative">
+			The percentage of the number of rows in the input table that are
+			in the first partition. It must be between 0 and 100, inclusively.
+		</option>
+		<option name="Draw randomly">
+			The sampling should be done randomly. If this is not checked the first partition
+			is taken from the top of the input table.
+		</option>
+		<option name="Seed">
+			Check this button and add a random seed to have deterministic 
+			sampling, i.e. each execution results in the same partitioning. 
+			If you do not specify a random seed, the partitioning will differ
+	        when the node is re-executed.
+		</option>
+	</fullDescription>                  
+    <ports>                 
+        <dataIn index="0" name="Table to partition">Table to partition.</dataIn>
+        <dataOut index="0" name="First partition (as defined in dialog)">
+	        First partition (as defined in dialog).</dataOut>
+        <dataOut index="1" name="Second partition (remaining rows)">
+        	Second partition (remaining rows).</dataOut>
+	</ports>
+</knimeNode>

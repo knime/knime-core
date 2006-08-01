@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./sampling.png" type="Manipulator">         
+    <name>Row Sampling</name>         
+    <shortDescription>Extracts a sample (a bunch of rows) from the input data.</shortDescription>
+    <fullDescription>
+        <intro>
+			This node extracts a sample (a bunch of rows) from the input data. The dialog 
+			enables you to specify the sample size. The following options are 
+			available in the dialog:
+		</intro>
+		<option name="Absolute">
+			Specify the absolute number of rows in the sample. If there are
+			less rows than specified here, all rows are used.
+		</option>
+		<option name="Relative">
+			The percentage of the number of rows in the sample. 
+			Must be between 0 and 100, inclusively.
+		</option>
+		<option name="Draw randomly">
+			The sampling is carried out randomly. If this is not checked the sample
+			is taken from the top of the input table.
+		</option>
+		<option name="Seed">
+			Check this button and add a random seed to have deterministic 
+			sampling, i.e. each execution results in the same sampling. If you
+			do not specify a random seed, the sampling will differ when the 
+			node is re-executed.
+		</option>
+	</fullDescription>
+    <ports>                 
+        <dataIn index="0" name="Table to sample from">Table to sample from.</dataIn>
+        <dataOut index="0" name="The sampled table">The sampled table.</dataOut>
+	</ports>
+</knimeNode>

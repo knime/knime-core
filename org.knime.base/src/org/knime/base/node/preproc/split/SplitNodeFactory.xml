@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./splitter.png" type="Manipulator">         
+    <name>Splitter</name>    
+    <shortDescription>Splits the columns of the input table into two output tables.</shortDescription>
+    <fullDescription>
+        <intro>
+			This node splits the columns of the input table into two output tables. Specify in the
+		    dialog which columns should occur in the top table (the left list), 
+		    and the bottom table (the right list). Use the buttons to move columns 
+		    from one list to the other.
+		</intro>
+		<option name="Left list">
+			A list of column names that make up the first output table (top 
+			output port).
+		</option>
+		<option name="Right list">
+			A list of column names that make up the second output table (bottom 
+			output port).
+		</option>
+	</fullDescription>
+    <ports>                 
+        <dataIn index="0" name="Table to split">Table to split.</dataIn>
+        <dataOut index="0" name="Splitted table, 1st partition">Input table with the columns from the dialog's left list.</dataOut>
+        <dataOut index="1" name="Splitted table, 2nd partition">Input table with the columns from the dialog's right list.</dataOut>
+	</ports>
+</knimeNode>

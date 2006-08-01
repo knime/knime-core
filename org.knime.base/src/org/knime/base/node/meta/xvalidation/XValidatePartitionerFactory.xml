@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="" type="Manipulator">
+	<name>X-Partitioner</name>
+	
+	<shortDescription>
+		Data partitioner for use in a cross-validation flow
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>This node is soley used to splitting the input table for a cross
+			validation node into two partitions.
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Any datatable">The datatable that is to be split</dataIn>
+		<dataOut index="0" name="Training data">The data table with the training data</dataOut>
+		<dataOut index="1" name="Test data">The data table with the test data</dataOut>
+	</ports>
+</knimeNode>

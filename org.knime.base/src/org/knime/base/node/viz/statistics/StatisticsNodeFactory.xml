@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode type="Visualizer" icon="./statistic.ico">
+	<name>Statistics View</name>
+	
+	<shortDescription>
+	    Calculates statistics across all columns.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+		This node has no dialog, therefore the statistical moments are computed for 
+		numeric columns.
+		The following moments are computed: mean, standard deviation, variance,
+		minimum, and maximum.
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Table">Table in which to compute statistics</dataIn>
+	</ports>	
+	<views>
+		<view index="0" name="Statistics View">
+			Displays statistics based for all columns.
+		</view>
+	</views>
+</knimeNode>

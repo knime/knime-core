@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode type="Predictor" icon="./rbfprediction_small.ico">
+	<name>PNN Predictor</name>
+	
+	<shortDescription>
+	    Applies unknown data to a Probabilistic Neural Network (PNN).
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    Applies unknown data to a Probabilistic Neural Network (PNN). The first 
+	    input port contains the test data, the second one contains the PNN Model to which
+	    the data are applied. The output data has one additional column with the predicted
+	    class attribute.
+		</intro>
+		
+    <option name="Choose Name">
+	    The name of the predicted column, appended to the test data.
+    </option>
+    <option name="Don't Know Class">
+	    A probability between 0.0 and 1.0. Instances whose activation lies above
+	    this theshold are classified with an unknown missing class. This is 
+	    useful in cases where the feature space is not completely covered by
+	    rules.
+    </option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Test Data">Test data must have same column names and types as the PNN model.</dataIn>
+		<predParamIn index="0" name="PNN Model">PNN model used to classify test data.</predParamIn>
+		<dataOut index="0" name="Classified Test Data">Test data with one additional column.</dataOut>
+	</ports>	
+</knimeNode>

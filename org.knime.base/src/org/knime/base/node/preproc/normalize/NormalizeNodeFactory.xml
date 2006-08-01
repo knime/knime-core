@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./normalize.png" type="Manipulator">         
+    <name>Normalizer</name>   
+
+    <shortDescription>Normalizes the attributes of a table.</shortDescription>
+    <fullDescription>
+        <intro>
+	        This node normalizes the values of all (numeric) columns. In the
+			second tab of the dialog, you can choose the columns you want to work on.
+			The following normalizations are available in the dialog:
+		</intro>
+		<option name="Min-max normalization">
+			Linear transformation of all values such that the minimum and maximum 
+			in each column are as given.
+		</option>
+		<option name="Z-score normalization">
+			Linear transformation such that the values in each column are 
+			Gaussian-(0,1)-distributed, i.e. mean is 0.0 and standard deviation 
+			is 1.0.
+		</option>
+		<option name="Normalization by decimal scaling">
+			Each value is divided by 10 as long as it is greater than 1. 
+		</option>
+	</fullDescription>                  
+    <ports>                 
+        <dataIn index="0" name="Table to normalize">Table requiring normalization of some or all columns.</dataIn>
+        <dataOut index="0" name="Normalized table">Table with normalized columns.</dataOut>
+	</ports>
+</knimeNode>

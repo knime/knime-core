@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode type="Other" icon="./colorappender.gif">
+	<name>Color Appender</name>
+	
+	<shortDescription>
+	    Appends colors settings to a table.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    The color settings are appended to the input table. Select one
+	    in the dialag to apply colors.
+		</intro>
+	    <option name="Append Color: ">
+		    Select the column to apply color settings.
+	    </option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Table">Table to which colors are appended</dataIn>
+		<dataOut index="0" name="Table with Colors">Table with colors for the selected column</dataOut>
+		<predParamIn index="0" name="Color Settings">Color settings applied to the input table</predParamIn>
+	</ports>	
+	
+</knimeNode>
