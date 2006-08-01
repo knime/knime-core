@@ -464,7 +464,8 @@ public class RPropNodeModel extends NodeModel {
         if (m_errors == null) {
             return new JPanel();
         }
-        XYSeriesCollection dataset = new XYSeriesCollection();
+        m_errorplot = new JPanel();
+      /*  XYSeriesCollection dataset = new XYSeriesCollection();
         XYSeries series = new XYSeries("MSE");
         for (int iteration = 0; iteration < m_errors.length; iteration++) {
             series.add(iteration, m_errors[iteration]);
@@ -474,7 +475,7 @@ public class RPropNodeModel extends NodeModel {
                 "iteration", "error", dataset, // x-axis, y-axis label, data
                 PlotOrientation.VERTICAL, true, // create legend
                 true, false); // generate tooltips, do not generate URLs
-        m_errorplot = new ChartPanel(chart);
+        m_errorplot = new ChartPanel(chart);*/
         return m_errorplot;
     }
 
