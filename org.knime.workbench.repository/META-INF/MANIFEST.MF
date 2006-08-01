@@ -1,18 +1,19 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Repository
-Bundle-SymbolicName: de.unikn.knime.workbench.repository; singleton=true
+Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-ClassPath: workbench-repository.jar
-Bundle-Activator: de.unikn.knime.workbench.repository.KNIMERepositoryPlugin
+Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
 Bundle-Vendor: University of Konstanz, Germany
 Bundle-Localization: plugin
-Provide-Package: de.unikn.knime.workbench.repository,
- de.unikn.knime.workbench.repository.model,
- de.unikn.knime.workbench.repository.view
+Provide-Package: org.knime.workbench.repository,
+ org.knime.workbench.repository.model,
+ org.knime.workbench.repository.view
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.ui.views,
- de.unikn.knime.workbench.core;reprovide=true,
+ org.knime.workbench.core;reprovide=true,
  org.eclipse.gef,
  org.eclipse.ui.ide
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
+Bundle-ManifestVersion: 2

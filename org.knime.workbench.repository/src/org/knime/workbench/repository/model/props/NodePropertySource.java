@@ -1,0 +1,154 @@
+/* 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   16.03.2005 (georg): created
+ */
+package org.knime.workbench.repository.model.props;
+
+import org.eclipse.ui.views.properties.IPropertyDescriptor;
+import org.eclipse.ui.views.properties.IPropertySource;
+import org.eclipse.ui.views.properties.PropertyDescriptor;
+
+import org.knime.workbench.repository.model.NodeTemplate;
+
+/**
+ * Property Source for a "NodeTemplate" object.
+ * 
+ * @author Florian Georg, University of Konstanz
+ */
+public class NodePropertySource implements IPropertySource {
+    private static final PropertyDescriptor NAME_DESC = new PropertyDescriptor(
+            "name", "Name");
+
+    private static final PropertyDescriptor DESC_DESC = new PropertyDescriptor(
+            "description", "Description");
+
+    private static final PropertyDescriptor ID_DESC = new PropertyDescriptor(
+            "id", "ID");
+
+    private static final PropertyDescriptor TYPE_DESC = new PropertyDescriptor(
+            "type", "Type");
+
+    private static final PropertyDescriptor FACT_DESC = new PropertyDescriptor(
+            "factory", "Factory class");
+
+    private static final PropertyDescriptor ICON_DESC = new PropertyDescriptor(
+            "icon.small", "Small icon");
+
+
+    private static final PropertyDescriptor CAT_DESC = new PropertyDescriptor(
+            "category", "Category path");
+
+    private static final String CATEGORY_INFO = "Info";
+
+    private static final String CATEGORY_ICONS = "Icons";
+
+    private static final String CATEGORY_PATH = "Path";
+
+    private NodeTemplate m_node;
+
+    static {
+        NAME_DESC.setCategory(CATEGORY_INFO);
+        DESC_DESC.setCategory(CATEGORY_INFO);
+        FACT_DESC.setCategory(CATEGORY_INFO);
+        TYPE_DESC.setCategory(CATEGORY_INFO);
+
+        ICON_DESC.setCategory(CATEGORY_ICONS);
+        ID_DESC.setCategory(CATEGORY_PATH);
+    }
+
+    /**
+     * Constructs a new property source for the.
+     * 
+     * @param model The node that is wrapped by this property source
+     */
+    public NodePropertySource(final NodeTemplate model) {
+        m_node = model;
+    }
+
+    /**
+     * 
+     * @see org.eclipse.ui.views.properties.IPropertySource#getEditableValue()
+     */
+    public Object getEditableValue() {
+        return this;
+    }
+
+    /**
+     * 
+     * @see org.eclipse.ui.views.properties.IPropertySource#
+     *      getPropertyDescriptors()
+     */
+    public IPropertyDescriptor[] getPropertyDescriptors() {
+        return new IPropertyDescriptor[] {ID_DESC, NAME_DESC, TYPE_DESC,
+                DESC_DESC, FACT_DESC, CAT_DESC, ICON_DESC};
+    }
+
+    /**
+     * 
+     * @see org.eclipse.ui.views.properties.IPropertySource#
+     *      getPropertyValue(java.lang.Object)
+     */
+    public Object getPropertyValue(final Object id) {
+        if ("name".equals(id)) {
+            return m_node.getName();
+        }
+        if ("id".equals(id)) {
+            return m_node.getID();
+        }
+        if ("type".equals(id)) {
+            return m_node.getType();
+        }
+        if ("factory".equals(id)) {
+            return m_node.getFactory();
+        }
+        if ("category".equals(id)) {
+            return m_node.getCategoryPath();
+        }
+
+        // this should not happen
+        assert false : "Unknown property id: " + id;
+        return null;
+    }
+
+    /**
+     * 
+     * @see org.eclipse.ui.views.properties.IPropertySource#
+     *      isPropertySet(java.lang.Object)
+     */
+    public boolean isPropertySet(final Object id) {
+        return false;
+    }
+
+    /**
+     * 
+     * @see org.eclipse.ui.views.properties.IPropertySource#
+     *      resetPropertyValue(java.lang.Object)
+     */
+    public void resetPropertyValue(final Object id) {
+
+    }
+
+    /**
+     * 
+     * @see org.eclipse.ui.views.properties.IPropertySource#
+     *      setPropertyValue(java.lang.Object, java.lang.Object)
+     */
+    public void setPropertyValue(final Object id, final Object value) {
+        // TODO Auto-generated method stub
+    }
+}
