@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.script.expression;
+package org.knime.ext.sun.nodes.script.expression;
 
 import java.io.BufferedWriter;
 import java.io.File;

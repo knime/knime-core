@@ -22,7 +22,7 @@
  * History
  *   26.05.2005 (bernd): created
  */
-package org.knime.dev.node.script;
+package org.knime.ext.sun.nodes.script;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

@@ -20,29 +20,27 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.script.expression;
+package org.knime.ext.sun.nodes.script.expression;
 
 /**
- * Exception that is thrown when the user tries to set fields that are
- * incompatibel or do not exist.
+ * An exception being thrown when the compilation fails.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class IllegalPropertyException extends Exception {
+public class CompilationFailedException extends Exception {
     /**
-     * Creates new exception with given error.
-     * 
-     * @param message the error message
+     * @param msg detailed (more or less) error message
+     * @see Exception#Exception(java.lang.String)
      */
-    public IllegalPropertyException(final String message) {
-        super(message);
+    public CompilationFailedException(final String msg) {
+        super(msg);
     }
 
     /**
-     * @param message the error message to print
-     * @param cause the cause
+     * @param cause the cause for this exception
+     * @see Exception#Exception(java.lang.Throwable)
      */
-    public IllegalPropertyException(final String message, final Throwable cause) {
-        super(message, cause);
+    public CompilationFailedException(final Throwable cause) {
+        super(cause);
     }
 }

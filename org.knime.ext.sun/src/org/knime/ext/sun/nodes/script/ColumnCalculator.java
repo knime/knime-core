@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.script;
+package org.knime.ext.sun.nodes.script;
 
 import java.util.HashMap;
 
@@ -40,10 +40,10 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
-import org.knime.dev.node.script.expression.EvaluationFailedException;
-import org.knime.dev.node.script.expression.Expression;
-import org.knime.dev.node.script.expression.ExpressionInstance;
-import org.knime.dev.node.script.expression.IllegalPropertyException;
+import org.knime.ext.sun.nodes.script.expression.EvaluationFailedException;
+import org.knime.ext.sun.nodes.script.expression.Expression;
+import org.knime.ext.sun.nodes.script.expression.ExpressionInstance;
+import org.knime.ext.sun.nodes.script.expression.IllegalPropertyException;
 
 /**
  * Interface implementation that executes the java code snippet and calculates

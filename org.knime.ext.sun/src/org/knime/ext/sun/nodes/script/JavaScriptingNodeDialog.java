@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.script;
+package org.knime.ext.sun.nodes.script;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -59,7 +59,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
-import org.knime.dev.node.script.expression.CompilationFailedException;
+import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 
 /**
  * 

@@ -1,4 +1,4 @@
-/*  
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,27 +20,20 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.script.expression;
+package org.knime.ext.sun.nodes.script.expression;
 
 /**
- * An exception being thrown when the compilation fails.
+ * Exception that wraps any Throwable when the compiled byte code is being
+ * executed.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class CompilationFailedException extends Exception {
-    /**
-     * @param msg detailed (more or less) error message
-     * @see Exception#Exception(java.lang.String)
-     */
-    public CompilationFailedException(final String msg) {
-        super(msg);
-    }
-
+public class EvaluationFailedException extends Exception {
     /**
      * @param cause the cause for this exception
      * @see Exception#Exception(java.lang.Throwable)
      */
-    public CompilationFailedException(final Throwable cause) {
+    public EvaluationFailedException(final Throwable cause) {
         super(cause);
     }
 }

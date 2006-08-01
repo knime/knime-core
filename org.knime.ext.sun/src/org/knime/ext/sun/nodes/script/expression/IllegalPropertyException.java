@@ -1,4 +1,4 @@
-/* 
+/*  
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,20 +20,29 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.script.expression;
+package org.knime.ext.sun.nodes.script.expression;
 
 /**
- * Exception that wraps any Throwable when the compiled byte code is being
- * executed.
+ * Exception that is thrown when the user tries to set fields that are
+ * incompatibel or do not exist.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class EvaluationFailedException extends Exception {
+public class IllegalPropertyException extends Exception {
     /**
-     * @param cause the cause for this exception
-     * @see Exception#Exception(java.lang.Throwable)
+     * Creates new exception with given error.
+     * 
+     * @param message the error message
      */
-    public EvaluationFailedException(final Throwable cause) {
-        super(cause);
+    public IllegalPropertyException(final String message) {
+        super(message);
+    }
+
+    /**
+     * @param message the error message to print
+     * @param cause the cause
+     */
+    public IllegalPropertyException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 }

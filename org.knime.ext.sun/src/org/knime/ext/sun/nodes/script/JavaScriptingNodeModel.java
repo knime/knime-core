@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.script;
+package org.knime.ext.sun.nodes.script;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,8 +46,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import org.knime.dev.node.script.expression.CompilationFailedException;
-import org.knime.dev.node.script.expression.Expression;
+import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
+import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
  * 
