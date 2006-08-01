@@ -25,7 +25,7 @@
          <copy file="about.mappings" toFile="plugin.mappings" />
          
          <antcall target="refresh">
-         	<param name="resource" value="/de.unikn.knime.workbench.branding"/>
+         	<param name="resource" value="/org.knime.workbench.branding"/>
          </antcall>
    </target>
    

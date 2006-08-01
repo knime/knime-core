@@ -12,7 +12,7 @@
   The essential components are: 
   <item>
   <b>Flow Editor</b> 
-  This <topic id="/de.unikn.knime.workbench.help/toc.xml">editor</topic> 
+  This <topic id="/org.knime.workbench.help/toc.xml">editor</topic> 
   enables you to create complex workflows consisting of
   different <topic id="??">nodes</topic>, that manipulate the data.
   </item>
