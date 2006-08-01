@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.node.join;
+package org.knime.base.node.preproc.join;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

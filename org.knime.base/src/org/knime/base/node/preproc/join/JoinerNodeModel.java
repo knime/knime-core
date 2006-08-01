@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.node.join;
+package org.knime.base.node.preproc.join;
 
 import java.io.File;
 import java.io.IOException;

@@ -22,7 +22,7 @@
  * History
  *   01.08.2005 (bernd): created
  */
-package org.knime.base.node.join;
+package org.knime.base.node.preproc.join;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
