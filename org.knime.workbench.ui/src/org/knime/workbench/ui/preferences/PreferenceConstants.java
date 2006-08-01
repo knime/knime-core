@@ -17,7 +17,7 @@
  * History
  *   12.01.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.ui.preferences;
+package org.knime.workbench.ui.preferences;
 
 import org.knime.core.node.NodeLogger.LEVEL;
 

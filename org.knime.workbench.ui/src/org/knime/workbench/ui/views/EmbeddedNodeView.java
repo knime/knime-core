@@ -17,7 +17,7 @@
  * History
  *   23.12.2005 (georg): created
  */
-package de.unikn.knime.workbench.ui.views;
+package org.knime.workbench.ui.views;
 
 import java.awt.Component;
 import java.awt.Frame;

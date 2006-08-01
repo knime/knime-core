@@ -17,7 +17,7 @@
  * History
  *   09.02.2005 (georg): created
  */
-package de.unikn.knime.workbench.ui.wrapper;
+package org.knime.workbench.ui.wrapper;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -51,7 +51,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowInExecutionException;
 
-import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * JFace implementation of a dialog containing the wrapped Panel from the

@@ -17,7 +17,7 @@
  * History
  *   11.07.2006 (sieb): created
  */
-package de.unikn.knime.workbench.ui.wizards.export;
+package org.knime.workbench.ui.wizards.export;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +48,8 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.misc.ContainerContentProvider;
 import org.eclipse.ui.part.DrillDownComposite;
 
-import de.unikn.knime.workbench.navigator.view.KnimeResourceLableProvider;
-import de.unikn.knime.workbench.navigator.view.KnimeResourcePatternFilter;
+import org.knime.workbench.navigator.view.KnimeResourceLableProvider;
+import org.knime.workbench.navigator.view.KnimeResourcePatternFilter;
 
 /**
  * Workbench-level composite for choosing a container. This is a complete copy

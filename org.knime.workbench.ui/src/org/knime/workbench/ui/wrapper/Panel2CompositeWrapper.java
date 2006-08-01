@@ -17,7 +17,7 @@
  * History
  *   09.02.2005 (georg): created
  */
-package de.unikn.knime.workbench.ui.wrapper;
+package org.knime.workbench.ui.wrapper;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;

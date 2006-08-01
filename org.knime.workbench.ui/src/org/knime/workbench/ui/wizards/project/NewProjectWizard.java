@@ -17,7 +17,7 @@
  * History
  *   12.01.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.ui.wizards.project;
+package org.knime.workbench.ui.wizards.project;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -53,9 +53,9 @@ import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.workbench.navigator.view.KnimeResourceNavigator;
-import de.unikn.knime.workbench.ui.builder.KNIMEProjectBuilder;
-import de.unikn.knime.workbench.ui.nature.KNIMEProjectNature;
+import org.knime.workbench.navigator.view.KnimeResourceNavigator;
+import org.knime.workbench.ui.builder.KNIMEProjectBuilder;
+import org.knime.workbench.ui.nature.KNIMEProjectNature;
 
 /**
  * Wizard for the creation of a new modeller project. TODO FIXME not yet

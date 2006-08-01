@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>de.unikn.knime.workbench.ui</name>
+	<name>org.knime.workbench.ui</name>
 	<comment></comment>
 	<projects>
 	</projects>

@@ -17,7 +17,7 @@
  * History
  *   11.03.2005 (georg): created
  */
-package de.unikn.knime.workbench.ui.builder;
+package org.knime.workbench.ui.builder;
 
 import java.util.Map;
 
@@ -27,7 +27,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
 
-import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Builder for KNIME Projects. TODO Not used yet - may be used e.g. to validate

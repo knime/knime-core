@@ -17,7 +17,7 @@
  * History
  *   04.07.2006 (sieb): created
  */
-package de.unikn.knime.workbench.ui.wizards.imports;
+package org.knime.workbench.ui.wizards.imports;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;

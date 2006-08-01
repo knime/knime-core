@@ -17,7 +17,7 @@
  * History
  *   11.07.2006 (sieb): created
  */
-package de.unikn.knime.workbench.ui.wizards.export;
+package org.knime.workbench.ui.wizards.export;
 
 import java.util.ArrayList;
 import java.util.List;

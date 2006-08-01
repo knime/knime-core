@@ -19,7 +19,7 @@
  * History
  *   12.01.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.ui;
+package org.knime.workbench.ui;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;

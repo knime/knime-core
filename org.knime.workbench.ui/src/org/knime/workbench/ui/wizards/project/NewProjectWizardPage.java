@@ -17,7 +17,7 @@
  * History
  *   07.02.2005 (georg): created
  */
-package de.unikn.knime.workbench.ui.wizards.project;
+package org.knime.workbench.ui.wizards.project;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.swtdesigner.ResourceManager;
 
-import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Page that is used as the "New Project" wizards' GUI.

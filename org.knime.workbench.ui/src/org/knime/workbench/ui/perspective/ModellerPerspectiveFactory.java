@@ -17,7 +17,7 @@
  * History
  *   12.01.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.ui.perspective;
+package org.knime.workbench.ui.perspective;
 
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;

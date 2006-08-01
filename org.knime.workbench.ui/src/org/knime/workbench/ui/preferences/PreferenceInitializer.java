@@ -17,12 +17,12 @@
  * History
  *   12.01.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.ui.preferences;
+package org.knime.workbench.ui.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Class used to initialize default preference values.

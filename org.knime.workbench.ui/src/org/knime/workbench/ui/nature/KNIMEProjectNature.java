@@ -17,7 +17,7 @@
  * History
  *   11.03.2005 (georg): created
  */
-package de.unikn.knime.workbench.ui.nature;
+package org.knime.workbench.ui.nature;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectNature;

@@ -17,7 +17,7 @@
  * History
  *   02.07.2006 (sieb): created
  */
-package de.unikn.knime.workbench.ui.wizards.export;
+package org.knime.workbench.ui.wizards.export;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

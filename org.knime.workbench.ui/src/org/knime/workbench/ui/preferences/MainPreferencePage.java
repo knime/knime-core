@@ -17,7 +17,7 @@
  * History
  *   12.01.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.ui.preferences;
+package org.knime.workbench.ui.preferences;
 
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * This class represents a preference page that is contributed to the
