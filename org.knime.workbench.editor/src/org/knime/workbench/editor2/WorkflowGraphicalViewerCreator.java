@@ -1,0 +1,120 @@
+/* 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   25.05.2005 (Florian Georg): created
+ */
+package org.knime.workbench.editor2;
+
+import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.gef.GraphicalViewer;
+import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
+import org.eclipse.gef.ui.actions.ActionRegistry;
+import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
+import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
+import org.eclipse.jface.util.TransferDropTargetListener;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IEditorSite;
+
+/**
+ * Helper class that creates the <code>GraphicalViewer</code> that is hosted
+ * inside the editor. This creates the root edit part and the
+ * <code>NodeTemplateDropTargetListener</code> that is responsible for
+ * dropping <code>NodeTemplates</code> into the viewer. (which get converted
+ * into <code>NodeContainer</code> objects.)
+ * 
+ * 
+ * @author Florian Georg, University of Konstanz
+ */
+public class WorkflowGraphicalViewerCreator {
+    /** the viewer. * */
+    private GraphicalViewer m_viewer;
+
+    /** the editor's action registry. */
+    private ActionRegistry m_actionRegistry;
+
+    /**
+     * 
+     * @param editorSite Current editor site
+     * @param actionRegistry The action registry to use
+     */
+    public WorkflowGraphicalViewerCreator(final IEditorSite editorSite,
+            final ActionRegistry actionRegistry) {
+
+        assert editorSite != null;
+
+        this.m_actionRegistry = actionRegistry;
+    }
+
+    /**
+     * Creates a new <code>Viewer</code>, configures, registers and
+     * initializes it.
+     * 
+     * @param parent the parent composite
+     */
+    public void createGraphicalViewer(final Composite parent) {
+        m_viewer = createViewer(parent);
+    }
+
+    /**
+     * Creates the viewer control, and connect it to a root edit part
+     * Additionally the viewer gets the edit part factory and a drop-listener.
+     * 
+     * @param parent Parent composite
+     * @return The viewer
+     */
+    protected GraphicalViewer createViewer(final Composite parent) {
+
+        // StatusLineValidationMessageHandler validationMessageHandler = new
+        // StatusLineValidationMessageHandler(editorSite);
+        GraphicalViewer viewer = new ScrollingGraphicalViewer();
+        viewer.createControl(parent);
+
+        // configure the m_viewer
+        viewer.getControl().setBackground(ColorConstants.white);
+        ScalableFreeformRootEditPart part = new ConnectionSelectingScalableFreeformRootEditPart();
+        viewer.setRootEditPart(part);
+        viewer.setKeyHandler(new GraphicalViewerKeyHandler(viewer));
+
+        // Add a drop listener
+        // This is a bit tricky and needs an explicit cast, as the
+        // deprecated method signature uses a class with the same name
+        // (...gef.dnd.TransferDropTargetListener)
+        // However, both classes not only are named the same, they
+        // actually both implement the same super-interface
+        // - strange stuff %-)
+        NodeTemplateDropTargetListener listener = null;
+        listener = new NodeTemplateDropTargetListener(viewer);
+        viewer.addDropTargetListener((TransferDropTargetListener)listener);
+
+        // configure context menu
+        viewer.setContextMenu(new WorkflowContextMenuProvider(m_actionRegistry,
+                viewer));
+
+        // set the factory that is able to create the edit parts to be
+        // used in the viewer
+        viewer.setEditPartFactory(NewWorkflowEditPartFactory.INSTANCE);
+
+        return viewer;
+    }
+
+    /**
+     * @return Returns the m_viewer.
+     */
+    public GraphicalViewer getViewer() {
+        return m_viewer;
+    }
+}
