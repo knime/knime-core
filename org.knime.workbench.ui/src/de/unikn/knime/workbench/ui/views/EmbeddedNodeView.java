@@ -38,8 +38,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+import org.knime.core.node.NodeView;
 
-import de.unikn.knime.core.node.NodeView;
 
 /**
  * View for showing Workbench-embedded KNIME Node-Views.

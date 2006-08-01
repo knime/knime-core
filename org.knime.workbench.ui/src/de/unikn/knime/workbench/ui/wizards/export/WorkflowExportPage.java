@@ -40,8 +40,8 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Page to enter the settings for the export of a workflow project.

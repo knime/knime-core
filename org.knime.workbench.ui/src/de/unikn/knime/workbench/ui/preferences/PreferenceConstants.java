@@ -19,7 +19,7 @@
  */
 package de.unikn.knime.workbench.ui.preferences;
 
-import de.unikn.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.NodeLogger.LEVEL;
 
 /**
  * Constant definitions for plug-in preferences. Values are stored under these

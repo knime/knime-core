@@ -45,12 +45,12 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowInExecutionException;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeDialogPane;
-import de.unikn.knime.core.node.NotConfigurableException;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
 import de.unikn.knime.workbench.ui.KNIMEUIPlugin;
 
 /**

@@ -51,8 +51,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.Workbench;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.navigator.view.KnimeResourceNavigator;
 import de.unikn.knime.workbench.ui.builder.KNIMEProjectBuilder;
 import de.unikn.knime.workbench.ui.nature.KNIMEProjectNature;
