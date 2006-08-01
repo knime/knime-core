@@ -45,200 +45,200 @@
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="de.unikn.knime.workbench.editor2.WorkflowEditor"
-            contributorClass="de.unikn.knime.workbench.editor2.WorkflowEditorActionBarContributor"
+            class="org.knime.workbench.editor2.WorkflowEditor"
+            contributorClass="org.knime.workbench.editor2.WorkflowEditorActionBarContributor"
             default="true"
             extensions="knime"
             filenames="knime"
             icon="icons/editor.png"
-            id="de.unikn.knime.workbench.editor.WorkflowEditor"
+            id="org.knime.workbench.editor.WorkflowEditor"
             name="KNIME Workflow Editor"/>
       <editor
-            class="de.unikn.knime.workbench.editor2.MetaWorkflowEditor"
-            contributorClass="de.unikn.knime.workbench.editor2.WorkflowEditorActionBarContributor"
+            class="org.knime.workbench.editor2.MetaWorkflowEditor"
+            contributorClass="org.knime.workbench.editor2.WorkflowEditorActionBarContributor"
             default="false"
             icon="icons/editor.png"
-            id="de.unikn.knime.workbench.editor.MetaWorkflowEditor"
+            id="org.knime.workbench.editor.MetaWorkflowEditor"
             name="KNIME Meta Workflow Editor"/>
    </extension>
    <extension
          point="org.eclipse.ui.editorActions">
       <editorContribution
-            id="de.unikn.knime.workbench.editor.editorContribution"
-            targetID="de.unikn.knime.workbench.editor.WorkflowEditor">
+            id="org.knime.workbench.editor.editorContribution"
+            targetID="org.knime.workbench.editor.WorkflowEditor">
          <menu
-               id="de.unikn.knime.workbench.editor.menu"
+               id="org.knime.workbench.editor.menu"
                label="Node"
                path="additions">
             <groupMarker name="group1"/>
          </menu>
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.OpenDialogEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.OpenDialogEditorAction"
                definitionId="knime.commands.openDialog"
                disabledIcon="icons/openDialog_disabled.gif"
                icon="icons/openDialog.gif"
-               id="de.unikn.knime.workbench.editor.actions.openDialog"
+               id="org.knime.workbench.editor.actions.openDialog"
                label="Configure"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Configure selected node"/>
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteEditorAction"
                definitionId="knime.commands.execute"
                disabledIcon="icons/execute_disabled.gif"
                icon="icons/execute.gif"
-               id="de.unikn.knime.workbench.editor.actions.execute"
+               id="org.knime.workbench.editor.actions.execute"
                label="Execute"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Execute selected and executable nodes"/>        
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
                definitionId="knime.commands.executeall"
                disabledIcon="icons/executeAll_disabled.gif"
                icon="icons/executeAll.gif"
-               id="de.unikn.knime.workbench.editor.actions.executeall"
+               id="org.knime.workbench.editor.actions.executeall"
                label="Execute all"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Execute all executable nodes"/>    
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.CancelAllEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.CancelAllEditorAction"
                definitionId="knime.commands.cancelall"
                disabledIcon="icons/cancelAll_disabled.PNG"
                icon="icons/cancelAll.PNG"
-               id="de.unikn.knime.workbench.editor.actions.cancelall"
+               id="org.knime.workbench.editor.actions.cancelall"
                label="Cancel all"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Cancel all running nodes"/>               
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
                definitionId="knime.commands.executeAndOpenView"
                disabledIcon="icons/executeAndView_disabled.PNG"
                icon="icons/executeAndView.PNG"
-               id="de.unikn.knime.workbench.editor.actions.executeAndOpenView"
+               id="org.knime.workbench.editor.actions.executeAndOpenView"
                label="ExecuteAndOpenView"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Execute selected node and open first view"/>
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
                definitionId="knime.commands.setNameAndDescription"
                disabledIcon="icons/setNameDescription_disabled.PNG"
                icon="icons/setNameDescription.PNG"
-               id="de.unikn.knime.workbench.editor.actions.setnameanddescription"
+               id="org.knime.workbench.editor.actions.setnameanddescription"
                label="SetNodeNameAndDescription"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="To set/view the user specified node name and a context dependant description."/>
                
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ResetEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ResetEditorAction"
                definitionId="knime.commands.reset"
                disabledIcon="icons/resetNode_disabled.gif"
                icon="icons/resetNode.gif"
-               id="de.unikn.knime.workbench.editor.actions.reset"
+               id="org.knime.workbench.editor.actions.reset"
                label="Reset"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Reset selected nodes"/>
          
                
       </editorContribution>
       <editorContribution
-            id="de.unikn.knime.workbench.editor.editorContribution"
-            targetID="de.unikn.knime.workbench.editor.MetaWorkflowEditor">
+            id="org.knime.workbench.editor.editorContribution"
+            targetID="org.knime.workbench.editor.MetaWorkflowEditor">
          <menu
-               id="de.unikn.knime.workbench.editor.menu"
+               id="org.knime.workbench.editor.menu"
                label="Node"
                path="additions">
             <groupMarker name="group1"/>
          </menu>
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.OpenDialogEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.OpenDialogEditorAction"
                definitionId="knime.commands.openDialog"
                disabledIcon="icons/openDialog_disabled.gif"
                icon="icons/openDialog.gif"
-               id="de.unikn.knime.workbench.editor.actions.openDialog"
+               id="org.knime.workbench.editor.actions.openDialog"
                label="Configure"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Configure selected node"/>
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteEditorAction"
                definitionId="knime.commands.execute"
                disabledIcon="icons/execute_disabled.gif"
                icon="icons/execute.gif"
-               id="de.unikn.knime.workbench.editor.actions.execute"
+               id="org.knime.workbench.editor.actions.execute"
                label="Execute"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Execute selected and executable nodes"/>        
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
                definitionId="knime.commands.executeall"
                disabledIcon="icons/executeAll_disabled.gif"
                icon="icons/executeAll.gif"
-               id="de.unikn.knime.workbench.editor.actions.executeall"
+               id="org.knime.workbench.editor.actions.executeall"
                label="Execute all"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Execute all executable nodes"/>    
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.CancelAllEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.CancelAllEditorAction"
                definitionId="knime.commands.cancelall"
                disabledIcon="icons/cancelAll_disabled.PNG"
                icon="icons/cancelAll.PNG"
-               id="de.unikn.knime.workbench.editor.actions.cancelall"
+               id="org.knime.workbench.editor.actions.cancelall"
                label="Cancel all"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Cancel all running nodes"/>               
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
                definitionId="knime.commands.executeAndOpenView"
                disabledIcon="icons/executeAndView_disabled.PNG"
                icon="icons/executeAndView.PNG"
-               id="de.unikn.knime.workbench.editor.actions.executeAndOpenView"
+               id="org.knime.workbench.editor.actions.executeAndOpenView"
                label="ExecuteAndOpenView"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Execute selected node and open first view"/>
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
                definitionId="knime.commands.setNameAndDescription"
                disabledIcon="icons/setNameDescription_disabled.PNG"
                icon="icons/setNameDescription.PNG"
-               id="de.unikn.knime.workbench.editor.actions.setnameanddescription"
+               id="org.knime.workbench.editor.actions.setnameanddescription"
                label="SetNodeNameAndDescription"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="To set/view the user specified node name and a context dependant description."/>
                
          <action
-               class="de.unikn.knime.workbench.editor2.actions.delegates.ResetEditorAction"
+               class="org.knime.workbench.editor2.actions.delegates.ResetEditorAction"
                definitionId="knime.commands.reset"
                disabledIcon="icons/resetNode_disabled.gif"
                icon="icons/resetNode.gif"
-               id="de.unikn.knime.workbench.editor.actions.reset"
+               id="org.knime.workbench.editor.actions.reset"
                label="Reset"
-               menubarPath="de.unikn.knime.workbench.editor.menu/group1"
+               menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="de.unikn.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Reset selected nodes"/>
          
                
