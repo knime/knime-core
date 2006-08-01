@@ -15,3 +15,5 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.ui
 Eclipse-LazyStart: true
 Bundle-ManifestVersion: 2
+Export-Package: org.knime.workbench.help,
+ org.knime.workbench.help.intro
