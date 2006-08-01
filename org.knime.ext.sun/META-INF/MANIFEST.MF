@@ -8,3 +8,4 @@ Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository
 Eclipse-AutoStart: true
+Bundle-ClassPath: lib/tools.jar

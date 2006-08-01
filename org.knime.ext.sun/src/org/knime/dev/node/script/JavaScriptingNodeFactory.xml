@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.inf.uni-konstanz.de/bioml/research/knime/Node.dtd">
+<knimeNode icon="./javascripting.png" type="Manipulator">         
+    <name>Java Scripting</name>         
+    <shortDescription>Calculates a new column based on java code snippets.</shortDescription>
+    <fullDescription>
+        <intro>
+			This node allows you to execute arbitrary java code to create
+			a new column or to replace an existing one. Enter the java code in 
+			the text area. To address certain input values of the table 
+			use <i>$name_of_col$</i>. For instance, the sum of the first two 
+			columns is <i>$col_1$ + $col_2$</i> (replace col_1 and col_2 by the 
+			name of the columns). Please also specify the return type with one 
+			of the radio buttons. The final value will be the result of your
+	        last statement (<b>after</b> last ';'). Note, you can also use static 
+	        methods of java utility classes, e.g. to get a column with random
+	        values, simply enter Math.random() and check the double return type.
+		</intro>
+		<option name="Text Area">
+		  Enter your java code here (the entire source will be wrapped in a 
+		  method), do not add the <b>return</b> keyword though but only the
+		  statement that succeeds <b>return</b>. If you use more complex code, 
+		  for instance loops, enter a (potentially unnecessary) '<b>;</b>' 
+		  right before the return statement. You can add the name of a column 
+		  by clicking its name in the left list. Note that numeric 
+		  (double-compatible) columns will be handled as generic <i>double</i>,
+		  int-compatible columns as <i>int</i> and any other column type as 
+		  <i>String</i>.
+		</option>
+		<option name="Return type">
+		  Specify here the resulting type of your code snippet. Unfortunately
+		  KNIME cannot determine what will be the correct return type - so you 
+		  need to assist here.
+		</option>
+		<option name="Replace/Append">
+		  Specify here if you want the result to be put into a separate or 
+		  existing column.
+		</option>
+	</fullDescription>
+    <ports>                 
+        <dataIn name="Any input table" index="0">Input table.</dataIn>
+        <dataOut name="Appended table" index="0">Input table with an additional calculated column
+	        or one column replaced.
+        </dataOut>
+	</ports>
+</knimeNode>
