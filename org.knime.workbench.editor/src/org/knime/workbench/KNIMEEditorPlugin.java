@@ -33,7 +33,7 @@ import org.osgi.framework.BundleContext;
 public class KNIMEEditorPlugin extends AbstractUIPlugin {
     // Make sure that this *always* matches the ID in plugin.xml
     /** The Plugin ID. */
-    public static final String PLUGIN_ID = "de.unikn.knime.workbench.editor";
+    public static final String PLUGIN_ID = "org.knime.workbench.editor";
 
     // The shared instance.
     private static KNIMEEditorPlugin plugin;
@@ -109,7 +109,7 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
         try {
             if (m_resourceBundle == null) {
                 m_resourceBundle = ResourceBundle
-                        .getBundle("de.unikn.knime.workbench.editor.Resources");
+                        .getBundle("org.knime.workbench.editor.Resources");
             }
         } catch (MissingResourceException x) {
             m_resourceBundle = null;

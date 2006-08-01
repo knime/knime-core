@@ -107,8 +107,8 @@ public class ExecuteAllAction extends AbstractNodeAction {
      * editor. The passed nodeParts are not needed here, as not only the
      * selected parts are executed but all executable nodes.
      * 
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(de.unikn.knime.workbench.editor2.
+     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
+     *      #runOnNodes(org.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
     @Override

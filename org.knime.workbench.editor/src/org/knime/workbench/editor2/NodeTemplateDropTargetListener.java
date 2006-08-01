@@ -37,9 +37,9 @@ import org.knime.workbench.repository.view.NodeTemplateTransfer;
  * <code>NodeFromNodeTemplateCreationFactory</code> A special Transfer type is
  * used (NodeTemplateTransfer)
  * 
- * @see de.unikn.knime.workbench.repository.model.NodeTemplate
- * @see de.unikn.knime.workbench.editor2.NodeFromNodeTemplateCreationFactory
- * @see de.unikn.knime.workbench.repository.view.NodeTemplateTransfer
+ * @see org.knime.workbench.repository.model.NodeTemplate
+ * @see org.knime.workbench.editor2.NodeFromNodeTemplateCreationFactory
+ * @see org.knime.workbench.repository.view.NodeTemplateTransfer
  * 
  * @author Florian Georg, University of Konstanz
  */

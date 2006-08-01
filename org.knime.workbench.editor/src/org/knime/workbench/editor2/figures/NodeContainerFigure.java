@@ -587,7 +587,7 @@ public class NodeContainerFigure extends RectangleFigure {
          * Sets a type specific background image.
          * 
          * @param type The node type, results in a different background
-         * @see de.unikn.knime.workbench.repository.model.NodeTemplate
+         * @see org.knime.workbench.repository.model.NodeTemplate
          */
         void setType(final NodeType type) {
             m_backgroundIcon.setIcon(getBackgroundForType(type));

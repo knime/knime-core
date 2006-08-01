@@ -626,7 +626,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // add Help context
         WorkbenchHelpSystem.getInstance().setHelp(
                 m_graphicalViewer.getControl(),
-                "de.unikn.knime.workbench.help.flow_editor_context");
+                "org.knime.workbench.help.flow_editor_context");
 
         loadProperties();
 

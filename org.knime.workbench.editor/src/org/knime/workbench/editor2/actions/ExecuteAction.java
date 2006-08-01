@@ -108,8 +108,8 @@ public class ExecuteAction extends AbstractNodeAction {
      * all controlled by the WorkflowManager object of the currently open
      * editor.
      * 
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(de.unikn.knime.workbench.editor2.
+     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
+     *      #runOnNodes(org.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
     @Override

@@ -96,8 +96,8 @@ public class CancelAllAction extends AbstractNodeAction {
     /**
      * This cancels all running jobs.
      * 
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(de.unikn.knime.workbench.editor2.
+     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
+     *      #runOnNodes(org.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
     @Override

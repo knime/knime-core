@@ -58,7 +58,7 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
 
     /**
      * 
-     * @see de.unikn.knime.workbench.editor2.figures.AbstractNodePortFigure
+     * @see org.knime.workbench.editor2.figures.AbstractNodePortFigure
      *      #isModelPort()
      */
     @Override

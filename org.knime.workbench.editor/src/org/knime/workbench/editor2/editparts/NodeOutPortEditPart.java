@@ -81,7 +81,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
     }
     
     /**
-     * @see de.unikn.knime.workbench.editor2.editparts.AbstractPortEditPart#
+     * @see org.knime.workbench.editor2.editparts.AbstractPortEditPart#
      *      isModelPort()
      */
     @Override

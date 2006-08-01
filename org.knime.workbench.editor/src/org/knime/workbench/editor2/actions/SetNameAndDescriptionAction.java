@@ -108,8 +108,8 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      * dialog is closed the new name and description are set to the node
      * container if applicable.
      * 
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction#
-     *      runOnNodes(de.unikn.knime.workbench.editor2.editparts.
+     * @see org.knime.workbench.editor2.actions.AbstractNodeAction#
+     *      runOnNodes(org.knime.workbench.editor2.editparts.
      *      NodeContainerEditPart[])
      */
     @Override

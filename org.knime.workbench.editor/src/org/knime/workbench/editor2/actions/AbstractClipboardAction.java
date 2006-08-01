@@ -51,7 +51,7 @@ public abstract class AbstractClipboardAction extends AbstractNodeAction {
     public abstract String getId();
 
     /**
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction#runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     * @see org.knime.workbench.editor2.actions.AbstractNodeAction#runOnNodes(org.knime.workbench.editor2.editparts.NodeContainerEditPart[])
      */
     @Override
     public abstract void runOnNodes(NodeContainerEditPart[] nodeParts);

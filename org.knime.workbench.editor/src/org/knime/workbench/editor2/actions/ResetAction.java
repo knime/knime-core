@@ -86,8 +86,8 @@ public class ResetAction extends AbstractNodeAction {
      * Resets all nodes, this is lightweight and does not need to be executed
      * inside an async job.
      * 
-     * @see de.unikn.knime.workbench.editor2.actions. AbstractNodeAction#
-     *      runOnNodes(de.unikn.knime.workbench.editor2.
+     * @see org.knime.workbench.editor2.actions. AbstractNodeAction#
+     *      runOnNodes(org.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
      */
     @Override

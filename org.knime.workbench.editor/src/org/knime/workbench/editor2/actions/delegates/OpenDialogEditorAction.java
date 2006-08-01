@@ -31,8 +31,8 @@ import org.knime.workbench.editor2.actions.OpenDialogAction;
 public class OpenDialogEditorAction extends AbstractEditorAction {
     /**
      * @see 
-     * de.unikn.knime.workbench.editor2.actions.delegates.AbstractEditorAction
-     *      #createAction(de.unikn.knime.workbench.editor2.WorkflowEditor)
+     * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
+     *      #createAction(org.knime.workbench.editor2.WorkflowEditor)
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {

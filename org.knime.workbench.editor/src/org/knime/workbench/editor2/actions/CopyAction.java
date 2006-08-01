@@ -141,8 +141,8 @@ public class CopyAction extends AbstractClipboardAction {
     }
 
     /**
-     * @see de.unikn.knime.workbench.editor2.actions.AbstractNodeAction
-     *  #runOnNodes(de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
+     *  #runOnNodes(org.knime.workbench.editor2.editparts.NodeContainerEditPart[])
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {

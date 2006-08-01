@@ -131,7 +131,7 @@ public class EditMetaWorkflowAction extends Action {
                     .getActiveWorkbenchWindow()
                     .getActivePage()
                     .openEditor(editorInput,
-                          "de.unikn.knime.workbench.editor.MetaWorkflowEditor");
+                          "org.knime.workbench.editor.MetaWorkflowEditor");
 
             childEditor.setParentEditor(parentEditor);
             parentEditor.addEditor(childEditor);
