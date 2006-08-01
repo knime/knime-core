@@ -7,7 +7,7 @@
 
 Plugin
 ----------------
-de.unikn.knime.workbench.editor
+org.knime.workbench.editor
 
 Description
 ----------------
