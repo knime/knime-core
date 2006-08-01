@@ -36,7 +36,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     // Make sure that this *always* matches the ID in plugin.xml
 
     /** The plugin ID. */
-    public static final String PLUGIN_ID = "de.unikn.knime.workbench.ui";
+    public static final String PLUGIN_ID = "org.knime.workbench.ui";
 
     // The shared instance.
     private static KNIMEUIPlugin plugin;
@@ -113,7 +113,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         try {
             if (m_resourceBundle == null) {
                 m_resourceBundle = ResourceBundle
-                        .getBundle("de.unikn.knime.workbench.ui.Resources");
+                        .getBundle("org.knime.workbench.ui.Resources");
             }
         } catch (MissingResourceException x) {
             m_resourceBundle = null;

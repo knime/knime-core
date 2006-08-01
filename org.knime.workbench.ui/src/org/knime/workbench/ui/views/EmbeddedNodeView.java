@@ -50,7 +50,7 @@ public class EmbeddedNodeView extends ViewPart implements
         PropertyChangeListener {
 
     /** The view ID, needed to open instances of this view programatically. */
-    public static final String ID = "de.unikn.knime.workbench.ui.views.EmbeddedNodeView";
+    public static final String ID = "org.knime.workbench.ui.views.EmbeddedNodeView";
 
     private Action m_action1;
 

@@ -240,7 +240,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
     private void throwCoreException(final String message) throws CoreException {
         IStatus status = new Status(IStatus.ERROR,
-                "de.unikn.knime.workbench.ui", IStatus.OK, message, null);
+                "org.knime.workbench.ui", IStatus.OK, message, null);
         throw new CoreException(status);
     }
 }
