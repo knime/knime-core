@@ -22,8 +22,8 @@ package de.unikn.knime.workbench.repository;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.swt.graphics.Image;
+import org.knime.core.node.NodeFactory;
 
-import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.workbench.repository.model.Category;
 import de.unikn.knime.workbench.repository.model.IContainerObject;
 import de.unikn.knime.workbench.repository.model.IRepositoryObject;

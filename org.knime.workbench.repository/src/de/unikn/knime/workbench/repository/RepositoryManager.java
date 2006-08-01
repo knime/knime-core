@@ -31,9 +31,9 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.node.NodeLogger;
 
-import de.unikn.knime.core.eclipseUtil.GlobalClassCreator;
-import de.unikn.knime.core.node.NodeLogger;
 import de.unikn.knime.workbench.core.EclipseClassCreator;
 import de.unikn.knime.workbench.core.WorkbenchErrorLogger;
 import de.unikn.knime.workbench.repository.model.Category;
