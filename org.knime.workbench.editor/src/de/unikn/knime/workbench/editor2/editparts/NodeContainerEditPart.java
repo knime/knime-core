@@ -34,16 +34,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodePort;
+import org.knime.core.node.NodeStateListener;
+import org.knime.core.node.NodeStatus;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeFactory;
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodePort;
-import de.unikn.knime.core.node.NodeStateListener;
-import de.unikn.knime.core.node.NodeStatus;
-import de.unikn.knime.core.node.NotConfigurableException;
-import de.unikn.knime.core.node.NodeFactory.NodeType;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 import de.unikn.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import de.unikn.knime.workbench.editor2.directnodeedit.NodeEditManager;
@@ -292,7 +292,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * Handles state changes for the underlying node.
      * 
-     * @see de.unikn.knime.core.node.NodeStateListener#stateChanged(NodeStatus,
+     * @see org.knime.core.node.NodeStateListener#stateChanged(NodeStatus,
      *      int)
      */
     public void stateChanged(final NodeStatus state, final int id) {

@@ -32,11 +32,11 @@ import org.eclipse.gef.SnapToGuides;
 import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.rulers.RulerProvider;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.workflow.WorkflowEvent;
-import de.unikn.knime.core.node.workflow.WorkflowListener;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import de.unikn.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import de.unikn.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
@@ -193,8 +193,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * Controller is getting notified about model changes. This invokes
      * <code>refreshChildren</code> keep in sync with the model.
      * 
-     * @see de.unikn.knime.core.node.workflow.WorkflowListener
-     *      #workflowChanged(de.unikn.knime.core.node.workflow.WorkflowEvent)
+     * @see org.knime.core.node.workflow.WorkflowListener
+     *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
     public void workflowChanged(final WorkflowEvent event) {
         LOGGER.debug("WorkflowRoot: workflow changed, refreshing "

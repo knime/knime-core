@@ -92,22 +92,22 @@ import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DefaultNodeProgressMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeProgressListener;
+import org.knime.core.node.NodeProgressMonitor;
+import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.meta.MetaInputModel;
+import org.knime.core.node.meta.MetaOutputModel;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowInExecutionException;
+import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.CanceledExecutionException;
-import de.unikn.knime.core.node.DefaultNodeProgressMonitor;
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.KNIMEConstants;
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeProgressListener;
-import de.unikn.knime.core.node.NodeProgressMonitor;
-import de.unikn.knime.core.node.NodeLogger.LEVEL;
-import de.unikn.knime.core.node.meta.MetaInputModel;
-import de.unikn.knime.core.node.meta.MetaOutputModel;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowEvent;
-import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
-import de.unikn.knime.core.node.workflow.WorkflowListener;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
 import de.unikn.knime.workbench.editor2.actions.CancelAllAction;
 import de.unikn.knime.workbench.editor2.actions.CopyAction;
@@ -1005,7 +1005,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         /**
-         * @see de.unikn.knime.core.node.NodeProgressListener#
+         * @see org.knime.core.node.NodeProgressListener#
          *      progressChanged(double, java.lang.String)
          */
         public void progressChanged(final double progress, final String message) {
@@ -1254,8 +1254,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
      * 
-     * @see de.unikn.knime.core.node.workflow.WorkflowListener
-     *      #workflowChanged(de.unikn.knime.core.node.workflow.WorkflowEvent)
+     * @see org.knime.core.node.workflow.WorkflowListener
+     *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
     public void workflowChanged(final WorkflowEvent event) {
         LOGGER.debug("Workflow event triggered: " + event.toString());

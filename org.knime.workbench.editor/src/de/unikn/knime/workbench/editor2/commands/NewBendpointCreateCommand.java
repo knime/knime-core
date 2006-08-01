@@ -23,8 +23,8 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
+import org.knime.core.node.workflow.ConnectionContainer;
 
-import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 

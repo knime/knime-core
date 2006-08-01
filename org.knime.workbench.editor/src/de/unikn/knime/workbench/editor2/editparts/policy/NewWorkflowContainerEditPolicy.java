@@ -26,10 +26,10 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeFactory;
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.commands.CreateNodeCommand;
 import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;

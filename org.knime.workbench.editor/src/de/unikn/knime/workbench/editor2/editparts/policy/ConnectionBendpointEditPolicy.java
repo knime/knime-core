@@ -37,8 +37,8 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.SelectionHandlesEditPolicy;
 import org.eclipse.gef.requests.BendpointRequest;
+import org.knime.core.node.workflow.ConnectionContainer;
 
-import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.workbench.editor2.commands.NewBendpointCreateCommand;
 import de.unikn.knime.workbench.editor2.commands.NewBendpointDeleteCommand;
 import de.unikn.knime.workbench.editor2.commands.NewBendpointMoveCommand;

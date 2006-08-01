@@ -26,12 +26,12 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeExtraInfo;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeSettings;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.NodeExtraInfo;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.ClipboardObject;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.editparts.AbstractWorkflowEditPart;

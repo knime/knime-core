@@ -22,14 +22,14 @@ import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.ui.IEditorInput;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeStateListener;
+import org.knime.core.node.NodeStatus;
+import org.knime.core.node.meta.MetaInputModel;
+import org.knime.core.node.meta.MetaOutputModel;
+import org.knime.core.node.workflow.NodeContainer;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.NodeModel;
-import de.unikn.knime.core.node.NodeStateListener;
-import de.unikn.knime.core.node.NodeStatus;
-import de.unikn.knime.core.node.meta.MetaInputModel;
-import de.unikn.knime.core.node.meta.MetaOutputModel;
-import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
@@ -206,8 +206,8 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
     }
 
     /**
-     * @see de.unikn.knime.core.node.NodeStateListener#
-     *      stateChanged(de.unikn.knime.core.node.NodeStatus, int)
+     * @see org.knime.core.node.NodeStateListener#
+     *      stateChanged(org.knime.core.node.NodeStatus, int)
      */
     public void stateChanged(final NodeStatus state, final int id) {
         if (state instanceof NodeStatus.CustomName) {

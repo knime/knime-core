@@ -43,8 +43,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.NodeFactory.NodeType;
 
-import de.unikn.knime.core.node.NodeFactory.NodeType;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 
 /**

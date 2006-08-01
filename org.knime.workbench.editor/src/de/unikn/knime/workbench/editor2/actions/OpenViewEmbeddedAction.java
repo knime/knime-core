@@ -23,9 +23,9 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.workflow.NodeContainer;
 
-import de.unikn.knime.core.node.NodeView;
-import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.ui.views.EmbeddedNodeView;
 
 /**

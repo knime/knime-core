@@ -23,9 +23,9 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.commands.DeleteNodeContainerCommand;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;

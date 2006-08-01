@@ -21,11 +21,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.knime.core.node.NodeProgressListener;
+import org.knime.core.node.NodeProgressMonitor;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeProgressListener;
-import de.unikn.knime.core.node.NodeProgressMonitor;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 
 /**
  * This class is a dummy node job whose only responsibility is to show a
@@ -111,7 +111,7 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
     /**
      * Updates UI after progress has changed.
      * 
-     * @see de.unikn.knime.core.node.NodeProgressListener
+     * @see org.knime.core.node.NodeProgressListener
      *      #progressChanged(double, java.lang.String)
      */
     public synchronized void progressChanged(final double progress,

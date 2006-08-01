@@ -23,10 +23,10 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.meta.MetaNodeModel;
+import org.knime.core.node.workflow.NodeContainer;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.meta.MetaNodeModel;
-import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 import de.unikn.knime.workbench.editor2.MetaWorkflowEditor;
 import de.unikn.knime.workbench.editor2.MetaWorkflowEditorInput;

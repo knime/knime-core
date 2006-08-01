@@ -23,10 +23,10 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowInExecutionException;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.workflow.WorkflowInExecutionException;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**

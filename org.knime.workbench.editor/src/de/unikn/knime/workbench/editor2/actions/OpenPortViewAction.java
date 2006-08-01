@@ -21,9 +21,9 @@ package de.unikn.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.ImageRepository;
 
 /**

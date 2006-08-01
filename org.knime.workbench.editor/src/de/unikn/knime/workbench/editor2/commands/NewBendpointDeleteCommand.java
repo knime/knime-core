@@ -20,8 +20,8 @@
 package de.unikn.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.ConnectionContainer;
 
-import de.unikn.knime.core.node.workflow.ConnectionContainer;
 import de.unikn.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**

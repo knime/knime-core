@@ -22,8 +22,8 @@ package de.unikn.knime.workbench.editor2.editparts.policy;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.ComponentEditPolicy;
 import org.eclipse.gef.requests.GroupRequest;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.commands.DeleteNodeContainerCommand;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import de.unikn.knime.workbench.editor2.editparts.WorkflowRootEditPart;

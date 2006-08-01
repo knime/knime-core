@@ -30,8 +30,8 @@ import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
+import org.knime.core.node.NodeLogger;
 
-import de.unikn.knime.core.node.NodeLogger;
 
 /**
  * This is an implementation of a writer which logs to the ConsoleView inside

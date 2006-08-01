@@ -20,8 +20,8 @@
 package de.unikn.knime.workbench.editor2.directnodeedit;
 
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.NodeContainer;
 
-import de.unikn.knime.core.node.workflow.NodeContainer;
 
 /**
  * Command to change the user node name in the figure.

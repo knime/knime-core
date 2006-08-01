@@ -31,10 +31,10 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.meta.MetaNodeModel;
+import org.knime.core.node.workflow.NodeContainer;
 
-import de.unikn.knime.core.node.NodeLogger;
-import de.unikn.knime.core.node.meta.MetaNodeModel;
-import de.unikn.knime.core.node.workflow.NodeContainer;
 import de.unikn.knime.workbench.editor2.actions.AbstractNodeAction;
 import de.unikn.knime.workbench.editor2.actions.EditMetaWorkflowAction;
 import de.unikn.knime.workbench.editor2.actions.ExecuteAction;

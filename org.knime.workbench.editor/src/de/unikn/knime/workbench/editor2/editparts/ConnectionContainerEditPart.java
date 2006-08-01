@@ -35,10 +35,10 @@ import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
 
-import de.unikn.knime.core.node.workflow.ConnectionContainer;
-import de.unikn.knime.core.node.workflow.WorkflowEvent;
-import de.unikn.knime.core.node.workflow.WorkflowListener;
 import de.unikn.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import de.unikn.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import de.unikn.knime.workbench.editor2.editparts.policy.NewConnectionComponentEditPolicy;
@@ -146,8 +146,8 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     }
 
     /**
-     * @see de.unikn.knime.core.node.workflow.WorkflowListener
-     *      #workflowChanged(de.unikn.knime.core.node.workflow.WorkflowEvent)
+     * @see org.knime.core.node.workflow.WorkflowListener
+     *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
     public void workflowChanged(final WorkflowEvent event) {
         refreshVisuals();

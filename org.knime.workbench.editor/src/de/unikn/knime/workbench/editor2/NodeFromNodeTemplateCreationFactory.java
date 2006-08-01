@@ -20,8 +20,8 @@
 package de.unikn.knime.workbench.editor2;
 
 import org.eclipse.gef.requests.CreationFactory;
+import org.knime.core.node.NodeFactory;
 
-import de.unikn.knime.core.node.NodeFactory;
 import de.unikn.knime.workbench.repository.model.NodeTemplate;
 
 /**

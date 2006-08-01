@@ -21,10 +21,11 @@ package de.unikn.knime.workbench.editor2.extrainfo;
 
 import java.util.ArrayList;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
-import de.unikn.knime.core.node.workflow.ConnectionExtraInfo;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.ConnectionExtraInfo;
+
 
 /**
  * Default implementation of a connection extra info.
@@ -90,7 +91,7 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
     }
 
     /**
-     * @see de.unikn.knime.core.node.workflow.ConnectionExtraInfo
+     * @see org.knime.core.node.workflow.ConnectionExtraInfo
      *      #save(NodeSettingsWO)
      */
     public void save(final NodeSettingsWO config) {
@@ -103,7 +104,7 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
     }
 
     /**
-     * @see de.unikn.knime.core.node.workflow.ConnectionExtraInfo
+     * @see org.knime.core.node.workflow.ConnectionExtraInfo
      *      #load(NodeSettingsRO)
      */
     public void load(final NodeSettingsRO config)

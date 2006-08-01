@@ -21,12 +21,12 @@ package de.unikn.knime.workbench.editor2;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartFactory;
+import org.knime.core.node.NodeInPort;
+import org.knime.core.node.NodeOutPort;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.NodeInPort;
-import de.unikn.knime.core.node.NodeOutPort;
-import de.unikn.knime.core.node.workflow.ConnectionContainer;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import de.unikn.knime.workbench.editor2.editparts.NodeInPortEditPart;

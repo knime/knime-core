@@ -31,10 +31,10 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
-import de.unikn.knime.core.node.workflow.ConnectionContainer;
-import de.unikn.knime.core.node.workflow.NodeContainer;
-import de.unikn.knime.core.node.workflow.WorkflowManager;
 import de.unikn.knime.workbench.editor2.WorkflowEditor;
 import de.unikn.knime.workbench.editor2.editparts.AbstractWorkflowEditPart;
 import de.unikn.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -281,8 +281,8 @@ public abstract class AbstractNodeAction extends SelectionAction {
     // /**
     // * We must update the action on every change
     // *
-    // * @see de.unikn.knime.core.node.workflow.WorkflowListener
-    // * #workflowChanged(de.unikn.knime.core.node.workflow.WorkflowEvent)
+    // * @see org.knime.core.node.workflow.WorkflowListener
+    // * #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
     // */
     // public void workflowChanged(final WorkflowEvent event) {
     // update();

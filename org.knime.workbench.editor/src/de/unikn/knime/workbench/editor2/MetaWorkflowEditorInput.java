@@ -22,9 +22,9 @@ package de.unikn.knime.workbench.editor2;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
+import org.knime.core.node.meta.MetaNodeModel;
+import org.knime.core.node.workflow.NodeContainer;
 
-import de.unikn.knime.core.node.meta.MetaNodeModel;
-import de.unikn.knime.core.node.workflow.NodeContainer;
 
 /**
  * This node wraps a meta-workflow in form of setting. It is used to set up a

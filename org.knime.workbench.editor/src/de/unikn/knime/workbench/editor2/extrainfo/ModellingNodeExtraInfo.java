@@ -19,10 +19,10 @@
  */
 package de.unikn.knime.workbench.editor2.extrainfo;
 
-import de.unikn.knime.core.node.InvalidSettingsException;
-import de.unikn.knime.core.node.NodeSettingsRO;
-import de.unikn.knime.core.node.NodeSettingsWO;
-import de.unikn.knime.core.node.workflow.NodeExtraInfo;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NodeExtraInfo;
 
 /**
  * Special <code>NodeExtraInfo</code> object used by the workflow editor.
@@ -73,7 +73,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     }
 
     /**
-     * @see de.unikn.knime.core.node.workflow.NodeExtraInfo
+     * @see org.knime.core.node.workflow.NodeExtraInfo
      *      #save(NodeSettingsWO)
      */
     public void save(final NodeSettingsWO config) {
@@ -81,7 +81,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     }
 
     /**
-     * @see de.unikn.knime.core.node.workflow.NodeExtraInfo
+     * @see org.knime.core.node.workflow.NodeExtraInfo
      *      #load(NodeSettingsRO)
      */
     public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
@@ -89,7 +89,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     }
 
     /**
-     * @see de.unikn.knime.core.node.workflow.NodeExtraInfo#isFilledProperly()
+     * @see org.knime.core.node.workflow.NodeExtraInfo#isFilledProperly()
      */
     public boolean isFilledProperly() {
         if (m_bounds == null) {
