@@ -19,7 +19,7 @@
  * History
  *   28.08.2005 (Florian Georg): created
  */
-package de.unikn.knime.workbench.help.intro;
+package org.knime.workbench.help.intro;
 
 import java.util.Properties;
 
@@ -32,7 +32,7 @@ import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.intro.IIntroSite;
 import org.eclipse.ui.intro.config.IIntroAction;
 
-import de.unikn.knime.workbench.ui.wizards.project.NewProjectWizard;
+import org.knime.workbench.ui.wizards.project.NewProjectWizard;
 
 /**
  * 

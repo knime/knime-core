@@ -17,7 +17,7 @@
  * History
  *   19.01.2005 (georg): created
  */
-package de.unikn.knime.workbench.help;
+package org.knime.workbench.help;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
