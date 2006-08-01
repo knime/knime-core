@@ -22,7 +22,7 @@
  * History
  *   01.08.2005 (bernd): created
  */
-package org.knime.dev.node.join;
+package org.knime.base.node.join;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import org.knime.base.data.join.JoinedTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -44,7 +45,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
-import org.knime.dev.data.join.JoinedTable;
 
 /**
  * 

@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.node.join;
+package org.knime.base.node.join;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +29,8 @@ import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.knime.base.data.join.JoinedRow;
+import org.knime.base.data.join.JoinedTable;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -48,8 +50,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.DefaultHiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
-import org.knime.dev.data.join.JoinedRow;
-import org.knime.dev.data.join.JoinedTable;
 
 /**
  * Joins two tables such that the first table appears on the left side

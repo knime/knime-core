@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.data.join;
+package org.knime.base.data.join;
 
 import java.util.HashMap;
 import java.util.Map;
