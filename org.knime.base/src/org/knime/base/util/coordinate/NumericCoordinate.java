@@ -30,8 +30,8 @@ import org.knime.core.data.DataColumnSpec;
 /**
  * The abstract class which should be implemented by all coordinates which map
  * numeric values.
- * @see de.unikn.knime.base.util.coordinate.DoubleCoordinate 
- * @see de.unikn.knime.base.util.coordinate.IntegerCoordinate
+ * @see org.knime.base.util.coordinate.DoubleCoordinate 
+ * @see org.knime.base.util.coordinate.IntegerCoordinate
  * 
  * @author Tobias Koetter, University of Konstanz
  */
@@ -63,7 +63,7 @@ public abstract class NumericCoordinate extends Coordinate {
      * Calculates a numeric mapping assuming a
      * {@link org.knime.core.data.def.DoubleCell}.
      * 
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     * @see org.knime.base.util.coordinate.Coordinate
      *      #calculateMappedValue(org.knime.core.data.DataCell,double,
      *      boolean)
      */
@@ -72,7 +72,7 @@ public abstract class NumericCoordinate extends Coordinate {
             final double absolutLength, final boolean naturalMapping);
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#isNominal()
+     * @see org.knime.base.util.coordinate.Coordinate#isNominal()
      */
     @Override
     public boolean isNominal() {
@@ -82,7 +82,7 @@ public abstract class NumericCoordinate extends Coordinate {
     /**
      * A numeric coordinate does not has a unused distance range.
      * 
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     * @see org.knime.base.util.coordinate.Coordinate
      *      #getUnusedDistBetweenTicks(double)
      */
     @Override

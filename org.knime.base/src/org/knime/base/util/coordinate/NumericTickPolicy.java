@@ -26,7 +26,7 @@ package org.knime.base.util.coordinate;
 
 /**
  * Enumeration of all available policies determine the position of ticks of a
- * {@link de.unikn.knime.base.util.coordinate.DoubleCoordinate}.
+ * {@link org.knime.base.util.coordinate.DoubleCoordinate}.
  * 
  * @author Christoph Sieb, University of Konstanz
  */

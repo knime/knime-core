@@ -36,7 +36,7 @@ import org.knime.core.node.ExecutionMonitor;
 /**
  * Row iterator of the row filter table. Wraps a given row iterator and forwards
  * only rows that are approved by a given
- * {@link de.unikn.knime.base.node.filter.row.rowfilter.RowFilter}. Also a
+ * {@link org.knime.base.node.filter.row.rowfilter.RowFilter}. Also a
  * range of row numbers can be specified and a flag to only include or exclude
  * rows within that range. (The range feature is ANDed to the filter match
  * result. If another operation on the row number is required an appropreate

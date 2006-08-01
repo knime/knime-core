@@ -102,7 +102,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
+     * @see org.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
      *      #getClassCounts(org.knime.core.data.DataCell,
      *      org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)

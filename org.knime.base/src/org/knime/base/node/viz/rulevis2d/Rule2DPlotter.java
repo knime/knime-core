@@ -131,7 +131,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.scatterplot.ScatterPlotter
+     * @see org.knime.dev.node.view.scatterplot.ScatterPlotter
      *      #getHiLiteMenu()
      */
     @Override
@@ -186,7 +186,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.scatterplot.ScatterPlotter
+     * @see org.knime.dev.node.view.scatterplot.ScatterPlotter
      *      #fillPopupMenu(javax.swing.JPopupMenu)
      */
     @Override
@@ -224,7 +224,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.scatterplot.ScatterPlotter
+     * @see org.knime.dev.node.view.scatterplot.ScatterPlotter
      *      #updatePaintModel()
      */
     @Override
@@ -356,7 +356,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractPlotter2D
+     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
      *      #getDrawingPane()
      */
     @Override

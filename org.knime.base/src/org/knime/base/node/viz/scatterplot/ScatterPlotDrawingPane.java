@@ -256,7 +256,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #getNumberSelectedElements()
      */
     @Override
@@ -270,7 +270,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
      * will happen. Otherwise all rowkeys of the dots contained in that
      * rectangle will be added to the SelectedSet.
      * 
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #selectElementsInDragTangle(int, int, int, int)
      */
     @Override
@@ -354,7 +354,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #paintPlotDrawingPane(java.awt.Graphics)
      */
     @Override
@@ -429,7 +429,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #clearSelection()
      */
     @Override

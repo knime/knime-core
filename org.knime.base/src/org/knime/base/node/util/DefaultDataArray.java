@@ -259,7 +259,7 @@ public class DefaultDataArray implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getRow(int)
+     * @see org.knime.base.node.util.DataArray#getRow(int)
      */
     public DataRow getRow(final int idx) {
         return m_rows.get(idx);
@@ -267,21 +267,21 @@ public class DefaultDataArray implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getValues(int)
+     * @see org.knime.base.node.util.DataArray#getValues(int)
      */
     public Set<DataCell> getValues(final int colIdx) {
         return m_possVals.get(colIdx);
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getMinValue(int)
+     * @see org.knime.base.node.util.DataArray#getMinValue(int)
      */
     public DataCell getMinValue(final int colIdx) {
         return m_minVal[colIdx];
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getMaxValue(int)
+     * @see org.knime.base.node.util.DataArray#getMaxValue(int)
      */
     public DataCell getMaxValue(final int colIdx) {
         return m_maxVal[colIdx];
@@ -327,14 +327,14 @@ public class DefaultDataArray implements DataArray {
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#size()
+     * @see org.knime.base.node.util.DataArray#size()
      */
     public int size() {
         return m_rows.size();
     }
 
     /**
-     * @see de.unikn.knime.base.node.util.DataArray#getFirstRowNumber()
+     * @see org.knime.base.node.util.DataArray#getFirstRowNumber()
      */
     public int getFirstRowNumber() {
         return m_firstRow;

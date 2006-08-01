@@ -225,7 +225,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate#getTickPositions(double,
+     * @see org.knime.base.util.coordinate.NumericCoordinate#getTickPositions(double,
      *      boolean)
      */
     @Override
@@ -474,7 +474,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #calculateMappedValue(org.knime.core.data.DataCell, double,
      *      boolean)
      */
@@ -508,7 +508,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #getMaxDomainValue()
      */
     @Override
@@ -517,7 +517,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #getMinDomainValue()
      */
     @Override
@@ -526,7 +526,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #isMinDomainValueSet()
      */
     @Override
@@ -539,7 +539,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #isMaxDomainValueSet()
      */
     @Override
@@ -552,7 +552,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #setMaxDomainValue(double)
      */
     @Override
@@ -562,7 +562,7 @@ class DoubleCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #setMinDomainValue(double)
      */
     @Override

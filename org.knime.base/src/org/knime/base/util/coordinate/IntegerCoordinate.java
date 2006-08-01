@@ -131,7 +131,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     * @see org.knime.base.util.coordinate.Coordinate
      *  #getTickPositions(double, boolean)
      */
     @Override
@@ -219,7 +219,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     * @see org.knime.base.util.coordinate.Coordinate
      *      #calculateMappedValue(org.knime.core.data.DataCell, double,
      *      boolean)
      */
@@ -249,7 +249,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #isMinDomainValueSet()
      */
     @Override
@@ -258,7 +258,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #isMaxDomainValueSet()
      */
     @Override
@@ -267,7 +267,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #getMaxDomainValue()
      */
     @Override
@@ -276,7 +276,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #getMinDomainValue()
      */
     @Override
@@ -285,7 +285,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #setMinDomainValue(double)
      */
     @Override
@@ -299,7 +299,7 @@ class IntegerCoordinate extends NumericCoordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.NumericCoordinate
+     * @see org.knime.base.util.coordinate.NumericCoordinate
      *      #setMaxDomainValue(double)
      */
     @Override

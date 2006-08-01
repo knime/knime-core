@@ -300,7 +300,7 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @see de.unikn.knime.base.node.filter.row.rowfilter.RowFilter
+     * @see org.knime.base.node.filter.row.rowfilter.RowFilter
      *      #matches(org.knime.core.data.DataRow, int)
      */
     @Override

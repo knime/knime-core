@@ -171,7 +171,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @see de.unikn.knime.base.node.filter.row.RowFilterPanel
+     * @see org.knime.base.node.filter.row.RowFilterPanel
      *      #createFilter(boolean)
      */
     @Override

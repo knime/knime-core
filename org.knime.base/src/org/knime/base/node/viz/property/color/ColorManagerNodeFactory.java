@@ -28,7 +28,7 @@ import org.knime.core.node.NodeView;
 
 /**
  * The color manager factory which creates a
- * {@link de.unikn.knime.dev.node.property.color.ColorManagerNodeDialogPane}.
+ * {@link org.knime.dev.node.property.color.ColorManagerNodeDialogPane}.
  * 
  * @see ColorManagerNodeModel
  * @see ColorManagerNodeDialogPane

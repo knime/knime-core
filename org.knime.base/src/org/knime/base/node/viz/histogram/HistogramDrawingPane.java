@@ -139,7 +139,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /*--------- the drawing methods ----------------*/
     // **********************************************
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #paintPlotDrawingPane(java.awt.Graphics)
      */
     @Override
@@ -316,7 +316,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #clearSelection()
      */
     @Override
@@ -330,7 +330,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #selectElementsInDragTangle(int, int, int, int)
      */
     @Override
@@ -363,7 +363,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #toggleSelectionAt(int, int)
      */
     @Override
@@ -380,7 +380,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractDrawingPane
+     * @see org.knime.dev.node.view.plotter2D.AbstractDrawingPane
      *      #getNumberSelectedElements()
      */
     @Override

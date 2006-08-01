@@ -160,7 +160,7 @@ public class NominalCoordinate extends Coordinate {
      * Calculates a numeric mapping assuming a column with a given number of
      * possible values.
      * 
-     * @see de.unikn.knime.base.util.coordinate.Coordinate
+     * @see org.knime.base.util.coordinate.Coordinate
      *      #calculateMappedValue(org.knime.core.data.DataCell, double,
      *      boolean)
      */
@@ -196,7 +196,7 @@ public class NominalCoordinate extends Coordinate {
     }
 
     /**
-     * @see de.unikn.knime.base.util.coordinate.Coordinate#isNominal()
+     * @see org.knime.base.util.coordinate.Coordinate#isNominal()
      */
     @Override
     public boolean isNominal() {

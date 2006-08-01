@@ -182,7 +182,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     /**
      * This is called during resize, or any other pane triggered event.
      * 
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractPlotter2D
+     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
      *      #updatePaintModel()
      */
     @Override
@@ -851,7 +851,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractPlotter2D
+     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
      *      #getHiLiteMenu()
      */
     @Override
@@ -864,7 +864,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * @see de.unikn.knime.dev.node.view.plotter2D.AbstractPlotter2D
+     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
      *      #fillPopupMenu(javax.swing.JPopupMenu)
      */
     @Override
