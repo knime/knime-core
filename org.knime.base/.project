@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>de.unikn.knime.base</name>
+	<name>KNIME-Base</name>
 	<comment>@key 32303034313032372D31302064652E756E696B6E2E68616465732E62617365 </comment>
 	<projects>
 		<project>de.unikn.knime.core</project>
