@@ -33,7 +33,7 @@ import org.osgi.framework.BundleContext;
 public class KNIMEHelpPlugin extends Plugin {
     // Make sure that this *always* matches the ID in plugin.xml
     /** The plugin ID. */
-    public static final String PLUGIN_ID = "de.unikn.knime.workbench.help";
+    public static final String PLUGIN_ID = "org.knime.workbench.help";
 
     // The shared instance.
     private static KNIMEHelpPlugin plugin;
@@ -104,7 +104,7 @@ public class KNIMEHelpPlugin extends Plugin {
         try {
             if (m_resourceBundle == null) {
                 m_resourceBundle = ResourceBundle
-                        .getBundle("de.unikn.knime.workbench.help.Resources");
+                        .getBundle("org.knime.workbench.help.Resources");
             }
         } catch (MissingResourceException x) {
             m_resourceBundle = null;
