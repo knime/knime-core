@@ -3,7 +3,7 @@
 <knimeNode icon="./histogram.gif" type="Visualizer">
 	<name>Interactive Histogram</name>	
 	<shortDescription>
-		Interactive Histogram view.
+		Displays data in a histogram view.
 	</shortDescription>	
 	<fullDescription>
 		<intro>
