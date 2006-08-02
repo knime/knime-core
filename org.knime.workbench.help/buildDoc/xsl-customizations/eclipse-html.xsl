@@ -26,7 +26,7 @@
 <!-- 
    These are unused, as the plugin.xml is edited manually !
   <xsl:param name="eclipse.plugin.name"></xsl:param>
-  <xsl:param name="eclipse.plugin.id">de.unikn.knime.workbench.help</xsl:param>
+  <xsl:param name="eclipse.plugin.id">org.knime.workbench.help</xsl:param>
   <xsl:param name="eclipse.plugin.provider">Chair for Applied Computer Science, University of Konstanz</xsl:param>
 -->
 
