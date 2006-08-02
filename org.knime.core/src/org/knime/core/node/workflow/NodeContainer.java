@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -127,25 +126,8 @@ public class NodeContainer implements NodeStateListener {
         // use global Class Creator utility for Eclipse "compatibility"
 
         NodeFactory f = null;
-        try {
             f = (NodeFactory)((GlobalClassCreator.createClass(factoryClassName))
                     .newInstance());
-        } catch (ClassNotFoundException ex) {
-            String[] guesses = FactoryFinder.INSTANCE
-                    .guessClassName(factoryClassName);
-            if (guesses.length == 0) {
-                throw ex;
-            } else if (guesses.length == 1) {
-                f = (NodeFactory)((GlobalClassCreator.createClass(guesses[0]))
-                        .newInstance());
-                LOGGER.warn("Replaced unknown factory '" + factoryClassName
-                        + "' by guessed factory '" + guesses[0] + "'");
-            } else if (guesses.length > 1) {
-                throw new ClassNotFoundException(factoryClassName
-                        + "; possible replacements are "
-                        + Arrays.toString(guesses));
-            }
-        }
 
         return f;
     }
