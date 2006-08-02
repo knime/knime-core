@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Sun Plug-in
+Bundle-Name: KNIME JavaScripting node
 Bundle-SymbolicName: org.knime.ext.sun;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: org.knime.ext.sun.SunPlugin
@@ -9,3 +9,4 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository
 Eclipse-AutoStart: true
 Bundle-ClassPath: lib/tools.jar
+Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
