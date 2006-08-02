@@ -60,6 +60,35 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramProperties extends PlotterPropertiesPanel {
+
+    private static final String X_COLUMN_LABEL = "X Column:";
+
+    private static final String AGGREGATION_COLUMN_LABEL = 
+        "Aggregation Column:";
+    private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP = 
+        "Select the column used for aggregation an press 'Apply'.";
+    private static final String AGGREGATION_COLUMN_DISABLED_TOOLTIP = 
+        "Not available for aggregation method count";
+
+    private static final String AGGREGATION_METHOD_LABEL = 
+        "Aggregation method:";
+
+    private static final String BAR_SIZE_LABEL = "Bar size:";
+    private static final String BAR_WIDTH_TOOLTIP = "Width of the bars";
+
+    private static final String NUMBER_OF_BARS_LABEL = "Number of bars:";
+    private static final String NO_OF_BARS_TOOLTIP = "Number of bars";
+
+    private static final String SHOW_MISSING_VALUE_BAR_LABEL = 
+        "Show missing value bar";
+    private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Show a bar "
+        + "with rows which have a missing value for the selected x column.";
+
+    private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
+
+    private static final String APPLY_BUTTON_LABEL = "Apply";
+
+    
     /** The title of the histogram settings region. */
     private static final String SETTINGS_TITLE = "Histogram settings";
 
@@ -88,16 +117,20 @@ public class HistogramProperties extends PlotterPropertiesPanel {
         m_aggregationMethod = aggrMethod;
 
         // the column select boxes for the X axis
-        m_xCol = new ColumnSelectionComboxBox("X Column:");
+        m_xCol = new ColumnSelectionComboxBox(
+                HistogramProperties.X_COLUMN_LABEL);
         m_xCol.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 onXColChanged(m_xCol.getSelectedColumn());
             }
         });
         m_xCol.setBackground(this.getBackground());
-        m_yCol = new ColumnSelectionComboxBox("Aggregation Column:",
+        m_yCol = new ColumnSelectionComboxBox(
+                HistogramProperties.AGGREGATION_COLUMN_LABEL,
                 DoubleValue.class);
         m_yCol.setBackground(this.getBackground());
+        m_yCol.setToolTipText(
+                HistogramProperties.AGGREGATION_COLUMN_DISABLED_TOOLTIP);
 
         Box columnBox = Box.createVerticalBox();
         columnBox.add(m_xCol);
@@ -113,7 +146,8 @@ public class HistogramProperties extends PlotterPropertiesPanel {
         // create all dialog component boxes
         // the bar width label box
         final Box barWidthLabelBox = Box.createHorizontalBox();
-        final JLabel barWidthLabel = new JLabel("Bar size:");
+        final JLabel barWidthLabel = new JLabel(
+                HistogramProperties.BAR_SIZE_LABEL);
         barWidthLabelBox.add(Box.createHorizontalGlue());
         barWidthLabelBox.add(barWidthLabel);
         barWidthLabelBox.add(Box.createHorizontalGlue());
@@ -126,7 +160,8 @@ public class HistogramProperties extends PlotterPropertiesPanel {
 
         // the number of bars label box
         final Box noOfBarsLabelBox = Box.createHorizontalBox();
-        final JLabel noOfBarsLabel = new JLabel("Number of bars:");
+        final JLabel noOfBarsLabel = new JLabel(
+                HistogramProperties.NUMBER_OF_BARS_LABEL);
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
         noOfBarsLabelBox.add(noOfBarsLabel);
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
@@ -139,7 +174,8 @@ public class HistogramProperties extends PlotterPropertiesPanel {
 
         // the aggregation method label box
         final Box aggrLabelBox = Box.createHorizontalBox();
-        final JLabel aggrMethLabel = new JLabel("Aggregation method:");
+        final JLabel aggrMethLabel = new JLabel(
+                HistogramProperties.AGGREGATION_METHOD_LABEL);
         aggrMethLabel.setVerticalAlignment(SwingConstants.CENTER);
         aggrLabelBox.add(Box.createHorizontalGlue());
         aggrLabelBox.add(aggrMethLabel);
@@ -168,7 +204,8 @@ public class HistogramProperties extends PlotterPropertiesPanel {
         showMissingBox.add(Box.createHorizontalGlue());
 
         // the apply button box
-        final JButton applyButton = new JButton("Apply");
+        final JButton applyButton = new JButton(
+                HistogramProperties.APPLY_BUTTON_LABEL);
         applyButton.setHorizontalAlignment(SwingConstants.RIGHT);
         applyButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -220,7 +257,7 @@ public class HistogramProperties extends PlotterPropertiesPanel {
 
     /**
      * 
-     * @param spec current data table spec
+     * @param spec current data table specification
      * @param xColName preselected x column name
      * @param yColName preselected y column name
      */
@@ -249,7 +286,7 @@ public class HistogramProperties extends PlotterPropertiesPanel {
             // enable the select box only if it contains at least one value
             m_yCol.setEnabled(true);
         }
-        // eneable or disable the aggregation method buttons depending if
+        // enable or disable the aggregation method buttons depending if
         // aggregation columns available or not
         for (Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
                 .getElements(); buttons.hasMoreElements();) {
@@ -308,14 +345,20 @@ public class HistogramProperties extends PlotterPropertiesPanel {
             for (Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
                     .getElements(); buttons.hasMoreElements();) {
                 AbstractButton button = buttons.nextElement();
+                //enable the radio buttons only if we have some aggregation 
+                //columns to choose from
                 button.setEnabled(m_yCol.getModel().getSize() > 0);
                 if (button.getActionCommand()
                         .equals(m_aggregationMethod.name())) {
                     button.setSelected(true);
                 }
             }
-            m_showEmptyBars = new JCheckBox("Show empty bars:");
-            m_showMissingValBar = new JCheckBox("Show missing value bar:");
+            m_showEmptyBars = 
+                new JCheckBox(HistogramProperties.SHOW_EMPTY_BARS_LABEL);
+            m_showMissingValBar = new JCheckBox(
+                    HistogramProperties.SHOW_MISSING_VALUE_BAR_LABEL);
+            m_showMissingValBar.setToolTipText(
+                    HistogramProperties.SHOW_MISSING_VAL_BAR_TOOLTIP);
         } else {
             HistogramDataModel histoData = plotter.getHistogramDataModel();
             // set the bar width slider
@@ -334,7 +377,7 @@ public class HistogramProperties extends PlotterPropertiesPanel {
                 m_barWidth.setValue(currentBarWidth);
             }
             m_barWidth.setEnabled(true);
-            m_barWidth.setToolTipText("Number of bars in total");
+            m_barWidth.setToolTipText(HistogramProperties.BAR_WIDTH_TOOLTIP);
             setSliderLabels(m_barWidth, 2);
 
             // set the number of bars slider
@@ -354,19 +397,22 @@ public class HistogramProperties extends PlotterPropertiesPanel {
             // disable this noOfBars slider for nominal values
             if (!plotter.getHistogramDataModel().isNominal()) {
                 m_noOfBars.setEnabled(true);
-                m_noOfBars.setToolTipText("Number of binned bars");
+                m_noOfBars.setToolTipText(
+                        HistogramProperties.NO_OF_BARS_TOOLTIP);
             } else {
                 m_noOfBars.setEnabled(false);
-                m_noOfBars
-                        .setToolTipText("Only available for numerical properties");
+                m_noOfBars.setToolTipText(
+                        "Only available for numerical properties");
             }
             // set the values of the select boxes
             if (m_showEmptyBars == null) {
-                m_showEmptyBars = new JCheckBox("Show empty bars");
+                m_showEmptyBars = 
+                    new JCheckBox(HistogramProperties.SHOW_EMPTY_BARS_LABEL);
             }
             m_showEmptyBars.setSelected(plotter.isShowEmptyBars());
             if (m_showMissingValBar == null) {
-                m_showMissingValBar = new JCheckBox("Show missing value bar");
+                m_showMissingValBar = new JCheckBox(
+                        HistogramProperties.SHOW_MISSING_VALUE_BAR_LABEL);
             }
             m_showMissingValBar.setSelected(plotter.isShowMissingvalBar());
             m_showMissingValBar.setEnabled(histoData.containsMissingValueBar());
@@ -396,7 +442,8 @@ public class HistogramProperties extends PlotterPropertiesPanel {
             slider.setEnabled(false);
         } else {
             // slider.setLabelTable(slider.createStandardLabels(increment));
-            Hashtable<Integer, JLabel> labels = new Hashtable<Integer, JLabel>();
+            Hashtable<Integer, JLabel> labels = 
+                new Hashtable<Integer, JLabel>();
             labels.put(minimum, new JLabel("Min"));
             for (int i = 1; i < divisor; i++) {
                 int value = minimum + i * increment;
@@ -441,23 +488,7 @@ public class HistogramProperties extends PlotterPropertiesPanel {
             return;
         }
         plotter.setAggregationColumn(yColName, aggrMethod);
-        m_yCol.setToolTipText(yColName);
-    }
-
-    /**
-     * Sets the aggregation method. If it's count the aggregation column select
-     * box gets disabled otherwise it gets enabled.
-     * 
-     * @param aggrMethod to set
-     */
-    protected void setAggregationMethod(final AggregationMethod aggrMethod) {
-        m_aggregationMethod = aggrMethod;
-        if (m_aggregationMethod.equals(AggregationMethod.COUNT)
-                || m_yCol.getModel().getSize() < 1) {
-            m_yCol.setEnabled(false);
-        } else {
-            m_yCol.setEnabled(true);
-        }
+        //m_yCol.setToolTipText(yColName);
     }
 
     /**
@@ -513,7 +544,7 @@ public class HistogramProperties extends PlotterPropertiesPanel {
         }
         HistogramDataModel histoModel = plotter.getHistogramDataModel();
         if (histoModel == null) {
-            throw new IllegalStateException("HisotgramModel shouldn't be null");
+            throw new IllegalStateException("HistogramModel shouldn't be null");
         }
         plotter.setBarWidth(getBarWidth());
         if (!histoModel.isNominal()) {
@@ -541,8 +572,12 @@ public class HistogramProperties extends PlotterPropertiesPanel {
         if (method.equals(AggregationMethod.COUNT)
                 || m_yCol.getModel().getSize() < 1) {
             m_yCol.setEnabled(false);
+            m_yCol.setToolTipText(
+                    HistogramProperties.AGGREGATION_COLUMN_DISABLED_TOOLTIP);
         } else {
             m_yCol.setEnabled(true);
+            m_yCol.setToolTipText(
+                    HistogramProperties.AGGREGATION_COLUMN_ENABLED_TOOLTIP);
         }
     }
 }
