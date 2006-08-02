@@ -125,11 +125,27 @@ public class NodeContainer implements NodeStateListener {
         String factoryClassName = settings.getString(KEY_FACTORY_NAME);
         // use global Class Creator utility for Eclipse "compatibility"
 
-        NodeFactory f = null;
-            f = (NodeFactory)((GlobalClassCreator.createClass(factoryClassName))
-                    .newInstance());
+        try {
+            NodeFactory f = (NodeFactory)((GlobalClassCreator
+                    .createClass(factoryClassName)).newInstance());
+            return f;
+        } catch (ClassNotFoundException ex) {
+            String[] x = factoryClassName.split("\\.");
+            String simpleClassName = x[x.length - 1];
 
-        return f;
+            for (String s : GlobalClassCreator.getLoadedNodeFactories()) {
+                if (s.endsWith(simpleClassName)) {
+                    NodeFactory f = (NodeFactory)((GlobalClassCreator
+                            .createClass(s)).newInstance());
+                    LOGGER.warn("Substituted '" + f.getClass().getName()
+                            + "' for unknown factory '" + factoryClassName
+                            + "'");
+                    return f;
+                }
+            }
+
+            throw ex;
+        }
     }
 
     private List<NodeInPort> m_cachedInPorts;
