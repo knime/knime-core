@@ -15,7 +15,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core;reprovide=true,
  org.eclipse.gef,
  org.eclipse.ui.ide
-Eclipse-LazyStart: true
+Eclipse-AutoStart: true
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.workbench.repository,
  org.knime.workbench.repository.model,
