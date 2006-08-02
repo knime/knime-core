@@ -14,7 +14,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.base,
  org.knime.workbench.repository,
  org.knime.workbench.navigator
-Eclipse-LazyStart: true
+Eclipse-AutoStart: true
 Provide-Package: org.knime.workbench.ui,
  org.knime.workbench.ui.preferences,
  org.knime.workbench.ui.views,
