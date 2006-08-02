@@ -22,6 +22,7 @@ package org.knime.workbench.repository;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.swt.graphics.Image;
+import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.NodeFactory;
 
 import org.knime.workbench.repository.model.Category;
@@ -64,6 +65,7 @@ public final class RepositoryFactory {
                     .createExecutableExtension("factory-class");
 
             node.setFactory(factory.getClass());
+            GlobalClassCreator.addLoadedFactory(factory.getClass());
         } catch (CoreException e) {
             e.printStackTrace();
             throw new IllegalArgumentException(

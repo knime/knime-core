@@ -66,7 +66,6 @@ public final class RepositoryManager {
 
     // set the eclipse class creator into the static global class creator class
     static {
-
         GlobalClassCreator.setClassCreator(new EclipseClassCreator(ID_NODE));
     }
 
