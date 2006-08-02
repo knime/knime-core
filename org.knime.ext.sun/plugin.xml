@@ -7,8 +7,8 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            factory-class="org.knime.ext.sun.NodeFactory1"
-            id="org.knime.ext.sun.J"/>
+            factory-class="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
+            id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
    </extension>
 
 </plugin>

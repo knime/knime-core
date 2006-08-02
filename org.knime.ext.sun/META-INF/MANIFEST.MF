@@ -7,5 +7,5 @@ Bundle-Activator: org.knime.ext.sun.SunPlugin
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-ClassPath: lib/tools.jar
