@@ -4,7 +4,7 @@ Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
 Bundle-Version: 0.9.0
 Bundle-ClassPath: workbench-help.jar
 Bundle-Activator: org.knime.workbench.help.KNIMEHelpPlugin
-Bundle-Vendor: ALTANA Chair for Applied Computer Science
+Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-Localization: plugin
 Provide-Package: org.knime.workbench.help
 Require-Bundle: org.eclipse.core.runtime,
