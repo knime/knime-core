@@ -4,7 +4,7 @@ Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-ClassPath: workbench-repository.jar
 Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
-Bundle-Vendor: University of Konstanz, Germany
+Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-Localization: plugin
 Provide-Package: org.knime.workbench.repository,
  org.knime.workbench.repository.model,
