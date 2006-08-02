@@ -30,6 +30,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 
 
 /**
@@ -63,9 +64,9 @@ public abstract class Coordinate {
             return null;
         }
         DataType type = dataColumnSpec.getType();
-        // if (type.isCompatible(IntValue.class)) {
-        // return new IntegerCoordinate(dataColumnSpec);
-        // } else
+            if (type.isCompatible(IntValue.class)) {
+             return new IntegerCoordinate(dataColumnSpec);
+        } else
         if (type.isCompatible(DoubleValue.class)) {
             return new DoubleCoordinate(dataColumnSpec);
         } else {

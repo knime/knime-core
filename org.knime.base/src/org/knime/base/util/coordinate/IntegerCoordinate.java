@@ -43,7 +43,7 @@ import org.knime.core.data.IntValue;
  * @author Tobias Koetter, University of Konstanz
  */
 class IntegerCoordinate extends NumericCoordinate {
-    private static final int DEFAULT_TICK_DIST = 20;
+    private static final int DEFAULT_TICK_DIST = 30;
 
     /** The minimum value covered by this coordinate object. */
     private int m_minDomainValue;
@@ -144,8 +144,9 @@ class IntegerCoordinate extends NumericCoordinate {
             // absolute length
             double mappingValue = Math.round(absolutLength / 2);
             mapping = new IntegerCoordinateMapping[1];
-            mapping[0] = new IntegerCoordinateMapping(Integer
-                    .toString(m_minDomainValue), m_minDomainValue, mappingValue);
+            mapping[0] = new IntegerCoordinateMapping(
+                    Integer.toString(m_minDomainValue), m_minDomainValue, 
+                    mappingValue);
             return mapping;
         }
 
