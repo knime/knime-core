@@ -234,8 +234,8 @@ public final class RepositoryManager {
             MessageBox mb = new MessageBox(Display.getDefault()
                     .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText("Node(s) could not be loaded!");
-            mb.setMessage("Could not load all contributed node "
-                    + "extensions, skipped: '\n\n" + errorString.toString());
+            mb.setMessage("Some contributed nodes could not be loaded "
+                    + ", skipped: '\n\n" + errorString.toString());
             mb.open();
 
             WorkbenchErrorLogger
