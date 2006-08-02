@@ -41,11 +41,11 @@ import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.Serializer;
 import com.sun.org.apache.xml.internal.serialize.SerializerFactory;
 
-
 /**
- * A class used to load and save Config objects into an XML file. 
- * <p>This implementation uses a SAX Parser to create and save the xml files. 
- * This got necessary since predictive params may get big and using a DOM parser
+ * A class used to load and save Config objects into an XML file.
+ * <p>
+ * This implementation uses a SAX Parser to create and save the xml files. This
+ * got necessary since predictive params may get big and using a DOM parser
  * keeps the entire xml-tree in memory.
  * 
  * @author Bernd Wiswedel, University of Konstanz
@@ -55,24 +55,26 @@ final class XMLConfig {
     private XMLConfig() {
 
     }
-    
-    /** dtd name from class name. */
-    static final String DTD_NAME = 
-        XMLConfig.class.getName().replace('.', '/') + ".dtd";
 
+    /** dtd name from class name. */
+    static final String DTD_NAME = XMLConfig.class.getName().replace('.', '/')
+            + ".dtd";
+
+    static final String OLD_DTD_NAME = XMLConfig.class.getName().replace('.',
+            '/').replace("org/knime/", "de/unikn/knime/") + ".dtd";
 
     /**
-     * Read config entries from an XML file. The entries being read are stored 
-     * in a newly created <code>Config</code> object. 
+     * Read config entries from an XML file. The entries being read are stored
+     * in a newly created <code>Config</code> object.
      * 
-     * @param config The Config, which is used as factory to create a
-     *            new instance from (representing the root from the XML file).
+     * @param config The Config, which is used as factory to create a new
+     *            instance from (representing the root from the XML file).
      * @param is The XML inputstream storing the configuration to read
      * @return The root Config.
      * @throws IOException If the stream could not be read.
      */
     static Config load(final Config config, final InputStream is)
-        throws IOException {
+            throws IOException {
         Config cfg = config.getInstance("ignored");
         try {
             internalLoad(cfg, is);
@@ -92,24 +94,26 @@ final class XMLConfig {
             try {
                 return cfg.getConfig(s);
             } catch (InvalidSettingsException ise) {
-                throw new IOException("Reading from \"" + is.toString() 
+                throw new IOException("Reading from \"" + is.toString()
                         + "\" failed; does not start with config.");
             }
         }
-        throw new IOException("Reading from \"" + is.toString() 
+        throw new IOException("Reading from \"" + is.toString()
                 + "\" failed; no tags defined.");
     }
-    
-    /* Helper method to read the xml given by the inputstream to the config 
-     * object. */
+
+    /*
+     * Helper method to read the xml given by the inputstream to the config
+     * object.
+     */
     private static void internalLoad(final Config c, final InputStream in)
             throws SAXException, IOException, ParserConfigurationException {
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
         saxParserFactory.setValidating(true);
         SAXParser saxParser = saxParserFactory.newSAXParser();
         XMLReader reader = saxParser.getXMLReader();
-        XMLContentHandler xmlContentHandler = 
-            new XMLContentHandler(c, in.toString());
+        XMLContentHandler xmlContentHandler = new XMLContentHandler(c, in
+                .toString());
         reader.setContentHandler(xmlContentHandler);
         reader.setEntityResolver(xmlContentHandler);
         reader.setErrorHandler(xmlContentHandler);
@@ -133,12 +137,12 @@ final class XMLConfig {
         try {
             XMLContentHandler.asXML(config, serializer.asContentHandler());
         } catch (SAXException se) {
-            IOException ioe = new IOException("Saving xml to " + os.toString() 
+            IOException ioe = new IOException("Saving xml to " + os.toString()
                     + " failed: " + se.getMessage());
             ioe.initCause(se);
             throw ioe;
         } finally {
-            // Note: When using the GZIP stream, it is also required by the 
+            // Note: When using the GZIP stream, it is also required by the
             // ZLIB native library in order to support certain optimizations
             // to flush the stream.
             os.flush();

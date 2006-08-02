@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +57,6 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.meta.MetaNodeModel;
-
 
 /**
  * Wrapper for a Node and the surrounding graph information, i.e. successors and
@@ -125,8 +125,29 @@ public class NodeContainer implements NodeStateListener {
         // read node factory class name
         String factoryClassName = settings.getString(KEY_FACTORY_NAME);
         // use global Class Creator utility for Eclipse "compatibility"
-        return (NodeFactory)((GlobalClassCreator.createClass(factoryClassName))
-                .newInstance());
+
+        NodeFactory f = null;
+        try {
+            f = (NodeFactory)((GlobalClassCreator.createClass(factoryClassName))
+                    .newInstance());
+        } catch (ClassNotFoundException ex) {
+            String[] guesses = FactoryFinder.INSTANCE
+                    .guessClassName(factoryClassName);
+            if (guesses.length == 0) {
+                throw ex;
+            } else if (guesses.length == 1) {
+                f = (NodeFactory)((GlobalClassCreator.createClass(guesses[0]))
+                        .newInstance());
+                LOGGER.warn("Replaced unknown factory '" + factoryClassName
+                        + "' by guessed factory '" + guesses[0] + "'");
+            } else if (guesses.length > 1) {
+                throw new ClassNotFoundException(factoryClassName
+                        + "; possible replacements are "
+                        + Arrays.toString(guesses));
+            }
+        }
+
+        return f;
     }
 
     private List<NodeInPort> m_cachedInPorts;
