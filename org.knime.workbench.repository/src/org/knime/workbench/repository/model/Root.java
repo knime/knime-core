@@ -29,6 +29,10 @@ import java.util.List;
  * @author Florian Georg, University of Konstanz
  */
 public class Root extends AbstractContainerObject {
+    
+    /**
+     * Constructor for a root.
+     */
     public Root() {
     }
 
