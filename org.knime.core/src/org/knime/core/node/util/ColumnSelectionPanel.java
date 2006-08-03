@@ -252,7 +252,7 @@ public class ColumnSelectionPanel extends JPanel {
             } else {
                 for (int i = 0; i < m_filterClasses.length; i++) {
                     error.append(" \"");
-                    error.append(m_filterClasses[0].getSimpleName());
+                    error.append(m_filterClasses[i].getSimpleName());
                     error.append('"');
                     if (i == m_filterClasses.length - 2) { // second last
                         error.append(" or");
