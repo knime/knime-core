@@ -30,9 +30,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.swing.UIManager;
 
@@ -45,14 +48,13 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 
-
 /**
- * Implementation of a node as basic processing unit within the workflow. A
- * Node object is the place where the data flow starts, ends, or intersects. 
- * Thus a Node can be connected with predecessors and successors through its 
- * input and output ports, {@link org.knime.core.node.NodeInPort} and
- * {@link org.knime.core.node.NodeOutPort}, respectively. There are data
- * ports for exchanging data tables, and prediction model ports for transfering
+ * Implementation of a node as basic processing unit within the workflow. A Node
+ * object is the place where the data flow starts, ends, or intersects. Thus a
+ * Node can be connected with predecessors and successors through its input and
+ * output ports, {@link org.knime.core.node.NodeInPort} and
+ * {@link org.knime.core.node.NodeOutPort}, respectively. There are data ports
+ * for exchanging data tables, and prediction model ports for transfering
  * computed data models. <br />
  * A node must contain a {@link NodeModel} and may contain {@link NodeView}s
  * and a {@link NodeDialogPane} implementing the Model-View-Controller paradigm.
@@ -102,23 +104,24 @@ public final class Node {
 
     /** The listeners that are interested in node state changes. */
     private final Set<NodeStateListener> m_stateListeners;
-    
+
     /** Node settings XML file name. */
     public static final String SETTINGS_FILE_NAME = "settings.xml";
 
     /** Data config files, it contains the paths to the data files. */
     public static final String DATA_FILE_NAME = "data.xml";
-    
+
     /** Directory name to save and load node internals. */
     private static final String INTERN_FILE_DIR = "internal";
-    
+
     /** Directory name to save and load the data. */
     private static final String DATA_FILE_DIR = "data";
-    
+
     private File m_nodeDir = null;
 
-    /** Store when the current output data has been stored (to avoid 
-     * uneccesary re-save). Will be set when saved, will be unset upon reset.
+    /**
+     * Store when the current output data has been stored (to avoid uneccesary
+     * re-save). Will be set when saved, will be unset upon reset.
      */
     private boolean m_isCurrentlySaved = false;
 
@@ -129,7 +132,7 @@ public final class Node {
             // use the default look and feel then.
         }
     }
-    
+
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
      * specified <code>NodeFactory</code>. Also inits the input and output
@@ -141,9 +144,9 @@ public final class Node {
      * @throws NullPointerException if the node factory is <code>null</code>
      */
     public Node(final NodeFactory nodeFactory) {
-        this(nodeFactory, (WorkflowManager) null);
+        this(nodeFactory, (WorkflowManager)null);
     }
-    
+
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
      * specified <code>NodeFactory</code>. Also inits the input and output
@@ -152,10 +155,10 @@ public final class Node {
      * 
      * @param nodeFactory the node's factory for the creation of model, view,
      *            and dialog
-     * @param wfm the workflow manager that is responsible for this node;
-     * maybe <code>null</code>
-     * @throws IllegalArgumentException 
-     *         If the <i>nodeFactory</i> is <code>null</code>.
+     * @param wfm the workflow manager that is responsible for this node; maybe
+     *            <code>null</code>
+     * @throws IllegalArgumentException If the <i>nodeFactory</i> is
+     *             <code>null</code>.
      */
     public Node(final NodeFactory nodeFactory, final WorkflowManager wfm) {
 
@@ -209,32 +212,30 @@ public final class Node {
         // init model output ports
         m_outModelPorts = new ModelContentOutPort[m_model.getNrModelOuts()];
         for (int i = 0; i < m_outModelPorts.length; i++) {
-            m_outModelPorts[i] = 
-                new ModelContentOutPort(i + getNrDataOutPorts(), this);
+            m_outModelPorts[i] = new ModelContentOutPort(i
+                    + getNrDataOutPorts(), this);
             m_outModelPorts[i].setPortName(m_factory.getOutportModelName(i));
             m_outModelPorts[i].setModelContent(null);
         }
 
         if (m_model instanceof SpecialNodeModel) {
-            ((SpecialNodeModel) m_model).setNode(this);
-            ((SpecialNodeModel) m_model).setInternalWFM(wfm.createSubManager());
+            ((SpecialNodeModel)m_model).setNode(this);
+            ((SpecialNodeModel)m_model).setInternalWFM(wfm.createSubManager());
         }
-        
+
         // let the model create its 'default' table specs
         configure();
     }
-    
-    
-    
+
     /**
      * Creates a copy of the passed node.
      * 
      * @param node the node that should be copied
-     * @param wfm the workflow manager that is responsible for this node;
-     * maybe <code>null</code>
+     * @param wfm the workflow manager that is responsible for this node; maybe
+     *            <code>null</code>
      */
     public Node(final Node node, final WorkflowManager wfm) {
-        this (node.m_factory, wfm);
+        this(node.m_factory, wfm);
         NodeSettings modelSettings = new NodeSettings("modelSettings");
         node.m_model.saveSettingsTo(modelSettings);
         try {
@@ -242,11 +243,10 @@ public final class Node {
         } catch (InvalidSettingsException ise) {
             m_logger.error("Could not copy node, reason: " + ise.getMessage());
         } finally {
-            resetAndConfigure();            
+            resetAndConfigure();
         }
     }
 
- 
     /**
      * Loads the settings (but not the data) from the given settings object.
      * 
@@ -254,48 +254,48 @@ public final class Node {
      * @throws InvalidSettingsException if an expected setting is missing
      */
     public void loadSettings(final NodeSettingsRO settings)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         m_name = settings.getString(CFG_NAME);
 
         NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
         if (m_model instanceof SpecialNodeModel) {
-            ((SpecialNodeModel) m_model).loadSettingsFrom(null, modelSettings,
+            ((SpecialNodeModel)m_model).loadSettingsFrom(null, modelSettings,
                     null);
         } else {
             m_model.loadSettingsFrom(modelSettings);
-        }            
+        }
     }
-    
-    
+
     /**
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
-     * @param loadID Forwared to the node. This id serves as loading id, 
-     * it helps to distinguish between two workflows being loaded at the same
-     * time. This id is passed on to the 
-     * {@link org.knime.core.node.BufferedDataTable#getDataTable(
-     * int, Integer)}.
+     * 
+     * @param loadID Forwared to the node. This id serves as loading id, it
+     *            helps to distinguish between two workflows being loaded at the
+     *            same time. This id is passed on to the
+     *            {@link org.knime.core.node.BufferedDataTable#getDataTable(
+     *            int, Integer)}.
      * @param nodeFile The node settings location.
      * @param execMon The execution monitor reporting progress during reading
-     *        structure.
+     *            structure.
      * @throws IOException If the node settings file can't be found or read.
      * @throws InvalidSettingsException If the settings are wrong.
-     * @throws CanceledExecutionException If loading was canceled. 
+     * @throws CanceledExecutionException If loading was canceled.
      */
-    public void load(final int loadID, final File nodeFile, 
-            final ExecutionContext execMon) throws IOException, 
+    public void load(final int loadID, final File nodeFile,
+            final ExecutionContext execMon) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         assert execMon != null;
-        
+
         if (!nodeFile.isFile() || !nodeFile.canRead()) {
             m_model.setExecuted(false);
-            throw new IOException(SETTINGS_FILE_NAME + " can't be read: " 
+            throw new IOException(SETTINGS_FILE_NAME + " can't be read: "
                     + nodeFile);
         }
 
         // load node settings
-        NodeSettingsRO settings = 
-            NodeSettings.loadFromXML(new FileInputStream(nodeFile));
+        NodeSettingsRO settings = NodeSettings.loadFromXML(new FileInputStream(
+                nodeFile));
 
         // read node name
         m_name = settings.getString(CFG_NAME);
@@ -305,15 +305,15 @@ public final class Node {
             NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
             if (m_model instanceof SpecialNodeModel) {
                 ExecutionMonitor execSub = execMon.createSubProgress(0.25);
-                ((SpecialNodeModel) m_model).loadSettingsFrom(nodeFile,
+                ((SpecialNodeModel)m_model).loadSettingsFrom(nodeFile,
                         modelSettings, execSub);
             } else {
                 m_model.loadSettingsFrom(modelSettings);
-            }            
+            }
         } catch (InvalidSettingsException ise) {
             m_logger.warn("Unable to load settings: " + ise.getMessage());
-            m_status = new NodeStatus.Warning(
-                    "Unable to load settings: " + ise.getMessage());
+            m_status = new NodeStatus.Warning("Unable to load settings: "
+                    + ise.getMessage());
             notifyStateListeners(m_status);
         } catch (Exception e) {
             throw new InvalidSettingsException(e);
@@ -333,7 +333,6 @@ public final class Node {
             m_model.setExecuted(wasExecuted);
         }
 
-
         m_nodeDir = nodeFile.getParentFile();
         // load data if node was executed
         if (isExecuted()) {
@@ -343,15 +342,15 @@ public final class Node {
                 m_model.loadInternals(internDir, execSub);
                 processModelWarnings();
             } catch (IOException ioe) {
-                m_status = new NodeStatus.Error(
-                    "Unable to load internals: " + ioe.getMessage());
+                m_status = new NodeStatus.Error("Unable to load internals: "
+                        + ioe.getMessage());
                 notifyStateListeners(m_status);
             } catch (Exception e) {
                 m_logger.coding("loadInternals() "
                         + "should only cause IOException.");
-                m_status = new NodeStatus.Error(
-                        "Unable to load internals: " + e.getMessage());
-                    notifyStateListeners(m_status);
+                m_status = new NodeStatus.Error("Unable to load internals: "
+                        + e.getMessage());
+                notifyStateListeners(m_status);
             }
             // load data
             if (getNrDataOutPorts() > 0) {
@@ -365,9 +364,26 @@ public final class Node {
             for (int i = 0; i < m_outModelPorts.length; i++) {
                 String modelName = model.getString(CFG_OUTPUT_PREFIX + i);
                 File targetFile = new File(m_nodeDir, modelName);
-                BufferedInputStream in = 
-                    new BufferedInputStream(new FileInputStream(targetFile));
-                ModelContentRO pred = ModelContent.loadFromXML(in);
+
+                ModelContentRO pred = null;
+                // in an earlier version the model settings were written
+                // directly (without zipping); now the settings are 
+                // zipped (see save()); to be backward compatible
+                // both ways are tried
+                try {
+                    InputStream in = new BufferedInputStream(
+                            new FileInputStream(targetFile));
+                    GZIPInputStream gzin = new GZIPInputStream(in);
+                    pred = ModelContent.loadFromXML(gzin);
+                } catch (IOException ioe) {
+                    // if a gz input stream could not be created
+                    // we use read directly from the file via the
+                    // previously created buffered input stream
+                    InputStream in = new BufferedInputStream(
+                            new FileInputStream(targetFile));
+                    pred = ModelContent.loadFromXML(in);
+                }
+
                 m_outModelPorts[i].setModelContent(pred);
             }
             m_isCurrentlySaved = true;
@@ -378,15 +394,15 @@ public final class Node {
                 File targetFile = new File(m_nodeDir, specName);
                 DataTableSpec outSpec = null;
                 if (targetFile.exists()) {
-                    NodeSettingsRO settingsSpec = NodeSettings.loadFromXML(
-                        new BufferedInputStream(
-                                new FileInputStream(targetFile)));
+                    NodeSettingsRO settingsSpec = NodeSettings
+                            .loadFromXML(new BufferedInputStream(
+                                    new FileInputStream(targetFile)));
                     outSpec = DataTableSpec.load(settingsSpec);
                 }
                 m_outDataPorts[i].setDataTableSpec(outSpec);
             }
         }
-        
+
         if (wasExecuted && m_model.isAutoExecutable()) {
             execute(execMon);
         }
@@ -400,7 +416,7 @@ public final class Node {
     public String getName() {
         return m_name;
     }
-    
+
     /**
      * Returns the type for this node.
      * 
@@ -573,8 +589,7 @@ public final class Node {
     }
 
     /**
-     * Delegation method to the inport.
-     * {@link NodePort#getPortName()} method.
+     * Delegation method to the inport. {@link NodePort#getPortName()} method.
      * 
      * @param portID The port id of interest
      * @return The description to that port
@@ -591,8 +606,7 @@ public final class Node {
     }
 
     /**
-     * Delegation method to the outport.
-     * {@link NodePort#getPortName()} method.
+     * Delegation method to the outport. {@link NodePort#getPortName()} method.
      * 
      * @param portID The port id of interest.
      * @return The description to that port.
@@ -661,13 +675,13 @@ public final class Node {
                 return false;
             }
         }
-        
+
         if (m_model instanceof MetaInputModel) {
-            if (!((MetaInputModel) m_model).canBeExecuted()) {
+            if (!((MetaInputModel)m_model).canBeExecuted()) {
                 return false;
             }
         }
-        
+
         return isConfigured();
     }
 
@@ -781,8 +795,8 @@ public final class Node {
                                 + "). Is it not executed?!?");
                 m_logger.error("failed execute");
                 m_status = new NodeStatus.Error(
-                        "Couldn't get data from predecessor (Port No." + i 
-                        + "). Is it not executed?!?");
+                        "Couldn't get data from predecessor (Port No." + i
+                                + "). Is it not executed?!?");
                 notifyStateListeners(m_status);
                 notifyStateListeners(new NodeStatus.EndExecute());
                 return false;
@@ -803,26 +817,24 @@ public final class Node {
         } catch (AssertionError ae) {
             m_logger.assertLog(false, ae.getMessage(), ae);
             resetAndConfigure();
-            m_status = new NodeStatus.Error(
-                    "Execute failed: " + ae.getMessage());
+            m_status = new NodeStatus.Error("Execute failed: "
+                    + ae.getMessage());
             return false;
         } catch (Error e) {
             // some other error - should never happen!
             m_logger.fatal("Fatal error", e);
             resetAndConfigure();
-            m_status = new NodeStatus.Error(
-                    "Execute failed: " + e.getMessage());
+            m_status = new NodeStatus.Error("Execute failed: " + e.getMessage());
             return false;
         } catch (Exception e) {
             // execution failed
             m_logger.error("Execute failed", e);
             resetAndConfigure();
-            m_status = new NodeStatus.Error(
-                    "Execute failed: " + e.getMessage());            
+            m_status = new NodeStatus.Error("Execute failed: " + e.getMessage());
             return false;
         } finally {
             if (m_status != null) {
-                notifyStateListeners(m_status);    
+                notifyStateListeners(m_status);
             }
         }
 
@@ -836,7 +848,7 @@ public final class Node {
             } catch (Exception e) {
                 m_logger.error("Predictor model couldn't be saved at port #"
                         + p, e);
-                m_status = new NodeStatus.Error("ModelContent couldn't " 
+                m_status = new NodeStatus.Error("ModelContent couldn't "
                         + "be saved at port #" + p + e.getMessage());
                 notifyStateListeners(m_status);
                 notifyStateListeners(new NodeStatus.EndExecute());
@@ -903,30 +915,30 @@ public final class Node {
             reset(false);
         } catch (Exception e) {
             m_logger.error("Reset failed", e);
-            m_status = new NodeStatus.Warning(
-                    "Reset failed: " + e.getMessage());
+            m_status = new NodeStatus.Warning("Reset failed: " + e.getMessage());
         } catch (Error e) {
             m_logger.fatal("Reset failed", e);
-            m_status = new NodeStatus.Warning(
-                    "Reset failed: " + e.getMessage());
+            m_status = new NodeStatus.Warning("Reset failed: " + e.getMessage());
         }
-        
+
         // configure
         try {
             configure();
         } catch (Exception e) {
             m_logger.error("Configure failed", e);
-            
+
             notifyStateListeners(new NodeStatus.Reset("Not configured."));
-            m_status = new NodeStatus.Warning(
-                    "Configure failed: " + e.getMessage());
+            m_status = new NodeStatus.Warning("Configure failed: "
+                    + e.getMessage());
         } catch (Error e) {
             m_logger.fatal("Configure failed", e);
             notifyStateListeners(new NodeStatus.Reset("Not configured."));
-            m_status = new NodeStatus.Warning(
-                    "Configure failed: " + e.getMessage());            
+            m_status = new NodeStatus.Warning("Configure failed: "
+                    + e.getMessage());
         } finally {
-            if (m_status != null) { notifyStateListeners(m_status); }
+            if (m_status != null) {
+                notifyStateListeners(m_status);
+            }
         }
     }
 
@@ -936,7 +948,7 @@ public final class Node {
      * <code>PredictParams</code> at the outports.
      * 
      * @param sendEvent <code>true</code> if an {@link NodeStatus.Reset} event
-     * should be fired, <code>false</code> otherwise
+     *            should be fired, <code>false</code> otherwise
      */
     private void reset(final boolean sendEvent) {
         m_logger.info("reset");
@@ -968,8 +980,9 @@ public final class Node {
         // load ModelContent from all available InPorts again
         for (int p = 0; p < getNrModelContentInPorts(); p++) {
             try {
-                m_model.loadModelContent(p, m_inModelPorts[p]
-                        .getModelContent());
+                m_model
+                        .loadModelContent(p, m_inModelPorts[p]
+                                .getModelContent());
             } catch (NullPointerException npe) {
                 m_logger.coding("loadModelContent() does not check for null"
                         + " argument.");
@@ -982,7 +995,7 @@ public final class Node {
         }
 
         if (sendEvent) {
-            // notify about the new status or send warning if something failed 
+            // notify about the new status or send warning if something failed
             notifyStateListeners(new NodeStatus.Reset());
             if (m_status != null) {
                 notifyStateListeners(m_status);
@@ -1016,7 +1029,7 @@ public final class Node {
         // remove all state listeners
         m_stateListeners.clear();
     }
-    
+
     /**
      * Removes the internal directory and all data inside.
      */
@@ -1030,9 +1043,8 @@ public final class Node {
         }
     }
 
-
     /**
-     * Deletes and temporary rescources associated with this node. 
+     * Deletes and temporary rescources associated with this node.
      */
     public void cleanup() {
         for (DataOutPort o : m_outDataPorts) {
@@ -1042,7 +1054,7 @@ public final class Node {
             }
         }
     }
-    
+
     /**
      * Notification method, called by an input port to tell the node about a new
      * connected outport from a predecessor. The notification is done, as the
@@ -1060,7 +1072,7 @@ public final class Node {
     void inportHasNewConnection(final int inPortID) {
         boundInPort(inPortID);
         if (m_model instanceof SpecialNodeModel) {
-            ((SpecialNodeModel) m_model).inportHasNewConnection(inPortID);
+            ((SpecialNodeModel)m_model).inportHasNewConnection(inPortID);
         }
         // resetNodeWithoutConfigure();
         if (inPortID < getNrDataInPorts()) {
@@ -1068,8 +1080,8 @@ public final class Node {
             inportHasNewHiLiteHandler(inPortID);
             // also get a new DataTableSpec, if available
             inportHasNewTableSpec(inPortID);
-            
-            if (((DataOutPort) m_inDataPorts[inPortID].getConnectedPort())
+
+            if (((DataOutPort)m_inDataPorts[inPortID].getConnectedPort())
                     .getBufferedDataTable() != null) {
                 inportHasNewDataTable(inPortID);
             }
@@ -1097,8 +1109,8 @@ public final class Node {
             setHiLiteHandler(inPortID, null);
         } else { // then this is a ModelContent port
             /*
-             * reset the ModelContent of this inport, previously pushed in
-             * and stored in this node.
+             * reset the ModelContent of this inport, previously pushed in and
+             * stored in this node.
              */
             int realId = inPortID - getNrDataInPorts();
             try {
@@ -1117,9 +1129,9 @@ public final class Node {
         }
         // re-create out table specs, as incoming table specs/models are gone.
         configure();
-        
+
         if (m_model instanceof SpecialNodeModel) {
-            ((SpecialNodeModel) m_model).inportWasDisconnected(inPortID);
+            ((SpecialNodeModel)m_model).inportWasDisconnected(inPortID);
         }
     }
 
@@ -1153,7 +1165,7 @@ public final class Node {
         // data tables are propagated through data ports only
         boundDataInPort(inPortID);
         if (m_model instanceof SpecialNodeModel) {
-            ((SpecialNodeModel) m_model).inportHasNewDataTable(
+            ((SpecialNodeModel)m_model).inportHasNewDataTable(
                     m_inDataPorts[inPortID].getBufferedDataTable(), inPortID);
         }
     }
@@ -1175,11 +1187,11 @@ public final class Node {
         }
 
         if (m_model instanceof SpecialNodeModel) {
-            ((SpecialNodeModel) m_model).inportHasNewTableSpec(
+            ((SpecialNodeModel)m_model).inportHasNewTableSpec(
                     m_inDataPorts[inPortID].getDataTableSpec(), inPortID);
         }
         configure();
-        
+
     }
 
     /**
@@ -1200,14 +1212,12 @@ public final class Node {
         }
         try {
             int realId = inPortID - getNrDataInPorts();
-            ModelContentRO params = m_inModelPorts[realId]
-                    .getModelContent();
+            ModelContentRO params = m_inModelPorts[realId].getModelContent();
             m_model.loadModelContent(realId, params);
         } catch (InvalidSettingsException ise) {
-            m_logger.warn("Unable to load ModelContent: "
+            m_logger.warn("Unable to load ModelContent: " + ise.getMessage());
+            m_status = new NodeStatus.Error("Could not load ModelContent: "
                     + ise.getMessage());
-            m_status = new NodeStatus.Error(
-                    "Could not load ModelContent: " + ise.getMessage());
             notifyStateListeners(m_status);
         } catch (NullPointerException npe) {
             m_logger.coding("Model needs to check for null argument.");
@@ -1246,8 +1256,7 @@ public final class Node {
         boundDataInPort(inPortID);
         m_model.setInHiLiteHandler(hiLiteHdl, inPortID);
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            m_outDataPorts[i].setHiLiteHandler(m_model
-                    .getOutHiLiteHandler(i));
+            m_outDataPorts[i].setHiLiteHandler(m_model.getOutHiLiteHandler(i));
         }
     }
 
@@ -1282,8 +1291,8 @@ public final class Node {
             // if an in spec is null
             if (errorMsg.length() > 0) {
                 throw new InvalidSettingsException(
-                    "Node can't be configured due to missing input spec(s): " 
-                        + errorMsg);
+                        "Node can't be configured due to missing input spec(s): "
+                                + errorMsg);
             }
 
             // call configure model to create output table specs
@@ -1350,15 +1359,16 @@ public final class Node {
     public String getViewName(final int viewIndex) {
         return m_factory.getNodeViewName(viewIndex);
     }
-    
+
     /**
      * Opens the node's view.
+     * 
      * @param viewIndex The view index to show.
      */
     public void showView(final int viewIndex) {
         showView(viewIndex, getName());
     }
-    
+
     /**
      * Opens the node's view.
      * 
@@ -1391,11 +1401,11 @@ public final class Node {
      */
     public NodeView getView(final int viewIndex, final String nodeName) {
         NodeView view = m_factory.createNodeView(viewIndex, m_model);
-        view.setViewName(nodeName + " - " 
+        view.setViewName(nodeName + " - "
                 + m_factory.getNodeViewName(viewIndex));
         return view;
     }
-    
+
     /**
      * Closes all views.
      */
@@ -1404,7 +1414,7 @@ public final class Node {
             view.closeView();
         }
     }
-    
+
     /**
      * Closes all output port views (data and model port views).
      */
@@ -1416,16 +1426,17 @@ public final class Node {
             port.disposePortView();
         }
     }
-    
+
     /**
      * @return <code>true</code> if a dialog is available.
      */
     public boolean hasDialog() {
         return m_factory.hasDialog();
     }
-    
+
     /**
      * Shows this node's dialog with the name of this node as title.
+     * 
      * @see #showDialog(String)
      */
     public void showDialog() {
@@ -1435,6 +1446,7 @@ public final class Node {
     /**
      * Opens the node's dialog and loads the current settings from the model
      * into the dialog.
+     * 
      * @param title The title for the dialog to open.
      */
     public void showDialog(final String title) {
@@ -1462,8 +1474,9 @@ public final class Node {
      *         dialog pane. The pane might be <code>null</code> if no dialog
      *         is available.
      * @throws NotConfigurableException if the dialog cannot be opened because
-     * of real invalid settings or if any predconditions are not fulfilled, e.g.
-     * no predecessor node, no nominal column in input table, etc.
+     *             of real invalid settings or if any predconditions are not
+     *             fulfilled, e.g. no predecessor node, no nominal column in
+     *             input table, etc.
      * @see #hasDialog()
      */
     public NodeDialogPane getDialogPane() throws NotConfigurableException {
@@ -1481,34 +1494,43 @@ public final class Node {
         assert false : "Can't return dialog pane, node has no dialog!";
         return null;
     }
-    
+
     private static final String CFG_NAME = "name";
+
     private static final String CFG_ISCONFIGURED = "isConfigured";
+
     private static final String CFG_ISEXECUTED = "isExecuted";
+
     private static final String CFG_MODEL = "model";
+
     private static final String CFG_SPEC_FILES = "spec_files";
+
     private static final String SPEC_FILE_PREFIX = "spec_";
+
     private static final String CFG_DATA_FILE = "data_meta_file";
+
     private static final String CFG_DATA_FILE_DIR = "data_files_directory";
-    
+
     private static final String DATA_FILE_PREFIX = "data_";
+
     private static final String CFG_MODEL_FILES = "model_files";
+
     private static final String MODEL_FILE_PREFIX = "model_";
+
     private static final String CFG_OUTPUT_PREFIX = "output_";
-    
+
     private static String createSpecFileName(final int index) {
         return SPEC_FILE_PREFIX + index + ".xml";
     }
-    
+
     private static String createDataFileDirName(final int index) {
         return DATA_FILE_PREFIX + index;
     }
-    
+
     private static String createModelFileName(final int index) {
         return MODEL_FILE_PREFIX + index + ".pmml.gz";
     }
-    
-    
+
     /**
      * Saves the settings (but not the data).
      * 
@@ -1521,7 +1543,7 @@ public final class Node {
         settings.addBoolean(CFG_ISCONFIGURED, isConfigured());
         // write executed flag
         settings.addBoolean(CFG_ISEXECUTED, isExecuted());
-     
+
         // write model
         final NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
         try {
@@ -1530,12 +1552,13 @@ public final class Node {
             m_logger.error("Could not save model", e);
         } catch (Error e) {
             m_logger.fatal("Could not save model", e);
-        }        
+        }
     }
-    
+
     /**
      * Saves the node, node settings, and all internal structures, spec, data,
      * and models, to the given node directory (located at the node file).
+     * 
      * @param nodeFile To write node settings to.
      * @param execMon Used to report progress during saving.
      * @throws IOException If the node file can't be found or read.
@@ -1546,30 +1569,28 @@ public final class Node {
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveSettings(settings);
         m_nodeDir = nodeFile.getParentFile();
-        
+
         if (m_model instanceof SpecialNodeModel) {
             try {
                 ExecutionMonitor execSub = execMon.createSubProgress(0.25);
                 NodeSettings model = settings.getNodeSettings(CFG_MODEL);
-                ((SpecialNodeModel) m_model).saveSettingsTo(m_nodeDir, model,
+                ((SpecialNodeModel)m_model).saveSettingsTo(m_nodeDir, model,
                         execSub);
             } catch (InvalidSettingsException ex) {
                 // this should never happen as we have added the model
                 // in saveSettings(...) above
                 m_logger.error("Internal error while saving a meta node", ex);
-            }            
+            }
         }
 
-        
-        
         if (isConfigured()) {
             NodeSettingsWO specs = settings.addNodeSettings(CFG_SPEC_FILES);
             for (int i = 0; i < m_outDataPorts.length; i++) {
                 String specName = createSpecFileName(i);
                 specs.addString(CFG_OUTPUT_PREFIX + i, specName);
                 if (!(m_isCurrentlySaved && isExecuted())) {
-                    DataTableSpec outSpec = 
-                        m_outDataPorts[i].getDataTableSpec();
+                    DataTableSpec outSpec = m_outDataPorts[i]
+                            .getDataTableSpec();
                     if (outSpec != null) {
                         NodeSettings specSettings = new NodeSettings(specName);
                         outSpec.save(specSettings);
@@ -1596,18 +1617,18 @@ public final class Node {
                     internDir.mkdir();
                     if (internDir.canWrite()) {
                         try {
-                            ExecutionMonitor execSub = 
-                                execMon.createSilentSubProgress(0.50);
+                            ExecutionMonitor execSub = execMon
+                                    .createSilentSubProgress(0.50);
                             m_model.saveInternals(internDir, execSub);
                             processModelWarnings();
                         } catch (IOException ioe) {
-                            m_status = new NodeStatus.Error("Unable to save " 
+                            m_status = new NodeStatus.Error("Unable to save "
                                     + "internals: " + ioe.getMessage());
                             notifyStateListeners(m_status);
                         } catch (Exception e) {
                             m_logger.coding("saveInternals() "
                                     + "should only cause IOException.");
-                            m_status = new NodeStatus.Error("Unable to save " 
+                            m_status = new NodeStatus.Error("Unable to save "
                                     + "internals: " + e.getMessage());
                             notifyStateListeners(m_status);
                         }
@@ -1616,20 +1637,19 @@ public final class Node {
                 if (getNrDataOutPorts() > 0) {
                     settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
                     File dataSettingsFile = new File(m_nodeDir, DATA_FILE_NAME);
-                    ExecutionMonitor execSub = 
-                        execMon.createSubProgress(1.0);
+                    ExecutionMonitor execSub = execMon.createSubProgress(1.0);
                     saveData(dataSettingsFile, execSub);
                 }
-                NodeSettingsWO models = 
-                    settings.addNodeSettings(CFG_MODEL_FILES);
+                NodeSettingsWO models = settings
+                        .addNodeSettings(CFG_MODEL_FILES);
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     String specName = createModelFileName(i);
                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
-                    ModelContentRO pred = 
-                        m_outModelPorts[i].getModelContent();
+                    ModelContentRO pred = m_outModelPorts[i].getModelContent();
                     File targetFile = new File(m_nodeDir, specName);
                     BufferedOutputStream out = new BufferedOutputStream(
-                            new FileOutputStream(targetFile));
+                            new GZIPOutputStream(new FileOutputStream(
+                                    targetFile)));
                     pred.saveToXML(out);
                 }
                 m_isCurrentlySaved = true;
@@ -1642,31 +1662,31 @@ public final class Node {
                 for (int i = 0; i < m_outModelPorts.length; i++) {
                     String modelFile = createModelFileName(i);
                     File targetFile = new File(m_nodeDir, modelFile);
-                    targetFile.delete();            
+                    targetFile.delete();
                 }
             }
         } else {
-             if (isExecuted()) {
-                 if (getNrDataOutPorts() > 0) {
-                     settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
-                 }
-                 NodeSettingsWO models = 
-                     settings.addNodeSettings(CFG_MODEL_FILES);
-                 for (int i = 0; i < m_outModelPorts.length; i++) {
-                     String specName = createModelFileName(i);
-                     models.addString(CFG_OUTPUT_PREFIX + i, specName);
-                 }
-             } else {
-                 m_logger.assertLog(
-                         false, "Saved flag is set but node is not executed.");
-             }
+            if (isExecuted()) {
+                if (getNrDataOutPorts() > 0) {
+                    settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
+                }
+                NodeSettingsWO models = settings
+                        .addNodeSettings(CFG_MODEL_FILES);
+                for (int i = 0; i < m_outModelPorts.length; i++) {
+                    String specName = createModelFileName(i);
+                    models.addString(CFG_OUTPUT_PREFIX + i, specName);
+                }
+            } else {
+                m_logger.assertLog(false,
+                        "Saved flag is set but node is not executed.");
+            }
         }
-        settings.saveToXML(new BufferedOutputStream(
-                new FileOutputStream(nodeFile)));
+        settings.saveToXML(new BufferedOutputStream(new FileOutputStream(
+                nodeFile)));
     } // save(File, ExecutionMonitor)
 
     private void saveData(final File configFile, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
+            throws IOException, CanceledExecutionException {
         NodeSettings settings = new NodeSettings("data_files_information");
         File dataDir = new File(configFile.getParentFile(), DATA_FILE_DIR);
         if (dataDir.exists()) {
@@ -1674,51 +1694,52 @@ public final class Node {
         }
         dataDir.mkdir();
         if (!dataDir.isDirectory() || !dataDir.canWrite()) {
-            throw new IOException("Can not write directory " 
+            throw new IOException("Can not write directory "
                     + dataDir.getAbsolutePath());
         }
         settings.addString(CFG_DATA_FILE_DIR, DATA_FILE_DIR);
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            NodeSettingsWO portSettings = 
-                settings.addNodeSettings(CFG_OUTPUT_PREFIX + i);
+            NodeSettingsWO portSettings = settings
+                    .addNodeSettings(CFG_OUTPUT_PREFIX + i);
             String dataName = createDataFileDirName(i);
             File dir = new File(dataDir, dataName);
             dir.mkdir();
             if (!(dir.isDirectory() && dir.canWrite())) {
-                throw new IOException("Can not write directory " 
+                throw new IOException("Can not write directory "
                         + dir.getAbsolutePath());
             }
             portSettings.addString(CFG_DATA_FILE_DIR, dataName);
-            BufferedDataTable outTable = 
-                m_outDataPorts[i].getBufferedDataTable();
+            BufferedDataTable outTable = m_outDataPorts[i]
+                    .getBufferedDataTable();
             outTable.save(dir, portSettings, exec);
         }
-        settings.saveToXML(new BufferedOutputStream(
-                new FileOutputStream(configFile)));
+        settings.saveToXML(new BufferedOutputStream(new FileOutputStream(
+                configFile)));
     }
-    
-    private void loadData(final int loadID, final File configfile, 
-            final ExecutionMonitor exec) throws IOException, 
+
+    private void loadData(final int loadID, final File configfile,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException, InvalidSettingsException {
-        NodeSettingsRO settings = NodeSettings.loadFromXML(
-                new BufferedInputStream(new FileInputStream(configfile)));
+        NodeSettingsRO settings = NodeSettings
+                .loadFromXML(new BufferedInputStream(new FileInputStream(
+                        configfile)));
         String dataPath = settings.getString(CFG_DATA_FILE_DIR);
         File dataDir = new File(m_nodeDir, dataPath);
         if (!dataDir.exists() || !dataDir.canRead()) {
-            throw new IOException("Can not read directory " 
+            throw new IOException("Can not read directory "
                     + dataDir.getAbsolutePath());
         }
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            NodeSettingsRO portSettings = 
-                settings.getNodeSettings(CFG_OUTPUT_PREFIX + i);
+            NodeSettingsRO portSettings = settings
+                    .getNodeSettings(CFG_OUTPUT_PREFIX + i);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
             File dir = new File(dataDir, dataName);
             if (!dir.isDirectory() || !dir.canRead()) {
-                throw new IOException("Can not read directory " 
+                throw new IOException("Can not read directory "
                         + dir.getAbsolutePath());
             }
-            BufferedDataTable t = 
-                BufferedDataTable.loadFromFile(dir, portSettings, exec, loadID);
+            BufferedDataTable t = BufferedDataTable.loadFromFile(dir,
+                    portSettings, exec, loadID);
             // take ownership for any newly created files (successor nodes
             // don't store this table, they just reference on us.)
             t.setOwnerRecursively(this);
@@ -1726,7 +1747,7 @@ public final class Node {
             m_outDataPorts[i].setDataTable(t);
         }
     }
-    
+
     /**
      * Validates the settings inside the model.
      * 
@@ -1743,6 +1764,7 @@ public final class Node {
     /**
      * Reads the current settings from the dialog and writes them into the
      * model.
+     * 
      * @throws InvalidSettingsException If the settings are not valid for the
      *             underlying model.
      */
@@ -1779,9 +1801,11 @@ public final class Node {
     /**
      * Reads the current settings from the model and load them into the dialog
      * pane.
+     * 
      * @throws NotConfigurableException if the dialog cannot be opened because
-     * of real invalid settings or if any predconditions are not fulfilled, e.g.
-     * no predecessor node, no nominal column in input table, etc.
+     *             of real invalid settings or if any predconditions are not
+     *             fulfilled, e.g. no predecessor node, no nominal column in
+     *             input table, etc.
      */
     private void loadDialogSettingsFromModel() throws NotConfigurableException {
         // get the model's current settings ...
@@ -1870,16 +1894,14 @@ public final class Node {
     private int boundModelContentInPort(final int inPortID) {
         // predictor params port ids are the indecies above the data port ids
         if ((inPortID < getNrDataInPorts())
-                || (inPortID >= getNrModelContentInPorts() 
-                        + getNrDataInPorts())) {
+                || (inPortID >= getNrModelContentInPorts() + getNrDataInPorts())) {
             throw new IndexOutOfBoundsException(
                     "Invalid ModelContent input-port number: "
                             + inPortID
                             + " (valid range: ["
                             + getNrDataInPorts()
                             + "..."
-                            + (getNrModelContentInPorts() 
-                                    + getNrDataInPorts() - 1)
+                            + (getNrModelContentInPorts() + getNrDataInPorts() - 1)
                             + "])");
         }
         return inPortID;
@@ -1975,17 +1997,16 @@ public final class Node {
      * is just a container for a subworkflow.
      * 
      * @return the embedded workflowmanager or <code>null</code> if this node
-     * does not represent a meta node
+     *         does not represent a meta node
      */
     public WorkflowManager getEmbeddedWorkflowManager() {
         if (m_model instanceof SpecialNodeModel) {
-            return ((SpecialNodeModel) m_model).internalWFM();
+            return ((SpecialNodeModel)m_model).internalWFM();
         } else {
             return null;
         }
     }
-    
-    
+
     /**
      * Transfers the model of this node into the meta node model by calling
      * {@link MetaNodeModel#receiveModel(NodeModel)} with the model as argument.
@@ -1993,6 +2014,6 @@ public final class Node {
      * @param metaModel a meta node model
      */
     public void retrieveModel(final MetaNodeModel metaModel) {
-        metaModel.receiveModel(m_model);        
+        metaModel.receiveModel(m_model);
     }
 }
