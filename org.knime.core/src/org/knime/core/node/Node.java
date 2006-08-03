@@ -365,25 +365,25 @@ public final class Node {
                 String modelName = model.getString(CFG_OUTPUT_PREFIX + i);
                 File targetFile = new File(m_nodeDir, modelName);
 
-                ModelContentRO pred = null;
                 // in an earlier version the model settings were written
                 // directly (without zipping); now the settings are 
                 // zipped (see save()); to be backward compatible
                 // both ways are tried
+                InputStream in = null;
                 try {
-                    InputStream in = new BufferedInputStream(
-                            new FileInputStream(targetFile));
-                    GZIPInputStream gzin = new GZIPInputStream(in);
-                    pred = ModelContent.loadFromXML(gzin);
+                    in = new GZIPInputStream(new BufferedInputStream(
+                            new FileInputStream(targetFile)));
+
                 } catch (IOException ioe) {
                     // if a gz input stream could not be created
                     // we use read directly from the file via the
                     // previously created buffered input stream
-                    InputStream in = new BufferedInputStream(
+                    in = new BufferedInputStream(
                             new FileInputStream(targetFile));
-                    pred = ModelContent.loadFromXML(in);
+                    
                 }
 
+                ModelContentRO pred = ModelContent.loadFromXML(in);
                 m_outModelPorts[i].setModelContent(pred);
             }
             m_isCurrentlySaved = true;
