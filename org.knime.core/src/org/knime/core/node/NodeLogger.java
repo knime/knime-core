@@ -27,7 +27,6 @@ package org.knime.core.node;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Writer;
@@ -45,8 +44,6 @@ import org.apache.log4j.TTCCLayout;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
-
-import com.sun.corba.se.impl.ior.OldObjectKeyTemplateBase;
 
 /**
  * The general logger used to write info, warnings, errors , debugging, assert
