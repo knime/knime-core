@@ -47,6 +47,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -85,6 +86,12 @@ public class XValidateModel extends MetaNodeModel {
 
     private NodeContainer m_partionNode;
 
+    
+    static {
+        // this if for backwards compatibility with release 1.0.0
+        GlobalClassCreator.addLoadedFactory(XValidatePartitionerFactory.class);
+    }
+    
     /**
      * Creates a new cross validation node.
      * 

@@ -44,7 +44,7 @@ public final class GlobalClassCreator {
 
     private static final List<String> RO_LIST = Collections
             .unmodifiableList(LOADED_NODE_FACTORIES);
-
+    
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(GlobalClassCreator.class);
@@ -69,22 +69,37 @@ public final class GlobalClassCreator {
      * @return <code>Class</code> of specified name
      * @throws ClassNotFoundException Class not found.
      */
-    public static Class createClass(String className)
+    public static Class createClass(final String className)
             throws ClassNotFoundException {
         
-        if (className.startsWith("de.unikn.knime.core")) {
-            className = className.replace("de.unikn.knime.core", "org.knime.core");
+        String translatedClassName = className;
+        if (className.startsWith("de.unikn.knime.")) {
+            translatedClassName = className.replace("de.unikn.knime.",
+                    "org.knime.");
         }
         
         if (classCreator == null) {
             // no class creator given, create it directly
-            return Class.forName(className);
-        } else {
-            // class creator was given, use it!
-            Class result = classCreator.createClass(className);
-            if (result == null) {
+            try {
+                return Class.forName(translatedClassName);
+            } catch (ClassNotFoundException ex) {
                 return Class.forName(className);
             }
+        } else {
+            // class creator was given, use it!
+            Class result = classCreator.createClass(translatedClassName);
+            if (result == null) {
+                result = classCreator.createClass(className);                
+            }
+
+            if (result == null) {
+                result = Class.forName(translatedClassName);                
+            }
+
+            if (result == null) {
+                result = Class.forName(className);                
+            }
+            
             return result;
         }
     }

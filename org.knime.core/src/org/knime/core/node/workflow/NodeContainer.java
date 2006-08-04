@@ -111,8 +111,8 @@ public class NodeContainer implements NodeStateListener {
                 // and load content of extrainfo
                 extraInfo.load(sett);
             } catch (Exception e) {
-                LOGGER.warn("ExtraInfoClass could not " + "be loaded "
-                        + extraInfoClassName + " reason: " + e.getMessage());
+                LOGGER.warn("ExtraInfoClass could not be loaded "
+                        + extraInfoClassName + " reason: " + e, e);
             }
         }
         return extraInfo;

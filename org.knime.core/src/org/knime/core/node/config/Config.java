@@ -643,13 +643,21 @@ public abstract class Config extends AbstractConfigEntry
         String className = config.getString(CFG_DATA_CELL);
         if (className == null) {
             return null;
-        } else if (className.startsWith("de.unikn.knime.core")) {
-            className = className.replace("de.unikn.knime.core", "org.knime.core");
         }
 
         
+        Object o = null;
+        if (className.startsWith("de.unikn.knime.")) {
+            o = DATACELL_MAP.get(className.replace("de.unikn.knime.",
+                    "org.knime."));
+            // this may fail, e.g for de.unikn.knime.altanaexp, thus
+            // the fallback is also tried
+        }
+        if (o == null) {
+            o = DATACELL_MAP.get(className);
+        }
         
-        Object o = DATACELL_MAP.get(className);
+         
         if (o != null) {
             Config cellConfig = config.getConfig(className);
             DataCellEntry e = (DataCellEntry) o;

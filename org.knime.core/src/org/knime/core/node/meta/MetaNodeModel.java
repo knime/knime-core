@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -79,6 +80,15 @@ public class MetaNodeModel extends SpecialNodeModel implements
     private final ModelOutputNodeModel[] m_modelOutModels;
 
     private boolean m_resetFromInterior;
+
+    
+    static {
+        // this if for backwards compatibility with release 1.0.0
+        GlobalClassCreator.addLoadedFactory(DataInputNodeFactory.class);
+        GlobalClassCreator.addLoadedFactory(DataOutputNodeFactory.class);
+        GlobalClassCreator.addLoadedFactory(ModelInputNodeFactory.class);
+        GlobalClassCreator.addLoadedFactory(ModelOutputNodeFactory.class);
+    }
 
     /*
      * The listeners that are interested in node state changes.

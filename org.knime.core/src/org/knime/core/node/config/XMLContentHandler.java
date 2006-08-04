@@ -169,8 +169,8 @@ class XMLContentHandler extends DefaultHandler {
     public InputSource resolveEntity(
             final String publicId, final String systemId) 
         throws IOException, SAXException {
-        assert systemId != null && (systemId.endsWith(XMLConfig.DTD_NAME) ||
-                systemId.endsWith(XMLConfig.OLD_DTD_NAME));
+        assert systemId != null && (systemId.endsWith(XMLConfig.DTD_NAME)
+                || systemId.endsWith(XMLConfig.OLD_DTD_NAME));
         // gets URL for systemId which specifies the dtd file+path
         ClassLoader classLoader = XMLConfig.class.getClassLoader();
         URL dtdURL = classLoader.getResource(XMLConfig.DTD_NAME);
