@@ -24,11 +24,16 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
@@ -41,17 +46,19 @@ import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 
+import com.sun.corba.se.impl.ior.OldObjectKeyTemplateBase;
+
 /**
- * The general logger used to write info, warnings, errors , debugging,
- * assert messages, exceptions, and coding problems into the internal Log4J 
- * logger. By default, the messages are logged to <code>System.out</code> 
- * and <code>System.err</code>, respectively. In addtion, all messages are
- * written into the <i>knime.log</i> file created in the <i>.knime</i> 
- * directory, located by default in the user's home directory. Furthermore, it 
+ * The general logger used to write info, warnings, errors , debugging, assert
+ * messages, exceptions, and coding problems into the internal Log4J logger. By
+ * default, the messages are logged to <code>System.out</code> and
+ * <code>System.err</code>, respectively. In addtion, all messages are
+ * written into the <i>knime.log</i> file created in the <i>.knime</i>
+ * directory, located by default in the user's home directory. Furthermore, it
  * is possible to add and remove additional writers to this logger. Note,
- * calling <code>#setLevelIntern(LEVEL)</code> does only effect the minimum 
+ * calling <code>#setLevelIntern(LEVEL)</code> does only effect the minimum
  * logging level of the default loggers. All other writers' levels have to be
- * set before hand. 
+ * set before hand.
  * 
  * TODO put default logging levels into file and list of excluded packages.
  * 
@@ -78,6 +85,8 @@ public final class NodeLogger {
     /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
 
+    private static final int MAX_LOG_SIZE = 10 * 1024 * 1024;
+
     /** Assertions are on or off. */
     private static final boolean ASSERT;
     static {
@@ -92,28 +101,28 @@ public final class NodeLogger {
     }
 
     /** Keeps set of <code>NodeLogger</code> elements by classname as key. */
-    private static final HashMap<String, NodeLogger> LOGGERS = 
-        new HashMap<String, NodeLogger>();
+    private static final HashMap<String, NodeLogger> LOGGERS = new HashMap<String, NodeLogger>();
 
     /** Map of additionally added writers: Writer -> Appender. */
-    private static final HashMap<Writer, WriterAppender> WRITER = 
-        new HashMap<Writer, WriterAppender>();
-    
-    /** 
-     * Maximum number of chars (10000) printed on <code>System.out</code> and 
-     * <code>System.err</code>. 
+    private static final HashMap<Writer, WriterAppender> WRITER = new HashMap<Writer, WriterAppender>();
+
+    /**
+     * Maximum number of chars (10000) printed on <code>System.out</code> and
+     * <code>System.err</code>.
      */
     private static final int MAX_CHARS = 10000;
-    
+
     /** <code>System.err</code> log appender. */
     private static final ConsoleAppender SERR_APPENDER;
+
     /** <code>System.out</code> log appender. */
     private static final ConsoleAppender SOUT_APPENDER;
+
     /** Default log file appender. */
     private static final Appender FILE_APPENDER;
 
     /**
-     * Inits Log4J logger and appends <code>System.out</code>, 
+     * Inits Log4J logger and appends <code>System.out</code>,
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
@@ -122,7 +131,7 @@ public final class NodeLogger {
         root.setLevel(Level.ALL);
         // add System.out
         SOUT_APPENDER = new ConsoleAppender(new PatternLayout(
-                "%-5p\t %c{1}\t %." + MAX_CHARS + "m\n"), 
+                "%-5p\t %c{1}\t %." + MAX_CHARS + "m\n"),
                 ConsoleAppender.SYSTEM_OUT);
         SOUT_APPENDER.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
@@ -132,7 +141,7 @@ public final class NodeLogger {
         root.addAppender(SOUT_APPENDER);
         // add System.err
         SERR_APPENDER = new ConsoleAppender(new PatternLayout(
-                "%-5p\t %t : %c\t %." + MAX_CHARS + "m\n"), 
+                "%-5p\t %t : %c\t %." + MAX_CHARS + "m\n"),
                 ConsoleAppender.SYSTEM_ERR);
         SERR_APPENDER.setImmediateFlush(true);
         SERR_APPENDER.setThreshold(Level.ERROR);
@@ -140,17 +149,18 @@ public final class NodeLogger {
         FileAppender tempFileAppender;
         try {
             // get user home
-            String tmpDir = KNIMEConstants.KNIME_HOME_DIR + File.separator;
+            final String tmpDir = KNIMEConstants.KNIME_HOME_DIR
+                    + File.separator;
             // check if home/.knime exists
             File tempDir = new File(tmpDir);
             if (!tempDir.exists()) {
                 tempDir.mkdir();
             }
             // check old for old knime log files
-            File oldLog = new File(tmpDir + LOG_FILE);
-            if (oldLog.exists()) {
-                oldLog.renameTo(new File(tmpDir + LOG_FILE + ".bak"));
-                oldLog.delete();
+            final File oldLog = new File(tmpDir + LOG_FILE);
+            if (oldLog.exists() && (oldLog.length() > MAX_LOG_SIZE)
+                    && oldLog.canRead()) {
+                compressOldLog(oldLog);
             }
             // add knime.log file appender
             tempFileAppender = new FileAppender(new TTCCLayout(
@@ -183,7 +193,40 @@ public final class NodeLogger {
         }
     }
 
-    /** Write start logging message to info logger of this class. */  
+    private static void compressOldLog(final File oldLog) {
+        final File tempFile = new File(oldLog.getAbsolutePath() + ".old");
+        oldLog.renameTo(tempFile);
+
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                BufferedInputStream in;
+                try {
+                    in = new BufferedInputStream(new FileInputStream(tempFile));
+                    GZIPOutputStream out = new GZIPOutputStream(
+                            new FileOutputStream(new File(tempFile
+                                    .getAbsolutePath()
+                                    + ".gz")));
+
+                    byte[] buf = new byte[4096];
+                    int count;
+                    while ((count = in.read(buf)) > 0) {
+                        out.write(buf, 0, count);
+                    }
+
+                    in.close();
+                    out.close();
+                    oldLog.delete();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.start();
+    }
+
+    /** Write start logging message to info logger of this class. */
     private static void startMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
@@ -199,15 +242,17 @@ public final class NodeLogger {
         l.info("#                                                           #");
         l.info("#############################################################");
         l.info("# For more details see:                                     #");
-        l.info("# " + KNIMEConstants.KNIME_HOME_DIR + File.separator
+        l
+                .info("# " + KNIMEConstants.KNIME_HOME_DIR + File.separator
                         + LOG_FILE);
         l.info("#-----------------------------------------------------------#");
         l.info("# logging date=" + new Date());
         l.info("# java.version=" + System.getProperty("java.version"));
         l.info("# java.vm.version=" + System.getProperty("java.vm.version"));
         l.info("# os.name=" + System.getProperty("os.name"));
-        l.info("# number of CPUs=" 
-                + Runtime.getRuntime().availableProcessors());
+        l
+                .info("# number of CPUs="
+                        + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (ASSERT ? "on" : "off"));
         l.info("#############################################################");
     }
@@ -226,9 +271,8 @@ public final class NodeLogger {
     /** The Log4J logger to which all messages are logged. */
     private final Logger m_logger;
 
-    /** 
-     * Don't log the following packages. 
-     * TODO create external file. 
+    /**
+     * Don't log the following packages. TODO create external file.
      */
     private static final String[] DONT_LOG = new String[]{"joelib",
             "org.openscience"};
@@ -240,7 +284,7 @@ public final class NodeLogger {
     }
 
     /**
-     * Hidden default constructor, logger created by 
+     * Hidden default constructor, logger created by
      * <code>java.lang.Class</code>.
      * 
      * @param c The logger created by Class name.
@@ -412,18 +456,20 @@ public final class NodeLogger {
             m_logger.debug("ASSERT\t " + m, e);
         }
     }
-    
-    /** 
+
+    /**
      * Writes CODING PROBLEM plus this message into this logger as error.
+     * 
      * @param o The message to print.
      */
     public void coding(final Object o) {
         m_logger.error("CODING PROBLEM\t" + o);
     }
-    
+
     /**
      * Writes CODING PROBLEM plus this message, as well as the the message of
      * the throwable into this logger as error and debug.
+     * 
      * @param o The message to print.
      * @param t The throwable's message to print.
      */
@@ -432,7 +478,7 @@ public final class NodeLogger {
         this.coding(t.getMessage());
         this.debug(o, t);
     }
-    
+
     /**
      * Write fatal error message and throwable into the logger.
      * 
@@ -453,7 +499,7 @@ public final class NodeLogger {
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      */
-    public static final void addWriter(final Writer writer, 
+    public static final void addWriter(final Writer writer,
             final LEVEL minLevel, final LEVEL maxLevel) {
         // remove the writer first if existent
         if (WRITER.containsKey(writer)) {
@@ -474,15 +520,15 @@ public final class NodeLogger {
     }
 
     /**
-     * Removes the previously added <code>java.io.Writer</code> from the logger.
+     * Removes the previously added <code>java.io.Writer</code> from the
+     * logger.
      * 
      * @param writer The Writer to remove.
      */
     public static final void removeWriter(final Writer writer) {
         Appender o = WRITER.get(writer);
         if (o != null) {
-            if (o != FILE_APPENDER 
-                    && o != SERR_APPENDER && o != SOUT_APPENDER) {
+            if (o != FILE_APPENDER && o != SERR_APPENDER && o != SOUT_APPENDER) {
                 Logger.getRootLogger().removeAppender(o);
             }
         } else {
@@ -490,11 +536,12 @@ public final class NodeLogger {
                     "Could not delete writer: " + writer);
         }
     }
-    
+
     /**
      * Sets an new minimum logging level for all internal appenders, that are,
-     * log file, and System.out and System.err appender. The maximum loggings 
+     * log file, and System.out and System.err appender. The maximum loggings
      * stays LEVEL.ALL for all appenders.
+     * 
      * @param level The new minimum logging level.
      */
     public static void setLevelIntern(final LEVEL level) {
@@ -513,6 +560,7 @@ public final class NodeLogger {
 
     /**
      * Translates this loging levels into Log4J logging levels.
+     * 
      * @param level The level to translate.
      * @return The Log4J logging level.
      */
