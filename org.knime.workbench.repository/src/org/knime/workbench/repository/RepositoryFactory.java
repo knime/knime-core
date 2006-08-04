@@ -65,7 +65,6 @@ public final class RepositoryFactory {
                     .createExecutableExtension("factory-class");
 
             node.setFactory(factory.getClass());
-            GlobalClassCreator.addLoadedFactory(factory.getClass());
         } catch (CoreException e) {
             e.printStackTrace();
             throw new IllegalArgumentException(

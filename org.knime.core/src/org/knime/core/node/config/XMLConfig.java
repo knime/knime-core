@@ -51,7 +51,25 @@ import com.sun.org.apache.xml.internal.serialize.SerializerFactory;
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class XMLConfig {
-
+    private static SAXParserFactory factory;
+    
+    static {
+        String old = System.getProperty("javax.xml.parsers.SAXParserFactory");
+        System.setProperty("javax.xml.parsers.SAXParserFactory",
+                "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
+        
+        try {
+            factory = SAXParserFactory.newInstance();
+            factory.setValidating(true);
+        } finally {        
+            if (old != null) {
+                System.setProperty("javax.xml.parsers.SAXParserFactory", old);
+            } else {
+                System.clearProperty("javax.xml.parsers.SAXParserFactory");
+            }
+        }
+    }
+    
     private XMLConfig() {
 
     }
@@ -108,15 +126,13 @@ final class XMLConfig {
      */
     private static void internalLoad(final Config c, final InputStream in)
             throws SAXException, IOException, ParserConfigurationException {
-        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
-        saxParserFactory.setValidating(true);
-        SAXParser saxParser = saxParserFactory.newSAXParser();
+        SAXParser saxParser = factory.newSAXParser();
         XMLReader reader = saxParser.getXMLReader();
         XMLContentHandler xmlContentHandler = new XMLContentHandler(c, in
                 .toString());
         reader.setContentHandler(xmlContentHandler);
         reader.setEntityResolver(xmlContentHandler);
-        reader.setErrorHandler(xmlContentHandler);
+        reader.setErrorHandler(xmlContentHandler);        
         reader.parse(new InputSource(in));
     }
 

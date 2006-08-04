@@ -133,8 +133,8 @@ public class NodeContainer implements NodeStateListener {
             String[] x = factoryClassName.split("\\.");
             String simpleClassName = x[x.length - 1];
 
-            for (String s : GlobalClassCreator.getLoadedNodeFactories()) {
-                if (s.endsWith(simpleClassName)) {
+            for (String s : NodeFactory.getLoadedNodeFactories()) {
+                if (s.endsWith("." + simpleClassName)) {
                     NodeFactory f = (NodeFactory)((GlobalClassCreator
                             .createClass(s)).newInstance());
                     LOGGER.warn("Substituted '" + f.getClass().getName()

@@ -12,7 +12,7 @@ Provide-Package: org.knime.workbench.repository,
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.ui.views,
- org.knime.workbench.core;reprovide=true,
+ org.knime.workbench.core,
  org.eclipse.gef,
  org.eclipse.ui.ide
 Eclipse-AutoStart: true

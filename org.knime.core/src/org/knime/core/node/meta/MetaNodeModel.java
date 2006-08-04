@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -39,6 +38,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
@@ -84,10 +84,10 @@ public class MetaNodeModel extends SpecialNodeModel implements
     
     static {
         // this if for backwards compatibility with release 1.0.0
-        GlobalClassCreator.addLoadedFactory(DataInputNodeFactory.class);
-        GlobalClassCreator.addLoadedFactory(DataOutputNodeFactory.class);
-        GlobalClassCreator.addLoadedFactory(ModelInputNodeFactory.class);
-        GlobalClassCreator.addLoadedFactory(ModelOutputNodeFactory.class);
+        NodeFactory.addLoadedFactory(DataInputNodeFactory.class);
+        NodeFactory.addLoadedFactory(DataOutputNodeFactory.class);
+        NodeFactory.addLoadedFactory(ModelInputNodeFactory.class);
+        NodeFactory.addLoadedFactory(ModelOutputNodeFactory.class);
     }
 
     /*

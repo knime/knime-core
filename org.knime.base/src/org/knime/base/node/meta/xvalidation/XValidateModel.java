@@ -47,13 +47,13 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -89,7 +89,7 @@ public class XValidateModel extends MetaNodeModel {
     
     static {
         // this if for backwards compatibility with release 1.0.0
-        GlobalClassCreator.addLoadedFactory(XValidatePartitionerFactory.class);
+        NodeFactory.addLoadedFactory(XValidatePartitionerFactory.class);
     }
     
     /**

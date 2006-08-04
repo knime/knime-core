@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,6 +44,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -59,6 +61,13 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Michael Berthold, University of Konstanz
  */
 public abstract class NodeFactory {
+    private static final List<String> LOADED_NODE_FACTORIES = new ArrayList<String>();
+
+    private static final List<String> RO_LIST = Collections
+            .unmodifiableList(LOADED_NODE_FACTORIES);
+    
+
+    
     /**
      * Enum for all node types.
      * 
@@ -149,7 +158,12 @@ public abstract class NodeFactory {
      * description. Prints log message if that fails.
      */
     private static void instantiateParser() {
+        String old = System.getProperty("javax.xml.parsers.SAXParserFactory");
+        System.setProperty("javax.xml.parsers.SAXParserFactory",
+                "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
         try {
+            Thread.currentThread().setContextClassLoader(
+                    ClassLoader.getSystemClassLoader());
             DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
             f.setValidating(true);
             parser = f.newDocumentBuilder();
@@ -189,6 +203,12 @@ public abstract class NodeFactory {
             NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
         } catch (TransformerFactoryConfigurationError ex) {
             NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
+        } finally {
+            if (old != null) {
+                System.setProperty("javax.xml.parsers.SAXParserFactory", old);
+            } else {
+                System.clearProperty("javax.xml.parsers.SAXParserFactory");
+            }
         }
     }
 
@@ -307,6 +327,7 @@ public abstract class NodeFactory {
             // would call an abstract method from within the constructor -
             // local fields in the derived NodeFactory have not been initialized
         }
+        addLoadedFactory(this.getClass());
     }
 
     
@@ -899,5 +920,24 @@ public abstract class NodeFactory {
      */
     public static URL getDefaultIcon() {
         return defaultIcon;
+    }
+
+    /**
+     * Returns a collection of all loaded node factories.
+     * 
+     * @return a collection array of fully qualified node factory class names
+     */
+    public static List<String> getLoadedNodeFactories() {
+        return RO_LIST;
+    }
+
+    /**
+     * Adds the given factory class to the list of loaded factory classes.
+     * 
+     * @param factoryClass a factory class
+     */
+    public static void addLoadedFactory(
+            final Class<? extends NodeFactory> factoryClass) {
+        LOADED_NODE_FACTORIES.add(factoryClass.getName());
     }
 }
