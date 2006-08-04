@@ -133,11 +133,11 @@ public final class RepositoryManager {
             public int compare(final IConfigurationElement o1,
                     final IConfigurationElement o2) {
                 String element1 = o1.getAttribute("path");
-                if (element1.equals("/")) {
+                if (element1 == null || element1.equals("/")) {
                     return -1;
                 }
                 String element2 = o2.getAttribute("path");
-                if (element2.equals("/")) {
+                if (element2 == null || element2.equals("/")) {
                     return +1;
                 }
 
