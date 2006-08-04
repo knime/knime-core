@@ -65,11 +65,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
     public DialogComponentColumnSelection(final String configName,
             final String label, final int specIndex,
             final Class<? extends DataValue>... classFilter) {
-        this.add(new JLabel(label));
-        m_chooser = new ColumnSelectionPanel((Border)null, classFilter);
-        this.add(m_chooser);
-        m_configName = configName;
-        m_specIndex = specIndex;
+        this(configName, label, specIndex, true, classFilter);
     }
     
     
