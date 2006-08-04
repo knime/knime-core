@@ -182,9 +182,14 @@ public class PredictorWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("\"" + file.getAbsolutePath()
                     + "\" is a directory.");
         }
-        if (file.exists() && !file.canWrite()) {
-            throw new InvalidSettingsException("Cannot write to file \""
+        if (file.exists()) {
+            // here it exists and we can write it: warn user!
+            setWarningMessage("Selected output file exists and will be "
+                    + "overwritten!");
+            if (!file.canWrite()) {
+                throw new InvalidSettingsException("Cannot write to file \""
                     + file.getAbsolutePath() + "\".");
+            }
         }
         String tempFileName = newFileName + "~";
         File tempFile = new File(tempFileName);
@@ -192,11 +197,6 @@ public class PredictorWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("Cannot write to (=delete) temp"
                     + " file \"" + tempFile.getAbsolutePath() + "\".");
         }
-
-        // here it exists and we can write it: warn user!
-        setWarningMessage("Selected output file exists and will be "
-                + "overwritten!");
-        
         return newFileName;
     }
 
