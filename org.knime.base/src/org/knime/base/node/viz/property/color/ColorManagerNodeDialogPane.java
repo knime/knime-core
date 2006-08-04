@@ -282,9 +282,12 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
         for (int i = 0; i < cols; i++) {
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
             m_columns.addItem(cspec);
+            if (cspec.getName().equals(target)) {
+                m_columns.setSelectedIndex(i);
+            }
         }
+        columnChanged(target, nominalSelected);
         m_columns.addItemListener(this);
-        m_columns.setSelectedIndex(specs[0].findColumnIndex(target));
     }
 
     /**
@@ -307,8 +310,8 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
                 m_nominal.saveSettings(settings);
             } else {
                 if (m_buttonRange.isSelected() && m_buttonRange.isEnabled()) {
-                    settings
-                            .addBoolean(ColorManagerNodeModel.IS_NOMINAL, false);
+                    settings.addBoolean(
+                            ColorManagerNodeModel.IS_NOMINAL, false);
                     m_range.saveSettings(settings);
                 } else {
                     throw new InvalidSettingsException("No color settings for "
@@ -328,21 +331,31 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
             return;
         }
         String cell = ((DataColumnSpec)o).getName();
+        columnChanged(cell, true);
+    }
+    
+    private void columnChanged(final String cell, final boolean nominal) {
         boolean hasRanges = m_range.select(cell);
+        boolean hasNominal = m_nominal.select(cell);
         if (hasRanges) {
             m_buttonRange.setEnabled(true);
-            m_buttonRange.setSelected(true);
+            if (!nominal || !hasNominal) {
+                m_buttonRange.setSelected(true);
+            }
         } else {
             m_buttonRange.setEnabled(false);
         }
-        boolean hasNominal = m_nominal.select(cell);
         if (hasNominal) {
             m_buttonNominal.setEnabled(true);
-            m_buttonNominal.setSelected(true);
+            if (nominal || !hasRanges) {
+                m_buttonNominal.setSelected(true);
+            }
         } else {
             m_buttonNominal.setEnabled(false);
         }
     }
+    
+
 
     /* Find selected column in button group. */
     private String getSelectedItem() {
