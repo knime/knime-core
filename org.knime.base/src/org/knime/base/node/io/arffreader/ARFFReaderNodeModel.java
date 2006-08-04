@@ -308,9 +308,8 @@ public class ARFFReaderNodeModel extends NodeModel {
                 if (f.isDirectory()) {
                     return true;
                 }
-                String lastFive = f.getName().substring(
-                        f.getName().length() - 5, f.getName().length());
-                return lastFive.equalsIgnoreCase(".arff");
+                String name = f.getName();
+                return name.toLowerCase().endsWith(".arff");
             }
             return true;
 
