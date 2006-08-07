@@ -31,7 +31,7 @@ import org.knime.core.node.NodeView;
  * Joins two tables such that the first table appears on the left side of the
  * new table an the second one on the right side.
  * 
- * @see JoinedTable
+ * @see org.knime.base.data.join.JoinedTable
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JoinerNodeFactory extends NodeFactory {

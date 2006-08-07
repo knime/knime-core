@@ -45,7 +45,7 @@ public class XValidateNodeFactory extends MetaNodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new XValidateModel(this);
+        return new XValidateModel();
     }
 
     /**

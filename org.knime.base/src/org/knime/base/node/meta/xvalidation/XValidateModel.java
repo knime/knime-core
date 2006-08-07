@@ -59,7 +59,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.meta.DataInputNodeModel;
-import org.knime.core.node.meta.MetaNodeFactory;
 import org.knime.core.node.meta.MetaNodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 
@@ -94,10 +93,8 @@ public class XValidateModel extends MetaNodeModel {
     
     /**
      * Creates a new cross validation node.
-     * 
-     * @param f the factory that created this model
      */
-    public XValidateModel(final MetaNodeFactory f) {
+    public XValidateModel() {
         super(1, 1, 0, 0);
     }
 
@@ -208,14 +205,6 @@ public class XValidateModel extends MetaNodeModel {
      */
     public DataTable getConfusionMatrix() {
         return m_confusionMatrix;
-    }
-
-    /**
-     * @see org.knime.core.node.NodeModel#reset()
-     */
-    @Override
-    protected void reset() {
-        super.reset();
     }
 
     /**
