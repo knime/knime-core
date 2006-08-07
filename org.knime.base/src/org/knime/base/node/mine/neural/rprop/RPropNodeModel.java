@@ -39,13 +39,19 @@ import javax.swing.JPanel;
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.base.data.neural.methods.RProp;
+import org.knime.base.node.util.DefaultDataArray;
+import org.knime.base.node.viz.scatterplot.ScatterProps;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -165,7 +171,7 @@ public class RPropNodeModel extends NodeModel {
     /*
      * Used to plot the error.
      */
-    private JPanel m_errorplot;
+    //private ErrorPlot m_errorplot;
 
     /*
      * The error values at each iteration
@@ -242,7 +248,8 @@ public class RPropNodeModel extends NodeModel {
         m_inputmap = new HashMap<String, Integer>();
         for (DataColumnSpec colspec : posSpec) {
             // check for class column
-            if (colspec.getName().toString().compareTo(m_classcol.toString()) == 0) {
+            if (colspec.getName().toString().compareTo(
+                    m_classcol.toString()) == 0) {
                 if (colspec.getType().isCompatible(DoubleValue.class)) {
                     nrOutputs = 1;
                     m_classmap = new HashMap<DataCell, Integer>();
@@ -464,22 +471,27 @@ public class RPropNodeModel extends NodeModel {
         if (m_errors == null) {
             return new JPanel();
         }
-        m_errorplot = new JPanel();
-      /*  XYSeriesCollection dataset = new XYSeriesCollection();
-        XYSeries series = new XYSeries("MSE");
-        for (int iteration = 0; iteration < m_errors.length; iteration++) {
-            series.add(iteration, m_errors[iteration]);
+        DataColumnSpec[] colspecs = new DataColumnSpec[2];
+        DataColumnSpecCreator colspecCreator = new DataColumnSpecCreator(
+                "Iteration", DoubleCell.TYPE);
+        colspecs[0] = colspecCreator.createSpec();
+        colspecCreator = new DataColumnSpecCreator("Error", DoubleCell.TYPE);
+        colspecs[1] = colspecCreator.createSpec();
+        DataTableSpec spec = new DataTableSpec(colspecs);
+        DataContainer con = new DataContainer(spec);
+        for (int x = 0; x < m_errors.length; x++) {
+            DataCell[] cells = new DataCell[]{new DoubleCell(x),
+                    new DoubleCell(m_errors[x])};
+            con.addRowToTable(new DefaultRow(new StringCell("" + x), cells));
         }
-        dataset.addSeries(series);
-        JFreeChart chart = ChartFactory.createXYLineChart("Error Plot", // title
-                "iteration", "error", dataset, // x-axis, y-axis label, data
-                PlotOrientation.VERTICAL, true, // create legend
-                true, false); // generate tooltips, do not generate URLs
-        m_errorplot = new ChartPanel(chart);*/
-        return m_errorplot;
+        con.close();
+        DefaultDataArray darray = new DefaultDataArray(con.getTable(), 1, con
+                .size());
+        return new ErrorPlot(darray, 300, new ScatterProps());
+
     }
 
-    /**
+     /**
      * @see org.knime.core.node.NodeModel
      *      #loadInternals(java.io.File,ExecutionMonitor)
      */
@@ -505,7 +517,8 @@ public class RPropNodeModel extends NodeModel {
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
         File f = new File(internDir, "RProp");
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f));
+        ObjectOutputStream out = new ObjectOutputStream(
+                new FileOutputStream(f));
         int iterations = m_errors.length;
         out.writeInt(iterations);
         for (int i = 0; i < iterations; i++) {
