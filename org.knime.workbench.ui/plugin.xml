@@ -65,6 +65,8 @@
          <viewShortcut
                id="org.eclipse.pde.runtime.LogView">
          </viewShortcut>
+         <viewShortcut id="org.knime.workbench.navigator.view.KnimeResourceNavigator"/>
+         <viewShortcut id="org.knime.workbench.repository.view.RepositoryView"/>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
@@ -77,6 +79,7 @@
          <newWizardShortcut
                id="org.knime.workbench.ui.wizards.project.NewProjectWizard">
          </newWizardShortcut>
+         <perspectiveShortcut id="org.knime.workbench.ui.ModellerPerspective"/>
          <!--newWizardShortcut
                id="org.knime.workbench.ui.wizards.file.NewWorkflowWizard">
          </newWizardShortcut-->
