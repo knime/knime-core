@@ -14,7 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner or
  * as specified in the license file distributed with this product.
  *
- * If you have any quesions please contact the copyright holder:
+ * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
