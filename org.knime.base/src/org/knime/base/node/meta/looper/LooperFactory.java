@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.dev.nodes.looper;
+package org.knime.base.node.meta.looper;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
