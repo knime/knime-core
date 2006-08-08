@@ -54,8 +54,9 @@ import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
 /**
+ * Creates a connection to read from database. 
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 final class DBReaderConnection implements DataTable {
 

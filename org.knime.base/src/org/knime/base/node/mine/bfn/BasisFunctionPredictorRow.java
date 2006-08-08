@@ -39,9 +39,10 @@ import org.knime.core.node.ModelContentWO;
 
 
 /**
- * Class presents a predictor row for basis functions.
+ * Class presents a predictor row for basis functions providing method to apply
+ * unknown data.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class BasisFunctionPredictorRow {
     private final DataCell m_key;

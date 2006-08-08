@@ -29,7 +29,7 @@ package org.knime.core.data;
  * Comparator returned DoubleValue interface.
  * 
  * @see org.knime.core.data.DoubleValue#UTILITY
- * @author Michael Berthold, Konstanz University
+ * @author Michael Berthold, University of Konstanz
  */
 public class DoubleValueComparator extends DataValueComparator {
 

@@ -47,13 +47,19 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
-
 /**
- * @author Thomas Gabriel, Konstanz University
+ * Model of the transpose node which swaps rows and columns. In addition, a new 
+ * <code>HiLiteHandler</code> is provided at the output.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
  */
 final class TransposeTableNodeModel extends NodeModel {
     private HiLiteHandler m_outHiLite;
 
+    /**
+     * Creates a transpose model with one data in- and output.
+     *
+     */
     TransposeTableNodeModel() {
         super(1, 1);
         m_outHiLite = new DefaultHiLiteHandler();

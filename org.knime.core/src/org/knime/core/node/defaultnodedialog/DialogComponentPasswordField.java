@@ -46,7 +46,7 @@ import sun.misc.BASE64Encoder;
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  * 
  */
 public final class DialogComponentPasswordField extends DialogComponent {

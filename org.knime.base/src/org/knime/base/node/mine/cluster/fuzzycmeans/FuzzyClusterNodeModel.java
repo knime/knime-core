@@ -52,8 +52,8 @@ import org.knime.base.data.filter.column.FilterColumnTable;
 /**
  * Generate a fuzzy c-means clustering using a fixed number of cluster centers.
  * 
- * @author Michael Berthold, Konstanz University.
- * @author Nicolas Cebron, Konstanz University
+ * @author Michael Berthold, University of Konstanz
+ * @author Nicolas Cebron, University of Konstanz
  */
 
 public class FuzzyClusterNodeModel extends NodeModel {

@@ -38,7 +38,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  * 
  */
 public final class DialogComponentTextField extends DialogComponent {

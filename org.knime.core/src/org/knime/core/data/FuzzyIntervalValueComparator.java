@@ -29,7 +29,7 @@ package org.knime.core.data;
  * Comparator returned by the <code>FuzzyIntervalValue</code> datacell type.
  *  
  * @see org.knime.core.data.FuzzyIntervalValue.FuzzyIntervalUtilityFactory
- * @author Michael Berthold, Konstanz University
+ * @author Michael Berthold, University of Konstanz
  */
 public class FuzzyIntervalValueComparator extends DataValueComparator {
 

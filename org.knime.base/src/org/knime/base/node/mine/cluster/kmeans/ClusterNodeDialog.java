@@ -42,7 +42,7 @@ import org.knime.core.node.NotConfigurableException;
  * {@link ClusterNodeModel} - allows
  * to adjust number of clusters and other properties.
  * 
- * @author Michael Berthold, Konstanz University
+ * @author Michael Berthold, University of Konstanz
  */
 public class ClusterNodeDialog extends NodeDialogPane {
     // private members holding new values

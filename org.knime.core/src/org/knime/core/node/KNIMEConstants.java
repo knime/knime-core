@@ -57,10 +57,10 @@ public final class KNIMEConstants {
      * <i>Welcome to KNIME Konstanz Information Miner</i>.
      */
     public static final String WELCOME_MESSAGE = 
-   "************************************************************************\n"
- + "***        Welcome to KNIME. The Konstanz Information Miner.         ***\n"
- + "*** Copyright 2003-2006 Konstanz University, Germany, Prof. Berthold ***\n"
- + "************************************************************************\n";
+   "******************************************************************\n"
+ + "***     Welcome to KNIME. The Konstanz Information Miner.      ***\n"
+ + "*** (c) Copyright 2003 - 2006, University of Konstanz, Germany ***\n"
+ + "******************************************************************\n";
 
     /** Path to the <i>knime.png</i> icon. */
     private static final String KNIME_ICON_PATH = KNIMEConstants.class

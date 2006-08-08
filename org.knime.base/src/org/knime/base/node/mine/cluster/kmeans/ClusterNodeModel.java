@@ -64,7 +64,7 @@ import org.knime.base.data.append.column.AppendedColumnRow;
  * algorithm. Right now this works only on {@link DataTable}s holding
  * {@link org.knime.core.data.def.DoubleCell}s (or derivatives thereof).
  * 
- * @author Michael Berthold, Konstanz University.
+ * @author Michael Berthold, University of Konstanz
  */
 public class ClusterNodeModel extends NodeModel implements HiLiteMapper {
     /** Constant for the RowKey generation and identification in the view. */

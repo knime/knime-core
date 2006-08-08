@@ -31,7 +31,7 @@ package org.knime.core.node;
  * requested, this method will throw this exception which then leads the
  * process to terminate.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class CanceledExecutionException extends Exception {
     

@@ -25,7 +25,9 @@ import org.knime.base.node.viz.parcoord.DegreeOfAffinity;
 import org.knime.core.data.DataRow;
 
 /**
- * @author Thomas Gabriel, Konstanz University
+ * Class computes a overlapping value between two basis functions.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class BasisFunctionSymmetricRowOverlap implements DegreeOfAffinity {
     /**

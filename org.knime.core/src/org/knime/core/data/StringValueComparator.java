@@ -29,7 +29,7 @@ package org.knime.core.data;
  * Comparator returned by the StringValue interface. 
  * 
  * @see org.knime.core.data.StringValue.StringUtilityFactory
- * @author Michael Berthold, Konstanz University
+ * @author Michael Berthold, University of Konstanz
  */
 public class StringValueComparator extends DataValueComparator {
 

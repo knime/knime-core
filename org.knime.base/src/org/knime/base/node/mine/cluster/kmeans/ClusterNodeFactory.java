@@ -29,7 +29,7 @@ import org.knime.core.node.NodeView;
 /**
  * Create classes for k-means Clustering NodeModel, NodeView and NodeDialogPane.
  * 
- * @author Michael Berthold, Konstanz University
+ * @author Michael Berthold, University of Konstanz
  */
 public class ClusterNodeFactory extends NodeFactory {
     /**

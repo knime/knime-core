@@ -43,7 +43,7 @@ import java.util.Comparator;
  * comparator will return zero - and equals will return false.)
  * 
  * @see org.knime.core.data.DataValue.UtilityFactory#getComparator()
- * @author Michael Berthold, Konstanz University
+ * @author Michael Berthold, University of Konstanz
  */
 public abstract class DataValueComparator implements Comparator<DataCell> {
 

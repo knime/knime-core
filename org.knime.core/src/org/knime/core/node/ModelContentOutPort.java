@@ -25,7 +25,7 @@ package org.knime.core.node;
 /**
  * Output port used to transfere ModelContent objects between nodes.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public final class ModelContentOutPort extends NodeOutPort implements
         NodePort.ModelContentPort {

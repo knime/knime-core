@@ -29,7 +29,7 @@ package org.knime.core.data;
  * Comparator returned by the <code>ComplexNumberValue</code>. 
  * 
  * @see org.knime.core.data.ComplexNumberValue.ComplexNumberUtilityFactory
- * @author ciobaca, Konstanz University
+ * @author ciobaca, University of Konstanz
  */
 public class ComplexNumberValueComparator extends DataValueComparator {
 

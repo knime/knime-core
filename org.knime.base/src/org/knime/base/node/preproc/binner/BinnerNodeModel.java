@@ -43,7 +43,7 @@ import org.knime.core.node.NodeSettingsWO;
  * Bins numeric columns into intervals which are then returned as string-type
  * columns.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 final class BinnerNodeModel extends NodeModel {
     // private static final NodeLogger LOGGER =

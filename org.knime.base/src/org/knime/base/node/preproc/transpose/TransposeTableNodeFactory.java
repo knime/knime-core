@@ -28,7 +28,9 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * @author Thomas Gabriel, Konstanz University
+ * Factory to create a Transpose Node.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class TransposeTableNodeFactory extends NodeFactory {
     /**

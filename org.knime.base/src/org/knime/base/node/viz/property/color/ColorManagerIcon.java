@@ -37,7 +37,7 @@ import org.knime.core.data.DataType;
 /**
  * Constructs a new icon with its specific Color and size.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 class ColorManagerIcon implements Icon {
     private Color m_color;

@@ -28,7 +28,7 @@ package org.knime.core.node;
  * This monitor keeps a <code>NodeProgressMonitor</code> and forwards the
  * progress, as well as the cancel request to it.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class ExecutionMonitor {
 

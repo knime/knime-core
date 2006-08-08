@@ -30,7 +30,7 @@ import java.util.Set;
  * Column domain creator used to initialize possible values, lower and upper
  * bounds using <code>DataCell</code> objects.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class DataColumnDomainCreator {
 

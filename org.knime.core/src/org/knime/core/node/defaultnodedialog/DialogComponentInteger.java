@@ -43,7 +43,7 @@ import org.knime.core.node.NodeSettingsWO;
  * Provides label and JFormattedTextField that checks ranges as well as
  * functionality to load/store into config object.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class DialogComponentInteger extends DialogComponent {
 

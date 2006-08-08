@@ -30,8 +30,8 @@ import org.knime.core.node.NodeView;
  * Create classes for fuzzy c-means Clustering NodeModel, NodeView and
  * NodeDialogPane.
  * 
- * @author Michael Berthold, Konstanz University
- * @author Nicolas Cebron, Konstanz University
+ * @author Michael Berthold, University of Konstanz
+ * @author Nicolas Cebron, University of Konstanz
  */
 public class FuzzyClusterNodeFactory extends NodeFactory {
     /**

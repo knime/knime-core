@@ -57,11 +57,13 @@ import org.apache.log4j.varia.NullAppender;
  * logging level of the default loggers. All other writers' levels have to be
  * set before hand.
  * 
- * TODO put default logging levels into file and list of excluded packages.
- * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public final class NodeLogger {
+    
+    /*
+     * TODO (tg) create log configuration file
+     */
 
     /** The logging levels. */
     public static enum LEVEL {

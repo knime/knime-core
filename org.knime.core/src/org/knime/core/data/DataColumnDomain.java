@@ -42,7 +42,7 @@ import org.knime.core.node.config.ConfigRO;
  * is assumed that the domain - if available - contains reliable data. If you
  * are not sure about the data to come in your column, don't provide a domain.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public final class DataColumnDomain {
 

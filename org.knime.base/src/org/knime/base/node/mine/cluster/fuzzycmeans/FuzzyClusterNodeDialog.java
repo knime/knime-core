@@ -51,8 +51,8 @@ import org.knime.base.node.util.FilterColumnPanel;
  * Dialog for {@link ClusterNodeModel}- allows to adjust number of
  * clusters and other properties.
  * 
- * @author Michael Berthold, Konstanz University
- * @author Nicolas Cebron, Konstanz University
+ * @author Michael Berthold, University of Konstanz
+ * @author Nicolas Cebron, University of Konstanz
  */
 public class FuzzyClusterNodeDialog extends NodeDialogPane {
     private static final NodeLogger LOGGER = NodeLogger

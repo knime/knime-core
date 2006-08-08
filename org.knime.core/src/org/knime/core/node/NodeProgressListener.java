@@ -22,9 +22,10 @@
 package org.knime.core.node;
 
 /**
- * Listens for progress change events.
+ * Listener for progress change events providing a progress value between 0 and
+ * 1, and a progress message.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 public interface NodeProgressListener {
 

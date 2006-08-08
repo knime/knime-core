@@ -40,8 +40,9 @@ import org.knime.core.node.NodeLogger;
 
 
 /**
+ * Creates a connection to write to database.
  * 
- * @author Thomas Gabriel, Konstanz University
+ * @author Thomas Gabriel, University of Konstanz
  */
 final class DBWriterConnection {
     private static final NodeLogger LOGGER = NodeLogger

@@ -30,7 +30,7 @@ package org.knime.core.data;
  *
  * @see org.knime.core.data.IntValue#UTILITY
  * @see org.knime.core.data.IntValue.IntUtilityFactory
- * @author Michael Berthold, Konstanz University
+ * @author Michael Berthold, University of Konstanz
  */
 public class IntValueComparator extends DataValueComparator {
 
