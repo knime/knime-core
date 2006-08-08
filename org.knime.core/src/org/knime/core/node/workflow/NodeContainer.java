@@ -1163,11 +1163,4 @@ public class NodeContainer implements NodeStateListener {
     public boolean isFullyConnected() {
         return m_node.isFullyConnected();
     }
-    
-    /**
-     * @see Node#providesProgress()
-     */
-    public boolean providesProgress() {
-        return m_node.providesProgress();
-    }
 }

@@ -2016,14 +2016,4 @@ public final class Node {
     public void retrieveModel(final MetaNodeModel metaModel) {
         metaModel.receiveModel(m_model);
     }
-    
-    /**
-     * Returns if this node provides sensible progress.
-     * 
-     * @return <code>true</code> if sensible progress can be provided,
-     * <code>false</code> otherwise
-     */
-    public boolean providesProgress() {
-        return m_model.providesProgress();
-    }
 }
