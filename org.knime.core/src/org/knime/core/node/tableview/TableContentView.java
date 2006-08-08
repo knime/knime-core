@@ -531,8 +531,8 @@ public class TableContentView extends JTable {
         super.initializeLocalVars();
         TableColumnModel colModel = getColumnModel();
         int bestRowHeight = getRowHeight();
-        for (Enumeration enu = colModel.getColumns(); enu.hasMoreElements();) {
-            TableColumn col = (TableColumn)enu.nextElement();
+        for (Enumeration<TableColumn> enu = colModel.getColumns(); enu.hasMoreElements();) {
+            TableColumn col = enu.nextElement();
             TableCellRenderer renderer = col.getCellRenderer();
             if (renderer instanceof DataValueRenderer) {
                 int prefHeight = (int)((DataValueRenderer)renderer).

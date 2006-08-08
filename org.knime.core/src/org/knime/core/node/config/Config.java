@@ -122,7 +122,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * <code>StringCell.class</code>.
              */
-            public static final Class CLASS = StringCell.class;
+            public static final Class<StringCell> CLASS = StringCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
@@ -146,7 +146,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * <code>DoubleCell.class</code>.
              */
-            public static final Class CLASS = DoubleCell.class;
+            public static final Class<DoubleCell> CLASS = DoubleCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
@@ -170,7 +170,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * <code>IntCell.class</code>.
              */
-            public static final Class CLASS = IntCell.class;
+            public static final Class<IntCell> CLASS = IntCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
@@ -194,7 +194,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * <code>DataType.getMissingCell().getClass()</code>.
              */
-            public static final Class CLASS = 
+            public static final Class<? extends DataCell> CLASS = 
                 DataType.getMissingCell().getClass();
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
@@ -221,7 +221,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * <code>ComplexNumberCell.class</code>.
              */
-            public static final Class CLASS = ComplexNumberCell.class;
+            public static final Class<ComplexNumberCell> CLASS = ComplexNumberCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
@@ -251,7 +251,7 @@ public abstract class Config extends AbstractConfigEntry
             private static final String CFG_MAX_CORE = "max_core";
             private static final String CFG_MAX_SUPP = "max_supp";
             /** <code>FuzzyIntervalCell.class</code>. */
-            public static final Class CLASS = FuzzyIntervalCell.class;
+            public static final Class<FuzzyIntervalCell> CLASS = FuzzyIntervalCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */
@@ -286,7 +286,7 @@ public abstract class Config extends AbstractConfigEntry
             private static final String CFG_CORE = "core";
             private static final String CFG_RIGHT = "right";
             /** <code>FuzzyNumberCell.class</code>. */
-            public static final Class CLASS = FuzzyNumberCell.class;
+            public static final Class<FuzzyNumberCell> CLASS = FuzzyNumberCell.class;
             /**
              * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
              */

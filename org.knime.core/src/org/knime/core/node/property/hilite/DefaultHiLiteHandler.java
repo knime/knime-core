@@ -133,7 +133,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         if (ids == null) {
             throw new NullPointerException("Array of hilit keys is null.");
         }
-        List list = Arrays.asList(ids);
+        List<DataCell> list = Arrays.asList(ids);
         if (list.contains(null)) {
             throw new NullPointerException("Hilit key is null.");
         }

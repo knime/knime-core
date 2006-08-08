@@ -281,7 +281,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
             m_exclMdl.addElement(incls[i]);
             m_inclMdl.removeElement(incls[i]);
         }
-        List list = Arrays.asList(m_exclMdl.toArray());
+        List<Object> list = Arrays.asList(m_exclMdl.toArray());
         m_exclMdl.removeAllElements();
         for (Object c : m_order) {
             if (list.contains(c)) {
@@ -316,7 +316,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
 
         // again, remove all from the include list and start adding them from
         // the table spec by double-checking the include list
-        List l = Arrays.asList(m_inclMdl.toArray());
+        List<Object> l = Arrays.asList(m_inclMdl.toArray());
         m_inclMdl.removeAllElements();
         for (Object c : m_order) {
             if (l.contains(c)) {

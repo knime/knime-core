@@ -57,7 +57,7 @@ public class ObjectPool<T> {
     @SuppressWarnings("unchecked")
     // no generics in array definition
     public ObjectPool(final int subPools, final int maxSizes) {
-        m_pools = (SoftReference<List<T>>[])new SoftReference[subPools];
+        m_pools = new SoftReference[subPools];
         m_maxSizes = new int[subPools];
 
         for (int i = 0; i < subPools; i++) {
@@ -98,7 +98,8 @@ public class ObjectPool<T> {
         SoftReference<List<T>> sr = m_pools[subPool];
         List<T> referent = sr.get();
         if (referent == null) {
-            sr = new SoftReference<List<T>>(new ArrayList<T>());
+            referent = new ArrayList<T>();
+            sr = new SoftReference<List<T>>(referent);
             m_pools[subPool] = sr;
         }
 

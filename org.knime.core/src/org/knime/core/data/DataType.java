@@ -171,12 +171,10 @@ public final class DataType {
         } catch (ClassCastException cce) {
             exception = cce;
         }
-        if (exception != null) {
-            LOGGER.coding("Class \"" + cl.getSimpleName() + " has a problem " 
-                    + "with the static method \"getPreferredValueClass\", " 
-                    + "Caught an " + exception.getClass().getSimpleName(), 
-                    exception);
-        }
+        LOGGER.coding("Class \"" + cl.getSimpleName() + " has a problem " 
+                + "with the static method \"getPreferredValueClass\", " 
+                + "Caught an " + exception.getClass().getSimpleName(), 
+                exception);
         return null;
     }
 
@@ -296,7 +294,6 @@ public final class DataType {
             LOGGER.debug("Class \"" + cl.getSimpleName()
                     + "\" does not define method \"getCellSerializer\", using " 
                     + "ordinary (but slow) java serialization.");
-            result = null;
         } catch (InvocationTargetException ite) {
             exception = ite;
         } catch (NullPointerException npe) {

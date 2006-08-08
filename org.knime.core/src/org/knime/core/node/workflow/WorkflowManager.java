@@ -1295,7 +1295,7 @@ public class WorkflowManager implements WorkflowListener {
      * Loads the complete workflow from the given file.
      * 
      * @param workflowFile the workflow file
-     * @param progMon Used to report progress during loading.
+     * @param progMon a node progres monitor for reporting progress
      * @throws IOException if the workflow file can not be found or files to
      *             load node internals
      * @throws InvalidSettingsException if settings cannot be read

@@ -64,7 +64,7 @@ final class RowCounterThread extends Thread {
     public void run() {
         long lastNotify = System.currentTimeMillis();
         int rowCount = 0;
-        Iterator it = m_contentModel.getDataTable().iterator();
+        Iterator<?> it = m_contentModel.getDataTable().iterator();
         while (it.hasNext()) {
             if (isInterrupted()) {
                 return;

@@ -1743,7 +1743,6 @@ public final class Node {
             // take ownership for any newly created files (successor nodes
             // don't store this table, they just reference on us.)
             t.setOwnerRecursively(this);
-            assert (t != null);
             m_outDataPorts[i].setDataTable(t);
         }
     }
