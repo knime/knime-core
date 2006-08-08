@@ -550,7 +550,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
         File f = new File(internDir, "FuzzyCMeans");
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f));
+        ObjectOutputStream out = 
+            new ObjectOutputStream(new FileOutputStream(f));
         double[][] clusters = m_fcmAlgo.getClusterCentres();
         int nrClusters = clusters.length;
         int nrDimensions = clusters[0].length;

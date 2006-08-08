@@ -50,7 +50,7 @@ public class FuzzyClusterNodeView extends NodeView {
 
     /**
      * Creates a new view.
-     * 
+     * @param nodeModel the underlying NodeModel
      * @see FuzzyClusterNodeView#modelChanged()
      */
     FuzzyClusterNodeView(final NodeModel nodeModel) {
@@ -122,7 +122,8 @@ public class FuzzyClusterNodeView extends NodeView {
             double[][] clustercenters = m_model.getClusterCentres();
             for (int i = 0; i < clustercenters.length; i++) {
                 temp += "<h4>Cluster " + i + ":</h4><br>";
-                if (m_model.noiseClustering() && i == clustercenters.length - 1) {
+                if (m_model.noiseClustering() 
+                        && i == clustercenters.length - 1) {
                     temp += "Noise Cluster";
                 } else {
                     for (int j = 0; j < clustercenters[i].length; j++) {

@@ -233,7 +233,8 @@ public class FCMAlgorithm {
                     if (!(dRow.getCell(j).isMissing())) {
                         DataCell currentCell = dRow.getCell(j);
                         if (currentCell instanceof DoubleValue) {
-                            if (((DoubleValue)currentCell).getDoubleValue() == m_clusters[i][j]) {
+                            if (((DoubleValue)currentCell).
+                                    getDoubleValue() == m_clusters[i][j]) {
                                 sameCluster = i;
                             } else {
                                 sameCluster = -1;

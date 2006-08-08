@@ -48,7 +48,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.base.node.util.FilterColumnPanel;
 
 /**
- * Dialog for {@link ClusterNodeModel}- allows to adjust number of
+ * Dialog for {@link FuzzyClusterNodeModel}- allows to adjust number of
  * clusters and other properties.
  * 
  * @author Michael Berthold, University of Konstanz
