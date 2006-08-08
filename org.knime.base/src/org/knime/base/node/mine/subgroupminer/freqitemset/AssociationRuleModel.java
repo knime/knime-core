@@ -82,7 +82,7 @@ public class AssociationRuleModel {
         for (int i = 0; i < nrRules; i++) {
             ModelContentRO ruleModel = model.getModelContent(ASSOCIATION_RULE
                     + i);
-            int support = ruleModel.getInt(SUPPORT);
+            double support = ruleModel.getDouble(SUPPORT);
             double confidence = ruleModel.getDouble(CONFIDENCE);
             String consequentName = ruleModel.getString(CONSEQUENT);
             int consequent;
@@ -129,7 +129,7 @@ public class AssociationRuleModel {
         for (AssociationRule rule : m_rules) {
             ModelContentWO ruleModel = associationRulesModel
                     .addModelContent(ASSOCIATION_RULE + counter++);
-            ruleModel.addInt(SUPPORT, rule.getSupport());
+            ruleModel.addDouble(SUPPORT, rule.getSupport());
             ruleModel.addDouble(CONFIDENCE, rule.getConfidence());
             String name;
             if (m_nameMapping != null) {

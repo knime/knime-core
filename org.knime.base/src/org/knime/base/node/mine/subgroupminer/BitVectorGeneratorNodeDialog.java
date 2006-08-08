@@ -285,8 +285,8 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         String typeString = settings.getString(
                 BitVectorGeneratorNodeModel.CFG_STRING_TYPE,
                 BitVectorGeneratorNodeModel.STRING_TYPES.BIT.name());
-        BitVectorGeneratorNodeModel.STRING_TYPES type = BitVectorGeneratorNodeModel.STRING_TYPES
-                .valueOf(typeString);
+        BitVectorGeneratorNodeModel.STRING_TYPES type 
+            = BitVectorGeneratorNodeModel.STRING_TYPES.valueOf(typeString);
         m_stringType.setSelectedItem(type);
         m_useMean.setSelected(settings.getBoolean(
                 BitVectorGeneratorNodeModel.CFG_USE_MEAN, false));

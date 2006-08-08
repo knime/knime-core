@@ -88,8 +88,8 @@ public class TIDApriori implements AprioriAlgorithm {
                     "detecting frequent items. Transaction nr: "
                             + transactionNr);
             exec.checkCanceled();
-            for (int item = transaction.nextSetBit(0); item >= 0; item = transaction
-                    .nextSetBit(item + 1)) {
+            for (int item = transaction.nextSetBit(0); item >= 0; 
+                item = transaction.nextSetBit(item + 1)) {
                 /*
                  * iterate over every set bit, but!!! if: counterSoFar (what we
                  * got yet) + (dbsize - transaction#) (what is still possible) <
@@ -118,8 +118,8 @@ public class TIDApriori implements AprioriAlgorithm {
                             // check if it still could become frequent
                             int counterSoFar = m_frequentItems.get(j)
                                     .getSupport();
-                            if (counterSoFar
-                                    + (transactions.size() - transactionNr) >= m_minSupport) {
+                            if (counterSoFar + (transactions.size() 
+                                    - transactionNr) >= m_minSupport) {
                                 TIDItem freqItem = m_frequentItems.get(j);
                                 freqItem.addTID(transactionNr);
                                 m_frequentItems.set(j, freqItem);
@@ -286,7 +286,8 @@ public class TIDApriori implements AprioriAlgorithm {
     }
 
     private List<FrequentItemSet> getMaximalItemSets() {
-        List<FrequentItemSet> maximalItemsets = new ArrayList<FrequentItemSet>();
+        List<FrequentItemSet> maximalItemsets 
+            = new ArrayList<FrequentItemSet>();
         List<FrequentItemSet> closedItemsets = getClosedItemSets();
         for (FrequentItemSet outer : closedItemsets) {
             boolean isMaximal = true;
@@ -325,8 +326,10 @@ public class TIDApriori implements AprioriAlgorithm {
      *      #getAssociationRules(double)
      */
     public List<AssociationRule> getAssociationRules(final double confidence) {
-        List<FrequentItemSet> frequentItemSets = getFrequentItemSets(FrequentItemSet.Type.CLOSED);
-        List<AssociationRule> associationRules = new ArrayList<AssociationRule>();
+        List<FrequentItemSet> frequentItemSets = getFrequentItemSets(
+                    FrequentItemSet.Type.CLOSED);
+        List<AssociationRule> associationRules 
+            = new ArrayList<AssociationRule>();
         // handle always frequent items seperately
         List<Integer> alwaysFrequentIds = new ArrayList<Integer>();
         for (TIDItem item : m_alwaysFrequentItems) {

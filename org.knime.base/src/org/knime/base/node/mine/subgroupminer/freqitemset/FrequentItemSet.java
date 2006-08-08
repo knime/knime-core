@@ -76,7 +76,7 @@ public class FrequentItemSet implements Iterable<Integer> {
 
     private List<Integer> m_items;
 
-    private int m_support;
+    private double m_support;
 
     private boolean m_isClosed;
 
@@ -114,7 +114,7 @@ public class FrequentItemSet implements Iterable<Integer> {
      * @param items the items constituting this set
      * @param support the support of this itemset
      */
-    public FrequentItemSet(final List<Integer> items, final int support) {
+    public FrequentItemSet(final List<Integer> items, final double support) {
         m_items = new LinkedList<Integer>(items);
         m_support = support;
         m_isClosed = false;
@@ -133,7 +133,7 @@ public class FrequentItemSet implements Iterable<Integer> {
      * @param isMaximal <code>true</code> if this itemset is maximal,
      *            <code>false</code> otherwise
      */
-    public FrequentItemSet(final List<Integer> items, final int support,
+    public FrequentItemSet(final List<Integer> items, final double support,
             final boolean isClosed, final boolean isMaximal) {
         m_items = new LinkedList<Integer>(items);
         m_support = support;
@@ -228,7 +228,7 @@ public class FrequentItemSet implements Iterable<Integer> {
     /**
      * @return the support of this set
      */
-    public int getSupport() {
+    public double getSupport() {
         return m_support;
     }
 
@@ -237,7 +237,7 @@ public class FrequentItemSet implements Iterable<Integer> {
      * 
      * @param support the support of this set
      */
-    public void setSupport(final int support) {
+    public void setSupport(final double support) {
         this.m_support = support;
     }
 

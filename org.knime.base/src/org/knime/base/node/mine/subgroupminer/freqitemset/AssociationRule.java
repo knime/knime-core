@@ -38,7 +38,7 @@ public class AssociationRule {
 
     private double m_confidence;
 
-    private int m_support;
+    private double m_support;
 
     /**
      * Creates an association rule with the list of ids of the antecedent and an
@@ -51,7 +51,7 @@ public class AssociationRule {
      */
     public AssociationRule(final Integer consequent,
             final List<Integer> antecendent, final double confidence,
-            final int support) {
+            final double support) {
         m_consequent = consequent;
         m_antecedent = antecendent;
         m_confidence = confidence;
@@ -61,7 +61,7 @@ public class AssociationRule {
     /**
      * @return the support of the rule.
      */
-    public int getSupport() {
+    public double getSupport() {
         return m_support;
     }
 

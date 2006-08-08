@@ -283,7 +283,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         List<BitSet> transactions = preprocess(input, exec);
 
         m_apriori = AprioriAlgorithmFactory.getAprioriAlgorithm(
-                m_underlyingStruct, m_maxBitsetLength);
+                m_underlyingStruct, m_maxBitsetLength, m_nrOfRows);
         int support = (int)Math.ceil(m_minSupport * m_nrOfRows);
         LOGGER.debug("support: " + support);
         LOGGER.debug(m_minSupport + " start apriori: " + new Date());
@@ -390,7 +390,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             // create for every set a row
             FrequentItemSetRow row = new FrequentItemSetRow(new RowKey(
                     "item set " + rowKeyCounter++), itemList,
-                    m_maxItemSetLength, set.getSupport() / (double)m_nrOfRows);
+                    m_maxItemSetLength, set.getSupport());
             rows.add(row);
         }
         DataTableSpec outSpec = createItemsetOutputSpec();
@@ -441,7 +441,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         int rowKeyCounter = 0;
         for (AssociationRule r : associationRules) {
             // get the support
-            int support = r.getSupport();
+            double support = r.getSupport();
             // get the confidence
             double confidence = r.getConfidence();
             // get the antecedence (which is one item) -> cell
@@ -450,7 +450,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             Integer consequent = r.getConsequent();
 
             DataCell[] allCells = new DataCell[m_maxItemSetLength + 4];
-            allCells[0] = new DoubleCell((double)support / (double)m_nrOfRows);
+            allCells[0] = new DoubleCell(support);
             allCells[1] = new DoubleCell(confidence);
             if (m_nameMapping != null) {
                 allCells[2] = new StringCell(m_nameMapping.get(consequent));

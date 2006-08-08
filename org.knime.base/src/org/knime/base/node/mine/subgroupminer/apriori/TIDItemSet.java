@@ -44,6 +44,8 @@ public final class TIDItemSet {
     private List<TIDItem> m_items;
 
     private BitSet m_commonTIDs;
+    
+    private final int m_dbsize;
 
     /*
      * Creates and empty TIDItemSet and with no items. Attention: the bitset is
@@ -52,9 +54,10 @@ public final class TIDItemSet {
      * createEmptyTIDItemSet instead.
      * 
      */
-    private TIDItemSet() {
+    private TIDItemSet(final int length) {
         m_items = new ArrayList<TIDItem>();
         m_commonTIDs = new BitSet();
+        m_dbsize = length;
     }
 
     /**
@@ -65,7 +68,7 @@ public final class TIDItemSet {
      * @return an empty TIDItemSet with no items but present in all transactions
      */
     public static TIDItemSet createEmptyTIDItemSet(final int length) {
-        TIDItemSet empty = new TIDItemSet();
+        TIDItemSet empty = new TIDItemSet(length);
         BitSet all = new BitSet(length);
         all.set(0, length);
         empty.m_commonTIDs = all;
@@ -154,7 +157,7 @@ public final class TIDItemSet {
         if (ids.isEmpty()) {
             return null;
         }
-        return new TIDFrequentItemSet(ids, getSupport(), getTIDs());
+        return new TIDFrequentItemSet(ids, getSupport() / m_dbsize, getTIDs());
     }
 
     /**
@@ -162,7 +165,7 @@ public final class TIDItemSet {
      */
     @Override
     protected TIDItemSet clone() {
-        TIDItemSet newItem = new TIDItemSet();
+        TIDItemSet newItem = new TIDItemSet(m_dbsize);
         List<TIDItem> items = new ArrayList<TIDItem>(m_items);
         BitSet tids = new BitSet();
         for (int i = m_commonTIDs.nextSetBit(0); i >= 0; i = m_commonTIDs

@@ -250,7 +250,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         BufferedDataTable numericValues = inData[0];
         List<String> nameMapping = new ArrayList<String>();
         m_nrOfProcessedRows = numericValues.getRowCount();
-        for (int i = 0; i < numericValues.getDataTableSpec().getNumColumns(); i++) {
+        for (int i = 0; i < numericValues.getDataTableSpec().getNumColumns(); 
+            i++) {
             nameMapping.add(numericValues.getDataTableSpec().getColumnSpec(i)
                     .getName().toString());
         }
@@ -322,7 +323,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         DataColumnSpec colSpec = creator.createSpec();
         DataTable result = null;
         if (m_type.equals(STRING_TYPES.BIT)) {
-            BitString2BitVectorCellFactory factory = new BitString2BitVectorCellFactory();
+            BitString2BitVectorCellFactory factory 
+                = new BitString2BitVectorCellFactory();
             result = new ReplacedColumnsTable(data, colSpec, stringColIndex,
                     factory);
             m_totalNrOf0s = factory.getNumberOfNotSetBits();
@@ -334,7 +336,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             m_totalNrOf0s = factory.getNumberOfNotSetBits();
             m_totalNrOf1s = factory.getNumberOfSetBits();
         } else if (m_type.equals(STRING_TYPES.ID)) {
-            IdString2BitVectorCellFactory factory = new IdString2BitVectorCellFactory();
+            IdString2BitVectorCellFactory factory 
+                = new IdString2BitVectorCellFactory();
             result = new ReplacedColumnsTable(data, colSpec, stringColIndex,
                     factory);
             m_totalNrOf0s = factory.getNumberOfNotSetBits();
@@ -343,40 +346,6 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         return new DataTable[]{result};
     }
 
-    /*
-     * private DataTable[] createBitVectorsFromStrings(final DataTable data,
-     * final int stringColIndex, final ExecutionMonitor exec) throws
-     * CanceledExecutionException { // the firstly created bitset out of which //
-     * the bitvector rows are created List<BitSet> bitSets = new ArrayList<BitSet>(); //
-     * the row keys for the later on created bitvector rows List<RowKey>
-     * rowKeys = new ArrayList<RowKey>(); // the number of 1s for the view List<Integer>
-     * numberOfOnes = new ArrayList<Integer>(); // keeps track of the highest
-     * bit position = bitvector cells length. int maxPos = 0; // go once through
-     * the data and set the bits in the referring position m_nrOfProcessedRows =
-     * 0; long rowCnt = data.getRowCount(); for (RowIterator itr =
-     * data.iterator(); itr.hasNext();) { exec.checkCanceled();
-     * exec.setProgress(m_nrOfProcessedRows / (double)rowCnt, "processing row
-     * nr: " + m_nrOfProcessedRows++); DataRow currRow = itr.next(); BitSet
-     * currBitSet = new BitSet(); String toParse =
-     * ((StringValue)currRow.getCell(stringColIndex)) .getStringValue();
-     * String[] numbers = toParse.split("\\s");
-     * numberOfOnes.add(numbers.length); for (int i = 0; i < numbers.length;
-     * i++) { int pos = Integer.parseInt(numbers[i].trim()); maxPos =
-     * Math.max(maxPos, pos); currBitSet.set(pos); }
-     * rowKeys.add(currRow.getKey()); bitSets.add(currBitSet); }
-     * m_bitVectorLength = maxPos + 1;
-     * 
-     * m_totalNrOf1s = 0; m_totalNrOf0s = 0; // now create the data rows with
-     * bitvector cells // List<DataRow> bitVectorRows = new ArrayList<DataRow>();
-     * DataContainer bitVectorRows = new DataContainer(m_outSpec); for (int i =
-     * 0; i < bitSets.size(); i++) { bitVectorRows.addRowToTable(new
-     * DefaultRow(rowKeys.get(i), new DataCell[]{ new
-     * BitVectorCell(bitSets.get(i), maxPos + 1), new StringCell("?")})); int
-     * numberOf1s = numberOfOnes.get(i); int numberOfZeros = maxPos -
-     * numberOf1s; m_totalNrOf1s += numberOf1s; m_totalNrOf0s += numberOfZeros; }
-     * bitVectorRows.close(); // and the statistics array return new
-     * DataTable[]{bitVectorRows.getTable()}; }
-     */
 
     /**
      * @see org.knime.core.node.NodeModel#reset()

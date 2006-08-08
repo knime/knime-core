@@ -78,10 +78,12 @@ public class FrequentItemSetTable implements DataTable {
 
     private final DataTableSpec m_spec;
 
-    private static final Map<FrequentItemSetTable.Sorter, Comparator<FrequentItemSetRow>> COMPARATORS;
+    private static final Map<FrequentItemSetTable.Sorter, 
+        Comparator<FrequentItemSetRow>> COMPARATORS;
 
     static {
-        COMPARATORS = new HashMap<FrequentItemSetTable.Sorter, Comparator<FrequentItemSetRow>>();
+        COMPARATORS = new HashMap<FrequentItemSetTable.Sorter, 
+            Comparator<FrequentItemSetRow>>();
         COMPARATORS.put(FrequentItemSetTable.Sorter.SUPPORT,
                 new Comparator<FrequentItemSetRow>() {
                     public int compare(final FrequentItemSetRow row1,

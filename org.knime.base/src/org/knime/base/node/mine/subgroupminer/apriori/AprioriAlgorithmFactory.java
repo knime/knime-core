@@ -74,12 +74,14 @@ public final class AprioriAlgorithmFactory {
      * @param type the desired algorithm implementation
      * @param bitSetLength the bitset length of the transactions, i.e. the
      *            number of items
+     *            @param dbsize number of transactions
      * @return an instance of the AprioriAlgorithm
      */
     public static AprioriAlgorithm getAprioriAlgorithm(
-            final AlgorithmDataStructure type, final int bitSetLength) {
+            final AlgorithmDataStructure type, final int bitSetLength, 
+            final int dbsize) {
         if (type.equals(AlgorithmDataStructure.ARRAY)) {
-            return new ArrayApriori(bitSetLength);
+            return new ArrayApriori(bitSetLength, dbsize);
             /*
              * }else if(type.equals(SubgroupMinerConfig.DataStruture.LIST)){
              * return new ListApriori();

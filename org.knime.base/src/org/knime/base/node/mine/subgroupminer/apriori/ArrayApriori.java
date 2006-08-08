@@ -81,9 +81,11 @@ public class ArrayApriori implements AprioriAlgorithm {
      * the number of items.
      * 
      * @param bitSetLength the number of items
+     * @param dbsize the number of transactions
      */
-    public ArrayApriori(final int bitSetLength) {
+    public ArrayApriori(final int bitSetLength, final int dbsize) {
         m_bitSetLength = bitSetLength;
+        m_dbsize = dbsize;
     }
 
     /**
@@ -236,7 +238,8 @@ public class ArrayApriori implements AprioriAlgorithm {
                         } else if (parentsChild != null) {
                             boolean hasFrequentSubset = false;
                             for (int j = i; j < node.getLength(); j++) {
-                                if (parentsChild.getCounterFor(j) >= m_minSupport) {
+                                if (parentsChild.getCounterFor(j) 
+                                        >= m_minSupport) {
                                     hasFrequentSubset = true;
                                     break;
                                 }
@@ -281,8 +284,10 @@ public class ArrayApriori implements AprioriAlgorithm {
      *      #getAssociationRules(double)
      */
     public List<AssociationRule> getAssociationRules(final double confidence) {
-        List<FrequentItemSet> frequentItemSets = getFrequentItemSets(FrequentItemSet.Type.FREE);
-        List<AssociationRule> associationRules = new ArrayList<AssociationRule>();
+        List<FrequentItemSet> frequentItemSets = getFrequentItemSets(
+                FrequentItemSet.Type.FREE);
+        List<AssociationRule> associationRules 
+            = new ArrayList<AssociationRule>();
         /*
          * handle always frequent items seperately: since they are always
          * frequent each association rule of the itemset -> item must have
@@ -294,13 +299,14 @@ public class ArrayApriori implements AprioriAlgorithm {
             List<Integer> withoutI = new ArrayList<Integer>(
                     m_alwaysFrequentItems);
             withoutI.remove(i);
-            AssociationRule rule = new AssociationRule(i, withoutI, 1, m_dbsize);
+            AssociationRule rule = new AssociationRule(
+                    i, withoutI, 1, m_dbsize);
             associationRules.add(rule);
         }
         // for each itemset s in frequentitemsets
         for (FrequentItemSet s : frequentItemSets) {
             if (s.getItems().size() > 1) {
-                int supportS = s.getSupport();
+                double supportS = s.getSupport();
                 for (Iterator<Integer> iterator = s.iterator(); iterator
                         .hasNext();) {
                     Integer i = iterator.next();
@@ -344,7 +350,7 @@ public class ArrayApriori implements AprioriAlgorithm {
         for (Integer i : m_alwaysFrequentItems) {
             List<Integer> id = new ArrayList<Integer>();
             id.add(i);
-            FrequentItemSet set = new FrequentItemSet(id, m_dbsize);
+            FrequentItemSet set = new FrequentItemSet(id, 1);
             list.add(set);
         }
         FrequentItemSet initialSet = new FrequentItemSet();
@@ -366,7 +372,8 @@ public class ArrayApriori implements AprioriAlgorithm {
 
     private List<FrequentItemSet> filterMaximalItemsets(
             final List<FrequentItemSet> closedItemsets) {
-        List<FrequentItemSet> maximalItemsets = new ArrayList<FrequentItemSet>();
+        List<FrequentItemSet> maximalItemsets 
+            = new ArrayList<FrequentItemSet>();
         for (FrequentItemSet outer : closedItemsets) {
             boolean isMaximal = true;
             for (FrequentItemSet inner : closedItemsets) {
@@ -391,7 +398,8 @@ public class ArrayApriori implements AprioriAlgorithm {
         for (int i = item; i < root.getLength(); i++) {
             if (root.getCounterFor(i) >= m_minSupport) {
                 FrequentItemSet newSet = new FrequentItemSet(
-                        currSet.getItems(), root.getCounterFor(i));
+                        currSet.getItems(), ((double)root.getCounterFor(i) 
+                                / (double)m_dbsize));
                 newSet.add(m_backwardMapping[i]);
                 list.add(newSet);
                 getFrequentItemSets(root.getChild(i), list, newSet, i + 1);
@@ -408,7 +416,7 @@ public class ArrayApriori implements AprioriAlgorithm {
                     return (new Integer(s1.getItems().size()).compareTo(s2
                             .getItems().size()));
                 }
-                return (new Integer(s1.getSupport()).compareTo(s2.getSupport()));
+                return (new Double(s1.getSupport()).compareTo(s2.getSupport()));
             }
         });
         FrequentItemSet[] array = new FrequentItemSet[completeList.size()];

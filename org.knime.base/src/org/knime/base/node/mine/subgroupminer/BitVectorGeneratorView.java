@@ -62,7 +62,8 @@ public class BitVectorGeneratorView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        BitVectorGeneratorNodeModel model = ((BitVectorGeneratorNodeModel)getNodeModel());
+        BitVectorGeneratorNodeModel model = 
+            (BitVectorGeneratorNodeModel)getNodeModel();
         if (model.getNumberOfProcessedRows() > 0) {
             setTextArea();
         }
@@ -88,7 +89,8 @@ public class BitVectorGeneratorView extends NodeView {
     }
 
     private void setTextArea() {
-        BitVectorGeneratorNodeModel model = ((BitVectorGeneratorNodeModel)getNodeModel());
+        BitVectorGeneratorNodeModel model 
+            = (BitVectorGeneratorNodeModel)getNodeModel();
         StringBuffer buffer = new StringBuffer("<html></body>");
         buffer.append("<h2>BitVector Generator Information:</h2>");
         buffer.append("<hr>");

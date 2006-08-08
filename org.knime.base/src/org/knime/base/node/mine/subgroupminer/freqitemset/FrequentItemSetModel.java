@@ -69,7 +69,8 @@ public class FrequentItemSetModel {
 
     private int m_dbsize;
 
-    private List<FrequentItemSet> m_alwaysFrequent = new ArrayList<FrequentItemSet>();
+    private List<FrequentItemSet> m_alwaysFrequent 
+        = new ArrayList<FrequentItemSet>();
 
     /**
      * @param model the model containing information about the itemsets
@@ -91,7 +92,7 @@ public class FrequentItemSetModel {
         for (int i = 0; i < nrItemSets; i++) {
             ModelContentRO itemSet = itemsetsModel.getModelContent(ITEMSET + i);
             List<Integer> items = new ArrayList<Integer>();
-            int support = itemSet.getInt(SUPPORT_ABS);
+            double support = itemSet.getDouble(SUPPORT_ABS);
             int nrOfItems = itemSet.getInt(ITEMSET_SIZE);
             for (int j = 0; j < nrOfItems; j++) {
                 int pos;
@@ -148,7 +149,7 @@ public class FrequentItemSetModel {
 
     private void saveItemSetTo(final ModelContentWO itemSetModel,
             final FrequentItemSet set) {
-        itemSetModel.addInt(SUPPORT_ABS, set.getSupport());
+        itemSetModel.addDouble(SUPPORT_ABS, set.getSupport());
         itemSetModel.addInt(ITEMSET_SIZE, set.getItems().size());
         for (Integer itemId : set.getItems()) {
             // for every item look at the referring column name

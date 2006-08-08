@@ -116,8 +116,8 @@ public class TIDItem implements Comparable<TIDItem> {
     @Override
     public TIDItem clone() {
         TIDItem newItem = new TIDItem(new Integer(m_id));
-        for (int tid = m_transactionIDs.nextSetBit(0); tid >= 0; tid = m_transactionIDs
-                .nextSetBit(tid + 1)) {
+        for (int tid = m_transactionIDs.nextSetBit(0); tid >= 0; 
+            tid = m_transactionIDs.nextSetBit(tid + 1)) {
             newItem.addTID(tid);
         }
         return newItem;
