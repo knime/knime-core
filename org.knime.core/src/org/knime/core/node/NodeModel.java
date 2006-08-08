@@ -826,4 +826,15 @@ public abstract class NodeModel {
         m_warningMessage = warningMessage;
     }
 
-}   // NodeModel
+    /**
+     * Returns if this model provides sensible progress. The default is 
+     * <code>true</code>. Models that cannot provide progress should override
+     * this method and return <code>false</code> instead.
+     * 
+     * @return <code>true</code> if sensible progress can be provided,
+     * <code>false</code> otherwise
+     */
+    public boolean providesProgress() {
+        return true;
+    }
+}

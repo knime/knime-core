@@ -87,7 +87,8 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
         // TODO workaround for bug #239. The very last progress (remainder 100)
         // is not shown in the progress bar in eclipse. If we set it to 101
         // here, it will be shown with little space to the right.
-        m_eclipseMonitor.beginTask("", 101);
+        m_eclipseMonitor.beginTask("",
+                m_node.providesProgress() ? 101 : IProgressMonitor.UNKNOWN);
         m_eclipseMonitor.subTask(m_stateMessage);
 
         try {
