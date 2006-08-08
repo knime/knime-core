@@ -129,15 +129,6 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             throws Exception;
 
     /**
-     * This method is called after all chunks have been processed. Subclasses
-     * may override this empty method if they need to do some cleanup.
-     * 
-     * @param data the input data tables (if anyone needs them)
-     */
-    protected void executeFinished(final DataTable[] data) {
-    }
-
-    /**
      * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
      *      ExecutionContext)
      */

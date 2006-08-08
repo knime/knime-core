@@ -133,6 +133,9 @@ public abstract class SpecialNodeModel extends NodeModel {
      */
     protected void inportHasNewDataTable(final BufferedDataTable table,
             final int inPortID) {
+        // avoid checkstyle warnings
+        assert table == table;
+        assert inPortID == inPortID;
         // nothing to do for this class here
     }
 
@@ -145,6 +148,9 @@ public abstract class SpecialNodeModel extends NodeModel {
      */
     protected void inportHasNewTableSpec(final DataTableSpec spec,
             final int inPortID) {
+        // avoid checkstyle warnings
+        assert inPortID == inPortID;
+        assert spec == spec;
         // nothing to do for this class here
     }
 
@@ -154,6 +160,8 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param inPortID the port id that has been connected
      */
     protected void inportHasNewConnection(final int inPortID) {
+        // avoid checkstyle warnings
+        assert inPortID == inPortID;
         // nothing to do for this class here
     }
 
@@ -163,6 +171,8 @@ public abstract class SpecialNodeModel extends NodeModel {
      * @param inPortID the port id that just has been disconnected
      */
     protected void inportWasDisconnected(final int inPortID) {
+        // avoid checkstyle warnings
+        assert inPortID == inPortID;
         // nothing to do for this class here
     }
 

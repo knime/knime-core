@@ -500,6 +500,14 @@ public class WorkflowManager implements WorkflowListener {
         m_runningConnectionID = parent.m_runningConnectionID;
         m_runningNodeID = parent.m_runningNodeID;
     }
+    
+    /**
+     * Returns the current KNIME workflow file version loaded.
+     * @return Workflow file version.
+     */
+    public String getWorkflowVersion() {
+        return m_loadedVersion;
+    }
 
     private void addConnection(final ConnectionContainer cc) {
         if (m_connectionsByID.containsKey(cc.getID())) {
@@ -1287,6 +1295,7 @@ public class WorkflowManager implements WorkflowListener {
      * Loads the complete workflow from the given file.
      * 
      * @param workflowFile the workflow file
+     * @param progMon Used to report progress during loading.
      * @throws IOException if the workflow file can not be found or files to
      *             load node internals
      * @throws InvalidSettingsException if settings cannot be read
@@ -1619,7 +1628,7 @@ public class WorkflowManager implements WorkflowListener {
         // workflow settings
         NodeSettings settings = new NodeSettings(WORKFLOW_FILE);
         // save workflow version
-        settings.addString(CFG_VERSION, m_loadedVersion);
+        settings.addString(CFG_VERSION, KNIMEConstants.VERSION);
         // save current running id
         settings.addInt(KEY_RUNNING_NODE_ID, m_runningNodeID.intValue());
         // save current connection id

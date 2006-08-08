@@ -70,6 +70,6 @@ public class FuzzyBasisFunctionPredictorNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new BasisFunctionPredictorNodeDialog("Fuzzy Rule Predictor");
+        return new BasisFunctionPredictorNodeDialog();
     }
 }

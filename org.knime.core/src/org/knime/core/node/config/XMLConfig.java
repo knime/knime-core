@@ -78,6 +78,7 @@ final class XMLConfig {
     static final String DTD_NAME = XMLConfig.class.getName().replace('.', '/')
             + ".dtd";
 
+    /** replacement String for old dtd files. */
     static final String OLD_DTD_NAME = XMLConfig.class.getName().replace('.',
             '/').replace("org/knime/", "de/unikn/knime/") + ".dtd";
 

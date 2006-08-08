@@ -58,10 +58,8 @@ public class FuzzyBasisFunctionLearnerNodeDialog extends NodeDialogPane {
     /**
      * Creates a new {@link NodeDialogPane} for fuzzy basis functions in order
      * to set theta minus, theta plus, and a choice of distance function.
-     * 
-     * @param name this dialog's name
      */
-    public FuzzyBasisFunctionLearnerNodeDialog(final String name) {
+    public FuzzyBasisFunctionLearnerNodeDialog() {
         super();
         // panel with model specific settings
         m_basicsPanel = new BasisFunctionLearnerNodeDialogPanel();

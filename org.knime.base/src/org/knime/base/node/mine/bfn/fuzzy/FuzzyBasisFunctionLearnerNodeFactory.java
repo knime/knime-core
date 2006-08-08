@@ -73,6 +73,6 @@ public class FuzzyBasisFunctionLearnerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new FuzzyBasisFunctionLearnerNodeDialog("Fuzzy Rule Learner");
+        return new FuzzyBasisFunctionLearnerNodeDialog();
     }
 }

@@ -73,6 +73,6 @@ public class ColorAppenderNodeFactory extends NodeFactory {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new ColorAppenderNodeDialogPane("Color Appender");
+        return new ColorAppenderNodeDialogPane();
     }
 }

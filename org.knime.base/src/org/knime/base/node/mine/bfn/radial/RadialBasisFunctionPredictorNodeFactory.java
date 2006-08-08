@@ -70,6 +70,6 @@ public class RadialBasisFunctionPredictorNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new BasisFunctionPredictorNodeDialog("PNN Predictor");
+        return new BasisFunctionPredictorNodeDialog();
     }
 }

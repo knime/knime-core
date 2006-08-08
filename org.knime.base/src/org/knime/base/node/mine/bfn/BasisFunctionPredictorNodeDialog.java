@@ -67,10 +67,8 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
 
     /**
      * Creates a new predictor dialog to set a name for the applied column.
-     * 
-     * @param title title for this dialog
      */
-    public BasisFunctionPredictorNodeDialog(final String title) {
+    public BasisFunctionPredictorNodeDialog() {
         super();
         // panel with advance settings
         JPanel p = new JPanel(new GridLayout(2, 1));

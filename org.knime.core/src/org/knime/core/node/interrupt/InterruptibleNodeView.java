@@ -74,10 +74,8 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * InterruptibleNodeModel and a title.
      * 
      * @param model - the underlying InterruptibleNodeModel.
-     * @param title - the title of the view.
      */
-    public InterruptibleNodeView(final InterruptibleNodeModel model,
-            final String title) {
+    public InterruptibleNodeView(final InterruptibleNodeModel model) {
         super(model);
         setShowNODATALabel(false);
         // The interrupt menu
@@ -90,12 +88,10 @@ public abstract class InterruptibleNodeView extends NodeView implements
     /**
      * Creates an instance of the interruptible node view with the control 
      * elements and a specific additional panel.
-     * @param title - the title of the view.
      * @param model - the underlying interruptible model.
      * @param innerView - an additional view of the model.
      */
-    public InterruptibleNodeView(final String title, 
-            final InterruptibleNodeModel model,
+    public InterruptibleNodeView(final InterruptibleNodeModel model,
             final JPanel innerView) {
         super(model);
 

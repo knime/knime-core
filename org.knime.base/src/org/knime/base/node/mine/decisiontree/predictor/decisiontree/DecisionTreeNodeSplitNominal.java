@@ -177,7 +177,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @seeDecisionTreeNode#getStringSummary()
+     * @see DecisionTreeNode#getStringSummary()
      */
     @Override
     public String getStringSummary() {

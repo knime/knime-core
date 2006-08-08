@@ -53,11 +53,9 @@ public class ColorAppenderNodeDialogPane extends NodeDialogPane {
     private final JComboBox m_columns;
 
     /**
-     * Create dialog with title.
-     * 
-     * @param title the dialog's title
+     * Create color appender dialog pane.
      */
-    public ColorAppenderNodeDialogPane(final String title) {
+    public ColorAppenderNodeDialogPane() {
         super();
         m_columns = new JComboBox();
         m_columns.setPreferredSize(new Dimension(150, 20));
