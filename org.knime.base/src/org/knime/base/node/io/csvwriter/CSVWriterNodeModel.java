@@ -119,8 +119,7 @@ public class CSVWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("Missing pattern must not "
                     + "contain comma: " + missing);
         }
-        String fileName = settings.getString(CFGKEY_FILE);
-        checkFileAccess(fileName);
+        settings.getString(CFGKEY_FILE);
     }
 
     /**
@@ -243,7 +242,7 @@ public class CSVWriterNodeModel extends NodeModel {
     private void checkFileAccess(final String fileName)
             throws InvalidSettingsException {
         if (fileName == null) {
-            throw new InvalidSettingsException("No file set.");
+            throw new InvalidSettingsException("No output file specified.");
         }
         File file = new File(fileName);
 

@@ -78,7 +78,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        checkFileAccess(settings.getString(FILENAME));
+        settings.getString(FILENAME);
     }
 
     /**
@@ -87,7 +87,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_fileName = checkFileAccess(settings.getString(FILENAME));
+        m_fileName = settings.getString(FILENAME);
     }
 
     /**
@@ -162,7 +162,7 @@ public class PredictorWriterNodeModel extends NodeModel {
         return new DataTableSpec[0];
     }
 
-    /*
+    /**
      * Helper that checks some properties for the file argument.
      * 
      * @param fileName The file to check
@@ -171,7 +171,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     private String checkFileAccess(final String fileName)
             throws InvalidSettingsException {
         if (fileName == null) {
-            throw new InvalidSettingsException("No file set.");
+            throw new InvalidSettingsException("No output file specified.");
         }
         String newFileName = fileName;
         if (!fileName.endsWith(".pmml") && !fileName.endsWith(".pmml.gz")) {
