@@ -45,25 +45,25 @@ public class NodeExecutionManagerJob extends Job {
     private NodeContainerEditPart[] m_parts;
 
     /**
-     * @param manager The manager that hosts the nodes
+     * @param wfm The manager that hosts the nodes
      * @param nodeParts Controller edit parts that manage the nodes that should
      *            be executed.
      */
-    public NodeExecutionManagerJob(final WorkflowManager manager,
+    public NodeExecutionManagerJob(final WorkflowManager wfm,
             final NodeContainerEditPart[] nodeParts) {
         super("Execution Manager");
-        m_manager = manager;
+        m_manager = wfm;
         m_parts = nodeParts;
     }
 
     /**
      * Creates a job that executes all nodes.
      * 
-     * @param manager The manager that hosts the nodes
+     * @param wfm The manager that hosts the nodes
      */
-    public NodeExecutionManagerJob(final WorkflowManager manager) {
+    public NodeExecutionManagerJob(final WorkflowManager wfm) {
         super("Execution Manager");
-        m_manager = manager;
+        m_manager = wfm;
     }
 
     /**

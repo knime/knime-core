@@ -55,18 +55,18 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
      * 
      * @param name the job's name
      * @param monitor the progress monitor to listen to
-     * @param manager the workflow manage responsole for the node
+     * @param wfm the workflow manage responsole for the node
      * @param node the node that should be monitored
      * @param initMessage an initial messge for the progress bar
      */
     public ProgressMonitorJob(final String name,
-            final NodeProgressMonitor monitor, final WorkflowManager manager,
+            final NodeProgressMonitor monitor, final WorkflowManager wfm,
             final NodeContainer node, final String initMessage) {
 
         super(name);
         m_stateMessage = initMessage;
         m_nodeMonitor = monitor;
-        m_wfm = manager;
+        m_wfm = wfm;
         m_node = node;
         m_currentProgressMessage = "";
         setPriority(LONG);
@@ -133,12 +133,9 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
             }
 
             if (!m_currentProgressMessage.equals(tmpMessage)) {
-
                 if (message == null) {
-
                     tmpMessage = m_stateMessage;
                 } else {
-
                     tmpMessage = m_stateMessage + " - " + message;
                 }
 
