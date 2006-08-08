@@ -147,12 +147,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     private int m_maxNrIterations;
 
-    /*
-     * The finished state in the execute method
-     */
-    private boolean m_finished = false;
-
-    /*
+     /*
      * Flag indicating whether a noise cluster is induced.
      */
     private boolean m_noise;
@@ -254,14 +249,17 @@ public class FuzzyClusterNodeModel extends NodeModel {
 
         // main loop - until clusters stop changing or maxNrIterations reached
         int currentIteration = 0;
-        while ((!m_finished) && (currentIteration < m_maxNrIterations)) {
+        double totalchange = Double.MAX_VALUE;
+        while ((totalchange > 1e-5) 
+                && (currentIteration < m_maxNrIterations)) {
             if (exec != null) {
                 exec.checkCanceled();
                 exec.setProgress((double)currentIteration
                         / (double)m_maxNrIterations, "Iteration "
-                        + currentIteration);
+                        + currentIteration 
+                        + " Total change of prototypes: " + totalchange);
             }
-            m_finished = m_fcmAlgo.doOneIteration(exec);
+            totalchange = m_fcmAlgo.doOneIteration(exec);
             currentIteration++;
         } // while(!finished & nrIt<maxNrIt)
 
@@ -280,7 +278,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
     public void reset() {
         m_betweenClusterVariation = Double.NaN;
         m_withinClusterVariation = null;
-        m_finished = false;
         m_clusters = null;
     }
 

@@ -90,12 +90,7 @@ public class FCMAlgorithm {
      */
     private double m_allsum = 0;
 
-    /*
-     * The finished state in the execute method
-     */
-    private boolean m_finished = false;
-
-    /*
+     /*
      * DataTable to be clustered
      */
     private DataTable m_table;
@@ -104,6 +99,11 @@ public class FCMAlgorithm {
      * Distance object to calculate distance
      */
     private Distance m_distance;
+    
+    /*
+     * Total change in the cluster prototypes
+     */
+    private double m_totalChange = 0.0;
 
     /**
      * Constructor for a Fuzzy c-means algorithm (with no noise detection).
@@ -197,18 +197,18 @@ public class FCMAlgorithm {
      * matrix is updated and then the cluster prototypes are recalculated.
      * 
      * @param exec execution context to cancel the execution
-     * @return boolean indicating whether the cluster prototypes have stopped
-     *         moving
+     * @return the total change in the cluster prototypes. Allows to decide
+     * whether the algorithm can be stopped.
      * @throws CanceledExecutionException if the operation is canceled
      */
-    public boolean doOneIteration(final ExecutionContext exec)
+    public double doOneIteration(final ExecutionContext exec)
             throws CanceledExecutionException {
         assert (m_table != null);
         exec.checkCanceled();
-        m_finished = true;
         updateWeightMatrix(m_table, exec);
+        m_totalChange = 0.0;
         updateClusterCenters(m_table, exec);
-        return m_finished;
+        return m_totalChange;
     }
 
     /*
@@ -350,9 +350,7 @@ public class FCMAlgorithm {
             } // end while for all datarows sum up
             for (int j = 0; j < m_dimension; j++) {
                 double newValue = sumNumerator[j] / sumDenominator;
-                if (Math.abs(m_clusters[c][j] - newValue) > 1e-10) {
-                    m_finished = false;
-                }
+                m_totalChange += Math.abs(m_clusters[c][j] - newValue);
                 m_clusters[c][j] = newValue;
             }
         }
