@@ -615,6 +615,17 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
+     * Returns the model output model at the given index.
+     * 
+     * @param index the index
+     * @return a model ouput model
+     */
+    protected final ModelOutputNodeModel modelOutModel(final int index) {
+        return m_modelOutModels[index];
+    }
+
+    
+    /**
      * @see org.knime.core.node.NodeModel
      *      #saveSettingsTo(org.knime.core.node.NodeSettingsWO)
      */
