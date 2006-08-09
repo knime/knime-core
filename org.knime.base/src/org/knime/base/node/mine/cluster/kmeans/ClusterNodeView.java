@@ -103,7 +103,8 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
                     return;
                 }
                 for (TreePath path : m_jtree.getSelectionPaths()) {
-                    if (path.getLastPathComponent() instanceof ClusterMutableTreeNode) {
+                    if (path.getLastPathComponent() 
+                            instanceof ClusterMutableTreeNode) {
                         DataCell cell = ((ClusterMutableTreeNode)path
                                 .getLastPathComponent()).getRowId();
                         m_selected.add(cell);

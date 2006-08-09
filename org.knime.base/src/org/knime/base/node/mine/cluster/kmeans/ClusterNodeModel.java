@@ -368,7 +368,8 @@ public class ClusterNodeModel extends NodeModel implements HiLiteMapper {
                         DataCell currentCell = currentRow.getCell(i);
                         if ((!m_ignoreColumn[i])
                                 && (!(currentCell.isMissing()))) {
-                            delta[winner][deltaPos++] += ((DoubleValue)(currentCell))
+                            delta[winner][deltaPos++] 
+                                          += ((DoubleValue)(currentCell))
                                     .getDoubleValue();
                         }
                     }
@@ -469,7 +470,8 @@ public class ClusterNodeModel extends NodeModel implements HiLiteMapper {
                     if (!currentCell.isMissing()) {
                         assert currentCell.getType().isCompatible(
                                 DoubleValue.class);
-                        double d = (m_clusters[c][pos] - ((DoubleValue)(currentCell))
+                        double d = (m_clusters[c][pos] 
+                                - ((DoubleValue)(currentCell))
                                 .getDoubleValue());
                         if (!Double.isNaN(d)) {
                             distance += d * d;
