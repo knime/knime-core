@@ -37,9 +37,7 @@ public class FileReaderNodeFactory extends NodeFactory {
      * @param defXMLFileName this string will be set as default path to a XML
      *            file containing settings for the dialog. Won't be supported in
      *            the future anymore.
-     * @deprecated use the standard constructor instead
      */
-    @Deprecated
     public FileReaderNodeFactory(final String defXMLFileName) {
         m_defaultXMLFile = defXMLFileName;
     }

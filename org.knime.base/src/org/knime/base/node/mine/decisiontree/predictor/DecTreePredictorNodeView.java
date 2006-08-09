@@ -112,7 +112,7 @@ public class DecTreePredictorNodeView extends NodeView {
      */
     @Override
     protected void onClose() {
-        // TODO Auto-generated method stub
+        
     }
 
     /**
@@ -120,7 +120,7 @@ public class DecTreePredictorNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        // TODO Auto-generated method stub
+        
     }
 
     // /////////////////////////////
@@ -193,8 +193,8 @@ public class DecTreePredictorNodeView extends NodeView {
             }
         });
         result.add(item);
-        // listener when the hilite handler changes (disable/enable the menu)
-        // TODO
+        // TODO listener when the hilite handler changes 
+        // (disable/enable the menu)
         /*
          * PropertyChangeListener hiliterChangeListener = new
          * PropertyChangeListener() { public void propertyChange(final

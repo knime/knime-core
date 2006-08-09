@@ -114,8 +114,7 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
             defaults = ColSetting.loadMetaColSettings(settings);
             individuals = ColSetting.loadIndividualColSettings(settings);
         } catch (InvalidSettingsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOGGER.debug("Settings are invalid", e);
         }
 
         m_defaultsPanel.removeAll();

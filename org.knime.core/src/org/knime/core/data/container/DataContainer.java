@@ -73,10 +73,13 @@ import org.knime.core.util.FileUtil;
  */
 public class DataContainer implements RowAppender {
     
+    /*
+     * TODO: We need to find a way to figure out how much memory a row occupies
+     */
+    
     /** 
      * Number of cells that are cached without being written to the 
      * temp file (see Buffer implementation).
-     * TODO: We need to find a way to figure out how much memory a row occupies
      */
     private static final int MAX_CELLS_IN_MEMORY = 0; //2000000;
     

@@ -49,7 +49,7 @@ import org.knime.core.node.ExecutionMonitor;
  * The view's content model which keeps track on the data and all its additional
  * properties.
  * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author Simona Pintilie, University of Konstanz
  */
 public final class ParallelCoordinatesViewContent implements Serializable {
 

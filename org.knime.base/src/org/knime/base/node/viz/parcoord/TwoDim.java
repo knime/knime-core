@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Mar 16, 2005 (tg): created
+ *   Mar 16, 2005 (sp): created
  */
 package org.knime.base.node.viz.parcoord;
 
@@ -28,7 +28,7 @@ import java.io.Serializable;
 
 /**
  * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author Simona Pintilie, University of Konstanz
  */
 public class TwoDim implements Serializable {
 

@@ -29,8 +29,11 @@ package org.knime.core.node;
  */
 public interface NodeStateListener {
     
-    /**
+    /*
      * TODO (tg) is the id important here?
+     */
+    
+    /**
      * Callback from node, indicating that the given node has changed its state.
      * Clients may observe the node in order to get the current state.
      * 

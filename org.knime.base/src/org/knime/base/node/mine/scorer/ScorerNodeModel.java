@@ -250,7 +250,6 @@ public class ScorerNodeModel extends NodeModel {
             throw new InvalidSettingsException("Column "
                     + m_secondCompareColumn + " not found.");
         }
-        // TODO FIXME Bug36
         return new DataTableSpec[1];
     }
 

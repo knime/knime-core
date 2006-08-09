@@ -46,10 +46,13 @@ import org.knime.core.node.ExecutionMonitor;
  * which is the predicted class (label) for each input row.
  * 
  * @author Thomas Gabriel, University of Konstanz
- * 
- * TODO add fuzzy degree output for each class
  */
 public class BasisFunctionPredictorTable implements DataTable {
+    
+    /*
+     * TODO add fuzzy degree output for each class
+     */
+    
     /**
      * The underlying data to be applied.
      */

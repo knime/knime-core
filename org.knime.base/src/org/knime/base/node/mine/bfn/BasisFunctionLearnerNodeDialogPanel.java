@@ -39,11 +39,14 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * Panel is used inside the basisfunction dialogs for general settings, such as
  * distance function, shrink after commit, ...
  * 
- * TODO add maximum number of epochs
- * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
+    
+    /*
+     * TODO add maximum number of epochs
+     */
+    
     /** Select target column with class-label. */
     private final JComboBox m_targetColumn;
 

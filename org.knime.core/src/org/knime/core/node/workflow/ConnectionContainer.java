@@ -45,9 +45,7 @@ import org.knime.core.node.NodeSettingsWO;
  * about source and target is final, the extra-information can change and
  * workflow listeners will be notified accordingly.
  * 
- * TODO FG: implement notifcation mechanism !!!
- * 
- * @author M. Berthold, University of Konstanz
+ * @author Michael Berthold, University of Konstanz
  */
 public class ConnectionContainer {
 

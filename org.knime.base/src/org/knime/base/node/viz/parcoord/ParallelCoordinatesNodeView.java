@@ -19,12 +19,6 @@
  * email: contact@knime.org
  * ----------------------------------------------------------------------------
  */
-/*
- * Created on Jan 24, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package org.knime.base.node.viz.parcoord;
 
 import java.awt.Color;
@@ -33,9 +27,10 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
-
 /**
- * @author Thomas Gabriel, University of Konstanz
+ * View showing the Parallel Coordinates panel.
+ * 
+ * @author Simona Pintilie, University of Konstanz
  */
 public class ParallelCoordinatesNodeView extends NodeView {
 

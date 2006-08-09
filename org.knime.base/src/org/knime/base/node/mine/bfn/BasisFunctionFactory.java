@@ -44,10 +44,13 @@ import org.knime.core.node.ModelContentWO;
  * @author Thomas Gabriel, University of Konstanz
  * 
  * @see BasisFunctionLearnerRow
- * 
- * TODO hierarchy level should have lower, upper bound, and possible values set
  */
 public abstract class BasisFunctionFactory {
+    
+    /*
+     * TODO hierarchy level should have lower, upper bound, and possible values
+     */
+    
     /** the model spec. */
     private final DataTableSpec m_spec;
 

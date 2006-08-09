@@ -38,7 +38,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
   
 /**
  * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author Simona Pintilie, University of Konstanz
  */
 public class ParallelCoordinatesFrame extends JFrame {
     

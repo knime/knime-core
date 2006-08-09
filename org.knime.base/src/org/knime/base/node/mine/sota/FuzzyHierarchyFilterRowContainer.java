@@ -235,7 +235,6 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
      * @see DataArray#getValues(int)
      */
     public Set<DataCell> getValues(final int colIdx) {
-        // TODO Auto-generated method stub
         return null;
     }
 

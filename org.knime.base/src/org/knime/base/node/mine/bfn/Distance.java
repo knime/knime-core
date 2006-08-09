@@ -29,10 +29,13 @@ import org.knime.core.data.DoubleValue;
  * Computes the euclidian distance between two vectors.
  * 
  * @author Thomas Gabriel, University of Konstanz
- * 
- * TODO introduce more general class Distance.
  */
 public final class Distance {
+    
+    /* 
+     * TODO introduce more general class and distance package
+     */
+    
     /**
      * Hidden, empty constructor.
      */

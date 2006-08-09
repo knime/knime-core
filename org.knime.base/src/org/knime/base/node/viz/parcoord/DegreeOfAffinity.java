@@ -28,7 +28,7 @@ import org.knime.core.data.DataRow;
 
 /**
  * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author Simona Pintilie, University of Konstanz
  */
 public interface DegreeOfAffinity {
     

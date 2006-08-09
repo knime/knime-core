@@ -42,9 +42,10 @@ import org.knime.base.node.io.filetokenizer.Quote;
 public class FileAnalyzerTest extends TestCase {
 
     /**
-     * Tests the analyze TODO: test all features!
+     * Tests the analyze.
      */
     public void testAnalyze() {
+        // TODO: test all features!
         colHeaderTest();
         rowHeaderTest();
         quoteTest();

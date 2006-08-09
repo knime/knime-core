@@ -28,7 +28,7 @@ import java.util.EventListener;
 
 /**
  * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author Simona Pintilie, University of Konstanz
  */
 public interface VisibilityListener extends EventListener {
     /** 

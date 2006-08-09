@@ -146,11 +146,6 @@ public class DotInfoArray {
     /**
      * Returns a list of dots that sit in the specified rectangle (including the
      * boundaries of the rectangle). It takes into account the size of each dot.
-     * TODO: Must be changed if we start drawing different shapes. Also, this
-     * function assumes that the real x/y coord. is not in the middle of the
-     * drawn rectangle but at the upper left corner. And - the orientation has
-     * not changed from the default which is (0,0) sits in the upper left
-     * corner. This function really depends on the array being sorted!!
      * 
      * @param x1 the X coordinate of one corner of the rectangle
      * @param y1 the Y coordinate of one corner of the rectangle
@@ -162,6 +157,14 @@ public class DotInfoArray {
      */
     public List<DotInfo> getDotsContainedIn(final int x1, final int y1,
             final int x2, final int y2, final int dotSize) {
+        /*
+         * TODO: Must be changed if we start drawing different shapes. Also, 
+         * this function assumes that the real x/y coord. is not in the middle 
+         * of the drawn rectangle but at the upper left corner. And - the 
+         * orientation has not changed from the default which is (0,0) sits in 
+         * the upper left corner. This function really depends on the array 
+         * being sorted!!
+         */
 
         Rectangle dragRect = new Rectangle(x1, y1, x2 - x1, y2 - y1);
 

@@ -271,7 +271,7 @@ public final class NodeLogger {
     private final Logger m_logger;
 
     /**
-     * Don't log the following packages. TODO create external file.
+     * Don't log the following packages.
      */
     private static final String[] DONT_LOG = new String[]{"joelib",
             "org.openscience"};

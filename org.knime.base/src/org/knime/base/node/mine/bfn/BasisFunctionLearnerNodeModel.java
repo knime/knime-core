@@ -66,8 +66,6 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 /**
  * Abstract basisfunction model holding the trained rule table.
  * 
- * TODO move the HiLiteTranslater into this class.
- * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class BasisFunctionLearnerNodeModel extends NodeModel {

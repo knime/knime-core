@@ -300,7 +300,7 @@ public class SorterNodeModelTest extends TestCase {
         rowIt = resultTable[0].iterator();
         assertTrue(rowIt.hasNext());
         int k = dimension - 1;
-        // TODO
+        // TODO while loop
         // while (!rowIt.atEnd()) {
         // IntCell ic = (IntCell) rowIt.next().getKey();
         // assertEquals(k, ic.getIntValue());

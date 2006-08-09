@@ -201,12 +201,11 @@ public abstract class NodeOutPort extends NodePort {
     }
 
     /**
-     * TODO (tg) This method is not guaranteed to be called!
-     * 
      * @see java.lang.Object#finalize()
      */
     @Override
     protected void finalize() throws Throwable {
+        // TODO (tg) This method is not guaranteed to be called!
         // make sure to blow away the port view
         disposePortView();
         super.finalize();
