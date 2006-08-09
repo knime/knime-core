@@ -52,7 +52,8 @@ import org.knime.base.data.util.DataCellStringMapper;
 public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     private HashSet<DataCell> m_coveredPattern = new HashSet<DataCell>();
 
-    private HashMap<Color, Double> m_coveredColors = new HashMap<Color, Double>();
+    private HashMap<Color, Double> m_coveredColors 
+       = new HashMap<Color, Double>();
 
     /**
      * Empty Constructor visible only within package.

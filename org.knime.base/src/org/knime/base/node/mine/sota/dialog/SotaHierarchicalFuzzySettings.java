@@ -75,8 +75,8 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
         m_jchbUseHierarchicalFuzzyData = new JCheckBox();
         m_jchbUseHierarchicalFuzzyData
                 .setSelected(SotaManager.USE_HIERARCHICAL_FUZZY_DATA);
-        m_jchbUseHierarchicalFuzzyData
-                .addActionListener(new SotaHierarchicalFuzzySettingsController());
+        m_jchbUseHierarchicalFuzzyData.addActionListener(
+                new SotaHierarchicalFuzzySettingsController());
 
         m_columnSelectionPanel = new ColumnSelectionPanel("Hierarchical level",
                 IntValue.class);

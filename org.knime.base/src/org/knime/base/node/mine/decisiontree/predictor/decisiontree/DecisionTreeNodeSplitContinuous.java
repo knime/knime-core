@@ -52,7 +52,8 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     // NodeLogger.getLogger(DecisionTreeNodeSplitContinuous.class);
     private double m_threshold = 0.0;
 
-    private HashMap<Color, Double> m_coveredColors = new HashMap<Color, Double>();
+    private HashMap<Color, Double> m_coveredColors 
+        = new HashMap<Color, Double>();
 
     /**
      * Empty Constructor visible only within package.
@@ -234,7 +235,8 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
 
     /**
      * @see DecisionTreeNodeSplit
-     *      #saveNodeSplitInternalsToPredParams(org.knime.core.node.ModelContentWO)
+     *      #saveNodeSplitInternalsToPredParams(
+     *      org.knime.core.node.ModelContentWO)
      */
     @Override
     public void saveNodeSplitInternalsToPredParams(final ModelContentWO pConf) {
@@ -244,7 +246,8 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /**
      * 
      * @see DecisionTreeNodeSplit
-     *      #loadNodeSplitInternalsFromPredParams(org.knime.core.node.ModelContentRO)
+     *      #loadNodeSplitInternalsFromPredParams(
+     *      org.knime.core.node.ModelContentRO)
      */
     @Override
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)

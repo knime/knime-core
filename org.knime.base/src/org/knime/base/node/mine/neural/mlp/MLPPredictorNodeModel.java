@@ -119,7 +119,8 @@ public class MLPPredictorNodeModel extends NodeModel {
             DataType type;
             if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
                 type = DoubleCell.TYPE;
-            } else if (m_mlp.getMode() == MultiLayerPerceptron.CLASSIFICATION_MODE) {
+            } else if (m_mlp.getMode() == MultiLayerPerceptron
+                    .CLASSIFICATION_MODE) {
                 type = StringCell.TYPE;
             } else {
                 throw new InvalidSettingsException("Unsupported mode in MLP: "
@@ -170,7 +171,8 @@ public class MLPPredictorNodeModel extends NodeModel {
         DataType type;
         if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
             type = DoubleCell.TYPE;
-        } else if (m_mlp.getMode() == MultiLayerPerceptron.CLASSIFICATION_MODE) {
+        } else if (m_mlp.getMode() == MultiLayerPerceptron
+                .CLASSIFICATION_MODE) {
             type = StringCell.TYPE;
         } else {
             throw new Exception("Unsupported mode in MLP: " + m_mlp.getMode());
@@ -275,7 +277,8 @@ public class MLPPredictorNodeModel extends NodeModel {
          * @param regression indicates whether a regression should take place.
          * @param columns to work on.
          */
-        MLPClassificationFactory(final boolean regression, final int[] columns) {
+        MLPClassificationFactory(final boolean regression, 
+                final int[] columns) {
             m_regression = regression;
             m_faccolumns = columns;
         }

@@ -114,7 +114,8 @@ public class LinRegPredictorNodeModel extends NodeModel implements
     protected void loadModelContent(final int index,
             final ModelContentRO predParams) throws InvalidSettingsException {
         if (index != 0) {
-            throw new IndexOutOfBoundsException("Invalid model input: " + index);
+            throw new IndexOutOfBoundsException(
+                    "Invalid model input: " + index);
         }
         LinearRegressionParams param;
         if (predParams == null) {
@@ -216,8 +217,8 @@ public class LinRegPredictorNodeModel extends NodeModel implements
         final int[] columns = new int[par.size() - 1];
         // find the indizes of the columns to include
         int count = 0;
-        for (Iterator<Map.Entry<String, Double>> it = par.entrySet().iterator(); it
-                .hasNext(); count++) {
+        for (Iterator<Map.Entry<String, Double>> it = par.entrySet().iterator();
+            it.hasNext(); count++) {
             Map.Entry<String, Double> entry = it.next();
             String colName = entry.getKey();
             parameters[count] = entry.getValue();

@@ -63,12 +63,9 @@ public final class Distances {
                 }
             } else if (SotaUtil.isFuzzyIntervalType(type) && fuzzy) {
                 if (col < cell.getData().length) {
-                    distance += Math
-                            .pow(
-                                    cell.getData()[col].getValue()
-                                            - SotaFuzzyMath
-                                                    .getCenterOfCoreRegion((FuzzyIntervalValue)row
-                                                            .getCell(i)), 2);
+                    distance += Math.pow(cell.getData()[col].getValue() 
+                            - SotaFuzzyMath.getCenterOfCoreRegion(
+                                    (FuzzyIntervalValue)row.getCell(i)), 2);
                     col++;
                 }
             }
@@ -207,10 +204,9 @@ public final class Distances {
                 }
             } else if (SotaUtil.isFuzzyIntervalType(type) && fuzzy) {
                 if (col < cell.getData().length) {
-                    vectorMultRes += cell.getData()[col].getValue()
-                            * SotaFuzzyMath
-                                    .getCenterOfCoreRegion((FuzzyIntervalValue)row
-                                            .getCell(i));
+                    vectorMultRes += cell.getData()[col].getValue() 
+                        * SotaFuzzyMath.getCenterOfCoreRegion(
+                                (FuzzyIntervalValue)row.getCell(i));
 
                     vectorLength += Math.pow(SotaFuzzyMath
                             .getCenterOfCoreRegion((FuzzyIntervalValue)row
@@ -265,16 +261,17 @@ public final class Distances {
             if (SotaUtil.isNumberType(type) && !fuzzy) {
                 if (col < cell.getData().length) {
                     dist += (cell.getData()[col].getValue() - meanCell)
-                            * (((DoubleValue)row.getCell(i)).getDoubleValue() - meanRow);
+                            * (((DoubleValue)row.getCell(i)).getDoubleValue() 
+                                    - meanRow);
                     col++;
                     count++;
                 }
             } else if (SotaUtil.isFuzzyIntervalType(type) && fuzzy) {
                 if (col < cell.getData().length) {
                     dist += (cell.getData()[col].getValue() - meanCell)
-                            * (SotaFuzzyMath
-                                    .getCenterOfCoreRegion((FuzzyIntervalValue)row
-                                            .getCell(i)) - meanRow);
+                            * (SotaFuzzyMath.getCenterOfCoreRegion(
+                                    (FuzzyIntervalValue)row.getCell(i)) 
+                                    - meanRow);
                     col++;
                     count++;
                 }
@@ -320,8 +317,9 @@ public final class Distances {
             DataType type = row1.getCell(i).getType();
 
             if (SotaUtil.isNumberType(type) && !fuzzy) {
-                dist += (((DoubleValue)row1.getCell(i)).getDoubleValue() - meanRow1)
-                        * (((DoubleValue)row2.getCell(i)).getDoubleValue() - meanRow2);
+                dist += (((DoubleValue)row1.getCell(i)).getDoubleValue() 
+                        - meanRow1) * (((DoubleValue)row2.getCell(i))
+                                .getDoubleValue() - meanRow2);
                 count++;
             } else if (SotaUtil.isFuzzyIntervalType(type) && fuzzy) {
                 dist += (SotaFuzzyMath
@@ -360,10 +358,8 @@ public final class Distances {
             DataType type = row.getCell(i).getType();
 
             if (SotaUtil.isNumberType(type) && !fuzzy) {
-                dev += Math
-                        .pow(
-                                (((DoubleValue)row.getCell(i)).getDoubleValue() - mean),
-                                2);
+                dev += Math.pow((((DoubleValue)row.getCell(i)).getDoubleValue() 
+                        - mean), 2);
                 count++;
             } else if (SotaUtil.isFuzzyIntervalType(type) && fuzzy) {
                 dev += Math.pow((SotaFuzzyMath

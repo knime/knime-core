@@ -310,8 +310,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             if (m_isHierarchicalFuzzyData && m_drawHierarchicalFuzzyData) {
                 // if clusterlines too high
                 if (m_root.getEndY() < 0) {
-                    int lineCount = (Math.abs(m_root.getEndY()) + m_jpHeight - PIXEL_HEIGHT)
-                            / m_clusterLineHeight;
+                    int lineCount = (Math.abs(m_root.getEndY()) 
+                            + m_jpHeight - PIXEL_HEIGHT) / m_clusterLineHeight;
 
                     m_clusterLineHeight = (m_jpHeight - PIXEL_HEIGHT)
                             / lineCount;
@@ -347,7 +347,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             setPreferredSize(new Dimension(m_jpWidth, m_jpHeight));
 
             modelChanged(false);
-        } else if ((m_jpWidth != getSize().width || m_jpHeight != getSize().height)
+        } else if ((m_jpWidth != getSize().width 
+                || m_jpHeight != getSize().height)
                 && !m_zooming) {
             // If size of panel is smaller than size of frame and size of panel
             // was changed
@@ -395,7 +396,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                 // draw data rectangle
                 g.setColor(m_originalData.getDataTableSpec().getRowColor(
                         origRow).getColor());
-                // g.setColor(m_data.getTableSpec().getRowColor(row).getColor());
+               // g.setColor(m_data.getTableSpec().getRowColor(row).getColor());
 
                 g.fillRect(startX, m_jpHeight - HILITE_HEIGHT,
                         (m_pixelWidth - 1), HILITE_HEIGHT);
@@ -478,7 +479,9 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         }
         if (cell.isHilited() && sister.isHilited() && !cell.isSelected()) {
             g.setColor(m_hilit);
-        } else if (cell.isHilited() && sister.isHilited() && cell.isSelected()) {
+        } else if (cell.isHilited() 
+                && sister.isHilited() 
+                && cell.isSelected()) {
             g.setColor(m_selectedHilited);
         } else {
             g.setColor(getCellColor(cell, true));
@@ -653,7 +656,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                                     - children.get(i).getAncestor()
                                             .getLevelInHierarchy();
 
-                            for (int l = childrenHLevel - 1; l > currentHLevel; l--) {
+                            for (int l = childrenHLevel - 1; l > currentHLevel; 
+                                l--) {
                                 heightFactor += m_hierarchicalMaxLevels.get(l);
                             }
                         }
@@ -726,7 +730,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             mLevel++;
         }
         if (!cell.isCell()) {
-            int maxLevLeft = getMaxLevelOfHLevel(mLevel, cell.getLeft(), hLevel);
+            int maxLevLeft = getMaxLevelOfHLevel(mLevel, cell.getLeft(), 
+                    hLevel);
             int maxLevRight = getMaxLevelOfHLevel(mLevel, cell.getRight(),
                     hLevel);
             if (mLevel < maxLevLeft) {
@@ -1095,7 +1100,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     /**
      * @param hierarchicalFuzzyData the drawHierarchicalFuzzyData to set
      */
-    public void setDrawHierarchicalFuzzyData(final boolean hierarchicalFuzzyData) {
+    public void setDrawHierarchicalFuzzyData(
+            final boolean hierarchicalFuzzyData) {
         m_drawHierarchicalFuzzyData = hierarchicalFuzzyData;
     }
 
@@ -1164,7 +1170,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                     m_hiliteHandler.hiLite(m_hilitedKeys);
 
                     repaint();
-                } else if (e.getActionCommand().equals(POPUP_UNHILITE_SELECTED)) {
+                } else if (e.getActionCommand().equals(
+                        POPUP_UNHILITE_SELECTED)) {
                     HashSet<DataCell> unhilite = new HashSet<DataCell>();
                     for (int i = 0; i < m_selectedKeys.size(); i++) {
                         if (m_hilitedKeys.contains(m_selectedKeys.get(i))) {

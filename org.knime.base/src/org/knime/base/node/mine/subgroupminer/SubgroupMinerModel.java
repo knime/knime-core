@@ -132,13 +132,15 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
 
     private FrequentItemSet.Type m_itemSetType = FrequentItemSet.Type.CLOSED;
 
-    private FrequentItemSetTable.Sorter m_sorter = FrequentItemSetTable.Sorter.NONE;
+    private FrequentItemSetTable.Sorter m_sorter 
+        = FrequentItemSetTable.Sorter.NONE;
 
     private boolean m_associationRules = false;
 
     private double m_confidence = DEFAULT_CONFIDENCE;
 
-    private AprioriAlgorithmFactory.AlgorithmDataStructure m_underlyingStruct = AprioriAlgorithmFactory.AlgorithmDataStructure.ARRAY;
+    private AprioriAlgorithmFactory.AlgorithmDataStructure m_underlyingStruct 
+        = AprioriAlgorithmFactory.AlgorithmDataStructure.ARRAY;
 
     private BufferedDataTable m_itemSetTable;
 
@@ -458,12 +460,14 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
                 allCells[2] = new StringCell("Item" + consequent);
             }
             allCells[3] = new StringCell("<---");
-            for (int i = 0; i < antecedent.size() && i < m_maxItemSetLength + 4; i++) {
+            for (int i = 0; i < antecedent.size() 
+                && i < m_maxItemSetLength + 4; i++) {
                 if (m_nameMapping != null) {
                     allCells[i + 4] = new StringCell(m_nameMapping
                             .get(antecedent.get(i)));
                 } else {
-                    allCells[i + 4] = new StringCell("Item" + antecedent.get(i));
+                    allCells[i + 4] = new StringCell(
+                            "Item" + antecedent.get(i));
                 }
             }
             int start = Math.min(antecedent.size() + 4, m_maxItemSetLength + 4);

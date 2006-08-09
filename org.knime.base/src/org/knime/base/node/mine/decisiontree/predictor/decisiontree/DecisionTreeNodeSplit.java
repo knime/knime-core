@@ -207,7 +207,8 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 // value is missing, we have to combine all class weights
                 // from _all_ branches
                 // initialize result HashMap
-                HashMap<DataCell, Double> result = new HashMap<DataCell, Double>();
+                HashMap<DataCell, Double> result 
+                    = new HashMap<DataCell, Double>();
                 // check each branch for it's counts and add them up
                 for (DecisionTreeNode nodeIt : m_child) {
                     HashMap<DataCell, Double> thisNodeCounts = nodeIt
@@ -248,7 +249,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             throws Exception;
 
     /**
-     * @seeDecisionTreeNode
+     * @see DecisionTreeNode
      *      #addCoveredPattern(org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
      */
@@ -262,7 +263,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 if (m_previousIndex == -1) {
                     LOGGER.error(spec.toString());
                     throw new Exception("Decision Tree Prediction failed."
-                            + " Could not find attribute '" + m_splitAttr + "'");
+                           + " Could not find attribute '" + m_splitAttr + "'");
                 }
                 m_previousSpec = spec;
             }
@@ -307,7 +308,8 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      *      #saveNodeInternalsToPredParams(org.knime.core.node.ModelContentWO)
      */
     @Override
-    public final void saveNodeInternalsToPredParams(final ModelContentWO pConf) {
+    public final void saveNodeInternalsToPredParams(
+            final ModelContentWO pConf) {
         saveNodeSplitInternalsToPredParams(pConf);
         pConf.addString("splitAttribute", m_splitAttr);
         pConf.addInt("nrChildren", m_child.length);
@@ -331,7 +333,8 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      *      #loadNodeInternalsFromPredParams(org.knime.core.node.ModelContentRO)
      */
     @Override
-    public final void loadNodeInternalsFromPredParams(final ModelContentRO pConf)
+    public final void loadNodeInternalsFromPredParams(
+            final ModelContentRO pConf)
             throws InvalidSettingsException {
         loadNodeSplitInternalsFromPredParams(pConf);
         m_splitAttr = pConf.getString("splitAttribute");

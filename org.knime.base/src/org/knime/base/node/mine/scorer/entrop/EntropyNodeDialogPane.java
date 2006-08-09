@@ -54,6 +54,10 @@ public class EntropyNodeDialogPane extends NodeDialogPane {
 
     private final ColumnSelectionComboxBox m_comboCluster;
 
+    /**
+     * The dialog for the entropy scorer. 
+     *
+     */
     public EntropyNodeDialogPane() {
         super();
         m_comboReference = new ColumnSelectionComboxBox((Border)null,

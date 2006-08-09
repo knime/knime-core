@@ -110,12 +110,14 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
 
             // if new level is reached
             if (newLevel) {
-                FuzzyHierarchyFilterMetaInformation meta = new FuzzyHierarchyFilterMetaInformation();
+                FuzzyHierarchyFilterMetaInformation meta 
+                    = new FuzzyHierarchyFilterMetaInformation();
                 meta.setLevel(level);
                 meta.setSize(1);
 
                 // Save min max values
-                for (int h = 0; h < m_rc.getDataTableSpec().getNumColumns(); h++) {
+                for (int h = 0; h < m_rc.getDataTableSpec().getNumColumns(); 
+                    h++) {
                     DataType type = m_rc.getDataTableSpec().getColumnSpec(h)
                             .getType();
 
@@ -131,11 +133,11 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
                         if (j < m_meta.size()) {
                             if (m_meta.get(j) == null) {
                                 m_meta
-                                        .add(new FuzzyHierarchyFilterMetaInformation());
+                                .add(new FuzzyHierarchyFilterMetaInformation());
                             }
                         } else {
                             m_meta
-                                    .add(new FuzzyHierarchyFilterMetaInformation());
+                            .add(new FuzzyHierarchyFilterMetaInformation());
                         }
                     }
                 }
@@ -144,7 +146,8 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
             } else {
                 m_meta.get(level).addToSize(1);
 
-                for (int h = 0; h < m_rc.getDataTableSpec().getNumColumns(); h++) {
+                for (int h = 0; h < m_rc.getDataTableSpec().getNumColumns(); 
+                    h++) {
                     DataType type = m_rc.getDataTableSpec().getColumnSpec(h)
                             .getType();
 
@@ -216,7 +219,8 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
         int index = 0;
         for (int i = 0; i < m_rc.size(); i++) {
             DataRow row = m_rc.getRow(i);
-            if (((IntValue)row.getCell(m_levelColumn)).getIntValue() == m_hierarchyLevel) {
+            if (((IntValue)row.getCell(m_levelColumn)).getIntValue() 
+                    == m_hierarchyLevel) {
                 if (index == idx) {
                     return row;
                 } else {

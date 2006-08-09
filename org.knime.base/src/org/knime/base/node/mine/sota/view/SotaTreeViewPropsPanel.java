@@ -211,9 +211,8 @@ public class SotaTreeViewPropsPanel extends JPanel {
 
                 m_pane.modelChanged(false);
             } else if (source.equals(m_setHierarchicalSeparators)) {
-                m_pane
-                        .setDrawHierarchicalSeparators(m_setHierarchicalSeparators
-                                .isSelected());
+                m_pane.setDrawHierarchicalSeparators(
+                                m_setHierarchicalSeparators.isSelected());
                 m_pane.repaint();
             }
         }

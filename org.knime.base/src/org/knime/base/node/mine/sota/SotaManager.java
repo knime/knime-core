@@ -228,7 +228,8 @@ public class SotaManager {
 
         this.m_useVariability = SotaManager.USE_VARIABILITY;
         this.m_distance = SotaManager.EUCLIDEAN_DIST;
-        this.m_useHierarchicalFuzzyData = SotaManager.USE_HIERARCHICAL_FUZZY_DATA;
+        this.m_useHierarchicalFuzzyData 
+            = SotaManager.USE_HIERARCHICAL_FUZZY_DATA;
         this.m_trained = false;
 
         this.m_exec = null;
@@ -290,8 +291,8 @@ public class SotaManager {
             this.m_isFuzzy = true;
             this.m_inDataContainer = new FuzzyHierarchyFilterRowContainer(
                     m_inDataContainer, m_currentHierarchyLevel);
-            this.m_maxHierarchicalLevel = ((FuzzyHierarchyFilterRowContainer)m_inDataContainer)
-                    .getMaxLevel();
+            this.m_maxHierarchicalLevel = ((FuzzyHierarchyFilterRowContainer)
+                    m_inDataContainer).getMaxLevel();
         }
 
         //
@@ -365,8 +366,8 @@ public class SotaManager {
                 }
             } else {
                 while (m_currentMaxResource > m_minResource) {
-
-                    m_state = 1.0 - ((m_currentMaxResource - m_minResource) / maxDeltaRes);
+                    m_state = 1.0 - ((m_currentMaxResource - m_minResource) 
+                            / maxDeltaRes);
                     m_exec.setProgress(m_state, "Cycle: " + m_cycle
                             + " has been trained ");
 
@@ -445,7 +446,8 @@ public class SotaManager {
         //
         if (m_currentMaxResourceCell != null) {
             if ((m_useVariability && var > m_minVariability)
-                    || (!m_useVariability && m_currentMaxResource > m_minResource)) {
+                    || (!m_useVariability && m_currentMaxResource 
+                            > m_minResource)) {
 
                 // split cell
                 m_currentMaxResourceCell.split(m_currentHierarchyLevel);
@@ -856,7 +858,8 @@ public class SotaManager {
     /**
      * @param hierarchicalFuzzyData the useHierarchicalFuzzyData to set
      */
-    public void setUseHierarchicalFuzzyData(final boolean hierarchicalFuzzyData) {
+    public void setUseHierarchicalFuzzyData(
+            final boolean hierarchicalFuzzyData) {
         m_useHierarchicalFuzzyData = hierarchicalFuzzyData;
     }
 

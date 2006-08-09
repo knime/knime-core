@@ -177,7 +177,8 @@ public class SotaNodeModel extends NodeModel {
         int numberCells = 0;
         int fuzzyCells = 0;
         int intCells = 0;
-        for (int i = 0; i < inSpecs[SotaNodeModel.INPORT].getNumColumns(); i++) {
+        for (int i = 0; i < inSpecs[SotaNodeModel.INPORT].getNumColumns(); 
+            i++) {
             if (m_includeList.contains(inSpecs[SotaNodeModel.INPORT]
                     .getColumnSpec(i).getName())) {
                 DataType type = inSpecs[SotaNodeModel.INPORT].getColumnSpec(i)
@@ -307,9 +308,8 @@ public class SotaNodeModel extends NodeModel {
             Object isHierarchicalFuzzyData = s.readObject();
             Object maxHierarchicalLevel = s.readObject();
 
-            m_sota
-                    .setUseHierarchicalFuzzyData(((Boolean)isHierarchicalFuzzyData)
-                            .booleanValue());
+            m_sota.setUseHierarchicalFuzzyData(((Boolean)
+                    isHierarchicalFuzzyData).booleanValue());
             m_sota.setMaxHierarchicalLevel(((Integer)maxHierarchicalLevel)
                     .intValue());
 

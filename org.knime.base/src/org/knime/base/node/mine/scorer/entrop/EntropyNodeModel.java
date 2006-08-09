@@ -72,6 +72,11 @@ public class EntropyNodeModel extends NodeModel {
 
     private final HiLiteTranslator m_translator;
 
+    /**
+     * The Entropy node model with two data inports for the two clustering
+     * results.
+     *
+     */
     public EntropyNodeModel() {
         super(2, 0);
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler());

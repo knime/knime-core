@@ -218,7 +218,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
         return new DataTableSpec[]{createOutTableSpec(inSpecs[INDATAPORT])};
     }
 
-    private static DataTableSpec createOutTableSpec(final DataTableSpec inSpec) {
+    private static DataTableSpec createOutTableSpec(
+            final DataTableSpec inSpec) {
         DataColumnSpec newCol = new DataColumnSpecCreator(
                 "Prediction (DecTree)", StringCell.TYPE).createSpec();
         DataTableSpec newColSpec = new DataTableSpec(
@@ -272,7 +273,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
         File f = new File(nodeInternDir, INTERNALS_FILE_NAME);
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f));
+        ObjectOutputStream out = new ObjectOutputStream(
+                    new FileOutputStream(f));
         out.writeObject(m_decTree);
         out.close();
     }

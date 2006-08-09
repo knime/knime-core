@@ -94,7 +94,8 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
      * @param lev hierarchy level of the cell
      * @param isCell flags if cell is a Cell or a Node
      */
-    public SotaTreeCell(final int dimension, final int lev, final boolean isCell) {
+    public SotaTreeCell(final int dimension, final int lev, 
+            final boolean isCell) {
         this.m_data = new SotaCell[dimension];
         this.m_level = lev;
         this.m_dataIds = new ArrayList<Integer>();

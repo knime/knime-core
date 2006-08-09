@@ -45,7 +45,8 @@ public final class SotaFuzzyMath {
      * @param val the Fuzzy Cell Value to compute center of core region for
      * @return the center of the given FuzzyCells core region
      */
-    public static double getMaxCoreDistanceToCenter(final FuzzyIntervalValue val) {
+    public static double getMaxCoreDistanceToCenter(
+            final FuzzyIntervalValue val) {
         return (val.getMaxCore() - val.getMinCore()) / 2;
     }
 
@@ -64,9 +65,9 @@ public final class SotaFuzzyMath {
     }
 
     /**
-     * Approximates dilatation of Core region, by using Pythagoras. Dilatation d =
-     * (sum(ai))^(1/2), with ai = (Cmax - Cmin) / 2. If cell-array length is
-     * less or equal 0, than -1 is returned.
+     * Approximates dilatation of Core region, by using Pythagoras. 
+     * Dilatation d = (sum(ai))^(1/2), with ai = (Cmax - Cmin) / 2. 
+     * If cell-array length is less or equal 0, than -1 is returned.
      * 
      * @param vals array of cells of N-dimensional Fuzzy Set to approximate core
      *            dilatation
@@ -87,9 +88,9 @@ public final class SotaFuzzyMath {
     }
 
     /**
-     * Approximates dilatation of Core region, by using Pythagoras. Dilatation d =
-     * (sum(ai))^(1/2), with ai = (Cmax - Cmin) / 2. -1 is returned if the given
-     * DataRow contains no FuzzyIntervalCells.
+     * Approximates dilatation of Core region, by using Pythagoras. 
+     * Dilatation d = (sum(ai))^(1/2), with ai = (Cmax - Cmin) / 2. 
+     * -1 is returned if the given DataRow contains no FuzzyIntervalCells.
      * 
      * @param cells row which contains FuzzyIntervalCells
      * @param spec spec of the row, to see which cells are FuzzyIntervalCells
@@ -105,11 +106,8 @@ public final class SotaFuzzyMath {
                 DataType type = spec.getColumnSpec(i).getType();
                 if (type.isCompatible(FuzzyIntervalValue.class)) {
                     if (!(cells.getCell(i).isMissing())) {
-                        d += Math
-                                .pow(
-                                        SotaFuzzyMath
-                                                .getMaxCoreDistanceToCenter((FuzzyIntervalValue)cells
-                                                        .getCell(i)), 2);
+                        d += Math.pow(SotaFuzzyMath.getMaxCoreDistanceToCenter(
+                                (FuzzyIntervalValue)cells.getCell(i)), 2);
                     }
                 }
             }

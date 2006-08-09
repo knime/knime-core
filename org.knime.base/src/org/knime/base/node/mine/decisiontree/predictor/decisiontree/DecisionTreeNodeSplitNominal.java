@@ -53,7 +53,8 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
 
     private DataCell[] m_splitValues = null;
 
-    private HashMap<Color, Double> m_coveredColors = new HashMap<Color, Double>();
+    private HashMap<Color, Double> m_coveredColors 
+        = new HashMap<Color, Double>();
 
     /**
      * Empty Constructor visible only within package.
@@ -102,7 +103,8 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see org.knime.dev.node.decisiontree.predictor.decisiontree.DecisionTreeNodeSplit
+     * @see org.knime.dev.node.decisiontree.predictor.decisiontree
+     *      .DecisionTreeNodeSplit
      *      #getClassCounts(org.knime.core.data.DataCell,
      *      org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
@@ -206,7 +208,8 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
 
     /**
      * @see DecisionTreeNodeSplit
-     *      #saveNodeSplitInternalsToPredParams(org.knime.core.node.ModelContentWO)
+     *      #saveNodeSplitInternalsToPredParams(
+     *      org.knime.core.node.ModelContentWO)
      */
     @Override
     public void saveNodeSplitInternalsToPredParams(final ModelContentWO pConf) {
@@ -215,7 +218,8 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
 
     /**
      * @see DecisionTreeNodeSplit
-     *      #loadNodeSplitInternalsFromPredParams(org.knime.core.node.ModelContentRO)
+     *      #loadNodeSplitInternalsFromPredParams(
+     *      org.knime.core.node.ModelContentRO)
      */
     @Override
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)

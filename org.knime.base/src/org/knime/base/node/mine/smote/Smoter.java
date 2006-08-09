@@ -84,7 +84,8 @@ class Smoter {
      * 
      * @param in the input table
      * @param colName the target column with class information
-     * @param exec monitor to get canceled status from (may be <code>null</code>)
+     * @param exec monitor to get canceled status from 
+     *  (may be <code>null</code>)
      * @throws CanceledExecutionException if execution is canceled
      */
     public Smoter(final BufferedDataTable in, final String colName,
@@ -164,7 +165,8 @@ class Smoter {
      * @param name the class name
      * @param count add this amount of new rows
      * @param kNN k nearest neighbor parameter
-     * @param exec monitor to get canceled status from (may be <code>null</code>)
+     * @param exec monitor to get canceled status from 
+     *  (may be <code>null</code>)
      * @throws CanceledExecutionException if execution is canceled
      */
     public void smote(final DataCell name, final int count, final int kNN,
@@ -395,8 +397,8 @@ class Smoter {
             // double type (think of an integer column which isn't an integer
             // column really once the Smoter adds new records
             if (cur.getType().isCompatible(DoubleValue.class)) {
-                DataColumnSpecCreator colspeccreator = new DataColumnSpecCreator(
-                        cur);
+                DataColumnSpecCreator colspeccreator 
+                    = new DataColumnSpecCreator(cur);
                 DataType oldType = cur.getType();
                 // may be there was some strange double value type in the
                 // column, use supertype of old type and DoubleCell.TYPE

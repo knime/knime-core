@@ -88,8 +88,8 @@ public class SotaSettingsPanel extends JPanel {
         m_jsLearningRateWinner = new JSpinner(new SpinnerNumberModel(
                 SotaManager.LR_WINNER, SotaManager.LR_WINNER_MIN,
                 SotaManager.LR_WINNER_MAX, m_learningrateINCR));
-        JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_jsLearningRateWinner
-                .getEditor();
+        JSpinner.DefaultEditor editor 
+            = (JSpinner.DefaultEditor)m_jsLearningRateWinner.getEditor();
         editor.getTextField().setColumns(m_width);
 
         m_jsLearningRateSister = new JSpinner(new SpinnerNumberModel(
@@ -246,8 +246,8 @@ public class SotaSettingsPanel extends JPanel {
         settings.addDouble(SotaConfigKeys.CFGKEY_MIN_ERROR, getMinimumError());
         settings.addDouble(SotaConfigKeys.CFGKEY_VARIABILITY,
                 getMinimumVariability());
-        settings
-                .addDouble(SotaConfigKeys.CFGKEY_RESOURCE, getMinimumResource());
+        settings.addDouble(SotaConfigKeys.CFGKEY_RESOURCE, 
+                getMinimumResource());
 
         settings.addBoolean(SotaConfigKeys.CFGKEY_USE_VARIABILITY,
                 isUseVariability());

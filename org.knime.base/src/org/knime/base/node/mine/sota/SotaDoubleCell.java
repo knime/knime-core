@@ -58,8 +58,8 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
      */
     public void adjustCell(final DataCell cell, final double learningrate) {
         if (SotaUtil.isNumberType(cell.getType())) {
-            m_value = m_value
-                    + (learningrate * (((DoubleValue)cell).getDoubleValue() - m_value));
+            m_value = m_value + (learningrate * (((DoubleValue)cell)
+                    .getDoubleValue() - m_value));
         }
     }
 

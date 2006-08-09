@@ -89,8 +89,8 @@ public class SmoteNodeDialog extends NodeDialogPane {
         editor.getTextField().setColumns(8);
         ButtonGroup buttonGroup = new ButtonGroup();
         m_smoteAllButton = new JRadioButton("Oversample by: ");
-        m_smoteAllButton
-                .setToolTipText("Oversample all classes equally but this rate.");
+        m_smoteAllButton.setToolTipText(
+                "Oversample all classes equally but this rate.");
         m_smoteMinorityButton = new JRadioButton("Oversample minority classes");
         m_smoteMinorityButton
                 .setToolTipText("Oversample only minority classes "

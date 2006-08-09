@@ -109,8 +109,8 @@ public class SmoteNodeModel extends NodeModel {
         loadSettings(settings, true);
     }
 
-    private void loadSettings(final NodeSettingsRO settings, final boolean write)
-            throws InvalidSettingsException {
+    private void loadSettings(final NodeSettingsRO settings, 
+            final boolean write) throws InvalidSettingsException {
         String method = settings.getString(CFG_METHOD);
         double rate = 1.0;
         String clas = settings.getString(CFG_CLASS);
@@ -150,12 +150,14 @@ public class SmoteNodeModel extends NodeModel {
         if (m_method.equals(METHOD_ALL)) {
             // count number of rows to add
             int nrRowsToAdd = 0;
-            for (Iterator<DataCell> it = smoter.getClassValues(); it.hasNext();) {
+            for (Iterator<DataCell> it = smoter.getClassValues(); 
+                it.hasNext();) {
                 int count = smoter.getCount(it.next());
                 nrRowsToAdd += (int)(count * m_rate);
             }
             int currentRow = 0;
-            for (Iterator<DataCell> it = smoter.getClassValues(); it.hasNext();) {
+            for (Iterator<DataCell> it = smoter.getClassValues(); 
+                it.hasNext();) {
                 DataCell cur = it.next();
                 int count = smoter.getCount(cur);
                 int newCount = (int)(count * m_rate);
