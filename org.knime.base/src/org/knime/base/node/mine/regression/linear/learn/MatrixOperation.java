@@ -126,7 +126,8 @@ public final class MatrixOperation {
      * @throws NullPointerException if the argument is <code>null</code> or
      *             contains <code>null</code> elements
      */
-    public static double[][] multiply(final double[][] m1, final double[][] m2) {
+    public static double[][] multiply(final double[][] m1, 
+            final double[][] m2) {
         int m1Rows = m1.length;
         int m2Rows = m2.length;
         int m1Cols = m1Rows > 0 ? m1[0].length : m2Rows;

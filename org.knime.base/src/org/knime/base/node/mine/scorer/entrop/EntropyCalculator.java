@@ -299,7 +299,8 @@ public final class EntropyCalculator {
         int nrClusters = config.getInt(CFG_NR_CLUSTER);
         int nrReferences = config.getInt(CFG_NR_REFERENCES);
         NodeSettingsRO subConfig = config.getNodeSettings(CFG_CLUSTERING_MAP);
-        LinkedHashMap<DataCell, Set<DataCell>> map = new LinkedHashMap<DataCell, Set<DataCell>>();
+        LinkedHashMap<DataCell, Set<DataCell>> map 
+            = new LinkedHashMap<DataCell, Set<DataCell>>();
         for (String key : subConfig.keySet()) {
             exec.checkCanceled();
             NodeSettingsRO keySettings = subConfig.getNodeSettings(key);
@@ -310,7 +311,8 @@ public final class EntropyCalculator {
                     .asList(mappedKeys)));
         }
         return new EntropyCalculator(entropy, quality, patternsInCluster,
-                nrClusters, patternsInReference, nrReferences, scorerTable, map);
+                nrClusters, patternsInReference, nrReferences, scorerTable, 
+                map);
     }
 
     private static final String[] NAMES = new String[]{"Size", "Entropy",
@@ -351,9 +353,10 @@ public final class EntropyCalculator {
     }
 
     private static HashMap<DataCell, Set<DataCell>> getClusterMap(
-            final DataTable table, final int colIndex, final ExecutionMonitor ex)
-            throws CanceledExecutionException {
-        HashMap<DataCell, Set<DataCell>> result = new LinkedHashMap<DataCell, Set<DataCell>>();
+            final DataTable table, final int colIndex, 
+            final ExecutionMonitor ex) throws CanceledExecutionException {
+        HashMap<DataCell, Set<DataCell>> result 
+            = new LinkedHashMap<DataCell, Set<DataCell>>();
         int rowCount = -1;
         if (table instanceof BufferedDataTable) {
             rowCount = ((BufferedDataTable)table).getRowCount();
@@ -384,7 +387,8 @@ public final class EntropyCalculator {
     private static HashMap<DataCell, DataCell> getMap(final DataTable table,
             final int colIndex, final ExecutionMonitor ex)
             throws CanceledExecutionException {
-        HashMap<DataCell, DataCell> result = new LinkedHashMap<DataCell, DataCell>();
+        HashMap<DataCell, DataCell> result 
+            = new LinkedHashMap<DataCell, DataCell>();
         int rowCount = -1;
         if (table instanceof BufferedDataTable) {
             rowCount = ((BufferedDataTable)table).getRowCount();
@@ -487,7 +491,8 @@ public final class EntropyCalculator {
     public static double entropy(final Map<DataCell, DataCell> ref,
             final Set<DataCell> pats) {
         // that will map the "original" cluster ID to a counter.
-        HashMap<DataCell, MutableInteger> refClusID2Count = new HashMap<DataCell, MutableInteger>();
+        HashMap<DataCell, MutableInteger> refClusID2Count 
+            = new HashMap<DataCell, MutableInteger>();
         for (DataCell pat : pats) {
             DataCell origCluster = ref.get(pat);
             MutableInteger countForClus = refClusID2Count.get(origCluster);

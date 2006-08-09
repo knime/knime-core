@@ -436,7 +436,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     protected void saveModelContent(final int index,
             final ModelContentWO predParams) throws InvalidSettingsException {
         if (index != 0) {
-            throw new IndexOutOfBoundsException("Invalid model index: " + index);
+            throw new IndexOutOfBoundsException(
+                    "Invalid model index: " + index);
         }
         m_params.saveParams(predParams);
     }

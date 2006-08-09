@@ -425,7 +425,8 @@ public class ScorerNodeModel extends NodeModel {
      * @param key the key to find
      * @return the index in source where key is located
      */
-    protected static int findValue(final DataCell[] source, final DataCell key) {
+    protected static int findValue(final DataCell[] source, 
+            final DataCell key) {
         for (int i = 0; i < source.length; i++) {
             if (source[i].equals(key)) {
                 return i;

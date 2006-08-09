@@ -88,10 +88,8 @@ public class MatrixOperationTest extends TestCase {
             }
         }
         // lineare dependency should not allow a solution
-        d = new double[][]{new double[]{3, 4, 2}, new double[]{6, 8, 4}, // multiple
-                // of
-                // first
-                // row
+        d = new double[][]{new double[]{3, 4, 2}, new double[]{6, 8, 4}, 
+                // multiple of first row
                 new double[]{4, 1, 5}};
         try {
             inverse = MatrixOperation.inverse(d);
