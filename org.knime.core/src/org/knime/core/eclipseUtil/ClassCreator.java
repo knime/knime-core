@@ -32,7 +32,8 @@ package org.knime.core.eclipseUtil;
  * 
  * <p>Have a look at the package description to find related links to these
  * eclipse features. 
- * @author mb, University of Konstanz
+ * 
+ * @author Michael Berthold, University of Konstanz
  */
 public interface ClassCreator {
 

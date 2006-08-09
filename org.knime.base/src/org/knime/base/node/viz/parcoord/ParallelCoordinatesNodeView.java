@@ -35,12 +35,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /**
- * @author pintilie
- * 
- * TODO To change the template for this generated type comment go to Window -
- * Preferences - Java - Code Style - Code Templates
+ * @author Thomas Gabriel, University of Konstanz
  */
-
 public class ParallelCoordinatesNodeView extends NodeView {
 
     /**

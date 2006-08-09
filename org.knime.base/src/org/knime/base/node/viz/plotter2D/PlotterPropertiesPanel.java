@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile: PlotterPropertiesPanel.java,v $ 
- * $Revision: 1.8 $ $Date: 2006/03/03 13:31:22 $ $Author: sieb $
  * --------------------------------------------------------------------- *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.

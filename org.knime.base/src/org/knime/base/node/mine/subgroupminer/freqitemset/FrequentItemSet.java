@@ -1,7 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 3773 $ $Date: 2006-07-14 13:15:30 +0200 (Fr, 14 Jul 2006) $ 
- * $Author: dill $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.

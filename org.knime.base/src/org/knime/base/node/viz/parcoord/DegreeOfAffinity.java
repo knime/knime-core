@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Jun 22, 2005 (pintilie): created
+ *   Jun 22, 2005 (tg): created
  */
 package org.knime.base.node.viz.parcoord;
 
@@ -30,7 +28,7 @@ import org.knime.core.data.DataRow;
 
 /**
  * 
- * @author Simona Pintilie, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 public interface DegreeOfAffinity {
     

@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Aug 12, 2005 (pintilie): created
+ *   Aug 12, 2005 (tg): created
  */
 package org.knime.base.node.mine.bfn;
 

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -22,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Jun 27, 2005 (pintilie): created
+ *   Jun 27, 2005 (tg): created
  */
 package org.knime.base.node.viz.parcoord.visibility;
 
@@ -30,7 +28,7 @@ import java.util.EventListener;
 
 /**
  * 
- * @author pintilie, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 public interface VisibilityListener extends EventListener {
     /** 

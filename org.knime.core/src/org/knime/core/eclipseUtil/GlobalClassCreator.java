@@ -32,7 +32,7 @@ import org.knime.core.node.NodeLogger;
  * classes using the appropriate class loader. If no creator is specified the
  * usual Java class loader will be used.
  * 
- * @author mb, University of Konstanz
+ * @author Michael Berthold, University of Konstanz
  */
 public final class GlobalClassCreator {
     /** The node logger for this class. */

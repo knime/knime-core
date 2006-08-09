@@ -1,6 +1,4 @@
 /*
- * @(#)$RCSfile: Header.java,v $ 
- * $Revision: 1.2 $ $Date: 2006/02/23 09:47:14 $ $Author: sieb $
  * --------------------------------------------------------------------- *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.

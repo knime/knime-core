@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -463,7 +461,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * @param meineHoehe the canvas height
      * @param meineGuete the canvas width
      * @return if the m_panel is large enough to display the content
-     * @author pintilie, University of Konstanz
      */
     private boolean isDrawable(final int meineHoehe, final int meineGuete) {
         return !((meineHoehe < m_minimumHeigth) || (meineGuete <= (m_columnCount + 1)
@@ -477,7 +474,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * 
      * @param x the location of the point on x coordinate
      * @param y the location of the point on y coordinate
-     * @author pintilie, University of Konstanz
      */
     private void drawPointAsRectangle(final int x, final int y,
             final Graphics2D g2d) {
@@ -495,7 +491,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * @param allocatedHeight the maximum height that the text has to occupy if
      *            not important, the value can be -1
      * @param the angle the text has to be drawn in
-     * @author pintilie, University of Konstanz
      */
     private void drawStringSmartWay(final String s, final int startX,
             final int startY, final int allocatedWidth,
@@ -579,7 +574,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
 
     /**
      * 
-     * @author pintilie, University of Konstanz
      */
     private double setCanvasStructure(final int meineHoehe,
             final int meineGuete, final Graphics2D g2d) {
@@ -682,8 +676,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
     /**
      * Comment for <code>drawingPolygon</code> drawing polygon representing
      * the part of a row between two coordinates col and col + 1.
-     * 
-     * @author pintilie, University of Konstanz
      */
     private void drawingPolygon(final Color c, final int size, final int col,
             final int lPMinDY, final int lPMaxDY, final int cPMaxDY,
@@ -725,7 +717,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
 
     /**
      * @param row the index of the row to be painted
-     * @author pintilie, University of Konstanz
      */
     private void paintRow(final int row, final Graphics2D g2d) {
         if ((m_visible[row])
