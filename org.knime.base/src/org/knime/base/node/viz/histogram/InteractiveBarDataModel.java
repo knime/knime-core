@@ -101,14 +101,14 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#getCaption()
+     * @see org.knime.base.node.viz.histogram.BarDataModel#getCaption()
      */
     public String getCaption() {
         return m_caption;
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#getLabel()
+     * @see org.knime.base.node.viz.histogram.BarDataModel#getLabel()
      */
     public String getLabel() {
         final double aggrVal = getAggregationValue();
@@ -162,21 +162,21 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#getNumberOfRows()
+     * @see org.knime.base.node.viz.histogram.BarDataModel#getNumberOfRows()
      */
     public int getNumberOfRows() {
         return m_rows.size();
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#isEmpty()
+     * @see org.knime.base.node.viz.histogram.BarDataModel#isEmpty()
      */
     public boolean isEmpty() {
         return (getNumberOfRows() < 1);
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#setAggregationColumn(int, org.knime.dev.node.view.histogram.AggregationMethod)
+     * @see org.knime.base.node.viz.histogram.BarDataModel#setAggregationColumn(int, AggregationMethod)
      */
     public void setAggregationColumn(final int aggrColIdx,
             final AggregationMethod aggrMethod) {
@@ -211,7 +211,7 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#getAggregationValue()
+     * @see org.knime.base.node.viz.histogram.BarDataModel#getAggregationValue()
      */
     public double getAggregationValue() {
         if (Double.isNaN(m_aggrValue)) {
@@ -221,14 +221,14 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#getAggregationMethod()
+     * @see org.knime.base.node.viz.histogram.BarDataModel#getAggregationMethod()
      */
     public AggregationMethod getAggregationMethod() {
         return m_aggrMethod;
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#getRowKeys()
+     * @see org.knime.base.node.viz.histogram.BarDataModel#getRowKeys()
      */
     public Set<DataCell> getRowKeys() {
         return m_rows.keySet();
@@ -270,7 +270,7 @@ final class InteractiveBarDataModel implements BarDataModel {
 
 
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#setCaption(java.lang.String)
+     * @see org.knime.base.node.viz.histogram.BarDataModel#setCaption(String)
      */
     public void setCaption(final String caption) {
         if (caption == null) {
@@ -280,7 +280,7 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
     
     /**
-     * @see org.knime.dev.node.view.histogram.BarDataModel#createColorInformation(org.knime.core.data.DataTableSpec)
+     * @see org.knime.base.node.viz.histogram.BarDataModel#createColorInformation(org.knime.core.data.DataTableSpec)
      */
     public Hashtable<ColorAttr, Collection<RowKey>> 
         createColorInformation(final DataTableSpec tableSpec) {

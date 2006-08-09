@@ -35,7 +35,7 @@ import javax.swing.ScrollPaneLayout;
  * the own <code>Plotter2DScrollPaneLayout</code> overriding the default
  * <code>ScrollPaneLayout</code>.
  * 
- * @see org.knime.dev.node.view.plotter2D.Plotter2DScrollPaneLayout
+ * @see org.knime.base.node.viz.plotter2D.Plotter2DScrollPaneLayout
  * @author Christoph Sieb, University of Konstanz
  */
 public class Plotter2DScrollPane extends JScrollPane {

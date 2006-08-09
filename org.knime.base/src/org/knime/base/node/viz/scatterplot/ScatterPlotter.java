@@ -577,7 +577,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements ActionListener 
     }
 
     /**
-     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
+     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
      *      #fillPopupMenu(javax.swing.JPopupMenu)
      */
     @Override

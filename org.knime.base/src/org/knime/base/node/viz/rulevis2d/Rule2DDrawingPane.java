@@ -264,7 +264,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
     /*--------- the drawing methods ----------------*/
 
     /**
-     * @see org.knime.dev.node.view.scatterplot.ScatterPlotDrawingPane
+     * @see org.knime.base.node.viz.scatterplot.ScatterPlotDrawingPane
      *      #paintPlotDrawingPane(java.awt.Graphics)
      */
     @Override

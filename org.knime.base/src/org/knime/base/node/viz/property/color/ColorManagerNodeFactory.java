@@ -28,13 +28,12 @@ import org.knime.core.node.NodeView;
 
 /**
  * The color manager factory which creates a
- * {@link org.knime.dev.node.property.color.ColorManagerNodeDialogPane}.
+ * {@link org.knime.base.node.viz.property.color.ColorManagerNodeDialogPane}.
  * 
  * @see ColorManagerNodeModel
  * @see ColorManagerNodeDialogPane
  * 
  * @author Thomas Gabriel, University of Konstanz
- * 
  */
 public class ColorManagerNodeFactory extends NodeFactory {
     /**

@@ -209,7 +209,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#addDataRow(org.knime.core.data.DataRow)
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#addDataRow(org.knime.core.data.DataRow)
      */
     public void addDataRow(final DataRow row) {
         if (row == null) {
@@ -281,7 +281,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getAggregationMethod()
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getAggregationMethod()
      */
     public AggregationMethod getAggregationMethod() {
         return m_aggrMethod;
@@ -334,7 +334,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getNumberOfBars()
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getNumberOfBars()
      */
     public int getNumberOfBars() {
         return m_noOfBars;
@@ -360,7 +360,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getBar(java.lang.String)
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getBar(java.lang.String)
      */
     public BarDataModel getBar(final String caption) {
         return getBars().get(caption);
@@ -379,7 +379,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getMissingValueBar()
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getMissingValueBar()
      */
     public BarDataModel getMissingValueBar() {
         if (m_missingValueBar != null && m_bars != null && m_bars.size() > 0
@@ -408,14 +408,14 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
     
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#isNominal()
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#isNominal()
      */
     public boolean isNominal() {
         return m_xIsNominal;
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getMinAggregationValue(boolean)
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getMinAggregationValue(boolean)
      */
     public double getMinAggregationValue(final boolean inclMissingBar) {
         if (Double.isNaN(m_minAggrValue)) {
@@ -438,7 +438,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getMaxAggregationValue(boolean)
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getMaxAggregationValue(boolean)
      */
     public double getMaxAggregationValue(final boolean inclMissingBar) {
         if (Double.isNaN(m_maxAggrValue)) {
@@ -461,14 +461,14 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getMaxVal()
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getMaxVal()
      */
     public DataCell getMaxVal() {
         return m_maxVal;
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#getMinVal()
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#getMinVal()
      */
     public DataCell getMinVal() {
         return m_minVal;
@@ -510,7 +510,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#toString()
+     * String summary of this histogram data model.
      */
     @Override
     public String toString() {
@@ -901,7 +901,7 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.HistogramDataModel#containsMissingValueBar()
+     * @see org.knime.base.node.viz.histogram.HistogramDataModel#containsMissingValueBar()
      */
     public boolean containsMissingValueBar() {
         return (getMissingValueBar() != null);
