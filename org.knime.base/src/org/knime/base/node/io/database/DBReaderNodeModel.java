@@ -67,7 +67,7 @@ class DBReaderNodeModel extends NodeModel {
     
     static {        
         try {
-            Class driverClass = Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
+            Class<?> driverClass = Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
             Driver theDriver = new WrappedDriver((Driver)driverClass
                     .newInstance());
             DriverManager.registerDriver(theDriver);

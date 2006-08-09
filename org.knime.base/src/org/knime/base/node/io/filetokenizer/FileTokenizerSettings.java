@@ -133,12 +133,12 @@ public class FileTokenizerSettings {
                 NodeSettingsRO quotes = settings.getNodeSettings(CFGKEY_QUOTES);
                 addQuotesFromConfiguration(quotes);
                 // get the configuration that holds all comments
-                NodeSettingsRO comments = 
-                    settings.getNodeSettings(CFGKEY_COMMENTS);
+                NodeSettingsRO comments = settings
+                        .getNodeSettings(CFGKEY_COMMENTS);
                 addCommentsFromConfiguration(comments);
                 // get the config holding white spaces
-                NodeSettingsRO wspaces = 
-                    settings.getNodeSettings(CFGKEY_WHITES);
+                NodeSettingsRO wspaces = settings
+                        .getNodeSettings(CFGKEY_WHITES);
                 addWhitesFromConfiguration(wspaces);
 
             } catch (InvalidSettingsException ice) {
@@ -167,9 +167,9 @@ public class FileTokenizerSettings {
     }
 
     /**
-     * Saves all settings into a <code>NodeSettings</code> object. Using the cfg
-     * object to construct a new FileTokenizerSettings object should lead to an
-     * object identical to this.
+     * Saves all settings into a <code>NodeSettings</code> object. Using the
+     * cfg object to construct a new FileTokenizerSettings object should lead to
+     * an object identical to this.
      * 
      * @param cfg the config object the settings are stored into.
      */
@@ -212,8 +212,7 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addDelimitersFromConfiguration(
-            final NodeSettingsRO allDelims) {
+    private void addDelimitersFromConfiguration(final NodeSettingsRO allDelims) {
         for (String delimKey : allDelims.keySet()) {
             // they should all start with "Delim"...
             if (delimKey.indexOf(CFGKEY_DELIMCFG) != 0) {
@@ -237,8 +236,7 @@ public class FileTokenizerSettings {
                 addDelimiterPattern(delim);
 
             } catch (InvalidSettingsException ice) {
-                LOGGER.warn(ice.getMessage() + "Ignoring '" + delimKey
-                        + "'!");
+                LOGGER.warn(ice.getMessage() + "Ignoring '" + delimKey + "'!");
                 continue;
             } catch (IllegalArgumentException iae) {
                 LOGGER.error("Error delimiter configuration '" + delimKey
@@ -329,8 +327,7 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addCommentsFromConfiguration(
-            final NodeSettingsRO allComments) {
+    private void addCommentsFromConfiguration(final NodeSettingsRO allComments) {
         for (String commentKey : allComments.keySet()) {
             // they should all start with "Comment"...
             if (commentKey.indexOf(CFGKEY_COMMNTCFG) != 0) {
@@ -359,8 +356,8 @@ public class FileTokenizerSettings {
                         + "'. Ignoring it!");
                 continue;
             } catch (IllegalArgumentException iae) {
-                LOGGER.error("ERROR: in comment configuration '"
-                        + commentKey + "'.");
+                LOGGER.error("ERROR: in comment configuration '" + commentKey
+                        + "'.");
                 LOGGER.error(iae.getMessage());
                 LOGGER.error("Ignoring comment!");
             }
@@ -390,8 +387,8 @@ public class FileTokenizerSettings {
                     + "to null config!");
         }
         for (int c = 0; c < m_commentPatterns.size(); c++) {
-            NodeSettingsWO commentConf = 
-                cfg.addNodeSettings(CFGKEY_COMMNTCFG + c);
+            NodeSettingsWO commentConf = cfg.addNodeSettings(CFGKEY_COMMNTCFG
+                    + c);
             Comment comment = m_commentPatterns.get(c);
             comment.saveToConfig(commentConf);
         }
@@ -449,8 +446,7 @@ public class FileTokenizerSettings {
      * 
      * @see #addQuotePattern(String, String, char)
      */
-    public void addQuotePattern(final String leftQuote, 
-            final String rightQuote) {
+    public void addQuotePattern(final String leftQuote, final String rightQuote) {
 
         addQuotePattern(new Quote(leftQuote, rightQuote));
     }
@@ -497,7 +493,7 @@ public class FileTokenizerSettings {
         }
         if (quote.getLeft().charAt(0) > FileTokenizer.MAX_CHAR) {
             errMsg += "The left quote must begin with a plain ASCII "
-                    + "character (ascii code < 127) \n";               
+                    + "character (ascii code < 127) \n";
         }
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
@@ -546,14 +542,18 @@ public class FileTokenizerSettings {
      * will be either appended to the current token (
      * <code>includeInToken</code> set <code>true</code>), returned in a
      * separate token (<code> returnAsSeparateToken</code> set <code>true
-     * </code>) or discarded (both set <code>false</code>). If you set both
-     * parameters <code>true</code>, it will throw an <code>
-     * IllegalArgumentException</code>. Another parameter (<code>
-     * combineConsecutiveDelimis</code>) will determine whether delimiters of
-     * the same kind immediately following will be ignored (set to <code>true
-     * </code>) or will cause empty tokens to be returned (set <code>false
-     * </code>). The delimiter specified must not prefix any existing
-     * delimiter, left quote or comment begin pattern.
+     * </code>)
+     * or discarded (both set <code>false</code>). If you set both parameters
+     * <code>true</code>, it will throw an <code>
+     * IllegalArgumentException</code>.
+     * Another parameter (<code>
+     * combineConsecutiveDelimis</code>) will
+     * determine whether delimiters of the same kind immediately following will
+     * be ignored (set to <code>true
+     * </code>) or will cause empty tokens to be
+     * returned (set <code>false
+     * </code>). The delimiter specified must not
+     * prefix any existing delimiter, left quote or comment begin pattern.
      * 
      * @param delimiter A string containing the delimiter.
      * @param combineConsecutiveDelims Pass in <code>true</code>, if you want
@@ -621,7 +621,7 @@ public class FileTokenizerSettings {
         }
         if (delimiter.getDelimiter().charAt(0) > FileTokenizer.MAX_CHAR) {
             errMsg += "The delimiter must begin with a plain ASCII "
-                    + "character (ascii code < 127) \n";               
+                    + "character (ascii code < 127) \n";
         }
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
@@ -667,7 +667,7 @@ public class FileTokenizerSettings {
         }
         if (delimiter.charAt(0) > FileTokenizer.MAX_CHAR) {
             errMsg += "The delimiter must begin with a plain ASCII "
-                    + "character (ascii code < 127) \n";               
+                    + "character (ascii code < 127) \n";
         }
         if (!errMsg.equals("")) {
             errMsg = "replaceDelimiterPattern:\n" + errMsg;
@@ -914,9 +914,9 @@ public class FileTokenizerSettings {
         }
         if (comment.getBegin().charAt(0) > FileTokenizer.MAX_CHAR) {
             errMsg += "The comment pattern must begin with a plain ASCII "
-                + "character (ascii code < 127) \n";            
+                    + "character (ascii code < 127) \n";
         }
-        
+
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
         }
@@ -942,10 +942,10 @@ public class FileTokenizerSettings {
      * Defines a new character to be handled as a whitespace character.
      * Whitespaces will be ignored when they appear in the file (except when
      * inside quotes or defined as delimiter/quote/comment pattern). Any other
-     * definition of the same character overrides the whitespace definition, 
-     * i.e., e.g. if the same character is defined as linecontinuation char
-     * it will be treated as such, the whitespace definition of this char will
-     * be (silently) ignored. 
+     * definition of the same character overrides the whitespace definition,
+     * i.e., e.g. if the same character is defined as linecontinuation char it
+     * will be treated as such, the whitespace definition of this char will be
+     * (silently) ignored.
      * 
      * @param ws a one character string containing the new whitespace character
      */
@@ -959,7 +959,7 @@ public class FileTokenizerSettings {
         }
         if (ws.charAt(0) > FileTokenizer.MAX_CHAR) {
             errMsg += "The whitespace must begin with a plain ASCII "
-                + "character (ascii code < 127) \n";               
+                    + "character (ascii code < 127) \n";
         }
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException("Add whitespace: " + errMsg);
@@ -970,15 +970,15 @@ public class FileTokenizerSettings {
     }
 
     /**
-     * This is a convenience method. Whitespace characters are handled as 
-     * one-character strings. 
+     * This is a convenience method. Whitespace characters are handled as
+     * one-character strings.
      * 
      * @see #addWhiteSpaceCharacter(String)
      * 
      * @param w character containing the new whitespace character
      */
     public void addWhiteSpaceCharacter(final char w) {
-        addWhiteSpaceCharacter(new String(new char[] {w}));
+        addWhiteSpaceCharacter(new String(new char[]{w}));
     }
 
     /**
@@ -1003,7 +1003,7 @@ public class FileTokenizerSettings {
      * @param c The new line continuation character.
      */
     public void setLineContinuationCharacter(final char c) {
-        m_lineContChar = new String(new char[] {c});
+        m_lineContChar = new String(new char[]{c});
     }
 
     /**
@@ -1137,24 +1137,26 @@ public class FileTokenizerSettings {
         StringBuffer result = new StringBuffer();
         // print the delimiters
         result.append("Delimiters:\n");
-        for (Iterator dIter = getAllDelimiters().iterator(); dIter.hasNext();) {
-            Delimiter delim = (Delimiter)dIter.next();
+        for (Iterator<Delimiter> dIter = getAllDelimiters().iterator(); dIter
+                .hasNext();) {
+            Delimiter delim = dIter.next();
             assert delim != null;
             result.append("    " + delim.toString());
             result.append("\n");
         }
         // append the comment pattern definitions
         result.append("Comments:\n");
-        for (Iterator cIter = getAllComments().iterator(); cIter.hasNext();) {
-            Comment comment = (Comment)cIter.next();
+        for (Iterator<Comment> cIter = getAllComments().iterator(); cIter
+                .hasNext();) {
+            Comment comment = cIter.next();
             assert comment != null;
             result.append("    " + comment.toString());
             result.append("\n");
         }
         // at last add the quote definitions
         result.append("Quotes:\n");
-        for (Iterator qIter = getAllQuotes().iterator(); qIter.hasNext();) {
-            Quote quote = (Quote)qIter.next();
+        for (Iterator<Quote> qIter = getAllQuotes().iterator(); qIter.hasNext();) {
+            Quote quote = qIter.next();
             assert quote != null;
             result.append("    " + quote.toString());
             result.append("\n");

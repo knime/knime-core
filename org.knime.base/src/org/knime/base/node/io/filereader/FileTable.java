@@ -239,7 +239,7 @@ public class FileTable implements DataTable {
     public String toString() {
         // maximum number of chars to print
         final int colLength = 15;
-        RowIterator rowIterator = (FileRowIterator)iterator();
+        RowIterator rowIterator = iterator();
         DataRow row;
         StringBuffer result = new StringBuffer();
 

@@ -193,17 +193,17 @@ public class FileAnalyzerTest extends TestCase {
             analSettings = FileAnalyzer.analyze(settings);
             assertTrue(analSettings.getFileHasColumnHeaders());
             assertEquals(analSettings.getNumberOfColumns(), 4);
-            Vector quotes = analSettings.getAllQuotes();
+            Vector<Quote> quotes = analSettings.getAllQuotes();
             // we support '"' and '
             assertEquals(quotes.size(), 2);
-            assertEquals(((Quote)quotes.get(0)).getLeft(), "\"");
-            assertEquals(((Quote)quotes.get(0)).getRight(), "\"");
-            assertTrue(((Quote)quotes.get(0)).hasEscapeChar());
-            assertEquals(((Quote)quotes.get(0)).getEscape(), '\\');
-            assertEquals(((Quote)quotes.get(1)).getLeft(), "'");
-            assertEquals(((Quote)quotes.get(1)).getRight(), "'");
-            assertTrue(((Quote)quotes.get(1)).hasEscapeChar());
-            assertEquals(((Quote)quotes.get(1)).getEscape(), '\\');
+            assertEquals((quotes.get(0)).getLeft(), "\"");
+            assertEquals((quotes.get(0)).getRight(), "\"");
+            assertTrue((quotes.get(0)).hasEscapeChar());
+            assertEquals((quotes.get(0)).getEscape(), '\\');
+            assertEquals((quotes.get(1)).getLeft(), "'");
+            assertEquals((quotes.get(1)).getRight(), "'");
+            assertTrue((quotes.get(1)).hasEscapeChar());
+            assertEquals((quotes.get(1)).getEscape(), '\\');
 
             /*
              * the tick (') is part of the data - don't consider it a quote (it
@@ -219,10 +219,10 @@ public class FileAnalyzerTest extends TestCase {
             quotes = analSettings.getAllQuotes();
             // we support '"' still
             assertEquals(quotes.size(), 1);
-            assertEquals(((Quote)quotes.get(0)).getLeft(), "\"");
-            assertEquals(((Quote)quotes.get(0)).getRight(), "\"");
-            assertTrue(((Quote)quotes.get(0)).hasEscapeChar());
-            assertEquals(((Quote)quotes.get(0)).getEscape(), '\\');
+            assertEquals(quotes.get(0).getLeft(), "\"");
+            assertEquals((quotes.get(0)).getRight(), "\"");
+            assertTrue((quotes.get(0)).hasEscapeChar());
+            assertEquals((quotes.get(0)).getEscape(), '\\');
             /*
              * there is also a single double quote in the data
              */
@@ -246,10 +246,10 @@ public class FileAnalyzerTest extends TestCase {
             // we must support the double quotes with the escape char
             quotes = analSettings.getAllQuotes();
             assertEquals(quotes.size(), 1);
-            assertEquals(((Quote)quotes.get(0)).getLeft(), "\"");
-            assertEquals(((Quote)quotes.get(0)).getRight(), "\"");
-            assertTrue(((Quote)quotes.get(0)).hasEscapeChar());
-            assertEquals(((Quote)quotes.get(0)).getEscape(), '\\');
+            assertEquals((quotes.get(0)).getLeft(), "\"");
+            assertEquals((quotes.get(0)).getRight(), "\"");
+            assertTrue((quotes.get(0)).hasEscapeChar());
+            assertEquals((quotes.get(0)).getEscape(), '\\');
 
         } catch (IOException ioe) {
             // if this goes off the temp file couldn't be created.

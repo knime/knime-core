@@ -228,15 +228,13 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
                         // Can only check files
                         // if we have a file location check its existence
                         File f = new File(urli.getPath());
-                        if (f != null) {
-                            if (f.isDirectory()) {
-                                m_urlError.setText("\"" + f.getAbsolutePath()
-                                        + "\" is a directory.");
-                            }
-                            if (f.exists() && !f.canWrite()) {
-                                text = "Cannot write to file \""
-                                        + f.getAbsolutePath() + "\".";
-                            }
+                        if (f.isDirectory()) {
+                            m_urlError.setText("\"" + f.getAbsolutePath()
+                                    + "\" is a directory.");
+                        }
+                        if (f.exists() && !f.canWrite()) {
+                            text = "Cannot write to file \""
+                                    + f.getAbsolutePath() + "\".";
                         }
                     }
                 } catch (Exception e) {

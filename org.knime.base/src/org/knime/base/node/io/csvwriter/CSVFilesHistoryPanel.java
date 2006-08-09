@@ -147,7 +147,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
         DefaultComboBoxModel comboModel = (DefaultComboBoxModel)m_textBox
                 .getModel();
         comboModel.removeAllElements();
-        for (Iterator it = list.iterator(); it.hasNext();) {
+        for (Iterator<String> it = list.iterator(); it.hasNext();) {
             comboModel.addElement(it.next());
         }
         // changing the model will also change the minimum size to be

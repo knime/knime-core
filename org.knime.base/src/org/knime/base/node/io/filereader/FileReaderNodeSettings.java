@@ -162,7 +162,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Writes all settings into the passed configuration object. Except for the
      * analyzedAllRows flag.
      * 
-     * @see FileTokenizerSettings
+     * @see org.knime.base.node.io.filetokenizer.FileTokenizerSettings
      *      #saveToConfiguration(NodeSettingsWO)
      */
     @Override

@@ -509,7 +509,6 @@ public class FileReaderSettings extends FileTokenizerSettings {
             } catch (IOException ioe) {
                 // the exception will fly if the specified file is not a zip
                 // file.
-                result = null;
             }
         }
         if (result == null) {
@@ -953,8 +952,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 status.addError("There are more patterns for missing values"
                         + " defined than columns in the table.");
             } else {
-                for (Iterator pIter = m_missingPatterns.iterator(); pIter
-                        .hasNext();) {
+                for (Iterator<String> pIter = m_missingPatterns.iterator();
+                        pIter.hasNext();) {
                     if (pIter.next() == null) {
                         status.addInfo("Not all columns have patterns for "
                                 + "missing values assigned.");
@@ -964,7 +963,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 }
             }
         } else {
-            for (Iterator pIter = m_missingPatterns.iterator(); pIter.hasNext();) {
+            for (Iterator<String> pIter = m_missingPatterns.iterator();
+                    pIter.hasNext();) {
                 if (pIter.next() == null) {
                     status.addInfo("Not all columns have patterns for missing"
                             + " values assigned.");
@@ -1005,8 +1005,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
         res.append(", ColHeaders:" + m_fileHasColumnHeaders);
         res.append(", Ignore empty lines:" + m_ignoreEmptyLines + "\n");
         res.append("Row delimiters: ");
-        for (Iterator r = m_rowDelimiters.iterator(); r.hasNext();) {
-            res.append(printableStr((String)r.next()));
+        for (Iterator<String> r = m_rowDelimiters.iterator(); r.hasNext();) {
+            res.append(printableStr(r.next()));
             if (r.hasNext()) {
                 res.append(", ");
             }

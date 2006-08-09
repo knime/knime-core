@@ -28,7 +28,6 @@ package org.knime.base.data.bitvector;
 import java.util.BitSet;
 
 import org.knime.base.data.replace.ReplacedCellFactory;
-import org.knime.base.data.replace.ReplacedColumnsTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
@@ -39,7 +38,7 @@ import org.knime.core.node.NodeLogger;
  * Factory class to transfrom a {@link org.knime.core.data.StringValue}
  * cell into a {@link BitVectorCell}.
  * 
- * @see ReplacedColumnsTable
+ * @see org.knime.base.data.replace.ReplacedColumnsTable
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class Hex2BitVectorCellFactory extends ReplacedCellFactory {

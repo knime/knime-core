@@ -989,12 +989,10 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             throw new InvalidSettingsException("I/O Error while accessing '"
                     + m_frSettings.getDataFileLocation().toString() + "'.");
         }
-        if (reader != null) {
-            try {
-                reader.close();
-            } catch (IOException ioe) {
-                // then don't close it.
-            }
+        try {
+            reader.close();
+        } catch (IOException ioe) {
+            // then don't close it.
         }
 
         m_frSettings.saveToConfiguration(settings);

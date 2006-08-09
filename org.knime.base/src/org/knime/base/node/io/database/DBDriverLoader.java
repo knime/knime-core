@@ -58,6 +58,7 @@ final class DBDriverLoader {
 
     /**
      * Loads <code>Driver</code> from the given file.
+     * 
      * @param file Load driver from.
      * @throws Exception If an exception occurs.
      */
@@ -73,9 +74,9 @@ final class DBDriverLoader {
 
     private static void readZip(final File file, final ZipFile zipFile)
             throws Exception {
-        for (Enumeration zipEntries = zipFile.entries(); zipEntries
-                .hasMoreElements();) {
-            ZipEntry e = (ZipEntry)zipEntries.nextElement();
+        for (Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+            zipEntries.hasMoreElements();) {
+            ZipEntry e = zipEntries.nextElement();
             if (e == null) {
                 continue;
             }
@@ -91,14 +92,14 @@ final class DBDriverLoader {
             }
         }
     }
-    
+
     private static void readFile(final File file, final String name)
             throws Exception, Error {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
         ClassLoader cl = new URLClassLoader(new URL[]{file.toURL()},
                 CLASS_LOADER);
-        Class c = cl.loadClass(className);
+        Class<?> c = cl.loadClass(className);
         if (Driver.class.isAssignableFrom(c)) {
             try {
                 Driver theDriver = new WrappedDriver((Driver)c.newInstance());

@@ -262,7 +262,7 @@ public class ARFFReaderNodeModel extends NodeModel {
                     if (url.getProtocol().equalsIgnoreCase("FILE")) {
                         // if we have a file location check its existence
                         File f = new File(url.getPath());
-                        if ((f != null) && (f.exists())) {
+                        if (f.exists()) {
                             allLocs.add(loc);
                         } // else ignore old, not existing entries
                     } else {
