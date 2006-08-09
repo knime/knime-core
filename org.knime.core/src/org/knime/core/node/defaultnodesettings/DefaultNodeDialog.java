@@ -51,8 +51,6 @@ public class DefaultNodeDialog extends NodeDialogPane {
     private JPanel m_panel;
 
     /** Constructor for DefaultNodeDialogPane.
-     * 
-     * @param title dialog title
      */
     public DefaultNodeDialog() {
         super();
