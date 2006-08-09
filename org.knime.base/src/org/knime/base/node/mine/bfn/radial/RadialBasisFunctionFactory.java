@@ -73,6 +73,7 @@ class RadialBasisFunctionFactory extends BasisFunctionFactory {
      * @param distance the choice of distance function
      * @param spec the input data to learn from
      * @param target the class info column in the data
+     * @param isHierarchical If the radial rule is hierarchical nature. 
      */
     RadialBasisFunctionFactory(final double thetaMinus, final double thetaPlus,
             final int distance, final DataTableSpec spec, final String target,

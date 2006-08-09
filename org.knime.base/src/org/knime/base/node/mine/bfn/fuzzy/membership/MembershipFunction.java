@@ -70,10 +70,21 @@ public class MembershipFunction {
     /** right border of the input domain of this feature value. */
     private final double m_max;
 
+    /**
+     * Minimum flag <i>min</i>.
+     */
     static final String MIN_FLAG = "min";
 
+    /**
+     * Maximum flag <i>max</i>.
+     */
     static final String MAX_FLAG = "max";
 
+    /**
+     * Creates a new memebership function with the given bounds.
+     * @param min Lower value.
+     * @param max Upper value.
+     */
     protected MembershipFunction(final double min, final double max) {
         assert (min <= max);
         m_min = min;
@@ -84,6 +95,11 @@ public class MembershipFunction {
         m_suppRight = Double.NaN; // not used if right support unconstrained
     }
 
+    /**
+     * Creates a new membership function based on the given model content.
+     * @param pp Reads this membership function's properties from.
+     * @throws InvalidSettingsException If the properties can't be read.
+     */
     public MembershipFunction(final ModelContentRO pp)
             throws InvalidSettingsException {
         m_missing = pp.getBoolean("is_missing");
@@ -620,14 +636,18 @@ public class MembershipFunction {
     }
 
     /**
-     * @see MembershipFunction#isMissingIntern()
+     * @return <code>true</code> if this membership function is undefined.
      */
     public final boolean isMissingIntern() {
         return m_missing;
     }
 
     /**
-     * @see MembershipFunction#createFuzzyIntervalCell()
+     * Returns a <code>DataCell</code>, either missing if undefined, or a 
+     * <code>FuzzyIntervalCell</code> using the membership function properties.
+     * Internally used to <i>convert</i> this membership function a final 
+     * <code>DataCell</code>. 
+     * @return A data cell for this membership function.
      */
     public final DataCell createFuzzyIntervalCell() {
         if (isMissingIntern()) {
@@ -638,6 +658,10 @@ public class MembershipFunction {
         return new FuzzyIntervalCell(min, m_coreLeft, m_coreRight, max);
     }
 
+    /**
+     * Saves this membership function the given model content.
+     * @param pp Model content to save properties to.
+     */
     public final void save(final ModelContentWO pp) {
         pp.addBoolean("is_missing", isMissingIntern());
         pp.addDouble("min", getMin());

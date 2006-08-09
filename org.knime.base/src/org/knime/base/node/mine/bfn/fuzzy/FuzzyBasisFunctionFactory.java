@@ -77,6 +77,7 @@ public final class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
      * @param spec the data to retrieve all columns and class info from
      * @param target the class info column in the data
      * @param distance the choice of distance function
+     * @param isHierarchical If hierarchical rules have to be commited.
      */
     public FuzzyBasisFunctionFactory(final int norm, final int shrink,
             final DataTableSpec spec, final String target, final int distance,

@@ -363,12 +363,16 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         }
     }
 
+    /** Model info identifier. */
     protected static final String MODEL_INFO = "model_info";
 
+    /** Model info file extension. */
     protected static final String MODEL_INFO_FILE_NAME = MODEL_INFO
             + ".pmml.gz";
 
-    protected static final String HILITE_MAPPING_FILE_NAME = "hilite_mapping.pmml.gz";
+    /** File name for hilite mapping. */
+    protected static final String HILITE_MAPPING_FILE_NAME = 
+        "hilite_mapping.pmml.gz";
 
     /**
      * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,

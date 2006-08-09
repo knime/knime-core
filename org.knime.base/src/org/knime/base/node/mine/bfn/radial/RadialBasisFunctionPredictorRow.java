@@ -34,7 +34,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
+/**
+ * A PNN rule used to predict unknown data.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
+ */
 public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
+    
+    /** Center vector of this radial function. */
     private final double[] m_center;
 
     /** Standard deviation of theta_minus to the center vector. */
@@ -49,6 +56,14 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     /** Max radius is true if radius was not adapted so far otherwise false. */
     private boolean m_notShrunk;
 
+    /**
+     * Creates a new predictor for PNN rules. 
+     * @param key The id for this rule.
+     * @param center The center vector.
+     * @param classLabel The class label.
+     * @param thetaMinus Theta minus.
+     * @param distance Distance measurement.
+     */
     RadialBasisFunctionPredictorRow(final DataCell key, final DataRow center,
             final DataCell classLabel, final double thetaMinus,
             final int distance) {
@@ -67,6 +82,11 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
         m_stdDev = Double.MAX_VALUE; // set max radius
     }
 
+    /**
+     * Creates a new predictor row based on the given model content.
+     * @param pp Model content to read this rule from.
+     * @throws InvalidSettingsException If properties can't be read.
+     */
     RadialBasisFunctionPredictorRow(final ModelContentRO pp)
             throws InvalidSettingsException {
         super(pp);
@@ -80,14 +100,24 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
         }
     }
 
+    /**
+     * @return <code>true</code> If not yet shrunken.
+     */
     final boolean isNotShrunk() {
         return m_notShrunk;
     }
 
+    /**
+     * @return The standard deviation of this radial basisfunction rule.
+     */
     final double getStdDev() {
         return m_stdDev;
     }
 
+    /**
+     * Shrinks this rules standard deviation by the new value.
+     * @param newStdDev The new value for the standard deviation.
+     */
     final void shrinkIt(final double newStdDev) {
         // set current to new std dev for theta minus
         m_stdDev = newStdDev;

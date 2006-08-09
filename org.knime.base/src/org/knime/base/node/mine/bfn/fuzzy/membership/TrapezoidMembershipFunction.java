@@ -34,6 +34,14 @@ import org.knime.core.data.DoubleValue;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class TrapezoidMembershipFunction extends MembershipFunction {
+
+    /**
+     * Creates a new trapezoid membership function.
+     * @param anchor The initial value.
+     * @param min Minimum value.
+     * @param max Maximum value.
+     * @see #MembershipFunction(DoubleValue, double, double)
+     */
     public TrapezoidMembershipFunction(final DoubleValue anchor,
             final double min, final double max) {
         super(anchor, min, max);

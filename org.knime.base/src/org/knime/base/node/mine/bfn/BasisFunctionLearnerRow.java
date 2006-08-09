@@ -80,6 +80,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         m_hierarchy = hierarchy;
     }
 
+    /**
+     * @return Underlying predictor row.
+     */
     public abstract BasisFunctionPredictorRow getPredictorRow();
 
     /**
@@ -107,7 +110,10 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         return m_key;
     }
 
-    public DataCell getClassLabel() {
+    /**
+     * @return The class label for this rule.
+     */
+    public final DataCell getClassLabel() {
         return m_classInfo;
     }
 
@@ -423,10 +429,18 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         return getAnchor().hashCode() * m_classInfo.hashCode();
     }
 
+    /**
+     * Covers the given example.
+     * @param key The example's id.
+     * @param classInfo The example's class label.
+     */
     public final void addCovered(final DataCell key, final DataCell classInfo) {
         getPredictorRow().addCovered(key, classInfo);
     }
 
+    /**
+     * @return A set of covered example ids.
+     */
     public final Set<DataCell> getAllCoveredPattern() {
         return getPredictorRow().getAllCoveredPattern();
     }

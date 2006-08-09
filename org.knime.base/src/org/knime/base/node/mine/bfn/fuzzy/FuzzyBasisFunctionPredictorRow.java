@@ -49,6 +49,13 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      */
     private static final double MINACT = 0.0;
 
+    /**
+     * Creates a new predictor as fuzzy rule.
+     * @param key The id for this rule.
+     * @param classLabel The class label of this rule.
+     * @param mem An array of membership functions each per dimension. 
+     * @param norm A fuzzy norm to combine activations via all dimensions.
+     */
     FuzzyBasisFunctionPredictorRow(final DataCell key,
             final DataCell classLabel, final MembershipFunction[] mem,
             final int norm) {
@@ -57,6 +64,11 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
         m_mem = mem;
     }
 
+    /**
+     * Creates a new predictor as fuzzy rule.
+     * @param pp Content to read rule from.
+     * @throws InvalidSettingsException If the content is invalid.
+     */
     FuzzyBasisFunctionPredictorRow(final ModelContentRO pp)
             throws InvalidSettingsException {
         super(pp);
@@ -70,10 +82,20 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
         }
     }
 
+    /**
+     * Return number of memberships which is equivalent to the number of
+     * numeric input dimensions.
+     * @return Number of membership functions. 
+     */
     public int getNrMemships() {
         return m_mem.length;
     }
 
+    /**
+     * Returns the membership for one dimension.
+     * @param i Dimension index.
+     * @return A fuzzy membership function.
+     */
     public MembershipFunction getMemship(final int i) {
         return m_mem[i];
     }

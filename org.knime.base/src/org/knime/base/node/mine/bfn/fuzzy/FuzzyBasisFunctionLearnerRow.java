@@ -46,12 +46,16 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     private final FuzzyBasisFunctionPredictorRow m_predRow;
 
     /**
-     * Creates a new row.
-     * 
-     * @param key the key for the row
-     * @param classInfo the class label
+     * Creates a new learner row for fuzzy rules.
+     * @param key the key for the row.
+     * @param classInfo the class label.
      * @param centroid the initial center row which forms the anchor of this
-     *            fuzzy rule
+     *            fuzzy rule.
+     * @param norm A fuzzy norm function.
+     * @param shrink A function to shrink rules.
+     * @param min An array if minimum bounds, for each input dimension.
+     * @param max An array if maximum bounds, for each input dimension.
+     * @param isHierarchical If hierarchical rules have to be commited.            
      */
     FuzzyBasisFunctionLearnerRow(final RowKey key, final DataCell classInfo,
             final DataRow centroid, final int norm, final int shrink,
