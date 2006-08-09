@@ -59,7 +59,7 @@ public final class GlobalClassCreator {
      * @return <code>Class</code> of specified name
      * @throws ClassNotFoundException Class not found.
      */
-    public static Class createClass(final String className)
+    public static Class<?> createClass(final String className)
             throws ClassNotFoundException {
 
         String translatedClassName = className;
@@ -77,7 +77,7 @@ public final class GlobalClassCreator {
             }
         } else {
             // class creator was given, use it!
-            Class result = classCreator.createClass(translatedClassName);
+            Class<?> result = classCreator.createClass(translatedClassName);
             if (result == null) {
                 result = classCreator.createClass(className);
             }

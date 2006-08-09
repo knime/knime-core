@@ -238,7 +238,7 @@ public abstract class NodeFactory {
         ClassLoader loader = getClass().getClassLoader();
         InputStream propInStream;
         String path;
-        Class clazz = getClass();
+        Class<?> clazz = getClass();
         
         do {
             path = clazz.getPackage().getName();

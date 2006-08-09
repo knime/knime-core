@@ -647,7 +647,8 @@ class Buffer {
             }
         } else {
             Class<? extends DataCell> type = getTypeForChar(identifier);
-            DataCellSerializer serializer = DataType.getCellSerializer(type);
+            DataCellSerializer<? extends DataCell> serializer =
+                DataType.getCellSerializer(type);
             assert serializer != null;
             try {
                 return inStream.readDataCell(serializer);

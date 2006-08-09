@@ -371,10 +371,10 @@ public final class DataType {
      * implemented interfaces of a DataCell class. 
      */
     private static void addDataValueInterfaces(
-            final Set<Class<? extends DataValue>> set, final Class current) {
+            final Set<Class<? extends DataValue>> set, final Class<?> current) {
         // all interfaces that cl implements
         Class[] interfaces = current.getInterfaces();
-        for (Class c : interfaces) {
+        for (Class<?> c : interfaces) {
             if (DataValue.class.isAssignableFrom(c)) {
                 Class<? extends DataValue> cv = (Class<? extends DataValue>)c;
                 // hash the utility object
@@ -384,7 +384,7 @@ public final class DataType {
             // interfaces may extend other interface, handle them here!
             addDataValueInterfaces(set, c);
         }
-        Class superClass = current.getSuperclass();
+        Class<?> superClass = current.getSuperclass();
         if (superClass != null) {
             addDataValueInterfaces(set, superClass);
         }

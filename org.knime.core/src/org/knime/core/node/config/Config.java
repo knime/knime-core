@@ -1637,7 +1637,7 @@ public abstract class Config extends AbstractConfigEntry
      * List of never serialized objects (java.lang.Class), used to print
      * warning.
      */
-    private static final Set<Class> UNSUPPORTED = new HashSet<Class>();
+    private static final Set<Class<?>> UNSUPPORTED = new HashSet<Class<?>>();
 
     /**
      * Serializes the given object to space-separated integer.

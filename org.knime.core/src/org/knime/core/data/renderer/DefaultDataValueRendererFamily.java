@@ -88,7 +88,7 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
      * @throws NullPointerException If the argument is <code>null</code>.
      */
     public static final DataValueRendererFamily findRensdererFamily(
-            final Class cellClass) {
+            final Class<?> cellClass) {
         if (cellClass == null) {
             throw new NullPointerException("Class argument must not be null");
         }
@@ -97,7 +97,7 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
                     + "subclass of DataCell: " + cellClass.getName());
         }
         Method m = null;
-        Class tClass = cellClass;
+        Class<?> tClass = cellClass;
         // this loop should theoretically not be traversed more than once.
         // More than once can only occur if some implements the method with
         // another return type than DataValueRendererFamily

@@ -42,5 +42,5 @@ public interface ClassCreator {
      * @param className specifies the name of the class to be found.
      * @return corresponding <code>Class</code>.
      */
-    public Class createClass(String className);
+    public Class<?> createClass(String className);
 }

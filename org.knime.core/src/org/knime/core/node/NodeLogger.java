@@ -125,6 +125,27 @@ public final class NodeLogger {
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
+//        File config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
+//                + "log4j.xml");
+//        if (config.exists()) {
+//            DOMConfigurator.configure(config.getAbsolutePath());
+//        } else {
+//            config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
+//                    + "log4j.properties");
+//            if (config.exists()) {
+//                PropertyConfigurator.configure(config.getAbsolutePath());
+//            } else {
+//                URL u = NodeLogger.class.getClassLoader().getResource("log4j.xml");
+//                if (u != null) {
+//                    try {
+//                        DOMConfigurator.configure(u);
+//                    } catch (Exception ex) {
+//                        ex.printStackTrace();
+//                    }
+//                }
+//            }
+//        }
+        
         // init root logger
         Logger root = Logger.getRootLogger();
         root.setLevel(Level.ALL);
@@ -288,7 +309,7 @@ public final class NodeLogger {
      * 
      * @param c The logger created by Class name.
      */
-    private NodeLogger(final Class c) {
+    private NodeLogger(final Class<?> c) {
         m_logger = Logger.getLogger(c);
     }
 
@@ -307,7 +328,7 @@ public final class NodeLogger {
      * @param c The logger's Class.
      * @return A new logger for this Class.
      */
-    public static NodeLogger getLogger(final Class c) {
+    public static NodeLogger getLogger(final Class<?> c) {
         String s = c.getName();
         if (LOGGERS.containsKey(s)) {
             return LOGGERS.get(s);
