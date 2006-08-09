@@ -32,8 +32,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * The {@link org.knime.core.node.NodeModel} for radial
- * {@link BasisFunctionLearnerRow}s.
+ * The {@link org.knime.core.node.NodeModel} for
+ * {@link RadialBasisFunctionLearnerRow}s.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

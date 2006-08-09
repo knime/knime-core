@@ -32,7 +32,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 
 /**
- * Extends the general {@link BasisFunctionLearnerRow} object to act as
+ * Extends the general {@link FuzzyBasisFunctionLearnerRow} object to act as
  * rectangular fuzzy prototype. Each feature value holds a fuzzy membership
  * function (trapezoid membership function so far) with a assigned anchor
  * retrieved from the input row which commit this rule.

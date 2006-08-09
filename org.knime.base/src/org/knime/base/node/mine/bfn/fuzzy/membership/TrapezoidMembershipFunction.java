@@ -40,7 +40,7 @@ public class TrapezoidMembershipFunction extends MembershipFunction {
      * @param anchor The initial value.
      * @param min Minimum value.
      * @param max Maximum value.
-     * @see #MembershipFunction(DoubleValue, double, double)
+     * @see MembershipFunction#MembershipFunction(DoubleValue, double, double)
      */
     public TrapezoidMembershipFunction(final DoubleValue anchor,
             final double min, final double max) {
