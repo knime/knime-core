@@ -69,6 +69,7 @@ public abstract class BasisFunctionFactory {
      * @param target the class info column in the data
      * @param type the type for the model columns
      * @param distance the choice of distance function
+     * @param hierarchy true if a hierarchical model is trained, false otherwise
      */
     protected BasisFunctionFactory(final DataTableSpec spec,
             final String target, final DataType type, final int distance,
@@ -110,26 +111,37 @@ public abstract class BasisFunctionFactory {
         }
     }
 
+    /**
+     * 
+     * @return the lower bounds.
+     */
     public final double[] getMins() {
         return m_mins;
     }
 
+    /**
+     * 
+     * @return the upper bounds.
+     */
     public final double[] getMaxs() {
         return m_maxs;
     }
 
     /**
      * Creates a model spec based on the data input spec by extracting all
-     * {@link org.knime.core.data.def.DoubleCell} columns and the specified target column.
+     * {@link org.knime.core.data.def.DoubleCell} columns and the specified 
+     * target column.
      * 
      * @param inSpec the input data spec
      * @param target the target classification column
-     * @return a new table spec with a number of {@link org.knime.core.data.def.DoubleCell}s and
+     * @return a new table spec with a number of 
+     * {@link org.knime.core.data.def.DoubleCell}s and
      *         the target column last
      * @param type the type for the model columns
      */
     public static final DataTableSpec createModelSpec(
-            final DataTableSpec inSpec, final String target, final DataType type) {
+            final DataTableSpec inSpec, final String target, 
+            final DataType type) {
         ArrayList<DataColumnSpec> list = new ArrayList<DataColumnSpec>();
         // find all double and integer columns
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
@@ -195,13 +207,17 @@ public abstract class BasisFunctionFactory {
      */
     public abstract BasisFunctionLearnerRow commit(final RowKey key,
             final DataCell classInfo, final DataRow row);
-
+    /** Key for the distance function. */
     static final String CFG_DISTANCE = "distance";
-
+    /** Key whether a hierarchical model is trained. */
     static final String CFG_IS_HIERACHICAL = "is_hierarchical";
-
+    /** Key for the model spec. */
     static final String CFG_MODEL_SPEC = "model_spec";
 
+    /**
+     * Saves to model content.
+     * @param pp the model content this is saved to.
+     */
     public void save(final ModelContent pp) {
         pp.addInt(CFG_DISTANCE, m_distance);
         pp.addBoolean(CFG_IS_HIERACHICAL, m_hierarchy);

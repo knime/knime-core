@@ -59,6 +59,10 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param key the key of this row
      * @param classInfo the class info assigned to this basisfunction
      * @param center the initial center vector
+     * @param thetaMinus upper bound for confliction instances
+     * @param thetaPlus lower bound for non-conflicting instances
+     * @param distance choice of the distance function between patterns
+     * @param isHierarchical true if the rule is hierarchical, false otherwise
      */
     RadialBasisFunctionLearnerRow(final RowKey key, final DataCell classInfo,
             final DataRow center, final double thetaMinus,
@@ -149,7 +153,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
             final boolean symmetric) {
         assert (bf instanceof RadialBasisFunctionLearnerRow);
         RadialBasisFunctionLearnerRow rbf = (RadialBasisFunctionLearnerRow)bf;
-        assert (this.getAnchor().getNumCells() == rbf.getAnchor().getNumCells());
+        assert (this.getAnchor().getNumCells() 
+                == rbf.getAnchor().getNumCells());
         double overlap = 1.0;
         for (int i = 0; i < this.getAnchor().getNumCells(); i++) {
             double a = ((DoubleValue)this.getAnchor().getCell(i))
@@ -193,7 +198,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     @Override
     protected final boolean compareCoverage(
             final BasisFunctionLearnerRow other, final DataRow row) {
-        RadialBasisFunctionLearnerRow rbf = (RadialBasisFunctionLearnerRow)other;
+        RadialBasisFunctionLearnerRow rbf 
+            = (RadialBasisFunctionLearnerRow)other;
         return computeActivation(row) >= rbf.computeActivation(row);
     }
 
