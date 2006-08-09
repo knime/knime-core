@@ -77,6 +77,11 @@
             level-id="statistics"
             name="Statistics"
             path="/"/>
+       <category
+            icon="icons/missing.gif"
+            level-id="regression"
+            name="Regression"
+            path="/statistics"/>
       <category
             after="meta"
             icon="icons/missing.gif"
@@ -331,11 +336,11 @@
             factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory"
             id="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory"/>
 	   <node
-	         category-path="/statistics"
+	         category-path="/statistics/regression"
 	         factory-class="org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeFactory"
 	         id="org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeFactory"/>
 	   <node
-          category-path="/statistics"
+          category-path="/statistics/regression"
           factory-class="org.knime.base.node.mine.regression.linear.predict.LinRegPredictorNodeFactory"
           id="org.knime.base.node.mine.regression.linear.predict.LinRegPredictorNodeFactory"/>
 	    <node
