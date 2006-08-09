@@ -748,7 +748,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         m_loadingCanceled = true;
                     } catch (Exception e) {
                         LOGGER.info("Workflow could not be loaded. "
-                                + e.getMessage());
+                                + e.getMessage(), e);
                         m_manager = null;
                     } finally {
                         // terminate the check thread
