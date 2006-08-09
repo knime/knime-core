@@ -127,7 +127,7 @@ class Buffer {
     
     /** The version this container is able to read, may be an array in the 
      * future. */
-    private static final String VERSION = "container_1.0.0";
+    private static final String VERSION = "container_1.1.0";
 
     /**
      * Contains weak references to file iterators that have ever been created
@@ -182,6 +182,14 @@ class Buffer {
      * when the node is reset and the file shall be deleted.
      */
     private final HashSet<WeakReference<FromFileIterator>> m_openIteratorSet;
+    
+    /**
+     * The version of the file we are reading (if initiated with 
+     * Buffer(File, boolean). Used to remember when we need to read a file 
+     * which has been written with another version of the Buffer, i.e. to
+     * provide backward compatibility.
+     */
+    private int m_version = 110;
 
     /** Adds a shutdown hook to the runtime that closes all open input streams
      * @see #OPENBUFFERS
@@ -297,13 +305,20 @@ class Buffer {
      * Validate the version as read from the file if it can be parsed by
      * this implementation.
      * @param version As read from file.
+     * @return The version ID for internal use.
      * @throws IOException If it can't be parsed.
      */
-    public void validateVersion(final String version) throws IOException {
-        if (!VERSION.equals(version)) {
-            throw new IOException("Unsupported version: \"" + version 
-                    + "\" (expected \"" + VERSION + "\")");
+    public int validateVersion(final String version) throws IOException {
+        if ("container_1.0.0".equals(version)) {
+            LOGGER.debug("Table has been written with a previous version " 
+                    + "of KNIME (1.0.0), reading anyway.");
+            return 100;
         }
+        if (VERSION.equals(version)) {
+            return 110;
+        }
+        throw new IOException("Unsupported version: \"" + version 
+                + "\" (expected \"" + VERSION + "\")");
     }
     
     /** 
@@ -481,7 +496,7 @@ class Buffer {
             NodeSettingsRO subSettings = 
                 settings.getNodeSettings(CFG_INTERNAL_META);
             String version = subSettings.getString(CFG_VERSION);
-            validateVersion(version);
+            m_version = validateVersion(version);
             m_size = subSettings.getInt(CFG_SIZE);
             if (m_size < 0) {
                 throw new IOException("Table size must not be < 0: " + m_size);
@@ -605,33 +620,77 @@ class Buffer {
             m_outStream.writeByte(BYTE_TYPE_MISSING);
             return;
         }
+        Class<? extends DataCell> cellClass = cell.getClass();
         @SuppressWarnings("unchecked")
         DataCellSerializer<DataCell> serializer = 
             (DataCellSerializer<DataCell>)DataType.getCellSerializer(
-                    cell.getClass());
+                    cellClass);
+        Byte identifier = m_typeShortCuts.get(cellClass); 
+        if (identifier == null) {
+            int size = m_typeShortCuts.size();
+            if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
+                throw new IOException(
+                "Too many different cell implemenations");
+            }
+            identifier = (byte)(size + BYTE_TYPE_START);
+            m_typeShortCuts.put(cell.getClass(), identifier);
+        }
         // DataCell is datacell-serializable
         if (serializer != null) {
-            Byte identifier = m_typeShortCuts.get(cell.getClass()); 
-            if (identifier == null) {
-                int size = m_typeShortCuts.size();
-                if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
-                    throw new IOException(
-                            "Too many different cell implemenations");
-                }
-                identifier = (byte)(size + BYTE_TYPE_START);
-                m_typeShortCuts.put(cell.getClass(), identifier);
-            }
             // memorize type if it does not exist
             m_outStream.writeByte(identifier);
             m_outStream.writeDataCell(serializer, cell);
         } else {
             m_outStream.writeByte(BYTE_TYPE_SERIALIZATION);
+            m_outStream.writeByte(identifier);
             m_outStream.writeObject(cell);
         }
     }
 
     /* Reads a datacell from a string. */
     private DataCell readDataCell(final DCObjectInputStream inStream) 
+        throws IOException {
+        if (m_version == 100) {
+            return readDataCellVersion100(inStream);
+        }
+        byte identifier = inStream.readByte();
+        if (identifier == BYTE_TYPE_MISSING) {
+            return DataType.getMissingCell();
+        }
+        final boolean isSerialized = identifier == BYTE_TYPE_SERIALIZATION;
+        if (isSerialized) {
+            identifier = inStream.readByte();
+        }
+        Class<? extends DataCell> type = getTypeForChar(identifier);
+        if (isSerialized) {
+            try {
+                return (DataCell)inStream.readObject();
+            } catch (ClassNotFoundException cnfe) {
+                IOException ioe = new IOException(cnfe.getMessage());
+                ioe.initCause(cnfe);
+                throw ioe;
+            }
+        } else {
+            DataCellSerializer<? extends DataCell> serializer = 
+                DataType.getCellSerializer(type);
+            assert serializer != null;
+            try {
+                return inStream.readDataCell(serializer);
+            } catch (IOException ioe) {
+                LOGGER.warn("Unable to read cell from file.", ioe);
+                return DataType.getMissingCell();
+            }
+        }
+    }
+    
+    /** Backward compatibility: DataCells that are (java-) serialized are
+     * not annotated with a byte identifying its type. We need that in the
+     * future to make sure we use the right class loader.
+     * @param inStream To read from.
+     * @return The cell.
+     * @throws IOException If fails.
+     */
+    private DataCell readDataCellVersion100(final DCObjectInputStream inStream)
         throws IOException {
         byte identifier = inStream.readByte();
         if (identifier == BYTE_TYPE_MISSING) {

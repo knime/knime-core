@@ -72,11 +72,15 @@ class NoKeyBuffer extends Buffer {
      * @see Buffer#validateVersion(String)
      */
     @Override
-    public void validateVersion(final String version) throws IOException {
-        if (!VERSION.equals(version)) {
-            throw new IOException("Unsupported version: \"" + version 
-                    + "\" (expected \"" + VERSION + "\")");
+    public int validateVersion(final String version) throws IOException {
+        if ("noRowKeyContainer_1.0.0".equals(version)) {
+            return 100;
+        } 
+        if (VERSION.equals(version)) {
+            return 110;
         }
+        throw new IOException("Unsupported version: \"" + version 
+                + "\" (expected \"" + VERSION + "\")");
     }
     /**
      * Does nothing as row keys are not stored.
