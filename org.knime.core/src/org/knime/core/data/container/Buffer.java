@@ -61,7 +61,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.FileUtil;
 
-
 /**
  * A buffer writes the rows from a {@link DataContainer} to a file. 
  * This class serves as connector between the {@link DataContainer} and 
@@ -653,6 +652,7 @@ class Buffer {
         if (m_version == 100) {
             return readDataCellVersion100(inStream);
         }
+        inStream.setCurrentClassLoader(null);
         byte identifier = inStream.readByte();
         if (identifier == BYTE_TYPE_MISSING) {
             return DataType.getMissingCell();
@@ -664,6 +664,8 @@ class Buffer {
         Class<? extends DataCell> type = getTypeForChar(identifier);
         if (isSerialized) {
             try {
+                ClassLoader cellLoader = type.getClassLoader();
+                inStream.setCurrentClassLoader(cellLoader);
                 return (DataCell)inStream.readObject();
             } catch (ClassNotFoundException cnfe) {
                 IOException ioe = new IOException(cnfe.getMessage());
