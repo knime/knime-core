@@ -29,7 +29,9 @@ package org.knime.workbench.core;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.adaptor.EclipseClassLoader;
 import org.knime.core.eclipseUtil.ClassCreator;
 import org.osgi.framework.Bundle;
 
@@ -84,31 +86,44 @@ public class EclipseClassCreator implements ClassCreator {
             return clazz;
         } catch (Exception ex) {
             try {
-                Bundle p = Platform
-                        .getBundle("org.knime.workbench.editor");
+                Bundle p = Platform.getBundle("org.knime.workbench.editor");
                 clazz = p.loadClass(className);
                 return clazz;
             } catch (Exception e) {
                 // ignore
             }
         }
-
+        
         /**
          * Look at all extensions, and try to load class from the plugin
          */
         for (int i = 0; i < m_extensions.length && clazz == null; i++) {
             IExtension ext = m_extensions[i];
             String pluginID = ext.getNamespace();
-
             try {
-                Bundle p = Platform.getBundle(pluginID);
-                clazz = p.loadClass(className);
-            } catch (Exception ex) {
+                // workaround for a bug that occurs when deserializing array
+                // objects. The bundle class loader is not able to resolve
+                // arrays, e.g. "[Lorg.openscience.cdk.AtomContainer;". The
+                // eclipse bug is resolved as WONTFIX
+                // (https://bugs.eclipse.org/bugs/show_bug.cgi?id=129550)
+                // Their solution: Developers shall use the Class.forName()
+                // method, which - however - does not work out here as we have
+                // no chance to get a proper class loader from the Bundle.
+                // NOTE: all that is obsolete. It will be removed by the buddy
+                // class loading concept in later versions.
+                IPluginDescriptor pluginDesc = 
+                    ext.getDeclaringPluginDescriptor();
+                if (pluginDesc != null) {
+                    ClassLoader l = pluginDesc.getPluginClassLoader();
+                    clazz = Class.forName(className, false, l);
+                } else { 
+                    Bundle p = Platform.getBundle(pluginID);
+                    clazz = p.loadClass(className);
+                }
+            } catch (Exception e) {
                 // ignore
             }
-
         }
-
         return clazz;
 
     }
