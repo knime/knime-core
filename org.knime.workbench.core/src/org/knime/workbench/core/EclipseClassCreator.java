@@ -31,7 +31,6 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.adaptor.EclipseClassLoader;
 import org.knime.core.eclipseUtil.ClassCreator;
 import org.osgi.framework.Bundle;
 
