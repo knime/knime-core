@@ -1720,24 +1720,18 @@ public final class Node {
     private void loadData(final int loadID, final File configfile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException, InvalidSettingsException {
-        NodeSettingsRO settings = NodeSettings
-                .loadFromXML(new BufferedInputStream(new FileInputStream(
-                        configfile)));
+        NodeSettingsRO settings = NodeSettings.loadFromXML(
+                new BufferedInputStream(new FileInputStream(configfile)));
         String dataPath = settings.getString(CFG_DATA_FILE_DIR);
         File dataDir = new File(m_nodeDir, dataPath);
-        if (!dataDir.exists() || !dataDir.canRead()) {
-            throw new IOException("Can not read directory "
-                    + dataDir.getAbsolutePath());
-        }
+        // note: we do not check for existence here - in some cases this
+        // directory may not exist (when exported and empty directories are 
+        // pruned)
         for (int i = 0; i < m_outDataPorts.length; i++) {
-            NodeSettingsRO portSettings = settings
-                    .getNodeSettings(CFG_OUTPUT_PREFIX + i);
+            NodeSettingsRO portSettings = settings.getNodeSettings(
+                    CFG_OUTPUT_PREFIX + i);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
             File dir = new File(dataDir, dataName);
-            if (!dir.isDirectory() || !dir.canRead()) {
-                throw new IOException("Can not read directory "
-                        + dir.getAbsolutePath());
-            }
             BufferedDataTable t = BufferedDataTable.loadFromFile(dir,
                     portSettings, exec, loadID);
             // take ownership for any newly created files (successor nodes

@@ -342,8 +342,13 @@ public final class BufferedDataTable implements DataTable {
         File file;
         if (fileName != null) {
             file = new File(dir, fileName);
+            if (!file.isFile() || !file.canRead()) {
+                throw new IOException("Can not read file "
+                        + file.getAbsolutePath());
+            }
         } else {
-            file = null; // for instance for a column filter node this is null.
+            // for instance for a column filter node this is null.
+            file = null; 
         }
         String tableType = s.getString(CFG_TABLE_TYPE);
         BufferedDataTable t;
