@@ -194,27 +194,27 @@ class XMLContentHandler extends DefaultHandler {
     private static void internalAsXML(final Config c, 
             final ContentHandler handler) throws SAXException {
         AttributesImpl attr = new AttributesImpl();
-        attr.addAttribute(null, null, "key", "CDATA", c.getKey());
-        handler.startElement(null, null, ConfigEntries.config.name(), attr);
+        attr.addAttribute("", "", "key", "CDATA", c.getKey());
+        handler.startElement("", "", ConfigEntries.config.name(), attr);
         for (String key : c.keySet()) {
             AbstractConfigEntry e = c.getEntry(key);
             if (e instanceof Config) {
                 internalAsXML((Config)e, handler);
             } else {
                 AttributesImpl a = new AttributesImpl();
-                a.addAttribute(null, null, "key", "CDATA", key);
-                a.addAttribute(null, null, "type", "CDATA", e.getType().name());
+                a.addAttribute("", "", "key", "CDATA", key);
+                a.addAttribute("", "", "type", "CDATA", e.getType().name());
                 String value = e.toStringValue();
 
                 if (value == null) {
-                    a.addAttribute(null, null, "isnull", "CDATA", "true");
+                    a.addAttribute("", "", "isnull", "CDATA", "true");
                     value = "";
                 }
-                a.addAttribute(null, null, "value", "CDATA", value);
-                handler.startElement(null, null, "entry", a);
-                handler.endElement(null, null, "entry");
+                a.addAttribute("", "", "value", "CDATA", value);
+                handler.startElement("", "", "entry", a);
+                handler.endElement("", "", "entry");
             }
         }
-        handler.endElement(null, null, ConfigEntries.config.name());
+        handler.endElement("", "", ConfigEntries.config.name());
     }
 }

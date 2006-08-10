@@ -157,10 +157,12 @@ public abstract class NodeFactory {
      * description. Prints log message if that fails.
      */
     private static void instantiateParser() {
-        String old = System.getProperty("javax.xml.parsers.SAXParserFactory");
-        System.setProperty("javax.xml.parsers.SAXParserFactory",
-                "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
-        try {
+        // temporarily changing the class loder here is to prevent that some
+        // external library is foisting us an incompatible XML library;
+        // using the system class loader should make sure, the the platform
+        // default XML classes are used
+        ClassLoader def = Thread.currentThread().getContextClassLoader();
+        try {            
             Thread.currentThread().setContextClassLoader(
                     ClassLoader.getSystemClassLoader());
             DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
@@ -203,11 +205,7 @@ public abstract class NodeFactory {
         } catch (TransformerFactoryConfigurationError ex) {
             NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
         } finally {
-            if (old != null) {
-                System.setProperty("javax.xml.parsers.SAXParserFactory", old);
-            } else {
-                System.clearProperty("javax.xml.parsers.SAXParserFactory");
-            }
+            Thread.currentThread().setContextClassLoader(def);            
         }
     }
 

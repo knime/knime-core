@@ -31,15 +31,18 @@ import java.io.OutputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.Serializer;
-import com.sun.org.apache.xml.internal.serialize.SerializerFactory;
 
 /**
  * A class used to load and save Config objects into an XML file.
@@ -51,22 +54,25 @@ import com.sun.org.apache.xml.internal.serialize.SerializerFactory;
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class XMLConfig {
-    private static SAXParserFactory factory;
+    private static SAXParserFactory parserFactory;
+    private static SAXTransformerFactory transformerFactory;
     
     static {
-        String old = System.getProperty("javax.xml.parsers.SAXParserFactory");
-        System.setProperty("javax.xml.parsers.SAXParserFactory",
-                "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
-        
-        try {
-            factory = SAXParserFactory.newInstance();
-            factory.setValidating(true);
+        // temporarily changing the class loder here is to prevent that some
+        // external library is foisting us an incompatible XML library;
+        // using the system class loader should make sure, the the platform
+        // default XML classes are used
+        ClassLoader def = Thread.currentThread().getContextClassLoader();
+        try {            
+            Thread.currentThread().setContextClassLoader(
+                    ClassLoader.getSystemClassLoader());
+            parserFactory = SAXParserFactory.newInstance();
+            parserFactory.setValidating(true);
+            
+            transformerFactory =
+                (SAXTransformerFactory)TransformerFactory.newInstance();
         } finally {        
-            if (old != null) {
-                System.setProperty("javax.xml.parsers.SAXParserFactory", old);
-            } else {
-                System.clearProperty("javax.xml.parsers.SAXParserFactory");
-            }
+            Thread.currentThread().setContextClassLoader(def);
         }
     }
     
@@ -127,7 +133,7 @@ final class XMLConfig {
      */
     private static void internalLoad(final Config c, final InputStream in)
             throws SAXException, IOException, ParserConfigurationException {
-        SAXParser saxParser = factory.newSAXParser();
+        SAXParser saxParser = parserFactory.newSAXParser();
         XMLReader reader = saxParser.getXMLReader();
         XMLContentHandler xmlContentHandler = new XMLContentHandler(c, in
                 .toString());
@@ -146,13 +152,22 @@ final class XMLConfig {
      */
     static void save(final Config config, final OutputStream os)
             throws IOException {
-        SerializerFactory f = SerializerFactory.getSerializerFactory("xml");
-        OutputFormat format = new OutputFormat();
-        format.setIndent(2);
-        format.setDoctype(null, DTD_NAME);
-        Serializer serializer = f.makeSerializer(os, format);
+        TransformerHandler tfh = null;
         try {
-            XMLContentHandler.asXML(config, serializer.asContentHandler());
+            tfh = transformerFactory.newTransformerHandler();
+        } catch (TransformerConfigurationException ex) {
+            throw new RuntimeException(ex);
+        }        
+        Transformer t = tfh.getTransformer();
+
+        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        t.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, DTD_NAME);
+        t.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        tfh.setResult(new StreamResult(os));
+
+        try {
+            XMLContentHandler.asXML(config, tfh);
         } catch (SAXException se) {
             IOException ioe = new IOException("Saving xml to " + os.toString()
                     + " failed: " + se.getMessage());
@@ -166,5 +181,4 @@ final class XMLConfig {
             os.close();
         }
     }
-
 }
