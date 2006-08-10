@@ -364,7 +364,7 @@ public class TIDApriori implements AprioriAlgorithm {
                     // LOGGER.debug("s' support: " + itemSet.getSupport() + "
                     // s': " + itemSet);
                     int newSupport = itemSet.getSupport();
-                    double c = (double)s.getSupport() / (double)newSupport;
+                    double c = s.getSupport() / newSupport;
                     if (c >= confidence) {
                         AssociationRule rule = new AssociationRule(i,
                                 sWithoutI, c, s.getSupport());

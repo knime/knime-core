@@ -420,7 +420,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * @return enumeration of all children
      */
     @Override
-    public Enumeration children() {
+    public Enumeration<DecisionTreeNode> children() {
         // TODO: fix. JTree doesn't seem to need it, luckily.
         /*
          * if (m_leftChild != null) { children.add(m_leftChild); } if

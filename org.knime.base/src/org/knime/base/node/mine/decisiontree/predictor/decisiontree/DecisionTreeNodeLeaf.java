@@ -205,7 +205,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * @see javax.swing.tree.TreeNode#children()
      */
     @Override
-    public Enumeration children() {
+    public Enumeration<DecisionTreeNode> children() {
         return null;
     }
 

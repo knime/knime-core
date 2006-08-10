@@ -235,7 +235,7 @@ public class ArrayApriori implements AprioriAlgorithm {
                         ArrayPrefixTreeNode parentsChild = parent.getChild(i);
                         if (parentsChild == null) {
                             // logger.debug("parents child == null");
-                        } else if (parentsChild != null) {
+                        } else {
                             boolean hasFrequentSubset = false;
                             for (int j = i; j < node.getLength(); j++) {
                                 if (parentsChild.getCounterFor(j) 
@@ -316,7 +316,7 @@ public class ArrayApriori implements AprioriAlgorithm {
                     // now go down the tree for both s and s'
                     int newSupport = getSupportFor(sWithoutI);
                     // logger.debug("support(s'): " + newSupport);
-                    double c = (double)supportS / (double)newSupport;
+                    double c = supportS / newSupport;
                     if (c >= confidence) {
                         // create association rule (i, s', counterFor(s),
                         // confidence)

@@ -326,7 +326,7 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
      * @see ItemListener#itemStateChanged(java.awt.event.ItemEvent)
      */
     public void itemStateChanged(final ItemEvent e) {
-        Object o = (DataColumnSpec)e.getItem();
+        Object o = e.getItem();
         if (o == null) {
             return;
         }

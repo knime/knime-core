@@ -126,7 +126,7 @@ public class FrequentItemSetModel {
 
         m_itemSetCounter = 0;
         for (FrequentItemSet set : m_itemSets) {
-            if (((double)set.getSupport() / (double)m_dbsize) == 1.0) {
+            if ((set.getSupport() / m_dbsize) == 1.0) {
                 m_alwaysFrequent.add(set);
             } else {
                 ModelContentWO itemSetModel = itemSetsModel

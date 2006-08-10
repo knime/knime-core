@@ -189,8 +189,7 @@ public class RowIDRowFilter extends RowFilter {
     }
 
     /**
-     * @see org.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #configure(org.knime.core.data.DataTableSpec)
+     * @see RowFilter#configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

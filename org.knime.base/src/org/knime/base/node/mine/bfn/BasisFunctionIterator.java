@@ -56,12 +56,12 @@ public final class BasisFunctionIterator extends RowIterator {
     /*
      * The iterator from the underlying table.
      */
-    private final Iterator m_it;
+    private final Iterator<DataCell> m_it;
 
     /*
      * Current basisfunctions for class index <code>m_bfIndex</code>.
      */
-    private ArrayList m_bfs;
+    private ArrayList<BasisFunctionLearnerRow> m_bfs;
 
     /*
      * Current class index for the basisfunction array <code>m_bfs</code>.
@@ -112,7 +112,7 @@ public final class BasisFunctionIterator extends RowIterator {
      */
     public BasisFunctionLearnerRow nextBasisFunction() {
         if (hasNext()) {
-            return (BasisFunctionLearnerRow)m_bfs.get(m_bfIndex++);
+            return m_bfs.get(m_bfIndex++);
         }
         throw new NoSuchElementException("No more elements to return.");
     }
@@ -137,7 +137,7 @@ public final class BasisFunctionIterator extends RowIterator {
         // step forward until non-empty list is found
         while (m_it.hasNext()) {
             // jump to next class and init next list of basisfunctions
-            m_bfs = (ArrayList)m_map.get(m_it.next());
+            m_bfs = (ArrayList<BasisFunctionLearnerRow>)m_map.get(m_it.next());
             if (m_bfs.size() > 0) {
                 // break while loop, new bf found
                 return;

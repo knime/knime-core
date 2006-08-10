@@ -298,12 +298,12 @@ public class InteractiveHistogramDataModel implements HistogramDataModel {
      */
     protected boolean changeAggregationColumn(final String colName,
             final AggregationMethod aggrMethod) {
+        if (aggrMethod == null) {
+            throw new IllegalArgumentException("Aggregation method not valid.");
+        }
         if (!aggrMethod.equals(AggregationMethod.COUNT)
                 && (colName == null || colName.length() < 1)) {
             throw new IllegalArgumentException("Column name not valid.");
-        }
-        if (aggrMethod == null) {
-            throw new IllegalArgumentException("Aggregation method not valid.");
         }
         // check if something has changed if not do nothing
         if ((m_aggrColumn == null && colName != null)

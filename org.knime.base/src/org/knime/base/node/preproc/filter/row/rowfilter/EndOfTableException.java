@@ -26,8 +26,9 @@ package org.knime.base.node.preproc.filter.row.rowfilter;
 
 /**
  * Used by {@link RowFilter}s to tell that no more rows will fulfill their
- * criteria and the {@link RowFilterTable}
- * iterator can flag the end of table.
+ * criteria and the
+ * {@link org.knime.base.node.preproc.filter.row.RowFilterTable} iterator can
+ * flag the end of table.
  * 
  * @author Peter Ohl, University of Konstanz
  */

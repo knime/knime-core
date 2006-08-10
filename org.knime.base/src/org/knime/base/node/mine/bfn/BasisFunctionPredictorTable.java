@@ -192,8 +192,8 @@ public class BasisFunctionPredictorTable implements DataTable {
         }
 
         // overall basisfunctions in the model
-        for (Iterator it = model.iterator(); it.hasNext();) {
-            BasisFunctionPredictorRow bf = (BasisFunctionPredictorRow)it.next();
+        for (Iterator<BasisFunctionPredictorRow> it = model.iterator(); it.hasNext();) {
+            BasisFunctionPredictorRow bf = it.next();
             // get its class label
             DataCell classInfo = bf.getClassLabel();
             double act = 0.0;

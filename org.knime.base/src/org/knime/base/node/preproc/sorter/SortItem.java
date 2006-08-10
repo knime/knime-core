@@ -51,7 +51,7 @@ public class SortItem extends JPanel {
     /*
      * Values for the JComboBox
      */
-    private final Vector m_combovalues;
+    private final Vector<?> m_combovalues;
 
     /*
      * The JComboBox
@@ -88,7 +88,7 @@ public class SortItem extends JPanel {
      * @param selected the selected column
      * @param sortOrder the sort
      */
-    SortItem(final int id, final Vector values, final Object selected,
+    SortItem(final int id, final Vector<?> values, final Object selected,
             final boolean sortOrder) {
         m_id = id;
         m_combovalues = values;

@@ -407,9 +407,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @see org.knime.base.node.filter.row.RowFilterPanel
-     *      #loadSettingsFromFilter(
-     *      org.knime.base.node.filter.row.rowfilter.RowFilter)
+     * @see RowFilterPanel#loadSettingsFromFilter(RowFilter)
      */
     @Override
     public void loadSettingsFromFilter(final RowFilter filter)
@@ -446,8 +444,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @see org.knime.base.node.filter.row.RowFilterPanel
-     *      #createFilter(boolean)
+     * @see RowFilterPanel#createFilter(boolean)
      */
     @Override
     public RowFilter createFilter(final boolean include)

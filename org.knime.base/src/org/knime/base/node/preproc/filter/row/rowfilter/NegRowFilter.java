@@ -32,7 +32,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Negates the match results from the filter passed. Unfortunately
- * {@link org.knime.base.node.filter.row.rowfilter.EndOfTableException}s
+ * {@link EndOfTableException}s
  * (indicating that matches from now on will always fail) will be caught and
  * swallowed by this filter. Thus using this filter in a filter hierarchy will
  * cause the row filter table to always iterate through the end of the original
@@ -122,8 +122,7 @@ public class NegRowFilter extends RowFilter {
     }
 
     /**
-     * @see org.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #configure(org.knime.core.data.DataTableSpec)
+     * @see RowFilter#configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

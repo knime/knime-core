@@ -52,8 +52,8 @@ public class ErrorPlot extends ScatterPlotter {
     /**
      * Overridden, because there is no highlighting in this view.
      * 
-     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D#
-     *      fillPopupMenu(javax.swing.JPopupMenu)
+     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
+     *  #fillPopupMenu(javax.swing.JPopupMenu)
      */
     @Override
     protected void fillPopupMenu(final JPopupMenu menu) {

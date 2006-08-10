@@ -719,7 +719,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                         next.setRightValue(value);
                     }
                 }
-                if (next != null && next.isLeftOpen() == isRightOpen()) {
+                if (next.isLeftOpen() == isRightOpen()) {
                     next.setLeftOpen(!isRightOpen());
                 }
             } else {
@@ -944,7 +944,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                 NodeSettingsWO set = settings.addNodeSettings(cell.toString());
                 if (p.isAppendedColumn()) {
                     String appendedName = p.getColumnName();
-                    Enumeration e = m_numMdl.elements();
+                    Enumeration<?> e = m_numMdl.elements();
                     while (e.hasMoreElements()) {
                         DataColumnSpec cspec = (DataColumnSpec)e.nextElement();
                         if (cspec.getName().equals(appendedName)) {

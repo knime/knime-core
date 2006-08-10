@@ -32,7 +32,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Row filter that includes or excludes a certain range of rows. It will throw a
- * {@link org.knime.base.node.filter.row.rowfilter.EndOfTableException} if
+ * {@link EndOfTableException} if
  * the row number is beyond the include range. An EOT constant is available to
  * use for the range-end-parameter.
  * 
@@ -190,8 +190,7 @@ public class RowNoRowFilter extends RowFilter {
     }
 
     /**
-     * @see org.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #configure(org.knime.core.data.DataTableSpec)
+     * @see RowFilter#configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

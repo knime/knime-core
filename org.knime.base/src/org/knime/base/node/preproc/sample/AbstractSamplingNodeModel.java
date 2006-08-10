@@ -42,7 +42,7 @@ import org.knime.core.node.NodeSettingsWO;
  * has one inport. The number of outports is defined by the derived class
  * 
  * @see SamplingNodeModel
- * @see org.knime.dev.node.partition.PartitionNodeModel
+ * @see org.knime.base.node.preproc.partition.PartitionNodeModel
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class AbstractSamplingNodeModel extends NodeModel {

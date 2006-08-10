@@ -300,8 +300,7 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @see org.knime.base.node.filter.row.rowfilter.RowFilter
-     *      #matches(org.knime.core.data.DataRow, int)
+     * @see RowFilter#matches(org.knime.core.data.DataRow, int)
      */
     @Override
     public boolean matches(final DataRow row, final int rowIndex)

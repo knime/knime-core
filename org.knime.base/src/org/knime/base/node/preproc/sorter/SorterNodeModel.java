@@ -203,9 +203,7 @@ public class SorterNodeModel extends NodeModel {
                 nrRowsinContainer++;
                 containerrowlist.add(row);
                 if (nrRowsinContainer == CONTAINERSIZE) {
-                    if (exec != null) {
-                        exec.checkCanceled();
-                    }
+                    exec.checkCanceled();
                     // sort list
                     DataRow[] temparray = new DataRow[containerrowlist.size()];
                     temparray = containerrowlist.toArray(temparray);
@@ -222,9 +220,7 @@ public class SorterNodeModel extends NodeModel {
                 }
             }
             if (nrRowsinContainer % CONTAINERSIZE != 0) {
-                if (exec != null) {
-                    exec.checkCanceled();
-                }
+                exec.checkCanceled();
                 // sort list
                 DataRow[] temparray = new DataRow[containerrowlist.size()];
                 temparray = containerrowlist.toArray(temparray);

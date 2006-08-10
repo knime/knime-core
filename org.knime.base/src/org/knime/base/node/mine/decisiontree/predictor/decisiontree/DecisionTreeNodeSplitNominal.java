@@ -53,8 +53,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
 
     private DataCell[] m_splitValues = null;
 
-    private HashMap<Color, Double> m_coveredColors 
-        = new HashMap<Color, Double>();
+    private HashMap<Color, Double> m_coveredColors = new HashMap<Color, Double>();
 
     /**
      * Empty Constructor visible only within package.
@@ -103,11 +102,8 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see org.knime.dev.node.decisiontree.predictor.decisiontree
-     *      .DecisionTreeNodeSplit
-     *      #getClassCounts(org.knime.core.data.DataCell,
-     *      org.knime.core.data.DataRow,
-     *      org.knime.core.data.DataTableSpec)
+     * @see DecisionTreeNodeSplit#getClassCounts(org.knime.core.data.DataCell,
+     *      org.knime.core.data.DataRow, org.knime.core.data.DataTableSpec)
      */
     @Override
     public HashMap<DataCell, Double> getClassCounts(final DataCell cell,
@@ -127,8 +123,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     /**
      * @see DecisionTreeNodeSplit
      *      #addCoveredPattern(org.knime.core.data.DataCell,
-     *      org.knime.core.data.DataRow,
-     *      org.knime.core.data.DataTableSpec)
+     *      org.knime.core.data.DataRow, org.knime.core.data.DataTableSpec)
      */
     @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
@@ -187,9 +182,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode
-     *      #addNodeToTreeDepthFirst(DecisionTreeNode,
-     *      int)
+     * @see DecisionTreeNode #addNodeToTreeDepthFirst(DecisionTreeNode, int)
      */
     @Override
     public boolean addNodeToTreeDepthFirst(final DecisionTreeNode node,
@@ -207,8 +200,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit
-     *      #saveNodeSplitInternalsToPredParams(
+     * @see DecisionTreeNodeSplit #saveNodeSplitInternalsToPredParams(
      *      org.knime.core.node.ModelContentWO)
      */
     @Override
@@ -217,8 +209,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit
-     *      #loadNodeSplitInternalsFromPredParams(
+     * @see DecisionTreeNodeSplit #loadNodeSplitInternalsFromPredParams(
      *      org.knime.core.node.ModelContentRO)
      */
     @Override

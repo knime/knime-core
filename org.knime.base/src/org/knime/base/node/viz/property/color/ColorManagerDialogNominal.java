@@ -81,18 +81,17 @@ final class ColorManagerDialogNominal extends JPanel {
      */
     boolean select(final String column) {
         m_columnModel.removeAllElements();
-        Object o = m_map.get(column);
+        Map<DataCell, Color> map = m_map.get(column);
         boolean flag;
-        if (o == null) {
+        if (map == null) {
             m_columnModel.removeAllElements();
             m_columnValues.setEnabled(false);
             flag = false;
         } else {
             m_columnValues.setEnabled(true);
-            Map map = (Map)o;
             for (Object cell : map.keySet()) {
                 assert cell != null;
-                Color color = (Color)map.get(cell);
+                Color color = map.get(cell);
                 assert color != null;
                 m_columnModel.addElement(new ColorManagerIcon((DataCell)cell,
                         color));

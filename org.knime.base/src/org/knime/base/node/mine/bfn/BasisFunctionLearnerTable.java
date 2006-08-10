@@ -472,7 +472,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
         // get Basisfunction's nomina class info
         DataCell classInfo = bf.getClassLabel();
         // get array list for current class
-        List list = m_bfs.get(classInfo);
+        List<BasisFunctionLearnerRow> list = m_bfs.get(classInfo);
         // if not available
         if (list == null) {
             assert (false);

@@ -620,7 +620,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
      * @param level current tree level
      * @return the parents in a list for which the coordinates were computed
      */
-    private ArrayList computeParentTreeNodeCoordinates(
+    private ArrayList<?> computeParentTreeNodeCoordinates(
             final ArrayList<SotaTreeCell> children, final int level) {
         ArrayList<SotaTreeCell> parents = new ArrayList<SotaTreeCell>();
 
@@ -1038,10 +1038,9 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
      */
     public void hiLite(
             final org.knime.core.node.property.hilite.KeyEvent event) {
-        Iterator i = event.keys().iterator();
-        DataCell cell;
+        Iterator<DataCell> i = event.keys().iterator();
         while (i.hasNext()) {
-            cell = (DataCell)i.next();
+            DataCell cell = i.next();
             m_hilitedKeys.add(cell);
         }
 
@@ -1056,10 +1055,9 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             final org.knime.core.node.property.hilite.KeyEvent event) {
         Set<DataCell> tmpSet = new HashSet<DataCell>();
 
-        Iterator i = m_hilitedKeys.iterator();
-        DataCell cell;
+        Iterator<DataCell> i = m_hilitedKeys.iterator();
         while (i.hasNext()) {
-            cell = (DataCell)i.next();
+            DataCell cell = i.next();
             if (!event.keys().contains(cell)) {
                 tmpSet.add(cell);
             }

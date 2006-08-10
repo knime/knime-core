@@ -205,9 +205,9 @@ public final class Sampler {
         int rowCount = 0;
         for (RowIterator it = table.iterator(); it.hasNext(); rowCount++) {
             DataRow row = it.next();
-            exec.setMessage("Counting Rows... " + rowCount + " (\""
-                    + row.getKey() + "\")");
             if (exec != null) {
+                exec.setMessage("Counting Rows... " + rowCount + " (\""
+                    + row.getKey() + "\")");
                 exec.checkCanceled();
             }
         }

@@ -261,7 +261,7 @@ public final class SorterNodeDialogPanel extends JPanel {
                 delta++;
             }
 
-            List l = Arrays.asList(m_exclMdl.toArray());
+            List<Object> l = Arrays.asList(m_exclMdl.toArray());
             m_exclMdl.removeAllElements();
             for (int i = 0; i < m_spec.getNumColumns(); i++) {
                 String c = m_spec.getColumnSpec(i).getName();
@@ -302,7 +302,7 @@ public final class SorterNodeDialogPanel extends JPanel {
         }
         // again, remove all from the include list and start adding them from
         // the table spec by double-checking the include list
-        List l = Arrays.asList(m_inclMdl.toArray());
+        List<Object> l = Arrays.asList(m_inclMdl.toArray());
         m_inclMdl.removeAllElements();
         if (m_spec != null) {
             for (int i = 0; i < m_spec.getNumColumns(); i++) {

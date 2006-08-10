@@ -174,8 +174,6 @@ public final class RowFilterFactory {
                     + " config object");
         }
 
-        assert newFilter != null;
-
         newFilter.loadSettingsFrom(cfg);
         return newFilter;
     }

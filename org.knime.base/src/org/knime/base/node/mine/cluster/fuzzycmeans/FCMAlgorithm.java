@@ -182,7 +182,7 @@ public class FCMAlgorithm {
     public void init(final DataTable table) {
         int nrdimensions = table.getDataTableSpec().getNumColumns();
         int nrRows = 0;
-        Iterator it = table.iterator();
+        Iterator<?> it = table.iterator();
         while (it.hasNext()) {
             it.next();
             nrRows++;

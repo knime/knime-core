@@ -479,7 +479,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * @return enumeration of all children
      */
-    public abstract Enumeration children();
+    public abstract Enumeration<DecisionTreeNode> children();
 
     /**
      * @return <code>true</code> if the receiver allows children

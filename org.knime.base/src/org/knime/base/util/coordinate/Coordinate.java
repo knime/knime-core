@@ -70,7 +70,7 @@ public abstract class Coordinate {
         if (type.isCompatible(DoubleValue.class)) {
             return new DoubleCoordinate(dataColumnSpec);
         } else {
-            Set possibleValuse = dataColumnSpec.getDomain().getValues();
+            Set<DataCell> possibleValuse = dataColumnSpec.getDomain().getValues();
             if (possibleValuse != null && possibleValuse.size() > 0) {
                 return new NominalCoordinate(dataColumnSpec);
             }

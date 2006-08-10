@@ -31,10 +31,10 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Used by the {@link org.knime.base.node.filter.row.RowFilterIterator} to
- * determine whether a row should be filtered or not. <br>
+ * Used by the {@link org.knime.base.node.preproc.filter.row.RowFilterIterator}
+ * to determine whether a row should be filtered or not. <br>
  * New row filter implementations MUST also modify the
- * {@link org.knime.base.node.filter.row.rowfilter.RowFilterFactory} in
+ * {@link org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory} in
  * order to get load and save work.
  * 
  * @author Peter Ohl, University of Konstanz
