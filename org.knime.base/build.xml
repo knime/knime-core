@@ -105,7 +105,7 @@
 			<fileset dir="${build.result.folder}" includes="knime-base.jar"			/>
 		</copy>
 		<copy todir="${destination.temp.folder}/org.knime.base_1.0.0" failonerror="true" overwrite="false">
-			<fileset dir="${basedir}" includes="knime-base.jar,plugin.xml,META-INF/,LICENSE.txt"			/>
+			<fileset dir="${basedir}" includes="knime-base.jar,plugin.xml,META-INF/,LICENSE.txt,icons/"			/>
 		</copy>
 	</target>
 
@@ -116,7 +116,7 @@
 		<mkdir dir="${destination.temp.folder}/org.knime.base_1.0.0"/>
 		<copy file="${build.result.folder}/knime-basesrc.zip" todir="${destination.temp.folder}/org.knime.base_1.0.0" failonerror="false" overwrite="false"/>
 		<copy todir="${destination.temp.folder}/org.knime.base_1.0.0" failonerror="false" overwrite="false">
-			<fileset dir="${basedir}" includes="plugin.xml,src/,build.properties,LICENSE.txt"			/>
+			<fileset dir="${basedir}" includes="plugin.xml,src/,build.properties,LICENSE.txt,icons/,META-INF/"			/>
 		</copy>
 	</target>
 
