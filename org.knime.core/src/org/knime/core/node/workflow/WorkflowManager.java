@@ -1431,16 +1431,12 @@ public class WorkflowManager implements WorkflowListener {
             try {
                 cc = new ConnectionContainer(m_runningConnectionID.inc(),
                         connectionConfig, this);
+                addConnection(cc);
             } catch (Exception ex) {
-                LOGGER.warn("Could not create connection: " + connectionKey
+                LOGGER.error("Could not create connection: " + connectionKey
                         + " reason: " + ex.getMessage());
                 LOGGER.debug(connectionConfig, ex);
             } 
-            try {
-                addConnection(cc);
-            } catch (Exception ex) {
-                LOGGER.error("Could not add connection", ex);
-            }
         }
     }
 
