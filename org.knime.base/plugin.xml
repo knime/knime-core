@@ -83,12 +83,6 @@
             name="Regression"
             path="/statistics"/>
       <category
-            after="meta"
-            icon="icons/missing.gif"
-            level-id="misc"
-            name="Misc"
-            path="/"/>
-      <category
             after="clustering"
             icon="icons/missing.gif"
             level-id="rules"
