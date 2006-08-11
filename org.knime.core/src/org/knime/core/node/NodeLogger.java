@@ -181,6 +181,7 @@ public final class NodeLogger {
             if (oldLog.exists() && (oldLog.length() > MAX_LOG_SIZE)
                     && oldLog.canRead()) {
                 compressOldLog(oldLog);
+                oldLog.delete();
             }
             // add knime.log file appender
             tempFileAppender = new FileAppender(new TTCCLayout(
