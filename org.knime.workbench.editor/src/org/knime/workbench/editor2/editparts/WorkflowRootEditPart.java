@@ -41,7 +41,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
@@ -65,7 +64,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      *         edit part
      */
     public WorkflowManager getWorkflowManager() {
-        return (WorkflowManager) getModel();
+        return (WorkflowManager)getModel();
     }
 
     /**
@@ -73,13 +72,13 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * that are stored in the workflow manager.
      * 
      * @see org.eclipse.gef.editparts.AbstractEditPart#getModelChildren()
-     */ 
+     */
     @Override
     @SuppressWarnings("unchecked")
-    protected List getModelChildren() {        
+    protected List getModelChildren() {
         return new ArrayList(getWorkflowManager().getNodes());
     }
-    
+
     /**
      * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
      */
@@ -162,7 +161,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected IFigure createFigure() {
-        IFigure backgroundFigure = new WorkflowFigure();
+        WorkflowFigure backgroundFigure = new WorkflowFigure();
 
         LayoutManager l = new WorkflowLayout();
         backgroundFigure.setLayoutManager(l);

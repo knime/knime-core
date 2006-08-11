@@ -49,7 +49,6 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeFactory.NodeType;
-
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -102,7 +101,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /** Error sign. * */
     public static final Image ERROR_SIGN = ImageRepository
             .getImage("icons/error.jpg");
-    
+
     /** Delete sign. * */
     public static final Image DELETE_SIGN = ImageRepository
             .getImage("icons/delete.png");
@@ -542,7 +541,7 @@ public class NodeContainerFigure extends RectangleFigure {
             m_deleteIcon = new Label();
             m_deleteIcon.setOpaque(false);
             m_deleteIcon.setIcon(DELETE_SIGN);
-            
+
             // center the icon figure
             add(m_backgroundIcon);
             m_backgroundIcon.setLayoutManager(new BorderLayout());

@@ -2,21 +2,16 @@
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
- *
+ * 
  * Copyright, 2003 - 2006
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
  * Prof. Dr. Michael R. Berthold
- *
+ * 
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
- *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
+ * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
  * 
  */
@@ -32,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -43,6 +39,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PrecisionPoint;
@@ -76,6 +73,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -126,6 +124,8 @@ import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -146,6 +146,10 @@ public class WorkflowEditor extends GraphicalEditor implements
             .getLogger(WorkflowEditor.class);
 
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
+
+    private static final int LINE_WIDTH_FOR_SELECTED_NODES = 2;
+
+    private static final int LINE_WIDTH_FOR_UNSELECTED_NODES = 1;
 
     /**
      * The static clipboard for copy/cut/paste.
@@ -189,6 +193,11 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Indicates if this editor has been closed.
      */
     private boolean m_closed;
+
+    /**
+     * Remembers all nodes whose connections are painted bold.
+     */
+    private StructuredSelection m_boldNodeParts;
 
     /**
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
@@ -748,7 +757,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         m_loadingCanceled = true;
                     } catch (Exception e) {
                         LOGGER.info("Workflow could not be loaded. "
-                                + e.getMessage(), e);
+                                + e.getMessage());
                         m_manager = null;
                     } finally {
                         // terminate the check thread
@@ -1228,6 +1237,106 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // update available actions
         updateActions(m_editorActions);
+
+        // paint the incoming and outgoing connections of all
+        // selected nodes "bold" (helps to differentiate the connections)
+        // and paint the connections or the not any more selected nodes
+        // normal
+        StructuredSelection structuredSelection = null;
+        if (selection instanceof StructuredSelection) {
+
+            structuredSelection = (StructuredSelection)selection;
+
+            // get all previously selected nodes that are not selected any more
+            NodeContainerEditPart[] nodeParts = getSelectionDifference(
+                    m_boldNodeParts, structuredSelection);
+
+            // revert the bold connections for all non-selected nodes
+            for (NodeContainerEditPart nodePart : nodeParts) {
+                makeConnectionsNormal(nodePart);
+            }
+
+            // paint the connections of the selected nodes bold
+            for (Object element : structuredSelection.toList()) {
+                if (element instanceof NodeContainerEditPart) {
+                    // make the connections bold
+                    makeConnectionsBold((NodeContainerEditPart)element);
+                }
+            }
+        }
+
+        // remember the new selection as the old one
+        m_boldNodeParts = structuredSelection;
+
+    }
+
+    /**
+     * Determines all {@link NodeContainerEditPart}s that are in the old
+     * selection but not in the new one.
+     * 
+     * @param oldSelection the old selection
+     * @param newSelection the new selection
+     * @return the nodes of the old selection not available in the new one.
+     */
+    private NodeContainerEditPart[] getSelectionDifference(
+            final StructuredSelection oldSelection,
+            final StructuredSelection newSelection) {
+
+        if (oldSelection == null) {
+            return new NodeContainerEditPart[0];
+        }
+
+        Vector<NodeContainerEditPart> result = new Vector<NodeContainerEditPart>();
+
+        // check each old element if it is contained in the new selection
+        for (Object oldElement : oldSelection.toList()) {
+
+            // only node container parts are checked
+            if (oldElement instanceof NodeContainerEditPart) {
+
+                // check a container from the old selection against all
+                // new selections
+                boolean alsoInNewSelection = false;
+                for (Object newElement : newSelection.toList()) {
+
+                    // only node containers are checked
+                    if (newElement instanceof NodeContainerEditPart) {
+                        // if the elements are equal (same objects)
+                        // do not put them to the result list
+                        if (newElement == oldElement) {
+                            alsoInNewSelection = true;
+                            break;
+                        }
+                    }
+                }
+
+                // if the old element could not be found in the new selection
+                // put it to the result list
+                if (!alsoInNewSelection) {
+                    result.add((NodeContainerEditPart)oldElement);
+                }
+            }
+        }
+
+        return result.toArray(new NodeContainerEditPart[result.size()]);
+    }
+
+private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
+
+        for (ConnectionContainerEditPart connectionPart : nodePart
+                .getAllConnections()) {
+
+            ((PolylineConnection)connectionPart.getFigure())
+                    .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
+        }
+    }    private void makeConnectionsNormal(final NodeContainerEditPart nodePart) {
+
+        for (ConnectionContainerEditPart connectionPart : nodePart
+                .getAllConnections()) {
+
+            ((PolylineConnection)connectionPart.getFigure())
+                    .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
+        }
     }
 
     /**

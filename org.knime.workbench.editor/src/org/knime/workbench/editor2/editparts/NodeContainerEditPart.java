@@ -26,6 +26,7 @@ package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.MouseEvent;
@@ -48,7 +49,6 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.directnodeedit.NodeEditManager;
@@ -160,12 +160,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // has no knowledge about a extrainfo
             ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
             info.setNodeLocation(0, 0, -1, -1);
-            
+
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // TODO: very bad hack for version 1.0.0!!!!
             // just to set the x-partitioner of the x-validation meta node
             // to a suitable position; this is done as the meta nodes
-            // can not determine locations and set them for a node 
+            // can not determine locations and set them for a node
             // which is (like the x-partitioner) created from the code (not
             // from the user)
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -297,8 +297,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * Handles state changes for the underlying node.
      * 
-     * @see org.knime.core.node.NodeStateListener#stateChanged(NodeStatus,
-     *      int)
+     * @see org.knime.core.node.NodeStateListener#stateChanged(NodeStatus, int)
      */
     public void stateChanged(final NodeStatus state, final int id) {
 
@@ -619,6 +618,59 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public DragTracker getDragTracker(final Request request) {
         return new WorkflowSelectionDragEditPartsTracker(this);
+    }
+
+    /**
+     * @return all outgoing connections of this node part
+     */
+    public ConnectionContainerEditPart[] getOutgoingConnections() {
+
+        Vector<ConnectionContainerEditPart> result = new Vector<ConnectionContainerEditPart>();
+
+        for (Object part : getChildren()) {
+
+            if (part instanceof NodeOutPortEditPart) {
+                result.addAll(((NodeOutPortEditPart)part)
+                        .getSourceConnections());
+            }
+        }
+
+        return result.toArray(new ConnectionContainerEditPart[result.size()]);
+    }
+
+    /**
+     * @return all incoming connections of this node part
+     */
+    public ConnectionContainerEditPart[] getIncomingConnections() {
+
+        Vector<ConnectionContainerEditPart> result = new Vector<ConnectionContainerEditPart>();
+
+        for (Object part : getChildren()) {
+
+            if (part instanceof NodeInPortEditPart) {
+                result
+                        .addAll(((NodeInPortEditPart)part)
+                                .getTargetConnections());
+            }
+        }
+
+        return result.toArray(new ConnectionContainerEditPart[result.size()]);
+    }
+
+    /**
+     * @return all connections of this node part
+     */
+    public ConnectionContainerEditPart[] getAllConnections() {
+
+        ConnectionContainerEditPart[] out = getOutgoingConnections();
+        ConnectionContainerEditPart[] in = getIncomingConnections();
+
+        ConnectionContainerEditPart[] result = new ConnectionContainerEditPart[out.length
+                + in.length];
+        System.arraycopy(in, 0, result, 0, in.length);
+        System.arraycopy(out, 0, result, in.length, out.length);
+
+        return result;
     }
 
     // TODO: double click event can not be received (maybe due to draw2d bug
