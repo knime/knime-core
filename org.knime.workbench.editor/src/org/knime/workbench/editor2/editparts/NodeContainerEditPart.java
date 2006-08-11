@@ -30,7 +30,6 @@ import java.util.Vector;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.MouseEvent;
-import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
@@ -68,7 +67,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
-        NodeStateListener, MouseListener {
+        NodeStateListener {
     /**
      * The time (in ms) within two clicks are treated as double click. TODO: get
      * the system double click time
@@ -76,8 +75,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     // private static final long DOUBLE_CLICK_TIME = 400;
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainerEditPart.class);
-
-    private static final long DOUBLE_CLICK_TIME = 500;
 
     /**
      * Remembers the time of the last <code>MousePressed</code> event. This is
@@ -96,11 +93,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * node is busy *
      */
     private boolean m_isLocked;
-
-    /**
-     * To implement manually the double click event.
-     */
-    private long m_lastClick;
 
     /**
      * The manager for the direct editing of the node name.
@@ -536,80 +528,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Implements a manual double click to open a nodes dialog. TODO: at the
-     * moment every 4th pressed event is not submitted to this listener. Find
-     * out why. Seems to be a draw2D problme.
-     * 
-     * @see org.eclipse.draw2d.MouseListener#
-     *      mousePressed(org.eclipse.draw2d.MouseEvent)
-     */
-    public void mousePressed(final MouseEvent me) {
-
-        // only left click matters
-        if (me.button != 1) {
-            return;
-        }
-
-        if (System.currentTimeMillis() - m_lastClick < DOUBLE_CLICK_TIME) {
-
-            NodeContainer container = (NodeContainer)getModel();
-
-            // if this node does not have a dialog
-            if (!container.hasDialog()) {
-
-                LOGGER.debug(container.getName()
-                        + ": Opening node dialog after double "
-                        + "click not possible");
-                return;
-            }
-
-            LOGGER.debug(container.getName()
-                    + ": Opening node dialog after double click...");
-
-            //  
-            // This is embedded in a special JFace wrapper dialog
-            //
-            try {
-                WrappedNodeDialog dlg = new WrappedNodeDialog(Display
-                        .getCurrent().getActiveShell(), container);
-                dlg.open();
-            } catch (NotConfigurableException ex) {
-                MessageBox mb = new MessageBox(Display.getDefault()
-                        .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
-                mb.setText("Dialog cannot be opened");
-                mb.setMessage("The dialog cannot be opened for the following"
-                        + " reason:\n" + ex.getMessage());
-                mb.open();
-            }
-
-            // me.consume();
-        }
-        m_lastClick = System.currentTimeMillis();
-
-    }
-
-    /**
-     * Does nothing.
-     * 
-     * @see org.eclipse.draw2d.MouseListener#
-     *      mouseReleased(org.eclipse.draw2d.MouseEvent)
-     */
-    public void mouseReleased(final MouseEvent me) {
-        // do nothing yet
-    }
-
-    /**
-     * Does nothing.
-     * 
-     * @see org.eclipse.draw2d.MouseListener#
-     *      mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
-     */
-    public void mouseDoubleClicked(final MouseEvent me) {
-
-        // do nothing yet
-    }
-
-    /**
      * Overridden to return a custom <code>DragTracker</code> for
      * NodeContainerEditParts.
      * 
@@ -671,6 +589,44 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         System.arraycopy(out, 0, result, in.length, out.length);
 
         return result;
+    }
+
+    /**
+     * Opens the node dialog on double click.
+     * 
+     * @see org.knime.workbench.editor2.editparts.KnimeAbstractPart#
+     *      doubleClick(org.eclipse.draw2d.MouseEvent)
+     */
+    public void doubleClick(final MouseEvent me) {
+        NodeContainer container = (NodeContainer)getModel();
+
+        // if this node does not have a dialog
+        if (!container.hasDialog()) {
+
+            LOGGER.debug(container.getName()
+                    + ": Opening node dialog after double "
+                    + "click not possible");
+            return;
+        }
+
+        LOGGER.debug(container.getName()
+                + ": Opening node dialog after double click...");
+
+        //  
+        // This is embedded in a special JFace wrapper dialog
+        //
+        try {
+            WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
+                    .getActiveShell(), container);
+            dlg.open();
+        } catch (NotConfigurableException ex) {
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            mb.setText("Dialog cannot be opened");
+            mb.setMessage("The dialog cannot be opened for the following"
+                    + " reason:\n" + ex.getMessage());
+            mb.open();
+        }
     }
 
     // TODO: double click event can not be received (maybe due to draw2d bug

@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -110,7 +109,6 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowInExecutionException;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.CopyAction;
@@ -1247,20 +1245,33 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             structuredSelection = (StructuredSelection)selection;
 
-            // get all previously selected nodes that are not selected any more
-            NodeContainerEditPart[] nodeParts = getSelectionDifference(
-                    m_boldNodeParts, structuredSelection);
+            // revert the bold connections for all old selections
+            // if available
+            if (m_boldNodeParts != null) {
+                for (Object element : m_boldNodeParts.toList()) {
 
-            // revert the bold connections for all non-selected nodes
-            for (NodeContainerEditPart nodePart : nodeParts) {
-                makeConnectionsNormal(nodePart);
+                    if (element instanceof NodeContainerEditPart) {
+
+                        // make the connections normal
+                        makeConnectionsNormal((NodeContainerEditPart)element);
+                    } else if (element instanceof ConnectionContainerEditPart) {
+
+                        makeConnectionNormal((ConnectionContainerEditPart)element);
+                    }
+
+                }
             }
 
-            // paint the connections of the selected nodes bold
+            // paint the connections of the new selection bold
             for (Object element : structuredSelection.toList()) {
+
                 if (element instanceof NodeContainerEditPart) {
+
                     // make the connections bold
                     makeConnectionsBold((NodeContainerEditPart)element);
+                } else if (element instanceof ConnectionContainerEditPart) {
+
+                    makeConnectionBold((ConnectionContainerEditPart)element);
                 }
             }
         }
@@ -1270,72 +1281,33 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    /**
-     * Determines all {@link NodeContainerEditPart}s that are in the old
-     * selection but not in the new one.
-     * 
-     * @param oldSelection the old selection
-     * @param newSelection the new selection
-     * @return the nodes of the old selection not available in the new one.
-     */
-    private NodeContainerEditPart[] getSelectionDifference(
-            final StructuredSelection oldSelection,
-            final StructuredSelection newSelection) {
-
-        if (oldSelection == null) {
-            return new NodeContainerEditPart[0];
-        }
-
-        Vector<NodeContainerEditPart> result = new Vector<NodeContainerEditPart>();
-
-        // check each old element if it is contained in the new selection
-        for (Object oldElement : oldSelection.toList()) {
-
-            // only node container parts are checked
-            if (oldElement instanceof NodeContainerEditPart) {
-
-                // check a container from the old selection against all
-                // new selections
-                boolean alsoInNewSelection = false;
-                for (Object newElement : newSelection.toList()) {
-
-                    // only node containers are checked
-                    if (newElement instanceof NodeContainerEditPart) {
-                        // if the elements are equal (same objects)
-                        // do not put them to the result list
-                        if (newElement == oldElement) {
-                            alsoInNewSelection = true;
-                            break;
-                        }
-                    }
-                }
-
-                // if the old element could not be found in the new selection
-                // put it to the result list
-                if (!alsoInNewSelection) {
-                    result.add((NodeContainerEditPart)oldElement);
-                }
-            }
-        }
-
-        return result.toArray(new NodeContainerEditPart[result.size()]);
+    private void makeConnectionNormal(
+            final ConnectionContainerEditPart connectionPart) {
+        ((PolylineConnection)connectionPart.getFigure())
+                .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
     }
 
-private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
+    private void makeConnectionBold(
+            final ConnectionContainerEditPart connectionPart) {
+        ((PolylineConnection)connectionPart.getFigure())
+                .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
+    }
+
+    private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
 
         for (ConnectionContainerEditPart connectionPart : nodePart
                 .getAllConnections()) {
 
-            ((PolylineConnection)connectionPart.getFigure())
-                    .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
+            makeConnectionBold(connectionPart);
         }
-    }    private void makeConnectionsNormal(final NodeContainerEditPart nodePart) {
+    }
+
+    private void makeConnectionsNormal(final NodeContainerEditPart nodePart) {
 
         for (ConnectionContainerEditPart connectionPart : nodePart
                 .getAllConnections()) {
 
-            ((PolylineConnection)connectionPart.getFigure())
-                    .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
+            makeConnectionNormal(connectionPart);
         }
     }
 

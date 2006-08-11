@@ -28,9 +28,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.MouseEvent;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
@@ -58,10 +58,24 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
         boolean isModelPort = container.isPredictorOutPort(getId());
         NodeOutPortFigure portFigure = new NodeOutPortFigure(getId(), container
                 .getNrModelContentOutPorts(), container.getNrDataOutPorts(),
-                container.getOutportName(getId()),
-                isModelPort);
+                container.getOutportName(getId()), isModelPort);
+
+        portFigure.addMouseListener(this);
 
         return portFigure;
+    }
+
+    /**
+     * Opens the outport table on double click.
+     * 
+     * @see org.knime.workbench.editor2.editparts.KnimeAbstractPart#
+     *      doubleClick(org.eclipse.draw2d.MouseEvent)
+     */
+    public void doubleClick(final MouseEvent me) {
+
+        ((NodeContainerEditPart)getParent()).getNodeContainer().openPortView(
+                getId());
+
     }
 
     /**
@@ -79,12 +93,12 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
                 getId());
 
         if (containers != null) {
-             return containers;
+            return containers;
         }
 
         return Collections.EMPTY_LIST;
     }
-    
+
     /**
      * @see org.knime.workbench.editor2.editparts.AbstractPortEditPart#
      *      isModelPort()
