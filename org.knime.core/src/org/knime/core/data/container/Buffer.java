@@ -804,12 +804,15 @@ class Buffer {
                     f.clear();
                 }
             }
-            // note: altough all input streams are closed, the file
-            // can't be deleted. If we call the gc, it works. No clue.
-            // That only happens under windows!
-            // http://forum.java.sun.com/thread.jspa?forumID=31&threadID=609458
-            System.gc();
-            if (m_outFile.delete()) {
+            boolean deleted = m_outFile.delete();
+            if (!deleted) {
+                // note: altough all input streams are closed, the file
+                // can't be deleted. If we call the gc, it works. No clue.
+                // That only happens under windows!
+ // http://forum.java.sun.com/thread.jspa?forumID=31&threadID=609458
+                System.gc();
+            }
+            if (deleted || m_outFile.delete()) {
                 LOGGER.debug("Deleted temp file \"" 
                         + m_outFile.getAbsolutePath() + "\"");
             } else {
