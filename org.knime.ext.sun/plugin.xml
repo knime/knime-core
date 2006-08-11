@@ -3,6 +3,12 @@
 <plugin>
    <extension
          point="org.knime.workbench.repository.categories">
+      <category
+            after="meta"
+            icon="icons/missing.gif"
+            level-id="misc"
+            name="Misc"
+            path="/"/>
    </extension>
    <extension
          point="org.knime.workbench.repository.nodes">
