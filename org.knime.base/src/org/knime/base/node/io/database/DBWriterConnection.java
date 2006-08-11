@@ -119,7 +119,7 @@ final class DBWriterConnection {
             } else if (cspec.getType().isCompatible(DoubleValue.class)) {
                 buf.append(column + " numeric");
             } else {
-                buf.append(column + " varchar");
+                buf.append(column + " varchar(255)");
             }
         }
         return buf.toString() + ")";
