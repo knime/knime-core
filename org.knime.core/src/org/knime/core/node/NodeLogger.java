@@ -180,8 +180,7 @@ public final class NodeLogger {
             final File oldLog = new File(tmpDir + LOG_FILE);
             if (oldLog.exists() && (oldLog.length() > MAX_LOG_SIZE)
                     && oldLog.canRead()) {
-                compressOldLog(oldLog);
-                oldLog.delete();
+                compressOldLog(oldLog);                
             }
             // add knime.log file appender
             tempFileAppender = new FileAppender(new TTCCLayout(
@@ -237,7 +236,7 @@ public final class NodeLogger {
 
                     in.close();
                     out.close();
-                    oldLog.delete();
+                    tempFile.delete();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
