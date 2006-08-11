@@ -1071,7 +1071,8 @@ public class WorkflowManager implements WorkflowListener {
         synchronized (this) {
             Collection<NodeContainer> nodes = new ArrayList<NodeContainer>();
 
-            for (NodeContainer nc : topSortNodes()) {
+            List<NodeContainer> topSortedNodes = topSortNodes();
+            for (NodeContainer nc : topSortedNodes) {
                 // we also add unconfigured nodes here because they may get
                 // configured if their predecessor(s) are executed
                 if (!nc.isExecuted() && nc.isFullyConnected()) {
@@ -1079,6 +1080,13 @@ public class WorkflowManager implements WorkflowListener {
                 }
             }
 
+            for (NodeContainer nc : topSortedNodes) {
+                if (!nc.isFullyConnected()) {
+                    nodes.removeAll(nc.getAllSuccessors());
+                }
+            }
+
+            
             if (m_parent != null) {
                 NodeContainer myNodeContainer = null;
                 for (NodeContainer nc : m_parent.m_nodesByID.values()) {

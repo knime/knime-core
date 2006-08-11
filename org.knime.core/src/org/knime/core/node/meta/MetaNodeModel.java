@@ -52,14 +52,13 @@ import org.knime.core.node.workflow.WorkflowInExecutionException;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 
-
 /**
  * This model is the heart of all meta workflows. It is reposnsible for
  * executing the inner workflow, for collecting its results and for the
  * communication with the outer flow. Therefore it needs some special
  * functionality and is therefore derived from
- * {@link org.knime.core.node.SpecialNodeModel}. This model is intended to
- * be subclassed by other nodes that execute some inner workflow, like cross
+ * {@link org.knime.core.node.SpecialNodeModel}. This model is intended to be
+ * subclassed by other nodes that execute some inner workflow, like cross
  * validation or boosting.
  * 
  * @author Thorsten Meinl, University of Konstanz
@@ -81,7 +80,6 @@ public class MetaNodeModel extends SpecialNodeModel implements
 
     private boolean m_resetFromInterior;
 
-    
     static {
         // this if for backwards compatibility with release 1.0.0
         NodeFactory.addLoadedFactory(DataInputNodeFactory.class);
@@ -143,16 +141,17 @@ public class MetaNodeModel extends SpecialNodeModel implements
             }
         }
 
+                        
         // collect all output specs
         DataTableSpec[] outspecs = new DataTableSpec[m_dataOutContainer.length];
         final int min = Math.min(outspecs.length, m_dataOutContainer.length);
         for (int i = 0; i < min; i++) {
             if (m_dataOutContainer[i] != null) {
                 outspecs[i] = m_dataOutModels[i].getDataTableSpec();
-                if ((outspecs[i] == null) || (outspecs[i].getNumColumns() == 0)) {
-                    throw new InvalidSettingsException(
-                            "Inner workflow is not"
-                                    + " fully connected yet, please open the meta-workflow editor");
+                if (!m_dataOutContainer[i].isFullyConnected()) {
+                    throw new InvalidSettingsException("Internal workflow "
+                            + "is not fully connected, please open the meta"
+                            + "workflow editor.");  
                 }
             }
         }
@@ -264,9 +263,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel
-     *      #saveSettingsTo(java.io.File, NodeSettingsWO,
-     *      org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.SpecialNodeModel #saveSettingsTo(java.io.File,
+     *      NodeSettingsWO, org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveSettingsTo(final File nodeDir,
@@ -541,8 +539,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel
-     *      #validateSettings(java.io.File, NodeSettingsRO)
+     * @see org.knime.core.node.SpecialNodeModel #validateSettings(java.io.File,
+     *      NodeSettingsRO)
      */
     @Override
     protected void validateSettings(final File nodeFile,
@@ -563,8 +561,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #loadModelContent(int,
-     *      ModelContentRO)
+     * @see org.knime.core.node.NodeModel #loadModelContent(int, ModelContentRO)
      */
     @Override
     protected void loadModelContent(final int index,
@@ -573,8 +570,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveModelContent(int,
-     *      ModelContentWO)
+     * @see org.knime.core.node.NodeModel #saveModelContent(int, ModelContentWO)
      */
     @Override
     protected void saveModelContent(final int index,
@@ -624,7 +620,6 @@ public class MetaNodeModel extends SpecialNodeModel implements
         return m_modelOutModels[index];
     }
 
-    
     /**
      * @see org.knime.core.node.NodeModel
      *      #saveSettingsTo(org.knime.core.node.NodeSettingsWO)

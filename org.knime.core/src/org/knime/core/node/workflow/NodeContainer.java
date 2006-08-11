@@ -429,23 +429,17 @@ public class NodeContainer implements NodeStateListener {
                 for (NodeContainer nc : ncl) {
                     if (!succ.contains(nc)) {
                         succ.add(nc);
-                    }
-                }
-            }
-        }
-
-        for (int i = 0; i < succ.size(); i++) {
-            for (List<NodeContainer> ncl : succ.get(i).m_succ) {
-                if (ncl != null) {
-                    for (NodeContainer nc : ncl) {
-                        if (!succ.contains(nc)) {
-                            succ.add(nc);
+                        Collection<NodeContainer> c = nc.getAllSuccessors();
+                        for (NodeContainer nc2 : c) {
+                            if (!succ.contains(nc2)) {
+                                succ.add(nc2);
+                            }
                         }
                     }
                 }
             }
         }
-
+        
         return succ;
     }
 
