@@ -100,10 +100,12 @@ public final class NodeLogger {
     }
 
     /** Keeps set of <code>NodeLogger</code> elements by classname as key. */
-    private static final HashMap<String, NodeLogger> LOGGERS = new HashMap<String, NodeLogger>();
+    private static final HashMap<String, NodeLogger> LOGGERS = 
+        new HashMap<String, NodeLogger>();
 
     /** Map of additionally added writers: Writer -> Appender. */
-    private static final HashMap<Writer, WriterAppender> WRITER = new HashMap<Writer, WriterAppender>();
+    private static final HashMap<Writer, WriterAppender> WRITER = 
+        new HashMap<Writer, WriterAppender>();
 
     /**
      * Maximum number of chars (10000) printed on <code>System.out</code> and
@@ -125,26 +127,26 @@ public final class NodeLogger {
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
-//        File config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
-//                + "log4j.xml");
-//        if (config.exists()) {
-//            DOMConfigurator.configure(config.getAbsolutePath());
-//        } else {
-//            config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
-//                    + "log4j.properties");
-//            if (config.exists()) {
-//                PropertyConfigurator.configure(config.getAbsolutePath());
-//            } else {
-//                URL u = NodeLogger.class.getClassLoader().getResource("log4j.xml");
-//                if (u != null) {
-//                    try {
-//                        DOMConfigurator.configure(u);
-//                    } catch (Exception ex) {
-//                        ex.printStackTrace();
-//                    }
-//                }
-//            }
-//        }
+        // File config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
+        // + "log4j.xml");
+        // if (config.exists()) {
+        // DOMConfigurator.configure(config.getAbsolutePath());
+        // } else {
+        // config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
+        // + "log4j.properties");
+        // if (config.exists()) {
+        // PropertyConfigurator.configure(config.getAbsolutePath());
+        // } else {
+        // URL u = NodeLogger.class.getClassLoader().getResource("log4j.xml");
+        // if (u != null) {
+        // try {
+        // DOMConfigurator.configure(u);
+        // } catch (Exception ex) {
+        //                        ex.printStackTrace();
+        //                    }
+        //                }
+        //            }
+        //        }
         
         // init root logger
         Logger root = Logger.getRootLogger();
@@ -548,7 +550,8 @@ public final class NodeLogger {
     public static final void removeWriter(final Writer writer) {
         Appender o = WRITER.get(writer);
         if (o != null) {
-            if (o != FILE_APPENDER && o != SERR_APPENDER && o != SOUT_APPENDER) {
+            if (o != FILE_APPENDER && o != SERR_APPENDER 
+                    && o != SOUT_APPENDER) {
                 Logger.getRootLogger().removeAppender(o);
             }
         } else {
