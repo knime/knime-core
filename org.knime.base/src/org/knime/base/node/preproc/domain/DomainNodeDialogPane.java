@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,19 +20,19 @@
 package org.knime.base.node.preproc.domain;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.GridLayout;
-import java.util.ArrayList;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Set;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 
 import org.knime.base.node.util.FilterColumnPanel;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -49,25 +49,36 @@ public class DomainNodeDialogPane extends NodeDialogPane {
     
     private final FilterColumnPanel m_possValuesPanel;
     private final FilterColumnPanel m_minMaxPanel;
+    private final JCheckBox m_maxValuesChecker;
+    private final JSpinner m_maxValuesSpinner;
     
     /** Inits members, does nothing else. */
     public DomainNodeDialogPane() {
         m_possValuesPanel = new FilterColumnPanel();
         m_minMaxPanel = new FilterColumnPanel();
-        JPanel allPanel = new JPanel(new GridLayout(0, 1));
         JPanel possValPanel = new JPanel(new BorderLayout());
-        possValPanel.setBorder(BorderFactory.createMatteBorder(
-                0, 0, 2, 0, Color.BLACK));
-        possValPanel.add(new JLabel("Possible Values"), BorderLayout.NORTH);
         possValPanel.add(m_possValuesPanel, BorderLayout.CENTER);
-        allPanel.add(possValPanel);
+        m_maxValuesChecker = new JCheckBox(
+                "Restrict number of possible values: ");
+        SpinnerModel spinModel = 
+            new SpinnerNumberModel(60, 1, Integer.MAX_VALUE, 10);
+        m_maxValuesSpinner = new JSpinner(spinModel);
+        JSpinner.DefaultEditor editor = 
+            (JSpinner.DefaultEditor) m_maxValuesSpinner.getEditor();
+        editor.getTextField().setColumns(6);
+        m_maxValuesChecker.addActionListener(new ActionListener() {
+           public void actionPerformed(final ActionEvent e) {
+                m_maxValuesSpinner.setEnabled(m_maxValuesChecker.isSelected());
+           } 
+        });
+        JPanel southPanel = new JPanel(new FlowLayout());
+        southPanel.add(m_maxValuesChecker);
+        southPanel.add(m_maxValuesSpinner);
+        possValPanel.add(southPanel, BorderLayout.SOUTH);
+        addTab("Possible Values", possValPanel);
         JPanel minMaxPanel = new JPanel(new BorderLayout());
-        minMaxPanel.setBorder(BorderFactory.createMatteBorder(
-                2, 0, 0, 0, Color.BLACK));
-        minMaxPanel.add(new JLabel("Min & Max"), BorderLayout.NORTH);
         minMaxPanel.add(m_minMaxPanel, BorderLayout.CENTER);
-        allPanel.add(minMaxPanel);
-        addTab("Column Selector", allPanel);
+        addTab("Min & Max Values", minMaxPanel);
     }
 
     /**
@@ -79,27 +90,26 @@ public class DomainNodeDialogPane extends NodeDialogPane {
         if (specs[0].getNumColumns() == 0) {
             throw new NotConfigurableException("No data at input.");
         }
-        String[] stringCols = getAllCols(StringValue.class, specs[0]); 
+        String[] stringCols = 
+            DomainNodeModel.getAllCols(StringValue.class, specs[0]); 
         String[] possCols = settings.getStringArray(
                 DomainNodeModel.CFG_POSSVAL_COLS, stringCols);
         
-        String[] dblCols = getAllCols(DoubleValue.class, specs[0]);
+        String[] dblCols = 
+            DomainNodeModel.getAllCols(DoubleValue.class, specs[0]);
         String[] minMaxCols = settings.getStringArray(
                 DomainNodeModel.CFG_MIN_MAX_COLS, dblCols);
         m_possValuesPanel.update(specs[0], false, possCols);
         m_minMaxPanel.update(specs[0], false, minMaxCols);
+        int maxPossValues = 
+            settings.getInt(DomainNodeModel.CFG_MAX_POSS_VALUES, 60);
+        if ((maxPossValues >= 0) != m_maxValuesChecker.isSelected()) {
+            m_maxValuesChecker.doClick();
+        }
+        m_maxValuesSpinner.setValue(maxPossValues >= 0 ? maxPossValues : 60);
     }
     
-    private static String[] getAllCols(
-            final Class<? extends DataValue> cl, final DataTableSpec spec) {
-        ArrayList<String> result = new ArrayList<String>();
-        for (DataColumnSpec c : spec) {
-            if (c.getType().isCompatible(cl)) {
-                result.add(c.getName());
-            }
-        }
-        return result.toArray(new String[result.size()]);
-    }
+
 
     /**
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
@@ -113,6 +123,9 @@ public class DomainNodeDialogPane extends NodeDialogPane {
                 possCols.toArray(new String[possCols.size()]));
         settings.addStringArray(DomainNodeModel.CFG_MIN_MAX_COLS, 
                 minMaxCols.toArray(new String[minMaxCols.size()]));
+        int maxPossVals = m_maxValuesChecker.isSelected() 
+            ? (Integer)m_maxValuesSpinner.getValue() : -1;
+        settings.addInt(DomainNodeModel.CFG_MAX_POSS_VALUES, maxPossVals);
     }
 
 }

@@ -21,6 +21,7 @@ package org.knime.base.node.preproc.domain;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -32,8 +33,11 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -55,9 +59,13 @@ public class DomainNodeModel extends NodeModel {
     /** Config identifier for columns for which min and max values 
      * must be determined. */
     static final String CFG_MIN_MAX_COLS = "min_max_columns";
+    /** Config identifier for columns for which min and max values 
+     * must be determined. */
+    static final String CFG_MAX_POSS_VALUES = "max_poss_values";
     
     private String[] m_possValCols;
     private String[] m_minMaxCols;
+    private int m_maxPossValues;
 
     /** Constructor, inits one input, one output. */
     public DomainNodeModel() {
@@ -108,6 +116,10 @@ public class DomainNodeModel extends NodeModel {
                 DataCell c = r.getCell(i);
                 if (!c.isMissing() && possVals[i] != null) {
                     possVals[i].add(c);
+                    if (m_maxPossValues >= 0 
+                            && possVals[i].size() > m_maxPossValues) {
+                        possVals[i] = null;
+                    }
                 }
                 if (!c.isMissing() && mins[i] != null) {
                     if (mins[i].isMissing()) {
@@ -155,6 +167,13 @@ public class DomainNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
     throws InvalidSettingsException {
         DataTableSpec oldSpec = inSpecs[0];
+        if (m_minMaxCols == null) {
+            setWarningMessage(
+                    "No configuration available, using auto-configuration.");
+            m_minMaxCols = getAllCols(DoubleValue.class, oldSpec);
+            m_possValCols = getAllCols(StringValue.class, oldSpec);
+            m_maxPossValues = 60;
+        }
         int colCount = oldSpec.getNumColumns();
         DataColumnSpec[] colSpec = new DataColumnSpec[colCount];
         for (int i = 0; i < colSpec.length; i++) {
@@ -183,6 +202,7 @@ public class DomainNodeModel extends NodeModel {
         if (m_possValCols != null) {
             settings.addStringArray(CFG_POSSVAL_COLS, m_possValCols);
             settings.addStringArray(CFG_MIN_MAX_COLS, m_minMaxCols);
+            settings.addInt(CFG_MAX_POSS_VALUES, m_maxPossValues);
         }
     }
 
@@ -194,6 +214,7 @@ public class DomainNodeModel extends NodeModel {
             throws InvalidSettingsException {
         settings.getStringArray(CFG_POSSVAL_COLS);
         settings.getStringArray(CFG_MIN_MAX_COLS);
+        settings.getInt(CFG_MAX_POSS_VALUES);
     }
 
     /**
@@ -204,6 +225,7 @@ public class DomainNodeModel extends NodeModel {
     throws InvalidSettingsException {
         m_possValCols = settings.getStringArray(CFG_POSSVAL_COLS);
         m_minMaxCols = settings.getStringArray(CFG_MIN_MAX_COLS);
+        m_maxPossValues = settings.getInt(CFG_MAX_POSS_VALUES);
     }
 
     /**
@@ -222,6 +244,22 @@ public class DomainNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+    }
+    
+    /** Finds all columns in a spec whose type is compatible to cl.
+     * @param cl The value to be compatible to.
+     * @param spec The spec to query.
+     * @return The identified columns.
+     */
+    static String[] getAllCols(
+            final Class<? extends DataValue> cl, final DataTableSpec spec) {
+        ArrayList<String> result = new ArrayList<String>();
+        for (DataColumnSpec c : spec) {
+            if (c.getType().isCompatible(cl)) {
+                result.add(c.getName());
+            }
+        }
+        return result.toArray(new String[result.size()]);
     }
 
 }
