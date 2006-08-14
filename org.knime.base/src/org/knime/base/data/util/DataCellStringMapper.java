@@ -133,7 +133,8 @@ public class DataCellStringMapper {
         for (int i = 0; i < uglyString.length(); i++) {
             char c = uglyString.charAt(i);
             if ((('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z'))
-                    || (('0' <= c) && (c <= '9')) || (c == '-') || (c == '_')) {
+                    || (('0' <= c) && (c <= '9')) || (c == '-') || (c == '_')
+                    || (c == '?')) {
                 newNameBuffer.append(c);
             }
         }
