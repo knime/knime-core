@@ -76,7 +76,6 @@ public class NominalCoordinate extends Coordinate {
         m_possibleValues = new Vector<DataCell>(possibleValues.size());
         Iterator<DataCell> possibleValuesIter = possibleValues.iterator();
         while (possibleValuesIter.hasNext()) {
-
             DataCell posValue = possibleValuesIter.next();
             m_possibleValues.add(posValue);
         }
@@ -91,7 +90,8 @@ public class NominalCoordinate extends Coordinate {
      * @param nominalValue the value to replace
      * @param index the position to set the value
      */
-    public void changeValuePosition(final DataCell nominalValue, final int index) {
+    public void changeValuePosition(final DataCell nominalValue, 
+               final int index) {
 
         // first remove the value to relocate
         m_possibleValues.remove(nominalValue);
