@@ -246,6 +246,10 @@
             factory-class="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"
             id="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"/>
       <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
+            id="org.knime.base.node.preproc.domain.DomainNodeFactory"/>
+     <node
             category-path="/manipulation/row"
             factory-class="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"
             id="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"/>
