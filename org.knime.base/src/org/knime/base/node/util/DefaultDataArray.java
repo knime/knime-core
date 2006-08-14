@@ -73,6 +73,10 @@ public class DefaultDataArray implements DataArray {
 
     /* the first row we've stored */
     private int m_firstRow;
+    
+    private static final int MAX_POSS_VALUES = 2000;
+    
+    private boolean[] m_ignoreCols;
 
     /*
      * we store the table spec - in case somebody needs name and type of the
@@ -133,7 +137,6 @@ public class DefaultDataArray implements DataArray {
             throw new IllegalArgumentException("Number of rows to read must be"
                     + " greater than or equal zero");
         }
-
         DataTableSpec tSpec = dTable.getDataTableSpec();
 
         int numOfColumns = tSpec.getNumColumns();
@@ -146,7 +149,9 @@ public class DefaultDataArray implements DataArray {
         // create a new list for the values - but only for native string columns
         m_possVals = new Vector<LinkedHashSet<DataCell>>();
         m_possVals.setSize(numOfColumns);
+        m_ignoreCols = new boolean[numOfColumns];
         for (int c = 0; c < numOfColumns; c++) {
+            m_ignoreCols[c] = false;
             if (tSpec.getColumnSpec(c).getType()
                     .isCompatible(StringValue.class)) {
                 m_possVals.set(c, new LinkedHashSet<DataCell>());
@@ -179,6 +184,10 @@ public class DefaultDataArray implements DataArray {
                     // ignore missing values.
                     continue;
                 }
+                
+                if (m_ignoreCols[c]) {
+                    continue;
+                }
 
                 // test the min value
                 if (m_minVal[c] == null) {
@@ -201,6 +210,13 @@ public class DefaultDataArray implements DataArray {
                 if (possVals != null) {
                     // non-string cols have a null list and will be skipped here
                     possVals.add(cell);
+                    // now check if we have more than MAX_POSS_VALUES values
+                    if (possVals.size() > MAX_POSS_VALUES) {
+                        m_possVals.add(c, null);
+                        m_minVal[c] = null;
+                        m_maxVal[c] = null;
+                        m_ignoreCols[c] = true;
+                    }
                 }
             } // for all columns in the row
 
