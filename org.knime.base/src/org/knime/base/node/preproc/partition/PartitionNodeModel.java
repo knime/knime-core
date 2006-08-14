@@ -64,10 +64,6 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
             Exception {
         DataTable in = inData[0];
         BufferedDataTable[] outs = new BufferedDataTable[2];
-        // the following line does not need the exec monitor. It's
-        // only used when the table is traversed in order to count the rows.
-        // This is done only if "in" does not support getRowCount().
-        // But the argument in the execute method surely does!
         RowFilter filterTrain = getSamplingRowFilter(in, exec);
         RowFilter filterTest = new NegRowFilter((RowFilter)filterTrain.clone());
         RowFilter[] filters = new RowFilter[]{filterTrain, filterTest};
