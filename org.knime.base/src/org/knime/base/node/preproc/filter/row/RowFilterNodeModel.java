@@ -29,7 +29,10 @@ import java.io.IOException;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -134,14 +137,26 @@ public class RowFilterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        if (m_rowFilter != null) {
-            m_rowFilter.configure(inData[0].getDataTableSpec());
-            return new BufferedDataTable[]{exec.createBufferedDataTable(
-                    new RowFilterTable(inData[0], m_rowFilter), exec)};
-        } else {
-            throw new InvalidSettingsException(
-                    "No row filter set in RowFilter table");
+        DataTable in = inData[0];
+        BufferedDataContainer container = 
+            exec.createDataContainer(in.getDataTableSpec());
+        exec.setMessage("Searching first matching row...");
+        try {
+            int count = 0;
+            RowFilterIterator it = new RowFilterIterator(in, m_rowFilter, exec);
+            while (it.hasNext()) {
+                DataRow row = it.next();
+                count++;
+                container.addRowToTable(row);
+                exec.setMessage("Added row " + count + " (\"" 
+                        + row.getKey() + "\")");
+            }
+        } catch (RowFilterIterator.RuntimeCanceledExecutionException rce) {
+            throw rce.getCause();
+        } finally {
+            container.close();
         }
+        return new BufferedDataTable[]{container.getTable()};
     }
 
     /**
