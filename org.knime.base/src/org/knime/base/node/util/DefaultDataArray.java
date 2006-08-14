@@ -54,6 +54,8 @@ import org.knime.core.node.ExecutionMonitor;
  * These values can be changed, in case somebody knows better limits. It
  * provides a list of all values seen for each string column (i.e. a list of all
  * values appearing in the rows stored - not the entire data table).
+ * If the maximal number of possible values (2000) is exceeded, no possible 
+ * values are available.
  * 
  * @author Peter Ohl, University of Konstanz
  */
