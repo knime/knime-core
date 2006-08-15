@@ -90,12 +90,11 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
             String name = nodePart.getNodeContainer().getName();
             String customName = nodePart.getNodeContainer().getCustomName();
 
-            if (!(customName == null) && !customName.trim().equals("")) {
-                name += "(" + name + ")";
-            }
+            String text = customName + " - " + name
+                + " (#" + nodePart.getNodeContainer().getID() + ")";
 
             String dialogText = "Do you really want to delete "
-                    + "the selected node: " + customName + name + "?";
+                    + "the selected node: " + text + "?";
             compoundCmd.setDialogDisplayText(dialogText);
         } else {
 
