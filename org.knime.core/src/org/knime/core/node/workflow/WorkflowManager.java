@@ -321,6 +321,10 @@ public class WorkflowManager implements WorkflowListener {
                             if (state instanceof NodeStatus.ExecutionCanceled) {
                                 cancelExecution(nc.getAllSuccessors());
                             }
+                            
+                            if (nc.getStatus() instanceof NodeStatus.Error) {
+                                cancelExecution(nc.getAllSuccessors());
+                            }
                         }
                     }
 
@@ -666,8 +670,7 @@ public class WorkflowManager implements WorkflowListener {
         NodeContainer src = m_nodesByID.get(sourceNode);
         NodeContainer targ = m_nodesByID.get(targetNode);
 
-        boolean nodesValid = (src != null) && (targ != null);
-        if (!nodesValid) {
+        if ((src == null) || (targ == null)) {
             // Nodes don't exist (whyever) - return failure
             LOGGER.error("WFM: checking for connection between non existing"
                     + " nodes!");
