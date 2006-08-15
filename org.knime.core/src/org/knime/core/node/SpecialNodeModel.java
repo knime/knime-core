@@ -227,7 +227,7 @@ public abstract class SpecialNodeModel extends NodeModel {
             throws InvalidSettingsException {
         validateSettings(nodeFile, settings);
         try {
-            loadValidatedSettingsFrom(nodeFile, settings, exec);
+            loadValidatedSettingsFrom(nodeFile.getParentFile(), settings, exec);
         } catch (IOException ex) {
             throw new InvalidSettingsException(ex);
         }
