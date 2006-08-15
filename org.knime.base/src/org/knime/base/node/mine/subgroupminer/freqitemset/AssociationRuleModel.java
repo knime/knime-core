@@ -121,9 +121,11 @@ public class AssociationRuleModel {
         ModelContentWO associationRulesModel = model
                 .addModelContent(ASSOCIATION_RULES);
         associationRulesModel.addString(TYPE, ASSOCIATION_RULES);
-        String[] mappingArray = new String[m_nameMapping.size()];
-        m_nameMapping.toArray(mappingArray);
-        associationRulesModel.addStringArray(NAME_MAPPING, mappingArray);
+        if (m_nameMapping != null) {
+            String[] mappingArray = new String[m_nameMapping.size()];
+            m_nameMapping.toArray(mappingArray);
+            associationRulesModel.addStringArray(NAME_MAPPING, mappingArray);
+        }
         int counter = 0;
         associationRulesModel.addInt(NR_RULES, m_rules.size());
         for (AssociationRule rule : m_rules) {

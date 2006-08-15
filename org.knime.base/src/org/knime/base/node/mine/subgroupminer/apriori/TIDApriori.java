@@ -50,7 +50,7 @@ public class TIDApriori implements AprioriAlgorithm {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TIDApriori.class);
 
-    private int m_minSupport;
+    private double m_minSupport;
 
     private int m_maxLength;
 
@@ -81,7 +81,11 @@ public class TIDApriori implements AprioriAlgorithm {
         m_frequentItems = new ArrayList<TIDItem>();
         int transactionNr = 0;
         for (BitSet transaction : transactions) {
-            exec.setProgress(transactionNr / transactions.size(),
+            double progress = (double)((double)transactionNr 
+                    / (double)m_dbsize); 
+            System.out.println("progress: " +  progress);
+            
+            exec.setProgress(progress,
                     "detecting frequent items. Transaction nr: "
                             + transactionNr);
             exec.checkCanceled();
@@ -98,7 +102,7 @@ public class TIDApriori implements AprioriAlgorithm {
                 if (!m_frequentItems.contains(new TIDItem(item))) {
                     // System.out.println(m_frequentItems + " does not contain "
                     // + item);
-                    if ((transactions.size() - transactionNr) >= m_minSupport) {
+//                    if ((transactions.size()- transactionNr)>= m_minSupport) {
                         // System.out.println(" possible: " +
                         // (transactions.size() - transactionNr) + " >= " +
                         // m_minSupport);
@@ -106,26 +110,26 @@ public class TIDApriori implements AprioriAlgorithm {
                         tidItem.addTID(transactionNr);
                         m_frequentItems.add(tidItem);
                         // added item to m_frequentItems
-                    }
+//                    }
                 } else {
                     // item should already be in m_frequentItems);
                     // find it and add this transaction id to it
                     for (int j = 0; j < m_frequentItems.size(); j++) {
                         if (m_frequentItems.get(j).equals(new TIDItem(item))) {
                             // check if it still could become frequent
-                            int counterSoFar = m_frequentItems.get(j)
-                                    .getSupport();
-                            if (counterSoFar + (transactions.size() 
-                                    - transactionNr) >= m_minSupport) {
+//                            int counterSoFar = m_frequentItems.get(j)
+//                                    .getSupport();
+//                            if (counterSoFar + (transactions.size() 
+//                                    - transactionNr) >= m_minSupport) {
                                 TIDItem freqItem = m_frequentItems.get(j);
                                 freqItem.addTID(transactionNr);
                                 m_frequentItems.set(j, freqItem);
                                 break;
-                            } else {
+//                            } else {
                                 // kick, delete and destroy it:
-                                m_frequentItems.remove(j);
-                                break;
-                            }
+//                                m_frequentItems.remove(j);
+//                                break;
+//                            }
                         }
                     }
                 }
@@ -225,7 +229,7 @@ public class TIDApriori implements AprioriAlgorithm {
      *      org.knime.core.node.ExecutionMonitor)
      */
     public void findFrequentItemSets(final List<BitSet> transactions,
-            final int minSupport, final int maxDepth,
+            final double minSupport, final int maxDepth,
             final FrequentItemSet.Type type, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         m_minSupport = minSupport;
@@ -363,8 +367,9 @@ public class TIDApriori implements AprioriAlgorithm {
                     // LOGGER.debug("s " + s);
                     // LOGGER.debug("s' support: " + itemSet.getSupport() + "
                     // s': " + itemSet);
-                    int newSupport = itemSet.getSupport();
-                    double c = s.getSupport() / newSupport;
+                    double newSupport = itemSet.getSupport();
+                    double oldSupport = s.getSupport();
+                    double c = oldSupport / newSupport;
                     if (c >= confidence) {
                         AssociationRule rule = new AssociationRule(i,
                                 sWithoutI, c, s.getSupport());

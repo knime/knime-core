@@ -101,11 +101,11 @@ public final class TIDItemSet {
      * 
      * @return the support of this set
      */
-    public int getSupport() {
+    public double getSupport() {
         if (m_items.size() > 0) {
-            return m_commonTIDs.cardinality();
+            return (double)m_commonTIDs.cardinality() / (double)m_dbsize;
         } else {
-            return 0;
+            return 0.0;
         }
     }
 
@@ -157,7 +157,7 @@ public final class TIDItemSet {
         if (ids.isEmpty()) {
             return null;
         }
-        return new TIDFrequentItemSet(ids, getSupport() / m_dbsize, getTIDs());
+        return new TIDFrequentItemSet(ids, getSupport(), getTIDs());
     }
 
     /**

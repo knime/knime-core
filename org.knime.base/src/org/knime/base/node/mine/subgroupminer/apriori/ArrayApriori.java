@@ -54,7 +54,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     // private static final NodeLogger logger =
     // NodeLogger.getLogger(ArrayApriori.class);
 
-    private int m_minSupport;
+    private double m_minSupport;
 
     private int m_builtLevel;
 
@@ -92,7 +92,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      * 
      * @param minSupport the minimum support
      */
-    public void setMinSupport(final int minSupport) {
+    public void setMinSupport(final double minSupport) {
         m_minSupport = minSupport;
     }
 
@@ -120,7 +120,7 @@ public class ArrayApriori implements AprioriAlgorithm {
         }
         int listPos = 0;
         for (int i = 0; i < items.length; i++) {
-            if (items[i] >= m_minSupport) {
+            if (((double)items[i] / (double)m_dbsize) >= m_minSupport) {
                 frequentItems.add(i);
                 m_mapping[i] = listPos++;
             } else {
@@ -167,7 +167,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      *      FrequentItemSet.Type, org.knime.core.node.ExecutionMonitor)
      */
     public void findFrequentItemSets(final List<BitSet> transactions,
-            final int minSupport, final int maxDepth,
+            final double minSupport, final int maxDepth,
             final FrequentItemSet.Type type, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         m_minSupport = minSupport;
@@ -222,7 +222,8 @@ public class ArrayApriori implements AprioriAlgorithm {
         for (int i = item; i < node.getLength() - 1; i++) {
             if (level == m_builtLevel) {
                 // create children
-                if (node.getCounterFor(i) >= m_minSupport) {
+                if (((double)node.getCounterFor(i) / (double)m_dbsize) 
+                        >= m_minSupport) {
                     /*
                      * Get the parent and the children of that parent ->
                      * parent.getChildren(node.getParentIndex()) if either they
@@ -238,7 +239,8 @@ public class ArrayApriori implements AprioriAlgorithm {
                         } else {
                             boolean hasFrequentSubset = false;
                             for (int j = i; j < node.getLength(); j++) {
-                                if (parentsChild.getCounterFor(j) 
+                                if (((double)parentsChild.getCounterFor(j) 
+                                        / (double)m_dbsize) 
                                         >= m_minSupport) {
                                     hasFrequentSubset = true;
                                     break;
@@ -314,7 +316,7 @@ public class ArrayApriori implements AprioriAlgorithm {
                             .getItems());
                     sWithoutI.remove(i);
                     // now go down the tree for both s and s'
-                    int newSupport = getSupportFor(sWithoutI);
+                    double newSupport = getSupportFor(sWithoutI);
                     // logger.debug("support(s'): " + newSupport);
                     double c = supportS / newSupport;
                     if (c >= confidence) {
@@ -331,14 +333,14 @@ public class ArrayApriori implements AprioriAlgorithm {
         return associationRules;
     }
 
-    private int getSupportFor(final List<Integer> itemset) {
+    private double getSupportFor(final List<Integer> itemset) {
         ArrayPrefixTreeNode child = m_root;
-        int support = 0;
+        double support = 0;
         for (Integer item : itemset) {
             support = child.getCounterFor(m_mapping[item]);
             child = child.getChild(m_mapping[item]);
         }
-        return support;
+        return support / m_dbsize;
     }
 
     /**
@@ -396,7 +398,8 @@ public class ArrayApriori implements AprioriAlgorithm {
             return;
         }
         for (int i = item; i < root.getLength(); i++) {
-            if (root.getCounterFor(i) >= m_minSupport) {
+            if (((double)root.getCounterFor(i) / (double)m_dbsize) 
+                    >= m_minSupport) {
                 FrequentItemSet newSet = new FrequentItemSet(
                         currSet.getItems(), ((double)root.getCounterFor(i) 
                                 / (double)m_dbsize));

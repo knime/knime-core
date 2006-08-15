@@ -39,7 +39,7 @@ public class TIDFrequentItemSet extends FrequentItemSet {
      * @param support the support (abs)
      * @param tids the transaction ids
      */
-    public TIDFrequentItemSet(final List<Integer> itemIds, final int support,
+    public TIDFrequentItemSet(final List<Integer> itemIds, final double support,
             final List<Integer> tids) {
         super(itemIds, support);
         m_tids = tids;

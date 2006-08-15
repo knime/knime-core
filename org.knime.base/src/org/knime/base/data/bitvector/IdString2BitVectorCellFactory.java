@@ -66,7 +66,7 @@ public class IdString2BitVectorCellFactory extends ReplacedCellFactory {
             currBitSet.set(pos);
         }
         m_nrOfSetBits += numbers.length;
-        m_nrOfNotSetBits += maxPos - m_nrOfSetBits;
+        m_nrOfNotSetBits += (maxPos - numbers.length);
         return new BitVectorCell(currBitSet, maxPos);
     }
 

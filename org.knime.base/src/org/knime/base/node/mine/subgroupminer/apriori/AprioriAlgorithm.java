@@ -52,8 +52,9 @@ public interface AprioriAlgorithm {
      * @param exec the execution monitor
      * @throws CanceledExecutionException if the execution was cancelled
      */
-    public void findFrequentItemSets(List<BitSet> transactions, int minSupport,
-            int maxDepth, FrequentItemSet.Type type, ExecutionMonitor exec)
+    public void findFrequentItemSets(List<BitSet> transactions, 
+            double minSupport, int maxDepth, FrequentItemSet.Type type, 
+            ExecutionMonitor exec)
             throws CanceledExecutionException;
 
     /**

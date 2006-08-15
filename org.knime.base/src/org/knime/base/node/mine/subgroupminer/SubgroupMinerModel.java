@@ -282,15 +282,16 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTable input = inData[0];
-        List<BitSet> transactions = preprocess(input, exec);
+        ExecutionMonitor exec1 = exec.createSubProgress(0.5);
+        ExecutionMonitor exec2 = exec.createSubProgress(0.5);
+        List<BitSet> transactions = preprocess(input, exec1);
 
         m_apriori = AprioriAlgorithmFactory.getAprioriAlgorithm(
                 m_underlyingStruct, m_maxBitsetLength, m_nrOfRows);
-        int support = (int)Math.ceil(m_minSupport * m_nrOfRows);
-        LOGGER.debug("support: " + support);
+        LOGGER.debug("support: " + m_minSupport);
         LOGGER.debug(m_minSupport + " start apriori: " + new Date());
-        m_apriori.findFrequentItemSets(transactions, support,
-                m_maxItemSetLength, m_itemSetType, exec);
+        m_apriori.findFrequentItemSets(transactions, m_minSupport,
+                m_maxItemSetLength, m_itemSetType, exec2);
         LOGGER.debug("ended apriori: " + new Date());
         m_itemSetTable = createOutputTable(exec);
 

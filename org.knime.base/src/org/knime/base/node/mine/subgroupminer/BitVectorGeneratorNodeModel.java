@@ -316,7 +316,6 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     private DataTable[] createBitVectorsFromStrings(
             final BufferedDataTable data,
-
             final int stringColIndex) {
         DataColumnSpecCreator creator = new DataColumnSpecCreator("BitVectors",
                 BitVectorCell.TYPE);
