@@ -26,9 +26,8 @@ import java.io.IOException;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -219,14 +218,8 @@ public class ScatterPlotNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         File data = new File(internDir, FILE_NAME);
-        DataTable table = DataContainer.readFromZip(data);
-        //TODO: remove this, when the number of rows is available for the table.
-        int rowCount = 0;
-        for (DataRow row : table) {
-            if (row != null) {
-                rowCount++;
-            }
-        }
+        ContainerTable table = DataContainer.readFromZip(data);
+        int rowCount = table.getRowCount();
         m_rows = new DefaultDataArray(table, 1, rowCount, exec);
     }
 

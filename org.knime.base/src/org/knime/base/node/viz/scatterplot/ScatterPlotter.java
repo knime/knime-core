@@ -52,7 +52,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * @author Christoph Sieb, University of Konstanz
  * @author Peter Ohl, University of Konstanz
  */
-public class ScatterPlotter extends AbstractPlotter2D implements ActionListener {
+public class ScatterPlotter extends AbstractPlotter2D implements 
+    ActionListener {
     // the guy we get the hilite status from
     private HiLiteHandler m_hiliteHdlr;
 
@@ -268,7 +269,8 @@ public class ScatterPlotter extends AbstractPlotter2D implements ActionListener 
      * @param size the number of pixles (an odd integer)
      */
     public void setDotSize(final int size) {
-        if ((size != getScatterPlotterDrawingPane().getDotSize()) && (size > 0)) {
+        if ((size != getScatterPlotterDrawingPane().getDotSize()) 
+                && (size > 0)) {
             getScatterPlotterDrawingPane().setDotSize(size);
             // with bigger dots we have less area to draw in:
             // therefore set the new offset into the header and
@@ -589,7 +591,8 @@ public class ScatterPlotter extends AbstractPlotter2D implements ActionListener 
 
         boolean dotsSelected;
         if ((getScatterPlotterDrawingPane().getSelectedSet() != null)
-                && (getScatterPlotterDrawingPane().getSelectedSet().size() > 0)) {
+                && (getScatterPlotterDrawingPane()
+                        .getSelectedSet().size() > 0)) {
             dotsSelected = true;
         } else {
             dotsSelected = false;
@@ -656,7 +659,8 @@ public class ScatterPlotter extends AbstractPlotter2D implements ActionListener 
     @Override
     public void mouseReleased(final MouseEvent e) {
         super.mouseReleased(e);
-        boolean existSelected = getDrawingPane().getNumberSelectedElements() > 0;
+        boolean existSelected = getDrawingPane()
+            .getNumberSelectedElements() > 0;
         m_hilite.setEnabled(existSelected);
         boolean existHilited = getHiLiteHandler().getHiLitKeys().size() > 0;
         m_unhilite.setEnabled(existSelected && existHilited);
@@ -965,12 +969,14 @@ public class ScatterPlotter extends AbstractPlotter2D implements ActionListener 
                 // check whether the bounds are set properly
                 if (!xCoordinate.isNominal()) {
 
-                    if (!((NumericCoordinate)xCoordinate).isMinDomainValueSet()) {
+                    if (!((NumericCoordinate)xCoordinate)
+                            .isMinDomainValueSet()) {
                         ((NumericCoordinate)xCoordinate)
                                 .setMinDomainValue(getXmin());
                     }
 
-                    if (!((NumericCoordinate)xCoordinate).isMaxDomainValueSet()) {
+                    if (!((NumericCoordinate)xCoordinate)
+                            .isMaxDomainValueSet()) {
                         ((NumericCoordinate)xCoordinate)
                                 .setMaxDomainValue(getXmax());
                     }
@@ -1029,12 +1035,14 @@ public class ScatterPlotter extends AbstractPlotter2D implements ActionListener 
                 // check whether the bounds are set properly
                 if (!yCoordinate.isNominal()) {
 
-                    if (!((NumericCoordinate)yCoordinate).isMinDomainValueSet()) {
+                    if (!((NumericCoordinate)yCoordinate)
+                            .isMinDomainValueSet()) {
                         ((NumericCoordinate)yCoordinate)
                                 .setMinDomainValue(getYmin());
                     }
 
-                    if (!((NumericCoordinate)yCoordinate).isMaxDomainValueSet()) {
+                    if (!((NumericCoordinate)yCoordinate)
+                            .isMaxDomainValueSet()) {
                         ((NumericCoordinate)yCoordinate)
                                 .setMaxDomainValue(getYmax());
                     }
