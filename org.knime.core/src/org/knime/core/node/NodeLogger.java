@@ -271,9 +271,9 @@ public final class NodeLogger {
         l.info("# logging date=" + new Date());
         l.info("# java.version=" + System.getProperty("java.version"));
         l.info("# java.vm.version=" + System.getProperty("java.vm.version"));
+        l.info("# java.vendor=" + System.getProperty("java.vendor"));
         l.info("# os.name=" + System.getProperty("os.name"));
-        l
-                .info("# number of CPUs="
+        l.info("# number of CPUs="
                         + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (ASSERT ? "on" : "off"));
         l.info("#############################################################");
