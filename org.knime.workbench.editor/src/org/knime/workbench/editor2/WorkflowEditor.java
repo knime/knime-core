@@ -38,7 +38,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PrecisionPoint;
@@ -122,8 +121,6 @@ import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
-import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -145,9 +142,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
-    private static final int LINE_WIDTH_FOR_SELECTED_NODES = 2;
-
-    private static final int LINE_WIDTH_FOR_UNSELECTED_NODES = 1;
+//    private static final int LINE_WIDTH_FOR_SELECTED_NODES = 2;
+//
+//    private static final int LINE_WIDTH_FOR_UNSELECTED_NODES = 1;
 
     /**
      * The static clipboard for copy/cut/paste.
@@ -1281,35 +1278,35 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    private void makeConnectionNormal(
-            final ConnectionContainerEditPart connectionPart) {
-        ((PolylineConnection)connectionPart.getFigure())
-                .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
-    }
+//    private void makeConnectionNormal(
+//            final ConnectionContainerEditPart connectionPart) {
+//        ((PolylineConnection)connectionPart.getFigure())
+//                .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
+//    }
+//
+//    private void makeConnectionBold(
+//            final ConnectionContainerEditPart connectionPart) {
+//        ((PolylineConnection)connectionPart.getFigure())
+//                .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
+//    }
 
-    private void makeConnectionBold(
-            final ConnectionContainerEditPart connectionPart) {
-        ((PolylineConnection)connectionPart.getFigure())
-                .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
-    }
-
-    private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
-
-        for (ConnectionContainerEditPart connectionPart : nodePart
-                .getAllConnections()) {
-
-            makeConnectionBold(connectionPart);
-        }
-    }
-
-    private void makeConnectionsNormal(final NodeContainerEditPart nodePart) {
-
-        for (ConnectionContainerEditPart connectionPart : nodePart
-                .getAllConnections()) {
-
-            makeConnectionNormal(connectionPart);
-        }
-    }
+//    private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
+//
+//        for (ConnectionContainerEditPart connectionPart : nodePart
+//                .getAllConnections()) {
+//
+//            makeConnectionBold(connectionPart);
+//        }
+//    }
+//
+//    private void makeConnectionsNormal(final NodeContainerEditPart nodePart) {
+//
+//        for (ConnectionContainerEditPart connectionPart : nodePart
+//                .getAllConnections()) {
+//
+//            makeConnectionNormal(connectionPart);
+//        }
+//    }
 
     /**
      * Called when the command stack has changed, that is, a GEF command was
