@@ -116,7 +116,6 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
                 max = 1.0;
             }
             d = (float)((val - min) / (max - min));
-            System.out.println(d);
             setIconValue(d);
             setTextInternal(null);
         } else {
