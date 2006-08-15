@@ -1241,40 +1241,40 @@ public class WorkflowEditor extends GraphicalEditor implements
         // and paint the connections or the not any more selected nodes
         // normal
         StructuredSelection structuredSelection = null;
-        if (selection instanceof StructuredSelection) {
-
-            structuredSelection = (StructuredSelection)selection;
-
-            // revert the bold connections for all old selections
-            // if available
-            if (m_boldNodeParts != null) {
-                for (Object element : m_boldNodeParts.toList()) {
-
-                    if (element instanceof NodeContainerEditPart) {
-
-                        // make the connections normal
-                        makeConnectionsNormal((NodeContainerEditPart)element);
-                    } else if (element instanceof ConnectionContainerEditPart) {
-
-                        makeConnectionNormal((ConnectionContainerEditPart)element);
-                    }
-
-                }
-            }
-
-            // paint the connections of the new selection bold
-            for (Object element : structuredSelection.toList()) {
-
-                if (element instanceof NodeContainerEditPart) {
-
-                    // make the connections bold
-                    makeConnectionsBold((NodeContainerEditPart)element);
-                } else if (element instanceof ConnectionContainerEditPart) {
-
-                    makeConnectionBold((ConnectionContainerEditPart)element);
-                }
-            }
-        }
+//        if (selection instanceof StructuredSelection) {
+//
+//            structuredSelection = (StructuredSelection)selection;
+//
+//            // revert the bold connections for all old selections
+//            // if available
+//            if (m_boldNodeParts != null) {
+//                for (Object element : m_boldNodeParts.toList()) {
+//
+//                    if (element instanceof NodeContainerEditPart) {
+//
+//                        // make the connections normal
+//                        makeConnectionsNormal((NodeContainerEditPart)element);
+//                    } else if (element instanceof ConnectionContainerEditPart) {
+//
+//                        makeConnectionNormal((ConnectionContainerEditPart)element);
+//                    }
+//
+//                }
+//            }
+//
+//            // paint the connections of the new selection bold
+//            for (Object element : structuredSelection.toList()) {
+//
+//                if (element instanceof NodeContainerEditPart) {
+//
+//                    // make the connections bold
+//                    makeConnectionsBold((NodeContainerEditPart)element);
+//                } else if (element instanceof ConnectionContainerEditPart) {
+//
+//                    makeConnectionBold((ConnectionContainerEditPart)element);
+//                }
+//            }
+//        }
 
         // remember the new selection as the old one
         m_boldNodeParts = structuredSelection;
