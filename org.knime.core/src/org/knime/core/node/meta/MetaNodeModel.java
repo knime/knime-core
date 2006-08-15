@@ -410,12 +410,11 @@ public class MetaNodeModel extends SpecialNodeModel implements
      *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void loadValidatedSettingsFrom(final File nodeFile,
+    protected void loadValidatedSettingsFrom(final File nodeDir,
             final NodeSettingsRO settings, final ExecutionMonitor exec)
             throws InvalidSettingsException, IOException {
-        if (nodeFile != null) {
-            File f = new File(nodeFile.getParentFile(),
-                    WorkflowManager.WORKFLOW_FILE);
+        if (nodeDir != null) {
+            File f = new File(nodeDir, WorkflowManager.WORKFLOW_FILE);
             if (f.exists() && f.isFile()) {
                 try {
                     internalWFM().clear();
