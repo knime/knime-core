@@ -106,6 +106,12 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * Key to store the columns used for clustering in the PredParams.
      */
     public static final String COLUMNSUSED_KEY = "colsused";
+    
+    /**
+     * Key to store whether the clustering should be performed in memory
+     * in the PredParams.
+     */
+    public static final String MEMORY_KEY = "memory";
 
     /*
      * List contains the data cells to include.
@@ -187,6 +193,11 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * The underlying fuzzy c-means algorithm.
      */
     private FCMAlgorithm m_fcmAlgo;
+    
+    /*
+     * Flag indicating whether the clustering should be performed in memory.
+     */
+    private boolean m_memory;
 
     /**
      * Constructor, remember parent and initialize status.
@@ -200,6 +211,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
         m_noise = false;
         m_calculateDelta = false;
         m_delta = .2;
+        m_memory = true;
     }
 
     /**
@@ -216,14 +228,28 @@ public class FuzzyClusterNodeModel extends NodeModel {
 
         if (m_noise) {
             if (m_calculateDelta) {
-                m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier,
-                        m_calculateDelta, m_lambda);
+                if (m_memory) {
+                    m_fcmAlgo = new FCMAlgorithmMemory(m_nrClusters,
+                            m_fuzzifier, m_calculateDelta, m_lambda);
+                } else {
+                    m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier,
+                            m_calculateDelta, m_lambda);
+                }
             } else {
-                m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier,
-                        m_calculateDelta, m_delta);
+                if (m_memory) {
+                    m_fcmAlgo = new FCMAlgorithmMemory(m_nrClusters,
+                            m_fuzzifier, m_calculateDelta, m_delta);
+                } else {
+                    m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier,
+                            m_calculateDelta, m_delta);
+                }
             }
         } else {
-            m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier);
+            if (m_memory) {
+                m_fcmAlgo = new FCMAlgorithmMemory(m_nrClusters, m_fuzzifier);
+            } else {
+                m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier);
+            }
         }
 
         int nrRows = inData[INPORT].getRowCount();
@@ -306,6 +332,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
             settings.addDouble(LAMBDAVALUE_KEY, m_lambda);
             settings.addDouble(DELTAVALUE_KEY, -1);
         }
+        settings.addBoolean(MEMORY_KEY, m_memory);
     }
 
     /**
@@ -378,6 +405,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
             for (int i = 0; i < columns.length; i++) {
                 m_list.add(columns[i]);
             }
+        }
+        if (settings.containsKey(MEMORY_KEY)) {
+            m_memory = settings.getBoolean(MEMORY_KEY);
         }
     }
 

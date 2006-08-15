@@ -42,6 +42,10 @@
     distances. However, a lambda paramater has to be set, according to the
     shape of the clusters.
     </option>
+    <option name="Perform the clustering in memory">
+    If this option is selected, the clustering is performed in the memory,
+    which speeds up the process.
+    </option>
 	</fullDescription>
 	
 	<ports>

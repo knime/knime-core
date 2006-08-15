@@ -42,6 +42,7 @@ import org.knime.core.node.ExecutionContext;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class FCMAlgorithm {
+    
     // dimension of input space
     private int m_dimension;
 
@@ -384,11 +385,13 @@ public class FCMAlgorithm {
         return m_noise;
     }
 
-    /*
+    /**
      * Helper method to determine the winner cluster center (The cluster center
      * to which the DataRow has the highest membership value).
+     * @param weights the weights.
+     * @return winner index.
      */
-    private final int getWinner(final double[] weights) {
+    protected final int getWinner(final double[] weights) {
         int max = -1;
         double maxvalue = -1;
         for (int i = 0; i < weights.length; i++) {
@@ -466,4 +469,133 @@ public class FCMAlgorithm {
         }
         return distance;
     }
+
+    
+    
+    ///////////////////////////////////////////////
+    // protected getted and setters 
+    ///////////////////////////////////////////////
+    
+    /**
+     * @return dimension of input space
+     */
+    protected int getDimension() {
+        return m_dimension;
+    }
+
+    /**
+     * @return the number of Rows
+     */
+    protected int getNrRows() {
+        return m_nrRows;
+    }
+
+    /**
+     * @return the numbre of clusters
+     */
+    protected int getNrClusters() {
+        return m_nrClusters;
+    }
+
+    /**
+     * @return the cluster prototypes
+     */
+    protected double[][] getClusters() {
+        return m_clusters;
+    }
+
+    /**
+     * Sets a value in a cluster prototype.
+     * @param cluster the cluster prototype
+     * @param column the column
+     * @param value the value to set.
+     */
+    protected void setClusterValue(final int cluster, 
+            final int column, final double value) {
+        m_clusters[cluster][column] = value;
+    }
+
+    /**
+     * @return the weight matrix.
+     */
+    protected double[][] getWeightMatrix() {
+        return m_weightMatrix;
+    }
+
+    /**
+     * Sets a value in the weight matrix.
+     * 
+     * @param row the row.
+     * @param column the column.
+     * @param value the value to set.
+     */
+    protected void setWeightMatrixValue(final int row, final int column,
+            final double value) {
+        m_weightMatrix[row][column] = value;
+    }
+
+    /**
+     * @return the fuzzifier.
+     */
+    protected double getFuzzifier() {
+        return m_fuzzifier;
+    }
+
+    /**
+     * @return noise clustering.
+     */
+    protected boolean isNoise() {
+        return m_noise;
+    }
+
+    /**
+     * @return is delta calculated.
+     */
+    protected boolean isCalculateDelta() {
+        return m_calculateDelta;
+    }
+
+    /**
+     * @return delta value
+     */
+    protected double getDelta() {
+        return m_delta;
+    }
+    
+    /**
+     * @param delta new delta value.
+     */
+    protected void setDelta(final double delta) {
+        m_delta = delta;
+    }
+
+    /**
+     * @return lambda value.
+     */
+    protected double getLambda() {
+        return m_lambda;
+    }
+
+    /**
+     * @return total change in prototypes.
+     */
+    protected double getTotalChange() {
+        return m_totalChange;
+    }
+
+    /**
+     * @param change current change in prototypes to sum up.
+     */
+    protected void addTotalChange(final double change) {
+        m_totalChange += change;
+    }
+    
+    /**
+     * @param value ne wvalue for total change in prototypes.
+     */
+    protected void setTotalChange(final double value) {
+        m_totalChange = value;
+    }
+
+    
 }

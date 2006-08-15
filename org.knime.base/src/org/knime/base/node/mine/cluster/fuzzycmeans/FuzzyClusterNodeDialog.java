@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -100,6 +101,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
 
     private final Checkbox m_noisecheck = new Checkbox("Induce noise cluster",
             false);
+    
+    private final JCheckBox m_memoryCB;
 
     /*
      * The tab's name.
@@ -195,6 +198,9 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         m_lambdaSpinner.setEnabled(false);
         noisepanel.add(m_lambdaSpinner);
         clusterPropPane.add(noisepanel);
+        
+        m_memoryCB = new JCheckBox("Perform the clustering in memory");
+        clusterPropPane.add(m_memoryCB);
 
         super.addTab(TAB, clusterPropPane);
         m_filterpanel = new FilterColumnPanel(DoubleValue.class);
@@ -318,6 +324,16 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         } else {
             p.update(specs[FuzzyClusterNodeModel.INPORT], true, new String[]{});
         }
+        
+        if (settings.containsKey(FuzzyClusterNodeModel.MEMORY_KEY)) {
+            try {
+                boolean memory = settings
+                        .getBoolean(FuzzyClusterNodeModel.MEMORY_KEY);
+                m_memoryCB.setSelected(memory);
+            } catch (InvalidSettingsException e) {
+                // nothing to do here.
+            }
+        }
     }
 
     /**
@@ -376,6 +392,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         } else {
             settings.addDouble(FuzzyClusterNodeModel.LAMBDAVALUE_KEY, -1);
         }
+        settings.addBoolean(FuzzyClusterNodeModel.MEMORY_KEY, m_memoryCB
+                .isSelected());
 
     }
 }
