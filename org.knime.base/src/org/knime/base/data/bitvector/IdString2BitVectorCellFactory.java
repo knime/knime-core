@@ -26,7 +26,6 @@ package org.knime.base.data.bitvector;
 
 import java.util.BitSet;
 
-import org.knime.base.data.replace.ReplacedCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
@@ -37,16 +36,18 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class IdString2BitVectorCellFactory extends ReplacedCellFactory {
+public class IdString2BitVectorCellFactory extends BitVectorCellFactory {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(IdString2BitVectorCellFactory.class);
 
     private int m_nrOfSetBits = 0;
-
-    private int m_nrOfNotSetBits = 0;
+    
+    private int m_processedRows = 0;
+    
+    private int m_maxPos = Integer.MIN_VALUE;
 
     /**
-     * @see ReplacedCellFactory#getReplacement(
+     * @see BitVectorCellFactory#getReplacement(
      *      org.knime.core.data.DataRow, int)
      */
     @Override
@@ -56,24 +57,24 @@ public class IdString2BitVectorCellFactory extends ReplacedCellFactory {
                     + " Replacing it with missing value!");
             return DataType.getMissingCell();
         }
+        m_processedRows++;
         BitSet currBitSet = new BitSet();
-        int maxPos = Integer.MIN_VALUE;
         String toParse = ((StringValue)row.getCell(column)).getStringValue();
         String[] numbers = toParse.split("\\s");
         for (int i = 0; i < numbers.length; i++) {
             int pos = Integer.parseInt(numbers[i].trim());
-            maxPos = Math.max(maxPos, pos);
+            m_maxPos = Math.max(m_maxPos, pos);
             currBitSet.set(pos);
         }
         m_nrOfSetBits += numbers.length;
-        m_nrOfNotSetBits += (maxPos - numbers.length);
-        return new BitVectorCell(currBitSet, maxPos);
+        return new BitVectorCell(currBitSet, m_maxPos);
     }
 
     /**
      * 
      * @return the number of set bits.
      */
+    @Override
     public int getNumberOfSetBits() {
         return m_nrOfSetBits;
     }
@@ -82,7 +83,10 @@ public class IdString2BitVectorCellFactory extends ReplacedCellFactory {
      * 
      * @return the number of not set bits.
      */
+    @Override
     public int getNumberOfNotSetBits() {
-        return m_nrOfNotSetBits;
+        // processedrows * m_maxPos = all possible positions
+        int allPositions = m_processedRows * m_maxPos;
+        return allPositions - m_nrOfSetBits;
     }
 }

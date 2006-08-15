@@ -26,7 +26,6 @@ package org.knime.base.data.bitvector;
 
 import java.util.BitSet;
 
-import org.knime.base.data.replace.ReplacedCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
@@ -37,7 +36,7 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class BitString2BitVectorCellFactory extends ReplacedCellFactory {
+public class BitString2BitVectorCellFactory extends BitVectorCellFactory {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BitString2BitVectorCellFactory.class);
@@ -47,7 +46,7 @@ public class BitString2BitVectorCellFactory extends ReplacedCellFactory {
     private int m_nrOfNotSetBits = 0;
 
     /**
-     * @see ReplacedCellFactory#getReplacement(
+     * @see BitVectorCellFactory#getReplacement(
      *      org.knime.core.data.DataRow, int)
      */
     @Override
@@ -87,6 +86,7 @@ public class BitString2BitVectorCellFactory extends ReplacedCellFactory {
      * 
      * @return the number of se bits.
      */
+    @Override
     public int getNumberOfSetBits() {
         return m_nrOfSetBits;
     }
@@ -95,6 +95,7 @@ public class BitString2BitVectorCellFactory extends ReplacedCellFactory {
      * 
      * @return the number of not set bits.
      */
+    @Override
     public int getNumberOfNotSetBits() {
         return m_nrOfNotSetBits;
     }

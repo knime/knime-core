@@ -34,6 +34,7 @@ import java.util.List;
 
 import org.knime.base.data.bitvector.BitString2BitVectorCellFactory;
 import org.knime.base.data.bitvector.BitVectorCell;
+import org.knime.base.data.bitvector.BitVectorCellFactory;
 import org.knime.base.data.bitvector.Hex2BitVectorCellFactory;
 import org.knime.base.data.bitvector.IdString2BitVectorCellFactory;
 import org.knime.base.data.replace.ReplacedColumnsTable;
@@ -137,6 +138,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     private static final String INT_CFG_NR_ZEROS = "nrOfZeros";
 
     private static final String INT_CFG_NR_ONES = "nrOfOnes";
+    
+    private BitVectorCellFactory m_factory;
 
     /**
      * Creates an instance of the BitVectorGeneratorNodeModel with one inport
@@ -159,7 +162,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      * @return the number of 1s generated
      */
     public int getTotalNrOf1s() {
-        return m_totalNrOf1s;
+        return m_factory.getNumberOfSetBits();
     }
 
     /**
@@ -167,7 +170,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      * @return the number of 0s generated
      */
     public int getTotalNrOf0s() {
-        return m_totalNrOf0s;
+        return m_factory.getNumberOfNotSetBits();
     }
 
     /**
@@ -322,25 +325,19 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         DataColumnSpec colSpec = creator.createSpec();
         DataTable result = null;
         if (m_type.equals(STRING_TYPES.BIT)) {
-            BitString2BitVectorCellFactory factory 
+            m_factory 
                 = new BitString2BitVectorCellFactory();
             result = new ReplacedColumnsTable(data, colSpec, stringColIndex,
-                    factory);
-            m_totalNrOf0s = factory.getNumberOfNotSetBits();
-            m_totalNrOf1s = factory.getNumberOfSetBits();
+                    m_factory);
         } else if (m_type.equals(STRING_TYPES.HEX)) {
-            Hex2BitVectorCellFactory factory = new Hex2BitVectorCellFactory();
+            m_factory = new Hex2BitVectorCellFactory();
             result = new ReplacedColumnsTable(data, creator.createSpec(),
-                    stringColIndex, factory);
-            m_totalNrOf0s = factory.getNumberOfNotSetBits();
-            m_totalNrOf1s = factory.getNumberOfSetBits();
+                    stringColIndex, m_factory);
         } else if (m_type.equals(STRING_TYPES.ID)) {
-            IdString2BitVectorCellFactory factory 
+            m_factory 
                 = new IdString2BitVectorCellFactory();
             result = new ReplacedColumnsTable(data, colSpec, stringColIndex,
-                    factory);
-            m_totalNrOf0s = factory.getNumberOfNotSetBits();
-            m_totalNrOf1s = factory.getNumberOfSetBits();
+                    m_factory);
         }
         return new DataTable[]{result};
     }

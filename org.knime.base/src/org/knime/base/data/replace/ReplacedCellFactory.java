@@ -58,5 +58,6 @@ public abstract class ReplacedCellFactory implements ReplacedCellsFactory {
      * @throws IndexOutOfBoundsException if int argument is out of range
      * @throws NullPointerException if row is <code>null</code>
      */
-    public abstract DataCell getReplacement(final DataRow row, final int column);
+    public abstract DataCell getReplacement(final DataRow row, 
+                final int column);
 }
