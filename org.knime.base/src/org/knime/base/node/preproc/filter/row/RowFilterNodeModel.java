@@ -138,6 +138,11 @@ public class RowFilterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTable in = inData[0];
+        // in case the node was configured and the workflow is closed 
+        // (and saved), the row filter isn't configured upon reloading. 
+        // here, we give it a chance to configure itself (e.g. find the column
+        // index)
+        m_rowFilter.configure(in.getDataTableSpec());
         BufferedDataContainer container = 
             exec.createDataContainer(in.getDataTableSpec());
         exec.setMessage("Searching first matching row...");
