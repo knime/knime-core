@@ -391,7 +391,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
      * @see org.knime.core.node.SpecialNodeModel#internalWFM()
      */
     @Override
-    protected WorkflowManager internalWFM() {
+    protected final WorkflowManager internalWFM() {
         if (!m_wfmInitialized) {
             super.internalWFM().addListener(this);
             m_wfmInitialized = true;
