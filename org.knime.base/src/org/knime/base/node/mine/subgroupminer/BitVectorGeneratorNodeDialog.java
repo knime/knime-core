@@ -78,7 +78,6 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
 
     private boolean m_hasStringCol = false;
 
-    // private static final int HORIZ_SPACE = 10;
 
     private static final int COMP_HEIGHT = 20;
 
@@ -282,6 +281,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
 
         m_stringRadio.setSelected(settings.getBoolean(
                 BitVectorGeneratorNodeModel.CFG_FROM_STRING, false));
+        m_numericRadio.setSelected(!m_stringRadio.isSelected());
         String typeString = settings.getString(
                 BitVectorGeneratorNodeModel.CFG_STRING_TYPE,
                 BitVectorGeneratorNodeModel.STRING_TYPES.BIT.name());
