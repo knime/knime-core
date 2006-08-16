@@ -31,6 +31,8 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Set;
 
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.ComplexNumberCell;
@@ -39,8 +41,6 @@ import org.knime.core.data.def.FuzzyIntervalCell;
 import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-
-import junit.framework.TestCase;
 
 /**
  * Test the <code>Config</code> class.
@@ -393,7 +393,27 @@ public final class NodeSettingsTest extends TestCase {
         SETT.addDataCell("finterval", f);
         assertTrue(SETT.containsKey("finterval"));
         assertTrue(SETT.getDataCell("finterval").equals(f));
+        DataCell unknownCell = new UnknownCell();
+        SETT.addDataCell("unknownCell", unknownCell);
+        assertTrue(SETT.containsKey("unknownCell"));
+        assertTrue(SETT.getDataCell("unknownCell").equals(unknownCell));
     }
+    
+    private static class UnknownCell extends DataCell {
+        @Override
+        protected boolean equalsDataCell(DataCell dc) {
+            return dc instanceof UnknownCell;
+        }
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
+        @Override
+        public String toString() {
+            return "unknown";
+        }
+    };
+    
     
     /**
      * Test write/read of DataType elements.
