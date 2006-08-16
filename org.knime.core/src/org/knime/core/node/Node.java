@@ -1274,6 +1274,7 @@ public final class Node {
         // reset status object to clean previous status messages.
         m_status = null;
 
+        NodeStatus localStatus = null;
         // configure
         try {
             String errorMsg = "";
@@ -1310,6 +1311,8 @@ public final class Node {
         } catch (InvalidSettingsException ise) {
             if (isFullyConnected()) {
                 m_logger.warn("Configure failed: " + ise.getMessage());
+                localStatus = new NodeStatus.Warning("Warning: "
+                        + ise.getMessage());                
             } else {
                 m_logger.debug("Configure failed: " + ise.getMessage());
             }
@@ -1321,6 +1324,10 @@ public final class Node {
             m_logger.fatal("Configure failed", e);
             reset(true);
         } finally {
+            if (localStatus != null) {
+                m_status = localStatus;
+                notifyStateListeners(localStatus);
+            }
             processModelWarnings();
         }
     }
@@ -2008,5 +2015,16 @@ public final class Node {
      */
     public void retrieveModel(final MetaNodeModel metaModel) {
         metaModel.receiveModel(m_model);
+    }
+
+    /**
+     * Transfers the factory of this node into the meta node model by calling
+     * {@link MetaNodeModel#receiveFactory(NodeFactory)} with the model as
+     * argument.
+     * 
+     * @param metaModel a meta node model
+     */
+    public void retrieveFactory(final MetaNodeModel metaModel) {
+        metaModel.receiveFactory(m_factory);
     }
 }
