@@ -91,6 +91,10 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     private JMenuItem m_fade;
 
     private JMenuItem m_hide;
+    
+    private JMenuItem m_show;
+    
+    private static final String POPUP_SHOW = "Show UnHiLited";
 
     /**
      * Remembers if the currently set columns are valid. Set in
@@ -630,7 +634,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         item.setEnabled(dotsSelected && clearPossible);
         item.addActionListener(this);
         menu.add(item);
-        /* --- "clear hilight" --- */
+        /* --- "clear hilite" --- */
         item = new JMenuItem(clearhilite);
         item.setEnabled(clearPossible);
         item.addActionListener(this);
@@ -639,12 +643,18 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         /* ------------------------------ */
         menu.addSeparator();
         ButtonGroup group = new ButtonGroup();
-        /* --- "[ ] fade unhighlited" --- */
+        /* --- "[ ] show unhilited" --- */
+        item = new JRadioButtonMenuItem(POPUP_SHOW, 
+                (!getFadeUnHiLited() && !isHideUnHiLited()));
+        item.addActionListener(this);
+        group.add(item);
+        menu.add(item);
+        /* --- "[ ] fade unhilited" --- */
         item = new JRadioButtonMenuItem(POPUP_FADE, getFadeUnHiLited());
         item.addActionListener(this);
         group.add(item);
         menu.add(item);
-
+        /* --- "[ ] hide unhilited" --- */
         item = new JRadioButtonMenuItem(POPUP_HIDE, isHideUnHiLited());
         item.addActionListener(this);
         group.add(item);
@@ -703,12 +713,18 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         /* ------------------------------ */
         menu.addSeparator();
         ButtonGroup group = new ButtonGroup();
+        /* --- "[ ] show unhilited" --- */
+        m_show = new JRadioButtonMenuItem(POPUP_SHOW, 
+                (!getFadeUnHiLited() && !isHideUnHiLited()));
+        m_show.addActionListener(this);
+        group.add(m_show);
+        menu.add(m_show);
         /* --- "[ ] fade unhilited" --- */
         m_fade = new JRadioButtonMenuItem(POPUP_FADE, getFadeUnHiLited());
         m_fade.addActionListener(this);
         group.add(m_fade);
         menu.add(m_fade);
-
+        /* --- "[ ] hide unhilited" --- */
         m_hide = new JRadioButtonMenuItem(POPUP_HIDE, isHideUnHiLited());
         m_hide.addActionListener(this);
         group.add(m_hide);
@@ -722,8 +738,10 @@ public class ScatterPlotter extends AbstractPlotter2D implements
      * Clears all hiliting.
      */
     private void clearHilite() {
-
         getScatterPlotterDrawingPane().clearHilite();
+        setHideUnHiLited(false);
+        setFadeUnHiLited(false);
+        m_show.setSelected(true);
     }
 
     /**
@@ -743,15 +761,17 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         } else if (e.getActionCommand().equals(POPUP_CLEAR_HILITED)) {
             setHideUnHiLited(false);
             setFadeUnHiLited(false);
-            m_fade.setSelected(false);
-            m_hide.setSelected(false);
-            m_hiliteMenu.revalidate();
+            m_show.setSelected(true);
             m_hiliteHdlr.unHiLiteAll();
+        } else if (e.getActionCommand().equals(POPUP_SHOW)) {
+            setHideUnHiLited(false);
+            setFadeUnHiLited(false);
+            m_show.setSelected(true);
         }
     }
 
     /**
-     * Registers the currently selected dots as highlited with the hilite
+     * Registers the currently selected dots as hilited with the hilite
      * manager. And repaints.
      */
     public void hiliteSelected() {
