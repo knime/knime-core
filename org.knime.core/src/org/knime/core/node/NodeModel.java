@@ -770,7 +770,6 @@ public abstract class NodeModel {
             }
         } catch (InvalidSettingsException ise) {
             m_configured = false;
-            setWarningMessage("Configure failed: " + ise.getMessage());
             throw ise;
         }
         // return the resulting DataTableSpecs from the configure call
