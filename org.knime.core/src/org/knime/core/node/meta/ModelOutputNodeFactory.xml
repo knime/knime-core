@@ -16,6 +16,6 @@
 	</fullDescription>
 	
 	<ports>
-		<modelIn name="result model" index="0">The result model</modelIn>
+		<predParamIn name="result model" index="0">The result model</predParamIn>
 	</ports>	
 </knimeNode>

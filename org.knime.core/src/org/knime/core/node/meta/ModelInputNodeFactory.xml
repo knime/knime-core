@@ -14,6 +14,6 @@
 	</fullDescription>
 	
 	<ports>
-		<modelOut name="transfered model" index="0">Model from the connected successor outside</modelOut>
+		<predParamOut name="transfered model" index="0">Model from the connected successor outside</predParamOut>
 	</ports>	
 </knimeNode>
