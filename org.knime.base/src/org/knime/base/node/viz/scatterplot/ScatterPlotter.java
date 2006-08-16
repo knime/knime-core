@@ -148,7 +148,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         getColHeader().setStartTickOffset(pane.getCurrentHalfMaxDotSize());
         getRowHeader().setStartTickOffset(pane.getCurrentHalfMaxDotSize());
         if (m_rowContainer != null) {
-        props.setSelectables(m_rowContainer.getDataTableSpec());
+            props.setSelectables(m_rowContainer.getDataTableSpec());
         } else {
             props.setSelectables(null);
         }
@@ -168,12 +168,13 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     public void modelDataChanged(final DataArray newRowContainer) {
         // store the new row contaier coming from the model
         m_rowContainer = newRowContainer;
-        // if (getXColName() != null) {
-        // setXColumn(getXColName());
-        // }
-        // if (getYColName() != null) {
-        // setYColumn(getYColName());
-        // }
+        checkColumns();
+//         if (getXColName() != null) {
+//         setXColumn(getXColName());
+//         }
+//         if (getYColName() != null) {
+//         setYColumn(getYColName());
+//         }
 
         // generates dots, calculates coordinates and repaints
         updateDotsAndPaint();
@@ -357,8 +358,8 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         if (m_rowContainer == null) {
             return;
         }
-
         // if there is a invalid column return
+        checkColumns();
         if (m_invalidColumn) {
             return;
         }

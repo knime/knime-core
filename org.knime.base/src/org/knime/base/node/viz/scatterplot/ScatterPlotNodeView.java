@@ -80,13 +80,7 @@ public class ScatterPlotNodeView extends NodeView {
         ScatterPlotNodeModel model = (ScatterPlotNodeModel)getNodeModel();
 
         if (model != null) {
-            // update the x/y col selectors, this should trigger
-            DataArray rows = model.getRowsContainer();
-            if (rows != null) {
-                m_properties.setSelectables(rows.getDataTableSpec());
-            } else {
-                m_properties.setSelectables(null);
-            }
+
 
             // clear the plot
             m_plot.clear();
@@ -96,6 +90,14 @@ public class ScatterPlotNodeView extends NodeView {
 
             // or the data table.
             m_plot.modelDataChanged(model.getRowsContainer());
+            
+            // update the x/y col selectors, this should trigger
+            DataArray rows = model.getRowsContainer();
+            if (rows != null) {
+                m_properties.setSelectables(rows.getDataTableSpec());
+            } else {
+                m_properties.setSelectables(null);
+            }
 
             setViewTitle(getViewName() + " " 
                     + constructTitle((ScatterPlotNodeModel)getNodeModel()));

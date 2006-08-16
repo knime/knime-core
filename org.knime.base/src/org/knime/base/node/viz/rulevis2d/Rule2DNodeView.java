@@ -40,28 +40,27 @@ import org.knime.core.node.NodeView;
  */
 public class Rule2DNodeView extends NodeView {
 
-    private static final NodeLogger LOGGER 
-            = NodeLogger.getLogger(Rule2DNodeView.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(Rule2DNodeView.class);
+
     /**
      * The Rule2DPlotter is the core of the view.
      */
-    private Rule2DPlotter m_plotter;
+    private final Rule2DPlotter m_plotter;
 
     // the pane holding the always visible controls
     private ScatterProps m_properties = new ScatterProps() {
         /**
-         * @see org.knime.base.node.viz.scatterplot.ScatterProps#setSelectables(
-         * org.knime.core.data.DataTableSpec, 
-         * java.lang.Class<? extends org.knime.core.data.DataValue>[])
+         * @see org.knime.base.node.viz.scatterplot.ScatterProps#
+         *      setSelectables(org.knime.core.data.DataTableSpec)
          */
         @Override
-        public void setSelectables(DataTableSpec tSpec) {
+        public void setSelectables(final DataTableSpec tSpec) {
             super.setSelectables(tSpec, FuzzyIntervalValue.class);
         }
     };
-    
-    private static final int INITIAL_WIDTH = 300;
 
+    private static final int INITIAL_WIDTH = 300;
 
     /**
      * Opens a frame with the FuzzyRulePlotterPanel inside.
@@ -71,18 +70,16 @@ public class Rule2DNodeView extends NodeView {
     public Rule2DNodeView(final Rule2DNodeModel nodeModel) {
         super(nodeModel);
         LOGGER.debug("model: " + nodeModel + " rules: " + nodeModel.getRules());
-        if (nodeModel.getDataPoints() != null && nodeModel.getRules() != null) {
-            m_plotter = new Rule2DPlotter(nodeModel.getDataPoints(), nodeModel
-                    .getRules(), m_properties, INITIAL_WIDTH);
-            m_plotter.setBackground(ColorAttr.getBackground());
-    
-            // set the HiLiteHandler for the data coming from port 0
-            m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-            // set the HiLiteHandler for the rules coming from port 1
-    
-            getJMenuBar().add(m_plotter.getHiLiteMenu());
-            setComponent(m_plotter);
-        }
+        m_plotter = new Rule2DPlotter(nodeModel.getDataPoints(), nodeModel
+                .getRules(), m_properties, INITIAL_WIDTH);
+        m_plotter.setBackground(ColorAttr.getBackground());
+
+        // set the HiLiteHandler for the data coming from port 0
+        m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
+        // set the HiLiteHandler for the rules coming from port 1
+
+        getJMenuBar().add(m_plotter.getHiLiteMenu());
+        setComponent(m_plotter);
     }
 
     /**
@@ -109,27 +106,25 @@ public class Rule2DNodeView extends NodeView {
      */
     @Override
     public void modelChanged() {
-        if (m_plotter == null) {
-            return;
-        }
         Rule2DDataProvider dataProvider = getDataProvider();
         // update the x/y col selectors, this should trigger
         if (dataProvider.getDataPoints() != null) {
-//            m_properties.setSelectables(dataProvider.getDataPoints()
-//                    .getDataTableSpec());
-            m_properties.setSelectables(
-                    dataProvider.getDataPoints().getDataTableSpec(), 
-                    FuzzyIntervalValue.class);
-        // clear the plot
-        m_plotter.clear();
-        // set the HiLiteHandler for the data coming from port 0
-        m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-        // set the HiLiteHandler for the rules coming from port 1
-        m_plotter.setRuleHiLiteHandler(getNodeModel()
-                .getInHiLiteHandler(1));
-        // trigger an update for the plotter
-        m_plotter.setRules(dataProvider.getRules());
-        m_plotter.modelDataChanged(dataProvider.getDataPoints());
+            // m_properties.setSelectables(dataProvider.getDataPoints()
+            // .getDataTableSpec());
+
+            // clear the plot
+            m_plotter.clear();
+            // set the HiLiteHandler for the data coming from port 0
+            m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
+            // set the HiLiteHandler for the rules coming from port 1
+            m_plotter
+                    .setRuleHiLiteHandler(getNodeModel().getInHiLiteHandler(1));
+            // trigger an update for the plotter
+            m_plotter.setRules(dataProvider.getRules());
+            m_plotter.modelDataChanged(dataProvider.getDataPoints());
+            m_properties.setSelectables(dataProvider.getDataPoints()
+                    .getDataTableSpec(), FuzzyIntervalValue.class);
+            m_plotter.updatePaintModel();
         }
     }
 

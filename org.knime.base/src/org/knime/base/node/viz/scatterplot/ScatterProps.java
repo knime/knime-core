@@ -213,7 +213,9 @@ public class ScatterProps extends PlotterPropertiesPanel {
                     m_yCol.setSelectedItem(m_xAvailCol.get(0));
                 }
             }
-        }        
+        }
+        selectedXColChanged((DataColumnSpec)m_xCol.getSelectedItem());
+        selectedYColChanged((DataColumnSpec)m_yCol.getSelectedItem());
     }
 
     /**
