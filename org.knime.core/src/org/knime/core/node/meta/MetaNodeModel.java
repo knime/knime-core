@@ -263,6 +263,17 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
+     * Returns if the {@link #reset()} is called because of an internal
+     * trigger or from the outside.
+     * 
+     * @return <code>true</code> if the reset is triggered internally,
+     * <code>false</code> if it comes from the outside
+     */
+    protected final boolean resetFromInterior() {
+        return m_resetFromInterior;
+    }
+    
+    /**
      * @see org.knime.core.node.SpecialNodeModel #saveSettingsTo(java.io.File,
      *      NodeSettingsWO, org.knime.core.node.ExecutionMonitor)
      */
