@@ -125,15 +125,12 @@ public class LooperModel extends MetaNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.meta.MetaNodeModel #saveSettingsTo(java.io.File,
-     *      org.knime.core.node.NodeSettingsWO,
-     *      org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.meta.MetaNodeModel
+     *  #saveSettingsTo(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final File nodeDir,
-            final NodeSettingsWO settings, final ExecutionMonitor exec)
-            throws InvalidSettingsException, IOException {
-        super.saveSettingsTo(nodeDir, settings, exec);
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        super.saveSettingsTo(settings);
         m_settings.saveSettingsTo(settings);
     }
 
