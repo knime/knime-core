@@ -83,8 +83,6 @@ public class TIDApriori implements AprioriAlgorithm {
         for (BitSet transaction : transactions) {
             double progress = (double)((double)transactionNr 
                     / (double)m_dbsize); 
-            System.out.println("progress: " +  progress);
-            
             exec.setProgress(progress,
                     "detecting frequent items. Transaction nr: "
                             + transactionNr);
