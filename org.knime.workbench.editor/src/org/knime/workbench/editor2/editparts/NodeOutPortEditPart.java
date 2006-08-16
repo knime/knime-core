@@ -60,7 +60,8 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
                 .getNrModelContentOutPorts(), container.getNrDataOutPorts(),
                 container.getOutportName(getId()), isModelPort);
 
-        portFigure.addMouseListener(this);
+        // BW: double click on port has been disabled
+//        portFigure.addMouseListener(this);
 
         return portFigure;
     }
