@@ -71,7 +71,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -189,10 +188,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private boolean m_closed;
 
-    /**
-     * Remembers all nodes whose connections are painted bold.
-     */
-    private StructuredSelection m_boldNodeParts;
+//    /**
+//     * Remembers all nodes whose connections are painted bold.
+//     */
+//    private StructuredSelection m_boldNodeParts;
 
     /**
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
@@ -1237,7 +1236,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // selected nodes "bold" (helps to differentiate the connections)
         // and paint the connections or the not any more selected nodes
         // normal
-        StructuredSelection structuredSelection = null;
+//        StructuredSelection structuredSelection = null;
 //        if (selection instanceof StructuredSelection) {
 //
 //            structuredSelection = (StructuredSelection)selection;
@@ -1274,7 +1273,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 //        }
 
         // remember the new selection as the old one
-        m_boldNodeParts = structuredSelection;
+//        m_boldNodeParts = structuredSelection;
 
     }
 
