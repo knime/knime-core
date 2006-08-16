@@ -315,10 +315,6 @@
             id="org.knime.base.node.mine.sota.SotaNodeFactory"/>
       <node
             category-path="/manipulation/column"
-            factory-class="org.knime.base.node.preproc.nominal.NominalValueFactory"
-            id="org.knime.base.node.preproc.nominal.NominalValueFactory"/>
-      <node
-            category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
             id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
