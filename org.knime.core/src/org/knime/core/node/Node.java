@@ -2017,14 +2017,14 @@ public final class Node {
         metaModel.receiveModel(m_model);
     }
 
-    /**
-     * Transfers the factory of this node into the meta node model by calling
-     * {@link MetaNodeModel#receiveFactory(NodeFactory)} with the model as
-     * argument.
-     * 
-     * @param metaModel a meta node model
-     */
-    public void retrieveFactory(final MetaNodeModel metaModel) {
-        metaModel.receiveFactory(m_factory);
-    }
+//    /**
+//     * Transfers the factory of this node into the meta node model by calling
+//     * {@link MetaNodeModel#receiveFactory(NodeFactory)} with the model as
+//     * argument.
+//     * 
+//     * @param metaModel a meta node model
+//     */
+//    public void retrieveFactory(final MetaNodeModel metaModel) {
+//        metaModel.receiveFactory(m_factory);
+//    }
 }
