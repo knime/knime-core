@@ -38,7 +38,7 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.scatterplot.ScatterPlotter;
 import org.knime.base.node.viz.scatterplot.ScatterProps;
-import org.knime.base.util.coordinate.NumericCoordinate;
+import org.knime.base.util.coordinate.Coordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -237,17 +237,17 @@ public class Rule2DPlotter extends ScatterPlotter {
 
             String xName = getXColName();
             String yName = getYColName();
-            int xIdx = 0;
-            int yIdx = 1;
+            int xIdx = -1;
+            int yIdx = -1;
             if (xName != null && yName != null) {
                 xIdx = m_rules.getDataTableSpec().findColumnIndex(xName);
                 yIdx = m_rules.getDataTableSpec().findColumnIndex(yName);
             }
 
             if (xIdx >= 0 && yIdx >= 0) {
-                NumericCoordinate x = (NumericCoordinate)getColHeader()
+                Coordinate x = getColHeader()
                         .getCoordinate();
-                NumericCoordinate y = (NumericCoordinate)getRowHeader()
+                Coordinate y = getRowHeader()
                         .getCoordinate();
 
                 // check if the coordinates are valid
@@ -271,6 +271,11 @@ public class Rule2DPlotter extends ScatterPlotter {
                     DataCell[] newCells = new DataCell[2];
 
                     for (int cell = 0; cell < currRow.getNumCells(); cell++) {
+//                        if (!m_rules.getDataTableSpec().getColumnSpec(cell)
+//                                .getType().isCompatible(
+//                                        FuzzyIntervalValue.class)) {
+//                            continue;
+//                        }
                         Rectangle rect = calculateDrawingRectangle();
                         double a;
                         double b;

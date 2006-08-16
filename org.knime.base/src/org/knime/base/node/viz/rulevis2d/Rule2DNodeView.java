@@ -25,6 +25,8 @@
 package org.knime.base.node.viz.rulevis2d;
 
 import org.knime.base.node.viz.scatterplot.ScatterProps;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeView;
@@ -46,7 +48,17 @@ public class Rule2DNodeView extends NodeView {
     private Rule2DPlotter m_plotter;
 
     // the pane holding the always visible controls
-    private ScatterProps m_properties = new ScatterProps();
+    private ScatterProps m_properties = new ScatterProps() {
+        /**
+         * @see org.knime.base.node.viz.scatterplot.ScatterProps#setSelectables(
+         * org.knime.core.data.DataTableSpec, 
+         * java.lang.Class<? extends org.knime.core.data.DataValue>[])
+         */
+        @Override
+        public void setSelectables(DataTableSpec tSpec) {
+            super.setSelectables(tSpec, FuzzyIntervalValue.class);
+        }
+    };
     
     private static final int INITIAL_WIDTH = 300;
 
@@ -59,17 +71,18 @@ public class Rule2DNodeView extends NodeView {
     public Rule2DNodeView(final Rule2DNodeModel nodeModel) {
         super(nodeModel);
         LOGGER.debug("model: " + nodeModel + " rules: " + nodeModel.getRules());
-        
-        m_plotter = new Rule2DPlotter(nodeModel.getDataPoints(), nodeModel
-                .getRules(), m_properties, INITIAL_WIDTH);
-        m_plotter.setBackground(ColorAttr.getBackground());
-
-        // set the HiLiteHandler for the data coming from port 0
-        m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-        // set the HiLiteHandler for the rules coming from port 1
-
-        getJMenuBar().add(m_plotter.getHiLiteMenu());
-        setComponent(m_plotter);
+        if (nodeModel.getDataPoints() != null && nodeModel.getRules() != null) {
+            m_plotter = new Rule2DPlotter(nodeModel.getDataPoints(), nodeModel
+                    .getRules(), m_properties, INITIAL_WIDTH);
+            m_plotter.setBackground(ColorAttr.getBackground());
+    
+            // set the HiLiteHandler for the data coming from port 0
+            m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
+            // set the HiLiteHandler for the rules coming from port 1
+    
+            getJMenuBar().add(m_plotter.getHiLiteMenu());
+            setComponent(m_plotter);
+        }
     }
 
     /**
@@ -96,24 +109,28 @@ public class Rule2DNodeView extends NodeView {
      */
     @Override
     public void modelChanged() {
+        if (m_plotter == null) {
+            return;
+        }
         Rule2DDataProvider dataProvider = getDataProvider();
         // update the x/y col selectors, this should trigger
         if (dataProvider.getDataPoints() != null) {
-            m_properties.setSelectables(dataProvider.getDataPoints()
-                    .getDataTableSpec());
-        } else {
-            m_properties.setSelectables(null);
-        }
+//            m_properties.setSelectables(dataProvider.getDataPoints()
+//                    .getDataTableSpec());
+            m_properties.setSelectables(
+                    dataProvider.getDataPoints().getDataTableSpec(), 
+                    FuzzyIntervalValue.class);
         // clear the plot
         m_plotter.clear();
         // set the HiLiteHandler for the data coming from port 0
         m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
         // set the HiLiteHandler for the rules coming from port 1
-        m_plotter.setRuleHiLiteHandler(getNodeModel().getInHiLiteHandler(1));
+        m_plotter.setRuleHiLiteHandler(getNodeModel()
+                .getInHiLiteHandler(1));
         // trigger an update for the plotter
         m_plotter.setRules(dataProvider.getRules());
         m_plotter.modelDataChanged(dataProvider.getDataPoints());
-        
+        }
     }
 
     /**
@@ -121,7 +138,9 @@ public class Rule2DNodeView extends NodeView {
      */
     @Override
     public void onClose() {
-        m_plotter.shutDown();
+        if (m_plotter != null) {
+            m_plotter.shutDown();
+        }
     }
 
     /**
@@ -129,11 +148,5 @@ public class Rule2DNodeView extends NodeView {
      */
     @Override
     public void onOpen() {
-        // the HiLiteHandler for the data processed by methods inherited from
-        // the ScatterPlotter.
-        m_plotter.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-        // the HiLiteHandler for the rules processed by the
-        // FuzzyRuleDrawingPane.
-//        m_plotter.setRuleHiLiteHandler(getNodeModel().getInHiLiteHandler(1));
     }
 }

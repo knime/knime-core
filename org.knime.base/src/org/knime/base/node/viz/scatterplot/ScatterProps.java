@@ -26,8 +26,10 @@ import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -43,6 +45,8 @@ import org.knime.base.node.viz.plotter2D.PlotterPropertiesPanel;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
@@ -140,14 +144,15 @@ public class ScatterProps extends PlotterPropertiesPanel {
         addPropertiesComponent(compositePanel);
 
     }
-
+    
     /**
-     * Triggers new items in the x/y col combos.
      * 
-     * @param tSpec a table spec containing the new columns
+     * @param tSpec the data table spec
+     * @param filterClass allowed classes
      */
-    public void setSelectables(final DataTableSpec tSpec) {
-
+    public void setSelectables(final DataTableSpec tSpec, 
+            final Class<? extends DataValue>... filterClass) {
+        List<Class<? extends DataValue>> filters = Arrays.asList(filterClass);
         // do nothing if the table spec has been already before
         if (m_tableSpec == tSpec) {
             return;
@@ -162,16 +167,27 @@ public class ScatterProps extends PlotterPropertiesPanel {
 
         if (tSpec != null) {
             // put all column names of type double in the drop box
+            List<DataColumnSpec> compatibleSpecs 
+                = new ArrayList<DataColumnSpec>();
             for (int i = 0; i < tSpec.getNumColumns(); i++) {
                 // if we can get a number from that column: add it to the vector
 
                 // check which columns are displayable
-                if (Coordinate.createCoordinate(
-                        tSpec.getColumnSpec(i)) != null) {
-                    m_xAvailCol.add(tSpec.getColumnSpec(i));
+                DataType type = tSpec.getColumnSpec(i).getType();
+                for (Class<? extends DataValue> cl : filters) {
+                    if (type.isCompatible(cl)) {
+                        compatibleSpecs.add(tSpec.getColumnSpec(i));
+                    }
+                }
+            }
+            for (DataColumnSpec compSpec : compatibleSpecs) {
+                // check which columns are displayable
+                if (Coordinate.createCoordinate(compSpec) != null) {
+                    m_xAvailCol.add(compSpec);
                 }
             }
         }
+
 
         // store the old selection - in case it's still good
         DataColumnSpec xColSel = (DataColumnSpec)m_xCol.getSelectedItem();
@@ -197,7 +213,16 @@ public class ScatterProps extends PlotterPropertiesPanel {
                     m_yCol.setSelectedItem(m_xAvailCol.get(0));
                 }
             }
-        }
+        }        
+    }
+
+    /**
+     * Triggers new items in the x/y col combos.
+     * 
+     * @param tSpec a table spec containing the new columns
+     */
+    public void setSelectables(final DataTableSpec tSpec) {
+        setSelectables(tSpec, DataValue.class);
     }
 
     /**

@@ -26,11 +26,14 @@ package org.knime.base.node.viz.rulevis2d;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.scatterplot.ScatterPlotNodeModel;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -88,6 +91,7 @@ public class Rule2DNodeModel extends NodeModel implements Rule2DDataProvider {
      * The fuzzy rules.
      */
     private DataArray m_fuzzyRules;
+    
 
     /**
      * Creates an instance of the Node Model. The 2 inports are as follows:
@@ -112,7 +116,21 @@ public class Rule2DNodeModel extends NodeModel implements Rule2DDataProvider {
         if (inSpecs == null || inSpecs.length != 2) {
             throw new InvalidSettingsException("need 2 inports");
         }
-        // TODO: check for FuzzyIntervalValues!
+        DataTableSpec dataSpec = inSpecs[DATA_INPORT];
+        DataTableSpec ruleSpec = inSpecs[RULES_INPORT];
+        List<String>validColummNames = new ArrayList<String>();
+        for (int i = 0; i < dataSpec.getNumColumns(); i++) {
+            if (dataSpec.getColumnSpec(i).getName().equals(
+                    ruleSpec.getColumnSpec(i).getName())
+                    && ruleSpec.getColumnSpec(i).getType().isCompatible(
+                            FuzzyIntervalValue.class)) {
+                validColummNames.add(dataSpec.getColumnSpec(i).getName());
+            }
+        }
+        if (validColummNames.size() == 0) {
+            throw new InvalidSettingsException("Data must have the same column" 
+                    + " names and the rules must be fuzzy intervals!");
+        }
         return new DataTableSpec[]{};
     }
 
@@ -202,6 +220,7 @@ public class Rule2DNodeModel extends NodeModel implements Rule2DDataProvider {
     public DataArray getDataPoints() {
         return m_data;
     }
+    
 
     /**
      * Load internals.
