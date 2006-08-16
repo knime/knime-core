@@ -106,6 +106,9 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
             public void mouseReleased(final MouseEvent arg0) {
                 // LOGGER.debug("mouse released...x: " + arg0.getX() + " y: " +
                 // arg0.getY());
+                if (arg0.isPopupTrigger()) {
+                    return;
+                }
                 Point click = new Point(arg0.getX(), arg0.getY());
                 if (!arg0.isControlDown()) {
                     m_selectedRules.clear();
