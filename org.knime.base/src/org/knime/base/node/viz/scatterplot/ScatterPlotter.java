@@ -147,8 +147,11 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         // set the initial start tick offset which depends on the dot size
         getColHeader().setStartTickOffset(pane.getCurrentHalfMaxDotSize());
         getRowHeader().setStartTickOffset(pane.getCurrentHalfMaxDotSize());
-
+        if (m_rowContainer != null) {
         props.setSelectables(m_rowContainer.getDataTableSpec());
+        } else {
+            props.setSelectables(null);
+        }
 
         updateDotsAndPaint();
 
