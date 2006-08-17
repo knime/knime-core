@@ -107,6 +107,10 @@ public class DialogComponentColumnSelection extends DialogComponent {
         String classCol = "** Unknown column **";
         try {
             classCol = settings.getString(m_configName);
+        } catch (Exception e) {
+            // do nothing here, since its the dialog
+            // catch it that the DefaultNodeDialogPane doesn't 
+            // interrupt the for loop (loadSettings)
         } finally {
             // update JComboBox with list of column names
             DataTableSpec spec = specs[m_specIndex];
