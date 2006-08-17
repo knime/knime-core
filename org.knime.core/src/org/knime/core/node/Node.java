@@ -119,6 +119,12 @@ public final class Node {
 
     private File m_nodeDir = null;
 
+    // lock that prevents a possible deadlock if a node is currently configuring
+    // (e.g. because inportHasNodeModelContent has been called)
+    // and the WFM is asking if the node isExecutable(), which it is in most
+    // cases then
+    private final Object m_configureLock = new Object();
+    
     /**
      * Store when the current output data has been stored (to avoid uneccesary
      * re-save). Will be set when saved, will be unset upon reset.
@@ -656,33 +662,35 @@ public final class Node {
      *         <code>false</code>.
      */
     public boolean isExecutable() {
-        if (isExecuted()) {
-            return false;
+        synchronized (m_configureLock) { 
+            if (isExecuted()) {
+                return false;
+            }
+            for (DataInPort inPort : m_inDataPorts) {
+                if (!inPort.isConnected()) {
+                    return false;
+                }
+                if (inPort.getBufferedDataTable() == null) {
+                    return false;
+                }
+            }
+            for (ModelContentInPort inPort : m_inModelPorts) {
+                if (!inPort.isConnected()) {
+                    return false;
+                }
+                if (inPort.getModelContent() == null) {
+                    return false;
+                }
+            }
+    
+            if (m_model instanceof MetaInputModel) {
+                if (!((MetaInputModel)m_model).canBeExecuted()) {
+                    return false;
+                }
+            }
+    
+            return isConfigured();
         }
-        for (DataInPort inPort : m_inDataPorts) {
-            if (!inPort.isConnected()) {
-                return false;
-            }
-            if (inPort.getBufferedDataTable() == null) {
-                return false;
-            }
-        }
-        for (ModelContentInPort inPort : m_inModelPorts) {
-            if (!inPort.isConnected()) {
-                return false;
-            }
-            if (inPort.getModelContent() == null) {
-                return false;
-            }
-        }
-
-        if (m_model instanceof MetaInputModel) {
-            if (!((MetaInputModel)m_model).canBeExecuted()) {
-                return false;
-            }
-        }
-
-        return isConfigured();
     }
 
     /**
@@ -1266,69 +1274,71 @@ public final class Node {
      * new specs to the connected successors.
      */
     public void configure() {
-        if (isExecuted()) {
-            throw new IllegalStateException("Must not call configure when"
-                    + " executed.");
-        }
-
-        // reset status object to clean previous status messages.
-        m_status = null;
-
-        NodeStatus localStatus = null;
-        // configure
-        try {
-            String errorMsg = "";
-            // get inspecs and check them against null
-            DataTableSpec[] inSpecs = new DataTableSpec[getNrDataInPorts()];
-            for (int i = 0; i < inSpecs.length; i++) {
-                inSpecs[i] = m_inDataPorts[i].getDataTableSpec();
-                if (inSpecs[i] == null) {
-                    if (errorMsg.length() > 0) {
-                        errorMsg += ",";
+        synchronized (m_configureLock) {
+            if (isExecuted()) {
+                throw new IllegalStateException("Must not call configure when"
+                        + " executed.");
+            }
+    
+            // reset status object to clean previous status messages.
+            m_status = null;
+    
+            NodeStatus localStatus = null;
+            // configure
+            try {
+                String errorMsg = "";
+                // get inspecs and check them against null
+                DataTableSpec[] inSpecs = new DataTableSpec[getNrDataInPorts()];
+                for (int i = 0; i < inSpecs.length; i++) {
+                    inSpecs[i] = m_inDataPorts[i].getDataTableSpec();
+                    if (inSpecs[i] == null) {
+                        if (errorMsg.length() > 0) {
+                            errorMsg += ",";
+                        }
+                        errorMsg += i;
                     }
-                    errorMsg += i;
                 }
+                // if an in spec is null
+                if (errorMsg.length() > 0) {
+                    throw new InvalidSettingsException(
+                            "Node can't be configured due to missing input spec(s): "
+                                    + errorMsg);
+                }
+    
+                // call configure model to create output table specs
+                DataTableSpec[] newSpecs = m_model.configureModel(inSpecs);
+                // notify state listeners before the new specs are propagated
+                notifyStateListeners(new NodeStatus.Configured("Configured"));
+                /*
+                 * set the new specs in the output ports, which will propagate them
+                 * to connected successor nodes
+                 */
+                for (int p = 0; p < newSpecs.length; p++) {
+                    // update data table spec
+                    m_outDataPorts[p].setDataTableSpec(newSpecs[p]);
+                }
+            } catch (InvalidSettingsException ise) {
+                if (isFullyConnected()) {
+                    m_logger.warn("Configure failed: " + ise.getMessage());
+                    localStatus = new NodeStatus.Warning("Warning: "
+                            + ise.getMessage());                
+                } else {
+                    m_logger.debug("Configure failed: " + ise.getMessage());
+                }
+                reset(true);
+            } catch (Exception e) {
+                m_logger.error("Configure failed", e);
+                reset(true);
+            } catch (Error e) {
+                m_logger.fatal("Configure failed", e);
+                reset(true);
+            } finally {
+                if (localStatus != null) {
+                    m_status = localStatus;
+                    notifyStateListeners(localStatus);
+                }
+                processModelWarnings();
             }
-            // if an in spec is null
-            if (errorMsg.length() > 0) {
-                throw new InvalidSettingsException(
-                        "Node can't be configured due to missing input spec(s): "
-                                + errorMsg);
-            }
-
-            // call configure model to create output table specs
-            DataTableSpec[] newSpecs = m_model.configureModel(inSpecs);
-            // notify state listeners before the new specs are propagated
-            notifyStateListeners(new NodeStatus.Configured("Configured"));
-            /*
-             * set the new specs in the output ports, which will propagate them
-             * to connected successor nodes
-             */
-            for (int p = 0; p < newSpecs.length; p++) {
-                // update data table spec
-                m_outDataPorts[p].setDataTableSpec(newSpecs[p]);
-            }
-        } catch (InvalidSettingsException ise) {
-            if (isFullyConnected()) {
-                m_logger.warn("Configure failed: " + ise.getMessage());
-                localStatus = new NodeStatus.Warning("Warning: "
-                        + ise.getMessage());                
-            } else {
-                m_logger.debug("Configure failed: " + ise.getMessage());
-            }
-            reset(true);
-        } catch (Exception e) {
-            m_logger.error("Configure failed", e);
-            reset(true);
-        } catch (Error e) {
-            m_logger.fatal("Configure failed", e);
-            reset(true);
-        } finally {
-            if (localStatus != null) {
-                m_status = localStatus;
-                notifyStateListeners(localStatus);
-            }
-            processModelWarnings();
         }
     }
 
@@ -1936,7 +1946,7 @@ public final class Node {
      * 
      * @param state The status object.
      */
-    synchronized void notifyStateListeners(final NodeStatus state) {
+    void notifyStateListeners(final NodeStatus state) {
         synchronized (m_stateListeners) {
             for (NodeStateListener listener : m_stateListeners) {
                 listener.stateChanged(state, -1);
