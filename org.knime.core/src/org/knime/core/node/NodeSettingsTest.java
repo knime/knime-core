@@ -56,7 +56,9 @@ public final class NodeSettingsTest extends TestCase {
      */
     @Override
     public void tearDown() {
-        System.out.println(SETT.toString());
+        StringBuffer buf = new StringBuffer();
+        SETT.toString(buf);
+        System.out.println(buf.toString());
         testFile();
         testXML();
     }

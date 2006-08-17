@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Collections;
@@ -52,6 +53,7 @@ import org.knime.core.data.def.FuzzyIntervalCell;
 import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -89,6 +91,7 @@ public abstract class Config extends AbstractConfigEntry
     private static final String CFG_ARRAY_SIZE = "array-size";
     private static final String CFG_IS_NULL    = "is_null";
     private static final String CFG_DATA_CELL  = "datacell";
+    private static final String CFG_DATA_CELL_SER = "datacell_serialized";
 
     private final LinkedHashMap<String, AbstractConfigEntry> m_map;
     
@@ -604,7 +607,9 @@ public abstract class Config extends AbstractConfigEntry
             } else { 
                 try {
                     // serialize DataCell
-                    config.addString(CFG_DATA_CELL, Config.writeObject(cell));
+                    config.addString(CFG_DATA_CELL, className);
+                    config.addString(CFG_DATA_CELL_SER, 
+                            Config.writeObject(cell));
                 } catch (IOException ioe) {
                     LOGGER.warn("Could not write DataCell: " + cell);
                     LOGGER.debug("", ioe);
@@ -665,7 +670,12 @@ public abstract class Config extends AbstractConfigEntry
         } else {
             // deserialize DataCell
             try {
-                return (DataCell)Config.readObject(className);
+                String serString = config.getString(CFG_DATA_CELL_SER, null);
+                if (serString == null) { // backward comp. to v1.0.0
+                    return (DataCell)Config.readObject(null, className);
+                } else {
+                    return (DataCell)Config.readObject(className, serString);
+                }
             } catch (IOException ioe) {
                 LOGGER.warn("Could not read DataCell: " + className);
                 LOGGER.debug("", ioe);
@@ -1646,7 +1656,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return The serialized String.
      * @throws IOException if an I/O error occurs during serializing the object
      */
-    public static final String writeObject(final Object o) throws IOException {
+    private static final String writeObject(final Object o) throws IOException {
         // print unsupported Object message
         if (o != null && !UNSUPPORTED.contains(o.getClass())) {
             UNSUPPORTED.add(o.getClass());
@@ -1670,13 +1680,37 @@ public abstract class Config extends AbstractConfigEntry
      * @throws ClassNotFoundException if the class of the serialized object
      *  cannot be found. 
      */
-    public static final Object readObject(final String string) 
-        throws IOException, ClassNotFoundException {
-        byte[] bytes = new BASE64Decoder().decodeBuffer(string);
+    private static final Object readObject(final String className, 
+            final String serString) 
+            throws IOException, ClassNotFoundException {
+        byte[] bytes = new BASE64Decoder().decodeBuffer(serString);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-        GlobalObjectInputStream ois = new GlobalObjectInputStream(bais);
+        GlobalObjectInputStream ois;
+        if (className == null) {
+            ois = new GlobalObjectInputStream(bais);
+        } else {
+            final Class cl = GlobalClassCreator.createClass(className);
+            if (cl == null) {
+                throw new ClassNotFoundException("Could not find class: " + cl);
+            }
+            ois = new GlobalObjectInputStream(bais) {
+                @Override
+                protected Class<?> resolveClass(final ObjectStreamClass desc) 
+                        throws IOException, ClassNotFoundException {
+                    ClassLoader clLoader = cl.getClassLoader();
+                    try {
+                        return Class.forName(desc.getName(), true, clLoader);
+                    } catch (ClassNotFoundException cnfe) {
+                        // ignore and let super try to do it.
+                    }
+                    return super.resolveClass(desc);
+                }  
+            };
+        }
         return ois.readObject();
     }
+    
+    
 
     /**
      * Makes a deep copy of this Config and all sub-configs.
