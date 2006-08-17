@@ -109,6 +109,9 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
                 if (arg0.isPopupTrigger()) {
                     return;
                 }
+                if (dragCoordSet()) {
+                    return;
+                }
                 Point click = new Point(arg0.getX(), arg0.getY());
                 if (!arg0.isControlDown()) {
                     m_selectedRules.clear();
