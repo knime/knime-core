@@ -527,12 +527,14 @@ public class ThreadPool {
      */
     @Override
     protected void finalize() throws Throwable {
-        while (true) {
-            Worker w = m_availableWorkers.poll();
-            if (w == null) {
-                break;
+        if (m_availableWorkers != null) {
+            while (true) {
+                Worker w = m_availableWorkers.poll();
+                if (w == null) {
+                    break;
+                }
+                w.interrupt();
             }
-            w.interrupt();
         }
         super.finalize();
     }
