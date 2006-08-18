@@ -41,15 +41,15 @@ import org.knime.core.data.property.ColorAttr;
  * @author Tobias Koetter, University of Konstanz
  */
 public class BarVisModel {
-    /** The <code>BarDataModel</code> which holds the basic information. */
-    private BarDataModel m_bar;
+    /** The <code>AbstractBarDataModel</code> which holds the basic information. */
+    private AbstractBarDataModel m_bar;
 
     /** The drawing space on the screen. */
     private Rectangle m_rect;
 
     /**
      * The <code>DataTableSpec</code> which holds the color information for
-     * all rows in the <code>BarDataModel</code>.
+     * all rows in the <code>AbstractBarDataModel</code>.
      */
     private final DataTableSpec m_tableSpec;
 
@@ -75,12 +75,12 @@ public class BarVisModel {
     /**
      * Constructor for class BarVisModel.
      * 
-     * @param bar the <code>BarDataModel</code> which contains the data
+     * @param bar the <code>AbstractBarDataModel</code> which contains the data
      * @param rect the <code>Rectangle</code> which defines the drawing space
      * @param tableSpec the <code>DataTableSpec</code> which contains the
      *            color and size information
      */
-    protected BarVisModel(final BarDataModel bar, final Rectangle rect,
+    protected BarVisModel(final AbstractBarDataModel bar, final Rectangle rect,
             final DataTableSpec tableSpec) {
         if (bar == null || rect == null || tableSpec == null) {
             throw new IllegalArgumentException("Bar, rectangle and tableSpec "
@@ -211,10 +211,10 @@ public class BarVisModel {
     /**
      * Updates this <code>BarVisModel</code> with the new data.
      * 
-     * @param bar the new <code>BarDataModel</code>
+     * @param bar the new <code>AbstractBarDataModel</code>
      * @param rect the new<code>Rectangle</code>
      */
-    public void updateBarData(final BarDataModel bar, final Rectangle rect) {
+    public void updateBarData(final AbstractBarDataModel bar, final Rectangle rect) {
         m_bar = bar;
         m_rect = rect;
     }

@@ -382,6 +382,10 @@
            factory-class="org.knime.base.node.meta.MetaNodeFactory22"
            id="org.knime.base.node.meta.MetaNodeFactory22"/>
      <node
+           category-path="/view"
+           factory-class="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"
+           id="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"/>
+     <node
            category-path="/meta"
            factory-class="org.knime.base.node.meta.looper.LooperFactory"
            id="org.knime.base.node.meta.looper.LooperFactory"/>

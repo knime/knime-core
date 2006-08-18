@@ -14,7 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner or
  * as specified in the license file distributed with this product.
  *
- * If you have any questions please contact the copyright holder:
+ * If you have any quesions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
@@ -30,16 +30,16 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * Factory class of the interactive histogram.
+ * Factory class of the histogram.
  * @author Tobias Koetter, University of Konstanz
  */
-public class HistogramNodeFactory extends NodeFactory {
+public class FixedColumnHistogramNodeFactory extends NodeFactory {
     /**
      * @see org.knime.core.node.NodeFactory#createNodeModel()
      */
     @Override
     public NodeModel createNodeModel() {
-        return new HistogramNodeModel();
+        return new FixedColumnHistogramNodeModel();
     }
 
     /**
@@ -57,7 +57,7 @@ public class HistogramNodeFactory extends NodeFactory {
     public NodeView createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
         assert viewIndex == 0;
-        return new HistogramNodeView(nodeModel);
+        return new FixedColumnHistogramNodeView(nodeModel);
     }
 
     /**
@@ -65,7 +65,7 @@ public class HistogramNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new HistogramNodeDialogPane();
+        return new FixedColumnHistogramNodeDialog();
     }
 
     /**

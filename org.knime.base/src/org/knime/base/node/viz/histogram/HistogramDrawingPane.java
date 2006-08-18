@@ -62,8 +62,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * Defines the stroke which is used for the border of bars with a negative
      * aggregation value.
      */
-    private static final BasicStroke BAR_OUTLINE_NEGATIVE_STROKE = new BasicStroke(
-            6f);
+    private static final BasicStroke BAR_OUTLINE_NEGATIVE_STROKE = 
+        new BasicStroke(6f);
 
     /**
      * Defines the color of the outline rectangle with a negative aggregation
@@ -78,7 +78,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final Color LABEL_RECT_COLOR = Color.LIGHT_GRAY;
 
     /** Defines the font of the bar labels. */
-    private static final Font BAR_LABEL_FONT = new Font("Arial", Font.PLAIN, 12);
+    private static final Font BAR_LABEL_FONT = 
+        new Font("Arial", Font.PLAIN, 12);
 
     /** Defines the font of the info message which is displayed. */
     private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
@@ -216,7 +217,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     g2.setPaint(colorAttr.getColor(bar.isSelected(), true));
                     int height = (int)Math.round(heightPerRow * noOfHiLite);
                     // avoid rounding errors
-                    if (startY + height > barRect.getY() + barRect.getHeight()) {
+                    if (startY + height 
+                            > barRect.getY() + barRect.getHeight()) {
                         int dif = (startY + height)
                                 - (int)(barRect.getY() + barRect.getHeight());
                         height = height - dif;
@@ -231,7 +233,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     g2.setPaint(colorAttr.getColor(bar.isSelected(), false));
                     int height = (int)Math.ceil(heightPerRow * noOfNotHiLite);
                     // avoid rounding errors
-                    if (startY + height > barRect.getY() + barRect.getHeight()) {
+                    if (startY + height 
+                            > barRect.getY() + barRect.getHeight()) {
                         int dif = (startY + height)
                                 - (int)(barRect.getY() + barRect.getHeight());
                         height = height - dif;
@@ -260,7 +263,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     textWidth += Math.abs(textX - 1);
                     textX = 1;
                 }
-                int textY = (int)(barRect.getY() + barRect.getHeight() - textWidth / 2)
+                int textY = 
+                    (int)(barRect.getY() + barRect.getHeight() - textWidth / 2)
                         - AGGR_VAL_LABEL_SPACER;
                 int textHeight = metrics.getHeight();
                 // calculate the text background rectangle

@@ -34,7 +34,7 @@ public enum AggregationMethod {
     /** The average of the selected y column. */
     AVERAGE,
     /** The summary of the selected y column. */
-    SUMMARY,
+    SUM,
     /** The number of rows. */
     COUNT;
 
@@ -63,13 +63,13 @@ public enum AggregationMethod {
     public static AggregationMethod getMethod4String(final String name) {
         if (name == null || name.length() < 1) {
             return getDefaultMethod();
-        } else if (name.equals(AggregationMethod.AVERAGE.name())) {
-            return AggregationMethod.AVERAGE;
-        } else if (name.equals(AggregationMethod.SUMMARY.name())) {
-            return AggregationMethod.SUMMARY;
-        } else {
-            return AggregationMethod.COUNT;
         }
+        for (AggregationMethod value : AggregationMethod.values()) {
+            if (value.name().equals(name)) {
+                return value;
+            }
+        }
+        return AggregationMethod.COUNT;
     }
 
     /**

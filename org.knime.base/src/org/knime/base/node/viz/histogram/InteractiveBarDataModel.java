@@ -21,7 +21,6 @@
  */
 package org.knime.base.node.viz.histogram;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -42,14 +41,10 @@ import org.knime.core.data.property.ColorAttr;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-final class InteractiveBarDataModel implements BarDataModel {
-    /**Used to format the aggregation value for the aggregation method count.*/
-    private static final DecimalFormat AGGREGATION_LABEL_FORMATER_COUNT = 
-        new DecimalFormat("#");
+final class InteractiveBarDataModel extends AbstractBarDataModel {
 
-    /** The caption associated with this bar. */
-    private String m_caption;
-
+    private double m_aggrValue = Double.NaN;
+    
     /**
      * <code>Hashtable</code> with the <code>RowKey</code> as
      * <code>DataCell</code> as key and the <code>DataRow</code> itself as
@@ -58,18 +53,6 @@ final class InteractiveBarDataModel implements BarDataModel {
     private Hashtable<DataCell, DataRow> m_rows = 
         new Hashtable<DataCell, DataRow>();
 
-    /** The method which is used to calculate the aggregation value. */
-    private AggregationMethod m_aggrMethod;
-
-    /** The index of the aggregation column in the data rows. */
-    private int m_aggrColIdx;
-
-    /**
-     * The upper bound for the current set aggregation method and aggregation
-     * method.
-     */
-    private double m_aggrValue = Double.NaN;
-
     /**
      * Constructor for class HistogramBar.
      * 
@@ -77,18 +60,9 @@ final class InteractiveBarDataModel implements BarDataModel {
      * @param aggrColIDx the index of the aggregation column
      * @param aggrMethod the aggregation method
      */
-    protected InteractiveBarDataModel(final String caption, final int aggrColIDx,
-            final AggregationMethod aggrMethod) {
-        if (caption == null) {
-            throw new IllegalArgumentException("Caption shouldn't be null.");
-        }
-        if (aggrMethod == null) {
-            throw new IllegalArgumentException("Aggregation method shouldn't "
-                    + "be null.");
-        }
-        m_caption = caption;
-        m_aggrMethod = aggrMethod;
-        m_aggrColIdx = aggrColIDx;
+    protected InteractiveBarDataModel(final String caption, 
+            final int aggrColIDx, final AggregationMethod aggrMethod) {
+        super(caption, aggrColIDx, aggrColIDx, aggrMethod);
     }
 
     /**
@@ -101,101 +75,42 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#getCaption()
+     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
+     * getNumberOfRows()
      */
-    public String getCaption() {
-        return m_caption;
-    }
-
-    /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#getLabel()
-     */
-    public String getLabel() {
-        final double aggrVal = getAggregationValue();
-        // return Double.toString(aggrVal);
-        AggregationMethod method = getAggregationMethod();
-        if (method.equals(AggregationMethod.COUNT)) {
-            return AGGREGATION_LABEL_FORMATER_COUNT.format(aggrVal);
-        } else {
-            return myRoundedLabel(aggrVal, 2);
-        }
-    }
-
-    /**
-     * Returns the rounded value. It returns the rounded value which contains
-     * the given number of digits after the last 0.
-     * 
-     * @param doubleVal the value to round
-     * @param noOfDigits the number of digits we want for less then 1 values
-     * @return the rounded value
-     */
-    private static String myRoundedLabel(final double doubleVal,
-            final int noOfDigits) {
-        // the given doubleVal is less then zero
-        char[] interval = Double.toString(doubleVal).toCharArray();
-        StringBuffer decimalFormatBuf = new StringBuffer();
-        boolean digitFound = false;
-        int digitCounter = 0;
-        int positionCounter = 0;
-        boolean dotFound = false;
-        for (int length = interval.length; positionCounter < length
-                && digitCounter <= noOfDigits; positionCounter++) {
-            char c = interval[positionCounter];
-            if (c == '.') {
-                decimalFormatBuf.append(".");
-                dotFound = true;
-            } else {
-                if (c != '0' || digitFound) {
-                    digitFound = true;
-                    if (dotFound) {
-                        digitCounter++;
-                    }
-                }
-                if (digitCounter <= noOfDigits) {
-                    decimalFormatBuf.append("#");
-                }
-            }
-        }
-        DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
-        String resultString = df.format(doubleVal);
-        return resultString;
-    }
-
-    /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#getNumberOfRows()
-     */
+    @Override
     public int getNumberOfRows() {
         return m_rows.size();
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#isEmpty()
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel#
+     * setAggregationMethod(org.knime.base.node.viz.histogram.AggregationMethod)
      */
-    public boolean isEmpty() {
-        return (getNumberOfRows() < 1);
+    @Override
+    public void setAggregationMethod(final AggregationMethod aggrMethod) {
+        super.setAggregationMethod(aggrMethod);
+        m_aggrValue = Double.NaN;
     }
-
+    
     /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#setAggregationColumn(int, AggregationMethod)
+     * Sets the index of the new aggregation column.
+     * 
+     * @param aggrColIdx sets the possibly new aggregation column
      */
-    public void setAggregationColumn(final int aggrColIdx,
-            final AggregationMethod aggrMethod) {
-        if (aggrMethod == null) {
-            throw new IllegalArgumentException("Aggregation method shouldn't"
-                    + " be null.");
-        }
-        if (m_aggrMethod.equals(aggrMethod)
-                && (m_aggrColIdx == aggrColIdx || aggrColIdx < 0)) {
+    @Override
+    protected void setAggregationColumn(final int aggrColIdx) {
+        if (getAggregationColIdx() == aggrColIdx || aggrColIdx < 0) {
             return;
         } else {
-            m_aggrMethod = aggrMethod;
-            m_aggrColIdx = aggrColIdx;
+            super.setAggregationColumn(aggrColIdx);
             // check if the column type and aggregation method are compatible
-            if (!m_aggrMethod.equals(AggregationMethod.COUNT)) {
+            if (!getAggregationMethod().equals(AggregationMethod.COUNT)) {
                 Collection<DataRow> rows = m_rows.values();
-                if (rows != null && rows.size() > 0) {
+                if (rows != null && rows.size() > 0 && aggrColIdx >= 0
+                        && aggrColIdx < rows.size()) {
                     DataRow row = rows.iterator().next();
-                    DataCell cell = row.getCell(m_aggrColIdx);
+                    DataCell cell = row.getCell(aggrColIdx);
                     if (!cell.getType().isCompatible(DoubleValue.class)) {
                         throw new IllegalArgumentException("Selected"
                                 + " aggregation column and method aren't"
@@ -209,10 +124,12 @@ final class InteractiveBarDataModel implements BarDataModel {
             return;
         }
     }
-
+    
     /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#getAggregationValue()
+     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
+     * getAggregationValue()
      */
+    @Override
     public double getAggregationValue() {
         if (Double.isNaN(m_aggrValue)) {
             calculateAggregationValue();
@@ -221,67 +138,18 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#getAggregationMethod()
+     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#getRowKeys()
      */
-    public AggregationMethod getAggregationMethod() {
-        return m_aggrMethod;
-    }
-
-    /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#getRowKeys()
-     */
+    @Override
     public Set<DataCell> getRowKeys() {
         return m_rows.keySet();
     }
-
-    /**
-     * Calculates the aggregation value depending on the defined
-     * <code>AggregationMethod</code>.
-     */
-    private void calculateAggregationValue() {
-        if (m_aggrMethod.equals(AggregationMethod.COUNT)) {
-            m_aggrValue = getNumberOfRows();
-        } else {
-            // calculate the sum of all cells of the aggregation column first
-            // because it is needed for both methods!
-            double aggrSum = 0.0;
-            for (DataRow row : m_rows.values()) {
-                final DataCell cell = row.getCell(m_aggrColIdx);
-                if (!cell.isMissing()) {
-                    aggrSum += ((DoubleValue)cell).getDoubleValue();
-                }
-            }
-            if (m_aggrMethod.equals(AggregationMethod.SUMMARY)) {
-                m_aggrValue = aggrSum;
-            } else if (m_aggrMethod.equals(AggregationMethod.AVERAGE)) {
-                if (getNumberOfRows() == 0) {
-                    m_aggrValue = 0;
-                } else {
-                    m_aggrValue = aggrSum / getNumberOfRows();
-                }
-            } else {
-                // this should never happen because we check the aggregation
-                // method in the set method!
-                throw new IllegalArgumentException(
-                        "No valid aggregation method");
-            }
-        }
-    }
-
-
-    /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#setCaption(String)
-     */
-    public void setCaption(final String caption) {
-        if (caption == null) {
-            throw new IllegalArgumentException("Caption shouldn't be null.");
-        }
-        m_caption = caption;
-    }
     
     /**
-     * @see org.knime.base.node.viz.histogram.BarDataModel#createColorInformation(org.knime.core.data.DataTableSpec)
+     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
+     * createColorInformation(org.knime.core.data.DataTableSpec)
      */
+    @Override
     public Hashtable<ColorAttr, Collection<RowKey>> 
         createColorInformation(final DataTableSpec tableSpec) {
         Hashtable<ColorAttr, Collection<RowKey>> rowsByColor = 
@@ -299,23 +167,37 @@ final class InteractiveBarDataModel implements BarDataModel {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * Calculates the aggregation value depending on the defined
+     * <code>AggregationMethod</code>.
      */
-    @Override
-    public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("Caption: ");
-        buf.append(m_caption);
-        buf.append("\n");
-        buf.append("Aggregation method: ");
-        buf.append(m_aggrMethod);
-        buf.append("\n");
-        buf.append("Aggregation Value: ");
-        buf.append(m_aggrValue);
-        buf.append("\n");
-        buf.append("Number of rows: ");
-        buf.append(m_rows.size());
-
-        return buf.toString();
+    private void calculateAggregationValue() {
+        final AggregationMethod method = getAggregationMethod();
+        if (method.equals(AggregationMethod.COUNT)) {
+            m_aggrValue = getNumberOfRows();
+        } else {
+            // calculate the sum of all cells of the aggregation column first
+            // because it is needed for both methods!
+            double aggrSum = 0.0;
+            for (DataRow row : m_rows.values()) {
+                final DataCell cell = row.getCell(getAggregationColIdx());
+                if (!cell.isMissing()) {
+                    aggrSum += ((DoubleValue)cell).getDoubleValue();
+                }
+            }
+            if (method.equals(AggregationMethod.SUM)) {
+                m_aggrValue = aggrSum;
+            } else if (method.equals(AggregationMethod.AVERAGE)) {
+                if (getNumberOfRows() == 0) {
+                    m_aggrValue = 0;
+                } else {
+                    m_aggrValue = aggrSum / getNumberOfRows();
+                }
+            } else {
+                // this should never happen because we check the aggregation
+                // method in the set method!
+                throw new IllegalArgumentException(
+                        "No valid aggregation method");
+            }
+        }
     }
 }

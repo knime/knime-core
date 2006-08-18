@@ -14,7 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner or
  * as specified in the license file distributed with this product.
  *
- * If you have any questions please contact the copyright holder:
+ * If you have any quesions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
@@ -30,13 +30,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.InteractiveHistogramPlotter;
-import org.knime.base.node.viz.histogram.InteractiveHistogramProperties;
+import org.knime.base.node.viz.histogram.FixedColumnHistogramPlotter;
+import org.knime.base.node.viz.histogram.FixedColumnHistogramProperties;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -50,44 +47,39 @@ import org.knime.core.node.NodeSettingsWO;
 
 
 /**
- * The NodeModel class of the interactive histogram plotter.
+ * The NodeModel class of the histogram plotter.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class HistogramNodeModel extends NodeModel {
-    private static final String CFG_DATA = "histogramData";
+public class FixedColumnHistogramNodeModel extends NodeModel {
+    
+    private static final String CFG_SETTINGS = "fixedColumnHistogramSettings";
+    
+    /**Settings name of the x column name.*/
+    protected static final String CFGKEY_X_COLNAME = "xColumn";
+    /**Settings name of the aggregation column name.*/
+    protected static final String CFGKEY_AGGR_COLNAME = "aggrColumn";
 
-    private static final String CFG_SETTINGS = "histogramSettings";
+    private String m_xColName;
+    
+    private String m_aggrColName;
 
     /** The Rule2DPlotter is the core of the view. */
-    private InteractiveHistogramPlotter m_plotter;
+    private FixedColumnHistogramPlotter m_plotter;
 
     /**
      * The <code>HistogramProps</code> class which holds the properties dialog
      * elements.
      */
-    private InteractiveHistogramProperties m_properties;
+    private FixedColumnHistogramProperties m_properties;
 
     private static final int INITIAL_WIDTH = 300;
 
     /**
-     * Used to store the attribute column name in the settings.
-     */
-    static final String CFGKEY_X_COLNAME = "HistogramXColName";
-
-    /** The <code>BufferedDataTable</code> of the input port. */
-    private DataTable m_data;
-
-    /** The name of the x column. */
-    private String m_xColName;
-    /**
      * The constructor.
      */
-    protected HistogramNodeModel() {
+    protected FixedColumnHistogramNodeModel() {
         super(1, 0); // one input, no outputs
-        m_data = null;
-        setAutoExecutable(true);
-        // m_attrColName = null;
     }
 
     /**
@@ -96,6 +88,7 @@ public class HistogramNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(CFGKEY_X_COLNAME, m_xColName);
+        settings.addString(CFGKEY_AGGR_COLNAME, m_aggrColName);
     }
 
     /**
@@ -104,11 +97,16 @@ public class HistogramNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        /*
-         * try { settings.getString(CFGKEY_ATTRCOLNAME); } catch
-         * (InvalidSettingsException e) { throw new
-         * InvalidSettingsException("Attribute column " + "not specified"); }
-         */
+        String xCol = settings.getString(CFGKEY_X_COLNAME);
+        if (xCol == null || xCol.length() < 1) {
+            throw new InvalidSettingsException(
+                    "The x column needs to be defined.");
+        }
+        String aggrCol = settings.getString(CFGKEY_AGGR_COLNAME);
+        if (aggrCol == null || aggrCol.length() < 1) {
+            throw new InvalidSettingsException(
+                    "The aggregation column needs to be defined.");
+        }
     }
 
     /**
@@ -119,6 +117,7 @@ public class HistogramNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_xColName = settings.getString(CFGKEY_X_COLNAME);
+        m_aggrColName = settings.getString(CFGKEY_AGGR_COLNAME);
     }
 
     /**
@@ -129,13 +128,12 @@ public class HistogramNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        File f = new File(nodeInternDir, CFG_DATA);
-        m_data = DataContainer.readFromZip(f);
         File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
         FileInputStream in = new FileInputStream(settingsFile);
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
         try {
             m_xColName = settings.getString(CFGKEY_X_COLNAME);
+            m_aggrColName = settings.getString(CFGKEY_AGGR_COLNAME);
         } catch (InvalidSettingsException e) {
             throw new IOException(e.getMessage());
         }
@@ -149,10 +147,9 @@ public class HistogramNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        File f = new File(nodeInternDir, CFG_DATA);
-        DataContainer.writeToZip(m_data, f, exec);
         NodeSettings settings = new NodeSettings(CFG_SETTINGS);
         settings.addString(CFGKEY_X_COLNAME, m_xColName);
+        settings.addString(CFGKEY_AGGR_COLNAME, m_aggrColName);
         File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
         FileOutputStream out = new FileOutputStream(settingsFile);
         settings.saveToXML(out);
@@ -166,26 +163,21 @@ public class HistogramNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         // create the data object
-        m_data = inData[0];
-        DataTableSpec tableSpec = m_data.getDataTableSpec();
-        String selectedXCol = m_xColName;
-        if (selectedXCol == null && tableSpec.getNumColumns() > 0) {
-            // set the first column of the table as default x column
-            selectedXCol = tableSpec.getColumnSpec(0).getName();
-        }
+        BufferedDataTable data = inData[0];
         // create the properties panel
         m_properties = 
-            new InteractiveHistogramProperties(AggregationMethod.COUNT);
+            new FixedColumnHistogramProperties(AggregationMethod.COUNT);
         // create the plotter
-        m_plotter = new InteractiveHistogramPlotter(INITIAL_WIDTH, 
-                tableSpec, m_properties, getInHiLiteHandler(0), selectedXCol);
+        m_plotter = new FixedColumnHistogramPlotter(INITIAL_WIDTH, 
+                data.getDataTableSpec(), m_properties, getInHiLiteHandler(0), 
+                m_xColName, m_aggrColName);
         m_plotter.setBackground(ColorAttr.getBackground());
-        if (m_data != null) {
+        if (data != null) {
             exec.setMessage("Adding data rows to histogram...");
             final int noOfRows = inData[0].getRowCount();
             final double progressPerRow = 1.0 / noOfRows;
             double progress = 0.0;
-            for (DataRow row : m_data) {
+            for (DataRow row : data) {
                 m_plotter.addDataRow(row);
                 progress += progressPerRow;
                 exec.setProgress(progress, "Adding data rows to histogram...");
@@ -198,22 +190,10 @@ public class HistogramNodeModel extends NodeModel {
     }
 
     /**
-     * @return the data of the input port.
-     */
-    public DataTable getData() {
-        return m_data;
-    }
-
-    /*
-     * protected String getSelectedColumnName() { return m_attrColName; }
-     */
-
-    /**
      * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
-        m_data = null;
         m_plotter = null;
         m_properties = null;
     }
@@ -221,7 +201,7 @@ public class HistogramNodeModel extends NodeModel {
     /**
      * @return the plotter
      */
-    protected AbstractHistogramPlotter getPlotter() {
+    protected FixedColumnHistogramPlotter getPlotter() {
         return m_plotter;
     }
     
@@ -232,14 +212,16 @@ public class HistogramNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        /*
-         * if ((m_attrColName == null) || (m_attrColName.length() == 0)) { throw
-         * new InvalidSettingsException("Attribute column must be" + "
-         * specified."); } int colIdx =
-         * inSpecs[0].findColumnIndex(m_attrColName); if (colIdx < 0) { throw
-         * new InvalidSettingsException("Specified attribute column" + " not in
-         * input table"); }
-         */
+        //check the internal variables if they are valid
+        if (m_xColName == null || m_xColName.length() < 1) {
+            throw new InvalidSettingsException(
+                    "Please define the x column.");
+        }
+
+        if (m_aggrColName == null || m_aggrColName.length() < 1) {
+            throw new InvalidSettingsException(
+                    "Please define the aggregation column.");
+        }
         return new DataTableSpec[0];
     }
 }

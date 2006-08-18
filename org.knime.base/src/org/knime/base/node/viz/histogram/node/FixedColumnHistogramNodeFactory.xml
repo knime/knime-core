@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./interactiveHistogram.gif" type="Visualizer">
-	<name>Interactive Histogram</name>	
+<knimeNode icon="./fixedColumnHistogram.gif" type="Visualizer">
+	<name>Histogram</name>	
 	<shortDescription>
 		Displays data in a histogram view.
 	</shortDescription>	
 	<fullDescription>
 		<intro>
-		<p>Displays an interactive histogram view with different viewing options.</p>
+		<p>Displays an histogram view with different viewing options.</p>
 		<p>The user can change the following properties on the fly:
 			<ol>
-			<li>X axis</li>
-			<li>Aggregation column (Y axis)</li>
 			<li>Aggregation method (count, summary, average)</li>
 			<li>Number of bins for numerical attributes</li>
 			<li>The width of the bars</li>
@@ -22,9 +20,9 @@
 			<li>...</li>
 			</ol>
 		</p>
-		<p><b>Please note: This node caches all data in the main memory to 
-		provide interactive functions. For huge data sets use the 
-		"Histogram" node instead.</b></p>
+		<p>To allow the work with huge datasets the user has to specify the desired
+		x and aggregation column before opening the view. For more interaction
+		use the "Interactive Histogram".</p>
 		</intro>
 	</fullDescription>
 	
@@ -33,7 +31,7 @@
 	</ports>	
 	<views>
 		<view index="0" name="Histogram View">
-			Interactive histogram view
+			Histogram view
 		</view>
 	</views>
 </knimeNode>

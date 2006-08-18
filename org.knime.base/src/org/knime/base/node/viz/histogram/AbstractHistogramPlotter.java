@@ -1,23 +1,20 @@
-/*
- * ------------------------------------------------------------------
+/*-------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
- *
+ * 
  * Copyright, 2003 - 2006
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
  * Prof. Dr. Michael R. Berthold
- *
+ * 
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
- *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
+ * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
+ * 
+ * History
+ *   18.08.2006 (Tobias Koetter): created
  */
 package org.knime.base.node.viz.histogram;
 
@@ -29,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -45,132 +41,100 @@ import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * This class is the controller between the data model of the
- * {@link InteractiveHistogramDataModel} class and the view 
- * {@link HistogramDrawingPane}. It creates the {@link BarVisModel} objects 
- * based on the {@link InteractiveBarDataModel} of the 
- * {@link InteractiveHistogramDataModel} class by enhancing these information 
- * with information about the size of the drawing space like height and width 
- * in pixel.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class HistogramPlotter extends AbstractPlotter2D {
+public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
+
     /** The minimum height of a bar with an aggregation value > 0. */
     private static final int MINIMUM_BAR_HEIGHT = 2;
-
     /** The highlight selected item menu entry. */
     public static final String HILITE = HiLiteHandler.HILITE_SELECTED;
-
     /** The unhighlight selected item menu entry. */
     public static final String UNHILITE = HiLiteHandler.UNHILITE_SELECTED;
-
     /** The unhighlight item menu entry. */
     public static final String CLEAR_HILITE = HiLiteHandler.CLEAR_HILITE;
-
     /** Defines the minimum width of a bar. */
     public static final int MIN_BAR_WIDTH = 20;
-
     /** This is the minimum space between two bars. */
     public static final int SPACE_BETWEEN_BARS = 5;
-
-    /** <code>DataTable</code> which holds the data rows. */
-    private DataTable m_data;
-
     /** The <code>DataTableSpec</code> of the input data. */
     private DataTableSpec m_tableSpec;
-
     /**
      * Saves the <code>DataColumnSpec</code> which was used to create the x
      * coordinates.
      */
     private DataColumnSpec m_xColumnSpec = null;
-
     /**
      * The name of the column which is used for the aggregation. Could be
      * <code>null</code> for the count method.
      */
     private String m_aggrColName = null;
-
     /**
      * The aggregation method. Default is <code>AggregationMethod.COUNT</code>.
      */
     private AggregationMethod m_aggrMethod = AggregationMethod.COUNT;
-
     /**
-     * The <code>HistogramDataModel</code> which holds the basic information.
+     * The <code>AbstractHistogramDataModel</code> which holds the basic 
+     * information.
      */
-    private InteractiveHistogramDataModel m_histoData;
-
+    private AbstractHistogramDataModel m_histoData;
     /** The current basic width of the bars. */
     private int m_barWidth = -1;
-
     /**
      *The plotter will show all bars empty or not when set to <code>true</code>.
      */
     private boolean m_showEmptyBars = false;
-
     /**
      * The plotter will show an additional bar which contains all rows which
      * have a missing value for the selected x axis.
      */
     private boolean m_showMissingValBar = true;
-
     /** The <code>HiLiteHandler</code>. */
     private HiLiteHandler m_hiLiteHandler;
 
-    /**
-     * Creates a new PlotterScrolling pane and associates it with the passed
-     * view control panel.
-     * 
-     * @param initialWidth the width of the dialog at the creation time
-     * @param data the <code>DataArray</code> with all data
-     * @param histogramProps the <code>HistogramProperties</code> with the
-     *            view options for the user
-     * @param handler the hilite handler from the input port
-     * @param xColumn the x axis column which should be selected, if it's
-     *            <code>null</code> the first column will be selected
+    
+    /**Constructor for class AbstractHistogramPlotter.
+     * @param initialWidth the initial width of the window
+     * @param spec the specification of the input table
+     * @param histogramProps the histogram properties panel
+     * @param handler the HiLiteHandler to use
+     * @param xColumn the name of the selected x column
      */
-    public HistogramPlotter(final int initialWidth, final DataTable data,
-            final HistogramProperties histogramProps,
+    public AbstractHistogramPlotter(final int initialWidth, 
+            final DataTableSpec spec,
+            final AbstractHistogramProperties histogramProps,
             final HiLiteHandler handler, final String xColumn) {
         super(initialWidth, histogramProps, new HistogramDrawingPane(handler));
-        // disable the crosshairs
-        // setCrosshairCursorEnabled(false);
-        if (data == null) {
+        if (spec == null) {
             throw new IllegalArgumentException("Internal exception:"
                     + " Row container shouldn't be null.");
         }
-        m_data = data;
-        m_tableSpec = data.getDataTableSpec();
+        m_tableSpec = spec;
         if (m_tableSpec == null) {
             throw new IllegalArgumentException("Internal exception:"
-                    + " Tablespec shouldn't be null.");
+                    + " Table specification shouldn't be null.");
         }
-        String selectedCol = xColumn;
-        if (selectedCol == null && m_tableSpec.getNumColumns() > 0) {
-            // set the first column of the table as default x column
-            selectedCol = m_tableSpec.getColumnSpec(0).getName();
-            // set the initial x column
-            setXColumn(selectedCol);
-            // select the x column also in the select box of the properties
-            // panel
-            histogramProps.updateColumnSelection(data.getDataTableSpec(),
-                    selectedCol, null);
+
+        if (xColumn == null || xColumn.length() < 1) {
+            throw new IllegalArgumentException("No column available to set.");
         }
-        // set the hilitehanlder for highlighting stuff
+        // set the initial x column
+        setXColName(xColumn);
+        // select the x column also in the select box of the properties
+        // panel
+        histogramProps.updateColumnSelection(m_tableSpec, xColumn, null);
+        // set the hilitehandler for highlighting stuff
         if (handler != null) {
             this.m_hiLiteHandler = handler;
             this.m_hiLiteHandler.addHiLiteListener(this);
@@ -178,11 +142,26 @@ public class HistogramPlotter extends AbstractPlotter2D {
             throw new IllegalArgumentException("HiLiteHandler not defined.");
         }
     }
+    
+    /**
+     * @param row the {@link DataRow} to add
+     */
+    public void addDataRow(final DataRow row) {
+        m_histoData.addDataRow(row);
+    }
+    
+    /**
+     * Call this method after adding the last data row.
+     */
+    public void lastDataRowAdded() {
+        setXCoordinates();
+        setYCoordinates();
+    }
 
     /**
      * This is called during resize, or any other pane triggered event.
      * 
-     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
+     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
      *      #updatePaintModel()
      */
     @Override
@@ -197,21 +176,11 @@ public class HistogramPlotter extends AbstractPlotter2D {
     /**
      * Called by the view, forwarding a model changed event.
      * 
-     * @param data the new data
+     * @param spec the specification of the input data table
      * @param selectedXCol the name of the new x column
      */
-    public void modelChanged(final DataTable data, final String selectedXCol) {
-        m_data = data;
-        m_tableSpec = data.getDataTableSpec();
-        m_aggrColName = null;
-        m_aggrMethod = AggregationMethod.COUNT;
-        setXColumn(selectedXCol);
-        setBackground(ColorAttr.getBackground());
-        HistogramProperties props = getHistogramPropertiesPanel();
-        props.updateColumnSelection(m_tableSpec, selectedXCol, null);
-        props.setUpdateHistogramSettings(this);
-        updatePaintModel();
-    }
+    public abstract void modelChanged(final DataTableSpec spec, 
+            final String selectedXCol);
 
     /**
      * @see java.awt.event.ActionListener
@@ -225,50 +194,15 @@ public class HistogramPlotter extends AbstractPlotter2D {
      * This method is called when ever something basic has changed. This method
      * forces the class to reload the HistogramData.
      */
-    private void resetHistogramData() {
+    protected void resetHistogramData() {
         m_histoData = null;
     }
 
     /**
-     * Sets the new x columns.
-     * 
-     * @param xColName name of the new x column to plot
+     * Sets the x coordinates for the current 
+     * {@link AbstractHistogramDataModel}.
      */
-    public void setXColumn(final String xColName) {
-        if (m_data == null) {
-            throw new IllegalArgumentException("No row container defined.");
-        }
-        if (xColName == null || xColName.trim().length() < 1) {
-            throw new IllegalArgumentException("X axis must be defined.");
-        }
-        // if it's the same name we don't need to do anything
-        if (getXColName() != null && getXColName().equals(xColName)) {
-            return;
-        }
-        // since the tableSpec is final and checked in the constructor
-        // we don't need to check for null
-        int xIndex = m_tableSpec.findColumnIndex(xColName);
-        if (xIndex >= 0) {
-            resetHistogramData();
-            // set the name of the selected x column in the plotter class
-            setXColName(xColName);
-            setXCoordinates();
-            // reset the vis bars
-            getHistogramDrawingPane().setVisBars(null);
-            // reset the aggregation column to the possible new boundaries
-            setYColName(null); // set the column name to null to force
-            // resetting
-            setAggregationColumn(m_aggrColName, m_aggrMethod);
-        } else {
-            throw new IllegalArgumentException("No column specification found"
-                    + " for column: " + xColName);
-        }
-    }
-
-    /**
-     * Sets the x coordinates for the current <code>HistogramDataModel</code>.
-     */
-    private void setXCoordinates() {
+    protected void setXCoordinates() {
         DataColumnSpec colSpec = getXColumnSpec();
         m_xColumnSpec = colSpec;
         // tell the headers to display the new column names
@@ -278,57 +212,27 @@ public class HistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * Sets new aggregation columns and recalculates/repaints.
-     * 
-     * @param yColName name of the new y column to plot
-     * @param aggrMethod The aggregation method
+     * Sets the y coordinates for the current 
+     * {@link AbstractHistogramDataModel}.
      */
-    public void setAggregationColumn(final String yColName,
-            final AggregationMethod aggrMethod) {
-        if (aggrMethod == null) {
-            throw new IllegalArgumentException("Aggregation method shouldn't"
-                    + " be null");
-        }
-        if (yColName == null && !aggrMethod.equals(AggregationMethod.COUNT)) {
-            throw new IllegalArgumentException("No column name only allowed"
-                    + " with aggregation method count.");
-        }
-        m_aggrColName = yColName;
-        m_aggrMethod = aggrMethod;
-        // set the aggregation method and column first!!!
-        if (getHistogramDataModel().changeAggregationColumn(yColName,
-                aggrMethod)
-                || getYColName() == null
-                || getRowHeader().getCoordinate() == null) {
-            setYCoordinates();
-        }
-        return;
-    }
-
-    /**
-     * Sets the x coordinates for the current <code>HistogramDataModel</code>.
-     */
-    private void setYCoordinates() {
-        DataColumnSpec aggrColSpec = getAggregationColumnSpec();
+    protected void setYCoordinates() {
+        DataColumnSpec aggrColSpec = getAggregationColSpec();
         setYColName(aggrColSpec.getName());
         // tell the headers to display the new column names
         getRowHeader().setToolTipText(aggrColSpec.getName());
-        /*
-         * NumericCoordinate yCoordinate = new NumericCoordinate(colSpec, 0, 0,
-         * 30, NumericTickPolicy.LABLE_WITH_ROUNDED_NUMBERS, 6);
-         */
         Coordinate yCoordinate = Coordinate.createCoordinate(aggrColSpec);
         getRowHeader().setCoordinate(yCoordinate);
     }
 
     /**
-     * Sets the basic width for the bars.
-     * 
+     * Sets the preferred width for the bars. If the window is to small for the 
+     * size the bars are painted with the maximum bar width.
+     * @see #getMaxBarWidth()
      * @param barWidth the new width of the bar
      * @return <code>true</code> if the value has change otherwise
      *         <code>false</code>
      */
-    protected boolean setBarWidth(final int barWidth) {
+    protected boolean setPreferredBarWidth(final int barWidth) {
         if (m_barWidth == barWidth) {
             return false;
         } else {
@@ -343,7 +247,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * @return the current basic width of the bars.
+     * @return the current preferred width of the bars.
      */
     protected int getBarWidth() {
         if (m_barWidth < 0) {
@@ -372,7 +276,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     protected int getMaxBarWidth() {
         int noOfBars = getNoOfDisplayedBars();
         Rectangle drawingSpace = calculateDrawingRectangle();
-
+    
         int result = (int)(drawingSpace.getWidth() / noOfBars)
                 - SPACE_BETWEEN_BARS;
         if (result < 0) {
@@ -393,7 +297,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
             // reset the vis bars
             getHistogramDrawingPane().setVisBars(null);
             // and we have to set the new max value for the y axis
-            DataColumnSpec yColSpec = getAggregationColumnSpec();
+            DataColumnSpec yColSpec = getAggregationColSpec();
             Coordinate yCoordinate = Coordinate.createCoordinate(yColSpec);
             getRowHeader().setCoordinate(yCoordinate);
             // updatePaintModel();
@@ -450,33 +354,61 @@ public class HistogramPlotter extends AbstractPlotter2D {
         }
     }
 
-    /*
+    /**
+     * Sets new aggregation columns and recalculates/repaints.
+     * 
+     * @param aggrMethod The aggregation method
+     * @return <code>true</code> if the method has change otherwise 
+     * <code>flase</code>. 
+     */
+    public boolean setAggregationMethod(final AggregationMethod aggrMethod) {
+        if (aggrMethod == null) {
+            throw new IllegalArgumentException("Aggregation method shouldn't"
+                    + " be null");
+        }
+        m_aggrMethod = aggrMethod;
+        AbstractHistogramDataModel model = getHistogramDataModel();
+        //set the aggregation method first and ...
+        final boolean aggrMethChanged = 
+            model.changeAggregationMethod(aggrMethod);
+        // ... then the column!!!
+        if (aggrMethChanged || getYColName() == null
+                || getRowHeader().getCoordinate() == null) {
+            setYCoordinates();
+            return true;
+        }
+        return false;
+    }
+    
+    /**
      * Creates the <code>BarVisModel</code> objects which are used for drawing
      * the Histogram. If the bars are already exists they get only updated
      * otherwise would we loose the selected information. This is the case when
      * the user only changes the aggregation method or column.
      * 
      * @param existingBars The currently displayed bars or <code>null</code>
-     * if the bars should be created. @param xCoordinates The <code>Coordinate</code>
-     * object which contains the start position of an bar on the x axis @param
-     * drawingSpace A <code>Rectangle</code> which defines the available
-     * drawing space @return a <code>Collection</code> of <code>BarVisModel</code>
-     * objects containing all information needed for drawing.
+     * if the bars should be created. @param xCoordinates The 
+     * <code>Coordinate</code> object which contains the start position of an 
+     * bar on the x axis 
+     * @param drawingSpace A <code>Rectangle</code> which defines the available
+     * drawing space @return a <code>Collection</code> of 
+     * <code>BarVisModel</code> objects containing all information needed for 
+     * drawing.
      */
     private Hashtable<String, BarVisModel> createUpdateVisBars(
-            final Hashtable<String, BarVisModel> existingBars,
-            final Coordinate xCoordinates, final Coordinate yCoordinates,
+            final Hashtable<String, BarVisModel> existingBars, 
+            final Coordinate xCoordinates, final Coordinate yCoordinates, 
             final Rectangle drawingSpace) {
-        InteractiveHistogramDataModel histoData = getHistogramDataModel();
-        Hashtable<String, InteractiveBarDataModel> bars = histoData.getBars();
+        AbstractHistogramDataModel histoData = getHistogramDataModel();
         Hashtable<String, BarVisModel> visBars = existingBars;
         // this is the minimum size of a bar with an aggregation value > 0
         int minHeight = Math.max((int)HistogramDrawingPane.getMaxStrokeWidth(),
-                HistogramPlotter.MINIMUM_BAR_HEIGHT);
+                AbstractHistogramPlotter.MINIMUM_BAR_HEIGHT);
         if (existingBars == null
                 || existingBars.size() < getNoOfDisplayedBars()) {
             // +1 because of a possible missing value bar
-            visBars = new Hashtable<String, BarVisModel>(bars.size() + 1);
+            visBars = new Hashtable<String, BarVisModel>(
+                        histoData.getNumberOfBars() + 1);
         }
         final double drawingWidth = drawingSpace.getWidth();
         final double drawingHeight = drawingSpace.getHeight();
@@ -486,7 +418,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
         int barWidth = getBarWidth();
         for (CoordinateMapping coordinate : xMappingPositions) {
             String caption = coordinate.getDomainValueAsString();
-            BarDataModel bar = bars.get(caption);
+            AbstractBarDataModel bar = histoData.getBar(caption);
             if (bar == null) {
                 // if we find no bar for the caption it could be a information
                 // caption like only missing values so we simply continue
@@ -522,7 +454,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
             } else if (startY > drawingHeight) {
                 startY = (int)drawingHeight;
             }
-
+    
             Rectangle rect = new Rectangle(startX, startY, barWidth, height);
             BarVisModel visBar = visBars.get(bar.getCaption());
             if (visBar == null) {
@@ -547,7 +479,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
         // - getHistogramPlotterDrawingPane().getCurrentMaxDotSize();
         int height = getPlotterHeight();
         // - getHistogramPlotterDrawingPane().getCurrentMaxDotSize();
-
+    
         // we only need an offset if we have borders
         int xOffset = 0;
         // getHistogramPlotterDrawingPane().getCurrentHalfMaxDotSize();
@@ -567,40 +499,34 @@ public class HistogramPlotter extends AbstractPlotter2D {
      * 
      * @return the underlying scatter plotter drawing pane
      */
-    private HistogramDrawingPane getHistogramDrawingPane() {
+    protected HistogramDrawingPane getHistogramDrawingPane() {
         return (HistogramDrawingPane)getDrawingPane();
     }
 
-    private HistogramProperties getHistogramPropertiesPanel() {
-        return (HistogramProperties)getPropertiesPanel();
+    protected AbstractHistogramProperties getHistogramPropertiesPanel() {
+        return (AbstractHistogramProperties)getPropertiesPanel();
     }
 
     /**
-     * Returns the <code>HistogramDataModel</code> on which the visualisation
-     * bases on. It creates the model if it doesn't exists by using the
-     * information of the getXColName method and the m_rowContainer variable.
+     * Returns the <code>AbstractHistogramDataModel</code> on which the 
+     * visualisation bases on. It creates the model if it doesn't exists by 
+     * using the information of the getXColName method and the m_rowContainer 
+     * variable.
      * 
      * @return the model on which the visualisation is based on
      */
-    public InteractiveHistogramDataModel getHistogramDataModel() {
-        if (m_histoData == null) {
-            m_histoData = new InteractiveHistogramDataModel(m_tableSpec, 
-                    getXColName(), m_aggrColName, m_aggrMethod);
-            for (Iterator<DataRow> iter = m_data.iterator(); iter.hasNext();) {
-                m_histoData.addDataRow(iter.next());
-            }
-        }
+    public AbstractHistogramDataModel getHistogramDataModel() {
         return m_histoData;
     }
 
     /**
      * @return the <code>DataColumnSpec</code> of the aggregation column
      */
-    public DataColumnSpec getAggregationColumnSpec() {
+    public DataColumnSpec getAggregationColSpec() {
         double lowerBound = getHistogramDataModel().getMinAggregationValue(
-                isShowMissingvalBar());
+                isShowMissingValBar());
         double upperBound = getHistogramDataModel().getMaxAggregationValue(
-                isShowMissingvalBar());
+                isShowMissingValBar());
         if (lowerBound > 0) {
             lowerBound = 0;
         } else if (upperBound < 0) {
@@ -633,7 +559,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
      * @return the <code>DataColumnSpec</code> of the x column
      */
     private DataColumnSpec getXColumnSpec() {
-        final InteractiveHistogramDataModel model = getHistogramDataModel();
+        final AbstractHistogramDataModel model = getHistogramDataModel();
         final DataColumnSpec xColSpec = getHistogramDataModel()
                 .getOriginalXColSpec();
         String colName = xColSpec.getName();
@@ -663,14 +589,14 @@ public class HistogramPlotter extends AbstractPlotter2D {
             extendedBinCaptions.addAll(binCaptions);
             if (!m_showEmptyBars) {
                 for (DataCell cell : binCaptions) {
-                    BarDataModel bar = model.getBar(cell.toString());
+                    AbstractBarDataModel bar = model.getBar(cell.toString());
                     if (bar == null || bar.isEmpty()) {
                         extendedBinCaptions.remove(cell);
                     }
                 }
             }
             if (m_showMissingValBar) {
-                BarDataModel missingValBar = model.getMissingValueBar();
+                AbstractBarDataModel missingValBar = model.getMissingValueBar();
                 if (missingValBar != null) {
                     StringCell missingValCell = new StringCell(missingValBar
                             .getCaption());
@@ -697,8 +623,8 @@ public class HistogramPlotter extends AbstractPlotter2D {
      * @return the <code>DataColumnSpec</code> object created using the
      * given values
      */
-    private DataColumnSpec createColumnSpec(final String columnName,
-            final DataType type, final double lowerBound,
+    private DataColumnSpec createColumnSpec(final String columnName, 
+            final DataType type, final double lowerBound, 
             final double upperBound, final Set<DataCell> values) {
         DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
         if (!Double.isNaN(lowerBound) && !Double.isNaN(upperBound)) {
@@ -731,13 +657,13 @@ public class HistogramPlotter extends AbstractPlotter2D {
      * @param aggrMethod the aggregation method
      * @return column name with a hint about the aggregation method
      */
-    private String createAggregationColumnName(final String colName,
+    private String createAggregationColumnName(final String colName, 
             final AggregationMethod aggrMethod) {
         if (aggrMethod.equals(AggregationMethod.COUNT)) {
-            return HistogramDataModel.COL_NAME_COUNT;
+            return AbstractHistogramDataModel.COL_NAME_COUNT;
         } else if (colName == null || colName.length() < 0) {
             throw new IllegalArgumentException("Column name not defined.");
-        } else if (aggrMethod.equals(AggregationMethod.SUMMARY)) {
+        } else if (aggrMethod.equals(AggregationMethod.SUM)) {
             return "Sum of " + colName;
         } else if (aggrMethod.equals(AggregationMethod.AVERAGE)) {
             return "Avg of " + colName;
@@ -771,7 +697,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     /**
      * @return the showMissingvalBar
      */
-    public boolean isShowMissingvalBar() {
+    public boolean isShowMissingValBar() {
         return m_showMissingValBar;
     }
 
@@ -784,7 +710,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
             m_showMissingValBar = showMissingvalBar;
             if (!showMissingvalBar) {
                 // remove a possibly set missing value bar from the vis bars
-                BarDataModel missingValBar = getHistogramDataModel()
+                AbstractBarDataModel missingValBar = getHistogramDataModel()
                         .getMissingValueBar();
                 if (missingValBar != null) {
                     Hashtable<String, BarVisModel> visBars = 
@@ -816,7 +742,6 @@ public class HistogramPlotter extends AbstractPlotter2D {
         getHistogramDrawingPane().reset();
     }
 
-    // HiLiting stuff
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener#hiLite(
      *      org.knime.core.node.property.hilite.KeyEvent)
@@ -851,7 +776,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
+     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
      *      #getHiLiteMenu()
      */
     @Override
@@ -864,7 +789,7 @@ public class HistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
+     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
      *      #fillPopupMenu(javax.swing.JPopupMenu)
      */
     @Override
@@ -885,19 +810,21 @@ public class HistogramPlotter extends AbstractPlotter2D {
         JMenuItem hiliteItem = new JMenuItem(HILITE);
         hiliteItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                if (m_hiLiteHandler != null) {
-                    m_hiLiteHandler.hiLite(getHistogramDrawingPane()
+                HiLiteHandler hiLiteHandler = getHiLiteHandler();
+                if (hiLiteHandler != null) {
+                    hiLiteHandler.hiLite(getHistogramDrawingPane()
                             .getKeys4SelectedBars());
                 }
             }
         });
         items.add(hiliteItem);
-
+    
         JMenuItem unHiLiteItem = new JMenuItem(UNHILITE);
         unHiLiteItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                if (m_hiLiteHandler != null) {
-                    m_hiLiteHandler.unHiLite(getHistogramDrawingPane()
+                HiLiteHandler hiLiteHandler = getHiLiteHandler();
+                if (hiLiteHandler != null) {
+                    hiLiteHandler.unHiLite(getHistogramDrawingPane()
                             .getKeys4SelectedBars());
                 }
             }
@@ -906,8 +833,9 @@ public class HistogramPlotter extends AbstractPlotter2D {
         JMenuItem clearHiLiteItem = new JMenuItem(CLEAR_HILITE);
         clearHiLiteItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                if (m_hiLiteHandler != null) {
-                    m_hiLiteHandler.unHiLiteAll();
+                HiLiteHandler hiLiteHandler = getHiLiteHandler();
+                if (hiLiteHandler != null) {
+                    hiLiteHandler.unHiLiteAll();
                 }
             }
         });
@@ -922,4 +850,44 @@ public class HistogramPlotter extends AbstractPlotter2D {
         m_hiLiteHandler = hiLiteHandler;
         getHistogramDrawingPane().setHiLiteHandler(hiLiteHandler);
     }
+
+    /**
+     * @return the table specification
+     */
+    public DataTableSpec getDataTableSpec() {
+        return m_tableSpec;
+    }
+
+    protected AbstractHistogramDataModel getHistoData() {
+        return m_histoData;
+    }
+
+    protected void setHistoData(AbstractHistogramDataModel histoData) {
+        m_histoData = histoData;
+    }
+
+    protected String getAggregationColName() {
+        return m_aggrColName;
+    }
+
+    public AggregationMethod getAggregationMethod() {
+        return m_aggrMethod;
+    }
+
+    protected DataTableSpec getTableSpec() {
+        return m_tableSpec;
+    }
+
+    protected void setAggregationColName(String aggrColName) {
+        m_aggrColName = aggrColName;
+    }
+
+    protected void setTableSpec(DataTableSpec tableSpec) {
+        m_tableSpec = tableSpec;
+    }
+
+    protected HiLiteHandler getHiLiteHandler() {
+        return m_hiLiteHandler;
+    }
+
 }

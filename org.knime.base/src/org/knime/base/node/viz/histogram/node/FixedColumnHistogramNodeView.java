@@ -14,7 +14,7 @@
  * otherwise expressly permitted in writing by the copyright owner or
  * as specified in the license file distributed with this product.
  *
- * If you have any questions please contact the copyright holder:
+ * If you have any quesions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.FixedColumnHistogramPlotter;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
@@ -35,25 +35,25 @@ import org.knime.core.node.NodeView;
  * @author Tobias Koetter, University of Konstanz
  * 
  */
-public class HistogramNodeView extends NodeView {
+public class FixedColumnHistogramNodeView extends NodeView {
     
-    private final HistogramNodeModel m_model;
+    private final FixedColumnHistogramNodeModel m_model;
     
-    private AbstractHistogramPlotter m_plotter;
+    private FixedColumnHistogramPlotter m_plotter;
 
     /**
      * Creates a new view instance for the histogram node.
      * 
      * @param nodeModel the corresponding node model
      */
-    HistogramNodeView(final NodeModel nodeModel) {
+    FixedColumnHistogramNodeView(final NodeModel nodeModel) {
         super(nodeModel);
-        if (!(nodeModel instanceof HistogramNodeModel)) {
+        if (!(nodeModel instanceof FixedColumnHistogramNodeModel)) {
             throw new IllegalArgumentException(NodeModel.class.getName()
                     + " not an instance of "
                     + HistogramNodeModel.class.getName());
         }
-        m_model = (HistogramNodeModel)nodeModel;
+        m_model = (FixedColumnHistogramNodeModel)nodeModel;
         if (m_model != null) {
             m_plotter = m_model.getPlotter();
         }
@@ -72,7 +72,7 @@ public class HistogramNodeView extends NodeView {
      */
     @Override
     public void modelChanged() {
-        if (m_model == null || m_model.getData() == null) {
+        if (m_model == null) {
             if (m_model != null) {
                 m_model.reset();
             }
