@@ -47,6 +47,7 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 
@@ -181,8 +182,16 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
      * @param spec the specification of the input data table
      * @param selectedXCol the name of the new x column
      */
-    public abstract void modelChanged(final DataTableSpec spec, 
-            final String selectedXCol);
+    public void modelChanged(final DataTableSpec spec, 
+            final String selectedXCol) {
+        m_tableSpec = spec;
+        setXColName(selectedXCol);
+        setBackground(ColorAttr.getBackground());
+        AbstractHistogramProperties props = getHistogramPropertiesPanel();
+        props.updateColumnSelection(spec, selectedXCol, null);
+        props.setUpdateHistogramSettings(this);
+        updatePaintModel();
+    }
 
     /**
      * @see java.awt.event.ActionListener

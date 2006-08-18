@@ -64,15 +64,15 @@ public abstract class AbstractHistogramDataModel {
     
     
     /**
-     * <code>Hashtable</code> with all <code>AbstractBarDataModel</code> objects as
-     * values and their caption as <code>String</code> as key.
+     * <code>Hashtable</code> with all <code>AbstractBarDataModel</code> 
+     * objects as values and their caption as <code>String</code> as key.
      */
     private final Hashtable<String, AbstractBarDataModel> m_bars;
     
     /**
-     * <code>AbstractBarDataModel</code> object with all rows which have no value for
-     * the selected x axis column or <code>null</code> if all rows have a
-     * value.
+     * <code>AbstractBarDataModel</code> object with all rows which have no 
+     * value for the selected x axis column or <code>null</code> if all rows 
+     * have a value.
      */
     private AbstractBarDataModel m_missingValueBar = null;
 
@@ -121,7 +121,7 @@ public abstract class AbstractHistogramDataModel {
 
     /** The maximum for the aggregation column without the missing value bar. */
     private double m_maxAggrValue = Double.NaN;
-
+    
     /**Constructor for class AbstractHistogramDataModel.
      * @param tableSpec the table specification
      * @param xCoordLabel the label of the x coordinate
@@ -265,8 +265,8 @@ public abstract class AbstractHistogramDataModel {
 
     /**
      * @param caption the caption of the bar we want
-     * @return the <code>AbstractBarDataModel</code> object with the given caption or
-     *         <code>null</code> if no bar exists with the given caption
+     * @return the <code>AbstractBarDataModel</code> object with the given 
+     * caption or <code>null</code> if no bar exists with the given caption
      */
     public AbstractBarDataModel getBar(final String caption) {
         return m_bars.get(caption);
@@ -293,9 +293,9 @@ public abstract class AbstractHistogramDataModel {
     }
     
     /**
-     * @return a <code>AbstractBarDataModel</code> with all missing value rows or
-     *         <code>null</code> if all rows contains a value for the selected
-     *         x axis
+     * @return a <code>AbstractBarDataModel</code> with all missing value rows 
+     * or <code>null</code> if all rows contains a value for the selected
+     * x axis
      */
     public AbstractBarDataModel getMissingValueBar() {
         if (m_missingValueBar != null && m_bars != null && m_bars.size() > 0
@@ -326,7 +326,8 @@ public abstract class AbstractHistogramDataModel {
     /**
      * @param missingValueBar the missingValueBar to set
      */
-    protected void setMissingValueBar(final AbstractBarDataModel missingValueBar) {
+    protected void setMissingValueBar(
+            final AbstractBarDataModel missingValueBar) {
         m_missingValueBar = missingValueBar;
     }
 
@@ -466,6 +467,18 @@ public abstract class AbstractHistogramDataModel {
         return (getMissingValueBar() != null);
     }
 
+    /**
+     * @return <code>true</code> if the at least one empty bar is present
+     */
+    public boolean containsEmptyValueBars() {
+        for (AbstractBarDataModel bar : m_bars.values()) {
+            if (bar.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     /**
      * Sets the number of bars to create.
      * 

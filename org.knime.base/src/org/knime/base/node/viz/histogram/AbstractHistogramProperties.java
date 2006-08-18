@@ -47,17 +47,22 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel {
+public abstract class AbstractHistogramProperties extends 
+    PlotterPropertiesPanel {
 
-    protected static final String X_COLUMN_LABEL = "X Column:";
-    private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP = "Select the column used for aggregation an press 'Apply'.";
-    private static final String AGGREGATION_COLUMN_DISABLED_TOOLTIP = "Not available for aggregation method count";
-    protected static final String AGGREGATION_METHOD_LABEL = "Aggregation method:";
-    protected static final String BAR_SIZE_LABEL = "Bar size:";
+    private static final String X_COLUMN_LABEL = "X Column:";
+    private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP = 
+        "Select the column used for aggregation an press 'Apply'.";
+    private static final String AGGREGATION_COLUMN_DISABLED_TOOLTIP = 
+        "Not available for aggregation method count";
+    private static final String AGGREGATION_METHOD_LABEL = 
+        "Aggregation method:";
+    private static final String BAR_SIZE_LABEL = "Bar size:";
     private static final String BAR_WIDTH_TOOLTIP = "Width of the bars";
-    protected static final String NUMBER_OF_BARS_LABEL = "Number of bars:";
+    private static final String NUMBER_OF_BARS_LABEL = "Number of bars:";
     private static final String NO_OF_BARS_TOOLTIP = "Number of bars";
-    private static final String SHOW_MISSING_VALUE_BAR_LABEL = "Show missing value bar";
+    private static final String SHOW_MISSING_VALUE_BAR_LABEL = 
+        "Show missing value bar";
     private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Shows a bar "
             + "with rows which have a missing value for the selected x column.";
     private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
@@ -74,11 +79,14 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
     private JCheckBox m_showMissingValBar = null;
 
     
+    /**Constructor for class AbstractHistogramProperties.
+     * @param aggrMethod the aggregation method to set
+     */
     public AbstractHistogramProperties(final AggregationMethod aggrMethod) {
         m_aggregationMethod = aggrMethod;
         // the column select boxes for the X axis
         m_xCol = new ColumnSelectionComboxBox(
-                InteractiveHistogramProperties.X_COLUMN_LABEL);
+                AbstractHistogramProperties.X_COLUMN_LABEL);
         m_xCol.setBackground(this.getBackground());
         //the column select box for the aggregation method which gets added to
         // the button box later
@@ -421,6 +429,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
             }
             m_showMissingValBar.setSelected(plotter.isShowMissingValBar());
             m_showMissingValBar.setEnabled(histoData.containsMissingValueBar());
+            m_showEmptyBars.setEnabled(histoData.containsEmptyValueBars());
         } // end of else of if plotter == null
     }
 

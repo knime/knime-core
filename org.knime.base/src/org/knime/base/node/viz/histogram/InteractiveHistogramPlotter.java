@@ -27,7 +27,6 @@ import java.util.Iterator;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -172,14 +171,9 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     @Override
     public void modelChanged(final DataTableSpec spec, 
             final String selectedXCol) {
-        setTableSpec(spec);
         setAggregationColName(null);
         setAggregationMethod(AggregationMethod.getDefaultMethod());
         setXColumn(selectedXCol);
-        setBackground(ColorAttr.getBackground());
-        AbstractHistogramProperties props = getHistogramPropertiesPanel();
-        props.updateColumnSelection(spec, selectedXCol, null);
-        props.setUpdateHistogramSettings(this);
-        updatePaintModel();
+        super.modelChanged(spec, selectedXCol);
     }
 }
