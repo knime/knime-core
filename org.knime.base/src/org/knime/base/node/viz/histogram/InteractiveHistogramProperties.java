@@ -40,7 +40,8 @@ import org.knime.base.node.viz.plotter2D.AbstractPlotter2D;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class InteractiveHistogramProperties extends AbstractHistogramProperties {
+public class InteractiveHistogramProperties extends 
+    AbstractHistogramProperties {
 
     /**
      * Constructor for class FixedColumnHistogramProperties.
@@ -49,9 +50,9 @@ public class InteractiveHistogramProperties extends AbstractHistogramProperties 
      */
     public InteractiveHistogramProperties(final AggregationMethod aggrMethod) {
        super(aggrMethod);
-       m_xCol.addActionListener(new ActionListener() {
+       getXColSelectBox().addActionListener(new ActionListener() {
            public void actionPerformed(final ActionEvent e) {
-               onXColChanged(m_xCol.getSelectedColumn());
+               onXColChanged(getSelectedXColumn());
            }
        });
     }
@@ -61,13 +62,13 @@ public class InteractiveHistogramProperties extends AbstractHistogramProperties 
      * 
      * @param xColName the new selected x column
      */
-    private void onXColChanged(final String xColName) {
+    protected void onXColChanged(final String xColName) {
         final InteractiveHistogramPlotter plotter = getHistogramPlotter();
         if (plotter == null || xColName == null) {
             return;
         }
         plotter.setXColumn(xColName);
-        m_xCol.setToolTipText(xColName);
+        getXColSelectBox().setToolTipText(xColName);
         // repaint the plotter
         plotter.updatePaintModel();
         // update the slider values and the select boxes
@@ -78,11 +79,28 @@ public class InteractiveHistogramProperties extends AbstractHistogramProperties 
      * @return the <code>FixedColumnHistogramPlotter</code> object to whom this
      *         properties panel belongs
      */
+    @Override
     protected InteractiveHistogramPlotter getHistogramPlotter() {
         AbstractPlotter2D plotter = getPlotter();
         if (plotter instanceof InteractiveHistogramPlotter) {
             return (InteractiveHistogramPlotter)plotter;
         }
         return null;
+    }
+    
+    /**
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties#
+     * onApply()
+     */
+    @Override
+    protected void onApply() {
+        final InteractiveHistogramPlotter plotter = getHistogramPlotter();
+        if (plotter == null) {
+            return;
+        }
+        plotter.setAggregationColumn(getSelectedAggrColumn(), 
+                    getSelectedAggrMethod());
+        super.onApply();
+        return;
     }
 }

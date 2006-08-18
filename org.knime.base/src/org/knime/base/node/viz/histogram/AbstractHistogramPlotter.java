@@ -141,6 +141,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         } else {
             throw new IllegalArgumentException("HiLiteHandler not defined.");
         }
+        //disable the cross hair cursor by default for all histogram plots
+        setCrosshairCursorEnabled(false);
     }
     
     /**
@@ -878,7 +880,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         return m_tableSpec;
     }
 
-    protected void setAggregationColName(String aggrColName) {
+    public void setAggregationColName(String aggrColName) {
         m_aggrColName = aggrColName;
     }
 

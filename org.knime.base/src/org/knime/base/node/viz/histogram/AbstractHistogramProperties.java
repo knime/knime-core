@@ -61,22 +61,21 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
     private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Shows a bar "
             + "with rows which have a missing value for the selected x column.";
     private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
-    protected static final String APPLY_BUTTON_LABEL = "Apply";
+    private static final String APPLY_BUTTON_LABEL = "Apply";
     /** The title of the histogram settings region. */
-    protected static final String SETTINGS_TITLE = "Histogram settings";
-    protected AggregationMethod m_aggregationMethod;
-    protected final ColumnSelectionComboxBox m_xCol;
-    protected ColumnSelectionComboxBox m_yCol;
-    protected JSlider m_barWidth;
-    protected JSlider m_noOfBars = null;
-    protected ButtonGroup m_aggrMethButtonGrp = null;
-    protected JCheckBox m_showEmptyBars = null;
-    protected JCheckBox m_showMissingValBar = null;
+    private static final String SETTINGS_TITLE = "Histogram settings";
+    private AggregationMethod m_aggregationMethod;
+    private final ColumnSelectionComboxBox m_xCol;
+    private ColumnSelectionComboxBox m_yCol;
+    private JSlider m_barWidth;
+    private JSlider m_noOfBars = null;
+    private ButtonGroup m_aggrMethButtonGrp = null;
+    private JCheckBox m_showEmptyBars = null;
+    private JCheckBox m_showMissingValBar = null;
 
     
     public AbstractHistogramProperties(final AggregationMethod aggrMethod) {
         m_aggregationMethod = aggrMethod;
-
         // the column select boxes for the X axis
         m_xCol = new ColumnSelectionComboxBox(
                 InteractiveHistogramProperties.X_COLUMN_LABEL);
@@ -84,7 +83,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
         //the column select box for the aggregation method which gets added to
         // the button box later
         /*m_yCol = new ColumnSelectionComboxBox(
-                InteractiveHistogramProperties.AGGREGATION_COLUMN_LABEL,
+                AbstractHistogramProperties.AGGREGATION_COLUMN_LABEL,
                 DoubleValue.class);*/
         Box columnBox = Box.createVerticalBox();
         /*m_xCol.setMaximumSize(new Dimension(Integer.MAX_VALUE,
@@ -102,7 +101,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
         // the bar width label box
         final Box barWidthLabelBox = Box.createHorizontalBox();
         final JLabel barWidthLabel = new JLabel(
-                InteractiveHistogramProperties.BAR_SIZE_LABEL);
+                AbstractHistogramProperties.BAR_SIZE_LABEL);
         barWidthLabelBox.add(Box.createHorizontalGlue());
         barWidthLabelBox.add(barWidthLabel);
         barWidthLabelBox.add(Box.createHorizontalGlue());
@@ -116,7 +115,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
         // the number of bars label box
         final Box noOfBarsLabelBox = Box.createHorizontalBox();
         final JLabel noOfBarsLabel = new JLabel(
-                InteractiveHistogramProperties.NUMBER_OF_BARS_LABEL);
+                AbstractHistogramProperties.NUMBER_OF_BARS_LABEL);
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
         noOfBarsLabelBox.add(noOfBarsLabel);
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
@@ -130,7 +129,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
         // the aggregation method label box
         final Box aggrLabelBox = Box.createHorizontalBox();
         final JLabel aggrMethLabel = new JLabel(
-                InteractiveHistogramProperties.AGGREGATION_METHOD_LABEL);
+                AbstractHistogramProperties.AGGREGATION_METHOD_LABEL);
         aggrMethLabel.setVerticalAlignment(SwingConstants.CENTER);
         aggrLabelBox.add(Box.createHorizontalGlue());
         aggrLabelBox.add(aggrMethLabel);
@@ -160,7 +159,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
 
         // the apply button box
         final JButton applyButton = new JButton(
-                InteractiveHistogramProperties.APPLY_BUTTON_LABEL);
+                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
         applyButton.setHorizontalAlignment(SwingConstants.RIGHT);
         applyButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -201,7 +200,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
         // Create the histogram setting root box
         final Box histoBox = Box.createHorizontalBox();
         final TitledBorder histoBorder = BorderFactory.createTitledBorder(
-                InteractiveHistogramProperties.SETTINGS_TITLE);
+                AbstractHistogramProperties.SETTINGS_TITLE);
         histoBox.setBorder(histoBorder);
 
         // add the sections to the root box
@@ -224,7 +223,8 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
      * @param divisor the steps are calculated
      *            <code>maxVal - minVal / divisor</code>
      */
-    private static void setSliderLabels(final JSlider slider, final int divisor) {
+    private static void setSliderLabels(final JSlider slider, 
+            final int divisor) {
         // show at least the min, middle and max value on the slider.
         final int minimum = slider.getMinimum();
         final int maximum = slider.getMaximum();
@@ -261,7 +261,8 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
      * @param xColName preselected x column name
      * @param yColName preselected y column name
      */
-    public void updateColumnSelection(final DataTableSpec spec, final String xColName, final String yColName) {
+    public void updateColumnSelection(final DataTableSpec spec, 
+            final String xColName, final String yColName) {
         try {
             m_xCol.setEnabled(true);
             m_xCol.update(spec, xColName);
@@ -298,10 +299,11 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
      * Updates the available slider with the current values of the Histogram
      * plotter.
      * 
-     * @param plotter the <code>InteractiveHistogramPlotter</code> object which contains
-     *            the data. Could be <code>null</code>.
+     * @param plotter the <code>AbstractHistogramPlotter</code> object which 
+     * contains the data. Could be <code>null</code>.
      */
-    protected void setUpdateHistogramSettings(final AbstractHistogramPlotter plotter) {
+    protected void setUpdateHistogramSettings(
+            final AbstractHistogramPlotter plotter) {
         if (plotter == null) {
             // set all components with dummy values
             m_barWidth = new JSlider(0, 20, 10);
@@ -361,7 +363,8 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
             m_showMissingValBar = new JCheckBox(SHOW_MISSING_VALUE_BAR_LABEL);
             m_showMissingValBar.setToolTipText(SHOW_MISSING_VAL_BAR_TOOLTIP);
         } else {
-            AbstractHistogramDataModel histoData = plotter.getHistogramDataModel();
+            AbstractHistogramDataModel histoData = 
+                plotter.getHistogramDataModel();
             // set the bar width slider
             int currentBarWidth = plotter.getBarWidth();
             int maxBarWidth = plotter.getMaxBarWidth();
@@ -425,10 +428,10 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
      * @return the <code>FixedColumnHistogramPlotter</code> object to whom this
      *         properties panel belongs
      */
-    protected InteractiveHistogramPlotter getHistogramPlotter() {
+    protected AbstractHistogramPlotter getHistogramPlotter() {
         AbstractPlotter2D plotter = getPlotter();
-        if (plotter instanceof InteractiveHistogramPlotter) {
-            return (InteractiveHistogramPlotter)plotter;
+        if (plotter instanceof AbstractHistogramPlotter) {
+            return (AbstractHistogramPlotter)plotter;
         }
         return null;
     }
@@ -450,7 +453,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
     /**
      * @return the current selected aggregation method
      */
-    private AggregationMethod getSelectedAggrMethod() {
+    protected AggregationMethod getSelectedAggrMethod() {
         if (m_aggrMethButtonGrp == null) {
             return AggregationMethod.getDefaultMethod();
         } else {
@@ -468,7 +471,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
      * Applies the settings to the plotter model.
      */
     protected void onApply() {
-        final InteractiveHistogramPlotter plotter = getHistogramPlotter();
+        final AbstractHistogramPlotter plotter = getHistogramPlotter();
         if (plotter == null) {
             return;
         }
@@ -482,8 +485,7 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
             plotter.setNumberOfBars(getNoOfBars());
         }
         m_aggregationMethod = getSelectedAggrMethod();
-        plotter.setAggregationColumn(m_yCol.getSelectedColumn(), 
-                m_aggregationMethod);
+        plotter.setAggregationMethod(m_aggregationMethod);
         plotter.setShowEmptyBars(m_showEmptyBars.isSelected());
         plotter.setShowMissingvalBar(m_showMissingValBar.isSelected());
         // force the repainting of the plotter
@@ -491,6 +493,20 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
         // update the labels of the sliders and the select boxes
         setUpdateHistogramSettings(plotter);
         return;
+    }
+
+    /**
+     * @return the name of the column the user has selected as y coordinate
+     */
+    protected String getSelectedAggrColumn() {
+        return m_yCol.getSelectedColumn();
+    }
+    
+    /**
+     * @return the name of the column the user has selected as x coordinate
+     */
+    protected String getSelectedXColumn() {
+        return m_xCol.getSelectedColumn();
     }
 
     /**
@@ -512,4 +528,34 @@ public abstract class AbstractHistogramProperties extends PlotterPropertiesPanel
         }
     }
 
+    /**
+     * @return the select box for the x column
+     */
+    protected ColumnSelectionComboxBox getXColSelectBox() {
+        return m_xCol;
+    }
+
+    /**
+     * Enables the x column select box so that items can be selected. When the
+     * select box is disabled, items cannot be selected and values
+     * cannot be typed into its field (if it is editable).
+     *
+     * @param b a boolean value, where true enables the component and
+     *          false disables it
+     */
+    protected void setXColEnabled(final boolean b) {
+        m_xCol.setEnabled(b);
+    }
+    
+    /**
+     * Enables the x column select box so that items can be selected. When the
+     * select box is disabled, items cannot be selected and values
+     * cannot be typed into its field (if it is editable).
+     *
+     * @param b a boolean value, where true enables the component and
+     *          false disables it
+     */
+    protected void setAggrColEnabled(final boolean b) {
+        m_yCol.setEnabled(b);
+    }
 }

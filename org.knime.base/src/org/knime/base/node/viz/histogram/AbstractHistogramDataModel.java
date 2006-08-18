@@ -419,6 +419,8 @@ public abstract class AbstractHistogramDataModel {
      */
     protected void calculateAggregationValues() {
         if (m_bars == null || m_bars.size() < 1) {
+            m_minAggrValue = 0;
+            m_maxAggrValue = 0;
             return;
         }
         double minVal = Double.NaN;

@@ -21,6 +21,8 @@
  */
 package org.knime.base.node.viz.histogram;
 
+import org.knime.core.data.DataTableSpec;
+
 
 /**
  * The properties panel of the Histogram plotter which allows the user to change
@@ -36,7 +38,8 @@ package org.knime.base.node.viz.histogram;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedColumnHistogramProperties extends AbstractHistogramProperties {
+public class FixedColumnHistogramProperties extends 
+    AbstractHistogramProperties {
 
 
     /**
@@ -46,6 +49,40 @@ public class FixedColumnHistogramProperties extends AbstractHistogramProperties 
      */
     public FixedColumnHistogramProperties(final AggregationMethod aggrMethod) {
         super(aggrMethod);
+        //disable the select boxes
+        disableSelectBoxes();
     }
 
+    /**
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties#
+     * onSelectAggrMethod(java.lang.String)
+     */
+    @Override
+    protected void onSelectAggrMethod(final String actionCommand) {
+        super.onSelectAggrMethod(actionCommand);
+        //disable the select box
+        disableSelectBoxes();
+    }
+    
+    /**
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties#
+     * updateColumnSelection(org.knime.core.data.DataTableSpec, 
+     * java.lang.String, java.lang.String)
+     */
+    @Override
+    public void updateColumnSelection(final DataTableSpec spec, 
+            final String xColName, final String yColName) {
+        super.updateColumnSelection(spec, xColName, yColName);
+        //disable the column select boxes
+        disableSelectBoxes();
+    }
+    
+    /**
+     * Disables the column select boxes which shouldn't be used in this 
+     * histogram implementation.
+     */
+    private void disableSelectBoxes() {
+        setXColEnabled(false);
+        setAggrColEnabled(false);
+    }
 }
