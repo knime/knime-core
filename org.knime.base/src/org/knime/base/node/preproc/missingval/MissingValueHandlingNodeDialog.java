@@ -110,12 +110,8 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
         }
         ColSetting[] defaults = new ColSetting[0];
         ColSetting[] individuals = new ColSetting[0];
-        try {
-            defaults = ColSetting.loadMetaColSettings(settings);
-            individuals = ColSetting.loadIndividualColSettings(settings);
-        } catch (InvalidSettingsException e) {
-            LOGGER.debug("Settings are invalid", e);
-        }
+        defaults = ColSetting.loadMetaColSettings(settings, specs[0]);
+        individuals = ColSetting.loadIndividualColSettings(settings, specs[0]);
 
         m_defaultsPanel.removeAll();
         for (int i = 0; i < defaults.length; i++) {

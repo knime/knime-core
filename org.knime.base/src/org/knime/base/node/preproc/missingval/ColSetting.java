@@ -37,7 +37,6 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -366,8 +365,9 @@ final class ColSetting {
      * @return meta settings
      */
     protected static ColSetting[] loadMetaColSettings(
-            final NodeSettings settings, final DataTableSpec spec) {
-        LinkedHashMap<String, ColSetting> defaultsHash = new LinkedHashMap<String, ColSetting>();
+            final NodeSettingsRO settings, final DataTableSpec spec) {
+        LinkedHashMap<String, ColSetting> defaultsHash = 
+            new LinkedHashMap<String, ColSetting>();
         if (spec.containsCompatibleType(IntValue.class)) {
             defaultsHash.put(CFG_META_INT, new ColSetting(TYPE_INT));
         }
@@ -417,9 +417,10 @@ final class ColSetting {
      * @return individual settings
      */
     protected static ColSetting[] loadIndividualColSettings(
-            final NodeSettings settings, final DataTableSpec spec) {
+            final NodeSettingsRO settings, final DataTableSpec spec) {
         assert (spec == spec); // avoid checkstyle complain
-        Map<String, ColSetting> individHash = new LinkedHashMap<String, ColSetting>();
+        Map<String, ColSetting> individHash = 
+            new LinkedHashMap<String, ColSetting>();
         if (settings.containsKey(CFG_INDIVIDUAL)) {
             NodeSettingsRO subConfig;
             try {
@@ -438,7 +439,8 @@ final class ColSetting {
      */
     private static Map<String, ColSetting> loadSubConfigs(
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        LinkedHashMap<String, ColSetting> result = new LinkedHashMap<String, ColSetting>();
+        LinkedHashMap<String, ColSetting> result = 
+            new LinkedHashMap<String, ColSetting>();
         for (String key : settings.keySet()) { // TODO CONFIG
             NodeSettingsRO subConfig = settings.getNodeSettings(key);
             ColSetting local = new ColSetting();
