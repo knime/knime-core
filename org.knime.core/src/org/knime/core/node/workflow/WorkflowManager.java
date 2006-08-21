@@ -1186,6 +1186,39 @@ public class WorkflowManager implements WorkflowListener {
             m_executor.waitUntilFinished(this);
         }
     }
+    
+    /**
+     * Executes exactly one node. The node must be in the executable state. No
+     * predecessors will be executed in order to get this node into the
+     * executable state. No auto-executable successor nodes will be executed
+     * afterwards.
+     * 
+     * @param nodeID the id of the node to execute.
+     * @param block <code>true</code> if the method should block,
+     *            <code>false</code> otherwise
+     * @throws IllegalArgumentException if the passed node is not configured or
+     *             already executed
+     */
+    public void executeOneNode(final int nodeID, final boolean block) {
+        synchronized (this) {
+            NodeContainer nc = m_nodesByID.get(nodeID);
+            if (!nc.isExecutable()) {
+                throw new IllegalArgumentException("The given node is not"
+                        + " executable, thus can't be executed");
+            }
+            if (nc.isExecuted()) {
+                throw new IllegalArgumentException("The given node is already"
+                        + " executed");
+            }
+
+            List<NodeContainer> nodes = new LinkedList<NodeContainer>();
+            nodes.add(nc);
+            m_executor.addWaitingNodes(nodes);
+        }
+        if (block) {
+            m_executor.waitUntilFinished(this);
+        }
+    }
 
     /**
      * Searches for potentially executable nodes that are before the passed node
