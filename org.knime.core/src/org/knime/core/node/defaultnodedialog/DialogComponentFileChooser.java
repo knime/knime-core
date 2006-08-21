@@ -25,21 +25,27 @@
  */
 package org.knime.core.node.defaultnodedialog;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.border.Border;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
 
 
@@ -52,8 +58,10 @@ import org.knime.core.util.SimpleFileFilter;
 public class DialogComponentFileChooser extends DialogComponent {
 
     private final String m_configName;
-
-    private final JTextField m_fileURL;
+    
+    private final JComboBox m_fileComboBox;
+    
+    private StringHistory m_fileHistory;
 
     private final JButton m_browseButton;
     
@@ -63,11 +71,13 @@ public class DialogComponentFileChooser extends DialogComponent {
      * given extensions.
      * 
      * @param configName key for filename in config object
+     * @param historyID to identify the file history
      * @param validExtensions only show files with those extensions
      */
-    public DialogComponentFileChooser(final String configName,
+    public DialogComponentFileChooser(final String configName, 
+            final String historyID, 
             final String... validExtensions) {
-       this(configName, JFileChooser.OPEN_DIALOG, validExtensions); 
+       this(configName, historyID, JFileChooser.OPEN_DIALOG, validExtensions); 
     }
     
     /**
@@ -77,12 +87,14 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @param configName key for filename in config object
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
+     *  @param historyID to identify the file history
      * @param directoryOnly <code>true</code> if only directories should be
      * selectable, otherwise only files can be selected
      */
-    public DialogComponentFileChooser(final String configName,
+    public DialogComponentFileChooser(final String configName, 
+            final String historyID,
             final int dialogType, final boolean directoryOnly) {
-        this(configName, dialogType, directoryOnly, new String[0]);
+        this(configName, historyID, dialogType, directoryOnly, new String[0]);
     }
     
     /**
@@ -93,10 +105,12 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
      * @param validExtensions only show files with those extensions
+     * @param historyID id for the file history
      */
     public DialogComponentFileChooser(final String configName,
-            final int dialogType, final String... validExtensions) {
-        this(configName, dialogType, false, validExtensions);
+            final String historyID, final int dialogType, 
+            final String... validExtensions) {
+        this(configName, historyID, dialogType, false, validExtensions);
     }
 
     /**
@@ -109,25 +123,52 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @param directoryOnly <code>true</code> if only directories should be
      *  selectable, otherwise only files can be selected
      * @param validExtensions only show files with those extensions
+     * @param historyID to identify the file histroy
      */
     public DialogComponentFileChooser(final String configName,
-            final int dialogType, final boolean directoryOnly,
+            final String historyID,
+            final int dialogType,
+            final boolean directoryOnly,
             final String... validExtensions) {
         setLayout(new FlowLayout());
         m_configName = configName;
         JPanel p = new JPanel();
-        m_fileURL = new JTextField("n/a");
+        
+        m_fileHistory = StringHistory.getInstance(historyID);
+        m_fileComboBox = new JComboBox();
+        m_fileComboBox.setPreferredSize(new Dimension(300, 
+                m_fileComboBox.getPreferredSize().height));
+        m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
+        for (String fileName : m_fileHistory.getHistory()) {
+            m_fileComboBox.addItem(fileName);
+        }
+        m_fileComboBox.addItemListener(new ItemListener() {
+
+            /**
+             * @see java.awt.event.ItemListener#itemStateChanged(
+             * java.awt.event.ItemEvent)
+             */
+            public void itemStateChanged(final ItemEvent e) {
+                String fileName = (String)m_fileComboBox.getSelectedItem();
+                if (fileName != null) {
+                    m_fileHistory.add(fileName);
+                }
+            }
+            
+        });
         Border b = BorderFactory.createTitledBorder(" Selected File ");
         p.setBorder(b);
-        p.add(m_fileURL);
+        p.add(m_fileComboBox);
         
-        m_fileURL.setColumns(40);
-        m_fileURL.setEditable(true);
         m_browseButton = new JButton("Browse...");
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
-                JFileChooser chooser = new JFileChooser(m_fileURL.getText());
+                String selectedFile = (String)m_fileComboBox.getSelectedItem();
+                if (selectedFile == null) {
+                    selectedFile = (String)m_fileComboBox.getItemAt(0);
+                }
+                JFileChooser chooser = new JFileChooser(selectedFile);
                 chooser.setDialogType(dialogType);
                 if (directoryOnly) {
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -138,8 +179,10 @@ public class DialogComponentFileChooser extends DialogComponent {
                         chooser.setAcceptAllFileFilterUsed(false);
                     }
                     // set file filter for given extensions
-                    chooser.setFileFilter(
-                            new SimpleFileFilter(validExtensions));
+                    for (String extension : validExtensions) {
+                        chooser.setFileFilter(
+                                new SimpleFileFilter(extension));
+                    }
                 }
                 int returnVal = chooser.showDialog(getParent(), null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -158,7 +201,13 @@ public class DialogComponentFileChooser extends DialogComponent {
                     } catch (SecurityException se) {
                         newFile = "<Error: " + se.getMessage() + ">";
                     }
-                    m_fileURL.setText(newFile);
+                    List<String> files = Arrays.asList(
+                            m_fileHistory.getHistory());
+                    if (!files.contains(newFile)) {
+                        m_fileComboBox.addItem(newFile);
+                    }
+                    m_fileComboBox.setSelectedItem(newFile);
+                    revalidate();
                 }
             }
         });
@@ -183,7 +232,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         try {
             fileName = settings.getString(m_configName);
         } finally {
-            m_fileURL.setText(fileName);
+            m_fileComboBox.setSelectedItem(fileName);
         }
         /*
          * if (fileName != null) { m_fileLocator = new File(fileName); } else {
@@ -197,7 +246,7 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     @Override
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        String file = m_fileURL.getText().trim();
+        String file = ((String)m_fileComboBox.getSelectedItem()).trim();
         if (file.length() == 0) {
             file = null;
         }
@@ -211,7 +260,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_browseButton.setEnabled(enabled);
-        m_fileURL.setEnabled(enabled);
+        m_fileComboBox.setEnabled(enabled);
     }
     
 }
