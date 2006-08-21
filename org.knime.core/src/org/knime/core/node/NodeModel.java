@@ -147,40 +147,32 @@ public abstract class NodeModel {
     }
     
     /**
-     * Load internals into the derived <code>NodeModel</code>. This method is
+     * Load internals into the derived <code>NodeModel</code>. This method is 
      * only called if the <code>Node</code> was executed. Read all your
      * internal structures from the given file directory to create your internal
      * data structure which is necessary to provide all node functionalities
-     * after the workflow is loaded, e.g. view content and/or hilite mapping.
-     * <br>
-     * This method is not called if the model is autoexecutable. The node will
-     * be executed instead.
-     * 
+     * after the workflow is loaded, e.g. view content and/or hilite mapping.  
      * @param nodeInternDir The directory to read from.
      * @param exec Used to report progress and to cancel the load process.
      * @throws IOException If an error occurs during reading from this dir.
      * @throws CanceledExecutionException If the loading has been canceled.
      * @see #saveInternals(File,ExecutionMonitor)
-     * @see #setAutoExecutable(boolean)
      */
     protected abstract void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException;
     
     /**
-     * Save internals of the derived <code>NodeModel</code>. This method is
+     * Save internals of the derived <code>NodeModel</code>. This method is 
      * only called if the <code>Node</code> is executed. Write all your
-     * internal structures into the given file directory which are necessary to
+     * internal structures into the given file directory which are necessary to 
      * recreate this model when the workflow is loaded, e.g. view content and/or
-     * hilite mapping.<br>
-     * This method is not called, if the model is autoexecutable.
-     * 
+     * hilite mapping.  
      * @param nodeInternDir The directory to write into.
      * @param exec Used to report progress and to cancel the save process.
      * @throws IOException If an error occurs during writting to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File,ExecutionMonitor)
-     * @see #setAutoExecutable(boolean)
      */
     protected abstract void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
@@ -716,17 +708,11 @@ public abstract class NodeModel {
      * require much computation during the execute, hence, can be conveniently
      * executed right after all predecessors are executed. Set this flag here to
      * indicate that your derived node is of that kind. This method should be
-     * called in the constructor of the derived node model.<br>
-     * There is one side effect to this flag, if it is set true, the node will
-     * not be able to save its internals (saveInternals is not called, even if
-     * the node was executed). Also loadInternals will not be called, the node
-     * will be executed instead.
+     * called in the constructor of the derived node model.
      * 
      * @param isAutoExecutable <code>true</code> if the node should be
      *            immediately executed when possible, <code>false</code>
      *            otherwise.
-     * @see #loadInternals(File, ExecutionMonitor)
-     * @see #saveInternals(File, ExecutionMonitor)
      */
     protected final void setAutoExecutable(final boolean isAutoExecutable) {
         m_isAutoExecutable = isAutoExecutable;

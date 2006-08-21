@@ -141,6 +141,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
             }
         }
 
+                        
         // collect all output specs
         DataTableSpec[] outspecs = new DataTableSpec[m_dataOutContainer.length];
         final int min = Math.min(outspecs.length, m_dataOutContainer.length);
@@ -150,7 +151,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
                 if (!m_dataOutContainer[i].isFullyConnected()) {
                     throw new InvalidSettingsException("Internal workflow "
                             + "is not fully connected, please open the meta"
-                            + "workflow editor.");
+                            + "workflow editor.");  
                 }
             }
         }
@@ -262,16 +263,16 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * Returns if the {@link #reset()} is called because of an internal trigger
-     * or from the outside.
+     * Returns if the {@link #reset()} is called because of an internal
+     * trigger or from the outside.
      * 
      * @return <code>true</code> if the reset is triggered internally,
-     *         <code>false</code> if it comes from the outside
+     * <code>false</code> if it comes from the outside
      */
     protected final boolean resetFromInterior() {
         return m_resetFromInterior;
     }
-
+    
     /**
      * @see org.knime.core.node.SpecialNodeModel #saveSettingsTo(java.io.File,
      *      NodeSettingsWO, org.knime.core.node.ExecutionMonitor)
@@ -387,17 +388,9 @@ public class MetaNodeModel extends SpecialNodeModel implements
         super.inportWasDisconnected(inPortID);
 
         try {
-            if (inPortID < m_dataInModels.length) {
-                m_dataInModels[inPortID].setBufferedDataTable(null);
-                internalWFM().resetAndConfigureNode(
-                        m_dataInContainer[inPortID].getID());
-            } else {
-                m_modelInModels[inPortID - m_dataInModels.length]
-                        .setModelContent(null);
-                internalWFM().resetAndConfigureNode(
-                        m_dataInContainer[inPortID - m_dataInModels.length]
-                                .getID());
-            }
+            m_dataInModels[inPortID].setBufferedDataTable(null);
+            internalWFM().resetAndConfigureNode(
+                    m_dataInContainer[inPortID].getID());
         } catch (WorkflowInExecutionException ex) {
             LOGGER.error("Could not reset meta input nodes", ex);
         }

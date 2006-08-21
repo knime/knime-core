@@ -514,18 +514,9 @@ public abstract class AbstractPlotter2D extends JPanel implements
                 // unfortunate...)
                 if (m_drawingPane.dragCoordSet()) {
                     m_drawingPane.setDragCoord(xPos, yPos);
-                    int downX = m_drawingPane.getMouseDownX();
-                    int downY = m_drawingPane.getMouseDownY();
-                    int dragX = m_drawingPane.getDragX();
-                    int dragY = m_drawingPane.getDragY();
-                    int x1 = Math.min(downX, dragX);
-                    int x2 = Math.max(downX, dragX);
-                    int y1 = Math.min(downY, dragY);
-                    int y2 = Math.max(downY, dragY);
-                    if (x1 != x2 && y1 != y2) {
-                        m_drawingPane.selectElementsInDragTangle(
-                                x1, y1, x2, y2);
-                    }
+                    m_drawingPane.selectElementsInDragTangle(m_drawingPane
+                            .getMouseDownX(), m_drawingPane.getMouseDownY(),
+                            m_drawingPane.getDragX(), m_drawingPane.getDragY());
                 } else {
                     m_drawingPane.toggleSelectionAt(xPos, yPos);
                 }

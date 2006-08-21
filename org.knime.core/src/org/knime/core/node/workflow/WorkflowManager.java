@@ -40,9 +40,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -61,12 +58,13 @@ import org.knime.core.node.NodeStateListener;
 import org.knime.core.node.NodeStatus;
 import org.knime.core.util.MutableInteger;
 
+
 /**
  * Manager for a workflow holding Nodes and the connecting edge information. The
  * information is stored in a graph based data structure and allows to access
  * predecessors and successors. For performance reasons this implementation is
- * specific to vertices being of type <code>org.knime.dev.node.Node</code> and
- * (directed) edges connecting ports indicated by indices.
+ * specific to vertices being of type <code>org.knime.dev.node.Node</code>
+ * and (directed) edges connecting ports indicated by indices.
  * 
  * @author M. Berthold, University of Konstanz
  * @author Florian Georg, University of Konstanz
@@ -135,23 +133,8 @@ public class WorkflowManager implements WorkflowListener {
             }
         }
 
-        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes =
-            new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>(),
-            m_waitingNodes = new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
-
-        private final Object m_addLock = new Object(),
-            m_transferLock = new Object(), m_finishLock = new Object();
-        
-        WorkflowExecutor() {
-            Timer watchdogTimer = new Timer(true);
-            TimerTask watchDog = new TimerTask() {
-                @Override
-                public void run() {
-                    startNewNodes(true);
-                }
-            };
-            watchdogTimer.scheduleAtFixedRate(watchDog, 5000, 10000);
-        }
+        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = new HashMap<NodeContainer, NodeProgressMonitor>(),
+                m_waitingNodes = new HashMap<NodeContainer, NodeProgressMonitor>();
 
         /**
          * Adds new nodes to the list of nodes that are waiting for execution.
@@ -159,29 +142,22 @@ public class WorkflowManager implements WorkflowListener {
          * @param nodes a list of nodes that should be executed
          */
         public void addWaitingNodes(final Collection<NodeContainer> nodes) {
-            boolean change = false;
-            for (final NodeContainer nc : nodes) {
-                boolean b;
-                // avoid that a node is removed from m_waitingNodes but not yet
-                // inserted into m_runningNodes
-                synchronized (m_transferLock) {
-                    b = m_waitingNodes.containsKey(nc)
-                        && !m_runningNodes.containsKey(nc); 
-                }
-                if (!b) {
-                    MyNodePM pm = new MyNodePM(nc);
-                    synchronized (m_addLock) {
-                        m_waitingNodes.put(nc, pm);    
-                    }
-                    
-                    fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc
-                            .getID(), nc, pm));
+            synchronized (m_waitingNodes) {
+                boolean change = false;
+                for (final NodeContainer nc : nodes) {
+                    if (!m_waitingNodes.containsKey(nc)
+                            && !m_runningNodes.containsKey(nc)) {
+                        MyNodePM pm = new MyNodePM(nc);
+                        m_waitingNodes.put(nc, pm);
+                        fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc
+                                .getID(), nc, pm));
 
-                    change = true;
+                        change = true;
+                    }
                 }
-            }
-            if (change) {
-                startNewNodes(false);
+                if (change) {
+                    startNewNodes();
+                }
             }
         }
 
@@ -191,15 +167,12 @@ public class WorkflowManager implements WorkflowListener {
          * monitor) that they should terminate.
          */
         public void cancelExecution() {
-            // avoid that a node is added to m_waitingNodes after the finish
-            // events have been sent and before the map is cleared;
-            // we will miss the finish event for this node otherwise
-            synchronized (m_addLock) {
+            synchronized (m_waitingNodes) {
                 for (NodeContainer nc : m_waitingNodes.keySet()) {
                     fireWorkflowEvent(new WorkflowEvent.NodeFinished(
                             nc.getID(), null, null));
                 }
-    
+
                 m_waitingNodes.clear();
             }
             for (NodeProgressMonitor pm : m_runningNodes.values()) {
@@ -215,10 +188,10 @@ public class WorkflowManager implements WorkflowListener {
          * @param nodes a list of nodes that should be canceled
          */
         public void cancelExecution(final Collection<NodeContainer> nodes) {
-            Set<NodeContainer> cancelNodes = new HashSet<NodeContainer>();
-            cancelNodes.addAll(nodes);
-            
-            synchronized (m_transferLock) {
+            synchronized (m_waitingNodes) {
+                Set<NodeContainer> cancelNodes = new HashSet<NodeContainer>();
+                cancelNodes.addAll(nodes);
+
                 for (NodeContainer nc : nodes) {
                     if (m_runningNodes.containsKey(nc)) {
                         m_runningNodes.get(nc).setExecuteCanceled();
@@ -230,16 +203,12 @@ public class WorkflowManager implements WorkflowListener {
                     }
                 }
 
-                for (Iterator<?> it = cancelNodes.iterator(); it.hasNext();) {
-                    if (m_waitingNodes.remove(it.next()) == null) {
-                        it.remove();
+                for (NodeContainer nc : cancelNodes) {
+                    if (m_waitingNodes.remove(nc) != null) {
+                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
+                                .getID(), null, null));
                     }
                 }
-            }
-            
-            for (NodeContainer nc : cancelNodes) {
-                fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
-                        .getID(), null, null));                
             }
         }
 
@@ -253,31 +222,32 @@ public class WorkflowManager implements WorkflowListener {
          *         <code>false</code> otherwise
          */
         public boolean executionInProgress(final WorkflowManager wfm) {
-            // check if any of the nodes in the lists are from the
-            // passed WFM
+            synchronized (m_waitingNodes) {
+                // check if any of the nodes in the lists are from the
+                // passed WFM
 
-            synchronized (m_transferLock) {
                 for (NodeContainer nc : m_runningNodes.keySet()) {
                     if (wfm.m_nodesByID.values().contains(nc)) {
+
                         return true;
                     }
                 }
-    
+
                 for (NodeContainer nc : m_waitingNodes.keySet()) {
                     if (wfm.m_nodesByID.values().contains(nc)) {
                         return true;
                     }
                 }
-            }
 
-            for (WeakReference<WorkflowManager> wr : wfm.m_children) {
-                if (wr.get() != null) {
-                    if (executionInProgress(wr.get())) {
-                        return true;
+                for (WeakReference<WorkflowManager> wr : wfm.m_children) {
+                    if (wr.get() != null) {
+                        if (executionInProgress(wr.get())) {
+                            return true;
+                        }
                     }
                 }
+                return false;
             }
-            return false;
         }
 
         /**
@@ -285,21 +255,19 @@ public class WorkflowManager implements WorkflowListener {
          * Threads waiting on m_waitingNodes are awakened if no nodes are
          * running any more and no new executable node has been found.
          */
-        private void startNewNodes(final boolean watchdog) {
-            synchronized (m_finishLock) {
+        private void startNewNodes() {
+            synchronized (m_waitingNodes) {
                 Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = m_waitingNodes
                         .entrySet().iterator();
                 while (it.hasNext()) {
                     Map.Entry<NodeContainer, NodeProgressMonitor> e = it.next();
-                    if (e.getKey().isExecutable()) {                    
+                    if (e.getKey().isExecutable()) {
+                        it.remove();
                         NodeContainer nc = e.getKey();
                         NodeProgressMonitor pm = e.getValue();
-                        
-                        synchronized (m_transferLock) {
-                            it.remove();
-                            m_runningNodes.put(nc, pm);
-                        }
-    
+
+                        m_runningNodes.put(nc, pm);
+
                         try {
                             fireWorkflowEvent(new WorkflowEvent.NodeStarted(nc
                                     .getID(), nc, pm));
@@ -309,6 +277,7 @@ public class WorkflowManager implements WorkflowListener {
                             // remove from running nodes due to an error
                             m_runningNodes.remove(nc);
                         }
+
                     } else if (e.getKey().isExecuted()) {
                         it.remove();
                     }
@@ -316,15 +285,8 @@ public class WorkflowManager implements WorkflowListener {
 
                 if (m_runningNodes.size() == 0) {
                     if (m_waitingNodes.size() > 0) {
-                        if (watchdog) {
-                            LOGGER.error("Whoa there, the watchdog found a "
-                                            + "possible deadlock situation! Some nodes "
-                                            + "are still waiting, but none is running"
-                                            + m_waitingNodes);
-                        } else {
-                            LOGGER.warn("Some nodes were still waiting but "
-                                    + "none is running: " + m_waitingNodes);
-                        }
+                        LOGGER.warn("Some nodes were still waiting but none is"
+                                + " running: " + m_waitingNodes);
                     }
 
                     for (NodeContainer nc : m_waitingNodes.keySet()) {
@@ -333,7 +295,7 @@ public class WorkflowManager implements WorkflowListener {
                     }
                     m_waitingNodes.clear();
 
-                    m_finishLock.notifyAll();
+                    m_waitingNodes.notifyAll();
                 }
             }
         }
@@ -345,31 +307,29 @@ public class WorkflowManager implements WorkflowListener {
         public void stateChanged(final NodeStatus state, final int id) {
             if ((state instanceof NodeStatus.EndExecute)
                     || (state instanceof NodeStatus.ExecutionCanceled)) {
-                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = m_runningNodes
-                        .entrySet().iterator();
-                while (it.hasNext()) {
-                    NodeContainer nc = it.next().getKey();
-                    if (nc.getID() == id) {
-                        nc.removeListener(this);
-                        synchronized (m_finishLock) {
+                synchronized (m_waitingNodes) {
+                    Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = m_runningNodes
+                            .entrySet().iterator();
+                    while (it.hasNext()) {
+                        NodeContainer nc = it.next().getKey();
+                        if (nc.getID() == id) {
+                            nc.removeListener(this);
                             it.remove();
-                        }
 
-                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
-                                .getID(), null, null));
-                        if (state instanceof NodeStatus.ExecutionCanceled) {
-                            cancelExecution(nc.getAllSuccessors());
-                        }
-
-                        if (nc.getStatus() instanceof NodeStatus.Error) {
-                            cancelExecution(nc.getAllSuccessors());
+                            fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
+                                    .getID(), null, null));
+                            if (state instanceof NodeStatus.ExecutionCanceled) {
+                                cancelExecution(nc.getAllSuccessors());
+                            }
+                            
+                            if (nc.getStatus() instanceof NodeStatus.Error) {
+                                cancelExecution(nc.getAllSuccessors());
+                            }
                         }
                     }
-                }
 
-                startNewNodes(false);
-                synchronized (m_finishLock) {
-                    m_finishLock.notifyAll();
+                    startNewNodes();
+                    m_waitingNodes.notifyAll();
                 }
             }
         }
@@ -381,7 +341,7 @@ public class WorkflowManager implements WorkflowListener {
          * @param wfm a workflow manager
          */
         public void waitUntilFinished(final WorkflowManager wfm) {
-            synchronized (m_finishLock) {
+            synchronized (m_waitingNodes) {
                 while (m_runningNodes.size() > 0) {
                     // check if any of the nodes in the lists are from the
                     // passed WFM
@@ -404,7 +364,7 @@ public class WorkflowManager implements WorkflowListener {
 
                     if (interesting) {
                         try {
-                            m_finishLock.wait();
+                            m_waitingNodes.wait();
                         } catch (InterruptedException ex) {
                             break;
                         }
@@ -544,10 +504,9 @@ public class WorkflowManager implements WorkflowListener {
         m_runningConnectionID = parent.m_runningConnectionID;
         m_runningNodeID = parent.m_runningNodeID;
     }
-
+    
     /**
      * Returns the current KNIME workflow file version loaded.
-     * 
      * @return Workflow file version.
      */
     public String getWorkflowVersion() {
@@ -1130,6 +1089,7 @@ public class WorkflowManager implements WorkflowListener {
                 }
             }
 
+            
             if (m_parent != null) {
                 NodeContainer myNodeContainer = null;
                 for (NodeContainer nc : m_parent.m_nodesByID.values()) {
@@ -1487,7 +1447,7 @@ public class WorkflowManager implements WorkflowListener {
                 LOGGER.error("Could not create connection: " + connectionKey
                         + " reason: " + ex.getMessage());
                 LOGGER.debug(connectionConfig, ex);
-            }
+            } 
         }
     }
 
@@ -1683,7 +1643,7 @@ public class WorkflowManager implements WorkflowListener {
         // save nodes in an own sub-config object as a series of configs
         NodeSettingsWO nodes = settings.addNodeSettings(KEY_NODES);
         int nodeNum = 0;
-
+        
         ExecutionMonitor execMon = new ExecutionMonitor(progMon);
         for (NodeContainer nextNode : m_nodesByID.values()) {
 
@@ -1703,7 +1663,7 @@ public class WorkflowManager implements WorkflowListener {
             if (!nodeDir.isDirectory() && !nodeDir.mkdir()) {
                 throw new IOException("Unable to create dir: " + nodeDir);
             }
-
+            
             NodeProgressMonitor subProgMon = execMon.createSubProgress(
                     1.0 / m_nodesByID.size()).getProgressMonitor();
             nextNode.save(nextNodeConfig, nodeFile, subProgMon);
