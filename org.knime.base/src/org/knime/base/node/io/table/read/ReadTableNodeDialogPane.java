@@ -41,7 +41,9 @@ public class ReadTableNodeDialogPane extends DefaultNodeDialogPane {
     public ReadTableNodeDialogPane() {
         super();
         addDialogComponent(new DialogComponentFileChooser(
-                ReadTableNodeModel.CFG_FILENAME, JFileChooser.OPEN_DIALOG, 
+                ReadTableNodeModel.CFG_FILENAME, 
+                ReadTableNodeDialogPane.class.getName(), 
+                JFileChooser.OPEN_DIALOG, 
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
     }
 

@@ -44,7 +44,9 @@ public class WriteTableNodeDialogPane extends DefaultNodeDialogPane {
     public WriteTableNodeDialogPane() {
         super();
         addDialogComponent(new DialogComponentFileChooser(
-                WriteTableNodeModel.CFG_FILENAME, JFileChooser.SAVE_DIALOG, 
+                WriteTableNodeModel.CFG_FILENAME, 
+                WriteTableNodeDialogPane.class.getName(),
+                JFileChooser.SAVE_DIALOG, 
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
     }
 
