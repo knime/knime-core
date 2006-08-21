@@ -27,7 +27,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 /**
  * 
- * @author Bernd Wieswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class ConvenientComboBoxRenderer extends BasicComboBoxRenderer {
     /**
