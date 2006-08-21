@@ -917,8 +917,9 @@ class Buffer {
             if (m_inStream == null) {
                 return;
             }
-            String closeMes = "Closing input stream on \""
-                + m_outFile.getAbsolutePath() + "\", "; 
+            
+            String closeMes = (m_outFile != null) ? "Closing input stream on \""
+                + m_outFile.getAbsolutePath() + "\", " : ""; 
             try {
                 m_inStream.close();
                 m_nrOpenInputStreams--;
