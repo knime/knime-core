@@ -1,0 +1,126 @@
+/* Created on Aug 21, 2006 1:52:46 PM by thor
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2006
+ * University of Konstanz, Germany.
+ * Chair for Bioinformatics and Information Mining
+ * Prof. Dr. Michael R. Berthold
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * ------------------------------------------------------------------- * 
+ */
+package org.knime.core.util;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.zip.GZIPOutputStream;
+
+import org.apache.log4j.FileAppender;
+import org.knime.core.node.KNIMEConstants;
+
+/**
+ * This is a special appender for KNIME that writes into the
+ * <code>knime.log</code> in the users <code>.knime</code> directory. If the
+ * log file gets bigger the {@link #getMaxLogSize()} the file is gzipped and
+ * renamed and a new empty file is created.
+ * 
+ * @author Thorsten Meinl, University of Konstanz
+ */
+public class LogfileAppender extends FileAppender {
+    private final File m_logFile;
+
+    private int m_maxLogSize = 10 * 1024 * 1024; // 10MB
+
+    /**
+     * Creates a new LogfileAppender.
+     */
+    public LogfileAppender() {
+        // get user home
+        final String tmpDir = KNIMEConstants.KNIME_HOME_DIR + File.separator;
+        // check if home/.knime exists
+        File tempDir = new File(tmpDir);
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
+        }
+
+        m_logFile = new File(tmpDir + "knime.log");
+        setFile(m_logFile.getAbsolutePath());
+        setImmediateFlush(true);
+    }
+
+    /**
+     * @see org.apache.log4j.FileAppender#activateOptions()
+     */
+    @Override
+    public void activateOptions() {
+        if (m_logFile.exists() && (m_logFile.length() > m_maxLogSize)
+                && m_logFile.canRead()) {
+            compressOldLog(m_logFile);
+        }
+        super.activateOptions();
+    }
+
+    private static void compressOldLog(final File oldLog) {
+        final File tempFile = new File(oldLog.getAbsolutePath() + ".old");
+        oldLog.renameTo(tempFile);
+
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                BufferedInputStream in;
+                try {
+                    in = new BufferedInputStream(new FileInputStream(tempFile));
+                    GZIPOutputStream out = new GZIPOutputStream(
+                            new FileOutputStream(new File(tempFile
+                                    .getAbsolutePath()
+                                    + ".gz")));
+
+                    byte[] buf = new byte[4096];
+                    int count;
+                    while ((count = in.read(buf)) > 0) {
+                        out.write(buf, 0, count);
+                    }
+
+                    in.close();
+                    out.close();
+                    tempFile.delete();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.start();
+    }
+
+    /**
+     * Returns the maximum log file size in bytes before it is compressed.
+     * 
+     * @return the maximum log file size
+     */
+    public int getMaxLogSize() {
+        return m_maxLogSize;
+    }
+
+    /**
+     * Sets the maximum log file size in bytes before it is compressed.
+     * 
+     * @param maxLogSize the maximum log file size
+     */
+    public void setMaxLogSize(final int maxLogSize) {
+        m_maxLogSize = maxLogSize;
+    }
+}

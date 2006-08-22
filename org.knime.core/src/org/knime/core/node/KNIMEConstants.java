@@ -88,6 +88,15 @@ public final class KNIMEConstants {
         } catch (Exception e) {
             // do nothing.
         }
+        
+        File knimeDir = new File(KNIME_HOME_DIR);
+        if (!knimeDir.exists()) {
+            if (!knimeDir.mkdirs()) {
+                System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.err.println("  Could not create '" + knimeDir + "'");
+                System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
+        }
     }
 
     /** The global thread pool from which all threads should be taken. */

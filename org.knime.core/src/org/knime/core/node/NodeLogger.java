@@ -24,47 +24,43 @@
  */
 package org.knime.core.node;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.zip.GZIPOutputStream;
+
+import javax.xml.parsers.FactoryConfigurationError;
 
 import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
-import org.apache.log4j.TTCCLayout;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
+import org.apache.log4j.xml.DOMConfigurator;
+import org.knime.core.util.LogfileAppender;
 
 /**
  * The general logger used to write info, warnings, errors , debugging, assert
- * messages, exceptions, and coding problems into the internal Log4J logger. By
- * default, the messages are logged to <code>System.out</code> and
- * <code>System.err</code>, respectively. In addtion, all messages are
- * written into the <i>knime.log</i> file created in the <i>.knime</i>
- * directory, located by default in the user's home directory. Furthermore, it
- * is possible to add and remove additional writers to this logger. Note,
- * calling <code>#setLevelIntern(LEVEL)</code> does only effect the minimum
- * logging level of the default loggers. All other writers' levels have to be
- * set before hand.
+ * messages, exceptions, and coding problems into the internal Log4J logger. The
+ * loggers are configured by the <code>log4j.properties</code> file in the
+ * root of the core package. The configuration can be overridden by specifying a
+ * file in <code>-Dlog4j.configuration</code> (this is the standard log4j
+ * behaviour). Furthermore, it is possible to add and remove additional writers
+ * to this logger. Note, calling {@link #setLevelIntern(LEVEL)} does only effect
+ * the minimum logging level of the default loggers. All other writers' levels
+ * have to be set before hand.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class NodeLogger {
-    
-    /*
-     * TODO (tg) create log configuration file
-     */
-
     /** The logging levels. */
     public static enum LEVEL {
         /** includes debug and more critical messages. */
@@ -84,8 +80,6 @@ public final class NodeLogger {
     /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
 
-    private static final int MAX_LOG_SIZE = 10 * 1024 * 1024;
-
     /** Assertions are on or off. */
     private static final boolean ASSERT;
     static {
@@ -100,12 +94,10 @@ public final class NodeLogger {
     }
 
     /** Keeps set of <code>NodeLogger</code> elements by classname as key. */
-    private static final HashMap<String, NodeLogger> LOGGERS = 
-        new HashMap<String, NodeLogger>();
+    private static final HashMap<String, NodeLogger> LOGGERS = new HashMap<String, NodeLogger>();
 
     /** Map of additionally added writers: Writer -> Appender. */
-    private static final HashMap<Writer, WriterAppender> WRITER = 
-        new HashMap<Writer, WriterAppender>();
+    private static final HashMap<Writer, WriterAppender> WRITER = new HashMap<Writer, WriterAppender>();
 
     /**
      * Maximum number of chars (10000) printed on <code>System.out</code> and
@@ -114,10 +106,10 @@ public final class NodeLogger {
     private static final int MAX_CHARS = 10000;
 
     /** <code>System.err</code> log appender. */
-    private static final ConsoleAppender SERR_APPENDER;
+    private static final Appender SERR_APPENDER;
 
     /** <code>System.out</code> log appender. */
-    private static final ConsoleAppender SOUT_APPENDER;
+    private static final Appender SOUT_APPENDER;
 
     /** Default log file appender. */
     private static final Appender FILE_APPENDER;
@@ -127,125 +119,48 @@ public final class NodeLogger {
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
-        // File config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
-        // + "log4j.xml");
-        // if (config.exists()) {
-        // DOMConfigurator.configure(config.getAbsolutePath());
-        // } else {
-        // config = new File(KNIMEConstants.KNIME_HOME_DIR + File.separator
-        // + "log4j.properties");
-        // if (config.exists()) {
-        // PropertyConfigurator.configure(config.getAbsolutePath());
-        // } else {
-        // URL u = NodeLogger.class.getClassLoader().getResource("log4j.xml");
-        // if (u != null) {
-        // try {
-        // DOMConfigurator.configure(u);
-        // } catch (Exception ex) {
-        //                        ex.printStackTrace();
-        //                    }
-        //                }
-        //            }
-        //        }
-        
-        // init root logger
-        Logger root = Logger.getRootLogger();
-        root.setLevel(Level.ALL);
-        // add System.out
-        SOUT_APPENDER = new ConsoleAppender(new PatternLayout(
-                "%-5p\t %c{1}\t %." + MAX_CHARS + "m\n"),
-                ConsoleAppender.SYSTEM_OUT);
-        SOUT_APPENDER.setImmediateFlush(true);
-        LevelRangeFilter filter = new LevelRangeFilter();
-        filter.setLevelMin(Level.DEBUG);
-        filter.setLevelMax(Level.FATAL);
-        SOUT_APPENDER.addFilter(filter);
-        root.addAppender(SOUT_APPENDER);
-        // add System.err
-        SERR_APPENDER = new ConsoleAppender(new PatternLayout(
-                "%-5p\t %t : %c\t %." + MAX_CHARS + "m\n"),
-                ConsoleAppender.SYSTEM_ERR);
-        SERR_APPENDER.setImmediateFlush(true);
-        SERR_APPENDER.setThreshold(Level.ERROR);
-        root.addAppender(SERR_APPENDER);
-        FileAppender tempFileAppender;
-        try {
-            // get user home
-            final String tmpDir = KNIMEConstants.KNIME_HOME_DIR
-                    + File.separator;
-            // check if home/.knime exists
-            File tempDir = new File(tmpDir);
-            if (!tempDir.exists()) {
-                tempDir.mkdir();
-            }
-            // check old for old knime log files
-            final File oldLog = new File(tmpDir + LOG_FILE);
-            if (oldLog.exists() && (oldLog.length() > MAX_LOG_SIZE)
-                    && oldLog.canRead()) {
-                compressOldLog(oldLog);                
-            }
-            // add knime.log file appender
-            tempFileAppender = new FileAppender(new TTCCLayout(
-                    "yy.MM.dd HH:mm:ss"), tmpDir + LOG_FILE);
-            // WriterAppender file =
-            // new DailyRollingFileAppender(
-            // new TTCCLayout("yy.MM.dd HH:mm:ss"),
-            // tmpDir + LOG_FILE, "yyMMdd");
-            tempFileAppender.setName(LOG_FILE);
-            tempFileAppender.setImmediateFlush(true);
-            tempFileAppender.setThreshold(Level.ALL);
-            root.addAppender(tempFileAppender);
-            // write start logging message
-            startMessage();
-        } catch (IOException ioe) {
-            // write start logging message
-            startMessage();
-            // print error
-            NodeLogger logger = getLogger(NodeLogger.class);
-            logger.error(
-                    "Could not create temp-file: "
-                            + KNIMEConstants.KNIME_HOME_DIR + File.separator
-                            + LOG_FILE, ioe);
-            tempFileAppender = null;
-        }
-        if (tempFileAppender == null) {
-            FILE_APPENDER = new NullAppender();
-        } else {
-            FILE_APPENDER = tempFileAppender;
-        }
-    }
-
-    private static void compressOldLog(final File oldLog) {
-        final File tempFile = new File(oldLog.getAbsolutePath() + ".old");
-        oldLog.renameTo(tempFile);
-
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                BufferedInputStream in;
+        // check if KNIME log4j config exisist in users home
+        File knimeDir = new File(KNIMEConstants.KNIME_HOME_DIR);
+        File log4j = new File(knimeDir, "log4j-1.1.0.xml");
+        if (!log4j.exists()) {
+            InputStream in = NodeLogger.class.getClassLoader()
+                    .getResourceAsStream("log4j-1.1.0.xml");
+            if (in != null) {
+                byte[] buf = new byte[4096];
                 try {
-                    in = new BufferedInputStream(new FileInputStream(tempFile));
-                    GZIPOutputStream out = new GZIPOutputStream(
-                            new FileOutputStream(new File(tempFile
-                                    .getAbsolutePath()
-                                    + ".gz")));
-
-                    byte[] buf = new byte[4096];
-                    int count;
+                    OutputStream out = new FileOutputStream(log4j);
+                    int count = 0;
                     while ((count = in.read(buf)) > 0) {
                         out.write(buf, 0, count);
                     }
-
                     in.close();
                     out.close();
-                    tempFile.delete();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             }
-        };
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
+        }
+
+        if (System.getProperty("log4j.configuration") == null) {
+            try {
+                DOMConfigurator.configure(log4j.toURL());
+            } catch (MalformedURLException ex) {
+                ex.printStackTrace();
+            } catch (FactoryConfigurationError ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        // init root logger
+        Logger root = Logger.getRootLogger();
+        Appender a = root.getAppender("stderr");
+        SERR_APPENDER = (a != null) ? a : new NullAppender();
+        a = root.getAppender("stdout");
+        SOUT_APPENDER = (a != null) ? a : new NullAppender();
+        a = root.getAppender("knimelog");
+        FILE_APPENDER = (a != null) ? a : new NullAppender();
+
+        startMessage();
     }
 
     /** Write start logging message to info logger of this class. */
@@ -263,17 +178,21 @@ public final class NodeLogger {
         copyrightMessage();
         l.info("#                                                           #");
         l.info("#############################################################");
-        l.info("# For more details see:                                     #");
-        l
-                .info("# " + KNIMEConstants.KNIME_HOME_DIR + File.separator
-                        + LOG_FILE);
-        l.info("#-----------------------------------------------------------#");
+        if (FILE_APPENDER instanceof LogfileAppender) {
+            l
+                    .info("# For more details see:                                     #");
+            l.info("# " + ((LogfileAppender)FILE_APPENDER).getFile());
+            l
+                    .info("#-----------------------------------------------------------#");
+        }
+
         l.info("# logging date=" + new Date());
         l.info("# java.version=" + System.getProperty("java.version"));
         l.info("# java.vm.version=" + System.getProperty("java.vm.version"));
         l.info("# java.vendor=" + System.getProperty("java.vendor"));
         l.info("# os.name=" + System.getProperty("os.name"));
-        l.info("# number of CPUs="
+        l
+                .info("# number of CPUs="
                         + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (ASSERT ? "on" : "off"));
         l.info("#############################################################");
@@ -292,18 +211,6 @@ public final class NodeLogger {
 
     /** The Log4J logger to which all messages are logged. */
     private final Logger m_logger;
-
-    /**
-     * Don't log the following packages.
-     */
-    private static final String[] DONT_LOG = new String[]{"joelib",
-            "org.openscience"};
-    static {
-        for (int i = 0; i < DONT_LOG.length; i++) {
-            Logger log = Logger.getLogger(DONT_LOG[i]);
-            log.setLevel(Level.OFF);
-        }
-    }
 
     /**
      * Hidden default constructor, logger created by
@@ -550,8 +457,7 @@ public final class NodeLogger {
     public static final void removeWriter(final Writer writer) {
         Appender o = WRITER.get(writer);
         if (o != null) {
-            if (o != FILE_APPENDER && o != SERR_APPENDER 
-                    && o != SOUT_APPENDER) {
+            if (o != FILE_APPENDER) {
                 Logger.getRootLogger().removeAppender(o);
             }
         } else {
@@ -574,10 +480,10 @@ public final class NodeLogger {
         filter.setLevelMin(getLevel(level));
         filter.setLevelMax(getLevel(LEVEL.FATAL));
         FILE_APPENDER.clearFilters();
-        SERR_APPENDER.clearFilters();
+        // SERR_APPENDER.clearFilters();
         SOUT_APPENDER.clearFilters();
         FILE_APPENDER.addFilter(filter);
-        SERR_APPENDER.addFilter(filter);
+        // SERR_APPENDER.addFilter(filter);
         SOUT_APPENDER.addFilter(filter);
     }
 
