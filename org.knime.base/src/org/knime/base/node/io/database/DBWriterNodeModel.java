@@ -193,12 +193,6 @@ class DBWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        try {
-            new DBWriterConnection(m_name, m_user, m_pass, m_table);
-            return new DataTableSpec[0];
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Could not establish connection"
-                    + " to database: " + m_name);
-        }
+        return new DataTableSpec[0];
     }
 }
