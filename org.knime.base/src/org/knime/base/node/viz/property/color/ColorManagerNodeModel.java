@@ -372,8 +372,16 @@ class ColorManagerNodeModel extends NodeModel {
         assert map.size() == 2;
         Color c0 = map.get(MIN_VALUE).getColor();
         Color c1 = map.get(MAX_VALUE).getColor();
-        double d0 = ((DoubleValue)lower).getDoubleValue();
-        double d1 = ((DoubleValue)upper).getDoubleValue();
+        double d0 = Double.NaN;
+        if (!lower.isMissing() && 
+                lower.getType().isCompatible(DoubleValue.class)) {
+            d0 = ((DoubleValue)lower).getDoubleValue();
+        }
+        double d1 = Double.NaN;
+        if (!upper.isMissing() && 
+                upper.getType().isCompatible(DoubleValue.class)) {
+            d1 = ((DoubleValue)upper).getDoubleValue();
+        }
         return new ColorHandler(new ColorModelRange(d0, c0, d1, c1));
     }
 }
