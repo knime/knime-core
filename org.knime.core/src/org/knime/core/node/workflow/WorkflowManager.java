@@ -147,7 +147,7 @@ public class WorkflowManager implements WorkflowListener {
             TimerTask watchDog = new TimerTask() {
                 @Override
                 public void run() {
-                    startNewNodes(true);
+//                    startNewNodes(true);
                 }
             };
             watchdogTimer.scheduleAtFixedRate(watchDog, 5000, 10000);

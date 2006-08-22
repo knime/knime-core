@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -105,9 +104,6 @@ public final class NodeLogger {
      */
     private static final int MAX_CHARS = 10000;
 
-    /** <code>System.err</code> log appender. */
-    private static final Appender SERR_APPENDER;
-
     /** <code>System.out</code> log appender. */
     private static final Appender SOUT_APPENDER;
 
@@ -154,7 +150,6 @@ public final class NodeLogger {
         // init root logger
         Logger root = Logger.getRootLogger();
         Appender a = root.getAppender("stderr");
-        SERR_APPENDER = (a != null) ? a : new NullAppender();
         a = root.getAppender("stdout");
         SOUT_APPENDER = (a != null) ? a : new NullAppender();
         a = root.getAppender("knimelog");
@@ -179,11 +174,9 @@ public final class NodeLogger {
         l.info("#                                                           #");
         l.info("#############################################################");
         if (FILE_APPENDER instanceof LogfileAppender) {
-            l
-                    .info("# For more details see:                                     #");
+            l.info("# For more details see:                                     #");
             l.info("# " + ((LogfileAppender)FILE_APPENDER).getFile());
-            l
-                    .info("#-----------------------------------------------------------#");
+            l.info("#-----------------------------------------------------------#");
         }
 
         l.info("# logging date=" + new Date());
