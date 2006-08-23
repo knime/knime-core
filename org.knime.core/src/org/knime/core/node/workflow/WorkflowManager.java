@@ -1436,15 +1436,13 @@ public class WorkflowManager implements WorkflowListener {
                     String msg = "Unable to load node: "
                             + newNode.getNameWithID()
                             + " -> reset and configure.";
-                    LOGGER.error(msg);
-                    LOGGER.debug("", ioe);
+                    LOGGER.error(msg, ioe);
                     failedNodes.add(newNode);
                 } catch (InvalidSettingsException ise) {
                     String msg = "Unable to load node: "
                             + newNode.getNameWithID()
                             + " -> reset and configure.";
-                    LOGGER.error(msg);
-                    LOGGER.debug("", ise);
+                    LOGGER.error(msg, ise);
                     failedNodes.add(newNode);
                 }
                 progMon.setProgress(nodeCounter / topSortNodes().size());
