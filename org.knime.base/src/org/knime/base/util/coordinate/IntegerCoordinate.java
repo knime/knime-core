@@ -323,17 +323,6 @@ class IntegerCoordinate extends NumericCoordinate {
         return roundRange(range);
     }
 
-    /**
-     * @param minValue the minimum value of this coordinate
-     * @return the base value which is used to calculate the position
-     */
-    private static int getBaseVal(final int minValue) {
-        if (minValue < 0) {
-            return minValue;
-        } else {
-            return 0;
-        }
-    }
 
     /**
      * This method is called every time a domain range (min or max) changes to
@@ -341,7 +330,7 @@ class IntegerCoordinate extends NumericCoordinate {
      */
     private void updateInternalData() {
         m_domainRange = createDomainRange(m_minDomainValue, m_maxDomainValue);
-        m_baseVal = getBaseVal(m_minDomainValue);
+        m_baseVal = m_minDomainValue;
     }
 
 }
