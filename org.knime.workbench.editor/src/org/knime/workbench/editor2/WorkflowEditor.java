@@ -1363,6 +1363,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         } else if (event instanceof WorkflowEvent.NodeStarted) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
             if (j != null) {
+                LOGGER.debug("'Node Started' event received for "
+                        + event.getOldValue());
                 j.setStateMessage("Executing");
                 j.schedule();
             }
