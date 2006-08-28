@@ -26,6 +26,7 @@ package org.knime.workbench.editor2.actions.delegates;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -105,8 +106,12 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
      *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
     public void workflowChanged(final WorkflowEvent event) {
-        m_editor.getSite().getSelectionProvider().setSelection(
-                m_editor.getSite().getSelectionProvider().getSelection());
+        Display.getDefault().asyncExec(new Runnable() {
+            public void run() {
+                m_editor.getSite().getSelectionProvider().setSelection(
+                    m_editor.getSite().getSelectionProvider().getSelection());
+            }
+        });
     }
 
     /**
