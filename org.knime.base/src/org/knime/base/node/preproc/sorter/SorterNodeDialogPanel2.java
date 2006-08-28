@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.preproc.sorter;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -101,7 +102,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
             }
             if ((incl == null) && (sortOrder == null)) {
 
-                for (int i = 0; i < nrsortitems && i < spec.getNumColumns(); i++) {
+                for (int i = 0; i < nrsortitems 
+                && i < spec.getNumColumns(); i++) {
                     Object selected = (i == 0) ? values.get(i + 1) : values
                             .get(0);
                     SortItem temp = new SortItem(i, values, selected, true);
@@ -134,6 +136,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
             int maxCols = m_spec.getNumColumns() - m_components.size();
             SpinnerNumberModel snm = new SpinnerNumberModel(0, 0, maxCols, 1);
             final JSpinner spinner = new JSpinner(snm);
+            spinner.setMaximumSize(new Dimension(100, 30));
+            spinner.setPreferredSize(new Dimension(100, 30));
             JButton addSortItemButton = new JButton("new columns");
             addSortItemButton.addActionListener(new ActionListener() {
                 public void actionPerformed(final ActionEvent ae) {
@@ -163,6 +167,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
                 }
             });
             buttonbox.add(spinner);
+            buttonbox.add(Box.createHorizontalStrut(10));
             buttonbox.add(addSortItemButton);
             super.add(buttonbox);
             super.validate();

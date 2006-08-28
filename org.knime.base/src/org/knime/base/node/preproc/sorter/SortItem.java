@@ -24,10 +24,13 @@
  */
 package org.knime.base.node.preproc.sorter;
 
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -98,6 +101,17 @@ public class SortItem extends JPanel {
         m_combo = new JComboBox(m_combovalues);
         m_combo.setLightWeightPopupEnabled(false);
         m_combo.setSelectedItem(selected);
+        m_combo.setMaximumSize(new Dimension(150, 25));
+        m_combo.setPreferredSize(new Dimension(150, 25));
+        
+        JPanel comboPanel = new JPanel();
+        comboPanel.setLayout(new BoxLayout(comboPanel, BoxLayout.Y_AXIS));
+        comboPanel.add(Box.createGlue());
+        comboPanel.add(m_combo);
+        comboPanel.add(Box.createGlue());
+        
+        
+        
         ButtonGroup group = new ButtonGroup();
         group.add(m_ascRB);
         group.add(m_descRB);
@@ -112,7 +126,8 @@ public class SortItem extends JPanel {
         } else {
             m_descRB.setSelected(true);
         }
-        super.add(m_combo);
+       
+        super.add(comboPanel);
         super.add(m_ascRB);
         super.add(new JLabel());
         super.add(m_descRB);
