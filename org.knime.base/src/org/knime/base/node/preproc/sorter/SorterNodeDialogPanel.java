@@ -199,8 +199,8 @@ public final class SorterNodeDialogPanel extends JPanel {
         // include list
         m_inclMdl = new DefaultListModel();
         m_inclList = new JList(m_inclMdl);
-        m_inclList
-                .setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclList.setSelectionMode(
+                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         m_inclList.addListSelectionListener(new ListSelectionListener() {
             /**
              * Listener method for list selection changes
@@ -225,8 +225,8 @@ public final class SorterNodeDialogPanel extends JPanel {
         // exclude list
         m_exclMdl = new DefaultListModel();
         m_exclList = new JList(m_exclMdl);
-        m_exclList
-                .setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_exclList.setSelectionMode(
+                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         final JScrollPane jspExcl = new JScrollPane(m_exclList);
         jspExcl.setPreferredSize(new Dimension(200, 250));
