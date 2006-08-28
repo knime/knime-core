@@ -514,6 +514,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         return (HistogramDrawingPane)getDrawingPane();
     }
 
+    /**
+     * @return the {@link AbstractHistogramProperties} panel
+     */
     protected AbstractHistogramProperties getHistogramPropertiesPanel() {
         return (AbstractHistogramProperties)getPropertiesPanel();
     }
@@ -538,6 +541,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
                 isShowMissingValBar());
         double upperBound = getHistogramDataModel().getMaxAggregationValue(
                 isShowMissingValBar());
+        //set the upper bound for negative values and the lower bound for
+        //positive values to 0 to ensure that the 0 is displayed on the 
+        //coordinate
         if (lowerBound > 0) {
             lowerBound = 0;
         } else if (upperBound < 0) {

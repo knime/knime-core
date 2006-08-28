@@ -29,8 +29,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.InteractiveHistogramPlotter;
 import org.knime.base.node.viz.histogram.InteractiveHistogramProperties;
 import org.knime.core.data.DataRow;
@@ -43,6 +43,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -55,6 +56,9 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramNodeModel extends NodeModel {
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(HistogramNodeModel.class);
+    
     private static final String CFG_DATA = "histogramData";
 
     private static final String CFG_SETTINGS = "histogramSettings";
@@ -165,6 +169,8 @@ public class HistogramNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        LOGGER.info(
+                "Entering execute(inData, exec) of class HistogramNodeModel.");
         // create the data object
         m_data = inData[0];
         DataTableSpec tableSpec = m_data.getDataTableSpec();
@@ -194,6 +200,8 @@ public class HistogramNodeModel extends NodeModel {
             exec.setMessage("Creating histogram data");
             m_plotter.lastDataRowAdded();
         }
+        LOGGER.info(
+                "Exiting execute(inData, exec) of class HistogramNodeModel.");
         return new BufferedDataTable[0];
     }
 

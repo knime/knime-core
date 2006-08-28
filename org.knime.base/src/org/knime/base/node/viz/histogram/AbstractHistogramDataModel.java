@@ -207,6 +207,7 @@ public abstract class AbstractHistogramDataModel {
     public AggregationMethod getAggregationMethod() {
         return m_aggrMethod;
     }
+    
     /**
      * Changes the aggregation method.
      * 
@@ -560,33 +561,47 @@ public abstract class AbstractHistogramDataModel {
                     myRoundedInterval(interval, INTERVAL_DIGITS, colSpec);
             } else {
                 // find the next higher number divided by ten.
-                double divider = 10;
-                double addition = 2;
-                if (interval > 50 && interval <= 100) {
-                    addition = 5;
-                } else if (interval > 100 && interval <= 1000) {
-                    addition = 10;
-                } else if (interval > 1000) {
-                    divider = 100;
-                    addition = 100;
-                    while ((interval / 10) > divider) {
-                        divider *= 10;
-                        addition *= 5;
-                    }
-                }
-                /*
-                 * if (interval > 1000) { addition = 100; divider = 100; }
-                 */
-
-                while (interval / divider > 1) {
-                    divider += addition;
-                }
-                interval = divider;
+                interval = myRounder(interval);
             }
         } else {
             interval = myRoundedInterval(interval, INTERVAL_DIGITS, colSpec);
         }
         return interval;
+    }
+    /**
+     * @param value
+     * @return the rounded value which is >= the given value and looks nicer :-)
+     */
+    private static double myRounder(final double value) {
+        double divider = 1;
+        double addition = 1;
+        if (value > 20 && value <= 50) {
+          divider = 20;
+          addition = 2;
+        } else if (value > 50 && value <= 100) {
+            divider = 50;
+            addition = 5;
+        } else if (value > 100 && value <= 500) {
+            divider = 100;
+            addition = 10;
+        } else if (value > 500 && value <= 1000) {
+            divider = 500;
+            addition = 50;
+        } else if (value > 1000 && value <= 100000) {
+            divider = 1000;
+            addition = 100;
+        } else if (value > 100000) {
+            divider = 100000;
+            addition = 1000;
+            while ((value / 10) > divider) {
+                divider *= 10;
+                addition *= 10;
+            }
+        }
+        while (value / divider > 1) {
+            divider += addition;
+        }
+        return divider;
     }
 
 
@@ -625,6 +640,29 @@ public abstract class AbstractHistogramDataModel {
         DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
         String resultString = df.format(doubleVal);
         double result = Double.parseDouble(resultString);
+        return result;
+    }
+
+    /**
+     * @param minVal
+     * @param maxVal
+     * @param binInterval
+     * @param noOfBars
+     * @return
+     */
+    protected double createBinStart(final double minVal, 
+            final double binInterval) {
+        double result = minVal;
+        if (minVal >= 0 && minVal - binInterval <= 0) {
+            // try to start with 0 as left border to have nicer intervals
+            //but only if the minimum value is bigger then 0
+            result = 0;
+        } else if (minVal < 0) {
+            result = myRounder(Math.abs(minVal));
+            result *= -1;
+        } else if (minVal > 0) {
+            result = myRounder(minVal);
+        }
         return result;
     }
 

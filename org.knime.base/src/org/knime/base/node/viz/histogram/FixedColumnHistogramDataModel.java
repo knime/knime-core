@@ -198,10 +198,7 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
         }
         final double binInterval = createBinInterval(maxVal, minVal, noOfBars,
                 getOriginalXColSpec());
-        if (minVal - binInterval < 0) {
-            // try to start with 0 as left border to have nicer intervals
-            minVal = 0;
-        }
+        minVal = createBinStart(minVal, binInterval);
         // increase the number of bars to include the max value
         while (minVal + (binInterval * noOfBars) < maxVal) {
             noOfBars++;
