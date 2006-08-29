@@ -529,7 +529,7 @@ public class SnapToPortGeometry extends SnapToHelper {
             }
 
             // System.out.println("Xcorrect:" + correction.preciseX
-            // + " intermediat: " + xcorrect);
+            //             + " intermediat: " + xcorrect);
         }
 
         // get y values of the draged node part ports
@@ -553,7 +553,7 @@ public class SnapToPortGeometry extends SnapToHelper {
 
         // get the move delta of the orignial location
         Point moveDeltaPoint = ((ChangeBoundsRequest)request).getMoveDelta();
-        WorkflowEditor.adaptZoom(m_zoomManager, moveDeltaPoint, true);
+        WorkflowEditor.adaptZoom(m_zoomManager, moveDeltaPoint, false);
         int moveDelta = moveDeltaPoint.y;
         if ((snapOrientation & VERTICAL) != 0) {
             double ycorrect = THRESHOLD;
@@ -564,8 +564,8 @@ public class SnapToPortGeometry extends SnapToHelper {
                 correction.preciseY += (ycorrect + 1);
             }
 
-            // System.out.println("Ycorrect:" + correction.preciseY
-            // + " intermediat: " + ycorrect + "delta: " + moveDelta);
+//             System.out.println("Ycorrect:" + correction.preciseY
+//             + " intermediat: " + ycorrect + "delta: " + moveDelta);
         }
 
         if ((snapOrientation & EAST) != 0) {
