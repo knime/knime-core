@@ -42,8 +42,8 @@ import org.knime.core.node.NodeLogger;
  */
 class JoinedTableRowIterator extends RowIterator {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(JoinedTableRowIterator.class);
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(JoinedTableRowIterator.class);
 
     /**
      * Reference to underlying table. We need frequent access when data is not
@@ -147,13 +147,13 @@ class JoinedTableRowIterator extends RowIterator {
                 if (cont) {
                     if (!m_hasSkippedRight) {
                         if (!m_table.isPrintedErrorOnSorting()) {
-                            LOGGER
-                                    .warn("Either both tables don't have all rows in "
-                                            + "common or they are sorted differently.");
-                            LOGGER
-                                    .warn("(Iteration may have quadratic complexity "
-                                            + "to ensure that all matching rows are "
-                                            + "found.");
+                            LOGGER.warn(
+                                    "Either both tables don't have all rows in "
+                                    + "common or they are sorted differently.");
+                            LOGGER.warn(
+                                    "(Iteration may have quadratic complexity "
+                                    + "to ensure that all matching rows are "
+                                    + "found.");
                             LOGGER.warn("I'll suppress further warnings.");
                             m_table.setPrintedErrorOnSorting(true);
                         }
