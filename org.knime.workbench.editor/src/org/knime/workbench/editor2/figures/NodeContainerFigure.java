@@ -414,9 +414,17 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-        return new Dimension(Math
-                .max(WIDTH, m_heading.getPreferredSize().width), super
-                .getPreferredSize(-1, -1).height);
+
+        Rectangle parentBounds = getBounds();
+        int prefWidth = Math.max(WIDTH, m_heading.getPreferredSize().width);
+        if (parentBounds.width > 0) {
+            prefWidth = parentBounds.width;
+        }
+        int prefHeight = super.getPreferredSize(-1, -1).height;
+        if (parentBounds.height > 0) {
+            prefHeight = parentBounds.height;
+        }
+        return new Dimension(prefWidth, prefHeight);
     }
 
     /**
@@ -1022,4 +1030,5 @@ public class NodeContainerFigure extends RectangleFigure {
 
         m_contentFigure.m_backgroundIcon.remove(m_contentFigure.m_deleteIcon);
     }
+
 }
