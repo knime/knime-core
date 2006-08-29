@@ -27,10 +27,13 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.data.join.JoinedRow;
 import org.knime.base.data.join.JoinedTable;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -109,6 +112,7 @@ public class JoinerNodeModel extends NodeModel {
 
     private ExecutionContext m_exec;
 
+    /** Upper bound for total row count, used for progress only. */
     private double m_max;
 
     /**
@@ -127,9 +131,32 @@ public class JoinerNodeModel extends NodeModel {
                 .createSpec(inData[0].getDataTableSpec(), inData[1]
                         .getDataTableSpec(), m_method, m_suffix));
 
+        DataTable leftTable = inData[0];
+        DataTable rightTable = inData[1];
+        // determine the list of columns in the right table that must be
+        // in the output
+        if (JoinedTable.METHOD_FILTER.equals(m_method)) {
+            DataTableSpec leftTableSpec = leftTable.getDataTableSpec();
+            DataTableSpec rightTableSpec = rightTable.getDataTableSpec();
+            LinkedHashSet<String> leftHash = new LinkedHashSet<String>();
+            for (DataColumnSpec c : leftTableSpec) {
+                leftHash.add(c.getName());
+            }
+            LinkedHashSet<String> rightHash = new LinkedHashSet<String>();
+            for (DataColumnSpec c : rightTableSpec) {
+                rightHash.add(c.getName());
+            }
+            rightHash.removeAll(leftHash);            
+            String[] survivors = 
+                rightHash.toArray(new String[rightHash.size()]);
+            if (survivors.length < rightTableSpec.getNumColumns()) {
+                rightTable = new FilterColumnTable(rightTable, survivors);
+            }
+        }
+
         final BitSet rightRows = new BitSet(inData[1].getRowCount());
-        final LinkedHashMap<RowKey, SoftReference<Helper>> map = new LinkedHashMap<RowKey, SoftReference<Helper>>(
-                1024);
+        final LinkedHashMap<RowKey, SoftReference<Helper>> map = 
+            new LinkedHashMap<RowKey, SoftReference<Helper>>(1024);
         m_leftRows = 0;
         m_outputRows = 0;
         m_leftIt = null;
@@ -144,16 +171,17 @@ public class JoinerNodeModel extends NodeModel {
         }
 
         while (true) {
-            if (!readLeftChunk(inData[0], map)) {
+            if (!readLeftChunk(leftTable, map)) {
                 if (!m_ignoreMissingRows) {
-                    processRemainingRightRows(dc, inData[0], inData[1],
+                    processRemainingRightRows(dc, leftTable, rightTable,
                             rightRows);
                 }
                 break;
             }
 
-            if ((m_rightIt == null) || (!m_rightIt.hasNext())) {
-                m_rightIt = new CounterRowIterator(inData[1].iterator());
+            if ((m_rightIt == null) || (!m_rightIt.hasNext()) ||
+                    (rightRows.nextClearBit(0) <= m_rightIt.getIndex())) {
+                m_rightIt = new CounterRowIterator(rightTable.iterator());
             }
             while (m_rightIt.hasNext() && (map.size() > 0)) {
                 m_exec.checkCanceled();
@@ -167,7 +195,9 @@ public class JoinerNodeModel extends NodeModel {
                         h.rightRow = rightRow;
                         h.rightIndex = m_rightIt.getIndex();
                         if (h.leftIndex == m_leftRows) {
-                            m_firstMapHelper = h;
+                            // m_firstMapHelper = h;
+                            assert h.predecessor == null || 
+                                !map.containsKey(h.predecessor.leftRow.getKey());
                             h.predecessor = null;
                             DataRow joinedRow = new JoinedRow(h.leftRow,
                                     h.rightRow);
@@ -181,12 +211,13 @@ public class JoinerNodeModel extends NodeModel {
                         }
                     }
                 }
+                
             }
 
-            processRemainingLeftRowsInMap(dc, inData[1], map, rightRows);
+            processRemainingLeftRowsInMap(dc, rightTable, map, rightRows);
             if (!m_ignoreMissingRows) {
                 if (rightRows.cardinality() == inData[1].getRowCount()) {
-                    processRemainingLeftRowsInTable(dc, inData[0], inData[1]);
+                    processRemainingLeftRowsInTable(dc, leftTable, rightTable);
                 }
             } else {
                 m_leftRows += map.size();
@@ -217,9 +248,9 @@ public class JoinerNodeModel extends NodeModel {
             m_exec.checkCanceled();
             if (!rightRows.get(m_rightIt.getIndex())) {
                 dc.addRowToTable(new JoinedRow(new DefaultRow(
-                        rightRow.getKey(), JoinedTable
-                                .createMissingCells(leftTable
-                                        .getDataTableSpec())), rightRow));
+                        rightRow.getKey(), 
+                        JoinedTable.createMissingCells(
+                                leftTable.getDataTableSpec())), rightRow));
                 rightRows.set(m_rightIt.getIndex());
                 m_outputRows++;
                 printProgress(rightRow.getKey());
@@ -253,8 +284,9 @@ public class JoinerNodeModel extends NodeModel {
     }
 
     private void processRemainingLeftRowsInMap(final DataContainer dc,
-            final DataTable rightTable,
-            final Map<RowKey, SoftReference<Helper>> map, final BitSet rightRows) {
+            final DataTable rightTable, 
+            final Map<RowKey, SoftReference<Helper>> map, 
+            final BitSet rightRows) {
         // all rows from the right table have been written
 
         // first read the remaining entries in the map
@@ -378,6 +410,11 @@ public class JoinerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        m_leftIt = null;
+        m_rightIt = null;
+        m_exec = null;
+        m_firstMapHelper = null;
+        
         m_hiliteHandler.removeAllHiLiteHandlers();
         for (int i = 0; i < getNrDataIns(); i++) {
             HiLiteHandler hdl = getInHiLiteHandler(i);
@@ -505,10 +542,10 @@ public class JoinerNodeModel extends NodeModel {
             this.leftRow = leftRow;
         }
 
-        @Override
-        protected void finalize() throws Throwable {
-            // System.out.println("Finalizing helper for left index " +
-            // leftIndex);
-        }
+//        @Override
+//        protected void finalize() throws Throwable {
+//             System.out.println("Finalizing helper for left index " +
+//             leftIndex);
+//        }
     }
 }
