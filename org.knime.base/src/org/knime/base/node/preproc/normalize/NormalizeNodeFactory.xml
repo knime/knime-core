@@ -20,7 +20,10 @@
 			is 1.0.
 		</option>
 		<option name="Normalization by decimal scaling">
-			Each value is divided by 10 as long as it is greater than 1. 
+			The maximum value in a column (both positive and negative) is
+			divided j-times by 10 until its absolute value is smaller or 
+			equal to 1.
+			All values in the column are then divided by 10 to the power of j. 
 		</option>
 	</fullDescription>                  
     <ports>                 
