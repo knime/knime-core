@@ -67,7 +67,7 @@ public final class Normalizer {
     /**
      * Table to be wrapped.
      */
-    private final BufferedDataTable m_table;
+    private final DataTable m_table;
 
     /**
      * Column indices to work on.
@@ -242,6 +242,9 @@ public final class Normalizer {
      */
     public DataTable doDecimalScaling(final ExecutionMonitor exec)
             throws CanceledExecutionException {
+        StatisticsTable st = new StatisticsTable(m_table, exec);
+        double[] max = st.getdoubleMax();
+        double[] min = st.getdoubleMin();
         DataTableSpec spec = m_table.getDataTableSpec();
         String[] includes = getNames();
         DataContainer normalizedRows = new DataContainer(generateNewSpec(
@@ -261,17 +264,24 @@ public final class Normalizer {
             int index = 0;
             for (int j = 0; j < newrow.length; j++) {
                 DataColumnSpec cSpec = spec.getColumnSpec(j);
+                
                 // process only selected columns
-                if ((index < m_colindices.length) && (j == m_colindices[index])) {
+                if ((index < m_colindices.length) 
+                        && (j == m_colindices[index])) {
                     // process only double (or derivated) columns
                     if (cSpec.getType().isCompatible(DoubleValue.class)) {
                         if (!(oldrow.getCell(j).isMissing())) {
+                            double maxvalue = Math.abs(max[j]) 
+                            > Math.abs(min[j]) ? Math.abs(max[j]) 
+                                    : Math.abs(min[j]); 
+                            int exp = 0;
+                            while (Math.abs(maxvalue) > 1) {
+                                maxvalue = maxvalue / 10;
+                                exp++;
+                            }
                             DoubleValue dc = (DoubleValue)oldrow.getCell(j);
                             double v = dc.getDoubleValue();
-                            double newv = v;
-                            while (Math.abs(newv) > 1) {
-                                newv = newv / 10;
-                            }
+                            double newv = v / Math.pow(10, exp);
                             newrow[j] = new DoubleCell(newv);
                         }
                     }
