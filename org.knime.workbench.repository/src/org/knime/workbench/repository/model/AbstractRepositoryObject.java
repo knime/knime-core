@@ -36,6 +36,8 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     private String m_name;
 
     private String m_id;
+    
+    private String m_afterID;
 
     /**
      * Default implementation, provides no adapters.
@@ -114,12 +116,26 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     public String getName() {
         return m_name;
     }
+    
+    /**
+     * @return Returns the afterID.
+     */
+    public String getAfterID() {
+        return m_afterID;
+    }
 
     /**
      * @param name The name to set.
      */
     public void setName(final String name) {
         m_name = name;
+    }
+    
+    /**
+     * @param id the id to set
+     */
+    public void setAfterID(final String id) {
+        m_afterID = id;
     }
 
     /**

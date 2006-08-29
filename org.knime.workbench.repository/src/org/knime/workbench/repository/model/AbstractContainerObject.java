@@ -50,8 +50,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * Return true, if there are children contained in this cotainer.
      * 
-     * @see org.knime.workbench.repository.model.IContainerObject#
-     *      hasChildren()
+     * @see org.knime.workbench.repository.model.IContainerObject# hasChildren()
      */
     public final boolean hasChildren() {
         return this.getChildren().length > 0;
@@ -88,8 +87,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * after-relationship defined in the plugin-xml and lexicographically.
      * 
      * @return The children (category and nodes of current level)
-     * @see org.knime.workbench.repository.model.IContainerObject#
-     *      getChildren()
+     * @see org.knime.workbench.repository.model.IContainerObject# getChildren()
      */
     public IRepositoryObject[] getChildren() {
 
@@ -114,8 +112,8 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
         // create two seperate lists of categories and nodes, as categories
         // are ordered according to the after-relationship (see plugin.xml)
-        ArrayList<Category> categoryChildren = new ArrayList<Category>();
-        ArrayList<NodeTemplate> nodeChildren = new ArrayList<NodeTemplate>();
+        ArrayList<AbstractRepositoryObject> categoryChildren = new ArrayList<AbstractRepositoryObject>();
+        ArrayList<AbstractRepositoryObject> nodeChildren = new ArrayList<AbstractRepositoryObject>();
         for (AbstractRepositoryObject object : children) {
             if (object instanceof Category) {
                 categoryChildren.add((Category)object);
@@ -127,7 +125,9 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         // the ordered result list
         ArrayList<AbstractRepositoryObject> result = new ArrayList<AbstractRepositoryObject>();
 
-        // Create the root element of the after-relationship tree
+        // ---------- Category sorting -----------------------------------------
+        // Create the root element of the after-relationship tree for the
+        // categories
         TreeEntry root = new TreeEntry(null);
 
         // Recursively create the tree
@@ -140,14 +140,25 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         // append all categories that have not been inserted due to wrong
         // or missing after-relationship information
         Collections.sort(categoryChildren);
-        for (Category category : categoryChildren) {
-            m_problemCategories.add(category);
+        for (AbstractRepositoryObject category : categoryChildren) {
+            m_problemCategories.add((Category)category);
             result.add(category);
         }
 
+        // ---------- Node sorting ---------------------------------------------
+        // Create the root element of the after-relationship tree for the nodes
+        root = new TreeEntry(null);
+
+        // Recursively create the tree
+        addSuccessors(root, nodeChildren);
+
+        // traverse the tree depth first (apriori) and thus create the
+        // sorted list
+        createSortedList(root, result);
+
         // Finally append all nodes in lexicographically order
         Collections.sort(nodeChildren);
-        for (NodeTemplate node : nodeChildren) {
+        for (AbstractRepositoryObject node : nodeChildren) {
             result.add(node);
         }
 
@@ -164,7 +175,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     private void createSortedList(final TreeEntry entry,
             final ArrayList<AbstractRepositoryObject> result) {
         for (TreeEntry treeEntry : entry.getChildren()) {
-            result.add(treeEntry.m_category);
+            result.add(treeEntry.m_repositoryObject);
             createSortedList(treeEntry, result);
         }
     }
@@ -178,12 +189,12 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * @param children the list of all categories
      */
     private void addSuccessors(final TreeEntry parent,
-            final ArrayList<Category> children) {
+            final ArrayList<AbstractRepositoryObject> children) {
 
         // add all children with an after id equal to the parents id
-        Iterator<Category> childIter = children.iterator();
+        Iterator<AbstractRepositoryObject> childIter = children.iterator();
         while (childIter.hasNext()) {
-            Category child = childIter.next();
+            AbstractRepositoryObject child = childIter.next();
 
             if (child.getAfterID().equals(parent.getId())) {
                 parent.addChildCategory(new TreeEntry(child));
@@ -209,7 +220,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * @author Christoph Sieb, University of Konstanz
      */
     private class TreeEntry implements Comparable<TreeEntry> {
-        private Category m_category;
+        private AbstractRepositoryObject m_repositoryObject;
 
         private List<TreeEntry> m_treeChildren;
 
@@ -218,13 +229,13 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         /**
          * Constructs a new GraphEntry.
          * 
-         * @param category the category representing the parent
+         * @param repositoryObject the category representing the parent
          */
-        public TreeEntry(final Category category) {
-            m_category = category;
+        public TreeEntry(final AbstractRepositoryObject repositoryObject) {
+            m_repositoryObject = repositoryObject;
 
-            if (m_category != null) {
-                m_id = m_category.getID();
+            if (m_repositoryObject != null) {
+                m_id = m_repositoryObject.getID();
             } else {
                 m_id = "";
             }
@@ -263,7 +274,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
         public int compareTo(final TreeEntry o) {
 
-            return m_category.compareTo(o.m_category);
+            return m_repositoryObject.compareTo(o.m_repositoryObject);
         }
     }
 

@@ -45,8 +45,6 @@ public class Category extends AbstractContainerObject {
 
     private ImageDescriptor m_iconDescriptor;
 
-    private String m_afterID;
-
     /**
      * Creates a new repository category with the given level-id.
      * 
@@ -127,25 +125,11 @@ public class Category extends AbstractContainerObject {
     }
 
     /**
-     * @param id the id to set
-     */
-    public void setAfterID(final String id) {
-        m_afterID = id;
-    }
-
-    /**
-     * @return Returns the afterID.
-     */
-    public String getAfterID() {
-        return m_afterID;
-    }
-
-    /**
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
         return "Id: " + getID() + " Name: " + getName() + " After-id: "
-                + m_afterID;
+                + getAfterID();
     }
 }

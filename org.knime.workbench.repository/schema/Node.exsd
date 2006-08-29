@@ -72,6 +72,14 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="after" type="string">
+            <annotation>
+               <documentation>
+                  Specifies the id of the node after which this node should be sorted in. 
+                  If not defined, the nodes are sorted lexicographically.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

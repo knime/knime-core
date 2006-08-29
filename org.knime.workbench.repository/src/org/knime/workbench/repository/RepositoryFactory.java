@@ -57,6 +57,8 @@ public final class RepositoryFactory {
         String id = element.getAttribute("id");
 
         NodeTemplate node = new NodeTemplate(id);
+        
+        node.setAfterID(str(element.getAttribute("after"), ""));
 
         // Try to load the node factory class...
         NodeFactory factory;
