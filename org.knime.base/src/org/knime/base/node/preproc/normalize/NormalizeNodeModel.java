@@ -167,6 +167,7 @@ public class NormalizeNodeModel extends NodeModel {
             break;
         case DECIMALSCALING_MODE:
             outTable = ntable.doDecimalScaling(exec);
+            break;
         default:
             throw new Exception("No mode set");
         }
