@@ -265,7 +265,8 @@ public class JoinedTable implements DataTable {
             DataTableSpec newRight = new DataTableSpec(newCols);
             return new DataTableSpec(left, newRight);
         }
-        throw new IllegalArgumentException("Unknown method: " + duplicateMethod);
+        throw new IllegalArgumentException(
+                "Unknown method: " + duplicateMethod);
     }
 
     /* Determine the column names that only exist in the left table. */
