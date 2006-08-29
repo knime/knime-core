@@ -153,9 +153,10 @@
             id="org.knime.base.node.viz.property.color.ColorManagerNodeFactory">
       </node>
             <node
-            category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
-            id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
+                  after="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
+                  category-path="/view/property"
+                  factory-class="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
+                  id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
       </node>
       <node
             category-path="/view"
@@ -318,6 +319,7 @@
             factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
             id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
+            after="org.knime.base.node.viz.property.color.ColorManagerNodeFactory"
             category-path="/view/property"
             factory-class="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
             id="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"/>
