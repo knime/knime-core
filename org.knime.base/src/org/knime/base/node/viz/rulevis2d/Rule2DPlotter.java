@@ -179,8 +179,7 @@ public class Rule2DPlotter extends ScatterPlotter {
         } else if (e.getActionCommand().equals(HIDE_UNHILITED_RULES)) {
             // fade unhilited rules by setting a flag in the
             getDrawingPane().setHideUnhilitedRules(
-                    !getDrawingPane().isHideUnhilitedRules()
-                            && areRulesHilited());
+                    !getDrawingPane().isHideUnhilitedRules());
         }
         repaint();
     }
