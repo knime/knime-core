@@ -283,6 +283,8 @@ public final class Normalizer {
                             double v = dc.getDoubleValue();
                             double newv = v / Math.pow(10, exp);
                             newrow[j] = new DoubleCell(newv);
+                        } else {
+                            newrow[j] = oldrow.getCell(j);
                         }
                     }
                     index++;
