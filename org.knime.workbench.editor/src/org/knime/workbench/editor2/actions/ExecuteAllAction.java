@@ -24,15 +24,12 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.NodeLogger;
-
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.actions.job.NodeExecutionManagerJob;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -118,14 +115,9 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-
-        NodeContainerEditPart[] allNodeParts = getAllNodeParts();
-        LOGGER.debug("(Exec all) Creating execution job for "
-                + allNodeParts.length + " node(s)...");
-
-        // create a job that executes all nodes
-        NodeExecutionManagerJob job = new NodeExecutionManagerJob(getManager());
-
+        LOGGER.debug("Starting execution of all nodes");
+        getManager().executeAll(false);
+        
         try {
             Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
                     .showView("org.eclipse.ui.views.ProgressView");
@@ -133,14 +125,8 @@ public class ExecuteAllAction extends AbstractNodeAction {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
         } catch (PartInitException e) {
             // ignore
         }
-        job.setUser(false);
-        // Execution monitor should not be presented to user - its "system"
-        job.setSystem(true);
-        job.setPriority(Job.LONG);
-        job.schedule();
     }
 }

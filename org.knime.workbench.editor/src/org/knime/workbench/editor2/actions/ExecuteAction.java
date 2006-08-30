@@ -24,16 +24,13 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.actions.job.NodeExecutionManagerJob;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -123,10 +120,9 @@ public class ExecuteAction extends AbstractNodeAction {
                 + " node(s)...");
         WorkflowManager manager = getManager();
 
-        // this jobs starts sub-jobs every time new nodes become available for
-        // execution
-        NodeExecutionManagerJob job = new NodeExecutionManagerJob(manager,
-                nodeParts);
+        for (NodeContainerEditPart p : nodeParts) {
+            manager.executeUpToNode(p.getNodeContainer().getID(), false);
+        }
 
         try {
             Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
@@ -135,14 +131,8 @@ public class ExecuteAction extends AbstractNodeAction {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
         } catch (PartInitException e) {
             // ignore
         }
-        job.setUser(false);
-        // Execution monitor should not be presented to user - its "system"
-        job.setSystem(true);
-        job.setPriority(Job.LONG);
-        job.schedule();
     }
 }

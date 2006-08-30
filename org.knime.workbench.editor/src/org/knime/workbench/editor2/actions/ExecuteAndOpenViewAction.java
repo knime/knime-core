@@ -24,16 +24,15 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
-
+import org.knime.core.node.NodeStateListener;
+import org.knime.core.node.NodeStatus;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.actions.job.NodeExecutionManagerJob;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -134,13 +133,20 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             return;
         }
 
-        LOGGER.debug("Creating execution job for one node ...");
-        WorkflowManager manager = getManager();
-
-        // this jobs starts sub-jobs every time new nodes become available for
-        // execution
-        final NodeExecutionManagerJob job = new NodeExecutionManagerJob(
-                manager, nodeParts);
+        LOGGER.debug("Executing and opening view for one node");
+        
+        final NodeContainer cont = nodeParts[0].getNodeContainer();
+        cont.addListener(new NodeStateListener() {
+            public void stateChanged(final NodeStatus state, final int id) {
+                if (state instanceof NodeStatus.EndExecute) {
+                    cont.removeListener(this);
+                    if (cont.isExecuted()) { cont.showView(0); }
+                } else if (state instanceof NodeStatus.ExecutionCanceled) {
+                    cont.removeListener(this);
+                }
+            }
+        });
+        getManager().executeUpToNode(cont.getID(), false);
 
         try {
             Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
@@ -149,29 +155,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
         } catch (PartInitException e) {
             // ignore
         }
-        job.setUser(false);
-        // Execution monitor should not be presented to user - its "system"
-        job.setSystem(true);
-        job.setPriority(Job.LONG);
-        job.schedule();
-
-        // open the view now in another thread
-        new Thread(new Runnable() {
-            public void run() {
-                // wait until the job has finished execution
-                try {
-                    job.join();                    
-                } catch (InterruptedException ex) {
-                    // nothing to do here
-                }
-                if (nodeParts[0].getNodeContainer().isExecuted()) {
-                    nodeParts[0].getNodeContainer().showView(0);
-                }
-            }
-        }).start();
     }
 }
