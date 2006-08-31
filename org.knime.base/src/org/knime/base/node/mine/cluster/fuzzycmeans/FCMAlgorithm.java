@@ -491,7 +491,7 @@ public class FCMAlgorithm {
     }
 
     /**
-     * @return the numbre of clusters
+     * @return the number of clusters
      */
     protected int getNrClusters() {
         return m_nrClusters;
