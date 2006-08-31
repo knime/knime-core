@@ -27,6 +27,7 @@ package org.knime.base.node.mine.cluster.fuzzycmeans;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 
@@ -41,7 +42,11 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
      * Data to be clustered
      */
     private double[][] m_data;
-
+    
+    /*
+     * Rowkeys assigned to each position of the double data array
+     */
+    private RowKey[] m_keys;
    
 
     /**
@@ -94,8 +99,10 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
      */
     private void initData(final DataTable table) {
         m_data = new double[getNrRows()][getDimension()];
+        m_keys = new RowKey[getNrRows()];
         int curRow = 0;
         for (DataRow dRow : table) {
+            m_keys[curRow] = dRow.getKey();
             for (int j = 0; j < dRow.getNumCells(); j++) {
                 if (!(dRow.getCell(j).isMissing())) {
                     DoubleValue dv = (DoubleValue)dRow.getCell(j);
@@ -107,6 +114,31 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
             }
             curRow++;
         }
+    }
+    
+    /**
+     * Please make sure to call init() first in order to guarantee that
+     * the DataTable is converted.
+     * 
+     * @return the input DataTable converted as a double array. If it has not
+     * been produced yet, null is returned.
+     */
+    public double[][] getConvertedData() {
+        assert m_data != null : "Please initialize first";
+        return m_data;
+    }
+    
+    /**
+     * Please make sure to call init() first in order to guarantee that
+     * the DataTable is converted.
+     * 
+     * @return the RowKeys assigned to each position of the produced
+     * double array
+     * @see #getConvertedData()
+     */
+    public RowKey[] getRowKeys() {
+        assert m_keys != null : "Please initialize first";
+        return m_keys;
     }
     
     /**
