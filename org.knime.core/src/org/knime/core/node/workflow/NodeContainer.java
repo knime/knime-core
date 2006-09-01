@@ -1065,7 +1065,8 @@ public class NodeContainer implements NodeStateListener {
         };
         if (pm != null) {
             pm.setMessage("Scheduled for execution...");
-            pm.setProgress(0.0);
+            // removed (P.O. 1 Sept.2006) 
+            // pm.setProgress(0.0);
         }
         return KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(r);
     }
