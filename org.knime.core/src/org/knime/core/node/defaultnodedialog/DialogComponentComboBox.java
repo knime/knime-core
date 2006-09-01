@@ -41,7 +41,7 @@ import org.knime.core.node.NodeSettingsWO;
  * Provide a standard component for a dialog that allows to select among a list
  * of options provided as a list of String elements.
  * 
- * @author Giuseppe Di Fatta, University of Konstanz and ICAR-CNR
+ * @author Giuseppe Di Fatta, University of Konstanz
  * 
  */
 public class DialogComponentComboBox extends DialogComponent {

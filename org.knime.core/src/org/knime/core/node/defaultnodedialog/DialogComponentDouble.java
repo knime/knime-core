@@ -37,13 +37,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * Provides a standard component for a dialog that allows to edit a double
  * value. Provides label and {@link javax.swing.JFormattedTextField} that checks
  * ranges as well as functionality to load/store into config object.
  * 
- * @author Giuseppe Di Fatta, University of Konstanz and ICAR-CNR
+ * @author Giuseppe Di Fatta, University of Konstanz
  * 
  */
 public class DialogComponentDouble extends DialogComponent {
