@@ -875,36 +875,52 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         return m_tableSpec;
     }
 
+    /**
+     * @param tableSpec the new {@link DataTableSpec}
+     */
+    protected void setDataTableSpec(final DataTableSpec tableSpec) {
+        m_tableSpec = tableSpec;
+    }
+    
+    /**
+     * @return the {@link AbstractHistogramDataModel}
+     */
     protected AbstractHistogramDataModel getHistoData() {
         return m_histoData;
     }
 
-    protected void setHistoData(AbstractHistogramDataModel histoData) {
+    /**
+     * @param histoData the new {@link AbstractHistogramDataModel}
+     */
+    protected void setHistoData(final AbstractHistogramDataModel histoData) {
         m_histoData = histoData;
     }
 
+    /**
+     * @return the name of the aggregation column
+     */
     protected String getAggregationColName() {
         return m_aggrColName;
     }
 
+    /**
+     * @param aggrColName sets the new aggregation column
+     */
+    public void setAggregationColName(final String aggrColName) {
+        m_aggrColName = aggrColName;
+    }
+
+    /**
+     * @return the {@link AggregationMethod}
+     */
     public AggregationMethod getAggregationMethod() {
         return m_aggrMethod;
     }
 
-    protected DataTableSpec getTableSpec() {
-        return m_tableSpec;
-    }
-
-    public void setAggregationColName(String aggrColName) {
-        m_aggrColName = aggrColName;
-    }
-
-    protected void setTableSpec(DataTableSpec tableSpec) {
-        m_tableSpec = tableSpec;
-    }
-
+    /**
+     * @return the {@link HiLiteHandler}
+     */
     protected HiLiteHandler getHiLiteHandler() {
         return m_hiLiteHandler;
     }
-
 }

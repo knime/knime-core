@@ -69,8 +69,9 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
     @Override
     public void addDataRow(final DataRow row) {
         if (getHistoData() == null) {
-            setHistoData(new FixedColumnHistogramDataModel(getTableSpec(), 
-                    getXColName(), getAggregationColName(), getAggregationMethod()));
+            setHistoData(new FixedColumnHistogramDataModel(getDataTableSpec(), 
+                    getXColName(), getAggregationColName(), 
+                    getAggregationMethod()));
         }
         super.addDataRow(row);
     }
@@ -82,7 +83,7 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
     @Override
     public void modelChanged(final DataTableSpec spec, 
             final String selectedXCol) {
-        setTableSpec(spec);
+        setDataTableSpec(spec);
         setAggregationColName(null);
         setAggregationMethod(AggregationMethod.getDefaultMethod());
         setBackground(ColorAttr.getBackground());

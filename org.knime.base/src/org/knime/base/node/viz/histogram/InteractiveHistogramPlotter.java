@@ -75,7 +75,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         m_data.add(row);
         AbstractHistogramDataModel histoData = getHistoData();
         if (histoData == null) {
-            setHistoData(new InteractiveHistogramDataModel(getTableSpec(), 
+            setHistoData(new InteractiveHistogramDataModel(getDataTableSpec(), 
                     getXColName(), getAggregationColName(), 
                     getAggregationMethod()));
         }
@@ -97,7 +97,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         }
         // since the tableSpec is final and checked in the constructor
         // we don't need to check for null
-        int xIndex = getTableSpec().findColumnIndex(xColName);
+        int xIndex = getDataTableSpec().findColumnIndex(xColName);
         if (xIndex >= 0) {
             resetHistogramData();
             // set the name of the selected x column in the plotter class
@@ -150,7 +150,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     public AbstractHistogramDataModel getHistogramDataModel() {
         AbstractHistogramDataModel histoData = getHistoData();
         if (histoData == null) {
-            histoData = new InteractiveHistogramDataModel(getTableSpec(), 
+            histoData = new InteractiveHistogramDataModel(getDataTableSpec(), 
                     getXColName(), getAggregationColName(), 
                     getAggregationMethod());
             if (m_data != null) {

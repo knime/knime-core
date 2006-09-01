@@ -35,7 +35,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 
 /**
- * Interface of a histogram bar.
+ * Abstract class of a histogram bar which provides basic functions.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
