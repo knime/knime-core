@@ -210,10 +210,10 @@ public class DataContainerTest extends TestCase {
      * 
      */
     public void testBigFile() {
-        // with these setting (1000, 5000) it will write an 18MB cache file
-        // (the latest data this value was checked: 22. November 2005...)
-        final int colCount = 1000;
-        final int rowCount = 5000;
+        // with these setting (50, 100) it will write an 250MB cache file
+        // (the latest data this value was checked: 31. August 2006...)
+        final int colCount = 50;
+        final int rowCount = 100;
         String[] names = new String[colCount];
         DataType[] types = new DataType[colCount];
         for (int c = 0; c < colCount; c++) {
@@ -245,7 +245,7 @@ public class DataContainerTest extends TestCase {
                     String s;
                     if (rand.nextDouble() < 0.1) {
                         s = new String(
-                                createRandomChars(rand.nextInt(50), rand));
+                                createRandomChars(rand.nextInt(1000000), rand));
                     } else {
                         s = "Row" + i + "; Column:" + c;
                     }
@@ -267,46 +267,51 @@ public class DataContainerTest extends TestCase {
             key = null;
         }
         container.close();
+        final Throwable[] throwables = new Throwable[1];
         final DataTable table = container.getTable();
         Runnable runnable = new Runnable() {
             public void run() {
-                int i = 0;
-                Random rand1 = new Random(seed);
-                for (RowIterator it = table.iterator(); 
-                    it.hasNext(); i++) {
-                    DataCell key = new StringCell("Row " + i);
-                    DataCell[] cells = new DataCell[colCount];
-                    for (int c = 0; c < colCount; c++) {
-                        DataCell cell = null;
-                        switch (c % 3) {
-                        case 0: 
-                            cell = conv.createDataCell(
-                                    rand1.nextDouble() - 0.5); 
-                            break;
-                        case 1:
-                            String s;
-                            if (rand1.nextDouble() < 0.1) {
-                                s = new String(createRandomChars(
-                                        rand1.nextInt(50), rand1));
-                            } else {
-                                s = "Row" + i + "; Column:" + c;
+                try {
+                    int i = 0;
+                    Random rand1 = new Random(seed);
+                    for (RowIterator it = table.iterator(); 
+                        it.hasNext(); i++) {
+                        DataCell key = new StringCell("Row " + i);
+                        DataCell[] cells = new DataCell[colCount];
+                        for (int c = 0; c < colCount; c++) {
+                            DataCell cell = null;
+                            switch (c % 3) {
+                            case 0: 
+                                cell = conv.createDataCell(
+                                        rand1.nextDouble() - 0.5); 
+                                break;
+                            case 1:
+                                String s;
+                                if (rand1.nextDouble() < 0.1) {
+                                    s = new String(createRandomChars(
+                                            rand1.nextInt(1000000), rand1));
+                                } else {
+                                    s = "Row" + i + "; Column:" + c;
+                                }
+                                cell = conv.createDataCell(s);
+                                break;
+                            case 2: 
+                                // use full range of int
+                                int r = (int)rand1.nextLong();
+                                cell = conv.createDataCell(r); 
+                                break;
+                            default: throw new InternalError();
                             }
-                            cell = conv.createDataCell(s);
-                            break;
-                        case 2: 
-                            // use full range of int
-                            int r = (int)rand1.nextLong();
-                            cell = conv.createDataCell(r); 
-                            break;
-                        default: throw new InternalError();
+                            cells[c] = cell;
                         }
-                        cells[c] = cell;
+                        DataRow row1 = new DefaultRow(key, cells);
+                        DataRow row2 = it.next();
+                        assertEquals(row1, row2);
                     }
-                    DataRow row1 = new DefaultRow(key, cells);
-                    DataRow row2 = it.next();
-                    assertEquals(row1, row2);
+                    assertEquals(i, rowCount);
+                } catch (Throwable t) {
+                    throwables[0] = t;
                 }
-                assertEquals(i, rowCount);
             }
         }; // Runnable 
         // make two threads read the buffer (file) concurrently.
@@ -323,6 +328,9 @@ public class DataContainerTest extends TestCase {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
             fail();
+        }
+        if (throwables[0] != null) {
+            throw new RuntimeException(throwables[0]);
         }
     } // testBigFile()
     

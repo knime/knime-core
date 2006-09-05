@@ -65,7 +65,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     private final MyGlobalObjectInputStream m_inObject;
     /** Wrapped stream that is passed to the DataCellSerializer,
      * this stream reads from m_in. */
-    private final DataInputStream m_dataInStream;
+    private final LongUTFDataInputStream m_dataInStream;
     /** Escapable stream, returns eof when block ends. */
     private final BlockableInputStream m_in;
     
@@ -77,7 +77,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     DCObjectInputStream(final InputStream in) throws IOException {
         m_inObject = new MyGlobalObjectInputStream(in);
         m_in = new BlockableInputStream(m_inObject);
-        m_dataInStream = new DataInputStream(m_in);
+        m_dataInStream = new LongUTFDataInputStream(new DataInputStream(m_in));
     }
     
     /** Reads a data cell from the stream and pushes the stream forward to 
