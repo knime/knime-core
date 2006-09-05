@@ -66,7 +66,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
      * writeDataCell method. It will write to m_objectOut */
     private final BlockableOutputStream m_out;
     /** This stream writes to m_out and is passed to the DataCellSerializer. */
-    private final DataOutputStream m_dataOut;
+    private final LongUTFDataOutputStream m_dataOut;
 
     
     /**
@@ -78,7 +78,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
         m_underylingOut = out;
         m_objectOut = new ObjectOutputStream(m_underylingOut);
         m_out = new BlockableOutputStream(m_objectOut);
-        m_dataOut = new DataOutputStream(m_out);
+        m_dataOut = new LongUTFDataOutputStream(new DataOutputStream(m_out));
     }
 
     /** Get reference to underlying output stream. Remember to flush this
