@@ -25,6 +25,7 @@ package org.knime.core.data.container;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataCell;
@@ -838,9 +840,23 @@ class Buffer {
         FromFileIterator() {
             m_pointer = 0;
             try {
-                ZipFile zipFile = new ZipFile(m_outFile, ZipFile.OPEN_READ);
-                BufferedInputStream zipIn = new BufferedInputStream(
-                        zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_DATA)));
+                // this fixes bug #775: ZipFile has a bug if the file to read
+                // is too large
+                ZipInputStream zipIn = new ZipInputStream(
+                       new BufferedInputStream(new FileInputStream(m_outFile)));
+                ZipEntry zipEntry = null;
+                do {
+                    zipEntry = zipIn.getNextEntry();
+                    if (zipEntry == null) {
+                        throw new RuntimeException("Expected ZIP file entry '"
+                                + ZIP_ENTRY_DATA + "' not found.");
+                    }
+                } while (!zipEntry.getName().equals(ZIP_ENTRY_DATA));
+                
+//                ZipFile zipFile = new ZipFile(m_outFile, ZipFile.OPEN_READ);
+//                BufferedInputStream zipIn = new BufferedInputStream(
+//                        zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_DATA)));
+                
                 m_inStream = new DCObjectInputStream(zipIn);
                 m_nrOpenInputStreams++;
                 LOGGER.debug("Opening input stream on file \"" 
