@@ -83,8 +83,25 @@ final class DBWriterConnection {
         Connection conn = DriverManager.getConnection(url, user, pw);
         Statement stmt = conn.createStatement();
         DataTableSpec spec = data.getDataTableSpec();
+        /*
+         * TODO Feature request by Brian: 
+         * 'Although I do not at all think that this
+         * is the right long-term solution for the problem we are seeing
+         * (molecular structure strings are commonly too long to write to
+         * 255-character VARCHAR columns in Oracle), this slight modification
+         * should at least temporarily resolve the issue.  Line 86 and 87 of the
+         * current DBWriterConnection.java:'
+         */
         String cols = createColumnName(data.getDataTableSpec());
+        // If we're using oracle, size any varchar(255) columns
+        // to 4000 instead.  Oracle will auto-interpret this as
+        // varchar2(4000) upon table creation.
+        if (url.indexOf("oracle") != -1) {
+            cols = cols.replaceAll("255", "4000");
+        }
         LOGGER.debug(cols);
+        // String cols = createColumnName(data.getDataTableSpec());
+        // LOGGER.debug(cols);
         try {
             stmt.execute("DROP TABLE " + table);
         } catch (Exception e) {
