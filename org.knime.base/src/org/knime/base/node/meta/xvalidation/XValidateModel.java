@@ -183,8 +183,10 @@ public class XValidateModel extends MetaNodeModel {
                     errors[i][0]++;
                 }
             }
-            errors[i][0] /= count;
-            errorRowKeys[i] = "Validation" + i;
+            double x = 100.0 * errors[i][0];
+            x = x / count;
+            errors[i][0] = x;
+            errorRowKeys[i] = "Validation" + (i + 1);
         }
 
         String[] keys = new String[allClasses.size()];
