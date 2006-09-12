@@ -246,8 +246,8 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     @Override
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        String file = ((String)m_fileComboBox.getSelectedItem()).trim();
-        if (file.length() == 0) {
+        String file = ((String)m_fileComboBox.getSelectedItem());
+        if (file == null || file.trim().length() == 0) {
             file = null;
         }
         settings.addString(m_configName, file);
