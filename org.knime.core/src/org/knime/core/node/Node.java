@@ -31,9 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -103,7 +101,7 @@ public final class Node {
     private final ModelContentOutPort[] m_outModelPorts;
 
     /** The listeners that are interested in node state changes. */
-    private final Set<NodeStateListener> m_stateListeners;
+    private final CopyOnWriteArrayList<NodeStateListener> m_stateListeners;
 
     /** Node settings XML file name. */
     public static final String SETTINGS_FILE_NAME = "settings.xml";
@@ -187,8 +185,7 @@ public final class Node {
         m_dialogPane = null;
 
         // init state listener array
-        m_stateListeners = Collections
-                .synchronizedSet(new HashSet<NodeStateListener>());
+        m_stateListeners = new CopyOnWriteArrayList<NodeStateListener>();
 
         // init data input ports
         m_inDataPorts = new DataInPort[m_model.getNrDataIns()];
@@ -1924,7 +1921,9 @@ public final class Node {
      * @param listener The listener to add.
      */
     public void addStateListener(final NodeStateListener listener) {
-        if (!m_stateListeners.add(listener)) {
+        if (!m_stateListeners.contains(listener)) {
+            m_stateListeners.add(listener);
+        } else {
             m_logger.debug("listener already registered: " + listener);
         }
     }
@@ -1947,10 +1946,8 @@ public final class Node {
      * @param state The status object.
      */
     void notifyStateListeners(final NodeStatus state) {
-        synchronized (m_stateListeners) {
-            for (NodeStateListener listener : m_stateListeners) {
-                listener.stateChanged(state, -1);
-            }
+        for (NodeStateListener listener : m_stateListeners) {
+            listener.stateChanged(state, -1);
         }
     }
 
@@ -2026,5 +2023,4 @@ public final class Node {
     public void retrieveModel(final MetaNodeModel metaModel) {
         metaModel.receiveModel(m_model);
     }
-
 }

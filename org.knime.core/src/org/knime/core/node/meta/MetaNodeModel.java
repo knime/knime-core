@@ -26,7 +26,7 @@ package org.knime.core.node.meta;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -91,7 +91,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     /*
      * The listeners that are interested in node state changes.
      */
-    private final ArrayList<NodeStateListener> m_stateListeners;
+    private final CopyOnWriteArrayList<NodeStateListener> m_stateListeners;
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MetaNodeModel.class);
@@ -117,7 +117,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
         m_dataOutModels = new DataOutputNodeModel[dataOuts];
         m_modelInModels = new ModelInputNodeModel[predParamsIns];
         m_modelOutModels = new ModelOutputNodeModel[predParamsOuts];
-        m_stateListeners = new ArrayList<NodeStateListener>();
+        m_stateListeners = new CopyOnWriteArrayList<NodeStateListener>();
     }
 
     /**

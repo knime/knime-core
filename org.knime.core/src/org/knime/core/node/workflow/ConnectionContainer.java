@@ -25,8 +25,8 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.InvalidSettingsException;
@@ -72,7 +72,8 @@ public class ConnectionContainer {
 
     // listeners for changes to the extra info can register here. Other
     // information (source/destination) can not change!
-    private final ArrayList<WorkflowListener> m_listeners = new ArrayList<WorkflowListener>();
+    private final CopyOnWriteArrayList<WorkflowListener> m_listeners =
+        new CopyOnWriteArrayList<WorkflowListener>();
 
     /**
      * Creates a new container holding a connection of a workflow, storing both
@@ -275,8 +276,8 @@ public class ConnectionContainer {
     private void fireExtraInfoChanged() {
         WorkflowEvent event = new WorkflowEvent.ConnectionExtrainfoChanged(-1,
                 null, getExtraInfo());
-        for (int i = 0; i < m_listeners.size(); i++) {
-            m_listeners.get(i).workflowChanged(event);
+        for (WorkflowListener l : m_listeners) {
+            l.workflowChanged(event);
         }
     }
 

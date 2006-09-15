@@ -80,12 +80,14 @@ public final class FileUtil {
         while ((read = copyInStream.read(cache, 0, bufSize)) > 0) {
             copyOutStream.write(cache, 0, read);
             processed += read;
-            exec.setProgress(processed / (double) size);
-            try {
-                exec.checkCanceled();
-            } catch (CanceledExecutionException c) {
-                cee = c;
-                break;
+            if (processed % (1024*1024) == 0) {
+                exec.setProgress(processed / (double) size);
+                try {
+                    exec.checkCanceled();
+                } catch (CanceledExecutionException c) {
+                    cee = c;
+                    break;
+                }
             }
         }
         copyOutStream.close();

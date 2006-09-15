@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.io.filereader;
 
-import java.util.LinkedList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -50,7 +50,7 @@ public class FileReaderPreviewTable extends FileTable {
 
     private int m_errorLine;
 
-    private final LinkedList<ChangeListener> m_listeners;
+    private final CopyOnWriteArrayList<ChangeListener> m_listeners;
 
     /**
      * Creates a new table, its like the "normal" {@link FileTable}, just not
@@ -63,7 +63,7 @@ public class FileReaderPreviewTable extends FileTable {
     FileReaderPreviewTable(final DataTableSpec tableSpec,
             final FileReaderNodeSettings settings) {
         super(tableSpec, settings);
-        m_listeners = new LinkedList<ChangeListener>();
+        m_listeners = new CopyOnWriteArrayList<ChangeListener>();
         m_errorMsg = null;
         m_errorLine = -1;
     }

@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -473,8 +474,9 @@ public class WorkflowManager implements WorkflowListener {
     // quick access to connections
     private final Map<Integer, ConnectionContainer> m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
 
-    // change listener support (transient) <= why? (tm)
-    private final transient ArrayList<WorkflowListener> m_eventListeners = new ArrayList<WorkflowListener>();
+    // change listener support
+    private final CopyOnWriteArrayList<WorkflowListener> m_eventListeners =
+        new CopyOnWriteArrayList<WorkflowListener>();
 
     private final WorkflowExecutor m_executor;
 
@@ -1162,8 +1164,10 @@ public class WorkflowManager implements WorkflowListener {
      *             already executed
      */
     public void executeUpToNode(final int nodeID, final boolean block) {
+        NodeContainer nc;
+        List<NodeContainer> nodes;
         synchronized (this) {
-            NodeContainer nc = m_nodesByID.get(nodeID);
+            nc = m_nodesByID.get(nodeID);
             if (!nc.isConfigured()) {
                 throw new IllegalArgumentException("The given node is not"
                         + " configured and cannot be executed");
@@ -1173,17 +1177,36 @@ public class WorkflowManager implements WorkflowListener {
                         + " executed");
             }
 
-            List<NodeContainer> nodes = new ArrayList<NodeContainer>();
+            nodes = new ArrayList<NodeContainer>();
             nodes.add(nc);
             findExecutableNodes(nc, nodes);
-
-            // queue the nodes in reverse order, i.e. the first executing nodes
-            // gets queued first, so that its progress bar comes first
-            Collections.reverse(nodes);
-            m_executor.addWaitingNodes(nodes);
         }
+        // queue the nodes in reverse order, i.e. the first executing nodes
+        // gets queued first, so that its progress bar comes first
+        Collections.reverse(nodes);
+
+        
         if (block) {
-            m_executor.waitUntilFinished(this);
+            NodeStateListener nsl = new NodeStateListener() {
+                public void stateChanged(final NodeStatus state, final int id) {
+                    if (state instanceof NodeStatus.EndExecute) {
+                        synchronized (this) { this.notifyAll(); }
+                    }
+                }
+            };
+
+            synchronized (nsl) {
+                nc.addListener(nsl);
+                try {
+                    m_executor.addWaitingNodes(nodes);
+                    nsl.wait();
+                } catch (InterruptedException ex) {
+                    LOGGER.warn("Thread was interrupted", ex);
+                }
+            }
+            nc.removeListener(nsl);
+        } else {
+            m_executor.addWaitingNodes(nodes);
         }
     }
     
@@ -1278,14 +1301,8 @@ public class WorkflowManager implements WorkflowListener {
     /*
      * Notifes all registered listeners of the event.
      */
-    @SuppressWarnings("unchecked")
     private void fireWorkflowEvent(final WorkflowEvent event) {
-        // we make a copy here because a listener can add or remove
-        // itself or another listener during handling the event
-        // this will then cause a ConcurrentModificationException
-        ArrayList<WorkflowListener> temp = (ArrayList<WorkflowListener>)m_eventListeners
-                .clone();
-        for (WorkflowListener l : temp) {
+        for (WorkflowListener l : m_eventListeners) {
             l.workflowChanged(event);
         }
 
