@@ -53,17 +53,17 @@ public final class ModelContentOutPort extends NodeOutPort implements
      * 
      * @param predParams The new <code>ModelContent</code> object or null.
      */
-    void setModelContent(final ModelContentRO predParams) {
-        m_predParams = predParams;
+    void setModelContent(final ModelContentRO predParams) {        
         for (NodeInPort inPort : super.getConnectedInPorts()) {
             if (inPort instanceof ModelContentInPort) {
-                ((ModelContentInPort)inPort).newModelContentAvailable();
+              ((ModelContentInPort)inPort).newModelContentAvailable(predParams);
             }
         }
         if (getPortView() != null) {
             ((ModelContentOutPortView)getPortView())
-                    .updateModelContent(m_predParams);
+                    .updateModelContent(predParams);
         }
+        m_predParams = predParams;
     }
 
     /**

@@ -1083,7 +1083,8 @@ public final class Node {
                 inportHasNewDataTable(inPortID);
             }
         } else {
-            inportHasNewModelContent(inPortID);
+            inportHasNewModelContent(inPortID, m_inModelPorts[inPortID
+                - m_inDataPorts.length].getModelContent());
         }
     }
 
@@ -1200,8 +1201,10 @@ public final class Node {
      * 
      * @param inPortID The port ID that has a new predictor model spec
      *            available.
+     * @param predParams the new model content at the port
      */
-    void inportHasNewModelContent(final int inPortID) {
+    void inportHasNewModelContent(final int inPortID,
+            final ModelContentRO predParams) {
         // Predictor params are propagated through model ports only
         boundModelContentInPort(inPortID);
         if (isExecuted()) {
@@ -1209,8 +1212,7 @@ public final class Node {
         }
         try {
             int realId = inPortID - getNrDataInPorts();
-            ModelContentRO params = m_inModelPorts[realId].getModelContent();
-            m_model.loadModelContent(realId, params);
+            m_model.loadModelContent(realId, predParams);
         } catch (InvalidSettingsException ise) {
             m_logger.warn("Unable to load ModelContent: " + ise.getMessage());
             m_status = new NodeStatus.Error("Could not load ModelContent: "

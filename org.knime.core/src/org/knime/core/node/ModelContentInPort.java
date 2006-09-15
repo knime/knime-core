@@ -61,9 +61,10 @@ public final class ModelContentInPort extends NodeInPort implements
     /**
      * Called by the connected output port to notify its counterparts of a new
      * ModelContent available.
+     * @param predParams the new model content
      */
-    void newModelContentAvailable() {
-        getNode().inportHasNewModelContent(super.getPortID());
+    void newModelContentAvailable(final ModelContentRO predParams) {
+        getNode().inportHasNewModelContent(super.getPortID(), predParams);
     }
 
 }
