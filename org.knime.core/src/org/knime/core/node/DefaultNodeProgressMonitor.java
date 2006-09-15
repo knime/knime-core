@@ -21,8 +21,6 @@
  */
 package org.knime.core.node;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**

@@ -24,7 +24,6 @@
 package org.knime.core.node.property.hilite;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,7 +34,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataCell;
-
 
 /**
  * Default implementation for a <code>HiLiteHandler</code> which receives

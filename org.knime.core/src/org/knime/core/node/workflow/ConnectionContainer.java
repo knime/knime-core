@@ -25,7 +25,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 

@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.io.filereader;
 
-import java.util.LinkedList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.event.ChangeEvent;
@@ -32,7 +31,6 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
-
 
 /**
  * The data table displayed in the file reader's dialog's preview. We need an
