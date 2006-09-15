@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataCell;
 
@@ -53,7 +54,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /** List of registered <code>HiLiteListener</code>s to fire event to. 
      * This implementation uses a WeakReference list to allow early collection
      * of unused hilite listeners. */
-    private final List<WeakReference<HiLiteListener>> m_listenerList;
+    private final CopyOnWriteArrayList<WeakReference<HiLiteListener>> m_listenerList;
 
     /** Set of non-<code>null</code> hilit items. */
     private final Set<DataCell> m_hiLitKeys;
@@ -64,7 +65,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     public DefaultHiLiteHandler() {
         // inits empty event listener list
-        m_listenerList = new ArrayList<WeakReference<HiLiteListener>>();
+        m_listenerList = new CopyOnWriteArrayList<WeakReference<HiLiteListener>>();
         // initialize item list
         m_hiLitKeys = new LinkedHashSet<DataCell>();
     }
@@ -76,7 +77,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param listener the hilite listener to append to the list
      */
-    public synchronized void addHiLiteListener(final HiLiteListener listener) {
+    public void addHiLiteListener(final HiLiteListener listener) {
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
             HiLiteListener l = it.next().get();
@@ -97,7 +98,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param listener the hilite listener to remove from the list
      */
-    public synchronized void removeHiLiteListener(
+    public void removeHiLiteListener(
             final HiLiteListener listener) {
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
@@ -117,7 +118,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /**
      * Removes all hilite listeners from the list. 
      */
-    public synchronized void removeAllHiLiteListeners() {
+    public void removeAllHiLiteListeners() {
         m_listenerList.clear();
     }
 
@@ -244,7 +245,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param event Contains all rows keys to hilite.
      */
-    protected synchronized void fireHiLiteEvent(final KeyEvent event) {
+    protected void fireHiLiteEvent(final KeyEvent event) {
         assert (event != null);
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
@@ -266,7 +267,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param event Contains all rows keys to unhilite.
      */
-    protected synchronized void fireUnHiLiteEvent(final KeyEvent event) {
+    protected void fireUnHiLiteEvent(final KeyEvent event) {
         assert (event != null);
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
@@ -285,7 +286,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /** 
      * Informs all registered hilite listener to reset all hilit rows.
      */
-    protected synchronized void fireUnHiLiteAllEvent() {
+    protected void fireUnHiLiteAllEvent() {
         for (Iterator<WeakReference<HiLiteListener>> it = 
             m_listenerList.iterator(); it.hasNext();) {
             HiLiteListener l = it.next().get();
@@ -305,6 +306,5 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     public Set<DataCell> getHiLitKeys() {
         return Collections.unmodifiableSet(m_hiLitKeys);
-    }
-    
-} // DefaultHiLiteHandler
+    }   
+}

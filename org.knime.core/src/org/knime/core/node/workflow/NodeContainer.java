@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 import org.knime.core.eclipseUtil.GlobalClassCreator;
@@ -161,7 +162,7 @@ public class NodeContainer implements NodeStateListener {
     // store list of listeners - essentially this Container will listen
     // to events coming from its <code>Node</code>, add the id to the
     // event and forward it.
-    private final List<NodeStateListener> m_eventListeners;
+    private final CopyOnWriteArrayList<NodeStateListener> m_eventListeners;
 
     // for execution of the Node in its own Thread, hold status
     // information of the execution thread...
@@ -218,7 +219,7 @@ public class NodeContainer implements NodeStateListener {
         m_succ.setSize(m_node.getNrOutPorts());
         m_pred.setSize(m_node.getNrInPorts());
         m_extraInfo = null;
-        m_eventListeners = new ArrayList<NodeStateListener>();
+        m_eventListeners = new CopyOnWriteArrayList<NodeStateListener>();
         m_node.addStateListener(this);
     }
 
@@ -1050,6 +1051,12 @@ public class NodeContainer implements NodeStateListener {
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
                     m_node.execute(new ExecutionContext(pm, m_node));
+                } catch (Exception ex) {
+                    LOGGER.error("Execution of node " + m_node + " failed: "
+                            + ex.getMessage(), ex);
+                } catch (Error err) {
+                    LOGGER.fatal("Execution of node " + m_node + " failed: "
+                            + err.getMessage(), err);
                 } finally {
                     // and always clean up, no matter how we got out of here
                     m_executionRunning = false;

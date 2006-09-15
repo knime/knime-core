@@ -23,6 +23,7 @@ package org.knime.core.node;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The default node progress monitor which keep a progress flag between 0 and 1,
@@ -43,7 +44,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private String m_message;
 
     /** A set of progress listeners. */
-    private final Set<NodeProgressListener> m_set;
+    private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
 
     /**
      * Creates a new progress monitor with an empty set of listeners.
@@ -51,7 +52,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @see #DefaultNodeProgressMonitor(NodeProgressListener)
      */
     public DefaultNodeProgressMonitor() {
-        m_set = new HashSet<NodeProgressListener>();
+        m_listeners = new CopyOnWriteArrayList<NodeProgressListener>();
         m_cancelExecute = false;
     }
 
@@ -178,8 +179,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @see NodeProgressMonitor#addProgressListener(NodeProgressListener)
      */
     public void addProgressListener(final NodeProgressListener l) {
-        if (l != null) {
-            m_set.add(l);
+        if ((l != null) && ! m_listeners.contains(l)) {
+            m_listeners.add(l);
         }
     }
 
@@ -188,7 +189,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     public void removeProgressListener(final NodeProgressListener l) {
         if (l != null) {
-            m_set.remove(l);
+            m_listeners.remove(l);
         }
     }
 
@@ -196,13 +197,12 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @see NodeProgressMonitor#removeAllProgressListener()
      */
     public void removeAllProgressListener() {
-        m_set.clear();
+        m_listeners.clear();
     }
 
-    private synchronized void fireProgressChanged() {
-        for (NodeProgressListener l : m_set) {
+    private void fireProgressChanged() {
+        for (NodeProgressListener l : m_listeners) {
             l.progressChanged(m_progress, m_message);
         }
     }
-
-} // DefaultNodeProgressMonitor
+}

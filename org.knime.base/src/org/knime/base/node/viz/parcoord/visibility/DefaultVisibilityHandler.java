@@ -25,11 +25,9 @@
 package org.knime.base.node.viz.parcoord.visibility;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataCell;
 
@@ -44,7 +42,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     /**
      * Keeps list of registered <code>HiLiteListener</code> to fire event to.
      **/
-    private final List<VisibilityListener> m_listenerList;
+    private final CopyOnWriteArrayList<VisibilityListener> m_listenerList;
     
     /**
      * the set with the visible elements.
@@ -64,8 +62,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
         m_selected = new HashSet<DataCell>();
         
         //inits empty event listener list
-        m_listenerList = Collections.synchronizedList(
-                new ArrayList<VisibilityListener>());
+        m_listenerList = new CopyOnWriteArrayList<VisibilityListener>();
     }
     
     /** 
@@ -73,7 +70,9 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @param listener The selection listener to be removed from the list.
      */
     public void addVisibilityListener(final VisibilityListener listener) {
-        m_listenerList.add(listener);
+        if (!m_listenerList.contains(listener)) {
+            m_listenerList.add(listener);
+        }
     }
     
     /**
@@ -221,10 +220,9 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * in the visibility event.
      * @param event Contains all rows keys to select.
      */
-    private synchronized void fireSelectionEvent(final VisibilityEvent event) {
+    private void fireSelectionEvent(final VisibilityEvent event) {
         assert (event != null);
-        for (int vl = 0; vl < m_listenerList.size(); vl++) {
-            VisibilityListener l = m_listenerList.get(vl);
+        for (VisibilityListener l : m_listenerList) {
             l.select(event);
         }
     }
@@ -235,11 +233,9 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * in the visibility event.
      * @param event Contains all rows keys to unselect.
      */
-    private synchronized void fireUnSelectionEvent(final 
-            VisibilityEvent event) {
+    private void fireUnSelectionEvent(final VisibilityEvent event) {
         assert (event != null);
-        for (int vl = 0; vl < m_listenerList.size(); vl++) {
-            VisibilityListener l = m_listenerList.get(vl);
+        for (VisibilityListener l : m_listenerList) {
             l.unselect(event);
         }
     }
@@ -250,11 +246,9 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * in the visibility event.
      * @param event Contains all rows keys to select.
      */
-    private synchronized void fireMakeVisibleEvent(final 
-            VisibilityEvent event) {
+    private void fireMakeVisibleEvent(final VisibilityEvent event) {
         assert (event != null);
-        for (int vl = 0; vl < m_listenerList.size(); vl++) {
-            VisibilityListener l = m_listenerList.get(vl);
+        for (VisibilityListener l : m_listenerList) {
             l.makeVisible(event);
         }
     }
@@ -265,11 +259,9 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * in the visibility event.
      * @param event Contains all rows keys to unselect.
      */
-    private synchronized void fireMakeInvisibleEvent(final 
-            VisibilityEvent event) {
+    private void fireMakeInvisibleEvent(final VisibilityEvent event) {
         assert (event != null);
-        for (int vl = 0; vl < m_listenerList.size(); vl++) {
-            VisibilityListener l = m_listenerList.get(vl);
+        for (VisibilityListener l : m_listenerList) {
             l.makeInvisible(event);
         }
     }
