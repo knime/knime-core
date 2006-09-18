@@ -13,7 +13,7 @@
 			<li>X axis</li>
 			<li>Aggregation column (Y axis)</li>
 			<li>Aggregation method (count, summary, average)</li>
-			<li>Number of bins for numerical attributes</li>
+			<li>Number of bins for numerical attributes(incl. empty bars)</li>
 			<li>The width of the bars</li>
 			<li>Shows empty intervals option</li>
 			<li>Shows missing value bar option</li>

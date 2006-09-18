@@ -35,6 +35,8 @@ import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.plotter2D.AbstractPlotter2D;
 import org.knime.base.node.viz.plotter2D.PlotterPropertiesPanel;
@@ -60,7 +62,8 @@ public abstract class AbstractHistogramProperties extends
     private static final String BAR_SIZE_LABEL = "Bar size:";
     private static final String BAR_WIDTH_TOOLTIP = "Width of the bars";
     private static final String NUMBER_OF_BARS_LABEL = "Number of bars:";
-    private static final String NO_OF_BARS_TOOLTIP = "Number of bars";
+    private static final String NO_OF_BARS_TOOLTIP = 
+        "Number of bars incl. empty bars";
     private static final String SHOW_MISSING_VALUE_BAR_LABEL = 
         "Show missing value bar";
     private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Shows a bar "
@@ -74,6 +77,7 @@ public abstract class AbstractHistogramProperties extends
     private ColumnSelectionComboxBox m_yCol;
     private JSlider m_barWidth;
     private JSlider m_noOfBars = null;
+    private JLabel m_noOfBarsLabel = null;
     private ButtonGroup m_aggrMethButtonGrp = null;
     private JCheckBox m_showEmptyBars = null;
     private JCheckBox m_showMissingValBar = null;
@@ -126,6 +130,8 @@ public abstract class AbstractHistogramProperties extends
                 AbstractHistogramProperties.NUMBER_OF_BARS_LABEL);
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
         noOfBarsLabelBox.add(noOfBarsLabel);
+        noOfBarsLabelBox.add(Box.createHorizontalStrut(10));
+        noOfBarsLabelBox.add(m_noOfBarsLabel);
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
 
         // the number of bars slider box
@@ -246,7 +252,7 @@ public abstract class AbstractHistogramProperties extends
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setEnabled(false);
-        } else if (showDigitsAndTicks){
+        } else if (showDigitsAndTicks) {
             // slider.setLabelTable(slider.createStandardLabels(increment));
             Hashtable<Integer, JLabel> labels = 
                 new Hashtable<Integer, JLabel>();
@@ -262,7 +268,7 @@ public abstract class AbstractHistogramProperties extends
             slider.setPaintLabels(true);
             slider.setMajorTickSpacing(divisor);
             slider.setPaintTicks(true);
-            slider.setSnapToTicks(true);
+            //slider.setSnapToTicks(true);
             slider.setEnabled(true);
         }  else {
             final Hashtable<Integer, JLabel> labels = 
@@ -329,13 +335,14 @@ public abstract class AbstractHistogramProperties extends
             m_barWidth = new JSlider(0, 20, 10);
             m_barWidth.setEnabled(false);
             m_noOfBars = new JSlider(1, 20, 10);
-//            m_noOfBars.addChangeListener(new ChangeListener() {
-//                public void stateChanged(ChangeEvent e) {
-//                    JSlider source = (JSlider)e.getSource();
-//                    int fps = (int)source.getValue();
-//                    m_noOfBars.setToolTipText(Integer.toString(fps));
-//                } 
-//            });
+            m_noOfBarsLabel = new JLabel();
+            m_noOfBars.addChangeListener(new ChangeListener() {
+                public void stateChanged(final ChangeEvent e) {
+                    final JSlider source = (JSlider)e.getSource();
+                    m_noOfBarsLabel.setText(
+                            Integer.toString(source.getValue()));
+                } 
+            });
             m_noOfBars.setEnabled(false);
     
             // set the aggregation method radio buttons
@@ -419,11 +426,21 @@ public abstract class AbstractHistogramProperties extends
             if (currentNoOfBars > maxNoOfBars) {
                 maxNoOfBars = currentNoOfBars;
             }
-            if (m_noOfBars == null) {
+            if (m_noOfBars == null || m_noOfBarsLabel == null) {
                 m_noOfBars = new JSlider(1, maxNoOfBars, currentNoOfBars);
+                m_noOfBarsLabel = 
+                    new JLabel(Integer.toString(currentNoOfBars));
+                m_noOfBars.addChangeListener(new ChangeListener() {
+                    public void stateChanged(final ChangeEvent e) {
+                        final JSlider source = (JSlider)e.getSource();
+                        m_noOfBarsLabel.setText(
+                                Integer.toString(source.getValue()));
+                    } 
+                });
             } else {
                 m_noOfBars.setMaximum(maxNoOfBars);
                 m_noOfBars.setValue(currentNoOfBars);
+                m_noOfBarsLabel.setText(Integer.toString(currentNoOfBars));
             }
             setSliderLabels(m_noOfBars, 2, true);
             // disable this noOfBars slider for nominal values
