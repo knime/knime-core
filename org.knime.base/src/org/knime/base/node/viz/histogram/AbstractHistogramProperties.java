@@ -63,7 +63,7 @@ public abstract class AbstractHistogramProperties extends
     private static final String BAR_WIDTH_TOOLTIP = "Width of the bars";
     private static final String NUMBER_OF_BARS_LABEL = "Number of bars:";
     private static final String NO_OF_BARS_TOOLTIP = 
-        "Number of bars incl. empty bars";
+        "Number of bars (incl. empty bars, excl. missing value )";
     private static final String SHOW_MISSING_VALUE_BAR_LABEL = 
         "Show missing value bar";
     private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Shows a bar "

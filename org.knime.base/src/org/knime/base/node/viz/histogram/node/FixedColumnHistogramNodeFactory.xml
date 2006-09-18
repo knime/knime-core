@@ -11,7 +11,7 @@
 		<p>The user can change the following properties on the fly:
 			<ol>
 			<li>Aggregation method (count, summary, average)</li>
-			<li>Number of bins for numerical attributes (incl. empty bars)</li>
+			<li>Number of bins for numerical attributes (incl. empty bars, excl. missing value bar)</li>
 			<li>The width of the bars</li>
 			<li>Shows empty intervals option</li>
 			<li>Shows missing value bar option</li>
