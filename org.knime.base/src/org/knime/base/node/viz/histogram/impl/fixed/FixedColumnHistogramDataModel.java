@@ -1,5 +1,4 @@
-/*
- * ------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -19,15 +18,18 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl.fixed;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
+import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.property.ColorAttr;
 
 
 /**
@@ -36,24 +38,22 @@ import org.knime.core.data.DataTableSpec;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
+public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
+    
     /**
      * Saves all data rows which are added to this class. To get them ordered
      * use the getOrderedDataRows() method to access them!
      */
-    private final List<DataRow> m_dataRows;
+    private final List<HistogramDataRow> m_dataRows;
 
-    /**
-     * The <code>Comparator</code> used to sort the added data rows by the
-     * defined x axis property.
-     */
-    private final RowByColumnComparator m_rowComparator;
-
+    private final HistogramRowComparator m_rowComparator;
+    
     /**
      * The number of added rows after the last sorting. If greater then 0 the
      * rows get sorted if you call the <code>getOrderedDataRows</code> method
      */
     private int m_noOfNotSortedRows = 0;
+    
 
     /**
      * Constructor for class HistogramData.
@@ -66,14 +66,13 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
      * @param aggregationColumn column to aggregate on
      * @param aggrMethod the aggregation method
      */
-    protected InteractiveHistogramDataModel(final DataTableSpec tableSpec,
+    protected FixedColumnHistogramDataModel(final DataTableSpec tableSpec,
             final String xCoordLabel, final int noOfBars,
             final String aggregationColumn, 
             final AggregationMethod aggrMethod) {
         super(tableSpec, xCoordLabel, noOfBars, aggregationColumn, aggrMethod);
-        m_rowComparator = new RowByColumnComparator(getXColumnIdx(), 
-                getXColComparator());
-        m_dataRows = new ArrayList<DataRow>();
+        m_rowComparator = new HistogramRowComparator(getXColComparator());
+        m_dataRows = new ArrayList<HistogramDataRow>();
     }
     
     /**
@@ -87,7 +86,7 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
      * @param aggregationColumn column to aggregate on
      * @param aggrMethod the aggregation method
      */
-    protected InteractiveHistogramDataModel(final DataTableSpec tableSpec,
+    protected FixedColumnHistogramDataModel(final DataTableSpec tableSpec,
             final String xCoordLabel, final String aggregationColumn,
             final AggregationMethod aggrMethod) {
         this(tableSpec, xCoordLabel, DEFAULT_NO_OF_BARS,
@@ -95,7 +94,7 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramDataModel#
+     * @see org.knime.dev.node.view.histogram.AbstractHistogramDataModel#
      * addDataRow(org.knime.core.data.DataRow)
      */
     @Override
@@ -103,31 +102,37 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
         if (row == null) {
             throw new IllegalArgumentException("Row shouldn't be null.");
         }
-        if (row.getNumCells() < getXColumnIdx()) {
+        if (row.getNumCells() < getXColumnIdx() 
+                || row.getNumCells() < getAggregationColumnIdx()) {
             throw new IllegalArgumentException("Row is to short.");
         }
-        DataCell xCell = row.getCell(getXColumnIdx());
+        final DataCell xCell = row.getCell(getXColumnIdx());
+        final DataCell aggrCell = row.getCell(getAggregationColumnIdx());
         if (xCell == null
                 || (!xCell.isMissing() && !xCell.getType().equals(
                         getOriginalXColSpec().getType()))) {
-            throw new IllegalArgumentException("Cell null or column type of "
+            throw new IllegalArgumentException("X cell null or column type of "
                     + "this row and defined x coordinate column not equal.");
         }
-        m_dataRows.add(row);
+        final ColorAttr colorAttr = getTableSpec().getRowColor(row);
+        final HistogramDataRow histoRow = new HistogramDataRow(row.getKey(), 
+                colorAttr, xCell, aggrCell);
+        m_dataRows.add(histoRow);
         m_noOfNotSortedRows++;
         if (isNominal()) {
             if (xCell.isMissing()) {
-                addRow2MissingValBar(row);
+                addRow2MissingValBar(histoRow);
             } else {
                 String caption = xCell.toString();
-                AbstractBarDataModel bar = getBar(caption);
+                FixedColumnBarDataModel bar = 
+                    (FixedColumnBarDataModel) getBar(caption);
                 if (bar == null) {
-                    bar = new InteractiveBarDataModel(caption, 
+                    bar = new FixedColumnBarDataModel(caption, getXColumnIdx(),
                             getAggregationColumnIdx(),
                             getAggregationMethod());
                     addBar(bar);
                 }
-                ((InteractiveBarDataModel)bar).addRow(row);
+                bar.addRow(histoRow);
             }
         } // if it's a none nominal column the bars are created and filled in
         // the getBars method
@@ -140,19 +145,19 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
      * 
      * @param row the row to add to the bar
      */
-    private void addRow2MissingValBar(final DataRow row) {
-        InteractiveBarDataModel missingValBar = 
-            (InteractiveBarDataModel)getMissingValueBar();
+    private void addRow2MissingValBar(final HistogramDataRow row) {
+        FixedColumnBarDataModel missingValBar = 
+            (FixedColumnBarDataModel)getMissingValueBar();
         if (missingValBar == null) {
-            missingValBar = new InteractiveBarDataModel(
-                    MISSING_VAL_BAR_CAPTION, getAggregationColumnIdx(), 
-                    getAggregationMethod());
+            missingValBar = new FixedColumnBarDataModel(
+                    MISSING_VAL_BAR_CAPTION, getXColumnIdx(), 
+                    getAggregationColumnIdx(), getAggregationMethod());
             setMissingValueBar(missingValBar);
         }
         missingValBar.addRow(row);
     }
 
-     // ***********Helper classes********************
+    // ***********Helper classes********************
 
     /**
      * Creates the <code>HistogramBar</code> objects for the given bin values
@@ -162,7 +167,7 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
      */
     @Override
     protected void createBinnedBars(final int numberOfBars) {
-//      check if we have some data rows
+        //check if we have some data rows
         if (m_dataRows == null || m_dataRows.size() < 1) {
             return;
         }
@@ -202,9 +207,10 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
         }
         double leftBoundary = myRoundedBorders(minVal, binInterval,
                 INTERVAL_DIGITS);
-        List<DataRow> sortedRows = getOrderedDataRows();
+        List<HistogramDataRow> sortedRows = getOrderedDataRows();
         int rowLength = sortedRows.size();
-        InteractiveBarDataModel bar = null;
+        FixedColumnBarDataModel bar = null;
+        final int xCoordColIdx = getXColumnIdx();
         final int aggrColIdx = getAggregationColumnIdx();
         final AggregationMethod aggrMethod = getAggregationMethod();
         int currentRowIdx = 0;
@@ -216,10 +222,10 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
             double rightBoundary = myRoundedBorders(leftBoundary + binInterval,
                     binInterval, INTERVAL_DIGITS);
             String binCaption = createBarName(leftBoundary, rightBoundary);
-            bar = (InteractiveBarDataModel)getBar(binCaption);
+            bar = (FixedColumnBarDataModel) getBar(binCaption);
             if (bar == null) {
-                bar = new InteractiveBarDataModel(binCaption, aggrColIdx, 
-                        aggrMethod);
+                bar = new FixedColumnBarDataModel(binCaption, xCoordColIdx, 
+                        aggrColIdx, aggrMethod);
                 addBar(bar);
             } else {
                 // this should never happen because we clean the m_bars variable
@@ -229,8 +235,8 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
             }
             boolean isLower = true;
             while (isLower && currentRowIdx < rowLength) {
-                DataRow row = sortedRows.get(currentRowIdx);
-                DataCell cell = row.getCell(getXColumnIdx());
+                final HistogramDataRow row = sortedRows.get(currentRowIdx);
+                final DataCell cell = row.getXVal();
                 if (cell == null || cell.isMissing()) {
                     addRow2MissingValBar(row);
                     currentRowIdx++;
@@ -258,7 +264,7 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
             }
             while (currentRowIdx < rowLength) {
 
-                DataRow row = sortedRows.get(currentRowIdx++);
+                HistogramDataRow row = sortedRows.get(currentRowIdx++);
                 bar.addRow(row);
             }
         }
@@ -266,11 +272,10 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
         calculateAggregationValues();
     }
 
-
     /**
      * @return all rows sorted by the x axis property in ascending order
      */
-    private List<DataRow> getOrderedDataRows() {
+    private List<HistogramDataRow> getOrderedDataRows() {
         if (m_noOfNotSortedRows > 0) {
             Collections.sort(m_dataRows, m_rowComparator);
             m_noOfNotSortedRows = 0;

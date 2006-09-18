@@ -19,8 +19,10 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl.fixed;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
+import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.core.data.DataTableSpec;
 
 

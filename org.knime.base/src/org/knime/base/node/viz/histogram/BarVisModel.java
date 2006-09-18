@@ -41,7 +41,8 @@ import org.knime.core.data.property.ColorAttr;
  * @author Tobias Koetter, University of Konstanz
  */
 public class BarVisModel {
-    /** The <code>AbstractBarDataModel</code> which holds the basic information. */
+    /** The <code>AbstractBarDataModel</code> which holds the basic 
+     * information. */
     private AbstractBarDataModel m_bar;
 
     /** The drawing space on the screen. */

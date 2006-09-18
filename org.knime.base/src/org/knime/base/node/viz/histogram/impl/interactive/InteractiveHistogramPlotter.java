@@ -19,12 +19,17 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl.interactive;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
+import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.histogram.BarVisModel;
+import org.knime.base.node.viz.histogram.HistogramDrawingPane;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -60,7 +65,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
             final DataTableSpec spec,
             final InteractiveHistogramProperties histogramProps,
             final HiLiteHandler handler, final String xColumn) {
-        super(initialWidth, spec, histogramProps, handler, xColumn);
+        super(initialWidth, spec, histogramProps, handler, xColumn, null);
         setHistoData(new InteractiveHistogramDataModel(spec, xColumn, 
                 null, AggregationMethod.getDefaultMethod()));
         m_data = new ArrayList<DataRow>();
@@ -164,16 +169,15 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         return histoData;
     }
     
-    /**
+    /*
      * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
      * modelChanged(org.knime.core.data.DataTableSpec, java.lang.String)
-     */
     @Override
     public void modelChanged(final DataTableSpec spec, 
-            final String selectedXCol) {
-        setAggregationColName(null);
+            final String selectedXCol, final String aggrCol) {
+        setAggregationColName(aggrCol);
         setAggregationMethod(AggregationMethod.getDefaultMethod());
         setXColumn(selectedXCol);
-        super.modelChanged(spec, selectedXCol);
-    }
+        super.modelChanged(spec, selectedXCol, aggrCol);
+    }*/
 }

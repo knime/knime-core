@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.base.node.viz.histogram.FixedColumnHistogramPlotter;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;

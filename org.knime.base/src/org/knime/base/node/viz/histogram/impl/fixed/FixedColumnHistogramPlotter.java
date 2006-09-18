@@ -19,11 +19,15 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl.fixed;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.histogram.BarVisModel;
+import org.knime.base.node.viz.histogram.HistogramDrawingPane;
+import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -48,18 +52,18 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      * @param histogramProps the <code>FixedColumnHistogramProperties</code> 
      * with the view options for the user
      * @param handler the hilite handler from the input port
-     * @param xColumn the x axis column which should be selected, if it's
+     * @param xCol the x axis column which should be selected, if it's
      *            <code>null</code> the first column will be selected
-     * @param aggregationColName the name of the aggregation column
+     * @param aggrCol the name of the aggregation column
      */
     public FixedColumnHistogramPlotter(final int initialWidth, 
             final DataTableSpec spec,
             final FixedColumnHistogramProperties histogramProps,
-            final HiLiteHandler handler, final String xColumn, 
-            final String aggregationColName) {
-        super(initialWidth, spec, histogramProps, handler, xColumn);
-        setHistoData(new FixedColumnHistogramDataModel(spec, xColumn, 
-                aggregationColName, AggregationMethod.getDefaultMethod()));
+            final HiLiteHandler handler, final String xCol, 
+            final String aggrCol) {
+        super(initialWidth, spec, histogramProps, handler, xCol, aggrCol);
+        setHistoData(new FixedColumnHistogramDataModel(spec, xCol, 
+                aggrCol, AggregationMethod.getDefaultMethod()));
     }
     
     /**
@@ -76,20 +80,18 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
         super.addDataRow(row);
     }
 
-    /**
+    /*
      * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
      * modelChanged(org.knime.core.data.DataTableSpec, java.lang.String)
-     */
-    @Override
     public void modelChanged(final DataTableSpec spec, 
-            final String selectedXCol) {
+            final String selectedXCol, final String aggrCol) {
         setDataTableSpec(spec);
         setAggregationColName(null);
         setAggregationMethod(AggregationMethod.getDefaultMethod());
         setBackground(ColorAttr.getBackground());
         AbstractHistogramProperties props = getHistogramPropertiesPanel();
-        props.updateColumnSelection(spec, selectedXCol, null);
+        props.updateColumnSelection(spec, selectedXCol, aggrCol);
         props.setUpdateHistogramSettings(this);
         updatePaintModel();
-    }
+    }*/
 }

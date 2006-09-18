@@ -16,7 +16,7 @@
  * History
  *   14.08.2006 (koetter): created
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl.fixed;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.RowKey;

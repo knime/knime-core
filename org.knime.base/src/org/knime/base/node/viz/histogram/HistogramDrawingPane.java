@@ -124,7 +124,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * @param visBars the <code>BarVisModel</code> objects which represent the
      *            Histogram.
      */
-    protected void setVisBars(final Hashtable<String, BarVisModel> visBars) {
+    public void setVisBars(final Hashtable<String, BarVisModel> visBars) {
         m_bars = visBars;
     }
 

@@ -31,8 +31,8 @@ import java.io.IOException;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.InteractiveHistogramPlotter;
-import org.knime.base.node.viz.histogram.InteractiveHistogramProperties;
+import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
+import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -106,8 +106,7 @@ public class HistogramNodeModel extends NodeModel {
      * @see org.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) {
         /*
          * try { settings.getString(CFGKEY_ATTRCOLNAME); } catch
          * (InvalidSettingsException e) { throw new
@@ -131,8 +130,7 @@ public class HistogramNodeModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+            final ExecutionMonitor exec) throws IOException {
         File f = new File(nodeInternDir, CFG_DATA);
         m_data = DataContainer.readFromZip(f);
         File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
@@ -197,7 +195,7 @@ public class HistogramNodeModel extends NodeModel {
                 exec.setProgress(progress, "Adding data rows to histogram...");
                 exec.checkCanceled();
             }
-            exec.setMessage("Creating histogram data");
+            exec.setProgress(1.0, "Histogram finished.");
             m_plotter.lastDataRowAdded();
         }
         LOGGER.info(
@@ -238,8 +236,7 @@ public class HistogramNodeModel extends NodeModel {
      *      #configure(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
         /*
          * if ((m_attrColName == null) || (m_attrColName.length() == 0)) { throw
          * new InvalidSettingsException("Attribute column must be" + "

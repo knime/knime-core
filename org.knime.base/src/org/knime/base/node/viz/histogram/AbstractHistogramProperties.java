@@ -232,7 +232,7 @@ public abstract class AbstractHistogramProperties extends
      *            <code>maxVal - minVal / divisor</code>
      */
     private static void setSliderLabels(final JSlider slider, 
-            final int divisor) {
+            final int divisor, final boolean showDigitsAndTicks) {
         // show at least the min, middle and max value on the slider.
         final int minimum = slider.getMinimum();
         final int maximum = slider.getMaximum();
@@ -246,17 +246,29 @@ public abstract class AbstractHistogramProperties extends
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setEnabled(false);
-        } else {
+        } else if (showDigitsAndTicks){
             // slider.setLabelTable(slider.createStandardLabels(increment));
             Hashtable<Integer, JLabel> labels = 
                 new Hashtable<Integer, JLabel>();
-            labels.put(minimum, new JLabel("Min"));
+//            labels.put(minimum, new JLabel("Min"));
+            labels.put(minimum, new JLabel(Integer.toString(minimum)));
             for (int i = 1; i < divisor; i++) {
                 int value = minimum + i * increment;
                 labels.put(value, new JLabel(Integer.toString(value)));
             }
             // labels.put(maximum, new JLabel("Max"));
             labels.put(maximum, new JLabel(Integer.toString(maximum)));
+            slider.setLabelTable(labels);
+            slider.setPaintLabels(true);
+            slider.setMajorTickSpacing(divisor);
+            slider.setPaintTicks(true);
+            slider.setSnapToTicks(true);
+            slider.setEnabled(true);
+        }  else {
+            final Hashtable<Integer, JLabel> labels = 
+                new Hashtable<Integer, JLabel>();
+            labels.put(minimum, new JLabel("Min"));
+            labels.put(maximum, new JLabel("Max"));
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setEnabled(true);
@@ -310,13 +322,20 @@ public abstract class AbstractHistogramProperties extends
      * @param plotter the <code>AbstractHistogramPlotter</code> object which 
      * contains the data. Could be <code>null</code>.
      */
-    protected void setUpdateHistogramSettings(
+    public void setUpdateHistogramSettings(
             final AbstractHistogramPlotter plotter) {
         if (plotter == null) {
             // set all components with dummy values
             m_barWidth = new JSlider(0, 20, 10);
             m_barWidth.setEnabled(false);
             m_noOfBars = new JSlider(1, 20, 10);
+//            m_noOfBars.addChangeListener(new ChangeListener() {
+//                public void stateChanged(ChangeEvent e) {
+//                    JSlider source = (JSlider)e.getSource();
+//                    int fps = (int)source.getValue();
+//                    m_noOfBars.setToolTipText(Integer.toString(fps));
+//                } 
+//            });
             m_noOfBars.setEnabled(false);
     
             // set the aggregation method radio buttons
@@ -391,7 +410,7 @@ public abstract class AbstractHistogramProperties extends
             m_barWidth.setEnabled(true);
             m_barWidth.setToolTipText(
                     AbstractHistogramProperties.BAR_WIDTH_TOOLTIP);
-            setSliderLabels(m_barWidth, 2);
+            setSliderLabels(m_barWidth, 2, false);
     
             // set the number of bars slider
             // int currentNoOfBars = plotter.getNoOfDisplayedBars();
@@ -406,7 +425,7 @@ public abstract class AbstractHistogramProperties extends
                 m_noOfBars.setMaximum(maxNoOfBars);
                 m_noOfBars.setValue(currentNoOfBars);
             }
-            setSliderLabels(m_noOfBars, 2);
+            setSliderLabels(m_noOfBars, 2, true);
             // disable this noOfBars slider for nominal values
             if (!plotter.getHistogramDataModel().isNominal()) {
                 m_noOfBars.setEnabled(true);

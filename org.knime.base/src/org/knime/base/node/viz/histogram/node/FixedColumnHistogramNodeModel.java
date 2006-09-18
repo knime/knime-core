@@ -30,16 +30,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.FixedColumnHistogramPlotter;
-import org.knime.base.node.viz.histogram.FixedColumnHistogramProperties;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -52,6 +52,9 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedColumnHistogramNodeModel extends NodeModel {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(FixedColumnHistogramNodeModel.class);
     
     private static final String CFG_SETTINGS = "fixedColumnHistogramSettings";
     
@@ -126,8 +129,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+            final ExecutionMonitor exec) throws IOException {
         File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
         FileInputStream in = new FileInputStream(settingsFile);
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
@@ -145,8 +147,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+            final ExecutionMonitor exec) throws IOException {
         NodeSettings settings = new NodeSettings(CFG_SETTINGS);
         settings.addString(CFGKEY_X_COLNAME, m_xColName);
         settings.addString(CFGKEY_AGGR_COLNAME, m_aggrColName);
@@ -162,6 +163,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        LOGGER.info("Entering execute(inData, exec) of class "
+                + "FixedColumnHistogramNodeModel.");
         // create the data object
         BufferedDataTable data = inData[0];
         // create the properties panel
@@ -183,9 +186,11 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                 exec.setProgress(progress, "Adding data rows to histogram...");
                 exec.checkCanceled();
             }
-            exec.setMessage("Creating histogram data");
+            exec.setProgress(1.0, "Histogram finished.");
             m_plotter.lastDataRowAdded();
         }
+        LOGGER.info("Exiting execute(inData, exec) of class "
+                + "FixedColumnHistogramNodeModel.");
         return new BufferedDataTable[0];
     }
 

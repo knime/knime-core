@@ -234,7 +234,7 @@ public abstract class AbstractHistogramDataModel {
      * @param colName the name of the possibly new aggregation column
      * @return <code>true</code> if the value has changed
      */
-    protected boolean changeAggregationColumn(final String colName) {
+    public boolean changeAggregationColumn(final String colName) {
         // check if something has changed if not do nothing
         if ((m_aggrColumn == null && colName != null)
                 || (m_aggrColumn != null && !m_aggrColumn.equals(colName))) {

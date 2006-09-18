@@ -19,13 +19,15 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl.interactive;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Set;
 
+import org.knime.base.node.viz.histogram.AbstractBarDataModel;
+import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;

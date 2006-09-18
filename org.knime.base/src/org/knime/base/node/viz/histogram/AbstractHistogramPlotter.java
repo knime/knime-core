@@ -47,7 +47,6 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 
@@ -111,11 +110,13 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
      * @param histogramProps the histogram properties panel
      * @param handler the HiLiteHandler to use
      * @param xColumn the name of the selected x column
+     * @param aggrCol the name of the aggregation column
      */
     public AbstractHistogramPlotter(final int initialWidth, 
             final DataTableSpec spec,
             final AbstractHistogramProperties histogramProps,
-            final HiLiteHandler handler, final String xColumn) {
+            final HiLiteHandler handler, final String xColumn, 
+            final String aggrCol) {
         super(initialWidth, histogramProps, new HistogramDrawingPane(handler));
         if (spec == null) {
             throw new IllegalArgumentException("Internal exception:"
@@ -134,7 +135,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         setXColName(xColumn);
         // select the x column also in the select box of the properties
         // panel
-        histogramProps.updateColumnSelection(m_tableSpec, xColumn, null);
+        histogramProps.updateColumnSelection(m_tableSpec, xColumn, aggrCol);
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
             this.m_hiLiteHandler = handler;
@@ -168,7 +169,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
      *      #updatePaintModel()
      */
     @Override
-    protected void updatePaintModel() {
+    public void updatePaintModel() {
         updateBarsAndPaint();
         // update the Histogram properties panel
         if (m_tableSpec != null) {
@@ -176,22 +177,22 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         }
     }
 
-    /**
+    /*
      * Called by the view, forwarding a model changed event.
      * 
      * @param spec the specification of the input data table
      * @param selectedXCol the name of the new x column
-     */
+     * @param aggrCol the name of the new aggregation column
     public void modelChanged(final DataTableSpec spec, 
-            final String selectedXCol) {
+            final String selectedXCol, final String aggrCol) {
         m_tableSpec = spec;
         setXColName(selectedXCol);
         setBackground(ColorAttr.getBackground());
         AbstractHistogramProperties props = getHistogramPropertiesPanel();
-        props.updateColumnSelection(spec, selectedXCol, null);
+        props.updateColumnSelection(spec, selectedXCol, aggrCol);
         props.setUpdateHistogramSettings(this);
         updatePaintModel();
-    }
+    }*/
 
     /**
      * @see java.awt.event.ActionListener
@@ -370,7 +371,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
      * 
      * @param aggrMethod The aggregation method
      * @return <code>true</code> if the method has change otherwise 
-     * <code>flase</code>. 
+     * <code>false</code>. 
      */
     public boolean setAggregationMethod(final AggregationMethod aggrMethod) {
         if (aggrMethod == null) {

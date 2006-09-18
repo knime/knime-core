@@ -19,11 +19,13 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl.interactive;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
+import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.plotter2D.AbstractPlotter2D;
 
 /**
