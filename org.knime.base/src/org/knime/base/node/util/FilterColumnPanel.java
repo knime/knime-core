@@ -50,6 +50,8 @@ import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -122,6 +124,8 @@ public final class FilterColumnPanel extends JPanel {
 
     private final HashSet<DataColumnSpec> m_hideColumns = 
         new HashSet<DataColumnSpec>();
+    
+    private List<ChangeListener>m_listeners;
 
     /**
      * Creates a new filter column panel with three component which are the
@@ -308,6 +312,44 @@ public final class FilterColumnPanel extends JPanel {
         super.add(center, BorderLayout.WEST);
         super.add(excludePanel, BorderLayout.CENTER);
     } // FilterColumnPanel()
+    
+    /**
+     * Adds a listener which gets informed whenever the column filtering 
+     * changes.
+     * @param listener the listener
+     */
+    public void addChangeListener(final ChangeListener listener) {
+        if (m_listeners == null) {
+            m_listeners = new ArrayList<ChangeListener>();
+        }
+        m_listeners.add(listener);
+    }
+    
+    /**
+     * Removes the given listener from this filter column panel.
+     * @param listener the listener.
+     */
+    public void removeChangeListener(final ChangeListener listener) {
+        if (m_listeners != null) {
+            m_listeners.remove(listener);
+        }
+    }
+    
+    /**
+     * Removes all column filter change listener. 
+     *
+     */
+    public void removeAllColumnFilterChangeListener() {
+        m_listeners.clear();
+    }
+    
+    private void fireFilteringChangedEvent() {
+        if (m_listeners != null) {
+            for (ChangeListener listener : m_listeners) {
+                listener.stateChanged((new ChangeEvent(this)));
+            }
+        }
+    }
 
     /**
      * Called by the 'remove >>' button to exclude the selected elements from
@@ -330,6 +372,7 @@ public final class FilterColumnPanel extends JPanel {
                 m_exclMdl.addElement(c);
             }
         }
+        fireFilteringChangedEvent();
     }
 
     /**
@@ -344,6 +387,7 @@ public final class FilterColumnPanel extends JPanel {
                 m_exclMdl.addElement(c);
             }
         }
+        fireFilteringChangedEvent();
     }
 
     /**
@@ -367,6 +411,7 @@ public final class FilterColumnPanel extends JPanel {
                 m_inclMdl.addElement(c);
             }
         }
+        fireFilteringChangedEvent();
     }
 
     /**
@@ -381,6 +426,7 @@ public final class FilterColumnPanel extends JPanel {
                 m_inclMdl.addElement(c);
             }
         }
+        fireFilteringChangedEvent();
     }
 
     /**
@@ -676,6 +722,7 @@ public final class FilterColumnPanel extends JPanel {
                 m_exclMdl.removeElement(column);
             }
         }
+        fireFilteringChangedEvent();
     }
 
     /**
