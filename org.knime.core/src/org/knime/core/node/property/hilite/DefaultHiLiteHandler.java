@@ -53,7 +53,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /** List of registered <code>HiLiteListener</code>s to fire event to. 
      * This implementation uses a WeakReference list to allow early collection
      * of unused hilite listeners. */
-    private final CopyOnWriteArrayList<WeakReference<HiLiteListener>> m_listenerList;
+    private final CopyOnWriteArrayList<WeakReference<HiLiteListener>> 
+        m_listenerList;
 
     /** Set of non-<code>null</code> hilit items. */
     private final Set<DataCell> m_hiLitKeys;
@@ -64,7 +65,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     public DefaultHiLiteHandler() {
         // inits empty event listener list
-        m_listenerList = new CopyOnWriteArrayList<WeakReference<HiLiteListener>>();
+        m_listenerList = 
+            new CopyOnWriteArrayList<WeakReference<HiLiteListener>>();
         // initialize item list
         m_hiLitKeys = new LinkedHashSet<DataCell>();
     }
@@ -99,16 +101,15 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     public void removeHiLiteListener(
             final HiLiteListener listener) {
-        for (Iterator<WeakReference<HiLiteListener>> it = 
-            m_listenerList.iterator(); it.hasNext();) {
-            HiLiteListener l = it.next().get();
+        for (int i = m_listenerList.size() - 1; i >= 0; i--) {
+            HiLiteListener l = m_listenerList.get(i).get();
             // if listener has been released (garbage collected)
             if (l == null) {
                 // Note: It doesn't hurt to not remove all of the empty 
                 // listener, this if-statement is an optional maintenance task
-                it.remove();
+                m_listenerList.remove(i);
             } else if (l.equals(listener)) {
-                it.remove();
+                m_listenerList.remove(i);
                 return;
             }
         }
