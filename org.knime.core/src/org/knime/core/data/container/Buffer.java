@@ -741,6 +741,7 @@ class Buffer {
         if (outFile == null) {
             m_outFile = DataContainer.createTempFile();
             m_hasCreatedTempFile = true;
+            OPENBUFFERS.add(new WeakReference<Buffer>(this));
         } else {
             m_outFile = outFile;
             m_hasCreatedTempFile = false;
@@ -748,7 +749,6 @@ class Buffer {
         ZipOutputStream zipOut = new ZipOutputStream(
                 new BufferedOutputStream(new FileOutputStream(m_outFile)));
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
-        OPENBUFFERS.add(new WeakReference<Buffer>(this));
         m_outStream = new DCObjectOutputStream(zipOut);
     } // initOutFile()
     
