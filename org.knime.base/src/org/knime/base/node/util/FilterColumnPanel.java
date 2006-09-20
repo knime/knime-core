@@ -431,12 +431,12 @@ public final class FilterColumnPanel extends JPanel {
 
     /**
      * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contains all column names
+     * include and exclude list. The include list will contain all column names
      * from the spec afterwards.
      * 
      * @param spec the spec to retrieve the column names from
      * @param exclude the flag if <code>excl</code> contains the columns to
-     *            exclude otherwise include.
+     *            exclude (otherwise include).
      * @param cells an array of data cells to either in- or exclude.
      */
     public void update(final DataTableSpec spec, final boolean exclude,
@@ -459,12 +459,12 @@ public final class FilterColumnPanel extends JPanel {
 
     /**
      * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contains all column names
+     * include and exclude list. The include list will contain all column names
      * from the spec afterwards.
      * 
      * @param spec the spec to retrieve the column names from
      * @param exclude the flag if <code>excl</code> contains the columns to
-     *            exclude otherwise include
+     *            exclude (otherwise include).
      * @param excl the list of columns to exclude or include
      */
     public void update(final DataTableSpec spec, final boolean exclude,
