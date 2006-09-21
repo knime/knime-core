@@ -331,6 +331,12 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     m_factory);
         } else if (m_type.equals(STRING_TYPES.HEX)) {
             m_factory = new Hex2BitVectorCellFactory();
+            // BW: fixed here locally: the annotation and the column name
+            // are taken from input spec (21 Sep 2006)
+            creator = new DataColumnSpecCreator(
+                    data.getDataTableSpec().getColumnSpec(stringColIndex));
+            creator.setDomain(null);
+            creator.setType(BitVectorCell.TYPE);
             result = new ReplacedColumnsTable(data, creator.createSpec(),
                     stringColIndex, m_factory);
         } else if (m_type.equals(STRING_TYPES.ID)) {
