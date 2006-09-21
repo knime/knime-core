@@ -218,7 +218,6 @@ public final class FilterColumnPanel extends JPanel {
 
         // include list
         m_inclMdl = new DefaultListModel();
-        m_inclMdl.addElement("<empty>");
         m_inclList = new JList(m_inclMdl);
         m_inclList.setSelectionMode(
                 ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -259,7 +258,6 @@ public final class FilterColumnPanel extends JPanel {
 
         // exclude list
         m_exclMdl = new DefaultListModel();
-        m_exclMdl.addElement("<empty>");
         m_exclList = new JList(m_exclMdl);
         m_exclList.setSelectionMode(
                 ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -540,6 +538,9 @@ public final class FilterColumnPanel extends JPanel {
         final Set<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < model.getSize(); i++) {
             Object o = model.getElementAt(i);
+            if (o instanceof String) {
+                System.out.println(o);
+            }
             String cell = ((DataColumnSpec)o).getName();
             list.add(cell);
         }
