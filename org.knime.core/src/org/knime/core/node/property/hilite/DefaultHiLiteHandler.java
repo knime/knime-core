@@ -83,11 +83,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
             m_listenerList.iterator(); it.hasNext();) {
             HiLiteListener l = it.next().get();
             // if listener has been released (garbage collected)
-            if (l == null) {
-                // Note: It doesn't hurt to not remove all of the empty 
-                // listener, this if-statement is an optional maintenance task
-                it.remove();
-            } else if (l.equals(listener)) {
+            if (l != null && l.equals(listener)) {
                 return;
             }
         }
