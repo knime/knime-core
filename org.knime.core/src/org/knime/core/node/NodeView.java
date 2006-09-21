@@ -217,7 +217,7 @@ public abstract class NodeView {
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
-                closeView();
+                m_frame.dispose();
             }
         });
         menu.add(item);
