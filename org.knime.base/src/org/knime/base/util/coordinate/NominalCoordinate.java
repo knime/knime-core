@@ -39,8 +39,10 @@ import org.knime.core.data.DataColumnSpec;
  * {@link org.knime.core.data.DataColumnSpec}.
  * 
  * @author Christoph Sieb, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
 public class NominalCoordinate extends Coordinate {
+    
 
     /**
      * The number of different nominal values.
@@ -125,15 +127,7 @@ public class NominalCoordinate extends Coordinate {
         // calculate half of the equidistance for the initial tick
         double equiDistance = absolutLength / m_numberPossibleValues;
         double halfEquiDistance = equiDistance / 2;
-
-        // if the mapping values must be equivalent to integers
-        // the distance is rounded downwards (to ensure the ticks are
-        // not leaving the absolutLength)
-        if (naturalMapping) {
-            equiDistance = Math.floor(equiDistance);
-            halfEquiDistance = Math.floor(equiDistance / 2);
-        }
-
+        
         // Iterate over all possible values
         Iterator<DataCell> possibleValuesIter = m_possibleValues.iterator();
 
