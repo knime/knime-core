@@ -204,7 +204,7 @@ public class BarVisModel {
         for (ColorAttr color : colors) {
             sortedColors.add(color);
         }
-        Comparator<ColorAttr> comp = new ColorAttrComparator(false);
+        final Comparator<ColorAttr> comp = new HSBColorAttrComparator(false);
         Collections.sort(sortedColors, comp);
         return sortedColors;
     }
