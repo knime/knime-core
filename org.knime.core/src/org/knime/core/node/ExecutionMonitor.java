@@ -110,6 +110,14 @@ public class ExecutionMonitor {
         m_progress.setMessage(message);
     }
     
+    /**
+     * @see NodeProgressMonitor#setProgress(String)
+     * @param message The message to be shown in the progress monitor.
+     */
+    public void setProgress(final String message) {
+        m_progress.setProgress(message);
+    }
+    
     /** Creates an execution monitor with a partial progress range.
      * Classes that use a progress monitor and report in the range of [0,1]
      * should get such a sub-progress monitor when their job is only partially
@@ -235,12 +243,19 @@ public class ExecutionMonitor {
         }
 
         /**
-         * Delegates to parent.
-         * @see NodeProgressMonitor#setMessage(String)
+         * @see #setProgress(String)
          */
         public void setMessage(final String message) {
+            setProgress(message);
+        }
+        
+        /**
+         * Delegates to parent.
+         * @see NodeProgressMonitor#setProgress(String)
+         */
+        public void setProgress(final String message) {
             String subMessage = calcNewMessage(message);
-            m_parent.setMessage(m_parentMessage + " - " + subMessage);
+            m_parent.setProgress(m_parentMessage + " - " + subMessage);
         }
 
         /**

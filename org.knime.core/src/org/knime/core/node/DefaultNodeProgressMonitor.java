@@ -21,12 +21,22 @@
  */
 package org.knime.core.node;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * The default node progress monitor which keep a progress flag between 0 and 1,
- * or -1 if no progress is available or set wrong. Furthermore, it holds a flag
- * which indicates that the task during execution was interrupted.
+ * The default node progress monitor which keep a progress value between 0 and 
+ * 1, and a progress message. Both can be <code>null</code> if not available or 
+ * set wrong (progress value out of range). Furthermore, it holds a flag which 
+ * indicates that the task during execution was interrupted.
+ * <p>
+ * This progress monitor uses a static timer task looking every 250 milliseconds
+ * if progress information has changed. The <code>ProgressEvent</code> is fired
+ * if either the value or message has changed only.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -35,15 +45,59 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /** The cancel requested flag. */
     private boolean m_cancelExecute;
 
-    /** The progress of the excution between 0 and 1, or -1 if not available. */
-    private double m_progress;
+    /** The progress of the excution between 0 and 1, or null if not available. 
+     */
+    private Double m_progress;
 
     /** The progress message. */
     private String m_message;
 
     /** A set of progress listeners. */
     private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
-
+    
+    /** Timer period looking for changed progress information. */
+    private final static int TIMER_PERIOD = 250;
+    
+    /**
+     * Keeps a static list of these progress monitors if they are active. The
+     * timer task iterates over this list and informs the monitors about
+     * new progress information. 
+     */
+    private static final ArrayList<WeakReference<DefaultNodeProgressMonitor>> 
+       PROGMONS = new ArrayList<WeakReference<DefaultNodeProgressMonitor>>();
+    
+    /** If progress has changed. */
+    private boolean m_changed = false;
+    
+    /**
+     * The timer task which informs all currently active progress monitors
+     * about new progress information.
+     */
+    private static final TimerTask TASK = new TimerTask() {
+        @Override
+        public void run() {
+            synchronized (PROGMONS) {
+                for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = 
+                        PROGMONS.iterator(); it.hasNext();) {
+                    DefaultNodeProgressMonitor p = it.next().get();
+                    if (p == null) {
+                        it.remove(); // not active anymore
+                    } else if (p.m_changed) {
+                        p.fireProgressChanged(); // something has changed
+                    }
+                }
+            }
+        }  
+    };
+    
+    /** Timer used to schedule the task. */
+    private static final Timer TIMER = new Timer("KNIME Progress Timer", true);
+        
+    static {
+        // start timer once with the given task, starting time, and time period
+        TIMER.scheduleAtFixedRate(TASK, 0, TIMER_PERIOD);
+    }
+    
     /**
      * Creates a new progress monitor with an empty set of listeners.
      * 
@@ -52,6 +106,12 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public DefaultNodeProgressMonitor() {
         m_listeners = new CopyOnWriteArrayList<NodeProgressListener>();
         m_cancelExecute = false;
+        m_progress = null;
+        m_message = null;
+        synchronized (PROGMONS) {
+            // add this progress monitor to the list of active ones
+            PROGMONS.add(new WeakReference<DefaultNodeProgressMonitor>(this));            
+        }
     }
 
     /**
@@ -95,7 +155,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public synchronized void setExecuteCanceled() {
         m_cancelExecute = true;
     }
-
+    
     /**
      * Updates the progress value and message if different from the current one.
      * @see #setProgress(double)
@@ -105,48 +165,54 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public synchronized void setProgress(final double progress,
             final String message) {
         if (setProgressIntern(progress) | setMessageIntern(message)) {
-            fireProgressChanged();
+            m_changed = true;
         }
     }
 
     /**
      * Sets a new progress value. If the value is not in range, it will be set
-     * to -1.
+     * to <code>null</code>.
      * 
-     * @param progress The value between 0 and 1, or -1 if not available.
+     * @param progress The value between 0 and 1.
      */
     public synchronized void setProgress(final double progress) {
         if (setProgressIntern(progress)) {
-            fireProgressChanged();
+            m_changed = true;
         }
     }
-    
+
+    /**
+     * @see #setProgress(String)
+     */
+    public synchronized void setMessage(final String message) {
+        setProgress(message);
+    }
+
     /**
      * Sets a new message according to the argument.
      * @param message The text message shown in the progress monitor.
      */
-    public synchronized void setMessage(final String message) {
+    public void setProgress(String message) {
         if (setMessageIntern(message)) {
-            fireProgressChanged();
+            m_changed = true;
         }
     }
 
-    /*
-     * Sets progress internally, returns if old value has changed.
+    /**
+     * Sets progress internally, returns <code>true</code> if old value has 
+     * changed.
      */
     private boolean setProgressIntern(final double progress) {
-        final double oldProgress = m_progress;
+        final Double oldProgress = m_progress;
         if (progress >= 0.0 && progress <= 1.0) {
             m_progress = progress;
-        } else {
-            m_progress = -1;
         }
-        boolean changed = oldProgress != progress;
-        m_progress = progress;
+        boolean changed = oldProgress == null 
+            || oldProgress.doubleValue() != progress;
         return changed;
     }
 
-    /*
+    /**
      * Sets message internally, returns if old value has changed.
      */
     private boolean setMessageIntern(final String message) {
@@ -160,10 +226,10 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
     
     /**
-     * @return The current progress value.
+     * @return The current progress value, or -1 if not yet set.
      */
     public double getProgress() {
-        return m_progress;
+        return m_progress == null ? -1 : m_progress;
     }
 
     /**
@@ -199,8 +265,11 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
 
     private void fireProgressChanged() {
+        m_changed = false;
+        NodeProgressEvent pe = new NodeProgressEvent(m_progress, m_message);
         for (NodeProgressListener l : m_listeners) {
-            l.progressChanged(m_progress, m_message);
+            l.progressChanged(pe);
         }
     }
+    
 }

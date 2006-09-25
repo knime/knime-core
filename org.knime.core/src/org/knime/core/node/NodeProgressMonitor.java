@@ -60,8 +60,15 @@ public interface NodeProgressMonitor {
     /**
      * Displays the message as given by the argument.
      * @param message A convience message shown in the progress monitor.
+     * @see #setProgress(String)
      */
     void setMessage(final String message);
+    
+    /**
+     * Displays the message as given by the argument.
+     * @param message A convience message shown in the progress monitor.
+     */
+    void setProgress(final String message);
     
     /**
      * The current progress message displayed.

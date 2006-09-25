@@ -120,12 +120,20 @@ public class NodeProgressMonitorView extends JDialog implements
     /**
      * Interface method that's called by the underlying model.
      * 
-     * @see NodeProgressListener#progressChanged(double, String)
+     * @see NodeProgressListener#progressChanged(NodeProgressEvent)
      */
-    public void progressChanged(final double progress, final String message) {
-        int val = Math.max(0, Math.min(100, (int)Math.round(100 * progress)));
-        m_progressBar.setValue(val);
-        m_label.setText(message);
+    public void progressChanged(final NodeProgressEvent pe) {
+        if (pe.hasProgress()) {
+            double progress = pe.getProgress().doubleValue();
+            int val = Math.max(0, Math.min(100, 
+                    (int)Math.round(100 * progress)));
+            m_progressBar.setValue(val);
+        }
+        if (pe.hasMessage()) {
+            m_label.setText(pe.getMessage());
+        } else {
+            m_label.setText("");
+        }
     }
 
     /**

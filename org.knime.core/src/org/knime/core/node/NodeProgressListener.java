@@ -22,8 +22,8 @@
 package org.knime.core.node;
 
 /**
- * Listener for progress change events providing a progress value between 0 and
- * 1, and a progress message.
+ * Listener for <code>NodeProgressEvent</code> fired when the progress
+ * information has changed.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -31,10 +31,8 @@ public interface NodeProgressListener {
 
     /**
      * Invoked when the progress has changed.
-     * @param progress The progress value between 0.0 and 1.0, or -1
-     *        if no progress available.
-     * @param message The progress message to be displayed.
+     * @param pe The progress event holding the progress information.
      */
-    void progressChanged(double progress, String message);
+    void progressChanged(NodeProgressEvent pe);
     
 }
