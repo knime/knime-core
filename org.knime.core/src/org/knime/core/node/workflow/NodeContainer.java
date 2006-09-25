@@ -237,7 +237,8 @@ public class NodeContainer implements NodeStateListener {
         this(new Node(template.m_node, template.m_wfm), template.m_wfm, id);
 
         setExtraInfo((NodeExtraInfo)template.getExtraInfo().clone());
-        if (template.m_customName != null) {
+        if ((template.m_customName != null)
+                && !template.m_customName.equals("Node " + template.m_id)) {
             setCustomName(template.m_customName);
         }
         setDescription(template.m_description);
