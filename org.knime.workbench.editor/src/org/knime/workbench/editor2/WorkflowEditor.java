@@ -97,6 +97,7 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeProgressEvent;
 import org.knime.core.node.NodeProgressListener;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeLogger.LEVEL;
@@ -139,6 +140,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditor.class);
 
+    /** Clipboard name. */
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
 //    private static final int LINE_WIDTH_FOR_SELECTED_NODES = 2;
@@ -1013,20 +1015,27 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         /**
-         * @see org.knime.core.node.NodeProgressListener#
-         *      progressChanged(double, java.lang.String)
+         * @see org.knime.core.node.NodeProgressListener
+         *      #progressChanged(NodeProgressEvent)
          */
-        public void progressChanged(final double progress, final String message) {
-
-            int worked = (int)(progress * m_totalWork);
-
-            m_progressMonitor.worked(worked - m_workedSoFar);
-            if (message != null) {
-                m_progressMonitor.subTask(message);
-            }
-
-            // remember the work done so far
-            m_workedSoFar = worked;
+        public synchronized void progressChanged(final NodeProgressEvent pe) {
+            Display.getDefault().asyncExec(new Runnable() {
+                public void run() {
+                    if (pe.hasProgress()) {
+                        double progress = pe.getProgress();
+                        int worked = (int)(progress * m_totalWork);
+                        m_progressMonitor.worked(worked - m_workedSoFar);
+                        // remember the work done so far
+                        m_workedSoFar = worked;
+                    }
+            
+                    if (pe.hasMessage()) {
+                        m_progressMonitor.subTask(pe.getMessage());
+                    } else {
+                        m_progressMonitor.subTask("");
+                    }
+                }
+            });
         }
     }
 
@@ -1369,7 +1378,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 j.schedule();
             }
         } else if (event instanceof WorkflowEvent.NodeFinished) {
-            ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
+            ProgressMonitorJob j = m_dummyNodeJobs.remove(event.getID());
             if (j != null) {
                 j.finish();
             }
