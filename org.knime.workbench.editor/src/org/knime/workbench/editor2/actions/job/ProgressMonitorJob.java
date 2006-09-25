@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.knime.core.node.NodeProgressEvent;
 import org.knime.core.node.NodeProgressListener;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.workflow.NodeContainer;
@@ -117,17 +118,21 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
      * Updates UI after progress has changed.
      * 
      * @see org.knime.core.node.NodeProgressListener
-     *      #progressChanged(double, java.lang.String)
+     *      #progressChanged(NodeProgressEvent)
      */
-    public synchronized void progressChanged(final double progress,
-            final String message) {
+    public synchronized void progressChanged(final NodeProgressEvent pe) {
+        
+        String message = pe.getMessage();
 
-        String tmpMessage = message;
-
-        int newWorked = (int)Math.round(Math.max(0, Math.min(progress * 100,
+        int newWorked = m_currentWorked;
+        if (pe.hasProgress()) {
+            double progress = pe.getProgress().doubleValue(); 
+            newWorked = (int)Math.round(Math.max(0, Math.min(progress * 100,
                 100)));
+        }
+        
         boolean change = newWorked > m_currentWorked
-                || !m_currentProgressMessage.equals(tmpMessage);
+                || !m_currentProgressMessage.equals(message);
 
         if (change) {
             // TODO this does not work if we don't know if progress is provided
@@ -137,14 +142,14 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
                 m_currentWorked = newWorked;
             }
 
-            if (!m_currentProgressMessage.equals(tmpMessage)) {
+            if (!m_currentProgressMessage.equals(message)) {
                 if (message == null) {
-                    tmpMessage = m_stateMessage;
+                    message = m_stateMessage;
                 } else {
-                    tmpMessage = m_stateMessage + " - " + message;
+                    message = m_stateMessage + " - " + message;
                 }
 
-                m_eclipseMonitor.subTask(tmpMessage);
+                m_eclipseMonitor.subTask(message);
             }
 
             m_currentProgressMessage = message == null ? "" : m_stateMessage
