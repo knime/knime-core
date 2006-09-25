@@ -237,8 +237,7 @@ public class NodeContainer implements NodeStateListener {
         this(new Node(template.m_node, template.m_wfm), template.m_wfm, id);
 
         setExtraInfo((NodeExtraInfo)template.getExtraInfo().clone());
-        if ((template.m_customName != null)
-                && !template.m_customName.equals("Node " + template.m_id)) {
+        if (template.m_customName != null) {
             setCustomName(template.m_customName);
         }
         setDescription(template.m_description);
@@ -273,7 +272,7 @@ public class NodeContainer implements NodeStateListener {
             String name = setts.getString(KEY_CUSTOM_NAME);
 
             // if there was no user node name defined than keep the default name
-            if ((name != null) && !name.matches("^Node \\d+$")) {
+            if (name != null) {
                 setCustomName(name);
             }
         } catch (InvalidSettingsException ise) {

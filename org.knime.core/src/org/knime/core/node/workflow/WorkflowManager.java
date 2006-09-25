@@ -136,19 +136,18 @@ public class WorkflowManager implements WorkflowListener {
             }
         }
 
-        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes =
-            new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>(),
-            m_waitingNodes = new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
+        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>(),
+                m_waitingNodes = new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
 
         private final Object m_addLock = new Object(),
-            m_transferLock = new Object(), m_finishLock = new Object();
-        
+                m_transferLock = new Object(), m_finishLock = new Object();
+
         WorkflowExecutor() {
             Timer watchdogTimer = new Timer(true);
             TimerTask watchDog = new TimerTask() {
                 @Override
                 public void run() {
-//                    startNewNodes(true);
+                    // startNewNodes(true);
                 }
             };
             watchdogTimer.scheduleAtFixedRate(watchDog, 5000, 10000);
@@ -167,16 +166,16 @@ public class WorkflowManager implements WorkflowListener {
                 // inserted into m_runningNodes
                 synchronized (m_transferLock) {
                     b = m_waitingNodes.containsKey(nc)
-                        && !m_runningNodes.containsKey(nc); 
+                            && !m_runningNodes.containsKey(nc);
                 }
                 if (!b) {
                     MyNodePM pm = new MyNodePM(nc);
                     synchronized (m_addLock) {
-                        m_waitingNodes.put(nc, pm);    
+                        m_waitingNodes.put(nc, pm);
                     }
-                    
-                    fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc
-                            .getID(), nc, pm));
+
+                    fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc.getID(),
+                            nc, pm));
 
                     change = true;
                 }
@@ -200,7 +199,7 @@ public class WorkflowManager implements WorkflowListener {
                     fireWorkflowEvent(new WorkflowEvent.NodeFinished(
                             nc.getID(), null, null));
                 }
-    
+
                 m_waitingNodes.clear();
             }
             for (NodeProgressMonitor pm : m_runningNodes.values()) {
@@ -218,7 +217,7 @@ public class WorkflowManager implements WorkflowListener {
         public void cancelExecution(final Collection<NodeContainer> nodes) {
             Set<NodeContainer> cancelNodes = new HashSet<NodeContainer>();
             cancelNodes.addAll(nodes);
-            
+
             synchronized (m_transferLock) {
                 for (NodeContainer nc : nodes) {
                     if (m_runningNodes.containsKey(nc)) {
@@ -237,10 +236,10 @@ public class WorkflowManager implements WorkflowListener {
                     }
                 }
             }
-            
+
             for (NodeContainer nc : cancelNodes) {
-                fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
-                        .getID(), null, null));                
+                fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc.getID(),
+                        null, null));
             }
         }
 
@@ -263,7 +262,7 @@ public class WorkflowManager implements WorkflowListener {
                         return true;
                     }
                 }
-    
+
                 for (NodeContainer nc : m_waitingNodes.keySet()) {
                     if (wfm.m_nodesByID.values().contains(nc)) {
                         return true;
@@ -292,15 +291,15 @@ public class WorkflowManager implements WorkflowListener {
                         .entrySet().iterator();
                 while (it.hasNext()) {
                     Map.Entry<NodeContainer, NodeProgressMonitor> e = it.next();
-                    if (e.getKey().isExecutable()) {                    
+                    if (e.getKey().isExecutable()) {
                         NodeContainer nc = e.getKey();
                         NodeProgressMonitor pm = e.getValue();
-                        
+
                         synchronized (m_transferLock) {
                             it.remove();
                             m_runningNodes.put(nc, pm);
                         }
-    
+
                         try {
                             fireWorkflowEvent(new WorkflowEvent.NodeStarted(nc
                                     .getID(), nc, pm));
@@ -318,7 +317,8 @@ public class WorkflowManager implements WorkflowListener {
                 if (m_runningNodes.size() == 0) {
                     if (m_waitingNodes.size() > 0) {
                         if (watchdog) {
-                            LOGGER.error("Whoa there, the watchdog found a "
+                            LOGGER
+                                    .error("Whoa there, the watchdog found a "
                                             + "possible deadlock situation! Some nodes "
                                             + "are still waiting, but none is running"
                                             + m_waitingNodes);
@@ -475,8 +475,7 @@ public class WorkflowManager implements WorkflowListener {
     private final Map<Integer, ConnectionContainer> m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
 
     // change listener support
-    private final CopyOnWriteArrayList<WorkflowListener> m_eventListeners =
-        new CopyOnWriteArrayList<WorkflowListener>();
+    private final CopyOnWriteArrayList<WorkflowListener> m_eventListeners = new CopyOnWriteArrayList<WorkflowListener>();
 
     private final WorkflowExecutor m_executor;
 
@@ -990,6 +989,13 @@ public class WorkflowManager implements WorkflowListener {
                 final NodeContainer newNode = new NodeContainer(nodeSetting,
                         this);
                 newNode.loadSettings(nodeSetting);
+
+                // adapt custom name in case it has still the node id string
+                String customName = newNode.getCustomName();
+                if (customName.equals("Node " + oldId)) {
+                    newNode.setCustomName("Node " + newId);
+                }
+                
                 newNode.resetAndConfigure();
 
                 // change the id, as this id is already in use (it was copied)
@@ -998,18 +1004,6 @@ public class WorkflowManager implements WorkflowListener {
                 idMap.put(oldId, newId);
                 // remember the new id for the return value
                 newNodeIDs.add(newId);
-
-                // set the user name to the new id if the init name
-                // was set before e.g. "Node_44"
-                // get set username
-                String currentUserNodeName = newNode.getCustomName();
-
-                // create temprarily the init user name of the copied node
-                // to check wether the current name was changed
-                String oldInitName = "Node " + (oldId + 1);
-                if (oldInitName.equals(currentUserNodeName)) {
-                    newNode.setCustomName("Node " + (newId + 1));
-                }
 
                 // and add it to workflow
                 addNodeWithID(newNode);
@@ -1185,12 +1179,13 @@ public class WorkflowManager implements WorkflowListener {
         // gets queued first, so that its progress bar comes first
         Collections.reverse(nodes);
 
-        
         if (block) {
             NodeStateListener nsl = new NodeStateListener() {
                 public void stateChanged(final NodeStatus state, final int id) {
                     if (state instanceof NodeStatus.EndExecute) {
-                        synchronized (this) { this.notifyAll(); }
+                        synchronized (this) {
+                            this.notifyAll();
+                        }
                     }
                 }
             };
@@ -1209,7 +1204,7 @@ public class WorkflowManager implements WorkflowListener {
             m_executor.addWaitingNodes(nodes);
         }
     }
-    
+
     /**
      * Executes exactly one node. The node must be in the executable state. No
      * predecessors will be executed in order to get this node into the
