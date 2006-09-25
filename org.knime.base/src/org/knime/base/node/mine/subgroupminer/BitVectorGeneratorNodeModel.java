@@ -383,8 +383,22 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         }
         DataColumnSpec bitVectorColSpec = new DataColumnSpecCreator(
                 "BitVectors", BitVectorCell.TYPE).createSpec();
+        if (m_type.equals(STRING_TYPES.HEX)) {
+            DataColumnSpec[] specs = new DataColumnSpec[spec.getNumColumns()];
+            for (int i = 0; i < spec.getNumColumns(); i++) {
+                specs[i] = spec.getColumnSpec(i);
+            }
+            int target = spec.findColumnIndex(m_stringColumn);
+            DataColumnSpecCreator t = new DataColumnSpecCreator(specs[target]);
+            t.setType(BitVectorCell.TYPE);
+            t.setDomain(null);
+            m_outSpec = new DataTableSpec(t.createSpec());
+            specs[target] = t.createSpec();
+            return new DataTableSpec[]{new DataTableSpec(specs)};
+        }
         m_outSpec = new DataTableSpec(new DataColumnSpec[]{bitVectorColSpec});
-        return new DataTableSpec[]{m_outSpec};
+        // TODO: create spec here!
+        return null;
     }
 
     /**
