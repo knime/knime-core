@@ -273,7 +273,7 @@ public class NodeContainer implements NodeStateListener {
             String name = setts.getString(KEY_CUSTOM_NAME);
 
             // if there was no user node name defined than keep the default name
-            if (name != null) {
+            if ((name != null) && !name.matches("^Node \\d+$")) {
                 setCustomName(name);
             }
         } catch (InvalidSettingsException ise) {
