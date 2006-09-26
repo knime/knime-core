@@ -40,6 +40,8 @@ class HSBColorAttrComparator implements Comparator<ColorAttr> {
     private static final int HUE_IDX = 0;
     private static final int SATURATION_IDX = 1;
     private static final int BRIGHTNESS_IDX = 2;
+    //used to set the split of the hue circle in the blue area
+    private static final float HUE_SPLITT = 0.5f;
 
     /**
      * creates a new comparator for color attributes.
@@ -72,15 +74,17 @@ class HSBColorAttrComparator implements Comparator<ColorAttr> {
         float[] hsbvals = new float[3];
         hsbvals = 
             Color.RGBtoHSB(c1.getRed(), c1.getGreen(), c1.getBlue(), hsbvals);
-        
-        float hue1 = hsbvals[HUE_IDX];
+        //we don't need to make modulo 1 because java takes care that the value
+        //is below 1
+        float hue1 = hsbvals[HUE_IDX] + HUE_SPLITT;
         float sat1 = hsbvals[SATURATION_IDX];
         float bright1 = hsbvals[BRIGHTNESS_IDX];
         
         hsbvals = 
             Color.RGBtoHSB(c2.getRed(), c2.getGreen(), c2.getBlue(), hsbvals);
-        
-        float hue2 = hsbvals[HUE_IDX];
+        //we don't need to make modulo 1 because java takes care that the value
+        //is below 1        
+        float hue2 = hsbvals[HUE_IDX] + HUE_SPLITT;
         float sat2 = hsbvals[SATURATION_IDX];
         float bright2 = hsbvals[BRIGHTNESS_IDX];
         
