@@ -56,7 +56,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
     
     /** Timer period looking for changed progress information. */
-    private final static int TIMER_PERIOD = 250;
+    private static final int TIMER_PERIOD = 250;
     
     /**
      * Keeps a static list of these progress monitors if they are active. The
@@ -110,7 +110,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         m_message = null;
         synchronized (PROGMONS) {
             // add this progress monitor to the list of active ones
-            PROGMONS.add(new WeakReference<DefaultNodeProgressMonitor>(this));            
+            PROGMONS.add(new WeakReference<DefaultNodeProgressMonitor>(this));
         }
     }
 
@@ -192,7 +192,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * Sets a new message according to the argument.
      * @param message The text message shown in the progress monitor.
      */
-    public void setProgress(String message) {
+    public void setProgress(final String message) {
         if (setMessageIntern(message)) {
             m_changed = true;
         }
@@ -226,10 +226,10 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
     
     /**
-     * @return The current progress value, or -1 if not yet set.
+     * @return The current progress value, or <code>null</code> if not yet set.
      */
-    public double getProgress() {
-        return m_progress == null ? -1 : m_progress;
+    public Double getProgress() {
+        return m_progress;
     }
 
     /**
@@ -243,7 +243,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @see NodeProgressMonitor#addProgressListener(NodeProgressListener)
      */
     public void addProgressListener(final NodeProgressListener l) {
-        if ((l != null) && ! m_listeners.contains(l)) {
+        if ((l != null) && !m_listeners.contains(l)) {
             m_listeners.add(l);
         }
     }

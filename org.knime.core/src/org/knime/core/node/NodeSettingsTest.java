@@ -403,7 +403,7 @@ public final class NodeSettingsTest extends TestCase {
     
     private static class UnknownCell extends DataCell {
         @Override
-        protected boolean equalsDataCell(DataCell dc) {
+        protected boolean equalsDataCell(final DataCell dc) {
             return dc instanceof UnknownCell;
         }
         @Override

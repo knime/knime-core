@@ -1309,8 +1309,8 @@ public final class Node {
                 // notify state listeners before the new specs are propagated
                 notifyStateListeners(new NodeStatus.Configured("Configured"));
                 /*
-                 * set the new specs in the output ports, which will propagate them
-                 * to connected successor nodes
+                 * set the new specs in the output ports, which will propagate
+                 * them to connected successor nodes
                  */
                 for (int p = 0; p < newSpecs.length; p++) {
                     // update data table spec

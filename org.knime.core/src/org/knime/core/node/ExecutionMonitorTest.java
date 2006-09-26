@@ -84,9 +84,9 @@ public class ExecutionMonitorTest extends TestCase {
                 fail();
             }
         }
-        // progress shoudl be more or less 0.9
+        // progress should be more or less 0.9
         double n = dad.getProgress();
-        assertTrue(n < 0.91 && n > 0.89);
+        assertTrue("progress=" + n, n < 0.91 && n > 0.89);
     }
     
 }

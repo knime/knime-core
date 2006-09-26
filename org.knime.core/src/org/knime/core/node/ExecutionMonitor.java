@@ -214,7 +214,7 @@ public class ExecutionMonitor {
          * Get the subprogress, the value scaled to [0, 1].
          * @see NodeProgressMonitor#getProgress()
          */
-        public double getProgress() {
+        public Double getProgress() {
             return m_lastProg;
         }
 
@@ -282,12 +282,16 @@ public class ExecutionMonitor {
         
         
         private double calcSubProgress(final double progress) {
-            double progressOfParent = m_parent.getProgress();
+            Double progressOfParent = m_parent.getProgress();
             // diff to the last progress update
             double diff = progress - m_lastProg;
             m_lastProg = progress;
-            // scaled to our sub range
-            return progressOfParent + diff * m_maxProg;
+            if (progressOfParent == null) {
+                return diff * m_maxProg;
+            } else {
+                // scaled to our sub range
+                return progressOfParent + diff * m_maxProg;
+            }
         }
         
         private String calcNewMessage(final String message) {

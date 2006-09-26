@@ -37,22 +37,22 @@ public interface NodeProgressMonitor {
     void checkCanceled() throws CanceledExecutionException;
     
     /**
-     * Sets a new progress value. If the value is not in range, it will be set
-     * to -1.
-     * @param progress The value between 0 and 1, or -1 if not available.
+     * Sets a new progress value. If the value is not in range, the old value is
+     * kept.
+     * @param progress The value between 0 and 1.
      */
     void setProgress(final double progress);
     
     /**
-     * The current progress value.
-     * @return Progress value between 0 and 1.
+     * The current progress value or <code>null</code> if no progress available.
+     * @return Progress value between 0 and 1, or <code>null</code>.
      */
-    double getProgress();
+    Double getProgress();
 
     /**
-     * Sets a new progress value. If the value is not in range, it will be set
-     * to -1. The message is displayed.
-     * @param progress The value between 0 and 1, or -1 if not available.
+     * Sets a new progress value. If the value is not in range, the old value
+     * is kept. The message is displayed.
+     * @param progress The value between 0 and 1.
      * @param message A convience message shown in the progress monitor or null.
      */
     void setProgress(final double progress, final String message);
