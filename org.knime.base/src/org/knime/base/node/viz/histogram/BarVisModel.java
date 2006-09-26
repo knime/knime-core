@@ -200,10 +200,7 @@ public class BarVisModel {
      */
     private static Collection<ColorAttr> sortColorInformation(
             final Collection<ColorAttr> colors) {
-        List<ColorAttr> sortedColors = new ArrayList<ColorAttr>(colors.size());
-        for (ColorAttr color : colors) {
-            sortedColors.add(color);
-        }
+        final List<ColorAttr> sortedColors = new ArrayList<ColorAttr>(colors);
         final Comparator<ColorAttr> comp = new HSBColorAttrComparator(false);
         Collections.sort(sortedColors, comp);
         return sortedColors;
@@ -215,7 +212,8 @@ public class BarVisModel {
      * @param bar the new <code>AbstractBarDataModel</code>
      * @param rect the new<code>Rectangle</code>
      */
-    public void updateBarData(final AbstractBarDataModel bar, final Rectangle rect) {
+    public void updateBarData(final AbstractBarDataModel bar, 
+            final Rectangle rect) {
         m_bar = bar;
         m_rect = rect;
     }
