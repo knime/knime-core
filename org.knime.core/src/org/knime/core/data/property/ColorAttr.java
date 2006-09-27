@@ -73,6 +73,11 @@ public final class ColorAttr implements Serializable {
     public static final Color INACTIVE = Color.LIGHT_GRAY;
     
     /**
+     * The color for inactive points but selected: gray.
+     */
+    public static final Color INACTIVE_SELECTED = Color.GRAY;
+    
+    /**
      * The color of the border: dark gray.
      */
     public static final Color BORDER = Color.DARK_GRAY;
