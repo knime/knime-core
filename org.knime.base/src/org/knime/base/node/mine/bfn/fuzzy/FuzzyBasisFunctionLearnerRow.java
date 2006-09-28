@@ -83,6 +83,9 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         m_predRow.addCovered(centroid.getKey().getId(), classInfo);
     }
 
+    /**
+     * @see BasisFunctionLearnerRow#getPredictorRow()
+     */
     @Override
     public FuzzyBasisFunctionPredictorRow getPredictorRow() {
         return m_predRow;
