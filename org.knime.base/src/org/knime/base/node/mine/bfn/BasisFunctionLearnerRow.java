@@ -106,6 +106,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         }
     }
 
+    /** 
+     * @see org.knime.core.data.DataRow#getKey()
+     */
     public RowKey getKey() {
         return m_key;
     }
