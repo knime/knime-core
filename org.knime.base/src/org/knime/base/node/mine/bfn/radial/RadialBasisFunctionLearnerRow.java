@@ -36,18 +36,20 @@ import org.knime.core.data.RowKey;
  * infinity which means cover the entrie domain. During training the function is
  * shrinked if new conflicting instances are obmitted. Therefore two parameters
  * have been introduced. One is <code>m_thetaMinus</code> which is used to
- * desribe an upper bound of conflicting instances; and <code>m_thetaPlus</code>,
- * to lower bound for non-conflicting instances.
+ * desribe an upper bound of conflicting instances; and 
+ * <code>m_thetaPlus</code>, to lower bound for non-conflicting instances.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
+    
     /** The upper bound for confliction instances. */
     private final double m_thetaMinus;
 
     /** The lower bound for non-conflicting instances. */
     private final double m_thetaPlus;
 
+    /** Row used to predict unknown instances. */
     private final RadialBasisFunctionPredictorRow m_predRow;
 
     /**
@@ -79,8 +81,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see BasisFunctionLearnerRow
-     *      #getPredictorRow()
+     * @see BasisFunctionLearnerRow#getPredictorRow()
      */
     @Override
     public BasisFunctionPredictorRow getPredictorRow() {
@@ -88,8 +89,9 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @param col the column index
-     * @return the centroid value at the given dimension
+     * Returns the missing double value for the given dimension.
+     * @param col the column index.
+     * @return The centroid value at the given dimension.
      */
     @Override
     public DoubleValue getMissingValue(final int col) {

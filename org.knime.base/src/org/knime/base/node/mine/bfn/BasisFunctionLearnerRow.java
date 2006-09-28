@@ -32,24 +32,26 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultCellIterator;
 import org.knime.core.data.def.IntCell;
 
-
 /**
  * General <code>BasisFunctionLearnerRow</code> prototype which provides
- * functions to shink, cover, and reset rules and to be compared with others by
+ * functions to shink, cover, and reset rules; and to be compared with others by
  * its coverage. This basis function also keeps a list of all covered trainings
  * examples.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class BasisFunctionLearnerRow implements DataRow {
+    
+    /** This row's identifier. */
     private final RowKey m_key;
 
+    /** This row's class label. */
     private final DataCell m_classInfo;
 
     /** Keeps the initial anchor vector. */
     private final DataRow m_centroid;
 
-    /** Default level. */
+    /** Default level, used for hierarchical rule learning only. */
     private static final DataCell DFT_LEVEL = new IntCell(1);
 
     /** Level of detail, by default all are assigned to 1. */
@@ -423,8 +425,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     }
 
     /**
-     * Returns the hash code of the centroid for this basisfunction.
-     * 
+     * Returns a hash code computed by the product of the hash code of
+     * anchor and class label.
+     * @return A new hash code.
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -442,7 +445,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     }
 
     /**
-     * @return A set of covered example ids.
+     * @return A set of covered examples' ids.
      */
     public final Set<DataCell> getAllCoveredPattern() {
         return getPredictorRow().getAllCoveredPattern();
