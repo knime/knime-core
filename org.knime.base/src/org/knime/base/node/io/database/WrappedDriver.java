@@ -40,6 +40,7 @@ final class WrappedDriver implements Driver {
 
     /**
      * Create wrapper.
+     * 
      * @param d For this <code>Driver</code>.
      */
     WrappedDriver(final Driver d) {
@@ -65,9 +66,8 @@ final class WrappedDriver implements Driver {
     /**
      * @see java.sql.Driver#getPropertyInfo(String, java.util.Properties)
      */
-    public DriverPropertyInfo[] getPropertyInfo(final String url, 
-            final Properties info)
-            throws SQLException {
+    public DriverPropertyInfo[] getPropertyInfo(final String url,
+            final Properties info) throws SQLException {
         return m_d.getPropertyInfo(url, info);
     }
 

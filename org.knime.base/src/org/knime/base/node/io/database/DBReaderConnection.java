@@ -79,6 +79,7 @@ final class DBReaderConnection implements DataTable {
      */
     DBReaderConnection(final String url, final String user, final String pw,
             final String query) throws SQLException {
+        DriverManager.setLoginTimeout(5);
         m_conn = DriverManager.getConnection(url, user, pw);
         Statement stmt = m_conn.createStatement();
         m_query = query;
@@ -125,17 +126,26 @@ final class DBReaderConnection implements DataTable {
         int cols = meta.getColumnCount();
         DataColumnSpec[] cspecs = new DataColumnSpec[cols];
         for (int i = 0; i < cols; i++) {
-            String name = meta.getColumnName(i + 1);
-            int type = meta.getColumnType(i + 1);
+            int dbIdx = i + 1;
+            String name = meta.getColumnName(dbIdx);
+            int type = meta.getColumnType(dbIdx);
             DataType newType;
             switch (type) {
             case Types.INTEGER:
+            case Types.BIT: // TODO (tg) later we might use BooleanType instead
+            case Types.BINARY:
+            case Types.BOOLEAN:
+            case Types.VARBINARY:
+            case Types.SMALLINT:
+            case Types.TINYINT:
+            case Types.BIGINT:
                 newType = IntCell.TYPE;
                 break;
             case Types.FLOAT:
-                newType = DoubleCell.TYPE;
-                break;
             case Types.DOUBLE:
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.REAL:
                 newType = DoubleCell.TYPE;
                 break;
             default:

@@ -52,8 +52,11 @@ class DBReaderNodeModel extends NodeModel {
             .getLogger(DBReaderNodeModel.class);
 
     private DBReaderConnection m_load = null;
+    
+    private static final String JDBC_ODBC_DRIVER = 
+        "sun.jdbc.odbc.JdbcOdbcDriver";
 
-    private String m_driver = "sun.jdbc.odbc.JdbcOdbcDriver";
+    private String m_driver = JDBC_ODBC_DRIVER;
 
     private String m_query = "SELECT * FROM <table>";
 
@@ -67,12 +70,12 @@ class DBReaderNodeModel extends NodeModel {
     
     static {        
         try {
-            Class<?> driverClass = Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
-            Driver theDriver = new WrappedDriver((Driver)driverClass
-                    .newInstance());
-            DriverManager.registerDriver(theDriver);
+            Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
+            WrappedDriver d = new WrappedDriver(
+                    (Driver)driverClass.newInstance());
+            DriverManager.registerDriver(d);
         } catch (Exception e) {
-            LOGGER.warn("Could not load 'sun.jdbc.odbc.JdbcOdbcDriver'.");
+            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER);
             LOGGER.debug("", e);
         }
     }
@@ -172,6 +175,7 @@ class DBReaderNodeModel extends NodeModel {
     protected void reset() {
         if (m_load != null) {
             m_load.close();
+            m_load = null;
         }
     }
 

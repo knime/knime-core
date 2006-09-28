@@ -44,6 +44,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import org.knime.core.data.DataTableSpec;
@@ -81,7 +82,9 @@ public class DBWriterDialogPane extends NodeDialogPane {
     private final JFileChooser m_chooser = new JFileChooser();
 
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
-
+    
+    private final DBSQLTypesPanel m_typePanel;
+    
     /**
      * Creates new dialog.
      */
@@ -145,6 +148,9 @@ public class DBWriterDialogPane extends NodeDialogPane {
         tablePanel.add(m_table);
         parentPanel.add(tablePanel);
         super.addTab("Settings", parentPanel);
+        
+        m_typePanel = new DBSQLTypesPanel();
+        super.addTab("SQL Types", new JScrollPane(m_typePanel));
     }
 
     /**
@@ -175,6 +181,15 @@ public class DBWriterDialogPane extends NodeDialogPane {
         m_driver.setSelectedItem(settings.getString("driver", ""));
         // table name
         m_table.setText(settings.getString("table", ""));
+        
+        // load sql type for each column
+        try {
+            NodeSettingsRO typeSett = settings.getNodeSettings(
+                    DBWriterNodeModel.CFG_SQL_TYPES);
+            m_typePanel.loadSettingsFrom(typeSett, specs);
+        } catch (InvalidSettingsException ise) {
+            m_typePanel.loadSettingsFrom(null, specs);
+        }
     }
 
     private void updateDriver() {
@@ -212,5 +227,10 @@ public class DBWriterDialogPane extends NodeDialogPane {
         // save loaded driver
         settings.addStringArray("loaded_driver", m_driverLoaded
                 .toArray(new String[0]));
+        
+        // save sql type for each column
+        NodeSettingsWO typeSett = settings.addNodeSettings(
+                DBWriterNodeModel.CFG_SQL_TYPES);
+        m_typePanel.saveSettingsTo(typeSett);
     }
 }

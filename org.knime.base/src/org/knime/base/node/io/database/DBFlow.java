@@ -36,6 +36,31 @@ import org.knime.core.node.Node;
 public final class DBFlow {
     
     private DBFlow() {
+        read();
+    }
+    
+    /**
+     * Reads from database.
+     *
+     */
+    void read() {
+        Node read = new Node(new DBReaderNodeFactory());
+        read.showDialog();
+        read.execute();
+
+        Node table = new Node(new TableNodeFactory());
+        table.getInPort(0).connectPort(read.getOutPort(0));
+        table.execute();
+        table.showView(0);
+    }
+
+    
+    /**
+     * Writes to database.
+     *
+     */
+    void write() {
+    
         Node file = new Node(new FileReaderNodeFactory());
         file.showDialog();
         file.execute();

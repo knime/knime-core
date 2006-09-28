@@ -43,7 +43,7 @@ import java.util.zip.ZipFile;
 final class DBDriverLoader {
 
     /**
-     * Allowsed file extensions, jar and zip only.
+     * Allowed file extensions, jar and zip only.
      */
     static final String[] EXTENSIONS = {".jar", ".zip"};
 
@@ -67,11 +67,12 @@ final class DBDriverLoader {
         } else if (fileName.endsWith(".jar") || fileName.endsWith(".zip")) {
             readZip(file, new JarFile(file));
         }
-
     }
 
     private static void readZip(final File file, final ZipFile zipFile)
             throws Exception {
+        ClassLoader cl = new URLClassLoader(
+                new URL[]{file.toURL()}, CLASS_LOADER);
         for (Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
             zipEntries.hasMoreElements();) {
             ZipEntry e = zipEntries.nextElement();
@@ -81,7 +82,12 @@ final class DBDriverLoader {
             String name = e.getName();
             if (name.endsWith(".class")) {
                 try {
-                    readFile(file, name);
+                    Class<?> c = loadClass(cl, name);
+                    if (Driver.class.isAssignableFrom(c)) {
+                        WrappedDriver d = new WrappedDriver(
+                                (Driver)c.newInstance());
+                        DriverManager.registerDriver(d);
+                    }
                 } catch (Exception ex) {
                     // ignore
                 } catch (Error er) {
@@ -91,22 +97,10 @@ final class DBDriverLoader {
         }
     }
 
-    private static void readFile(final File file, final String name)
+    private static Class<?> loadClass(final ClassLoader cl, final String name)
             throws Exception, Error {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
-        ClassLoader cl = new URLClassLoader(new URL[]{file.toURL()},
-                CLASS_LOADER);
-        Class<?> c = cl.loadClass(className);
-        if (Driver.class.isAssignableFrom(c)) {
-            try {
-                Driver theDriver = new WrappedDriver((Driver)c.newInstance());
-                // if (theDriver.jdbcCompliant()) {
-                DriverManager.registerDriver(theDriver);
-                assert DriverManager.getDriver(className) == theDriver;
-            } catch (Exception allE) {
-                // ignore
-            }
-        }
+        return cl.loadClass(className);
     }
 }

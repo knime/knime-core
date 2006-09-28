@@ -29,8 +29,14 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -41,35 +47,61 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
+ * Database writer model which creates a new table and adds the entire table to
+ * it.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBWriterNodeModel extends NodeModel {
+
+    /*
+     * TODO not yet supported Double.MAX_VALUE, Double.NEGATIVE_INFINITY, and
+     * DOUBLE.POSITIVE_INFINITY
+     */
+
+    /** Logger for the database writer. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBWriterNodeModel.class);
 
-    private String m_driver = "sun.jdbc.odbc.JdbcOdbcDriver";
+    private static final String JDBC_ODBC_DRIVER = 
+        "sun.jdbc.odbc.JdbcOdbcDriver";
+
+    private String m_driver = JDBC_ODBC_DRIVER;
 
     private String m_name = "jdbc:odbc:<database_name>";
 
     private String m_user = "<user>";
 
     private String m_pass = "";
-    
+
     private String m_table = "<table_name>";
 
-    private final HashSet<String> m_driverLoaded = new HashSet<String>();
-    
-    static {        
+    private final Set<String> m_driverLoaded = new HashSet<String>();
+
+    private final Map<String, String> m_types = 
+        new LinkedHashMap<String, String>();
+
+    /** Default SQL-type for Strings. */
+    static final String SQL_TYPE_STRING = "varchar(255)";
+
+    /** Default SQL-type for Integers. */
+    static final String SQL_TYPE_INTEGER = "integer(32)";
+
+    /** Default SQL-type for Doubles. */
+    static final String SQL_TYPE_DOUBLE = "decimal(30,10)";
+
+    /** Config key for column to SQL-type mapping. */
+    static final String CFG_SQL_TYPES = "sql_types";
+
+    static {
         try {
-            Class<?> driverClass = Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
-            Driver theDriver = new WrappedDriver((Driver)driverClass
+            Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
+            WrappedDriver d = new WrappedDriver((Driver)driverClass
                     .newInstance());
-            DriverManager.registerDriver(theDriver);
+            DriverManager.registerDriver(d);
         } catch (Exception e) {
-            LOGGER.warn("Could not load 'sun.jdbc.odbc.JdbcOdbcDriver'.");
+            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER);
             LOGGER.debug("", e);
         }
     }
@@ -93,6 +125,11 @@ class DBWriterNodeModel extends NodeModel {
         settings.addStringArray("loaded_driver", m_driverLoaded
                 .toArray(new String[0]));
         settings.addString("table", m_table);
+        // save sql type mapping
+        NodeSettingsWO typeSett = settings.addNodeSettings(CFG_SQL_TYPES);
+        for (Map.Entry<String, String> e : m_types.entrySet()) {
+            typeSett.addString(e.getKey(), e.getValue());
+        }
     }
 
     /**
@@ -113,9 +150,8 @@ class DBWriterNodeModel extends NodeModel {
         loadSettings(settings, true);
     }
 
-    private void loadSettings(final NodeSettingsRO settings,
-            final boolean write)
-            throws InvalidSettingsException {
+    private void loadSettings(final NodeSettingsRO settings, 
+            final boolean write) throws InvalidSettingsException {
         String driver = settings.getString("driver");
         String database = settings.getString("database");
         String user = settings.getString("user");
@@ -144,6 +180,17 @@ class DBWriterNodeModel extends NodeModel {
                     LOGGER.info("Could not load driver from: " + loadedDriver);
                 }
             }
+            // load SQL type for each column
+            m_types.clear();
+            try {
+                NodeSettingsRO typeSett = settings
+                        .getNodeSettings(CFG_SQL_TYPES);
+                for (String key : typeSett.keySet()) {
+                    m_types.put(key, typeSett.getString(key));
+                }
+            } catch (InvalidSettingsException ise) {
+                // ignore, will be determined during configure
+            }
         }
     }
 
@@ -154,9 +201,8 @@ class DBWriterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        exec.setProgress(-1, "Opening database connection...");
-        new DBWriterConnection(m_name, m_user, m_pass, m_table, inData[0], 
-                exec);
+        new DBWriterConnection(m_name, m_user, m_pass, m_table, inData[0],
+                exec, m_types);
         return new BufferedDataTable[0];
     }
 
@@ -193,6 +239,26 @@ class DBWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // copy map to ensure only columns which are with the data
+        Map<String, String> map = new LinkedHashMap<String, String>();
+        // check that each column has a assigned type
+        for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
+            final String name = inSpecs[0].getColumnSpec(i).getName();
+            String sqlType = m_types.get(name);
+            if (sqlType == null) {
+                final DataType type = inSpecs[0].getColumnSpec(i).getType();
+                if (type.isCompatible(IntValue.class)) {
+                    sqlType = DBWriterNodeModel.SQL_TYPE_INTEGER;
+                } else if (type.isCompatible(DoubleValue.class)) {
+                    sqlType = DBWriterNodeModel.SQL_TYPE_DOUBLE;
+                } else {
+                    sqlType = DBWriterNodeModel.SQL_TYPE_STRING;
+                }
+            }
+            map.put(name, sqlType);
+        }
+        m_types.clear();
+        m_types.putAll(map);
         return new DataTableSpec[0];
     }
 }
