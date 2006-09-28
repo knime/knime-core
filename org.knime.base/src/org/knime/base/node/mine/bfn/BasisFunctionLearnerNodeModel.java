@@ -157,16 +157,16 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] ins)
             throws InvalidSettingsException {
-        // check target column
+        // check if target column available
         if (m_target == null || !ins[0].containsName(m_target)) {
             throw new InvalidSettingsException("Target column not available.");
         }
-        // check double type columns
+        // check if double type column available
         if (!ins[0].containsCompatibleType(DoubleValue.class)) {
             throw new InvalidSettingsException(
                     "No double-type column(s) found.");
         }
-        // if only one double type column, check if not target
+        // if only one double type column, check if not the target column
         for (int i = 0; i < ins[0].getNumColumns(); i++) {
             DataColumnSpec cspec = ins[0].getColumnSpec(i);
             if (cspec.getType().isCompatible(DoubleValue.class)) {
