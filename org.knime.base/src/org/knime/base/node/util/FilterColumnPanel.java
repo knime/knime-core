@@ -529,7 +529,7 @@ public final class FilterColumnPanel extends JPanel {
         return getColumnList(m_inclMdl);
     }
 
-    /*
+    /**
      * Helper for the get***ColumnList methods.
      * 
      * @param list The list from which to retrieve the elements
@@ -538,9 +538,6 @@ public final class FilterColumnPanel extends JPanel {
         final Set<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < model.getSize(); i++) {
             Object o = model.getElementAt(i);
-            if (o instanceof String) {
-                System.out.println(o);
-            }
             String cell = ((DataColumnSpec)o).getName();
             list.add(cell);
         }
