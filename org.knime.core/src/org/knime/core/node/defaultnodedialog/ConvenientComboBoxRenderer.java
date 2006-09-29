@@ -49,7 +49,7 @@ public class ConvenientComboBoxRenderer extends BasicComboBoxRenderer {
      * Does the clipping automatically, clips off characters from the middle
      * of the string.
      * 
-     * @see JLabel#getText()
+     * @see BasicComboBoxRenderer#getText()
      */
     @Override
     public String getText() {

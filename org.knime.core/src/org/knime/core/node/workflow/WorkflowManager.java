@@ -142,6 +142,9 @@ public class WorkflowManager implements WorkflowListener {
         private final Object m_addLock = new Object(),
                 m_transferLock = new Object(), m_finishLock = new Object();
 
+        /**
+         * Create new empty workflow executer.
+         */
         WorkflowExecutor() {
             Timer watchdogTimer = new Timer(true);
             TimerTask watchDog = new TimerTask() {
