@@ -25,7 +25,6 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -53,10 +52,7 @@ class DBReaderNodeModel extends NodeModel {
 
     private DBReaderConnection m_load = null;
     
-    private static final String JDBC_ODBC_DRIVER = 
-        "sun.jdbc.odbc.JdbcOdbcDriver";
-
-    private String m_driver = JDBC_ODBC_DRIVER;
+    private String m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
 
     private String m_query = "SELECT * FROM <table>";
 
@@ -68,19 +64,6 @@ class DBReaderNodeModel extends NodeModel {
 
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
     
-    static {        
-        try {
-            Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
-            WrappedDriver d = new WrappedDriver(
-                    (Driver)driverClass.newInstance());
-            DriverManager.registerDriver(d);
-        } catch (Exception e) {
-            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER);
-            LOGGER.debug("", e);
-        }
-    }
-
-
     /**
      * Creates a new model with one data outport.
      */
@@ -163,6 +146,7 @@ class DBReaderNodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         exec.setProgress(-1, "Opening database connection...");
+        DriverManager.registerDriver(DBDriverLoader.getWrappedDriver(m_driver));
         m_load = new DBReaderConnection(m_name, m_user, m_pass, m_query);
         return new BufferedDataTable[]{exec.createBufferedDataTable(m_load,
                 exec)};
@@ -206,12 +190,23 @@ class DBReaderNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         try {
+            DriverManager.registerDriver(
+                    DBDriverLoader.getWrappedDriver(m_driver));
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Could not register database"
+                    + " driver: " + m_driver);
+        }
+        
+        DataTableSpec spec = null;
+        try { 
             DBReaderConnection conn = new DBReaderConnection(m_name, m_user,
                     m_pass, m_query);
-            return new DataTableSpec[]{conn.getDataTableSpec()};
+            conn.getDataTableSpec();
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not establish connection"
                     + " to database: " + m_name);
         }
+        
+        return new DataTableSpec[]{spec};
     }
 }

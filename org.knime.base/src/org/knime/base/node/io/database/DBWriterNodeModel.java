@@ -25,7 +25,6 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -64,10 +63,7 @@ class DBWriterNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBWriterNodeModel.class);
 
-    private static final String JDBC_ODBC_DRIVER = 
-        "sun.jdbc.odbc.JdbcOdbcDriver";
-
-    private String m_driver = JDBC_ODBC_DRIVER;
+    private String m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
 
     private String m_name = "jdbc:odbc:<database_name>";
 
@@ -93,18 +89,6 @@ class DBWriterNodeModel extends NodeModel {
 
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";
-
-    static {
-        try {
-            Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
-            WrappedDriver d = new WrappedDriver((Driver)driverClass
-                    .newInstance());
-            DriverManager.registerDriver(d);
-        } catch (Exception e) {
-            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER);
-            LOGGER.debug("", e);
-        }
-    }
 
     /**
      * Creates a new model with one data outport.
@@ -201,6 +185,7 @@ class DBWriterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
+        DriverManager.registerDriver(DBDriverLoader.getWrappedDriver(m_driver));
         new DBWriterConnection(m_name, m_user, m_pass, m_table, inData[0],
                 exec, m_types);
         return new BufferedDataTable[0];
@@ -259,6 +244,19 @@ class DBWriterNodeModel extends NodeModel {
         }
         m_types.clear();
         m_types.putAll(map);
+        try {
+            DriverManager.registerDriver(
+                    DBDriverLoader.getWrappedDriver(m_driver));
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Could not register database"
+                    + " driver: " + m_driver);
+        }
+        
+        if (m_pass == null || m_pass.length() == 0) {
+            super.setWarningMessage(
+                    "Please check if you need to set a password.");
+        }
+        
         return new DataTableSpec[0];
     }
 }

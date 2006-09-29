@@ -32,11 +32,9 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.sql.Driver;
-import java.sql.DriverManager;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -194,16 +192,9 @@ public class DBWriterDialogPane extends NodeDialogPane {
 
     private void updateDriver() {
         m_driver.removeAllItems();
-        HashSet<String> driverHash = new HashSet<String>();
-        Enumeration<Driver> driver = DriverManager.getDrivers();
-        while (driver.hasMoreElements()) {
-            Driver d = driver.nextElement();
-            if (d instanceof WrappedDriver) {
-                String driverName = d.toString();
-                if (driverHash.add(driverName)) {
-                    m_driver.addItem(driverName);
-                }
-            }
+        Set<String> driverNames = DBDriverLoader.getLoadedDriver();
+        for (String driverName : driverNames) {
+            m_driver.addItem(driverName);
         }
     }
 
