@@ -179,8 +179,8 @@ public class JoinerNodeModel extends NodeModel {
                 break;
             }
 
-            if ((m_rightIt == null) || (!m_rightIt.hasNext()) ||
-                    (rightRows.nextClearBit(0) <= m_rightIt.getIndex())) {
+            if ((m_rightIt == null) || (!m_rightIt.hasNext())
+                    || (rightRows.nextClearBit(0) <= m_rightIt.getIndex())) {
                 m_rightIt = new CounterRowIterator(rightTable.iterator());
             }
             while (m_rightIt.hasNext() && (map.size() > 0)) {
@@ -192,15 +192,16 @@ public class JoinerNodeModel extends NodeModel {
                     if (h == null) {
                         map.remove(rightRow.getKey());
                     } else {
-                        h.rightRow = rightRow;
-                        h.rightIndex = m_rightIt.getIndex();
-                        if (h.leftIndex == m_leftRows) {
+                        h.m_rightRow = rightRow;
+                        h.m_rightIndex = m_rightIt.getIndex();
+                        if (h.m_leftIndex == m_leftRows) {
                             // m_firstMapHelper = h;
-                            assert h.predecessor == null || 
-                                !map.containsKey(h.predecessor.leftRow.getKey());
-                            h.predecessor = null;
-                            DataRow joinedRow = new JoinedRow(h.leftRow,
-                                    h.rightRow);
+                            assert h.m_predecessor == null 
+                                || !map.containsKey(
+                                        h.m_predecessor.m_leftRow.getKey());
+                            h.m_predecessor = null;
+                            DataRow joinedRow = new JoinedRow(h.m_leftRow,
+                                    h.m_rightRow);
                             dc.addRowToTable(joinedRow);
 
                             map.remove(rightRow.getKey());
@@ -296,17 +297,17 @@ public class JoinerNodeModel extends NodeModel {
                 break;
             }
 
-            if (h.rightRow != null) {
-                dc.addRowToTable(new JoinedRow(h.leftRow, h.rightRow));
-                rightRows.set(h.rightIndex);
+            if (h.m_rightRow != null) {
+                dc.addRowToTable(new JoinedRow(h.m_leftRow, h.m_rightRow));
+                rightRows.set(h.m_rightIndex);
             } else if (!m_ignoreMissingRows) {
-                dc.addRowToTable(new JoinedRow(h.leftRow, new DefaultRow(
-                        h.leftRow.getKey(), JoinedTable
+                dc.addRowToTable(new JoinedRow(h.m_leftRow, new DefaultRow(
+                        h.m_leftRow.getKey(), JoinedTable
                                 .createMissingCells(rightTable
                                         .getDataTableSpec()))));
             }
             m_outputRows++;
-            printProgress(h.leftRow.getKey());
+            printProgress(h.m_leftRow.getKey());
             m_leftRows++;
         }
         map.clear();
@@ -496,7 +497,11 @@ public class JoinerNodeModel extends NodeModel {
         private int m_index = -1;
 
         private final RowIterator m_it;
-
+        
+        /**
+         * Create new counting row iterator.
+         * @param it Iterator to count rows.
+         */
         CounterRowIterator(final RowIterator it) {
             m_it = it;
         }
@@ -519,27 +524,31 @@ public class JoinerNodeModel extends NodeModel {
             return r;
         }
 
+        /**
+         * @return Current position of the iterator.
+         */
         int getIndex() {
             return m_index;
         }
     }
 
-    private static class Helper {
-        final int leftIndex;
+    private static final class Helper {
+        
+        private final int m_leftIndex;
 
-        Helper predecessor;
+        private Helper m_predecessor;
 
-        final DataRow leftRow;
+        private final DataRow m_leftRow;
 
-        DataRow rightRow;
+        private DataRow m_rightRow;
 
-        int rightIndex;
+        private int m_rightIndex;
 
-        public Helper(final int leftIndex, final Helper predecessor,
+        private Helper(final int leftIndex, final Helper predecessor, 
                 final DataRow leftRow) {
-            this.leftIndex = leftIndex;
-            this.predecessor = predecessor;
-            this.leftRow = leftRow;
+            this.m_leftIndex = leftIndex;
+            this.m_predecessor = predecessor;
+            this.m_leftRow = leftRow;
         }
 
 //        @Override
