@@ -77,8 +77,7 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
-     * getNumberOfRows()
+     * @see AbstractBarDataModel#getNumberOfRows()
      */
     @Override
     public int getNumberOfRows() {
@@ -128,8 +127,7 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
     }
     
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
-     * getAggregationValue()
+     * @see AbstractBarDataModel#getAggregationValue()
      */
     @Override
     public double getAggregationValue() {
@@ -140,7 +138,7 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#getRowKeys()
+     * @see AbstractBarDataModel#getRowKeys()
      */
     @Override
     public Set<DataCell> getRowKeys() {
@@ -148,8 +146,7 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
     }
     
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
-     * createColorInformation(org.knime.core.data.DataTableSpec)
+     * @see AbstractBarDataModel#createColorInformation(DataTableSpec)
      */
     @Override
     public Hashtable<ColorAttr, Collection<RowKey>> 

@@ -28,8 +28,6 @@ import java.util.Iterator;
 import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.BarVisModel;
-import org.knime.base.node.viz.histogram.HistogramDrawingPane;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -37,7 +35,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 /**
  * This class is the controller between the data model of the
  * {@link InteractiveHistogramDataModel} class and the view 
- * {@link HistogramDrawingPane}. It creates the {@link BarVisModel} objects 
+ * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates 
+ * the {@link org.knime.base.node.viz.histogram.BarVisModel} objects 
  * based on the {@link InteractiveBarDataModel} of the 
  * {@link InteractiveHistogramDataModel} class by enhancing these information 
  * with information about the size of the drawing space like height and width 
