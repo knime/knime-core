@@ -44,8 +44,8 @@ import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
  * @author Florian Georg, University of Konstanz
  */
 public class CreateNodeCommand extends Command {
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(CreateNodeCommand.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(CreateNodeCommand.class);
 
     private WorkflowManager m_manager;
 
@@ -86,8 +86,19 @@ public class CreateNodeCommand extends Command {
     @Override
     public void execute() {
         // Add node to workflow and get the container
-        m_container = m_manager.addNewNode(m_factory);
-
+        try {
+            m_container = m_manager.addNewNode(m_factory);
+        } catch (Throwable t) {
+            // if fails notify the user
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            mb.setText("Node cannot be created.");
+            mb
+                    .setMessage("The selected node could not be created due to the following reason:\n"
+                            + t.getMessage());
+            mb.open();
+            return;
+        }
         // create extra info and set it
         ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
         info.setNodeLocation(m_location.x, m_location.y, -1, -1);
@@ -114,13 +125,12 @@ public class CreateNodeCommand extends Command {
         try {
             m_manager.removeNode(m_container);
         } catch (WorkflowInExecutionException ex) {
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_INFORMATION | SWT.OK);
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Operation not allowed");
             mb.setMessage("You cannot remove a node while the workflow is in"
                     + " execution.");
-            mb.open();            
+            mb.open();
         }
     }
 }
