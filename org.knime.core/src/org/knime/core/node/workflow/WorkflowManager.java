@@ -355,12 +355,14 @@ public class WorkflowManager implements WorkflowListener {
                     NodeContainer nc = it.next().getKey();
                     if (nc.getID() == id) {
                         nc.removeListener(this);
+
+                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
+                                .getID(), null, null));
+
                         synchronized (m_finishLock) {
                             it.remove();
                         }
 
-                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
-                                .getID(), null, null));
                         if (state instanceof NodeStatus.ExecutionCanceled) {
                             cancelExecution(nc.getAllSuccessors());
                         }
