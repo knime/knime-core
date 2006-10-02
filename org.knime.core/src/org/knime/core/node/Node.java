@@ -1643,7 +1643,7 @@ public final class Node {
                             notifyStateListeners(m_status);
                         } catch (Exception e) {
                             m_logger.coding("saveInternals() "
-                                    + "should only cause IOException.");
+                                    + "should only cause IOException.", e);
                             m_status = new NodeStatus.Error("Unable to save "
                                     + "internals: " + e.getMessage());
                             notifyStateListeners(m_status);
