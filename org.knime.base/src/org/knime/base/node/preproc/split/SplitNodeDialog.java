@@ -23,13 +23,13 @@
 package org.knime.base.node.preproc.split;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.ColumnFilterPanel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
-import org.knime.base.node.util.ColumnFilterPanel;
 
 /**
  * Dialog with a column filter which is used to define the split of the columns.

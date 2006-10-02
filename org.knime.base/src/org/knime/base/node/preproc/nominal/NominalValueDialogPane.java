@@ -24,12 +24,12 @@
  */
 package org.knime.base.node.preproc.nominal;
 
-import static org.knime.base.node.util.ColumnFilterPanel.INCLUDED_COLUMNS;
+import static org.knime.core.data.util.ColumnFilterPanel.INCLUDED_COLUMNS;
 
 import java.util.Set;
 
-import org.knime.base.node.util.ColumnFilterPanel;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.ColumnFilterPanel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;

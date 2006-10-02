@@ -18,6 +18,8 @@
  */
 package org.knime.base.node.util;
 
+import org.knime.core.data.util.ColumnFilterPanel;
+
 /**
  * 
  * @author Fabian Dill, University of Konstanz

@@ -39,6 +39,7 @@ import javax.swing.SpinnerNumberModel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.util.ColumnFilterPanel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -46,7 +47,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
-import org.knime.base.node.util.ColumnFilterPanel;
 
 /**
  * Dialog for {@link FuzzyClusterNodeModel}- allows to adjust number of
