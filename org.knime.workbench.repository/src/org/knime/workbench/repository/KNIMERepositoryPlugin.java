@@ -112,7 +112,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
         // Do the actual work: load the repository
         try {
             RepositoryManager.INSTANCE.create();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             WorkbenchErrorLogger.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
         } finally {

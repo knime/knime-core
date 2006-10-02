@@ -24,7 +24,6 @@
  */
 package org.knime.workbench.repository;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.NodeFactory;
@@ -70,11 +69,10 @@ public final class RepositoryFactory {
                     .createExecutableExtension("factory-class");
 
             node.setFactory(factory.getClass());
-        } catch (CoreException e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
             throw new IllegalArgumentException(
                     "Can't load factory class for node: "
-                            + element.getAttribute("factory-class"));
+                            + element.getAttribute("factory-class"), e);
 
         }
 

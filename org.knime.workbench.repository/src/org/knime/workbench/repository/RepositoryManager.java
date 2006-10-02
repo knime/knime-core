@@ -36,9 +36,9 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.NodeLogger;
-
 import org.knime.workbench.core.EclipseClassCreator;
 import org.knime.workbench.core.WorkbenchErrorLogger;
 import org.knime.workbench.repository.model.Category;
@@ -116,8 +116,7 @@ public final class RepositoryManager {
         //
         // First, process the contributed categories
         //
-        ArrayList<IConfigurationElement> allElements =
-            new ArrayList<IConfigurationElement>();
+        ArrayList<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
 
         for (int i = 0; i < categoryExtensions.length; i++) {
 
@@ -224,6 +223,8 @@ public final class RepositoryManager {
 
                 } catch (Exception ex) {
 
+                    LOGGER.error("Node could not be created:",
+                            ex);
                     errorString.append(e.getAttribute("id") + "' from plugin '"
                             + ext.getNamespace() + "'\n");
 
@@ -233,17 +234,24 @@ public final class RepositoryManager {
 
         }
 
+        System.out.println("Halo");
+
         // if errors occured show an information box
         if (errorString.length() > 0) {
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Node(s) could not be loaded!");
-            mb.setMessage("Some contributed nodes could not be loaded "
-                    + ", skipped: '\n\n" + errorString.toString());
-            mb.open();
+
+            Shell activeShell = Display.getDefault().getActiveShell();
+            if (activeShell != null) {
+                MessageBox mb = new MessageBox(activeShell, SWT.ICON_WARNING
+                        | SWT.OK);
+                mb.setText("Node(s) could not be loaded!");
+                mb.setMessage("Some contributed nodes could not be loaded "
+                        + ", skipped: '\n\n" + errorString.toString());
+                mb.open();
+            }
 
             WorkbenchErrorLogger
-                    .warning("Could not load all contributed nodes ");
+                    .warning("Could not load all contributed nodes: \n"
+                            + errorString);
         }
 
     }
@@ -263,17 +271,18 @@ public final class RepositoryManager {
      * @param settings NodeSettings to load from.
      * @return The workflow manager.s
      */
-//    public WorkflowManager loadWorkflowFromConfig(final NodeSettings settings) {
-//        assert settings != null;
-//
-//        WorkflowManager manager = new WorkflowManager();
-//        try {
-//            manager = new WorkflowManager(settings);
-//        } catch (InvalidSettingsException e) {
-//            LOGGER.error("Could not load workflow.");
-//            LOGGER.debug("Could not load workflow\n" + settings, e);
-//        }
-//
-//        return manager;
-//    }
+    // public WorkflowManager loadWorkflowFromConfig(final NodeSettings
+    // settings) {
+    // assert settings != null;
+    //
+    // WorkflowManager manager = new WorkflowManager();
+    // try {
+    // manager = new WorkflowManager(settings);
+    // } catch (InvalidSettingsException e) {
+    // LOGGER.error("Could not load workflow.");
+    // LOGGER.debug("Could not load workflow\n" + settings, e);
+    // }
+    //
+    // return manager;
+    // }
 }
