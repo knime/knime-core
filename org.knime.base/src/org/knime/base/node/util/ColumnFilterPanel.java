@@ -69,7 +69,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class ColumnFilterPanel extends JPanel {
+public class ColumnFilterPanel extends JPanel {
 
     /** Settings key for the excluded columns. */
     public static final String INCLUDED_COLUMNS = "included_columns";
