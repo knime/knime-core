@@ -364,6 +364,10 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         }
     }
 
+    /**
+     * @see org.knime.core.node.property.hilite.HiLiteListener#
+     * hiLite(org.knime.core.node.property.hilite.KeyEvent)
+     */
     public void hiLite(final KeyEvent event) {
 
         Point[] completeHilitedCells = ((HiliteScorerNodeModel)getNodeModel())
