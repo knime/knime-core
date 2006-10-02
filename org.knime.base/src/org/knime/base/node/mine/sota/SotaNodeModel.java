@@ -96,7 +96,7 @@ public class SotaNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_sota.saveSettingsTo(settings);
 
-        // Save FilterColumnPanel settings
+        // Save ColumnFilterPanel settings
         settings.addStringArray(SotaConfigKeys.CFGKEY_INCLUDE, m_includeList
                 .toArray(new String[m_includeList.size()]));
         settings.addStringArray(SotaConfigKeys.CFGKEY_EXCLUDE, m_excludeList
@@ -236,7 +236,7 @@ public class SotaNodeModel extends NodeModel {
         String msg = "";
 
         //
-        // / Validate FilterColumnPanel settings
+        // / Validate ColumnFilterPanel settings
         //
         String[] dataCellsEx = settings
                 .getStringArray(SotaConfigKeys.CFGKEY_EXCLUDE);

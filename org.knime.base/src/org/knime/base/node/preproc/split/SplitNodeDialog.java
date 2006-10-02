@@ -29,7 +29,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 
 /**
  * Dialog with a column filter which is used to define the split of the columns.
@@ -37,13 +37,13 @@ import org.knime.base.node.util.FilterColumnPanel;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SplitNodeDialog extends NodeDialogPane {
-    private final FilterColumnPanel m_filterPanel;
+    private final ColumnFilterPanel m_filterPanel;
 
     /**
      * Creates new dialog.
      */
     public SplitNodeDialog() {
-        m_filterPanel = new FilterColumnPanel();
+        m_filterPanel = new ColumnFilterPanel();
         m_filterPanel.setIncludeTitle(" Top ");
         m_filterPanel.setExcludeTitle(" Bottom ");
         m_filterPanel.setRemoveAllButtonText(">>");

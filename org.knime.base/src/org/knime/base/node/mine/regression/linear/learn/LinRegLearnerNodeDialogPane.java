@@ -38,7 +38,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -55,7 +55,7 @@ import org.knime.core.node.util.ColumnSelectionPanel;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
-    private final FilterColumnPanel m_filterPanel;
+    private final ColumnFilterPanel m_filterPanel;
 
     private final ColumnSelectionPanel m_selectionPanel;
 
@@ -70,7 +70,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
      */
     public LinRegLearnerNodeDialogPane() {
         super();
-        m_filterPanel = new FilterColumnPanel(DoubleValue.class);
+        m_filterPanel = new ColumnFilterPanel(DoubleValue.class);
         m_selectionPanel = new ColumnSelectionPanel((Border)null,
                 DoubleValue.class);
         JPanel panel = new JPanel(new BorderLayout());

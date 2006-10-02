@@ -30,7 +30,7 @@ import javax.swing.JPanel;
 
 import org.knime.base.node.mine.sota.SotaConfigKeys;
 import org.knime.base.node.mine.sota.SotaNodeModel;
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
@@ -44,14 +44,14 @@ import org.knime.core.node.NodeSettingsWO;
 public class SotaFilterColumnPanel extends JPanel {
     private static final long serialVersionUID = 4053372436104609508L;
 
-    private final FilterColumnPanel m_filterPanel;
+    private final ColumnFilterPanel m_filterPanel;
 
     /**
      * Constructor.
      */
     public SotaFilterColumnPanel() {
         super();
-        m_filterPanel = new FilterColumnPanel(DoubleValue.class,
+        m_filterPanel = new ColumnFilterPanel(DoubleValue.class,
                 FuzzyIntervalValue.class);
         this.add(m_filterPanel);
     }

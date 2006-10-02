@@ -69,7 +69,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class FilterColumnPanel extends JPanel {
+public final class ColumnFilterPanel extends JPanel {
 
     /** Settings key for the excluded columns. */
     public static final String INCLUDED_COLUMNS = "included_columns";
@@ -136,7 +136,7 @@ public final class FilterColumnPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Set)
      * @see #update(DataTableSpec, boolean, String...)
      */
-    public FilterColumnPanel() {
+    public ColumnFilterPanel() {
         this(DataValue.class);
     }
 
@@ -167,7 +167,7 @@ public final class FilterColumnPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Set)
      * @see #update(DataTableSpec, boolean, String...)
      */
-    public FilterColumnPanel(
+    public ColumnFilterPanel(
             final Class<? extends DataValue>... filterValueClasses) {
         m_filterClasses = init(filterValueClasses);
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
@@ -309,7 +309,7 @@ public final class FilterColumnPanel extends JPanel {
         center.add(buttonPan2, BorderLayout.EAST);
         super.add(center, BorderLayout.WEST);
         super.add(excludePanel, BorderLayout.CENTER);
-    } // FilterColumnPanel()
+    } // ColumnFilterPanel()
     
     /**
      * Adds a listener which gets informed whenever the column filtering 

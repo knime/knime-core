@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.preproc.nominal;
 
-import static org.knime.base.node.util.FilterColumnPanel.INCLUDED_COLUMNS;
+import static org.knime.base.node.util.ColumnFilterPanel.INCLUDED_COLUMNS;
 
 import java.io.File;
 import java.io.IOException;

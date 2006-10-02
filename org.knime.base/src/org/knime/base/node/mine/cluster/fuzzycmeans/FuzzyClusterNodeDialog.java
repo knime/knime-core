@@ -46,7 +46,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 
 /**
  * Dialog for {@link FuzzyClusterNodeModel}- allows to adjust number of
@@ -86,7 +86,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     /*
      * Panel to select the columns to use in the clustering process.
      */
-    private FilterColumnPanel m_filterpanel;
+    private ColumnFilterPanel m_filterpanel;
 
     /*
      * JRadioButton for selection to provide delta value
@@ -203,7 +203,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         clusterPropPane.add(m_memoryCB);
 
         super.addTab(TAB, clusterPropPane);
-        m_filterpanel = new FilterColumnPanel(DoubleValue.class);
+        m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
         super.addTab(TAB2, m_filterpanel);
     }
 
@@ -308,7 +308,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
             // settings can't be evaluated against the spec
             return;
         }
-        FilterColumnPanel p = (FilterColumnPanel)getTab(TAB2);
+        ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB2);
         if (settings.containsKey(FuzzyClusterNodeModel.INCLUDELIST_KEY)) {
             String[] columns = settings.getStringArray(
                     FuzzyClusterNodeModel.INCLUDELIST_KEY, new String[0]);
@@ -373,7 +373,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
             throw new InvalidSettingsException("Value out of range "
                     + "for fuzzifier, must be in " + "[>1,10]");
         }
-        m_filterpanel = (FilterColumnPanel)getTab(TAB2);
+        m_filterpanel = (ColumnFilterPanel)getTab(TAB2);
         Set<String> list = m_filterpanel.getIncludedColumnList();
         settings.addStringArray(FuzzyClusterNodeModel.INCLUDELIST_KEY, list
                 .toArray(new String[0]));

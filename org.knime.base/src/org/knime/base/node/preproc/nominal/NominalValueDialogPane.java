@@ -24,11 +24,11 @@
  */
 package org.knime.base.node.preproc.nominal;
 
-import static org.knime.base.node.util.FilterColumnPanel.INCLUDED_COLUMNS;
+import static org.knime.base.node.util.ColumnFilterPanel.INCLUDED_COLUMNS;
 
 import java.util.Set;
 
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -43,14 +43,14 @@ import org.knime.core.node.NotConfigurableException;
  */
 class NominalValueDialogPane extends NodeDialogPane {
     /** Column selection panel. */
-    private final FilterColumnPanel m_panel;
+    private final ColumnFilterPanel m_panel;
 
     /**
      * Creates a new dialog pane.
      */
     NominalValueDialogPane() {
         super();
-        m_panel = new FilterColumnPanel();
+        m_panel = new ColumnFilterPanel();
         addTab("Columns", m_panel);
     }
 

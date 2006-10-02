@@ -31,7 +31,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
@@ -47,15 +47,15 @@ import org.knime.core.node.NotConfigurableException;
  */
 public class DomainNodeDialogPane extends NodeDialogPane {
     
-    private final FilterColumnPanel m_possValuesPanel;
-    private final FilterColumnPanel m_minMaxPanel;
+    private final ColumnFilterPanel m_possValuesPanel;
+    private final ColumnFilterPanel m_minMaxPanel;
     private final JCheckBox m_maxValuesChecker;
     private final JSpinner m_maxValuesSpinner;
     
     /** Inits members, does nothing else. */
     public DomainNodeDialogPane() {
-        m_possValuesPanel = new FilterColumnPanel();
-        m_minMaxPanel = new FilterColumnPanel();
+        m_possValuesPanel = new ColumnFilterPanel();
+        m_minMaxPanel = new ColumnFilterPanel();
         JPanel possValPanel = new JPanel(new BorderLayout());
         possValPanel.add(m_possValuesPanel, BorderLayout.CENTER);
         m_maxValuesChecker = new JCheckBox(

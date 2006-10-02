@@ -30,7 +30,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 
 /**
  * This is the dialog for the column filter. The user can specify which columns
@@ -52,7 +52,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      */
     FilterColumnNodeDialog() {
         super();
-        super.addTab(TAB, new FilterColumnPanel());
+        super.addTab(TAB, new ColumnFilterPanel());
     }
 
     /**
@@ -82,7 +82,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
             }
         }
         // set exclusion list on the panel
-        FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
+        ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB);
         p.update(specs[FilterColumnNodeModel.INPORT], true, list);
     }
 
@@ -96,7 +96,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
+        ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB);
         Set<String> list = p.getExcludedColumnList();
         settings.addStringArray(FilterColumnNodeModel.KEY, list
                 .toArray(new String[0]));

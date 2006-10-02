@@ -44,7 +44,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
-import org.knime.base.node.util.FilterColumnPanel;
+import org.knime.base.node.util.ColumnFilterPanel;
 
 /**
  * The NormalizeNodeDialog lets the user choose the three different methods of
@@ -86,7 +86,7 @@ public class NormalizeNodeDialog extends NodeDialogPane {
 
     private JTextField m_newmaxTextField;
 
-    private FilterColumnPanel m_filterpanel;
+    private ColumnFilterPanel m_filterpanel;
 
     /**
      * Creates a new dialog for the Normalize Node.
@@ -94,7 +94,7 @@ public class NormalizeNodeDialog extends NodeDialogPane {
     NormalizeNodeDialog() {
         super();
         JPanel panel = generateContent();
-        m_filterpanel = new FilterColumnPanel(DoubleValue.class);
+        m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
         super.addTab(TAB, panel);
         super.addTab(TAB2, m_filterpanel);
     }
