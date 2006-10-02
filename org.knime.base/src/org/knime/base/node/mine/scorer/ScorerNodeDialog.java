@@ -43,7 +43,7 @@ import org.knime.core.node.NotConfigurableException;
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
  */
-final class ScorerNodeDialog extends NodeDialogPane {
+public final class ScorerNodeDialog extends NodeDialogPane {
     /*
      * The main panel in this view.
      */
@@ -65,7 +65,7 @@ final class ScorerNodeDialog extends NodeDialogPane {
      * Creates a new {@link NodeDialogPane} for scoring in order to set the two
      * columns to compare.
      */
-    ScorerNodeDialog() {
+    public ScorerNodeDialog() {
         super();
 
         m_p = new JPanel();
