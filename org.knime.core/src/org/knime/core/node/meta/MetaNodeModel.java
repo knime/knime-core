@@ -26,7 +26,6 @@ package org.knime.core.node.meta;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -88,11 +87,6 @@ public class MetaNodeModel extends SpecialNodeModel implements
         NodeFactory.addLoadedFactory(ModelOutputNodeFactory.class);
     }
 
-    /*
-     * The listeners that are interested in node state changes.
-     */
-    private final CopyOnWriteArrayList<NodeStateListener> m_stateListeners;
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MetaNodeModel.class);
 
@@ -117,7 +111,6 @@ public class MetaNodeModel extends SpecialNodeModel implements
         m_dataOutModels = new DataOutputNodeModel[dataOuts];
         m_modelInModels = new ModelInputNodeModel[predParamsIns];
         m_modelOutModels = new ModelOutputNodeModel[predParamsOuts];
-        m_stateListeners = new CopyOnWriteArrayList<NodeStateListener>();
     }
 
     /**
@@ -326,28 +319,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
      *      (org.knime.core.node.workflow.WorkflowEvent)
      */
     public void workflowChanged(final WorkflowEvent event) {
-        if (event instanceof WorkflowEvent.NodeExtrainfoChanged) {
-            notifyStateListeners(new NodeStatus.ExtrainfoChanged());
-        } else if (event instanceof WorkflowEvent.ConnectionAdded) {
-            notifyStateListeners(new NodeStatus.ExtrainfoChanged());
-        } else if (event instanceof WorkflowEvent.ConnectionRemoved) {
-            notifyStateListeners(new NodeStatus.ExtrainfoChanged());
-        } else if (event instanceof WorkflowEvent.ConnectionExtrainfoChanged) {
-            notifyStateListeners(new NodeStatus.ExtrainfoChanged());
-        } else if (event instanceof WorkflowEvent.NodeAdded) {
+        if (event instanceof WorkflowEvent.NodeAdded) {
             ((NodeContainer)event.getNewValue()).addListener(this);
-        }
-    }
-
-    /**
-     * Notifies all state listeners that the state of this meta node model has
-     * changed.
-     * 
-     * @param state <code>NodeStateListener</code>
-     */
-    private void notifyStateListeners(final NodeStatus state) {
-        for (NodeStateListener l : m_stateListeners) {
-            l.stateChanged(state, -1);
         }
     }
 
