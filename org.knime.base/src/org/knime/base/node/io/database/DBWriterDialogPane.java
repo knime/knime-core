@@ -80,7 +80,7 @@ public class DBWriterDialogPane extends NodeDialogPane {
     private final JFileChooser m_chooser = new JFileChooser();
 
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
-    
+
     private final DBSQLTypesPanel m_typePanel;
     
     /**
@@ -93,7 +93,6 @@ public class DBWriterDialogPane extends NodeDialogPane {
         m_chooser
                 .setFileFilter(new SimpleFileFilter(DBDriverLoader.EXTENSIONS));
         Font font = new Font("Courier", Font.PLAIN, 12);
-        JPanel parentPanel = new JPanel(new GridLayout(5, 1));
         m_driver.setEditable(false);
         m_driver.setFont(font);
         m_driver.setPreferredSize(new Dimension(335, 20));
@@ -119,36 +118,41 @@ public class DBWriterDialogPane extends NodeDialogPane {
                 .createTitledBorder(" Database Driver "));
         driverPanel.add(m_driver, BorderLayout.CENTER);
         driverPanel.add(m_load, BorderLayout.EAST);
-        parentPanel.add(driverPanel);
+        
+        JPanel settPanel = new JPanel(new GridLayout(5, 1));
+        settPanel.add(driverPanel);
         JPanel dbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         dbPanel.setBorder(BorderFactory.createTitledBorder(" Database Name "));
         m_db.setEditable(true);
         m_db.setFont(font);
         m_db.setPreferredSize(new Dimension(400, 20));
         dbPanel.add(m_db);
-        parentPanel.add(dbPanel);
+        settPanel.add(dbPanel);
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         userPanel.setBorder(BorderFactory.createTitledBorder(" User Name "));
         m_user.setPreferredSize(new Dimension(400, 20));
         m_user.setFont(font);
         userPanel.add(m_user);
-        parentPanel.add(userPanel);
+        settPanel.add(userPanel);
         JPanel passPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         passPanel.setBorder(BorderFactory.createTitledBorder(" Password "));
         m_pass.setPreferredSize(new Dimension(400, 20));
         m_pass.setFont(font);
         passPanel.add(m_pass);
-        parentPanel.add(passPanel);
+        settPanel.add(passPanel);
         JPanel tablePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         tablePanel.setBorder(BorderFactory.createTitledBorder(" Table Name "));
         m_table.setPreferredSize(new Dimension(400, 20));
         m_table.setFont(font);
         tablePanel.add(m_table);
-        parentPanel.add(tablePanel);
-        super.addTab("Settings", parentPanel);
+        settPanel.add(tablePanel);
+        super.addTab("Settings", settPanel);
         
+        // add SQL type panel
         m_typePanel = new DBSQLTypesPanel();
-        super.addTab("SQL Types", new JScrollPane(m_typePanel));
+        JScrollPane scroll = new JScrollPane(m_typePanel);
+        scroll.setPreferredSize(settPanel.getPreferredSize());
+        super.addTab("SQL Types", scroll);
     }
 
     /**
