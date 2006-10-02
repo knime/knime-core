@@ -158,11 +158,14 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * Sets that the next reset is ignored, because we are inside a cross
+     * Sets if the next reset should be ignored, because we are inside a cross
      * validation cycle.
+     * 
+     * @param b <code>true</code> if the reset should be ignored,
+     * <code>false</code> otherwise
      */
-    void ignoreNextReset() {
-        m_ignoreNextReset = true;
+    void setIgnoreNextReset(final boolean b) {
+        m_ignoreNextReset = b;
     }
 
     /**
@@ -173,7 +176,6 @@ public class XValidatePartitionModel extends NodeModel {
         if (!m_ignoreNextReset) {
             m_partNumbers = null;
         }
-        m_ignoreNextReset = false;
     }
 
     /**

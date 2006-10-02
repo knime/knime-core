@@ -150,9 +150,10 @@ public class XValidateModel extends MetaNodeModel {
 
             m_partitionModel.setPartitionNumber((short)i);
             if (i > 0) {
-                m_partitionModel.ignoreNextReset();
+                m_partitionModel.setIgnoreNextReset(true);
             }
             internalWFM().resetAndConfigureAll();
+            m_partitionModel.setIgnoreNextReset(false);
             // m_filter.setTestPartition((byte) i);
             KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
                 public void run() {
