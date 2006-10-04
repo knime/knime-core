@@ -1369,10 +1369,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                 // job.schedule();
 
                 Object o = m_dummyNodeJobs.put(event.getID(), job);
-                if (o != null) {
-                   System.out.println(); 
-                }
-                // assert (o == null);
+                  assert (o == null);
+                
+                
             }
         } else if (event instanceof WorkflowEvent.NodeStarted) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
