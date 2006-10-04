@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ----------------------------------------------------------------------------
  */
-package org.knime.workbench.product.rcp;
+package org.knime.product.rcp;
 
 import org.eclipse.core.runtime.IPlatformRunnable;
 import org.eclipse.swt.widgets.Display;

@@ -6,7 +6,7 @@
          id="KNIME_APPLICATION"
          point="org.eclipse.core.runtime.applications">
       <application>
-         <run class="org.knime.workbench.product.rcp.KNIMEApplication"/>
+         <run class="org.knime.product.rcp.KNIMEApplication"/>
       </application>
    </extension>
    <extension
@@ -14,7 +14,7 @@
          name="KNIME Workbench - Standalone Version"
          point="org.eclipse.core.runtime.products">
       <product
-            application="org.knime.workbench.product.KNIME_APPLICATION"
+            application="org.knime.product.KNIME_APPLICATION"
             description="An Integrated and Extensible Data Analysis Workbench"
             name="Konstanz Information Miner">
          <property
@@ -31,9 +31,9 @@
    <extension
          point="org.eclipse.ui.commands">
       <keyConfiguration
-            name="org.knime.workbench.product.keyConfiguration"
+            name="org.knime.product.keyConfiguration"
             description="KNIME Workbench Key Configuration"
-            id="org.knime.workbench.product.keyConfiguration">
+            id="org.knime.product.keyConfiguration">
       </keyConfiguration>
       <command
             name="New KNIME Project..."

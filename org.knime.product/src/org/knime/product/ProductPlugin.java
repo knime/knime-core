@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ----------------------------------------------------------------------------
  */
-package org.knime.workbench.product;
+package org.knime.product;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -98,7 +98,7 @@ public class ProductPlugin extends AbstractUIPlugin {
         try {
             if (m_resourceBundle == null) {
                 m_resourceBundle = ResourceBundle
-                        .getBundle("org.knime.workbench.product."
+                        .getBundle("org.knime.product."
                                 + "ProductPluginResources");
             }
         } catch (MissingResourceException x) {

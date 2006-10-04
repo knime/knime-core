@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Konstanz Information Miner
-Bundle-SymbolicName: org.knime.workbench.product;singleton:=true
+Bundle-SymbolicName: org.knime.product;singleton:=true
 Bundle-Version: 1.1.0
 Bundle-ClassPath: workbench-product.jar
-Bundle-Activator: org.knime.workbench.product.ProductPlugin
+Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: University of Konstanz, Germany
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,
@@ -19,5 +19,5 @@ Require-Bundle: org.eclipse.ui,
  org.knime.workbench.ui
 Eclipse-AutoStart: true
 Bundle-ManifestVersion: 2
-Export-Package: org.knime.workbench.product,
- org.knime.workbench.product.rcp
+Export-Package: org.knime.product,
+ org.knime.product.rcp
