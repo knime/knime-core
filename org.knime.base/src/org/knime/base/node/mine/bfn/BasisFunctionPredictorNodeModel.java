@@ -54,7 +54,8 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
 
     private double m_dontKnow = -1.0;
 
-    private final List<BasisFunctionPredictorRow> m_bfs = new ArrayList<BasisFunctionPredictorRow>();
+    private final List<BasisFunctionPredictorRow> m_bfs = 
+        new ArrayList<BasisFunctionPredictorRow>();
 
     private DataColumnSpec[] m_modelSpec;
 
@@ -173,8 +174,9 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * @return the model output spec
      */
     protected DataTableSpec createOutputSpec(final DataTableSpec dataSpec) {
+        DataType applyType = m_modelSpec[m_modelSpec.length - 1].getType();
         return BasisFunctionPredictorTable.createDataTableSpec(dataSpec,
-                m_applyColumn);
+                m_applyColumn, applyType);
     }
 
     /**

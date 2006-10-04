@@ -36,7 +36,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -157,7 +156,8 @@ public class BasisFunctionPredictorTable implements DataTable {
         }
         // create our table spec - which is the table spec from the data table
         // plus one additional column with the most common DataCell type
-        m_tableSpec = createDataTableSpec(data.getDataTableSpec(), applyColumn);
+        m_tableSpec = createDataTableSpec(data.getDataTableSpec(), 
+                applyColumn, modelSpecs[modelSpecs.length - 1].getType());
     }
 
     /**
@@ -238,13 +238,15 @@ public class BasisFunctionPredictorTable implements DataTable {
      * 
      * @param dataSpec the table spec of the input data
      * @param applyColumn the name of the new, applied column
+     * @param applyType the type of the applied column
      * @return the new data table spec
      */
     public static DataTableSpec createDataTableSpec(
-            final DataTableSpec dataSpec, final String applyColumn) {
+            final DataTableSpec dataSpec, final String applyColumn, 
+            final DataType applyType) {
         // create applied spec
         DataColumnSpec colSpec = new DataColumnSpecCreator(applyColumn,
-                StringCell.TYPE).createSpec();
+                applyType).createSpec();
         DataTableSpec applySpec = new DataTableSpec(
                 new DataColumnSpec[]{colSpec});
         return new DataTableSpec(dataSpec, applySpec);
