@@ -234,8 +234,6 @@ public final class RepositoryManager {
 
         }
 
-        System.out.println("Halo");
-
         // if errors occured show an information box
         if (errorString.length() > 0) {
 
