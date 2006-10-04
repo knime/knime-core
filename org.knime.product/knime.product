@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.1"?>
+
+<product name="Konstanz Information Miner" id="org.knime.workbench.product.KNIME_PRODUCT" application="org.knime.workbench.product.KNIME_APPLICATION" useFeatures="true">
+
+   <aboutInfo>
+      <image path="/org.knime.workbench.product/icons/knime64.gif"/>
+      <text>
+         Welcome to KNIME v1.1.0 (Build August 16, 2006)
+the Konstanz Information Miner
+Copyright, 2003 - 2006
+email: contact@knime.org
+
+This version of KNIME is licensed under the Aladdin Open Source 
+Licence. Please see the license file in the installation directory and 
+contact us if you can not locate it. More details can be found at
+http://www.knime.org
+
+Based on Eclipse 3.2, www.eclipse.org 
+Uses: Java5, GEF, Log4J, Weka, JFreeChart
+      </text>
+   </aboutInfo>
+
+   <configIni use="default"/>
+
+   <launcherArgs>
+      <programArgs>-clean</programArgs>
+      <vmArgs>-Xmx256M -XX:MaxPermSize=128m</vmArgs>
+   </launcherArgs>
+
+   <windowImages/>
+
+   <splash
+      location="org.knime.workbench.product" />
+   <launcher name="knime">
+      <linux icon="/org.knime.workbench.product/icons/knime.xpm"/>
+      <solaris/>
+      <win useIco="false">
+         <bmp
+            winSmallHigh="/org.knime.workbench.product/icons/knime16x16_32bit.bmp"
+            winSmallLow="/org.knime.workbench.product/icons/knime16x16_8bit.bmp"
+            win24Low="/org.knime.workbench.product/icons/knime24x24_8bit.bmp"
+            winMediumHigh="/org.knime.workbench.product/icons/knime32x32_32bit.bmp"
+            winMediumLow="/org.knime.workbench.product/icons/knime32x32_8bit.bmp"
+            winLargeHigh="/org.knime.workbench.product/icons/knime48x48_32bit.bmp"
+            winLargeLow="/org.knime.workbench.product/icons/knime48x48_8bit.bmp"/>
+      </win>
+   </launcher>
+
+
+   <plugins>
+      <plugin id="org.apache.lucene"/>
+      <plugin id="org.eclipse.ant.core"/>
+      <plugin id="org.eclipse.core.commands"/>
+      <plugin id="org.eclipse.core.expressions"/>
+      <plugin id="org.eclipse.core.resources"/>
+      <plugin id="org.eclipse.core.resources.compatibility" fragment="true"/>
+      <plugin id="org.eclipse.core.resources.linux"/>
+      <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.core.runtime.compatibility"/>
+      <plugin id="org.eclipse.core.variables"/>
+      <plugin id="org.eclipse.draw2d"/>
+      <plugin id="org.eclipse.gef"/>
+      <plugin id="org.eclipse.help"/>
+      <plugin id="org.eclipse.help.appserver"/>
+      <plugin id="org.eclipse.help.base"/>
+      <plugin id="org.eclipse.help.ui"/>
+      <plugin id="org.eclipse.help.webapp"/>
+      <plugin id="org.eclipse.jface"/>
+      <plugin id="org.eclipse.jface.text"/>
+      <plugin id="org.eclipse.osgi"/>
+      <plugin id="org.eclipse.osgi.services"/>
+      <plugin id="org.eclipse.osgi.util"/>
+      <plugin id="org.eclipse.platform"/>
+      <plugin id="org.eclipse.swt"/>
+      <plugin id="org.eclipse.swt.gtk.linux.x86"/>
+      <plugin id="org.eclipse.text"/>
+      <plugin id="org.eclipse.ui"/>
+      <plugin id="org.eclipse.ui.cheatsheets"/>
+      <plugin id="org.eclipse.ui.console"/>
+      <plugin id="org.eclipse.ui.forms"/>
+      <plugin id="org.eclipse.ui.ide"/>
+      <plugin id="org.eclipse.ui.intro"/>
+      <plugin id="org.eclipse.ui.views"/>
+      <plugin id="org.eclipse.ui.workbench"/>
+      <plugin id="org.eclipse.ui.workbench.texteditor"/>
+      <plugin id="org.eclipse.update.configurator"/>
+      <plugin id="org.eclipse.update.core"/>
+      <plugin id="org.eclipse.update.core.linux"/>
+      <plugin id="org.eclipse.update.ui"/>
+   </plugins>
+
+   <features>
+      <feature id="org.eclipse.gef" version="3.2.0.v20060626"/>
+      <feature id="org.eclipse.platform" version="3.2.0.v20060609m-AgOexn6hlEUsvBO"/>
+      <feature id="org.eclipse.rcp" version="3.2.0.v20060609m-SVDNgVrNoh-MeGG"/>
+      <feature id="org.knime.features.base" version="1.1.0"/>
+   </features>
+
+</product>
