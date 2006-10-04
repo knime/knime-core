@@ -443,7 +443,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void dispose() {
-
+        
         // remember that this editor has been closed
         m_closed = true;
 
