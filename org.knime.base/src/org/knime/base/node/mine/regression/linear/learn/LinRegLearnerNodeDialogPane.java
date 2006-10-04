@@ -173,7 +173,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        String[] includes = m_filterPanel.getIncludedColumnList().toArray(
+        String[] includes = m_filterPanel.getIncludedColumnSet().toArray(
                 new String[0]);
         String target = m_selectionPanel.getSelectedColumn();
         boolean isCalcError = m_isCalcErrorChecker.isSelected();

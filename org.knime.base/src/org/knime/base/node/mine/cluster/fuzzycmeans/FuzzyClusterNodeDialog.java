@@ -374,7 +374,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                     + "for fuzzifier, must be in " + "[>1,10]");
         }
         m_filterpanel = (ColumnFilterPanel)getTab(TAB2);
-        Set<String> list = m_filterpanel.getIncludedColumnList();
+        Set<String> list = m_filterpanel.getIncludedColumnSet();
         settings.addStringArray(FuzzyClusterNodeModel.INCLUDELIST_KEY, list
                 .toArray(new String[0]));
 

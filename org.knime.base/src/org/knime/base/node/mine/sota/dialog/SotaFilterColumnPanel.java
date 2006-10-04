@@ -80,8 +80,8 @@ public class SotaFilterColumnPanel extends JPanel {
     public void saveSettingsTo(final NodeSettingsWO settings) {
         assert (settings != null);
 
-        Set<String> listIn = m_filterPanel.getIncludedColumnList();
-        Set<String> listEx = m_filterPanel.getExcludedColumnList();
+        Set<String> listIn = m_filterPanel.getIncludedColumnSet();
+        Set<String> listEx = m_filterPanel.getExcludedColumnSet();
         settings.addStringArray(SotaConfigKeys.CFGKEY_INCLUDE, listIn
                 .toArray(new String[listIn.size()]));
         settings.addStringArray(SotaConfigKeys.CFGKEY_EXCLUDE, listEx

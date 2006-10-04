@@ -97,7 +97,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB);
-        Set<String> list = p.getExcludedColumnList();
+        Set<String> list = p.getExcludedColumnSet();
         settings.addStringArray(FilterColumnNodeModel.KEY, list
                 .toArray(new String[0]));
     }

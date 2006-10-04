@@ -77,9 +77,9 @@ public class SplitNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        String[] top = m_filterPanel.getIncludedColumnList().toArray(
+        String[] top = m_filterPanel.getIncludedColumnSet().toArray(
                 new String[0]);
-        String[] bottom = m_filterPanel.getExcludedColumnList().toArray(
+        String[] bottom = m_filterPanel.getExcludedColumnSet().toArray(
                 new String[0]);
         settings.addStringArray(SplitNodeModel.CFG_TOP, top);
         settings.addStringArray(SplitNodeModel.CFG_BOTTOM, bottom);

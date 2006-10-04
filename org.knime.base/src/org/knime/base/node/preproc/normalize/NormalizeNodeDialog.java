@@ -247,7 +247,7 @@ public class NormalizeNodeDialog extends NodeDialogPane {
         double newmaxD = Double.parseDouble(newmaxString);
         settings.addDouble(NormalizeNodeModel.NEWMAX_KEY, newmaxD);
 
-        Set<String> inclset = m_filterpanel.getIncludedColumnList();
+        Set<String> inclset = m_filterpanel.getIncludedColumnSet();
         String[] columns = inclset.toArray(new String[inclset.size()]);
         settings.addStringArray(NormalizeNodeModel.COLUMNS_KEY, columns);
     }

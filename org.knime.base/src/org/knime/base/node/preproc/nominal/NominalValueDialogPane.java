@@ -75,7 +75,7 @@ class NominalValueDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        Set<String> set = m_panel.getIncludedColumnList();
+        Set<String> set = m_panel.getIncludedColumnSet();
         settings.addStringArray(INCLUDED_COLUMNS, set.toArray(new String[0]));
     }
 }

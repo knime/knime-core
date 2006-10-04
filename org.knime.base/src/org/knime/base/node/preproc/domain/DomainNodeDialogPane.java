@@ -117,8 +117,8 @@ public class DomainNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        Set<String> possCols = m_possValuesPanel.getIncludedColumnList();
-        Set<String> minMaxCols = m_minMaxPanel.getIncludedColumnList();
+        Set<String> possCols = m_possValuesPanel.getIncludedColumnSet();
+        Set<String> minMaxCols = m_minMaxPanel.getIncludedColumnSet();
         settings.addStringArray(DomainNodeModel.CFG_POSSVAL_COLS, 
                 possCols.toArray(new String[possCols.size()]));
         settings.addStringArray(DomainNodeModel.CFG_MIN_MAX_COLS, 
