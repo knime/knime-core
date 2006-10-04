@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.FileAppender;
+import org.apache.log4j.helpers.LogLog;
+import org.apache.log4j.spi.LoggingEvent;
 import org.knime.core.node.KNIMEConstants;
 
 /**
@@ -68,42 +70,53 @@ public class LogfileAppender extends FileAppender {
     public void activateOptions() {
         if (m_logFile.exists() && (m_logFile.length() > m_maxLogSize)
                 && m_logFile.canRead()) {
-            compressOldLog(m_logFile);
+            compressOldLog();
         }
         super.activateOptions();
     }
 
-    private static void compressOldLog(final File oldLog) {
-        final File tempFile = new File(oldLog.getAbsolutePath() + ".old");
-        oldLog.renameTo(tempFile);
-
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                BufferedInputStream in;
-                try {
-                    in = new BufferedInputStream(new FileInputStream(tempFile));
-                    GZIPOutputStream out = new GZIPOutputStream(
-                            new FileOutputStream(new File(tempFile
-                                    .getAbsolutePath()
-                                    + ".gz")));
-
-                    byte[] buf = new byte[4096];
-                    int count;
-                    while ((count = in.read(buf)) > 0) {
-                        out.write(buf, 0, count);
+    /** This is not private only because that it is visible inside the thread
+     * below.
+     */
+    private void compressOldLog() {
+        synchronized (m_logFile) {
+            LogLog.debug("Compressing log file '" + m_logFile + "'");
+            final File tmpFile = new File(m_logFile.getAbsolutePath() + ".old");
+            m_logFile.renameTo(tmpFile);
+    
+            Thread t = new Thread() {
+                @Override
+                public void run() {
+                    synchronized (m_logFile) {
+                        if (tmpFile.exists()) {
+                            BufferedInputStream in;
+                            try {
+                                in = new BufferedInputStream(
+                                        new FileInputStream(tmpFile));
+                                GZIPOutputStream out = new GZIPOutputStream(
+                                        new FileOutputStream(new File(tmpFile
+                                                .getAbsolutePath()
+                                                + ".gz")));
+        
+                                byte[] buf = new byte[4096];
+                                int count;
+                                while ((count = in.read(buf)) > 0) {
+                                    out.write(buf, 0, count);
+                                }
+        
+                                in.close();
+                                out.close();
+                                tmpFile.delete();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
                     }
-
-                    in.close();
-                    out.close();
-                    tempFile.delete();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
                 }
-            }
-        };
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
+            };
+            t.setPriority(Thread.MIN_PRIORITY);
+            t.start();
+        }
     }
 
     /**
@@ -122,5 +135,27 @@ public class LogfileAppender extends FileAppender {
      */
     public void setMaxLogSize(final int maxLogSize) {
         m_maxLogSize = maxLogSize;
+    }
+
+    /**
+     * @see org.apache.log4j.WriterAppender
+     *      #subAppend(org.apache.log4j.spi.LoggingEvent)
+     */
+    @Override
+    protected void subAppend(final LoggingEvent event) {
+        super.subAppend(event);
+        if (m_logFile.length() > m_maxLogSize) {
+            compressOldLog();
+
+            try {
+                // This will also close the file. This is OK since multiple
+                // close operations are safe.
+                setFile(m_logFile.getAbsolutePath(), false, bufferedIO,
+                        bufferSize);
+            } catch (IOException e) {
+                LogLog.error("setFile(" + fileName + ", false) call failed.",
+                                e);
+            }
+        }
     }
 }
