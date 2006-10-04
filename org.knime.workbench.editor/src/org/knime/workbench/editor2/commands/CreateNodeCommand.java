@@ -90,12 +90,12 @@ public class CreateNodeCommand extends Command {
             m_container = m_manager.addNewNode(m_factory);
         } catch (Throwable t) {
             // if fails notify the user
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            LOGGER.debug("Node cannot be created.", t);
+            MessageBox mb = new MessageBox(Display.getDefault().
+                    getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText("Node cannot be created.");
-            mb
-                    .setMessage("The selected node could not be created due to the following reason:\n"
-                            + t.getMessage());
+            mb.setMessage("The selected node could not be created " 
+                    + "due to the following reason:\n" + t.getMessage());
             mb.open();
             return;
         }
