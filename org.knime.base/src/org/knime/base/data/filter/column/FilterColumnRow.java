@@ -35,7 +35,7 @@ import org.knime.core.data.def.DefaultCellIterator;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class FilterColumnRow implements DataRow {
+public final class FilterColumnRow implements DataRow {
 
     /**
      * Underlying row.
@@ -54,7 +54,7 @@ final class FilterColumnRow implements DataRow {
      * @param row the underlying {@link DataRow}
      * @param columns the array of column indices to keep
      */
-    FilterColumnRow(final DataRow row, final int[] columns) {
+    public FilterColumnRow(final DataRow row, final int[] columns) {
         m_row = row;
         m_columns = columns;
     }
