@@ -458,6 +458,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         m_manager.shutdown();
+        m_manager.waitUntilFinished();
 
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
@@ -1367,7 +1368,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                 // Reverted as not properly ordered yet. Improve in next version
                 // job.schedule();
 
-                m_dummyNodeJobs.put(event.getID(), job);
+                Object o = m_dummyNodeJobs.put(event.getID(), job);
+                if (o != null) {
+                   System.out.println(); 
+                }
+                // assert (o == null);
             }
         } else if (event instanceof WorkflowEvent.NodeStarted) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
