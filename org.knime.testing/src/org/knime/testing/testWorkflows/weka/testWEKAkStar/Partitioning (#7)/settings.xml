@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="Partitioning"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="true"/>
+  <config key="model">
+    <entry key="method" type="xstring" value="Relative"/>
+    <entry key="random" type="xboolean" value="true"/>
+    <entry key="fraction" type="xdouble" value="0.5"/>
+    <entry key="count" type="xint" value="100"/>
+    <entry key="random_seed" type="xstring" value="1151566506755"/>
+  </config>
+  <config key="spec_files">
+    <entry key="output_0" type="xstring" value="spec_0.xml"/>
+    <entry key="output_1" type="xstring" value="spec_1.xml"/>
+  </config>
+  <entry key="data_meta_file" type="xstring" value="data.xml"/>
+  <config key="model_files"/>
+</config>

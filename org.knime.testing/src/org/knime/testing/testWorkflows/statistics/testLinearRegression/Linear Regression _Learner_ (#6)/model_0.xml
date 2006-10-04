@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "de/unikn/knime/core/node/config/XMLConfig.dtd">
+<config key="predictor">
+  <config key="sub_params">
+    <config key="Col3">
+      <entry key="para_mean" type="xdouble" value="0.36333333333333334"/>
+      <entry key="cell_name" type="xstring" value="Col3"/>
+      <entry key="para_value" type="xdouble" value="10.698532898636632"/>
+    </config>
+  </config>
+  <config key="offset_name">
+    <entry key="cell_name" type="xstring" value="Col1"/>
+    <entry key="para_value" type="xdouble" value="0.5540330468286893"/>
+  </config>
+</config>

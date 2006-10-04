@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="Color Manager"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="true"/>
+  <config key="model">
+    <entry key="selected_column" type="xstring" value="Col11"/>
+    <entry key="is_nominal" type="xboolean" value="false"/>
+    <entry key="min_color" type="xint" value="-65536"/>
+    <entry key="max_color" type="xint" value="-16711936"/>
+  </config>
+  <config key="spec_files">
+    <entry key="output_0" type="xstring" value="spec_0.xml"/>
+  </config>
+  <entry key="data_meta_file" type="xstring" value="data.xml"/>
+  <config key="model_files">
+    <entry key="output_0" type="xstring" value="model_0.pmml.gz"/>
+  </config>
+</config>

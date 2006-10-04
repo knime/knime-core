@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Test-Node extension for KNIME Workbench
+Bundle-SymbolicName: org.knime.testing; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: knime-testing.jar
+Bundle-Vendor: 
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.editor,
+ org.knime.workbench.repository,
+ org.knime.base,
+ org.knime.dev,
+ org.knime.exp
+Eclipse-RegisterBuddy: org.knime.base
+Eclipse-AutoStart: true
+Export-Package: org.knime.testing
+

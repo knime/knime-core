@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="spec_0.xml">
+  <entry key="spec_name" type="xstring" value="default"/>
+  <entry key="number_columns" type="xint" value="26"/>
+  <config key="column_spec_0">
+    <entry key="column_name" type="xstring" value="T"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="326"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_1">
+    <entry key="column_name" type="xstring" value="I"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="298"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_2">
+    <entry key="column_name" type="xstring" value="D"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="370"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_3">
+    <entry key="column_name" type="xstring" value="N"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="355"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_4">
+    <entry key="column_name" type="xstring" value="G"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="275"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_5">
+    <entry key="column_name" type="xstring" value="S"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="268"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_6">
+    <entry key="column_name" type="xstring" value="B"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="334"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_7">
+    <entry key="column_name" type="xstring" value="A"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="330"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_8">
+    <entry key="column_name" type="xstring" value="J"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="326"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_9">
+    <entry key="column_name" type="xstring" value="M"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="375"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_10">
+    <entry key="column_name" type="xstring" value="X"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="315"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_11">
+    <entry key="column_name" type="xstring" value="O"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="292"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_12">
+    <entry key="column_name" type="xstring" value="R"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="306"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_13">
+    <entry key="column_name" type="xstring" value="F"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="317"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_14">
+    <entry key="column_name" type="xstring" value="C"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="279"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_15">
+    <entry key="column_name" type="xstring" value="H"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="212"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_16">
+    <entry key="column_name" type="xstring" value="W"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="346"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_17">
+    <entry key="column_name" type="xstring" value="L"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="332"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_18">
+    <entry key="column_name" type="xstring" value="P"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="328"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_19">
+    <entry key="column_name" type="xstring" value="E"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="302"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_20">
+    <entry key="column_name" type="xstring" value="V"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="313"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_21">
+    <entry key="column_name" type="xstring" value="Y"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="287"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_22">
+    <entry key="column_name" type="xstring" value="Q"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="272"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_23">
+    <entry key="column_name" type="xstring" value="U"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="344"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_24">
+    <entry key="column_name" type="xstring" value="K"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="273"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+  <config key="column_spec_25">
+    <entry key="column_name" type="xstring" value="Z"/>
+    <config key="column_type">
+      <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+    </config>
+    <config key="column_domain">
+      <config key="lower_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="0"/>
+        </config>
+      </config>
+      <config key="upper_bound">
+        <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+        <config key="org.knime.core.data.def.IntCell">
+          <entry key="IntCell" type="xint" value="276"/>
+        </config>
+      </config>
+    </config>
+    <config key="column_properties"/>
+  </config>
+</config>

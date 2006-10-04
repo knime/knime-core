@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="Row Sampling"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="false"/>
+  <config key="model">
+    <entry key="method" type="xstring" value="Relative"/>
+    <entry key="random" type="xboolean" value="false"/>
+    <entry key="fraction" type="xdouble" value="0.5"/>
+    <entry key="count" type="xint" value="100"/>
+    <entry key="random_seed" type="xstring" isnull="true" value=""/>
+  </config>
+  <config key="spec_files">
+    <entry key="output_0" type="xstring" value="spec_0.xml"/>
+  </config>
+</config>

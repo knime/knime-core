@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Difference Checker</name>
+	
+	<shortDescription>
+		Checks if the two input tables are the same.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			This node is used for the testing and compares the output of the workflow
+            with a stored persistent "golden" file and thrwos an exception if the two 
+            tables are not equal.
+		</intro>
+
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Datatable with the output of the workflow">Datatable with the output of the workflow</dataIn>
+		<dataIn index="1" name="The 'golden' datatable">The "golden" datatable.</dataIn>
+	</ports>	
+</knimeNode>
