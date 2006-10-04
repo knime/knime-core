@@ -215,7 +215,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      */
     public List<String> getExcludedColumnList() {
         List<String> list = new LinkedList<String>();
-        list.addAll(m_columnFilter.getExcludedColumnList());
+        list.addAll(m_columnFilter.getExcludedColumnSet());
         return list;
     }
 
@@ -226,7 +226,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      */
     public List<String> getIncludedColumnList() {
         List<String> list = new LinkedList<String>();
-        list.addAll(m_columnFilter.getIncludedColumnList());
+        list.addAll(m_columnFilter.getIncludedColumnSet());
         return list;
     }
 

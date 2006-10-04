@@ -515,9 +515,30 @@ public class ColumnFilterPanel extends JPanel {
      * Returns all columns from the exclude list.
      * 
      * @return a set of all columns from the exclude list
+     * @deprecated Use {@link #getExcludedColumnSet()} instead
      */
     public Set<String> getExcludedColumnList() {
+        return getExcludedColumnSet();
+    }
+
+    /**
+     * Returns all columns from the exclude list.
+     * 
+     * @return a set of all columns from the exclude list
+     */
+    public Set<String> getExcludedColumnSet() {
         return getColumnList(m_exclMdl);
+    }
+
+
+    /**
+     * Returns all columns from the include list.
+     * 
+     * @return a list of all columns from the include list
+     * @deprecated Use {@link #getIncludedColumnSet()} instead
+     */
+    public Set<String> getIncludedColumnList() {
+        return getIncludedColumnSet();
     }
 
     /**
@@ -525,9 +546,10 @@ public class ColumnFilterPanel extends JPanel {
      * 
      * @return a list of all columns from the include list
      */
-    public Set<String> getIncludedColumnList() {
+    public Set<String> getIncludedColumnSet() {
         return getColumnList(m_inclMdl);
     }
+
 
     /**
      * Helper for the get***ColumnList methods.
