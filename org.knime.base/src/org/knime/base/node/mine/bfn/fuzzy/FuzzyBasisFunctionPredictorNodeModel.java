@@ -30,7 +30,7 @@ import org.knime.core.node.ModelContentRO;
  * The fuzzy basis function predictor model performing a prediction on the data
  * from the first input and the fuzzy basisfunction model from the second.
  * 
- * @see org.knime.base.node.mine.bfn.BasisFunctionPredictorTable
+ * @see org.knime.base.node.mine.bfn.BasisFunctionPredictorCellFactory
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

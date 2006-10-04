@@ -30,6 +30,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -45,7 +46,7 @@ import org.knime.core.node.NodeSettingsWO;
  * The basis function predictor model performing a prediction on the data from
  * the first input and the radial basisfunction model from the second.
  * 
- * @see BasisFunctionPredictorTable
+ * @see BasisFunctionPredictorCellFactory
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -81,13 +82,16 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         assert (data != null && data.length == 1);
         assert (data[0] != null);
 
-        // build predictor table
-        BasisFunctionPredictorTable predict = new BasisFunctionPredictorTable(
-                exec, data[0], m_modelSpec, m_bfs, m_applyColumn, m_dontKnow);
-
-        // return the applied data table
-        return new BufferedDataTable[]{exec.createBufferedDataTable(predict,
-                exec)};
+        DataTableSpec dataSpec = data[0].getDataTableSpec();
+        ColumnRearranger colreg = new ColumnRearranger(dataSpec);
+        DataColumnSpec targetSpec = new DataColumnSpecCreator(
+                m_applyColumn, 
+                m_modelSpec[m_modelSpec.length - 1].getType()).createSpec();
+        colreg.append(new BasisFunctionPredictorCellFactory(
+                dataSpec, m_modelSpec, m_bfs, targetSpec, m_dontKnow, false));
+        
+        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
+                data[0], colreg, exec.createSubProgress(1.0))};
     }
 
     /**
@@ -164,19 +168,16 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                         + m_modelSpec[i].getName() + " not in data spec.");
             }
         }
-        return new DataTableSpec[]{createOutputSpec(inSpecs[0])};
+        return new DataTableSpec[]{createSpec(inSpecs[0]).createSpec()};
     }
-
-    /**
-     * Creates a model specific output spec.
-     * 
-     * @param dataSpec the data input spec
-     * @return the model output spec
-     */
-    protected DataTableSpec createOutputSpec(final DataTableSpec dataSpec) {
-        DataType applyType = m_modelSpec[m_modelSpec.length - 1].getType();
-        return BasisFunctionPredictorTable.createDataTableSpec(dataSpec,
-                m_applyColumn, applyType);
+    
+    private ColumnRearranger createSpec(final DataTableSpec oSpec) {
+        ColumnRearranger colreg = new ColumnRearranger(oSpec);
+        DataColumnSpec targetSpec = new DataColumnSpecCreator(
+                m_applyColumn, 
+                m_modelSpec[m_modelSpec.length - 1].getType()).createSpec();
+        colreg.append(new BasisFunctionPredictorCellFactory(targetSpec));
+        return colreg;
     }
 
     /**
