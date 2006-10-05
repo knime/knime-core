@@ -40,8 +40,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -146,14 +144,6 @@ public class WorkflowManager implements WorkflowListener {
          * Create new empty workflow executer.
          */
         WorkflowExecutor() {
-            Timer watchdogTimer = new Timer(true);
-            TimerTask watchDog = new TimerTask() {
-                @Override
-                public void run() {
-                    // startNewNodes(true);
-                }
-            };
-            watchdogTimer.scheduleAtFixedRate(watchDog, 5000, 10000);
         }
 
         /**
@@ -314,6 +304,12 @@ public class WorkflowManager implements WorkflowListener {
                         }
                     } else if (e.getKey().isExecuted()) {
                         it.remove();
+                    } else if (!checkForDeadlock(e.getKey())) {
+                        LOGGER.warn("A predecessor of " + e.getKey() + " is "
+                                + " neither running nor waiting or executed. "
+                                + "This is a deadlock, I will thus cancel "
+                                + e.getKey() + ".");
+                        cancelExecution(Collections.singletonList(e.getKey()));
                     }
                 }
 
@@ -342,6 +338,35 @@ public class WorkflowManager implements WorkflowListener {
             }
         }
 
+        
+        private boolean checkForDeadlock(final NodeContainer cont) {
+            if (!cont.isExecutable() && !cont.isExecuted()) {
+                boolean predStillWaiting = false;
+                for (NodeContainer pred : cont.getPredecessors()) {
+                    if (m_waitingNodes.containsKey(pred)
+                            || m_runningNodes.containsKey(pred)) {
+                        predStillWaiting = true;
+                        break;
+                    }
+                }
+                
+                if (!predStillWaiting) {
+                    LOGGER.warn("The node " + cont + " is not executable but "
+                            + "waiting for execution and "
+                            + "all its predecessor are already executed.");
+                    return false;
+                }
+                
+                for (NodeContainer pred : cont.getPredecessors()) {
+                    if (!checkForDeadlock(pred)) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+        
         /**
          * @see org.knime.core.node.NodeStateListener
          *      #stateChanged(org.knime.core.node.NodeStatus, int)
@@ -366,7 +391,7 @@ public class WorkflowManager implements WorkflowListener {
                         if (state instanceof NodeStatus.ExecutionCanceled) {
                             cancelExecution(nc.getAllSuccessors());
                         }
-
+                        
                         if (nc.getStatus() instanceof NodeStatus.Error) {
                             cancelExecution(nc.getAllSuccessors());
                         }
