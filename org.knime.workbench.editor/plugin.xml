@@ -251,10 +251,6 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+ENTER"/>
       <key
-            commandId="knime.commands.execute"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+SPACE"/>
-      <key
             commandId="knime.commands.reset"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+BS"/>          
