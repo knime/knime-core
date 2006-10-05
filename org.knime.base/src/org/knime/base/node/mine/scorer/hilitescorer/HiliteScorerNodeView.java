@@ -42,6 +42,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 
 import org.knime.core.data.DataTable;
+import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -333,7 +334,6 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
                 final boolean hasFocus, final int row, final int column) {
 
             // default background is white
-
             this.setBackground(Color.white);
 
             // first let the parent render this cell
@@ -346,16 +346,21 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
                 this.setForeground(Color.black);
             }
 
-            // if this cell is hilited, backgroun color is yellow
+            // if this cell is hilited, background color is yellow
             // the first column is never hilited
             if (column > 0) {
                 if (m_cellHilited[row][column - 1]) {
 
                     if (isSelected) {
-                        setBackground(Color.orange);
+                        setBackground(ColorAttr.SELECTED_HILITE);
                         setForeground(Color.black);
                     } else {
-                        setBackground(Color.yellow);
+                        setBackground(ColorAttr.HILITE);
+                    }
+                } else {
+                    // not hilited
+                    if (isSelected) {
+                        setBackground(ColorAttr.SELECTED);
                     }
                 }
             }
@@ -366,7 +371,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener#
-     * hiLite(org.knime.core.node.property.hilite.KeyEvent)
+     *      hiLite(org.knime.core.node.property.hilite.KeyEvent)
      */
     public void hiLite(final KeyEvent event) {
 
@@ -377,7 +382,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         for (Point cell : completeHilitedCells) {
             m_cellHilited[cell.x][cell.y] = true;
         }
-        
+
         m_tableView.repaint();
     }
 
