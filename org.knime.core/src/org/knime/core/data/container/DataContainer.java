@@ -401,7 +401,7 @@ public class DataContainer implements RowAppender {
         if (isClosed()) {
             return m_table.getDataTableSpec();
         } else if (isOpen()) {
-            return m_buffer.getTableSpec();
+            return m_spec;
         }
         throw new IllegalStateException("Cannot get spec: container not open.");
     }
