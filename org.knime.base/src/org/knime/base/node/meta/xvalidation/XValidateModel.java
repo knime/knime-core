@@ -30,18 +30,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
@@ -136,18 +134,18 @@ public class XValidateModel extends MetaNodeModel {
             final ExecutionContext exec) throws Exception {
         final int classColIndex = inData[0].getDataTableSpec().findColumnIndex(
                 m_settings.classColumnName());
-        Set<DataCell> classSet = new HashSet<DataCell>();
+        LinkedHashSet<DataCell> allClasses = new LinkedHashSet<DataCell>();
         Map<DataCell, Integer> classToIndex = new HashMap<DataCell, Integer>();
-        List<DataCell> allClasses = new ArrayList<DataCell>();
         int classCount = 0;
         int rowCount = 0;
         for (RowIterator it = inData[0].iterator(); it.hasNext(); rowCount++) {
             DataRow row = it.next();
-            if (classSet.add(row.getCell(classColIndex))) {
+            if (allClasses.add(row.getCell(classColIndex))) {
                 classToIndex.put(row.getCell(classColIndex), classCount++);
-                allClasses.add(row.getCell(classColIndex));
             }
         }
+        allClasses.add(DataType.getMissingCell());
+        classToIndex.put(DataType.getMissingCell(), classCount++);
 
         int[][] confusionMatrix = new int[allClasses.size()][allClasses.size()];
 
@@ -199,8 +197,9 @@ public class XValidateModel extends MetaNodeModel {
         }
 
         String[] keys = new String[allClasses.size()];
-        for (int i = 0; i < keys.length; i++) {
-            keys[i] = allClasses.get(i).toString();
+        int j = 0;
+        for (DataCell c : allClasses) {
+            keys[j++] = c.toString();
         }
         m_confusionMatrix = new DefaultTable(confusionMatrix, keys, keys);
 
