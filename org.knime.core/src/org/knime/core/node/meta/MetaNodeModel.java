@@ -123,7 +123,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (!m_resetFromInterior) {
-            for (int i = 0; (i < m_dataInModels.length) && (i < inSpecs.length); i++) {
+            for (int i = 0; (i < m_dataInModels.length) 
+                && (i < inSpecs.length); i++) {
                 m_dataInModels[i].setDataTableSpec(inSpecs[i]);
                 internalWFM().configureNode(m_dataInContainer[i].getID());
             }
@@ -178,13 +179,14 @@ public class MetaNodeModel extends SpecialNodeModel implements
 
         // translate output
         exec.setMessage("Collecting output");
-        BufferedDataTable[] out = new BufferedDataTable[m_dataOutContainer.length];
+        BufferedDataTable[] out = 
+            new BufferedDataTable[m_dataOutContainer.length];
         for (int i = 0; i < out.length; i++) {
             out[i] = m_dataOutModels[i].getBufferedDataTable();
         }
         return out;
     }
-
+    
     /**
      * Adds the input and output nodes to the workflow.
      */
@@ -251,6 +253,41 @@ public class MetaNodeModel extends SpecialNodeModel implements
             } finally {
                 m_resetFromInterior = false;
             }
+        }
+    }
+    
+    /** Resets and configures all nodes in the internal workflow 
+     * but does not touch the  state of this meta node. 
+     * In contrast, if you use internWFM().resetAndConfigureAll() it will 
+     * propagate reset and configure.
+     * @throws WorkflowInExecutionException 
+     * If that fails because nodes are running.
+     */
+    protected final void resetAndConfigureInternalWF() 
+        throws WorkflowInExecutionException {
+        m_resetFromInterior = true;
+        try {
+            internalWFM().resetAndConfigureAll();
+        } finally {
+            m_resetFromInterior = false;
+        }
+    }
+
+    /** Executes all nodes in the internal workflow but does not touch the
+     * state of this meta node. In contrast, if you use 
+     * internWFM().executeAll() it will eventually propagate reset and 
+     * configure.
+     */
+    protected final void executeInternalWF() {
+        m_resetFromInterior = true;
+        try {
+            KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
+                public void run() {
+                    internalWFM().executeAll(true);
+                }
+            });
+        } finally {
+            m_resetFromInterior = false;
         }
     }
 
@@ -417,8 +454,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
                                 "Could not load internal workflow");
                     } catch (CanceledExecutionException ex) {
                         throw new InvalidSettingsException(
-                                "Loading of internal"
-                                        + " workflow has been interrupted by user");
+                                "Loading of internal workflow has been " 
+                                + "interrupted by user");
                     }
 
                 } catch (WorkflowInExecutionException ex) {
@@ -515,7 +552,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
             }
         }
 
-        if (((state instanceof NodeStatus.Reset) || (state instanceof NodeStatus.Configured))
+        if (((state instanceof NodeStatus.Reset) 
+                || (state instanceof NodeStatus.Configured))
                 && outNode && !m_resetFromInterior) {
             m_resetFromInterior = true;
             try {
