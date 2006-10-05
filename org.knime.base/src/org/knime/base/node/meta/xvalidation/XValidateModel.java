@@ -42,11 +42,14 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -111,9 +114,17 @@ public class XValidateModel extends MetaNodeModel {
             throw new InvalidSettingsException("Column with class labels"
                     + " is not set");
         }
-
-        return new DataTableSpec[]{new DataTableSpec(new DataColumnSpecCreator(
-                "Error in %", DataType.getType(DoubleCell.class)).createSpec())};
+        return new DataTableSpec[]{createOutSpec()};
+    }
+    
+    private DataTableSpec createOutSpec() {
+        return new DataTableSpec(
+                new DataColumnSpecCreator(
+                        "Error in %", DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator(
+                        "Size of Test Set", IntCell.TYPE).createSpec(),
+                new DataColumnSpecCreator(
+                        "Error Count", IntCell.TYPE).createSpec());
     }
 
     /**
@@ -140,8 +151,9 @@ public class XValidateModel extends MetaNodeModel {
 
         int[][] confusionMatrix = new int[allClasses.size()][allClasses.size()];
 
-        final double[][] errors = new double[m_settings.validations()][1];
-        final String[] errorRowKeys = new String[m_settings.validations()];
+        final double[] errors = new double[m_settings.validations()];
+        final int[] testSize = new int[m_settings.validations()];
+        final int[] errorCountTest = new int[m_settings.validations()];
         m_partitionModel.setSettings(m_settings);
 
         for (int i = 0; i < m_settings.validations(); i++) {
@@ -170,10 +182,8 @@ public class XValidateModel extends MetaNodeModel {
             }
 
             DataTable prediction = dataOutModel(0).getBufferedDataTable();
-            int count = 0;
             for (RowIterator it = prediction.iterator(); it.hasNext();) {
                 DataRow row = it.next();
-                count++;
 
                 DataCell realValue = row.getCell(classColIndex);
                 DataCell predictedValue = row.getCell(row.getNumCells() - 1);
@@ -181,13 +191,11 @@ public class XValidateModel extends MetaNodeModel {
                 int y = classToIndex.get(predictedValue);
                 confusionMatrix[x][y]++;
                 if (x != y) {
-                    errors[i][0]++;
+                    errorCountTest[i]++;
                 }
+                testSize[i]++;
             }
-            double x = 100.0 * errors[i][0];
-            x = x / count;
-            errors[i][0] = x;
-            errorRowKeys[i] = "Validation" + (i + 1);
+            errors[i] = 100.0 * errorCountTest[i] / (double)testSize[i];
         }
 
         String[] keys = new String[allClasses.size()];
@@ -196,9 +204,18 @@ public class XValidateModel extends MetaNodeModel {
         }
         m_confusionMatrix = new DefaultTable(confusionMatrix, keys, keys);
 
-        return new BufferedDataTable[]{exec.createBufferedDataTable(
-                new DefaultTable(errors, errorRowKeys,
-                        new String[]{"Error in %"}), exec)};
+        DataTableSpec out = createOutSpec();
+        BufferedDataContainer con = exec.createDataContainer(out);
+        for (int i = 0; i < m_settings.validations(); i++) {
+            DataRow r = new DefaultRow(
+                    new RowKey("Validation" + (i + 1)),
+                    new DoubleCell(errors[i]),
+                    new IntCell(testSize[i]),
+                    new IntCell(errorCountTest[i]));
+            con.addRowToTable(r);
+        }
+        con.close();
+        return new BufferedDataTable[]{con.getTable()};
     }
 
     /**
