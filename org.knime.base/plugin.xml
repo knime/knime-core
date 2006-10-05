@@ -396,6 +396,10 @@
            category-path="/meta"
            factory-class="org.knime.base.node.meta.looper.LooperFactory"
            id="org.knime.base.node.meta.looper.LooperFactory"/>
+     <node
+           category-path="/meta"
+           factory-class="org.knime.base.node.meta.MetaNodeFactory01"
+           id="org.knime.base.node.meta.MetaNodeFactory01"/>
    </extension>
    
    
