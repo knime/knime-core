@@ -118,18 +118,21 @@ public class XValidatePartitionModel extends NodeModel {
         if (m_partNumbers == null) {
             m_partNumbers = new short[inData[0].getRowCount()];
 
+            final double partSize = m_partNumbers.length
+                    / (double)m_settings.validations();
+            for (int i = 0; i < m_partNumbers.length; i++) {
+                m_partNumbers[i] = (short)(i / partSize);
+            }
+            
             if (m_settings.randomSampling()) {
                 for (int i = 0; i < m_partNumbers.length; i++) {
-                    m_partNumbers[i] = 
-                        (short)(Math.random() * m_settings.validations());
-                }
-            } else {
-                final double partSize = m_partNumbers.length
-                        / (double)m_settings.validations();
-                for (int i = 0; i < m_partNumbers.length; i++) {
-                    m_partNumbers[i] = (short)(i / partSize);
+                    int pos = (int) (Math.random() * m_partNumbers.length);
+                    short x = m_partNumbers[pos];
+                    m_partNumbers[pos] = m_partNumbers[i];
+                    m_partNumbers[i] = x;
                 }
             }
+
             m_currentPartition = 0;
         }
 
