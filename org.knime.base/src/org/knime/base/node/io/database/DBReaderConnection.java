@@ -129,17 +129,27 @@ final class DBReaderConnection implements DataTable {
             int type = meta.getColumnType(i + 1);
             DataType newType;
             switch (type) {
-            case Types.INTEGER:
-                newType = IntCell.TYPE;
-                break;
-            case Types.FLOAT:
-                newType = DoubleCell.TYPE;
-                break;
-            case Types.DOUBLE:
-                newType = DoubleCell.TYPE;
-                break;
-            default:
-                newType = StringCell.TYPE;
+                // bugfix: support all types which can be handled as integer
+                case Types.INTEGER:
+                case Types.BIT:
+                case Types.BINARY:
+                case Types.BOOLEAN:
+                case Types.VARBINARY:
+                case Types.SMALLINT:
+                case Types.TINYINT:
+                case Types.BIGINT:
+                    newType = IntCell.TYPE;
+                    break;
+                // bugfix: support all types which can be handled as double
+                case Types.FLOAT:
+                case Types.DOUBLE:
+                case Types.NUMERIC:
+                case Types.DECIMAL:
+                case Types.REAL:
+                    newType = DoubleCell.TYPE;
+                    break;
+                default:
+                    newType = StringCell.TYPE;
             }
             cspecs[i] = new DataColumnSpecCreator(name, newType).createSpec();
         }

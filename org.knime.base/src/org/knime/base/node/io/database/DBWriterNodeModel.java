@@ -25,6 +25,7 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Arrays;
@@ -52,7 +53,7 @@ class DBWriterNodeModel extends NodeModel {
 
     private String m_driver = "sun.jdbc.odbc.JdbcOdbcDriver";
 
-    private String m_name = "jdbc:odbc:<database_name>";
+    private String m_url = "jdbc:odbc:<database_name>";
 
     private String m_user = "<user>";
 
@@ -64,7 +65,8 @@ class DBWriterNodeModel extends NodeModel {
     
     static {        
         try {
-            Class<?> driverClass = Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
+            Class<?> driverClass = Class.forName(
+                    "sun.jdbc.odbc.JdbcOdbcDriver");
             Driver theDriver = new WrappedDriver((Driver)driverClass
                     .newInstance());
             DriverManager.registerDriver(theDriver);
@@ -88,7 +90,7 @@ class DBWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString("driver", m_driver);
-        settings.addString("database", m_name);
+        settings.addString("database", m_url);
         settings.addString("user", m_user);
         settings.addStringArray("loaded_driver", m_driverLoaded
                 .toArray(new String[0]));
@@ -131,7 +133,7 @@ class DBWriterNodeModel extends NodeModel {
         }
         if (write) {
             m_driver = driver;
-            m_name = database;
+            m_url = database;
             m_user = user;
             m_pass = password;
             m_table = table;
@@ -155,8 +157,17 @@ class DBWriterNodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         exec.setProgress(-1, "Opening database connection...");
-        new DBWriterConnection(m_name, m_user, m_pass, m_table, inData[0], 
-                exec);
+        Connection conn = null;
+        try {
+            // create database connection
+            conn = DriverManager.getConnection(m_url, m_user, m_pass);
+            // write entire data
+            new DBWriterConnection(conn, m_url, m_table, inData[0], exec);
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
         return new BufferedDataTable[0];
     }
 
@@ -193,12 +204,21 @@ class DBWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        try {
-            new DBWriterConnection(m_name, m_user, m_pass, m_table);
-            return new DataTableSpec[0];
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Could not establish connection"
-                    + " to database: " + m_name);
+        // bugfix 730, don't create database connection during configure, since
+        // it is time consuming and it can't be ensured that connection will 
+        // still be valid during execute
+        
+        // throw exception if no data provided
+        if (inSpecs[0].getNumColumns() == 0) {
+            throw new InvalidSettingsException("No columns in input data.");
         }
+        
+        // print warning if password is empty
+        if (m_pass == null || m_pass.length() == 0) {
+            super.setWarningMessage(
+                    "Please check if you need to set a password.");
+        }
+        
+        return new DataTableSpec[0];
     }
 }

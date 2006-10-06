@@ -23,8 +23,9 @@ package org.knime.base.node.io.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.Types;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -67,64 +68,115 @@ final class DBWriterConnection {
 
     /**
      * Create connection to write into database.
-     * @param url The URL.
-     * @param user The user name.
-     * @param pw The password.
+     * @param conn An already opened connection to a database.
+     * @param url The database URL.
      * @param table The table name to write into.
      * @param data The data to write.
      * @param exec Used the cancel writting.
      * @throws SQLException If connection could not be established.
      * @throws CanceledExecutionException If canceled.
      */
-    DBWriterConnection(final String url, final String user, final String pw,
+    DBWriterConnection(final Connection conn, final String url,
             final String table, final BufferedDataTable data,
             final ExecutionMonitor exec) throws SQLException,
             CanceledExecutionException {
-        Connection conn = DriverManager.getConnection(url, user, pw);
-        Statement stmt = conn.createStatement();
-        DataTableSpec spec = data.getDataTableSpec();
+        
         /*
          * TODO Feature request by Brian: 
          * 'Although I do not at all think that this
          * is the right long-term solution for the problem we are seeing
          * (molecular structure strings are commonly too long to write to
          * 255-character VARCHAR columns in Oracle), this slight modification
-         * should at least temporarily resolve the issue.  Line 86 and 87 of the
-         * current DBWriterConnection.java:'
+         * should at least temporarily resolve the issue.  Line 86 and 87 of 
+         * the current DBWriterConnection.java:'
          */
-        String cols = createColumnName(data.getDataTableSpec());
+        DataTableSpec spec = data.getDataTableSpec();
+        String cols = createColumnName(spec);
+        
         // If we're using oracle, size any varchar(255) columns
-        // to 4000 instead.  Oracle will auto-interpret this as
+        // to 4000 instead. Oracle will auto-interpret this as
         // varchar2(4000) upon table creation.
         if (url.indexOf("oracle") != -1) {
             cols = cols.replaceAll("255", "4000");
         }
+        
+        // bugfix for jdbd-odbc (e.g. MS Access) bridges which don't allow 
+        // numeric SQL-type followed by parameter(s)
+        if (url.startsWith("jdbc:odbc:")) {
+            cols = cols.replace("numeric(30,10)", "numeric");
+        }
+        
         LOGGER.debug(cols);
+               
         // String cols = createColumnName(data.getDataTableSpec());
         // LOGGER.debug(cols);
         try {
-            stmt.execute("DROP TABLE " + table);
+            conn.createStatement().execute("DROP TABLE " + table);
         } catch (Exception e) {
-            LOGGER.debug("Table " + table + " not available.");
+            LOGGER.debug("Table " + table + " not available.", e);
         }
-        stmt.execute("CREATE TABLE " + table + " " + cols);
+        conn.createStatement().execute("CREATE TABLE " + table + " " + cols);
+        
+        StringBuilder wildcard = new StringBuilder("(");
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            if (i > 0) {
+                wildcard.append(", ?");
+            } else {
+                wildcard.append("?");
+            }
+        }
+        wildcard.append(")");
+        
+        // create table meta data with empty column information
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + table
+                + " VALUES " + wildcard.toString());
+        conn.setAutoCommit(false);
+        
+        // bugfix: problems writing more than 13 columns. the prepare statement 
+        // ensures that we can set the columns directly row-by-row, the database
+        // will handle the commit
         int rowCount = data.getRowCount();
         int cnt = 1;
         for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
             exec.checkCanceled();
             exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
-            String values = rowToValueString(it.next(), spec);
-            //LOGGER.debug(values);
-            stmt.addBatch("INSERT INTO " + table + " " + values);
+            DataRow row = it.next();
+            for (int i = 0; i < row.getNumCells(); i++) {
+                int dbIdx = i + 1;
+                DataColumnSpec cspec = spec.getColumnSpec(i);
+                DataCell cell = row.getCell(i);
+                if (cspec.getType().isCompatible(IntValue.class)) {
+                    if (cell.isMissing()) {
+                        stmt.setNull(dbIdx, Types.INTEGER);
+                    } else {
+                        int integer = ((IntValue) cell).getIntValue();
+                        stmt.setInt(dbIdx, integer);
+                    }
+                } else if (cspec.getType().isCompatible(DoubleValue.class)) {
+                    if (cell.isMissing()) {
+                        stmt.setNull(dbIdx, Types.DECIMAL);
+                    } else {
+                        double dbl = ((DoubleValue) cell).getDoubleValue();
+                        stmt.setDouble(dbIdx, dbl);
+                    }
+                } else {
+                    if (cell.isMissing()) {
+                        stmt.setNull(dbIdx, Types.VARCHAR);
+                    } else {
+                        stmt.setString(dbIdx, cell.toString());
+                    }
+                }
+            }
+            stmt.execute();
         }
-        exec.setMessage("Commiting data...");
-        stmt.executeBatch();
+        conn.commit();
+        conn.setAutoCommit(true);
         stmt.close();
         conn.close();
     }
     
     private String createColumnName(final DataTableSpec spec) {
-        StringBuffer buf = new StringBuffer("(");
+        StringBuilder buf = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
             if (i > 0) {
                 buf.append(", ");
@@ -134,37 +186,14 @@ final class DBWriterConnection {
             if (cspec.getType().isCompatible(IntValue.class)) {
                 buf.append(column + " integer");
             } else if (cspec.getType().isCompatible(DoubleValue.class)) {
-                buf.append(column + " numeric");
+                // bugfix 791, some databases need these arguments to write 
+                // doubles propertly and don't truncate them
+                buf.append(column + " numeric(30,10)");
             } else {
                 buf.append(column + " varchar(255)");
             }
         }
         return buf.toString() + ")";
     }
-        
 
-    private String rowToValueString(final DataRow row, 
-            final DataTableSpec spec) {
-        StringBuffer buf = new StringBuffer("(");
-        for (int i = 0; i < row.getNumCells(); i++) {
-            DataColumnSpec cspec = spec.getColumnSpec(i);
-            DataCell cell = row.getCell(i);
-            if (i > 0) {
-                buf.append(", ");
-            }
-            if (cell.isMissing()) {
-                buf.append("null");
-            } else if (cspec.getType().isCompatible(IntValue.class)) {
-                int integer = ((IntValue) cell).getIntValue();
-                buf.append(integer);
-            } else if (cspec.getType().isCompatible(DoubleValue.class)) {
-                double dbl = ((DoubleValue) cell).getDoubleValue();
-                buf.append(dbl);
-            } else {
-                buf.append("'" + cell.toString() + "'");
-            }
-        }
-        buf.append(")");
-        return "VALUES " + buf.toString();
-    }
 }

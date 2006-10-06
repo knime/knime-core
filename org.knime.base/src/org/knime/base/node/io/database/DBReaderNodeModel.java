@@ -67,7 +67,8 @@ class DBReaderNodeModel extends NodeModel {
     
     static {        
         try {
-            Class<?> driverClass = Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
+            Class<?> driverClass = Class.forName(
+                    "sun.jdbc.odbc.JdbcOdbcDriver");
             Driver theDriver = new WrappedDriver((Driver)driverClass
                     .newInstance());
             DriverManager.registerDriver(theDriver);
@@ -160,9 +161,13 @@ class DBReaderNodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         exec.setProgress(-1, "Opening database connection...");
-        m_load = new DBReaderConnection(m_name, m_user, m_pass, m_query);
-        return new BufferedDataTable[]{exec.createBufferedDataTable(m_load,
+        try {
+            m_load = new DBReaderConnection(m_name, m_user, m_pass, m_query);
+            return new BufferedDataTable[]{exec.createBufferedDataTable(m_load,
                 exec)};
+        } finally {
+            reset();
+        }
     }
 
     /**
