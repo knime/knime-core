@@ -53,19 +53,23 @@ public final class ColorAttr implements Serializable {
     private final Color m_attrColorSelectedHilite;
     
     /**
-     * The color for selection: some kind of light blue.
+     * The color for selection. Created like other colors with the
+     * HILITE color as base color.
+     * Color.getHSBColor(hsbVals[0], 0.2f, 0.7f);
      */
-    public static final Color SELECTED = new Color(204, 204, 255);
+    public static final Color SELECTED = new Color(179, 168, 143); 
     
     /**
-     * The color for hilite: yellow.
+     * The color for hilite: orange.
      */
-    public static final Color HILITE = Color.YELLOW;
+    public static final Color HILITE = new Color(255, 181, 0);
     
     /**
-     * The color for hilite and selection: pink.
+     * The color for hilite and selection. Created like other colors with the
+     * HILITE color as base color.
+     * Color.getHSBColor(hsbVals[0], 0.2f, 1f);
      */
-    public static final Color SELECTED_HILITE = Color.PINK;
+    public static final Color SELECTED_HILITE = new Color(255, 240, 204);   
     
     /**
      * The color for inactive points ("grayed out"): light gray.
@@ -93,16 +97,27 @@ public final class ColorAttr implements Serializable {
      */
     private static final HashMap<Color, ColorAttr> COLORATTRS;
     
+    private static final float S_NORMAL = 1f;
+    private static final float S_SELECT = 0.2f;
+    private static final float B_NORMAL = 0.5f;
+    private static final float B_HILITE = 1f;
+    
     /*
      * Inits Color to ColorAttr map and the default ColorAttr which is also
      * added to this map.
      */
     static {
         COLORATTRS = new HashMap<Color, ColorAttr>();
-        Color c = Color.DARK_GRAY;
-        DEFAULT = new ColorAttr(c);
-        COLORATTRS.put(c, DEFAULT);
-    }    
+        DEFAULT = new ColorAttr();
+        COLORATTRS.put(DEFAULT.getColor(), DEFAULT);
+    }  
+    
+    private ColorAttr() {
+        m_attrColor = Color.DARK_GRAY;
+        m_attrColorSelected = SELECTED;
+        m_attrColorSelectedHilite = SELECTED_HILITE;
+        m_attrColorHilite = HILITE;
+    }
     
     /*
      * Creates a new color attribute objects with its initial color.
@@ -114,6 +129,13 @@ public final class ColorAttr implements Serializable {
         float[] hsbVals = new float[3];
         Color.RGBtoHSB(attColor.getRed(), attColor.getGreen(),
                 attColor.getBlue(), hsbVals);
+        m_attrColor = Color.getHSBColor(hsbVals[0], S_NORMAL, B_NORMAL);
+        m_attrColorSelected = Color.getHSBColor(hsbVals[0], S_SELECT, 
+                    B_NORMAL + 0.2f);
+        m_attrColorHilite = Color.getHSBColor(hsbVals[0], S_NORMAL, B_HILITE);
+        m_attrColorSelectedHilite = Color.getHSBColor(hsbVals[0], S_SELECT, 
+                B_HILITE);
+        /* old version -> mixed yellow into hilited color 
         m_attrColor = attColor;
         m_attrColorSelected =
             Color.getColor(null, Color.HSBtoRGB(hsbVals[0], 0.6f, 0.6f));
@@ -121,6 +143,7 @@ public final class ColorAttr implements Serializable {
             Color.getColor(null, Color.HSBtoRGB(hsbVals[0] + 0.1f, 1.0f, 1.0f));
         m_attrColorSelectedHilite =
             Color.getColor(null, Color.HSBtoRGB(hsbVals[0] + 0.1f, 0.6f, 0.6f));
+            */
     }
 
     /**
