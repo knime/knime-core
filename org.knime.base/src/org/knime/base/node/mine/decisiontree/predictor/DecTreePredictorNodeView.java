@@ -150,9 +150,9 @@ public class DecTreePredictorNodeView extends NodeView {
             Set<DataCell> covPat = ((DecisionTreeNode)lastNode)
                     .coveredPattern();
             if (state) {
-                m_hiLiteHdl.hiLite(covPat);
+                m_hiLiteHdl.fireHiLiteEvent(covPat);
             } else {
-                m_hiLiteHdl.unHiLite(covPat);
+                m_hiLiteHdl.fireUnHiLiteEvent(covPat);
             }
         }
 
@@ -189,7 +189,7 @@ public class DecTreePredictorNodeView extends NodeView {
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
-                m_hiLiteHdl.unHiLiteAll();
+                m_hiLiteHdl.fireClearHiLiteEvent();
             }
         });
         result.add(item);

@@ -1165,7 +1165,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                         }
                     }
                     turnSelectedIntoHilited(m_root, true);
-                    m_hiliteHandler.hiLite(m_hilitedKeys);
+                    m_hiliteHandler.fireHiLiteEvent(m_hilitedKeys);
 
                     repaint();
                 } else if (e.getActionCommand().equals(
@@ -1178,13 +1178,13 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                         }
                     }
                     turnSelectedIntoHilited(m_root, false);
-                    m_hiliteHandler.unHiLite(unhilite);
+                    m_hiliteHandler.fireUnHiLiteEvent(unhilite);
 
                     repaint();
                 } else if (e.getActionCommand().equals(POPUP_UNHILITE)) {
                     m_root.setHilited(false);
                     m_hilitedKeys.clear();
-                    m_hiliteHandler.unHiLiteAll();
+                    m_hiliteHandler.fireClearHiLiteEvent();
 
                     repaint();
                 }

@@ -144,8 +144,8 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              *      java.awt.event.ActionEvent)
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().hiLite(
-                        m_selected);
+                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
+                    .fireHiLiteEvent(m_selected);
             }
         });
         menu.add(item);
@@ -156,8 +156,8 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              *      java.awt.event.ActionEvent)
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().unHiLite(
-                        m_selected);
+                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
+                .fireUnHiLiteEvent(m_selected);
             }
         });
         menu.add(item);
@@ -169,7 +169,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                        .unHiLiteAll();
+                        .fireClearHiLiteEvent();
             }
         });
         menu.add(item);
@@ -186,8 +186,8 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              *      java.awt.event.ActionEvent)
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().hiLite(
-                        m_selected);
+                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
+                    .fireHiLiteEvent(m_selected);
             }
 
         });
@@ -200,8 +200,8 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              *      java.awt.event.ActionEvent)
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().unHiLite(
-                        m_selected);
+                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
+                    .fireUnHiLiteEvent(m_selected);
             }
 
         });
@@ -215,7 +215,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                        .unHiLiteAll();
+                        .fireClearHiLiteEvent();
             }
         });
         menu.add(item);
@@ -228,7 +228,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
      */
     public void hiLite(final KeyEvent event) {
         getComponent().repaint();
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().hiLite(
+        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().fireHiLiteEvent(
                 event.keys());
     }
 
@@ -238,17 +238,19 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
      */
     public void unHiLite(final KeyEvent event) {
         getComponent().repaint();
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().unHiLite(
+        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().fireUnHiLiteEvent(
                 event.keys());
     }
+
 
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener
      *      #unHiLiteAll()
      */
     public void unHiLiteAll() {
+        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
+            .fireClearHiLiteEvent();
         getComponent().repaint();
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().unHiLiteAll();
     }
 
     /**

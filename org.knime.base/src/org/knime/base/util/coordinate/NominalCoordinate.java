@@ -43,6 +43,9 @@ import org.knime.core.data.DataColumnSpec;
  */
 public class NominalCoordinate extends Coordinate {
     
+    
+    private static final int DEFAULT_ABSOLUTE_TICK_DIST = 30;
+    
 
     /**
      * The number of different nominal values.
@@ -149,6 +152,37 @@ public class NominalCoordinate extends Coordinate {
 
         return mappings;
     }
+    
+    /**
+     * 
+     * @param absoluteLength the available length.
+     * @return a reduced mapping with a minimum distance between the values 
+     * and dots if some values were left out,
+     */
+    public CoordinateMapping[] getReducedTickPositions(
+            final int absoluteLength) {
+        int tickWidth = (int)Math.ceil(absoluteLength / m_numberPossibleValues);
+        if (tickWidth == 0) {
+            tickWidth = 1;
+        }
+        int leaveOut = DEFAULT_ABSOLUTE_TICK_DIST / tickWidth;
+        CoordinateMapping[] mappings = getTickPositions(absoluteLength, true);
+        CoordinateMapping[] reduced;
+        if (leaveOut > 0) {
+            reduced = new CoordinateMapping[mappings.length / leaveOut];
+            for (int i = 0; i < reduced.length; i++) {
+                if (i % 2 == 0) {
+                    reduced[i] = mappings[i * leaveOut];
+                } else {
+                    reduced[i] = new NominalCoordinateMapping("...", 
+                            mappings[i * leaveOut].getMappingValue());
+                }
+            }
+        } else {
+            reduced = mappings;    
+        }
+        return reduced;
+    }
 
     /**
      * Calculates a numeric mapping assuming a column with a given number of
@@ -203,5 +237,16 @@ public class NominalCoordinate extends Coordinate {
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {
         return absoluteLength / m_numberPossibleValues;
+    }
+
+    /**
+     * Cuts the passed string by retaining only the first 3 and the last four 
+     * characters, the rest is replaced by dots.
+     * @param label the string to be cutted
+     * @return the cutted string
+     */
+    public static String cutString(final String label) {
+        return label.substring(0, 3) + ".." 
+        + label.substring(label.length() - 4, label.length());
     }
 }

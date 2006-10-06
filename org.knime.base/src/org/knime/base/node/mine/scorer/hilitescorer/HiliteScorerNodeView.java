@@ -267,7 +267,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
-            getNodeModel().getInHiLiteHandler(0).hiLite(
+            getNodeModel().getInHiLiteHandler(0).fireHiLiteEvent(
                     ((HiliteScorerNodeModel)getNodeModel())
                             .getSelectedSet(selectedCells));
         }
@@ -288,7 +288,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
-            getNodeModel().getInHiLiteHandler(0).unHiLite(
+            getNodeModel().getInHiLiteHandler(0).fireUnHiLiteEvent(
                     ((HiliteScorerNodeModel)getNodeModel())
                             .getSelectedSet(selectedCells));
         }
@@ -303,7 +303,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 
         // reset the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
-            getNodeModel().getInHiLiteHandler(0).unHiLiteAll();
+            getNodeModel().getInHiLiteHandler(0).fireClearHiLiteEvent();
         }
 
     }
@@ -412,9 +412,10 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * 
      */
     public void unHiLiteAll() {
-
         clearHiliteBackgroundColor();
     }
+
 }

@@ -195,7 +195,7 @@ final class TransposeTableNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_outHiLite.unHiLiteAll();
+        m_outHiLite.fireClearHiLiteEvent();
     }
 
     /**

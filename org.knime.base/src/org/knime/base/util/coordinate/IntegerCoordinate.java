@@ -151,6 +151,7 @@ class IntegerCoordinate extends NumericCoordinate {
         }
 
         // the height per 1 value in pixel
+        
         double heightPerVal = absolutLength / m_domainRange;
         if (m_values != null && m_values.size() > 0) {
             // the user has predefined values which he want to have displayed

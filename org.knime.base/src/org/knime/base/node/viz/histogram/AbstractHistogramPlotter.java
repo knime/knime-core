@@ -782,6 +782,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         updatePaintModel();
     }
 
+
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener
      *      #unHiLiteAll()
@@ -830,7 +831,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
             public void actionPerformed(final ActionEvent e) {
                 HiLiteHandler hiLiteHandler = getHiLiteHandler();
                 if (hiLiteHandler != null) {
-                    hiLiteHandler.hiLite(getHistogramDrawingPane()
+                    hiLiteHandler.fireHiLiteEvent(getHistogramDrawingPane()
                             .getKeys4SelectedBars());
                 }
             }
@@ -842,7 +843,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
             public void actionPerformed(final ActionEvent e) {
                 HiLiteHandler hiLiteHandler = getHiLiteHandler();
                 if (hiLiteHandler != null) {
-                    hiLiteHandler.unHiLite(getHistogramDrawingPane()
+                    hiLiteHandler.fireUnHiLiteEvent(getHistogramDrawingPane()
                             .getKeys4SelectedBars());
                 }
             }
@@ -853,7 +854,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
             public void actionPerformed(final ActionEvent e) {
                 HiLiteHandler hiLiteHandler = getHiLiteHandler();
                 if (hiLiteHandler != null) {
-                    hiLiteHandler.unHiLiteAll();
+                    hiLiteHandler.fireClearHiLiteEvent();
                 }
             }
         });

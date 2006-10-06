@@ -932,6 +932,7 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         repaint();
     }
 
+
     /**
      * @see HiLiteListener#unHiLiteAll()
      */
@@ -949,13 +950,13 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         for (int i = 0; i < m_rowCount; i++) {
             if (m_vh != null) {
                 if (m_vh.isSelected(m_keys[i].getId())) {
-                    m_hdl.hiLite(m_keys[i].getId());
+                    m_hdl.fireHiLiteEvent(m_keys[i].getId());
                     m_hilited[i] = true;
                 }
             } else {
                 if (m_selected[i]) {
                     m_hilited[i] = true;
-                    m_hdl.hiLite(m_keys[i].getId());
+                    m_hdl.fireHiLiteEvent(m_keys[i].getId());
                 }
             }
         }
@@ -969,13 +970,13 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         for (int i = 0; i < m_rowCount; i++) {
             if (m_vh != null) {
                 if (m_vh.isSelected(m_keys[i].getId())) {
-                    m_hdl.unHiLite(m_keys[i].getId());
+                    m_hdl.fireUnHiLiteEvent(m_keys[i].getId());
                     m_hilited[i] = false;
                 }
             } else {
                 if (m_selected[i]) {
                     m_hilited[i] = false;
-                    m_hdl.unHiLite(m_keys[i].getId());
+                    m_hdl.fireUnHiLiteEvent(m_keys[i].getId());
                 }
             }
         }
@@ -986,7 +987,7 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * clears hilited rows in all views.
      */
     public void clearHilite() {
-        m_hdl.unHiLiteAll();
+        m_hdl.fireClearHiLiteEvent();
     }
 
     // ******************* selection methods **********************
@@ -1006,7 +1007,8 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
     public boolean pointInStage(final int x, final int y) {
         return ((x <= m_distanceBetweenCoordinates * m_columnCount)
                 && (x >= m_distanceBetweenCoordinates)
-                && (y <= m_canvasHeight - m_footerHeight) && (y >= m_headerHeight));
+                && (y <= m_canvasHeight - m_footerHeight) 
+                && (y >= m_headerHeight));
     }
 
     /**

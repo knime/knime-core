@@ -193,7 +193,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
      * Hilites the currently selected rules by adding them to the HiLiteHandler.
      */
     public void hiliteSelectedRules() {
-        m_hiLiteHandler.hiLite(m_selectedRules);
+        m_hiLiteHandler.fireHiLiteEvent(m_selectedRules);
     }
 
     /**
@@ -201,7 +201,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
      * HiLiteHandler.
      */
     public void unhiliteSelectedRules() {
-        m_hiLiteHandler.unHiLite(m_selectedRules);
+        m_hiLiteHandler.fireUnHiLiteEvent(m_selectedRules);
     }
 
     /**
@@ -244,15 +244,17 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
      */
     public void hiLite(final KeyEvent event) {
         // LOGGER.debug("hilite: " + event.keys());
-        m_hiLiteHandler.hiLite(event.keys());
+        m_hiLiteHandler.fireHiLiteEvent(event.keys());
         repaint();
     }
 
+
     /**
      * Resets the current hilite. Triggers a repaint.
+     * @see HiLiteListener#unHiLiteAll() 
      */
     public void unHiLiteAll() {
-        m_hiLiteHandler.unHiLiteAll();
+        m_hiLiteHandler.fireClearHiLiteEvent();
         m_hideUnhilitedRules = false;
         repaint();
     }
@@ -263,7 +265,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
      * @param event - the hiliting event.
      */
     public void unHiLite(final KeyEvent event) {
-        m_hiLiteHandler.unHiLite(event.keys());
+        m_hiLiteHandler.fireUnHiLiteEvent(event.keys());
         repaint();
     }
 

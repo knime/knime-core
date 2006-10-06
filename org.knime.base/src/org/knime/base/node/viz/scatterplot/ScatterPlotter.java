@@ -766,7 +766,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
             setHideUnHiLited(false);
             setFadeUnHiLited(false);
             m_show.setSelected(true);
-            m_hiliteHdlr.unHiLiteAll();
+            m_hiliteHdlr.fireClearHiLiteEvent();
         } else if (e.getActionCommand().equals(POPUP_SHOW)) {
             setHideUnHiLited(false);
             setFadeUnHiLited(false);
@@ -781,7 +781,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     public void hiliteSelected() {
         if (m_hiliteHdlr != null) {
             m_hiliteHdlr
-                    .hiLite(getScatterPlotterDrawingPane().getSelectedSet());
+                    .fireHiLiteEvent(getScatterPlotterDrawingPane().getSelectedSet());
             repaint();
         }
     }
@@ -792,7 +792,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
      */
     public void unHiliteSelected() {
         if (m_hiliteHdlr != null) {
-            m_hiliteHdlr.unHiLite(getScatterPlotterDrawingPane()
+            m_hiliteHdlr.fireUnHiLiteEvent(getScatterPlotterDrawingPane()
                     .getSelectedSet());
             repaint();
         }
@@ -839,12 +839,12 @@ public class ScatterPlotter extends AbstractPlotter2D implements
         changeHiLiteTo(false, event.keys());
     }
 
+
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener
      *      #unHiLiteAll()
      */
     public void unHiLiteAll() {
-
         clearHilite();
     }
 
