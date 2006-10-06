@@ -49,7 +49,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
 
     /**
      * @return Delegates to underlying stream.
-     * @throws IOException 
+     * @throws IOException When delgating method call fails.
      * @see java.io.FilterInputStream#available()
      */
     public int available() throws IOException {
@@ -57,7 +57,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @throws IOException
+     * @throws IOException When delgating method call fails.
      * @see java.io.FilterInputStream#close()
      */
     public void close() throws IOException {
@@ -65,7 +65,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
+     * @return Result from delegate object.
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
@@ -73,7 +73,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @param readlimit
+     * @param readlimit 
      * @see java.io.FilterInputStream#mark(int)
      */
     public void mark(final int readlimit) {
@@ -81,7 +81,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
+     * @return Result from delegate object.
      * @see java.io.FilterInputStream#markSupported()
      */
     public boolean markSupported() {
@@ -89,8 +89,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.FilterInputStream#read()
      */
     public int read() throws IOException {
@@ -98,11 +98,11 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @param b
-     * @param off
-     * @param len
-     * @return
-     * @throws IOException
+     * @param b Forwarded to delegate object.
+     * @param off Forwarded to delegate object.
+     * @param len Forwarded to delegate object.
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.FilterInputStream#read(byte[], int, int)
      */
     public int read(
@@ -111,9 +111,9 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @param b
-     * @return
-     * @throws IOException
+     * @param b Forwarded to delegate object.
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.FilterInputStream#read(byte[])
      */
     public int read(final byte[] b) throws IOException {
@@ -121,8 +121,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readBoolean()
      */
     public boolean readBoolean() throws IOException {
@@ -130,8 +130,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readByte()
      */
     public byte readByte() throws IOException {
@@ -139,8 +139,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readChar()
      */
     public char readChar() throws IOException {
@@ -148,8 +148,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readDouble()
      */
     public double readDouble() throws IOException {
@@ -157,8 +157,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readFloat()
      */
     public float readFloat() throws IOException {
@@ -166,10 +166,10 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @param b
-     * @param off
-     * @param len
-     * @throws IOException
+     * @param b Forwarded to delegate object.
+     * @param off Forwarded to delegate object.
+     * @param len Forwarded to delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readFully(byte[], int, int)
      */
     public void readFully(
@@ -178,8 +178,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @param b
-     * @throws IOException
+     * @param b Forwarded to delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readFully(byte[])
      */
     public void readFully(final byte[] b) throws IOException {
@@ -187,8 +187,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readInt()
      */
     public int readInt() throws IOException {
@@ -196,8 +196,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readLine()
      * @deprecated As in {@link DataInputStream#readLine()}.
      */
@@ -206,8 +206,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readLong()
      */
     public long readLong() throws IOException {
@@ -215,8 +215,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readShort()
      */
     public short readShort() throws IOException {
@@ -224,8 +224,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readUnsignedByte()
      */
     public int readUnsignedByte() throws IOException {
@@ -233,8 +233,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readUnsignedShort()
      */
     public int readUnsignedShort() throws IOException {
@@ -242,7 +242,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
     
     /**
-     * @throws IOException
+     * @throws IOException When delgating method call fails.
      * @see java.io.FilterInputStream#reset()
      */
     public void reset() throws IOException {
@@ -250,9 +250,9 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
     
     /**
-     * @param n
-     * @return
-     * @throws IOException
+     * @param n Forwarded to delegate object.
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.FilterInputStream#skip(long)
      */
     public long skip(final long n) throws IOException {
@@ -260,9 +260,9 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
     
     /**
-     * @param n
-     * @return
-     * @throws IOException
+     * @param n Forwarded to delegate object.
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#skipBytes(int)
      */
     public int skipBytes(final int n) throws IOException {
@@ -270,8 +270,8 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
     }
 
     /**
-     * @return
-     * @throws IOException
+     * @return Result from delegate object.
+     * @throws IOException When delgating method call fails.
      * @see java.io.DataInput#readUTF()
      */
     public String readUTF() throws IOException {
