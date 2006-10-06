@@ -87,7 +87,8 @@ class NoKeyBuffer extends Buffer {
      * @see Buffer#writeRowKey(RowKey)
      */
     @Override
-    void writeRowKey(final RowKey key) throws IOException {
+    void writeRowKey(final RowKey key, final DCObjectOutputStream outStream) 
+        throws IOException {
         // left empty, uses always the same key
     }
     

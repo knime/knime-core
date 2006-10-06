@@ -44,7 +44,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.util.FileUtil;
 
 
 /**
@@ -81,7 +80,7 @@ public class DataContainer implements RowAppender {
      * Number of cells that are cached without being written to the 
      * temp file (see Buffer implementation).
      */
-    private static final int MAX_CELLS_IN_MEMORY = 0; //2000000;
+    private static final int MAX_CELLS_IN_MEMORY = 20000;
     
     /**
      * The number of possible values being kept at most. If the number of
@@ -588,11 +587,7 @@ public class DataContainer implements RowAppender {
             CanceledExecutionException {
         if (table instanceof ContainerTable) {
             Buffer buf = ((ContainerTable)table).getBuffer();
-            if (buf.usesOutFile()) {
-                File tempFile = buf.getFile();
-                FileUtil.copy(tempFile, outFile, exec);
-                return;
-            }
+            buf.saveToFile(outFile, exec);
         }
         Buffer buf = new Buffer(outFile);
         int rowCount = 0;

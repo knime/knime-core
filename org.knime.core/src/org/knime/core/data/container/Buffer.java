@@ -156,7 +156,7 @@ class Buffer {
     private DCObjectOutputStream m_outStream;
     
     /** maximum number of rows that are in memory. */
-    private final int m_maxRowsInMem;
+    private int m_maxRowsInMem;
     
     /** the current row count (how often has addRow been called). */
     private int m_size;
@@ -226,8 +226,6 @@ class Buffer {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new LinkedList<DataRow>();
-        m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
-        m_list = new LinkedList<DataRow>();
         m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
         m_size = 0;
     }
@@ -245,7 +243,8 @@ class Buffer {
         if (outFile == null) {
             throw new NullPointerException("Can't set null file!");
         }
-        initOutFile(outFile);
+        m_outStream = initOutFile(outFile);
+        m_hasCreatedTempFile = false;
     }
     
     /** Creates new buffer for <strong>reading</strong>. The file is
@@ -331,12 +330,21 @@ class Buffer {
     public void addRow(final DataRow row) {
         m_list.add(row);
         incrementSize();
-        if (m_list.size() > m_maxRowsInMem) { // if size is violated
+        // if size is violated
+        if (m_list.size() > m_maxRowsInMem) {
             try {
-                if (m_outStream == null) {
-                    initOutFile(/*File=*/null);
+                if (m_outFile == null) {
+                    m_outFile = DataContainer.createTempFile();
+                    m_hasCreatedTempFile = true;
+                    OPENBUFFERS.add(new WeakReference<Buffer>(this));
+                    m_outStream = initOutFile(m_outFile);
                 }
-                writeEldestRow();             // write it to the file
+                while (!m_list.isEmpty()) {
+                    DataRow firstRow = m_list.remove(0);
+                    writeRow(firstRow, m_outStream); // write it to the file
+                }
+                // write next rows directly to file  
+                m_maxRowsInMem = 0;
             } catch (IOException ioe) {
                 String fileName = (m_outFile != null 
                         ? "\"" + m_outFile.getName() + "\"" : "");
@@ -366,35 +374,47 @@ class Buffer {
             // disallow modification
             List<DataRow> newList = Collections.unmodifiableList(m_list);
             m_list = newList;
-            return;
-        }
-        try {
-            // if it uses the file anyway: write also last rows to it.
-            while (!m_list.isEmpty()) {
-                writeEldestRow();
+        } else {
+            try {
+                assert (m_list.isEmpty()) : "In-Memory list is not empty.";
+                m_shortCutsLookup = closeFile(m_outStream);
+                m_typeShortCuts = null; // garbage
+                m_list = null;
+                double sizeInMB = m_outFile.length() / (double)(1 << 20);
+                String size = NumberFormat.getInstance().format(sizeInMB);
+                LOGGER.info("Buffer file (" + m_outFile.getAbsolutePath() 
+                        + ") is " + size + "MB in size");
+            } catch (IOException ioe) {
+                throw new RuntimeException("Cannot close stream of file \"" 
+                        + m_outFile.getName() + "\"", ioe); 
             }
-            createShortCutArray();
-            // Write spec.
-            // we push the underlying stream forward; need to make
-            // sure that m_outStream is done with everything.
-            m_outStream.flush();
-            ZipOutputStream zipOut = 
-                (ZipOutputStream)m_outStream.getUnderylingStream();
-            zipOut.closeEntry();
-            // both method will create their own zip entry and close 
-            // it afterwards
-            writeSpecToFile(zipOut);
-            writeMetaToFile(zipOut);
-            zipOut.close();
-            double sizeInMB = m_outFile.length() / (double)(1 << 20);
-            String size = NumberFormat.getInstance().format(sizeInMB);
-            LOGGER.info("Buffer file (" + m_outFile.getAbsolutePath() 
-                    + ") is " + size + "MB in size");
-        } catch (IOException ioe) {
-            throw new RuntimeException("Cannot close stream of file \"" 
-                    + m_outFile.getName() + "\"", ioe); 
         }
     } // close()
+    
+    /**
+     * Called when the buffer is closed or when the in-memory content (i.e.
+     * using m_list) is written to a file.
+     * @param outStream The output stream to close (to add meta-data, e.g.).
+     * @return The lookup table similar to m_shortCutsLookup
+     * @throws IOException If that fails.
+     */
+    private Class<? extends DataCell>[] closeFile(
+            final DCObjectOutputStream outStream) throws IOException {
+        Class<? extends DataCell>[] shortCutsLookup = createShortCutArray();
+        // Write spec.
+        // we push the underlying stream forward; need to make
+        // sure that m_outStream is done with everything.
+        outStream.flush();
+        ZipOutputStream zipOut = 
+            (ZipOutputStream)outStream.getUnderylingStream();
+        zipOut.closeEntry();
+        // both method will create their own zip entry and close 
+        // it afterwards
+        writeSpecToFile(zipOut);
+        writeMetaToFile(zipOut, shortCutsLookup);
+        zipOut.close();
+        return shortCutsLookup;
+    }
     
     /** Called when buffer is closed and we are writing to a customized
      * file. This method will add a zip entry containing the spec.
@@ -416,9 +436,14 @@ class Buffer {
     /** Writes internals to the zip output stream by adding a zip entry and 
      * writing to it.
      * @param zipOut To write to.
+     * @param shortCutsLookup The lookup table of this buffer, generally it's
+     * m_shortCutsLookup but it may be different when this buffer operates
+     * in-memory (i.e. uses m_list) but is written to a destination file.
      * @throws IOException If that fails.
      */
-    void writeMetaToFile(final ZipOutputStream zipOut) throws IOException {
+    void writeMetaToFile(final ZipOutputStream zipOut, 
+            final Class<? extends DataCell>[] shortCutsLookup) 
+            throws IOException {
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
         NodeSettings settings = new NodeSettings("Table Meta Information");
         NodeSettingsWO subSettings = 
@@ -426,9 +451,9 @@ class Buffer {
         subSettings.addString(CFG_VERSION, getVersion());
         subSettings.addInt(CFG_SIZE, size());
         // m_shortCutsLookup to string array, saved in config
-        String[] cellClasses = new String[m_shortCutsLookup.length];
-        for (int i = 0; i < m_shortCutsLookup.length; i++) {
-            cellClasses[i] = m_shortCutsLookup[i].getName();
+        String[] cellClasses = new String[shortCutsLookup.length];
+        for (int i = 0; i < shortCutsLookup.length; i++) {
+            cellClasses[i] = shortCutsLookup[i].getName();
         }
         subSettings.addStringArray(CFG_CELL_CLASSES, cellClasses);
         NodeSettingsWO addSubSettings = 
@@ -536,7 +561,7 @@ class Buffer {
     
     /** Create the shortcut table. */
     @SuppressWarnings("unchecked") // no generics in array definiton
-    private void createShortCutArray() {
+    private Class<? extends DataCell>[] createShortCutArray() {
         m_shortCutsLookup = new Class[m_typeShortCuts.size()];
         for (Map.Entry<Class<? extends DataCell>, Byte> e 
                 : m_typeShortCuts.entrySet()) {
@@ -544,7 +569,7 @@ class Buffer {
             Class<? extends DataCell> type = e.getKey();
             m_shortCutsLookup[shortCut - BYTE_TYPE_START] = type;
         }
-        m_typeShortCuts = null;
+        return m_shortCutsLookup;
     }
     
     /** Does the buffer use a file?
@@ -552,14 +577,6 @@ class Buffer {
      */
     boolean usesOutFile() {
         return m_outFile != null;
-    }
-    
-    /** Get reference to the file that we use or <code>null</code> if we keep
-     * the data in main memory.
-     * @return The file we use.
-     */
-    File getFile() {
-        return m_outFile;
     }
     
     /** Get the table spec that was set in the constructor.
@@ -578,29 +595,31 @@ class Buffer {
     
     /**
      * Serializes the first element in the list to the out file. This method
-     * is called from <code>addRow(DataRow)</code> and <code>close()</code>.
+     * is called from <code>addRow(DataRow)</code>.
      * @throws IOException If an IO error occurs while writing to the file.
      */
-    private void writeEldestRow() throws IOException {
-        DataRow firstRow = m_list.remove(0);
-        RowKey id = firstRow.getKey();
-        writeRowKey(id);
-        for (int i = 0; i < firstRow.getNumCells(); i++) {
-            DataCell cell = firstRow.getCell(i);
-            writeDataCell(cell);
+    private void writeRow(final DataRow row, 
+            final DCObjectOutputStream outStream) throws IOException {
+        RowKey id = row.getKey();
+        writeRowKey(id, outStream);
+        for (int i = 0; i < row.getNumCells(); i++) {
+            DataCell cell = row.getCell(i);
+            writeDataCell(cell, outStream);
         }
-        m_outStream.writeChar(ROW_SEPARATOR);
-        m_outStream.reset();
-    } // writeEldestRow()
+        outStream.writeChar(ROW_SEPARATOR);
+        outStream.reset();
+    }
     
     /** Writes the row key to the out stream. This method is overridden in
      * NoKeyBuffer in order to skip the row key. 
      * @param key The key to write.
+     * @param outStream To write to.
      * @throws IOException If that fails.
      */
-    void writeRowKey(final RowKey key) throws IOException {
+    void writeRowKey(final RowKey key, 
+            final DCObjectOutputStream outStream) throws IOException {
         DataCell id = key.getId();
-        writeDataCell(id);
+        writeDataCell(id, outStream);
     }
     
     /** Reads a row key from a string. Is overridden in NoKeyBuffer to return
@@ -615,10 +634,15 @@ class Buffer {
         return new RowKey(id);
     }
     
-    /* Writes a data cell to the m_outStream. */
-    private void writeDataCell(final DataCell cell) throws IOException {
+    /** Writes a data cell to the outStream.
+     * @param cell The cell to write.
+     * @param outStream To write to.
+     * @throws IOException
+     */
+    private void writeDataCell(final DataCell cell, 
+            final DCObjectOutputStream outStream) throws IOException {
         if (cell.isMissing()) {
-            m_outStream.writeByte(BYTE_TYPE_MISSING);
+            outStream.writeByte(BYTE_TYPE_MISSING);
             return;
         }
         Class<? extends DataCell> cellClass = cell.getClass();
@@ -639,12 +663,12 @@ class Buffer {
         // DataCell is datacell-serializable
         if (serializer != null) {
             // memorize type if it does not exist
-            m_outStream.writeByte(identifier);
-            m_outStream.writeDataCell(serializer, cell);
+            outStream.writeByte(identifier);
+            outStream.writeDataCell(serializer, cell);
         } else {
-            m_outStream.writeByte(BYTE_TYPE_SERIALIZATION);
-            m_outStream.writeByte(identifier);
-            m_outStream.writeObject(cell);
+            outStream.writeByte(BYTE_TYPE_SERIALIZATION);
+            outStream.writeByte(identifier);
+            outStream.writeObject(cell);
         }
     }
 
@@ -720,7 +744,7 @@ class Buffer {
                 return DataType.getMissingCell();
             }
         }
-    }
+    } // readDataCellVersion100(DCObjectInputStream)
     
     private Class<? extends DataCell> getTypeForChar(final byte identifier) 
         throws IOException {
@@ -734,23 +758,19 @@ class Buffer {
     /** Creates the out file and the stream that writes to it.
      * @param outFile The file to write to. If <code>null</code>, a 
      * temp file is created and deleted on exit.
-     * @throws IOException If the file or stream cannot be instantiated.
+     * @return A new output stream writing to the argument file.
+     * @throws IOException If the stream cannot be instantiated.
      */
-    private void initOutFile(final File outFile) throws IOException {
-        assert (m_outStream == null);
-        if (outFile == null) {
-            m_outFile = DataContainer.createTempFile();
-            m_hasCreatedTempFile = true;
-            OPENBUFFERS.add(new WeakReference<Buffer>(this));
-        } else {
-            m_outFile = outFile;
-            m_hasCreatedTempFile = false;
-        }
+    private DCObjectOutputStream initOutFile(
+            final File outFile) throws IOException {
+        assert (outFile != null);
         ZipOutputStream zipOut = new ZipOutputStream(
-                new BufferedOutputStream(new FileOutputStream(m_outFile)));
+                new BufferedOutputStream(new FileOutputStream(outFile)));
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
-        m_outStream = new DCObjectOutputStream(zipOut);
-    } // initOutFile()
+        m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
+        m_outFile = outFile;
+        return new DCObjectOutputStream(zipOut);
+    }
     
     /**
      * Get a new <code>RowIterator</code>, traversing all rows that have been
@@ -778,11 +798,29 @@ class Buffer {
      */
     void saveToFile(final File f, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
+        if (m_spec == null) {
+            throw new IOException("Can't save an open Buffer.");
+        }
         if (!usesOutFile()) {
-            initOutFile(null);
-            close(m_spec); // will also use this file for subsequent iterations
-        } 
-        FileUtil.copy(m_outFile, f, exec);
+            DCObjectOutputStream outStream = initOutFile(f);
+            int count = 1;
+            try {
+                for (DataRow row : m_list) {
+                    exec.setProgress(count / (double)size(), "Writing row " 
+                            + count + " (\"" + row.getKey() + "\")");
+                    exec.checkCanceled();
+                    writeRow(row, outStream);
+                    count++;
+                }
+                closeFile(outStream);
+            } catch (CanceledExecutionException cee) {
+                outStream.close();
+                f.delete();
+                throw cee;
+            }
+        } else {
+            FileUtil.copy(m_outFile, f, exec);
+        }
     }
     
     /** Deletes the file underlying this buffer.
@@ -808,7 +846,7 @@ class Buffer {
             }
             boolean deleted = m_outFile.delete();
             if (!deleted) {
-                // note: altough all input streams are closed, the file
+                // note: although all input streams are closed, the file
                 // can't be deleted. If we call the gc, it works. No clue.
                 // That only happens under windows!
  // http://forum.java.sun.com/thread.jspa?forumID=31&threadID=609458
