@@ -129,12 +129,18 @@ public final class ColorAttr implements Serializable {
         float[] hsbVals = new float[3];
         Color.RGBtoHSB(attColor.getRed(), attColor.getGreen(),
                 attColor.getBlue(), hsbVals);
+        // normal color with  low brightness
         m_attrColor = Color.getHSBColor(hsbVals[0], S_NORMAL, B_NORMAL);
+        // selection color with lower saturation and a bit brighter
         m_attrColorSelected = Color.getHSBColor(hsbVals[0], S_SELECT, 
                     B_NORMAL + 0.2f);
+        // hilite color with full saturation and full brightness
         m_attrColorHilite = Color.getHSBColor(hsbVals[0], S_NORMAL, B_HILITE);
+        // hilite and selected with full brightness and lower saturation.
         m_attrColorSelectedHilite = Color.getHSBColor(hsbVals[0], S_SELECT, 
                 B_HILITE);
+        
+        
         /* old version -> mixed yellow into hilited color 
         m_attrColor = attColor;
         m_attrColorSelected =
