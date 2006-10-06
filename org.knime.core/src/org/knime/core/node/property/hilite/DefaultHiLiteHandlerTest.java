@@ -132,26 +132,26 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         m_hdl.addHiLiteListener(m_l1);
         m_hdl.addHiLiteListener(m_l2);
         try {
-            m_hdl.hiLite((DataCell) null);
+            m_hdl.fireHiLiteEvent((DataCell) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
-            m_hdl.hiLite((Set<DataCell>) null);
+            m_hdl.fireHiLiteEvent((Set<DataCell>) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
         }
 
         try {
-            m_hdl.unHiLite((DataCell) null);
+            m_hdl.fireUnHiLiteEvent((DataCell) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
-            m_hdl.unHiLite((Set<DataCell>) null);
+            m_hdl.fireUnHiLiteEvent((Set<DataCell>) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
@@ -176,28 +176,28 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c2));
         
         // hilite c1
-        m_hdl.hiLite(m_c1);
+        m_hdl.fireHiLiteEvent(m_c1);
         assertTrue(m_hdl.isHiLit(m_c1));
-        m_hdl.hiLite(m_c1);
+        m_hdl.fireHiLiteEvent(m_c1);
         assertTrue(m_hdl.isHiLit(m_c1));
         
         // hilite c2
-        m_hdl.hiLite(m_c2);
+        m_hdl.fireHiLiteEvent(m_c2);
         assertTrue(m_hdl.isHiLit(m_c2));
-        m_hdl.hiLite(m_c2);
+        m_hdl.fireHiLiteEvent(m_c2);
         assertTrue(m_hdl.isHiLit(m_c2));
 
         // unhilite c1
-        m_hdl.unHiLite(m_c1);
+        m_hdl.fireUnHiLiteEvent(m_c1);
         assertFalse(m_hdl.isHiLit(m_c1));
-        m_hdl.unHiLite(m_c1);
+        m_hdl.fireUnHiLiteEvent(m_c1);
         assertTrue(true);
         assertFalse(m_hdl.isHiLit(m_c1));
 
         // unhilite c2
-        m_hdl.unHiLiteAll();
+        m_hdl.fireClearHiLiteEvent();
         assertFalse(m_hdl.isHiLit(m_c2));
-        m_hdl.unHiLite(m_c2);
+        m_hdl.fireUnHiLiteEvent(m_c2);
         assertFalse(m_hdl.isHiLit(m_c2));
         
         m_hdl.removeAllHiLiteListeners();
@@ -214,20 +214,20 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c2));
         
         // hilite c1
-        m_hdl.hiLite(m_c1);
+        m_hdl.fireHiLiteEvent(m_c1);
         assertTrue(m_hdl.isHiLit(m_c1));
         
         // hilite c2
-        m_hdl.hiLite(m_c2);
+        m_hdl.fireHiLiteEvent(m_c2);
         assertTrue(m_hdl.isHiLit(m_c2));
         
         // unhilite c1
-        m_hdl.unHiLite(m_c1);
+        m_hdl.fireUnHiLiteEvent(m_c1);
         assertFalse(m_hdl.isHiLit(m_c1));
-        m_hdl.unHiLite(m_c1);
+        m_hdl.fireUnHiLiteEvent(m_c1);
         
         // unhilite all
-        m_hdl.unHiLiteAll();
+        m_hdl.fireClearHiLiteEvent();
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
     }
@@ -244,34 +244,34 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c3));
         
         // hilite s1
-        m_hdl.hiLite(m_s12);
+        m_hdl.fireHiLiteEvent(m_s12);
         assertTrue(m_hdl.isHiLit(m_c1));
         assertTrue(m_hdl.isHiLit(m_c2));
-        m_hdl.hiLite(m_s12);
+        m_hdl.fireHiLiteEvent(m_s12);
         
         // hilite c3
         assertFalse(m_hdl.isHiLit(m_c3));
-        m_hdl.hiLite(m_c3);
+        m_hdl.fireHiLiteEvent(m_c3);
         assertTrue(m_hdl.isHiLit(m_c3));
         
         // hilite s2
-        m_hdl.hiLite(m_s23);
+        m_hdl.fireHiLiteEvent(m_s23);
         assertTrue(m_hdl.isHiLit(m_c1, m_c2, m_c3));
         
         // unhilite s1
-        m_hdl.unHiLite(m_s12);
+        m_hdl.fireUnHiLiteEvent(m_s12);
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertTrue(m_hdl.isHiLit(m_c3));
-        m_hdl.unHiLite(m_c1);
+        m_hdl.fireUnHiLiteEvent(m_c1);
         
         // unhilite c3
         assertTrue(m_hdl.isHiLit(m_c3));
-        m_hdl.unHiLite(m_c3);
+        m_hdl.fireUnHiLiteEvent(m_c3);
         assertFalse(m_hdl.isHiLit(m_c3));
         
         // unhilite s2
-        m_hdl.unHiLite(m_s23);
+        m_hdl.fireUnHiLiteEvent(m_s23);
     }
     
     /**
@@ -284,39 +284,39 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         assertFalse(m_hdl.isHiLit(m_c1, m_c2, m_c3));
         
         // hilite s1
-        m_hdl.hiLite(m_s12);
+        m_hdl.fireHiLiteEvent(m_s12);
         assertTrue(m_hdl.isHiLit(m_c1, m_c2));
         assertFalse(m_hdl.isHiLit(m_c3));
         
         // hilite c2
-        m_hdl.hiLite(m_c2);
+        m_hdl.fireHiLiteEvent(m_c2);
         
         // hilite s2
-        m_hdl.hiLite(m_s23);
+        m_hdl.fireHiLiteEvent(m_s23);
         assertTrue(m_hdl.isHiLit(m_c1, m_c2, m_c3));
         
         // unhilite s1
-        m_hdl.unHiLite(m_s12);
+        m_hdl.fireUnHiLiteEvent(m_s12);
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertTrue(m_hdl.isHiLit(m_c3));
-        m_hdl.unHiLite(m_c1);
+        m_hdl.fireUnHiLiteEvent(m_c1);
 
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertTrue(m_hdl.isHiLit(m_c3));
         
         // unhilite c3
-        m_hdl.unHiLite(m_c3);
+        m_hdl.fireUnHiLiteEvent(m_c3);
         assertFalse(m_hdl.isHiLit(m_c3));
-        m_hdl.unHiLite(m_c2);
+        m_hdl.fireUnHiLiteEvent(m_c2);
         assertFalse(m_hdl.isHiLit(m_c3));
         
         // unhilite s2
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertFalse(m_hdl.isHiLit(m_c3));
-        m_hdl.unHiLiteAll();
+        m_hdl.fireClearHiLiteEvent();
         assertFalse(m_hdl.isHiLit(m_c1));
         assertFalse(m_hdl.isHiLit(m_c2));
         assertFalse(m_hdl.isHiLit(m_c3));

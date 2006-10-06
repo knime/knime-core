@@ -73,15 +73,13 @@ public class HiLiteTranslator implements HiLiteListener {
         m_sendBackListener = new HiLiteListener() {
             public void hiLite(final KeyEvent event) { /* do nothing */ }
             public void unHiLite(final KeyEvent event) { /* do nothing */ }
-
             public void unHiLiteAll() {
                 // to avoid that the event travels forth and back
                 // do a check here if there is still something to unhilite
                 if (m_fromHandler.getHiLitKeys().size() > 0) {
-                    m_fromHandler.unHiLiteAll();
+                    m_fromHandler.fireClearHiLiteEvent();
                 }
             }
-            
         };
     }
     
@@ -106,7 +104,7 @@ public class HiLiteTranslator implements HiLiteListener {
      * @param mapper the new hilite mapper
      */
     public void setMapper(final HiLiteMapper mapper) {
-        m_fromHandler.unHiLiteAll();
+        m_fromHandler.fireClearHiLiteEvent();
         m_mapper = mapper;
     }
     
@@ -187,7 +185,7 @@ public class HiLiteTranslator implements HiLiteListener {
             }
             if (!fireSet.isEmpty()) {
                 for (HiLiteHandler h : m_toHandlers) {
-                    h.hiLite(fireSet);
+                    h.fireHiLiteEvent(fireSet);
                 }
             }
         }
@@ -209,7 +207,7 @@ public class HiLiteTranslator implements HiLiteListener {
             }
             if (!fireSet.isEmpty()) {
                 for (HiLiteHandler h : m_toHandlers) {
-                    h.unHiLite(fireSet);
+                    h.fireUnHiLiteEvent(fireSet);
                 }
             }
         }
@@ -220,7 +218,7 @@ public class HiLiteTranslator implements HiLiteListener {
      */
     public void unHiLiteAll() {
         for (HiLiteHandler h : m_toHandlers) {
-            h.unHiLiteAll();
+            h.fireClearHiLiteEvent();
         }
     }
 }

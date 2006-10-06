@@ -370,7 +370,7 @@ public class TableContentModelTest extends TestCase {
         for (RowIterator it = DATA.iterator(); it.hasNext();) {
             DataCell cell = it.next().getKey().getId();
             if (isEvenNumber) {
-                hiliteHdl.hiLite(cell);
+                hiliteHdl.fireHiLiteEvent(cell);
                 set.add(cell);
             }
             isEvenNumber = !isEvenNumber;
@@ -712,7 +712,7 @@ public class TableContentModelTest extends TestCase {
         for (int i = 0; i < 500; i++) {
             if (i % 100 == 0) {
                 // clear all, also that should work
-                hiliter.unHiLiteAll();
+                hiliter.fireClearHiLiteEvent();
                 nrHiLitKeys = 0;
             } else {
                 // let at most 20% change
@@ -723,10 +723,10 @@ public class TableContentModelTest extends TestCase {
                     DataCell keyForIndex = data[index].getKey().getId();
                     boolean isHilit = hiliter.isHiLit(keyForIndex);
                     if (isHilit) {
-                        hiliter.unHiLite(keyForIndex);
+                        hiliter.fireUnHiLiteEvent(keyForIndex);
                         nrHiLitKeys--;
                     } else {
-                        hiliter.hiLite(keyForIndex);
+                        hiliter.fireHiLiteEvent(keyForIndex);
                         nrHiLitKeys++;
                     }
                 }

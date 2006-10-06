@@ -111,15 +111,40 @@ public interface HiLiteHandler {
      * Hilites the given items and fires an event to all registered listeners.
      * 
      * @param ids an array of row IDs to hilite
+     * @deprecated Use {@link #fireHiLiteEvent(DataCell...)} instead
      */
     void hiLite(final DataCell... ids);
+
+    /**
+     * Hilites the given items and fires an event to all registered listeners.
+     * 
+     * @param ids an array of row IDs to hilite
+     */
+    void fireHiLiteEvent(final DataCell... ids);
+
+    /**
+     * Hilites the given keys and fires an event to all registered listeners.
+     * 
+     * @param ids the set of row keys to hilite
+     * @deprecated Use {@link #fireHiLiteEvent(Set)} instead
+     */
+    void hiLite(final Set<DataCell> ids);
 
     /**
      * Hilites the given keys and fires an event to all registered listeners.
      * 
      * @param ids the set of row keys to hilite
      */
-    void hiLite(final Set<DataCell> ids);
+    void fireHiLiteEvent(final Set<DataCell> ids);
+
+    /**
+     * Unhilites the given items and fires the event to all registered
+     * listeners.
+     * 
+     * @param ids an array of row IDs to reset hilite status
+     * @deprecated Use {@link #fireUnHiLiteEvent(DataCell...)} instead
+     */
+    void unHiLite(final DataCell... ids);
 
     /**
      * Unhilites the given items and fires the event to all registered
@@ -127,17 +152,31 @@ public interface HiLiteHandler {
      * 
      * @param ids an array of row IDs to reset hilite status
      */
-    void unHiLite(final DataCell... ids);
+    void fireUnHiLiteEvent(final DataCell... ids);
+
+    /**
+     * Unhilites the given keys and fires an event to all registered listeners.
+     * 
+     * @param ids the set of row IDs to unhilite
+     * @deprecated Use {@link #fireUnHiLiteEvent(Set)} instead
+     */
+    void unHiLite(final Set<DataCell> ids);
 
     /**
      * Unhilites the given keys and fires an event to all registered listeners.
      * 
      * @param ids the set of row IDs to unhilite
      */
-    void unHiLite(final Set<DataCell> ids);
+    void fireUnHiLiteEvent(final Set<DataCell> ids);
+
+    /**
+     * Unhilites all hilit items and fires an event.
+     * @deprecated Use {@link #fireClearHiLiteEvent()} instead
+     */
+    void unHiLiteAll();
 
     /**
      * Unhilites all hilit items and fires an event.
      */
-    void unHiLiteAll();
+    void fireClearHiLiteEvent();
 }

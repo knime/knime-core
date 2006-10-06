@@ -64,7 +64,7 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
                 KeyEvent newEvent = new KeyEvent(this, hilited);
                 this.hiLite(newEvent);
             }
-            forwardTo.hiLite(getHiLitKeys());
+            forwardTo.fireHiLiteEvent(getHiLitKeys());
             forwardTo.addHiLiteListener(this);
             m_handlers.add(forwardTo);
         }
@@ -107,10 +107,10 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
         // add them to the local stored keys.
         if (toBeHilited.size() > 0) {
             // forward the newly hilited keys to the listeners
-            super.hiLite(toBeHilited);
+            super.fireHiLiteEvent(toBeHilited);
             // redirect to the other handlers
             for (HiLiteHandler hdl : m_handlers) {
-                hdl.hiLite(toBeHilited);
+                hdl.fireHiLiteEvent(toBeHilited);
             }
         }
     }
@@ -129,10 +129,10 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
         toBeUnhilited.retainAll(getHiLitKeys());
         // if there are some keys to be unhilited
         if (toBeUnhilited.size() > 0) {
-            super.unHiLite(toBeUnhilited);
+            super.fireUnHiLiteEvent(toBeUnhilited);
             // redirect to the other handlers
             for (HiLiteHandler hdl : m_handlers) {
-                hdl.unHiLite(toBeUnhilited);
+                hdl.fireUnHiLiteEvent(toBeUnhilited);
             }
         }
     }
@@ -143,9 +143,22 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      * 
      * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
      * #hiLite(org.knime.core.data.DataCell...)
+     * @deprecated Use {@link #fireHiLiteEvent(DataCell...)} instead
      */
     @Override
     public synchronized void hiLite(final DataCell... ids) {
+        fireHiLiteEvent(ids);
+    }
+
+    /**
+     * Hilites those keys of the event which are not already hilited and 
+     * forwards them to the registered handlers and listeners.
+     * 
+     * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
+     * #fireHiLiteEvent(org.knime.core.data.DataCell...)
+     */
+    @Override
+    public synchronized void fireHiLiteEvent(final DataCell... ids) {
         if (ids.length > 0) {
             this.hiLite(new KeyEvent(this, ids));
         }
@@ -157,9 +170,22 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      * 
      * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
      * #hiLite(java.util.Set)
+     * @deprecated Use {@link #fireHiLiteEvent(Set)} instead
      */
     @Override
     public synchronized void hiLite(final Set<DataCell> ids) {
+        fireHiLiteEvent(ids);
+    }
+
+    /**
+     * Hilites those keys of the event which are not already hilited and 
+     * forwards them to the registered handlers and listeners.
+     * 
+     * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
+     * #fireHiLiteEvent(java.util.Set)
+     */
+    @Override
+    public synchronized void fireHiLiteEvent(final Set<DataCell> ids) {
         if (ids.size() > 0) {
             this.hiLite(new KeyEvent(this, ids));
         }
@@ -171,9 +197,22 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      *      
      * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
      * #unHiLite(org.knime.core.data.DataCell...)
+     * @deprecated Use {@link #fireUnHiLiteEvent(DataCell...)} instead
      */
     @Override
     public synchronized void unHiLite(final DataCell... ids) {
+        fireUnHiLiteEvent(ids);
+    }
+
+    /**
+     * Unhilites those keys which are hilited and propagates them to the 
+     * registered handlers and listeners.
+     *      
+     * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
+     * #fireUnHiLiteEvent(org.knime.core.data.DataCell...)
+     */
+    @Override
+    public synchronized void fireUnHiLiteEvent(final DataCell... ids) {
         if (ids.length > 0) {
             this.unHiLite(new KeyEvent(this, ids));
         }
@@ -185,23 +224,49 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      * 
      * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
      * #unHiLite(java.util.Set)
+     * @deprecated Use {@link #fireUnHiLiteEvent(Set)} instead
      */
     @Override
     public synchronized void unHiLite(final Set<DataCell> ids) {
+        fireUnHiLiteEvent(ids);
+    }
+
+    /**
+     * Unhilites those keys which are hilited and propagates them to the 
+     * registered handlers and listeners.
+     * 
+     * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
+     * #fireUnHiLiteEvent(java.util.Set)
+     */
+    @Override
+    public synchronized void fireUnHiLiteEvent(final Set<DataCell> ids) {
         if (ids.size() > 0) {
             this.unHiLite(new KeyEvent(this, ids));
         }
     }
 
+
+
     /**
      * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
-     * #unHiLiteAll()
+     * #fireClearHiLiteEvent()
      */
     @Override
-    public synchronized void unHiLiteAll() {
+    public synchronized void fireClearHiLiteEvent() {
         if (getHiLitKeys().size() > 0) {
             this.unHiLite(new KeyEvent(this, getHiLitKeys()));
         }
+    }
+    
+    /**
+     * 
+     * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler#
+     * unHiLiteAll()
+     * @deprecated Use {@link #fireClearHiLiteEvent(Set)} instead
+     */
+    @Override
+    public void unHiLiteAll() {
+        this.fireClearHiLiteEvent();
     }
     
     

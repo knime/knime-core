@@ -745,11 +745,11 @@ public class TableContentModel extends AbstractTableModel
      * the <code>HiLiteHandler</code>. This method does nothing if no handler
      * is connected.
      * 
-     * @see HiLiteHandler#unHiLiteAll()
+     * @see HiLiteHandler#fireClearHiLiteEvent()
      */
     protected void requestResetHiLite() {
         if (m_hiLiteHdl != null) {
-            m_hiLiteHdl.unHiLiteAll();
+            m_hiLiteHdl.fireClearHiLiteEvent();
         }
     } // clearHilite()
     
@@ -767,6 +767,7 @@ public class TableContentModel extends AbstractTableModel
         processHiLiteEvent(e, false);
     } // unHiLite(KeyEvent)
     
+
     /**
      * @see HiLiteListener#unHiLiteAll()
      */
@@ -1119,9 +1120,9 @@ public class TableContentModel extends AbstractTableModel
         assert (!selectedSet.isEmpty());
         // fire event according to mode
         if (isHiLite) {
-            m_hiLiteHdl.hiLite(selectedSet);
+            m_hiLiteHdl.fireHiLiteEvent(selectedSet);
         } else {
-            m_hiLiteHdl.unHiLite(selectedSet);
+            m_hiLiteHdl.fireUnHiLiteEvent(selectedSet);
         }
     } //processHiLiteRequest(ListSelectionModel, boolean)
     
