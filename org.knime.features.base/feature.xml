@@ -282,6 +282,7 @@ terms of this License.
       <import plugin="org.eclipse.ui.views"/>
       <import plugin="org.eclipse.ui.workbench"/>
       <import plugin="org.eclipse.ui.console"/>
+      <import plugin="org.eclipse.draw2d"/>
    </requires>
 
    <plugin
@@ -340,24 +341,6 @@ terms of this License.
 
    <plugin
          id="org.knime.product"
-         download-size="0"
-         install-size="0"
-         version="1.1.0"/>
-
-   <plugin
-         id="org.knime.ext.jfreechart"
-         download-size="0"
-         install-size="0"
-         version="1.1.0"/>
-
-   <plugin
-         id="org.knime.ext.weka"
-         download-size="0"
-         install-size="0"
-         version="1.1.0"/>
-
-   <plugin
-         id="org.knime.ext.sun"
          download-size="0"
          install-size="0"
          version="1.1.0"/>
