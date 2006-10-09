@@ -25,6 +25,7 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -64,6 +65,19 @@ class DBReaderNodeModel extends NodeModel {
 
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
     
+    static {        
+        try {
+            Class<?> driverClass = Class.forName(
+                    "sun.jdbc.odbc.JdbcOdbcDriver");
+            Driver theDriver = new WrappedDriver((Driver)driverClass
+                    .newInstance());
+            DriverManager.registerDriver(theDriver);
+        } catch (Exception e) {
+            LOGGER.warn("Could not load 'sun.jdbc.odbc.JdbcOdbcDriver'.");
+            LOGGER.debug("", e);
+        }
+    }
+
     /**
      * Creates a new model with one data outport.
      */
@@ -146,10 +160,13 @@ class DBReaderNodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         exec.setProgress(-1, "Opening database connection...");
-        DriverManager.registerDriver(DBDriverLoader.getWrappedDriver(m_driver));
-        m_load = new DBReaderConnection(m_name, m_user, m_pass, m_query);
-        return new BufferedDataTable[]{exec.createBufferedDataTable(m_load,
+        try {
+            m_load = new DBReaderConnection(m_name, m_user, m_pass, m_query);
+            return new BufferedDataTable[]{exec.createBufferedDataTable(m_load,
                 exec)};
+        } finally {
+            reset();
+        }
     }
 
     /**

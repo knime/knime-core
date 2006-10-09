@@ -25,6 +25,8 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -65,7 +67,7 @@ class DBWriterNodeModel extends NodeModel {
 
     private String m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
 
-    private String m_name = "jdbc:odbc:<database_name>";
+    private String m_url = "jdbc:odbc:<database_name>";
 
     private String m_user = "<user>";
 
@@ -89,6 +91,19 @@ class DBWriterNodeModel extends NodeModel {
 
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";
+    
+    static {        
+        try {
+            Class<?> driverClass = Class.forName(
+                    "sun.jdbc.odbc.JdbcOdbcDriver");
+            Driver theDriver = new WrappedDriver((Driver)driverClass
+                    .newInstance());
+            DriverManager.registerDriver(theDriver);
+        } catch (Exception e) {
+            LOGGER.warn("Could not load 'sun.jdbc.odbc.JdbcOdbcDriver'.");
+            LOGGER.debug("", e);
+        }
+    }
 
     /**
      * Creates a new model with one data outport.
@@ -104,7 +119,7 @@ class DBWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString("driver", m_driver);
-        settings.addString("database", m_name);
+        settings.addString("database", m_url);
         settings.addString("user", m_user);
         settings.addStringArray("loaded_driver", m_driverLoaded
                 .toArray(new String[0]));
@@ -151,7 +166,7 @@ class DBWriterNodeModel extends NodeModel {
         }
         if (write) {
             m_driver = driver;
-            m_name = database;
+            m_url = database;
             m_user = user;
             m_pass = password;
             m_table = table;
@@ -185,9 +200,18 @@ class DBWriterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        DriverManager.registerDriver(DBDriverLoader.getWrappedDriver(m_driver));
-        new DBWriterConnection(m_name, m_user, m_pass, m_table, inData[0],
-                exec, m_types);
+        exec.setProgress("Opening database connection...");
+        Connection conn = null;
+        try {
+            // create database connection
+            conn = DriverManager.getConnection(m_url, m_user, m_pass);
+            // write entire data
+            new DBWriterConnection(conn, m_table, inData[0], exec, m_types);
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
         return new BufferedDataTable[0];
     }
 
@@ -244,6 +268,7 @@ class DBWriterNodeModel extends NodeModel {
         }
         m_types.clear();
         m_types.putAll(map);
+        
         try {
             DriverManager.registerDriver(
                     DBDriverLoader.getWrappedDriver(m_driver));
@@ -252,6 +277,12 @@ class DBWriterNodeModel extends NodeModel {
                     + " driver: " + m_driver);
         }
         
+        // throw exception if no data provided
+        if (inSpecs[0].getNumColumns() == 0) {
+            throw new InvalidSettingsException("No columns in input data.");
+        }
+        
+        // print warning if password is empty
         if (m_pass == null || m_pass.length() == 0) {
             super.setWarningMessage(
                     "Please check if you need to set a password.");

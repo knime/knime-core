@@ -22,7 +22,6 @@
 package org.knime.base.node.io.database;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -52,9 +51,7 @@ final class DBWriterConnection {
     
     /**
      * Create connection to write into database.
-     * @param url The URL.
-     * @param user The user name.
-     * @param pw The password.
+     * @param conn An already opened connection to a database.
      * @param table The table name to write into.
      * @param data The data to write.
      * @param exec Used the cancel writting.
@@ -62,13 +59,10 @@ final class DBWriterConnection {
      * @throws SQLException If connection could not be established.
      * @throws CanceledExecutionException If canceled.
      */
-    DBWriterConnection(final String url, final String user, final String pw,
+    DBWriterConnection(final Connection conn,
             final String table, final BufferedDataTable data,
             final ExecutionMonitor exec, final Map<String, String> sqlTypes) 
             throws SQLException, CanceledExecutionException {
-        exec.setProgress(0.0, "Opening database connection...");
-        // create database connection
-        Connection conn = DriverManager.getConnection(url, user, pw);
         
         DataTableSpec spec = data.getDataTableSpec();
         StringBuilder buf = new StringBuilder("(");
@@ -84,7 +78,6 @@ final class DBWriterConnection {
         buf.append(")");
         LOGGER.debug(buf.toString());
         
-        // drop table first if available
         try {
             conn.createStatement().execute("DROP TABLE " + table);
         } catch (Exception e) {
@@ -93,9 +86,7 @@ final class DBWriterConnection {
         // and create new table
         conn.createStatement().execute("CREATE TABLE " + table + " " 
                 + buf.toString());
-        
-        int rowCount = data.getRowCount();
-        int cnt = 1;
+
         StringBuilder wildcard = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
             if (i > 0) {
@@ -111,6 +102,11 @@ final class DBWriterConnection {
                 + " VALUES " + wildcard.toString());
         conn.setAutoCommit(false);
         
+        // bugfix: problems writing more than 13 columns. the prepare statement 
+        // ensures that we can set the columns directly row-by-row, the database
+        // will handle the commit
+        int rowCount = data.getRowCount();
+        int cnt = 1;
         for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
             exec.checkCanceled();
             exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
