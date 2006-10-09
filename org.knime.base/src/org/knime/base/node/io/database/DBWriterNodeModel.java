@@ -84,10 +84,10 @@ class DBWriterNodeModel extends NodeModel {
     static final String SQL_TYPE_STRING = "varchar(255)";
 
     /** Default SQL-type for Integers. */
-    static final String SQL_TYPE_INTEGER = "integer(32)";
+    static final String SQL_TYPE_INTEGER = "integer";
 
     /** Default SQL-type for Doubles. */
-    static final String SQL_TYPE_DOUBLE = "decimal(30,10)";
+    static final String SQL_TYPE_DOUBLE = "numeric(30,10)";
 
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";
@@ -270,8 +270,12 @@ class DBWriterNodeModel extends NodeModel {
         m_types.putAll(map);
         
         try {
-            DriverManager.registerDriver(
-                    DBDriverLoader.getWrappedDriver(m_driver));
+            WrappedDriver wDriver = DBDriverLoader.getWrappedDriver(m_driver);
+            DriverManager.registerDriver(wDriver);
+            if (!wDriver.acceptsURL(m_url)) {
+                throw new InvalidSettingsException("Driver does not support"
+                        + " url: " + m_url);
+            }
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not register database"
                     + " driver: " + m_driver);

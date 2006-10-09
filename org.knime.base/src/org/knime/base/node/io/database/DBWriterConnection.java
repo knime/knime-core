@@ -107,6 +107,7 @@ final class DBWriterConnection {
         // will handle the commit
         int rowCount = data.getRowCount();
         int cnt = 1;
+        int errorCnt = 0;
         for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
             exec.checkCanceled();
             exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -124,10 +125,14 @@ final class DBWriterConnection {
                     }
                 } else if (cspec.getType().isCompatible(DoubleValue.class)) {
                     if (cell.isMissing()) {
-                        stmt.setNull(dbIdx, Types.DECIMAL);
+                        stmt.setNull(dbIdx, Types.NUMERIC);
                     } else {
                         double dbl = ((DoubleValue) cell).getDoubleValue();
-                        stmt.setDouble(dbIdx, dbl);
+                        if (Double.isNaN(dbl)) {
+                            stmt.setNull(dbIdx, Types.NUMERIC);
+                        } else {
+                            stmt.setDouble(dbIdx, dbl);
+                        }
                     }
                 } else {
                     if (cell.isMissing()) {
@@ -137,7 +142,21 @@ final class DBWriterConnection {
                     }
                 }
             }
-            stmt.execute();
+            try {
+                stmt.execute();
+            } catch (Exception e) {
+                if (errorCnt > -1) {
+                    if (errorCnt++ < 100) {
+                        LOGGER.warn("Error in row #" + cnt + ": " 
+                                + row.getKey() + ", " + e.getMessage(), e);
+                    } else {
+                        errorCnt = -1;
+                        LOGGER.warn("Error in row #" + cnt + ": " 
+                                + row.getKey() + ", " + e.getMessage() 
+                                + " - more errors...", e);
+                    }
+                }
+            }
         }
         conn.commit();
         conn.setAutoCommit(true);
