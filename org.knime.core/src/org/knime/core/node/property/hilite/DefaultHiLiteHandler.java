@@ -23,18 +23,15 @@
  */
 package org.knime.core.node.property.hilite;
 
-import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataCell;
-
 
 /**
  * Default implementation for a <code>HiLiteHandler</code> which receives
@@ -50,11 +47,9 @@ import org.knime.core.data.DataCell;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DefaultHiLiteHandler implements HiLiteHandler {
-    /** List of registered <code>HiLiteListener</code>s to fire event to. 
-     * This implementation uses a WeakReference list to allow early collection
-     * of unused hilite listeners. */
-    private final CopyOnWriteArrayList<WeakReference<HiLiteListener>> 
-        m_listenerList;
+
+    /** List of registered <code>HiLiteListener</code>s to fire event to. */
+    private final CopyOnWriteArrayList<HiLiteListener> m_listenerList;
 
     /** Set of non-<code>null</code> hilit items. */
     private final Set<DataCell> m_hiLitKeys;
@@ -64,9 +59,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * listeners and an empty set of hilit items.
      */
     public DefaultHiLiteHandler() {
-        // inits empty event listener list
-        m_listenerList = 
-            new CopyOnWriteArrayList<WeakReference<HiLiteListener>>();
+        m_listenerList = new CopyOnWriteArrayList<HiLiteListener>();
         // initialize item list
         m_hiLitKeys = new LinkedHashSet<DataCell>();
     }
@@ -79,15 +72,9 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param listener the hilite listener to append to the list
      */
     public void addHiLiteListener(final HiLiteListener listener) {
-        for (Iterator<WeakReference<HiLiteListener>> it = 
-            m_listenerList.iterator(); it.hasNext();) {
-            HiLiteListener l = it.next().get();
-            // if listener has been released (garbage collected)
-            if (l != null && l.equals(listener)) {
-                return;
-            }
+        if (!m_listenerList.contains(listener)) { 
+            m_listenerList.add(listener);
         }
-        m_listenerList.add(new WeakReference<HiLiteListener>(listener));
     }
 
     /**
@@ -95,20 +82,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param listener the hilite listener to remove from the list
      */
-    public void removeHiLiteListener(
-            final HiLiteListener listener) {
-        for (int i = m_listenerList.size() - 1; i >= 0; i--) {
-            HiLiteListener l = m_listenerList.get(i).get();
-            // if listener has been released (garbage collected)
-            if (l == null) {
-                // Note: It doesn't hurt to not remove all of the empty 
-                // listener, this if-statement is an optional maintenance task
-                m_listenerList.remove(i);
-            } else if (l.equals(listener)) {
-                m_listenerList.remove(i);
-                return;
-            }
-        }
+    public void removeHiLiteListener(final HiLiteListener listener) {
+        m_listenerList.remove(listener);
     }
     
     /**
@@ -306,17 +281,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     protected void fireHiLiteEventInternal(final KeyEvent event) {
         assert (event != null);
-        for (Iterator<WeakReference<HiLiteListener>> it = 
-            m_listenerList.iterator(); it.hasNext();) {
-            HiLiteListener l = it.next().get();
-            // if listener has been released (garbage collected)
-            if (l == null) {
-                // Note: It doesn't hurt to not remove all of the empty 
-                // listener, this if-statement is an optional maintenance task
-                it.remove();
-            } else {
-                l.hiLite(event);
-            }
+        for (HiLiteListener l : m_listenerList) {
+            l.hiLite(event);
         }
     }
 
@@ -328,17 +294,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     protected void fireUnHiLiteEventInternal(final KeyEvent event) {
         assert (event != null);
-        for (Iterator<WeakReference<HiLiteListener>> it = 
-            m_listenerList.iterator(); it.hasNext();) {
-            HiLiteListener l = it.next().get();
-            // if listener has been released (garbage collected)
-            if (l == null) {
-                // Note: It doesn't hurt to not remove all of the empty 
-                // listener, this if-statement is an optional maintenance task
-                it.remove();
-            } else {
-                l.unHiLite(event);
-            }
+        for (HiLiteListener l : m_listenerList) {
+            l.unHiLite(event);
         }
     }
     
@@ -346,17 +303,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * Informs all registered hilite listener to reset all hilit rows.
      */
     protected void fireClearHiLiteEventInternal() {
-        for (Iterator<WeakReference<HiLiteListener>> it = 
-            m_listenerList.iterator(); it.hasNext();) {
-            HiLiteListener l = it.next().get();
-            // if listener has been released (garbage collected)
-            if (l == null) {
-                // Note: It doesn't hurt to not remove all of the empty 
-                // listener, this if-statement is an optional maintenance task
-                it.remove();
-            } else {
-                l.unHiLiteAll();
-            }
+        for (HiLiteListener l : m_listenerList) {
+            l.unHiLiteAll();
         }
     }
 
