@@ -174,6 +174,10 @@ class IntegerCoordinate extends NumericCoordinate {
                 // this should never happen
                 noOfTicks++;
             }
+            while ((m_minDomainValue + noOfTicks * range) > m_maxDomainValue) {
+                // this should also not happen but happened...
+                noOfTicks--;
+            }
             int value = m_minDomainValue;
             mapping = new IntegerCoordinateMapping[noOfTicks];
             for (int i = 0, length = mapping.length; i < length; i++) {
