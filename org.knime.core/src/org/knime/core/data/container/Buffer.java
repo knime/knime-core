@@ -244,6 +244,7 @@ class Buffer {
             throw new NullPointerException("Can't set null file!");
         }
         m_outStream = initOutFile(outFile);
+        m_outFile = outFile;
         m_hasCreatedTempFile = false;
     }
     
@@ -768,7 +769,6 @@ class Buffer {
                 new BufferedOutputStream(new FileOutputStream(outFile)));
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
         m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
-        m_outFile = outFile;
         return new DCObjectOutputStream(zipOut);
     }
     
