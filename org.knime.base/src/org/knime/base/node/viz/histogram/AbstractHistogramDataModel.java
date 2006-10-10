@@ -558,13 +558,15 @@ public abstract class AbstractHistogramDataModel {
         if (interval >= 1) {
             if (interval < 10) {
                 interval = 
-                    myRoundedInterval(interval, INTERVAL_DIGITS, colSpec);
+                    myRoundedInterval(interval, INTERVAL_DIGITS, 
+                            colSpec.getType().isCompatible(IntValue.class));
             } else {
                 // find the next higher number divided by ten.
                 interval = myRounder(interval);
             }
         } else {
-            interval = myRoundedInterval(interval, INTERVAL_DIGITS, colSpec);
+            interval = myRoundedInterval(interval, INTERVAL_DIGITS, 
+                    colSpec.getType().isCompatible(IntValue.class));
         }
         return interval;
     }
@@ -575,7 +577,9 @@ public abstract class AbstractHistogramDataModel {
     private static double myRounder(final double value) {
         double divider = 1;
         double addition = 1;
-        if (value > 20 && value <= 50) {
+        if (value < 1) {
+            return myRoundedInterval(value, INTERVAL_DIGITS, false);
+        } else if (value > 20 && value <= 50) {
           divider = 20;
           addition = 2;
         } else if (value > 50 && value <= 100) {
@@ -644,29 +648,6 @@ public abstract class AbstractHistogramDataModel {
     }
 
     /**
-     * @param minVal
-     * @param maxVal
-     * @param binInterval
-     * @param noOfBars
-     * @return
-     */
-    protected double createBinStart(final double minVal, 
-            final double binInterval) {
-        double result = minVal;
-        if (minVal >= 0 && minVal - binInterval <= 0) {
-            // try to start with 0 as left border to have nicer intervals
-            //but only if the minimum value is bigger then 0
-            result = 0;
-        } else if (minVal < 0) {
-            result = myRounder(Math.abs(minVal));
-            result *= -1;
-        } else if (minVal > 0) {
-            result = myRounder(minVal);
-        }
-        return result;
-    }
-
-    /**
      * Returns the rounded value. If the value is bigger or equal 1 it returns
      * the result of the math.ceil method otherwise it returns the rounded value
      * which contains the given number of decimal places after the last 0.
@@ -674,14 +655,14 @@ public abstract class AbstractHistogramDataModel {
      * @param doubleVal the value to round 
      * @param noOfDigits the number of
      * decimal places we want for less then 1 values 
-     * @param colSpec the specification of the column we try to round
+     * @param isInteger <code>true</code> if the given number is an integer
      * @return the rounded value of the given value
      */
     protected static double myRoundedInterval(final double doubleVal,
-            final int noOfDigits, final DataColumnSpec colSpec) {
+            final int noOfDigits, final boolean isInteger) {
         // if the value is >= 1 or an integer return an interval without decimal
         // places
-        if (doubleVal >= 1 || colSpec.getType().isCompatible(IntValue.class)) {
+        if (doubleVal >= 1 || isInteger) {
             return Math.ceil(doubleVal);
         } else {
             // the given doubleVal is less then zero
@@ -712,6 +693,29 @@ public abstract class AbstractHistogramDataModel {
             result = Double.parseDouble(resultString);
             return result;
         }
+    }
+
+    /**
+     * @param minVal
+     * @param maxVal
+     * @param binInterval
+     * @param noOfBars
+     * @return
+     */
+    protected double createBinStart(final double minVal, 
+            final double binInterval) {
+        double result = minVal;
+        if (minVal >= 0 && minVal - binInterval <= 0) {
+            // try to start with 0 as left border to have nicer intervals
+            //but only if the minimum value is bigger then 0
+            result = 0;
+        } else if (minVal < 0) {
+            result = myRounder(Math.abs(minVal));
+            result *= -1;
+        } else if (minVal > 0) {
+            result = myRounder(minVal);
+        }
+        return result;
     }
 
     /**
