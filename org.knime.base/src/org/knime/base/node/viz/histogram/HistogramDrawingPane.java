@@ -48,6 +48,9 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramDrawingPane extends AbstractDrawingPane {
+
+    private static final long serialVersionUID = 7881989778083295425L;
+
     /** Defines the basic stroke which is used for the border of each bar. */
     private static final BasicStroke BAR_OUTLINE_BASIC_STROKE = new BasicStroke(
             2f);
@@ -80,7 +83,14 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /** Defines the font of the bar labels. */
     private static final Font BAR_LABEL_FONT = 
         new Font("Arial", Font.PLAIN, 12);
-
+    
+    /**
+     * Defines the color of the base line*/
+    private static final Color BASE_LINE_COLOR = Color.BLACK;
+    
+    /** Defines the stroke of the base line. */
+    private static final BasicStroke BASE_LINE_STROKE = new BasicStroke(2f);
+    
     /** Defines the font of the info message which is displayed. */
     private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
@@ -109,11 +119,14 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * only this message will be displayed.
      */
     private String m_infoMsg = null;
-
+    
+    /**If set the base line is drawn at this screen position.*/
+    private Integer m_baseLine = null;
+    
     /**
      * Constructor for class HistogramDrawingPane.
      * 
-     * @param handler
+     * @param handler the {@link HiLiteHandler} to use
      */
     protected HistogramDrawingPane(final HiLiteHandler handler) {
         super();
@@ -136,6 +149,48 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         return m_bars;
     }
 
+    /**
+     * @return the information message which will be displayed on the screen
+     *         instead of the bars
+     */
+    public String getInfoMsg() {
+        return m_infoMsg;
+    }
+
+    /**
+     * If the information message is set no bars will be drawn. Only this
+     * message will appear in the plotter.
+     * 
+     * @param infoMsg the information message to display
+     */
+    public void setInfoMsg(final String infoMsg) {
+        m_infoMsg = infoMsg;
+    }
+
+    /**
+     * @param hiLiteHandler the hiLiteHandler to set
+     */
+    public void setHiLiteHandler(final HiLiteHandler hiLiteHandler) {
+        m_hiLiteHandler = hiLiteHandler;
+    }
+
+    /**
+     * Indicates if a zero line should be drawn.
+     * @param baseLine the position of the baseline on the screen
+     */
+    public void setBaseLine(final int baseLine) {
+        m_baseLine = new Integer(baseLine);
+    }
+    
+    /**
+     * Resets the internal values of the histogram drawing pane to their default
+     * values.
+     */
+    public void reset() {
+        m_bars = null;
+        m_infoMsg = null;
+        m_hiLiteHandler = null;
+    }
     // **********************************************
     /*--------- the drawing methods ----------------*/
     // **********************************************
@@ -148,13 +203,13 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         if (m_bars == null) {
             return;
         }
-        Graphics2D g2 = (Graphics2D)g;
+        final Graphics2D g2 = (Graphics2D)g;
         if (m_infoMsg != null) {
             g2.setFont(INFO_MSG_FONT);
-            FontMetrics metrics = g2.getFontMetrics();
-            int textWidth = metrics.stringWidth(m_infoMsg);
-            int textHeight = metrics.getHeight();
-            Rectangle basicRect = getBounds();
+            final FontMetrics metrics = g2.getFontMetrics();
+            final int textWidth = metrics.stringWidth(m_infoMsg);
+            final int textHeight = metrics.getHeight();
+            final Rectangle basicRect = getBounds();
             int textX = (int)basicRect.getCenterX() - (textWidth / 2);
             int textY = (int)basicRect.getCenterY() - (textHeight / 2);
             if (textX < 0) {
@@ -165,6 +220,14 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             }
             g2.drawString(m_infoMsg, textX, textY);
             return;
+        }
+        if (m_baseLine != null) {
+            g2.setColor(BASE_LINE_COLOR);
+            g2.setStroke(BASE_LINE_STROKE);
+            final int yOffset = m_baseLine.intValue(); 
+            //+ (int)(BASE_LINE_STROKE.getLineWidth() / 2);
+            final int screenWidth  = (int) getBounds().getWidth();
+            g2.drawLine(0, yOffset, screenWidth, yOffset);
         }
         // loop over all bars and draw them
         for (BarVisModel bar : m_bars.values()) {
@@ -399,40 +462,5 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             }
         }
         return noOfSelected;
-    }
-
-    /**
-     * @return the information message which will be displayed on the screen
-     *         instead of the bars
-     */
-    public String getInfoMsg() {
-        return m_infoMsg;
-    }
-
-    /**
-     * If the information message is set no bars will be drawn. Only this
-     * message will appear in the plotter.
-     * 
-     * @param infoMsg the information message to display
-     */
-    public void setInfoMsg(final String infoMsg) {
-        m_infoMsg = infoMsg;
-    }
-
-    /**
-     * @param hiLiteHandler the hiLiteHandler to set
-     */
-    public void setHiLiteHandler(final HiLiteHandler hiLiteHandler) {
-        m_hiLiteHandler = hiLiteHandler;
-    }
-
-    /**
-     * Resets the internal values of the histogram drawing pane to their default
-     * values.
-     */
-    public void reset() {
-        m_bars = null;
-        m_infoMsg = null;
-        m_hiLiteHandler = null;
     }
 }

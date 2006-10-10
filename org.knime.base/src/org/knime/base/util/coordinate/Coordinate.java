@@ -117,6 +117,10 @@ public abstract class Coordinate {
     /**
      * Returns the mapping of a domain value for this coordinate axis. The
      * mapping is done according to the given absolute length.
+     * <p>
+     * The value is not the position on the screen. Since the java coordinate
+     * system is upside down simply subtract the returned value from the screen 
+     * height to calculate the screen position.
      * 
      * @param domainValueCell the data cell with the domain value to map
      * @param absolutLength the absolute length on which the domain value is

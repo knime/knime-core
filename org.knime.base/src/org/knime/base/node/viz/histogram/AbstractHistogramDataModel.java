@@ -433,7 +433,7 @@ public abstract class AbstractHistogramDataModel {
             double currentVal = bar.getAggregationValue();
             // we can't handle negative values yet thats why we use the absolute
             // method
-            currentVal = Math.abs(currentVal);
+            //currentVal = Math.abs(currentVal);
             if (currentVal <= minVal || Double.isNaN(minVal)) {
                 minVal = currentVal;
             }

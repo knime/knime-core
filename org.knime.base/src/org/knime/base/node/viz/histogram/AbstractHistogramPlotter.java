@@ -362,6 +362,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
             visBars = createUpdateVisBars(visBars, xCoordinates, yCoordinates,
                     drawingSpace);
             drawingPane.setVisBars(visBars);
+            final double drawingHeight = drawingSpace.getHeight();
+            int baseLine = (int)(drawingHeight 
+                    - yCoordinates.calculateMappedValue(
+                            new DoubleCell(0), drawingHeight, true));
+            drawingPane.setBaseLine(baseLine);
             repaint();
         }
     }
@@ -451,23 +456,49 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
             // aggregation value. If it's a small value which gets rounded
             double aggrVal = Double.parseDouble(bar.getLabel());
             // check for a negative value
-            if (aggrVal < 0) {
-                aggrVal = Math.abs(aggrVal);
+//            if (aggrVal < 0) {
+//                aggrVal = Math.abs(aggrVal);
+//            }
+            int startY = 0;
+            int endY = 0;
+            if (aggrVal >= 0) {
+                startY = (int)(drawingHeight 
+                        - yCoordinates.calculateMappedValue(
+                                new DoubleCell(aggrVal), drawingHeight, true));
+//              the calculateMappedValue method returns the position in a normal
+                //coordinate system since the java screen coordinates are vice 
+                //versa we have to subtract the screen height from the given 
+                //value to get the position on the screen
+                endY = (int)(drawingHeight 
+                        - yCoordinates.calculateMappedValue(new DoubleCell(0), 
+                                drawingHeight, true));
+            } else {
+                startY = (int)(drawingHeight
+                        - yCoordinates.calculateMappedValue(
+                        new DoubleCell(0), drawingHeight, true));
+//              the calculateMappedValue method returns the position in a normal
+                //coordinate system since the java screen coordinates are vice 
+                //versa we have to subtract the screen height from the given 
+                //value to get the position on the screen
+                endY = (int)(drawingHeight 
+                        - yCoordinates.calculateMappedValue(
+                                new DoubleCell(aggrVal), drawingHeight, true));
             }
-            int height = (int)yCoordinates.calculateMappedValue(new DoubleCell(
-                    aggrVal), drawingHeight, true);
+            int height = endY - startY;
             if (height <= minHeight && aggrVal > 0) {
                 height = minHeight;
             }
-            int startY = (int)(drawingHeight - height);
-            // take care of cast problems!
-            if (startY < 0) {
-                startY = 0;
-            } else if (startY > drawingHeight) {
-                startY = (int)drawingHeight;
-            }
-    
-            Rectangle rect = new Rectangle(startX, startY, barWidth, height);
+            
+//            int startY = (int)(drawingHeight - height);
+//            // take care of cast problems!
+//            if (startY < 0) {
+//                startY = 0;
+//            } else if (startY > drawingHeight) {
+//                startY = (int)drawingHeight;
+//            }
+
+            Rectangle rect = 
+                new Rectangle(startX, startY, barWidth, height);
             BarVisModel visBar = visBars.get(bar.getCaption());
             if (visBar == null) {
                 visBar = new BarVisModel(bar, rect, m_tableSpec);
@@ -550,8 +581,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
         } else if (upperBound < 0) {
             upperBound = 0;
         }
-        String columnName = getHistogramDataModel().getAggregationColumn();
-        DataColumnSpec colSpec = m_tableSpec.getColumnSpec(columnName);
+        final String columnName = 
+            getHistogramDataModel().getAggregationColumn();
+        final DataColumnSpec colSpec = m_tableSpec.getColumnSpec(columnName);
         // set the column type depending on the aggregation method and type of
         // the aggregation column. If the method is count set it to integer. If
         // the aggregation method is summary and the data type of the
@@ -564,9 +596,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
                         && !AggregationMethod.AVERAGE.equals(m_aggrMethod))) {
             type = IntCell.TYPE;
         }
-        String displayColumnName = createAggregationColumnName(columnName,
+        final String displayColumnName = createAggregationColumnName(columnName,
                 m_aggrMethod);
-        DataColumnSpec spec = createColumnSpec(displayColumnName, type,
+        final DataColumnSpec spec = createColumnSpec(displayColumnName, type,
                 lowerBound, upperBound, null);
         return spec;
     }
