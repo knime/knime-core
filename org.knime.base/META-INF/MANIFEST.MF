@@ -91,3 +91,4 @@ Provide-Package: org.knime.base.data.append.column,
  org.knime.base.node.viz.statistics,
  org.knime.base.node.viz.table,
  org.knime.base.util.coordinate
+Export-Package: org.knime.base.util.math
