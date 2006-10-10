@@ -49,7 +49,7 @@
 		<antcall target="gather.bin.parts">
 			<param name="destination.temp.folder" value="${temp.folder}/"/>
 		</antcall>
-		<zip destfile="${plugin.destination}/org.knime.core_1.0.0.jar" basedir="${temp.folder}/org.knime.core_1.0.0" filesonly="false" whenempty="skip" update="false"/>
+		<zip destfile="${plugin.destination}/org.knime.core_1.1.0.jar" basedir="${temp.folder}/org.knime.core_1.1.0" filesonly="false" whenempty="skip" update="false"/>
 		<delete dir="${temp.folder}"/>
 	</target>
 
@@ -96,11 +96,11 @@
 	</target>
 
 	<target name="gather.bin.parts" depends="init" if="destination.temp.folder">
-		<mkdir dir="${destination.temp.folder}/org.knime.core_1.0.0"/>
-		<copy todir="${destination.temp.folder}/org.knime.core_1.0.0" failonerror="true" overwrite="false">
+		<mkdir dir="${destination.temp.folder}/org.knime.core_1.1.0"/>
+		<copy todir="${destination.temp.folder}/org.knime.core_1.1.0" failonerror="true" overwrite="false">
 			<fileset dir="${build.result.folder}" includes="knime-core.jar"			/>
 		</copy>
-		<copy todir="${destination.temp.folder}/org.knime.core_1.0.0" failonerror="true" overwrite="false">
+		<copy todir="${destination.temp.folder}/org.knime.core_1.1.0" failonerror="true" overwrite="false">
 			<fileset dir="${basedir}" includes="knime-core.jar,plugin.xml,lib/,META-INF/,LICENSE.txt"			/>
 		</copy>
 	</target>
@@ -109,28 +109,28 @@
 	</target>
 
 	<target name="gather.sources" depends="init" if="destination.temp.folder">
-		<mkdir dir="${destination.temp.folder}/org.knime.core_1.0.0"/>
-		<copy file="${build.result.folder}/knime-coresrc.zip" todir="${destination.temp.folder}/org.knime.core_1.0.0" failonerror="false" overwrite="false"/>
-		<copy todir="${destination.temp.folder}/org.knime.core_1.0.0" failonerror="false" overwrite="false">
-			<fileset dir="${basedir}" includes="src/,plugin.xml,build.properties,.project,.cvsignore,.classpath,.checkstyle,lib/,LICENSE.txt"			/>
+		<mkdir dir="${destination.temp.folder}/org.knime.core_1.1.0"/>
+		<copy file="${build.result.folder}/knime-coresrc.zip" todir="${destination.temp.folder}/org.knime.core_1.1.0" failonerror="false" overwrite="false"/>
+		<copy todir="${destination.temp.folder}/org.knime.core_1.1.0" failonerror="false" overwrite="false">
+			<fileset dir="${basedir}" includes="src/,plugin.xml,build.properties,.project,.cvsignore,.classpath,.checkstyle,lib/,LICENSE.txt,KNIMECheckstyle3.1.xml,KNIMEUnitTestCheckstyle3.1.xml,StateDiagram.PNG,META-INF/"			/>
 		</copy>
 	</target>
 
 	<target name="gather.logs" depends="init" if="destination.temp.folder">
-		<mkdir dir="${destination.temp.folder}/org.knime.core_1.0.0"/>
-		<copy file="${temp.folder}/knime-core.jar.bin${logExtension}" todir="${destination.temp.folder}/org.knime.core_1.0.0" failonerror="false" overwrite="false"/>
+		<mkdir dir="${destination.temp.folder}/org.knime.core_1.1.0"/>
+		<copy file="${temp.folder}/knime-core.jar.bin${logExtension}" todir="${destination.temp.folder}/org.knime.core_1.1.0" failonerror="false" overwrite="false"/>
 	</target>
 
 	<target name="clean" depends="init" description="Clean the plug-in: org.knime.core of all the zips, jars and logs created.">
 		<delete file="${build.result.folder}/knime-core.jar"/>
 		<delete file="${build.result.folder}/knime-coresrc.zip"/>
-		<delete file="${plugin.destination}/org.knime.core_1.0.0.jar"/>
-		<delete file="${plugin.destination}/org.knime.core_1.0.0.zip"/>
+		<delete file="${plugin.destination}/org.knime.core_1.1.0.jar"/>
+		<delete file="${plugin.destination}/org.knime.core_1.1.0.zip"/>
 		<delete dir="${temp.folder}"/>
 	</target>
 
 	<target name="refresh" depends="init" if="eclipse.running" description="Refresh this folder.">
-		<eclipse.convertPath fileSystemPath="/home/thor/workspace/KNIME/org.knime.core" property="resourcePath"/>
+		<eclipse.convertPath fileSystemPath="C:/Dokumente und Einstellungen/sieb/workspace/org.knime.core" property="resourcePath"/>
 		<eclipse.refreshLocal resource="${resourcePath}" depth="infinite"/>
 	</target>
 
@@ -148,7 +148,7 @@
 		<delete>
 			<fileset dir="${temp.folder}" includes="**/*.bin${logExtension}"			/>
 		</delete>
-		<zip destfile="${plugin.destination}/org.knime.core_1.0.0.zip" basedir="${temp.folder}" filesonly="true" whenempty="skip" update="false"/>
+		<zip destfile="${plugin.destination}/org.knime.core_1.1.0.zip" basedir="${temp.folder}" filesonly="true" whenempty="skip" update="false"/>
 		<delete dir="${temp.folder}"/>
 	</target>
 
