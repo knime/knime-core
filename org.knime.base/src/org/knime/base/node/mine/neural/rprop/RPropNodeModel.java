@@ -201,8 +201,9 @@ public class RPropNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        for (DataColumnSpec colspec : inSpecs[INPORT]) {
-            if (m_classcol != null) {
+        if (m_classcol != null) {
+            boolean classcolinspec = false;
+            for (DataColumnSpec colspec : inSpecs[INPORT]) {
                 if (!(colspec.getName().toString().compareTo(
                         m_classcol.toString()) == 0)) {
                     if (!colspec.getType().isCompatible(DoubleValue.class)) {
@@ -210,6 +211,7 @@ public class RPropNodeModel extends NodeModel {
                                 "Only double columns for input");
                     }
                 } else {
+                    classcolinspec = true;
                     // check for regression
                     if (colspec.getType().isCompatible(DoubleValue.class)) {
                         // check if the values are in range [0,1]
@@ -228,9 +230,13 @@ public class RPropNodeModel extends NodeModel {
                         }
                     }
                 }
-            } else {
-                throw new InvalidSettingsException("Class column not set");
             }
+            if (!classcolinspec) {
+                throw new InvalidSettingsException("Class column " + m_classcol
+                        + " not found in DataTableSpec");
+            }
+        } else {
+            throw new InvalidSettingsException("Class column not set");
         }
         return null;
     }
