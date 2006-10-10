@@ -209,12 +209,27 @@ public class RPropNodeModel extends NodeModel {
                         throw new InvalidSettingsException(
                                 "Only double columns for input");
                     }
+                } else {
+                    // check for regression
+                    if (colspec.getType().isCompatible(DoubleValue.class)) {
+                        // check if the values are in range [0,1]
+                        DataColumnDomain domain = colspec.getDomain();
+                        if (domain.hasBounds()) {
+                            double lower = ((DoubleValue)domain.getLowerBound())
+                                    .getDoubleValue();
+                            double upper = ((DoubleValue)domain.getUpperBound())
+                                    .getDoubleValue();
+                            if (lower < 0 || upper > 1) {
+                                throw new InvalidSettingsException(
+                                        "Domain range for regression in column "
+                                                + colspec.getName()
+                                                + " not in range [0,1]");
+                            }
+                        }
+                    }
                 }
             } else {
-                if (!colspec.getType().isCompatible(DoubleValue.class)) {
-                    throw new InvalidSettingsException(
-                            "Only double columns for input");
-                }
+                throw new InvalidSettingsException("Class column not set");
             }
         }
         return null;
@@ -251,6 +266,20 @@ public class RPropNodeModel extends NodeModel {
             if (colspec.getName().toString().compareTo(
                     m_classcol.toString()) == 0) {
                 if (colspec.getType().isCompatible(DoubleValue.class)) {
+                    // check if the values are in range [0,1]
+                    DataColumnDomain domain = colspec.getDomain();
+                    if (domain.hasBounds()) {
+                        double lower = ((DoubleValue)domain.getLowerBound())
+                                .getDoubleValue();
+                        double upper = ((DoubleValue)domain.getUpperBound())
+                                .getDoubleValue();
+                        if (lower < 0 || upper > 1) {
+                            throw new InvalidSettingsException(
+                                    "Domain range for regression in column "
+                                            + colspec.getName()
+                                            + " not in range [0,1]");
+                        }
+                    }
                     nrOutputs = 1;
                     m_classmap = new HashMap<DataCell, Integer>();
                     m_classmap.put(new StringCell(colspec.getName()), 0);
@@ -385,7 +414,7 @@ public class RPropNodeModel extends NodeModel {
     protected void reset() {
         m_errors = null;
     }
-
+    
     /**
      * Stores the model of the trained neural network for later use.
      * 
