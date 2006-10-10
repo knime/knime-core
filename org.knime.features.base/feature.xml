@@ -5,7 +5,7 @@
       version="1.1.0"
       provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany"
       plugin="org.knime.core"
-      image="icons/banner.gif">
+      image="icons/knime64.gif">
 
    <description url="http://www.knime.org/">
       This features containes KNIME, the Konstanz Information Miner. All plugins needed to run the information mining workbench are included. Note that there are additional plugins available.
@@ -266,6 +266,7 @@ terms of this License.
    </license>
 
    <url>
+      <update label="KNIME Update Site" url="http://www.knime.org/update"/>
       <discovery label="KNIME" url="http://www.knime.org/update"/>
    </url>
 
@@ -344,5 +345,25 @@ terms of this License.
          download-size="0"
          install-size="0"
          version="1.1.0"/>
+
+   <plugin
+         id="org.eclipse.draw2d"
+         download-size="0"
+         install-size="0"
+         version="1.1.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.gef"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.knime.ext.sun"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
 </feature>
