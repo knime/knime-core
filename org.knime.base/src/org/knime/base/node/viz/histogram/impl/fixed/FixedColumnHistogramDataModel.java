@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
 import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -181,11 +182,11 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
         }
         double maxVal = 0;
         if (!maxValCell.isMissing()) {
-            maxVal = getNumericValue(maxValCell);
+            maxVal = BinningUtil.getNumericValue(maxValCell);
         }
         double minVal = 0;
         if (!minValCell.isMissing()) {
-            minVal = getNumericValue(minValCell);
+            minVal = BinningUtil.getNumericValue(minValCell);
         }
         /*
          * if (minVal > 0) { //start with 0 as left border to have nicer
@@ -198,14 +199,14 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
         if ((maxVal - minVal) == 0) {
             noOfBars = 1;
         }
-        final double binInterval = createBinInterval(maxVal, minVal, noOfBars,
-                getOriginalXColSpec());
-        minVal = createBinStart(minVal, binInterval);
+        final double binInterval = BinningUtil.createBinInterval(maxVal, 
+                minVal, noOfBars, getOriginalXColSpec());
+        minVal = BinningUtil.createBinStart(minVal, binInterval);
         // increase the number of bars to include the max value
         while (minVal + (binInterval * noOfBars) < maxVal) {
             noOfBars++;
         }
-        double leftBoundary = myRoundedBorders(minVal, binInterval,
+        double leftBoundary = BinningUtil.myRoundedBorders(minVal, binInterval,
                 INTERVAL_DIGITS);
         List<HistogramDataRow> sortedRows = getOrderedDataRows();
         int rowLength = sortedRows.size();
@@ -219,9 +220,10 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
             // small intervals. If the interval is very small it could happen
             // that we get the same boundaries for several bars by rounding the
             // borders
-            double rightBoundary = myRoundedBorders(leftBoundary + binInterval,
-                    binInterval, INTERVAL_DIGITS);
-            String binCaption = createBarName(leftBoundary, rightBoundary);
+            double rightBoundary = BinningUtil.myRoundedBorders(
+                    leftBoundary + binInterval, binInterval, INTERVAL_DIGITS);
+            String binCaption = 
+                BinningUtil.createBarName(leftBoundary, rightBoundary);
             bar = (FixedColumnBarDataModel) getBar(binCaption);
             if (bar == null) {
                 bar = new FixedColumnBarDataModel(binCaption, xCoordColIdx, 
@@ -242,7 +244,7 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
                     currentRowIdx++;
                     continue;
                 }
-                double val = getNumericValue(cell);
+                double val = BinningUtil.getNumericValue(cell);
                 if (val <= rightBoundary) {
                     bar.addRow(row);
                     currentRowIdx++;

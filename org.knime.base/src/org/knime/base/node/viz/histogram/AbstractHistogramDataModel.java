@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.viz.histogram;
 
-import java.text.DecimalFormat;
 import java.util.Hashtable;
 import java.util.LinkedHashSet;
 
@@ -35,7 +34,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
 import org.knime.core.data.def.StringCell;
 
 /**
@@ -60,7 +58,7 @@ public abstract class AbstractHistogramDataModel {
      * Defines the maximum number of decimal places which are used in the
      * binning method.
      */
-    protected static final int INTERVAL_DIGITS = 2;
+    public static final int INTERVAL_DIGITS = 2;
     
     
     /**
@@ -540,228 +538,7 @@ public abstract class AbstractHistogramDataModel {
             return m_barCaptions;
         }
     }
-//Helper classes
-    /**
-     * @param maxVal the maximum possible value
-     * @param minVal the minimum possible value
-     * @param noOfBars the number of bars
-     * @param colSpec the specification of the column for whom we want the
-     *            interval
-     * @return the interval for the given min, max value and no of bars
-     */
-    protected static double createBinInterval(final double maxVal,
-            final double minVal, final int noOfBars,
-            final DataColumnSpec colSpec) {
-        double interval = (maxVal - minVal) / noOfBars;
-        // if the column is of type integer we don't need to have an interval
-        // with decimal places
-        if (interval >= 1) {
-            if (interval < 10) {
-                interval = 
-                    myRoundedInterval(interval, INTERVAL_DIGITS, 
-                            colSpec.getType().isCompatible(IntValue.class));
-            } else {
-                // find the next higher number divided by ten.
-                interval = myRounder(interval);
-            }
-        } else {
-            interval = myRoundedInterval(interval, INTERVAL_DIGITS, 
-                    colSpec.getType().isCompatible(IntValue.class));
-        }
-        return interval;
-    }
-    /**
-     * @param value
-     * @return the rounded value which is >= the given value and looks nicer :-)
-     */
-    private static double myRounder(final double value) {
-        double divider = 1;
-        double addition = 1;
-        if (value < 1) {
-            return myRoundedInterval(value, INTERVAL_DIGITS, false);
-        } else if (value > 20 && value <= 50) {
-          divider = 20;
-          addition = 2;
-        } else if (value > 50 && value <= 100) {
-            divider = 50;
-            addition = 5;
-        } else if (value > 100 && value <= 500) {
-            divider = 100;
-            addition = 10;
-        } else if (value > 500 && value <= 1000) {
-            divider = 500;
-            addition = 50;
-        } else if (value > 1000 && value <= 100000) {
-            divider = 1000;
-            addition = 100;
-        } else if (value > 100000) {
-            divider = 100000;
-            addition = 1000;
-            while ((value / 10) > divider) {
-                divider *= 10;
-                addition *= 10;
-            }
-        }
-        while (value / divider > 1) {
-            divider += addition;
-        }
-        return divider;
-    }
-
-
-    /**
-     * Returns the rounded value which contains the given number of decimal
-     * places after the last 0 in the given increment.
-     * 
-     * @param doubleVal the value to round
-     * @param increment the increment which defines the start index of the digit
-     *            counter
-     * @param noOfDigits the number of decimal places to display
-     * @return the rounded value
-     */
-    protected static double myRoundedBorders(final double doubleVal,
-            final double increment, final int noOfDigits) {
-        char[] incrementString = Double.toString(increment).toCharArray();
-        StringBuffer decimalFormatBuf = new StringBuffer();
-        boolean digitFound = false;
-        int digitCounter = 0;
-        int positionCounter = 0;
-        for (int length = incrementString.length; positionCounter < length
-                && digitCounter <= noOfDigits; positionCounter++) {
-            char c = incrementString[positionCounter];
-            if (c == '.') {
-                decimalFormatBuf.append(".");
-            } else {
-                if (c != '0' || digitFound) {
-                    digitFound = true;
-                    digitCounter++;
-                }
-                if (digitCounter <= noOfDigits) {
-                    decimalFormatBuf.append("#");
-                }
-            }
-        }
-        DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
-        String resultString = df.format(doubleVal);
-        double result = Double.parseDouble(resultString);
-        return result;
-    }
-
-    /**
-     * Returns the rounded value. If the value is bigger or equal 1 it returns
-     * the result of the math.ceil method otherwise it returns the rounded value
-     * which contains the given number of decimal places after the last 0.
-     * 
-     * @param doubleVal the value to round 
-     * @param noOfDigits the number of
-     * decimal places we want for less then 1 values 
-     * @param isInteger <code>true</code> if the given number is an integer
-     * @return the rounded value of the given value
-     */
-    protected static double myRoundedInterval(final double doubleVal,
-            final int noOfDigits, final boolean isInteger) {
-        // if the value is >= 1 or an integer return an interval without decimal
-        // places
-        if (doubleVal >= 1 || isInteger) {
-            return Math.ceil(doubleVal);
-        } else {
-            // the given doubleVal is less then zero
-            char[] interval = Double.toString(doubleVal).toCharArray();
-            StringBuffer decimalFormatBuf = new StringBuffer();
-            boolean digitFound = false;
-            int digitCounter = 0;
-            int positionCounter = 0;
-            for (int length = interval.length; positionCounter < length
-                    && digitCounter <= noOfDigits; positionCounter++) {
-                char c = interval[positionCounter];
-                if (c == '.') {
-                    decimalFormatBuf.append(".");
-                } else {
-                    if (c != '0' || digitFound) {
-                        digitFound = true;
-                        digitCounter++;
-                    }
-                    if (digitCounter <= noOfDigits) {
-                        decimalFormatBuf.append("#");
-                    }
-                }
-            }
-            double result = Double.parseDouble(new String(interval, 0,
-                    positionCounter));
-            DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
-            String resultString = df.format(result);
-            result = Double.parseDouble(resultString);
-            return result;
-        }
-    }
-
-    /**
-     * @param minVal
-     * @param maxVal
-     * @param binInterval
-     * @param noOfBars
-     * @return
-     */
-    protected double createBinStart(final double minVal, 
-            final double binInterval) {
-        double result = minVal;
-        if (minVal >= 0 && minVal - binInterval <= 0) {
-            // try to start with 0 as left border to have nicer intervals
-            //but only if the minimum value is bigger then 0
-            result = 0;
-        } else if (minVal < 0) {
-            result = myRounder(Math.abs(minVal));
-            result *= -1;
-        } else if (minVal > 0) {
-            result = myRounder(minVal);
-        }
-        return result;
-    }
-
-    /**
-     * Checks if the given <code>DataCell</code> is a numeric cell and returns
-     * the numeric value. If it's not a numeric cell it throws an
-     * <code>IllegalargumentException</code>.
-     * 
-     * @param cell the cell to convert
-     * @return the numeric value of the given cell
-     */
-    protected static double getNumericValue(final DataCell cell) {
-        if (cell == null) {
-            throw new IllegalArgumentException("Cell shouldn't be null.");
-        }
-        if (!(cell.getType().isCompatible(DoubleValue.class))) {
-            throw new IllegalArgumentException("Cell type not "
-                    + "compatible with numeric data type.");
-        }
-        double val = ((DoubleValue)cell).getDoubleValue();
-        return val;
-    }
-
-    /**
-     * Creates the name of the bin depending on the given boundaries.
-     * 
-     * @param leftBoundary the left boundary of the bin
-     * @param rightBoundary the right boundary of the bin
-     * @return the bin name
-     */
-    protected static String createBarName(final double leftBoundary,
-            final double rightBoundary) {
-        StringBuffer buf = new StringBuffer();
-        if ((int)leftBoundary == leftBoundary) {
-            buf.append((int)leftBoundary);
-        } else {
-            buf.append(Double.toString(leftBoundary));
-        }
-        buf.append(" - ");
-        if ((int)rightBoundary == rightBoundary) {
-            buf.append((int)rightBoundary);
-        } else {
-            buf.append(Double.toString(rightBoundary));
-        }
-        return buf.toString();
-    }
-    /**
+/**
      * @return the xColComparator
      */
     protected DataValueComparator getXColComparator() {
