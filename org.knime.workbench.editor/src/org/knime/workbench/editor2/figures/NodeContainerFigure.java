@@ -161,6 +161,9 @@ public class NodeContainerFigure extends RectangleFigure {
     /** contains the the "traffic light". * */
     private StatusFigure m_statusFigure;
 
+    /** contains the the "progress bar". * */
+    private ProgressFigure m_progressFigure;
+
     /** The background color to apply. */
     private Color m_backgroundColor;
 
@@ -206,6 +209,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // add sub-figures
         ToolbarLayout layout = new ToolbarLayout(false);
+        layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
         layout.setSpacing(1);
         layout.setStretchMinorAxis(true);
         layout.setVertical(true);
@@ -234,6 +238,10 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // Status: traffic light
         m_statusFigure = new StatusFigure();
+
+        // progress bar
+        m_progressFigure = new ProgressFigure();
+        m_progressFigure.setOpaque(true);
 
         // Additional status (warning/error sign)
         m_infoWarnErrorPanel = new InfoWarnErrorPanel();
@@ -295,7 +303,8 @@ public class NodeContainerFigure extends RectangleFigure {
         // set it
         m_name.setText(name);
         if (!(m_name.getParent() == this)) {
-            add(m_name);
+
+            add(m_name, 4);
         }
 
         // if the tooltip (description) contains
@@ -339,6 +348,43 @@ public class NodeContainerFigure extends RectangleFigure {
 
     }
 
+    private boolean isChild(final Figure figure) {
+
+        for (Object contentFigure : getChildren()) {
+            if (contentFigure == figure) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void setProgressBar() {
+
+        // remove both intergangable onse
+        if (isChild(m_statusFigure)) {
+            remove(m_statusFigure);
+        }
+
+        // and set the progress bar
+        if (!isChild(m_progressFigure)) {
+            add(m_progressFigure, 3);
+        }
+    }
+
+    private void setStatusAmple() {
+
+        // remove both intergangable onse
+        if (isChild(m_progressFigure)) {
+            remove(m_progressFigure);
+        }
+
+        // and set the progress bar
+        if (!isChild(m_statusFigure)) {
+            add(m_statusFigure, 3);
+        }
+    }
+
     /**
      * Sets the state of the node, which shall be reflected in the UI.
      * 
@@ -351,11 +397,14 @@ public class NodeContainerFigure extends RectangleFigure {
         case STATE_NOT_CONFIGURED:
             m_heading.setFont(FONT_NORMAL);
             m_heading.setEnabled(false);
+            setStatusAmple();
             m_statusFigure.setIcon(RED);
             break;
         case STATE_READY:
             m_heading.setFont(FONT_NORMAL);
             m_heading.setEnabled(true);
+
+            setStatusAmple();
             m_statusFigure.setIcon(YELLOW);
 
             // m_contentFigure.removeWarningSign();
@@ -367,13 +416,16 @@ public class NodeContainerFigure extends RectangleFigure {
         case STATE_EXECUTING:
             m_heading.setFont(FONT_EXECUTING);
             m_heading.setEnabled(true);
-            m_statusFigure.setIcon(YELLOW);
+
+            setProgressBar();
             m_heading.setFont(FONT_EXECUTING);
             // m_contentFigure.removeWarningSign();
             break;
         case STATE_EXECUTED:
             m_heading.setFont(FONT_EXECUTED);
             m_heading.setEnabled(true);
+
+            setStatusAmple();
             m_statusFigure.setIcon(GREEN);
             break;
         case STATE_WARNING:
@@ -391,6 +443,8 @@ public class NodeContainerFigure extends RectangleFigure {
         default:
             m_heading.setFont(FONT_NORMAL);
             m_heading.setEnabled(false);
+
+            setStatusAmple();
             m_statusFigure.setIcon(RED);
             break;
         }
