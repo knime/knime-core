@@ -837,6 +837,7 @@ class Buffer {
      * Clears the temp file. Any subsequent iteration will fail!
      */
     void clear() {
+        m_list = null;
         if (m_outFile != null) {
             for (WeakReference<FromFileIterator> w : m_openIteratorSet) {
                 FromFileIterator f = w.get();
