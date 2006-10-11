@@ -22,6 +22,7 @@
 			<li>...</li>
 			</ol>
 		</p>
+		The bars are colored by the number of rows per color attribute.
 		<p><b>Please note: This node caches all data in the main memory to 
 		provide interactive functions. For huge data sets use the 
 		"Histogram" node instead.</b></p>

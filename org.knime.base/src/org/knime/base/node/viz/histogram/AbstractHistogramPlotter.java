@@ -36,6 +36,7 @@ import javax.swing.JPopupMenu;
 import org.knime.base.node.viz.plotter2D.AbstractPlotter2D;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.base.util.coordinate.CoordinateMapping;
+import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -362,11 +363,17 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
             visBars = createUpdateVisBars(visBars, xCoordinates, yCoordinates,
                     drawingSpace);
             drawingPane.setVisBars(visBars);
-            final double drawingHeight = drawingSpace.getHeight();
-            int baseLine = (int)(drawingHeight 
-                    - yCoordinates.calculateMappedValue(
-                            new DoubleCell(0), drawingHeight, true));
-            drawingPane.setBaseLine(baseLine);
+            if (!yCoordinates.isNominal() 
+                    && ((NumericCoordinate)yCoordinates).getMinDomainValue() 
+                        < 0) {
+                final double drawingHeight = drawingSpace.getHeight();
+                int baseLine = (int)(drawingHeight 
+                        - yCoordinates.calculateMappedValue(
+                                new DoubleCell(0), drawingHeight, true));
+                drawingPane.setBaseLine(baseLine);
+            } else {
+                drawingPane.setBaseLine(null);
+            }
             repaint();
         }
     }
@@ -404,35 +411,31 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
      * the user only changes the aggregation method or column.
      * 
      * @param existingBars The currently displayed bars or <code>null</code>
-     * if the bars should be created. @param xCoordinates The 
-     * <code>Coordinate</code> object which contains the start position of an 
-     * bar on the x axis 
+     * if the bars should be created. 
+     * @param xCoordinates The <code>Coordinate</code> object which contains 
+     * the start position of an bar on the x axis 
      * @param drawingSpace A <code>Rectangle</code> which defines the available
-     * drawing space @return a <code>Collection</code> of 
-     * <code>BarVisModel</code> objects containing all information needed for 
-     * drawing.
+     * drawing space 
+     * @return a <code>Collection</code> of <code>BarVisModel</code> objects 
+     * containing all information needed for drawing.
      */
     private Hashtable<String, BarVisModel> createUpdateVisBars(
             final Hashtable<String, BarVisModel> existingBars, 
             final Coordinate xCoordinates, final Coordinate yCoordinates, 
             final Rectangle drawingSpace) {
         AbstractHistogramDataModel histoData = getHistogramDataModel();
-        Hashtable<String, BarVisModel> visBars = existingBars;
+        Hashtable<String, BarVisModel> visBars = 
+            new Hashtable<String, BarVisModel>(histoData.getNumberOfBars() + 1);
         // this is the minimum size of a bar with an aggregation value > 0
-        int minHeight = Math.max((int)HistogramDrawingPane.getMaxStrokeWidth(),
+        final int minHeight = Math.max(
+                (int)HistogramDrawingPane.getMaxStrokeWidth(),
                 AbstractHistogramPlotter.MINIMUM_BAR_HEIGHT);
-        if (existingBars == null
-                || existingBars.size() < getNoOfDisplayedBars()) {
-            // +1 because of a possible missing value bar
-            visBars = new Hashtable<String, BarVisModel>(
-                        histoData.getNumberOfBars() + 1);
-        }
         final double drawingWidth = drawingSpace.getWidth();
         final double drawingHeight = drawingSpace.getHeight();
         CoordinateMapping[] xMappingPositions = xCoordinates.getTickPositions(
                 drawingWidth, true);
         // get the default width for all bars
-        int barWidth = getBarWidth();
+        final int barWidth = getBarWidth();
         for (CoordinateMapping coordinate : xMappingPositions) {
             String caption = coordinate.getDomainValueAsString();
             AbstractBarDataModel bar = histoData.getBar(caption);
@@ -449,63 +452,106 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
                     continue;
                 }
             }
-            double xCoordinate = coordinate.getMappingValue();
-            int startX = (int)(xCoordinate - barWidth / 2);
-            // double aggrVal = bar.getAggregationValue();
+//calculate the starting point on the x axis for the bar
+            final double xCoordinate = coordinate.getMappingValue();
+            //subtract half of the bar width from the start position to place
+            //the middle point of the bar on the mapped coordinate position
+            final int startX = (int)(xCoordinate - (barWidth / 2));
+            
+            
+//calculate the starting point on the y axis for the bar        
+//since the coordinate system in java is on the y axis reversed the bar gets 
+//painted from a starting point in the upper left corner to the bottom (height)
+//and to the right (width).
             // I have to use the String value label because this is the rounded
             // aggregation value. If it's a small value which gets rounded
             double aggrVal = Double.parseDouble(bar.getLabel());
-            // check for a negative value
-//            if (aggrVal < 0) {
-//                aggrVal = Math.abs(aggrVal);
-//            }
-            int startY = 0;
-            int endY = 0;
+            Rectangle rect = null;
             if (aggrVal >= 0) {
-                startY = (int)(drawingHeight 
+                //if it's a positive value the top left corner starting point
+                //is the value itself ...
+                int startY = (int)(drawingHeight 
                         - yCoordinates.calculateMappedValue(
                                 new DoubleCell(aggrVal), drawingHeight, true));
-//              the calculateMappedValue method returns the position in a normal
-                //coordinate system since the java screen coordinates are vice 
-                //versa we have to subtract the screen height from the given 
-                //value to get the position on the screen
-                endY = (int)(drawingHeight 
+                //... and the end point (height) of the bar is the 0 value!
+                final int fixPoint = (int)(drawingHeight 
                         - yCoordinates.calculateMappedValue(new DoubleCell(0), 
                                 drawingHeight, true));
+//              the calculateMappedValue method returns the position in a 
+//              normal coordinate system since the java screen coordinates 
+//              are vice versa we have to subtract the coordinate value from
+//              the screen height to get the position on the screen
+
+//check for rounding errors
+                if (startY < 0) {
+                    //avoid negative coordinates
+                    startY = 0;
+                }
+                //make sure that the start point is above the end point which 
+                //can't be moved because it is the 0 value!
+                if (startY > fixPoint) {
+                    startY = fixPoint;
+                }
+                //check the height for the minimum height
+                int height = fixPoint - startY;
+                if (height <= minHeight && aggrVal > 0) {
+                    height = minHeight;
+                    //adjust the starting point to the new height to avoid
+                    //painting in the negatives
+                    startY = fixPoint - height;
+                }
+                rect = new Rectangle(startX, startY, barWidth, height);
             } else {
-                startY = (int)(drawingHeight
+                //if it's a negative value the top left corner start point is
+                // the 0 value ...
+                final int fixPoint = (int)(drawingHeight
                         - yCoordinates.calculateMappedValue(
                         new DoubleCell(0), drawingHeight, true));
-//              the calculateMappedValue method returns the position in a normal
-                //coordinate system since the java screen coordinates are vice 
-                //versa we have to subtract the screen height from the given 
-                //value to get the position on the screen
-                endY = (int)(drawingHeight 
+                //... and the end point (height) is the negative value itself!
+                int endY = (int)(drawingHeight 
                         - yCoordinates.calculateMappedValue(
                                 new DoubleCell(aggrVal), drawingHeight, true));
-            }
-            int height = endY - startY;
-            if (height <= minHeight && aggrVal > 0) {
-                height = minHeight;
-            }
-            
-//            int startY = (int)(drawingHeight - height);
-//            // take care of cast problems!
-//            if (startY < 0) {
-//                startY = 0;
-//            } else if (startY > drawingHeight) {
-//                startY = (int)drawingHeight;
-//            }
+//              the calculateMappedValue method returns the position in a 
+//              normal coordinate system since the java screen coordinates 
+//              are vice versa we have to subtract the coordinate value from
+//              the screen height to get the position on the screen
+                
 
-            Rectangle rect = 
-                new Rectangle(startX, startY, barWidth, height);
-            BarVisModel visBar = visBars.get(bar.getCaption());
-            if (visBar == null) {
-                visBar = new BarVisModel(bar, rect, m_tableSpec);
-                visBars.put(bar.getCaption(), visBar);
-            } else {
-                visBar.updateBarData(bar, rect);
+//check for rounding errors
+                  if (endY > drawingHeight) {
+                      //avoid bigger bars than the drawing screen
+                      endY = (int)Math.floor(drawingHeight);
+                  }
+                  //make sure that the end point is below the start point which 
+                  //can't be moved because it is the 0 value!
+                  if (fixPoint > endY) {
+                      endY = fixPoint;
+                  }
+                  //check the height for the minimum height
+                  int height = endY - fixPoint;
+                  if (height <= minHeight && aggrVal > 0) {
+                      height = minHeight;
+                      //adjust the starting point to the new height to avoid
+                      //painting in the negatives
+                      endY = fixPoint + height;
+                  }
+                  rect = new Rectangle(startX, fixPoint, barWidth, height);
             }
+
+            BarVisModel visBar = null;
+            if (existingBars == null 
+                    || !existingBars.containsKey(bar.getCaption())) {
+                visBar = new BarVisModel(bar, rect, m_tableSpec);
+            } else {
+                visBar = existingBars.get(bar.getCaption());
+                if (visBar == null) {
+                    //this shouldn't happen
+                    visBar = new BarVisModel(bar, rect, m_tableSpec);
+                }
+                visBar.updateBarData(bar, rect);
+                
+            }
+            visBars.put(bar.getCaption(), visBar);
         } // end of for loop over the x axis coordinates
         return visBars;
     }

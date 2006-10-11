@@ -32,6 +32,7 @@ import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IntValue;
 
 
 /**
@@ -198,7 +199,8 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
             noOfBars = 1;
         }
         final double binInterval = BinningUtil.createBinInterval(maxVal, 
-                minVal, noOfBars, getOriginalXColSpec());
+                minVal, noOfBars, 
+                getOriginalXColSpec().getType().isCompatible(IntValue.class));
         minVal = BinningUtil.createBinStart(minVal, binInterval);
         // increase the number of bars to include the max value
         while (minVal + (binInterval * noOfBars) < maxVal) {

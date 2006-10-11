@@ -28,9 +28,7 @@ import java.text.DecimalFormat;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
 
 /**
  * 
@@ -39,36 +37,41 @@ import org.knime.core.data.IntValue;
 public final class BinningUtil {
 
     private BinningUtil() {
-        //prevent object creation for util class
+        //prevent object creation for utility class
     }
    
     /**
      * @param maxVal the maximum possible value
      * @param minVal the minimum possible value
      * @param noOfBars the number of bars
-     * @param colSpec the specification of the column for whom we want the
-     *            interval
+     * @param isInteger <code>true</code> if the value should be an integer
      * @return the interval for the given min, max value and no of bars
      */
     public static double createBinInterval(final double maxVal,
             final double minVal, final int noOfBars,
-            final DataColumnSpec colSpec) {
+            final boolean isInteger) {
+        if (maxVal < minVal) {
+            throw new IllegalArgumentException(
+                    "Max value should be at least as big as min value.");
+        }
+        if (noOfBars == 0) {
+            return maxVal - minVal;
+        }
         double interval = (maxVal - minVal) / noOfBars;
-        // if the column is of type integer we don't need to have an interval
-        // with decimal places
         if (interval > 10) {
                 // find the next higher number divided by ten.
                 interval = bigValueRounder(interval);
         } else {
             interval = smallValueRounder(interval, 
-                    AbstractHistogramDataModel.INTERVAL_DIGITS, 
-                    colSpec.getType().isCompatible(IntValue.class));
+                    AbstractHistogramDataModel.INTERVAL_DIGITS, isInteger);
         }
         return interval;
     }
 
     /**
      * Called to calculate the left start value of the binning.
+     * If the minVal is is greater then 0 it returns 0 if
+     * minVal - interval <= 0 otherwise it rounds the given minVal.
      * @param minVal the minimum value to round
      * @param binInterval the bin interval to check if we can start with 0
      * @return the left start value of the binning interval
