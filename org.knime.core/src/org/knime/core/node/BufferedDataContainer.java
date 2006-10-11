@@ -27,10 +27,58 @@ package org.knime.core.node;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.node.Node.MemoryPolicy;
 
 /**
+ * <code>DataContainer</code> to be used during a 
+ * <code>NodeModel</code>'s execution. 
+ * A <code>BufferedDataContainer</code> is special implementation of a 
+ * {@link DataContainer} whose <code>getTable()</code> returns a 
+ * {@link BufferedDataTable}, i.e. the return value of each 
+ * NodeModel's {@link NodeModel#execute(BufferedDataTable[], ExecutionContext) 
+ * execute} method.
  * 
- * @author wiswedel, University of Konstanz
+ * <p>Use a BufferedDataContainer when new data is aquired during the execution 
+ * or if it does not pay off to reference a node's input data (it does pay
+ * off when you only append a column to the input data, for instance).
+ * Please see the {@link ExecutionContext} for more details on how to create
+ * <code>BufferedDataTable</code>'s.  
+ * 
+ * <p>To get a quick start how to use a <code>BufferedDataTable</code>, see
+ * the following code:
+ * <pre>
+ * protected final BufferedDataTable[] execute(
+ *      final BufferedDataTable[] data, final ExecutionContext exec) 
+ *      throws Exception {
+ *  // the DataTableSpec of the final table
+ *  DataTableSpec spec = new DataTableSpec(
+ *          new DataColumnSpecCreator("A", StringCell.TYPE).createSpec(),
+ *          new DataColumnSpecCreator("B", DoubleCell.TYPE).createSpec());
+ *  // init the container
+ *  BufferedDataContainer container = exec.createDataContainer(spec);
+ *  
+ *  // add arbitrary number of rows to the container
+ *  DataRow firstRow = new DefaultRow(new RowKey("first"), new DataCell[]{
+ *      new StringCell("A1"), new DoubleCell(1.0)
+ *  });
+ *  container.addRowToTable(firstRow); 
+ *  DataRow secondRow = new DefaultRow(new RowKey("second"), new DataCell[]{
+ *      new StringCell("B1"), new DoubleCell(2.0)
+ *  });
+ *  container.addRowToTable(secondRow); 
+ *          
+ *  // finally close the container and get the result table.
+ *  container.close();
+ *  BufferedDataTable result = container.getTable();
+ *  ...
+ *
+ * </pre>
+ * <p>For a more detailed explanation refer to the description of the 
+ * {@link DataContainer} class.
+ * 
+ * @see DataContainer
+ * @see ExecutionContext
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class BufferedDataContainer extends DataContainer {
     
@@ -42,8 +90,23 @@ public class BufferedDataContainer extends DataContainer {
      */
     BufferedDataContainer(final DataTableSpec spec, 
             final boolean initDomain, final Node node) {
-        super(spec, initDomain);
+        super(spec, initDomain, getMaxCellsInMemory(node));
         m_node = node;
+    }
+    
+    /** Check the node if its outport memory policy says we should keep 
+     * everything in memory.
+     * @param The node to check.
+     * @return Integer.MAX_VALUE if 
+     * node.getOutDataMemoryPolicy().equals(MemoryPolicy.CacheInMemory), 
+     * otherwise 0.
+     */
+    private static int getMaxCellsInMemory(final Node node) {
+        if (node.getOutDataMemoryPolicy().equals(MemoryPolicy.CacheInMemory)) {
+            return Integer.MAX_VALUE;
+        } else {
+            return 0;
+        }
     }
 
     /**

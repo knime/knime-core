@@ -93,6 +93,10 @@ public final class Node {
 
     /** Keeps fixed array of output ports for data. */
     private final DataOutPort[] m_outDataPorts;
+    
+    /** The memory policy for the data outports, 
+     * i.e. keep in memory or hold on disc. */
+    private MemoryPolicy m_outDataPortsMemoryPolicy;
 
     /** Keeps fixed array of input ports for models. */
     private final ModelContentInPort[] m_inModelPorts;
@@ -115,6 +119,28 @@ public final class Node {
     /** Directory name to save and load the data. */
     private static final String DATA_FILE_DIR = "data";
 
+    /** Config for misc settings which are shown in the dialog. So
+     * far it only contains a subsetting for the memory policy of the data
+     * outports.
+     */
+    static final String CFG_MISC_SETTINGS = 
+        "internal_node_subsettings";
+    
+    /** Config key: What memory policy to use for a node outport. */
+    static final String CFG_MEMORY_POLICY = "memory_policy";
+    
+    /** Available policy how to handle output data. It might be held in memory
+     * or completely on disc. We use an enum here as a boolean may not be
+     * sufficient in the future (possibly adding a third option 
+     * "try to keep in memory").
+     */
+    static enum MemoryPolicy {
+        /** Hold output in memory. */
+        CacheInMemory, 
+        /** Buffer on disc. */
+        CacheOnDisc
+    }
+    
     private File m_nodeDir = null;
 
     // lock that prevents a possible deadlock if a node is currently configuring
@@ -204,6 +230,8 @@ public final class Node {
 
         // init data output ports
         m_outDataPorts = new DataOutPort[m_model.getNrDataOuts()];
+        // default option: keep on disc (can be changed in dialog)
+        m_outDataPortsMemoryPolicy = MemoryPolicy.CacheOnDisc;
         for (int i = 0; i < m_outDataPorts.length; i++) {
             m_outDataPorts[i] = new DataOutPort(i, this);
             m_outDataPorts[i].setPortName(m_factory.getOutportDataName(i));
@@ -239,9 +267,12 @@ public final class Node {
      */
     public Node(final Node node, final WorkflowManager wfm) {
         this(node.m_factory, wfm);
+        NodeSettings miscSettings = new NodeSettings("miscSettings");
+        node.saveMiscSettingsTo(miscSettings);
         NodeSettings modelSettings = new NodeSettings("modelSettings");
         node.m_model.saveSettingsTo(modelSettings);
         try {
+            loadMiscSettingsFrom(miscSettings, true);
             this.m_model.loadSettingsFrom(modelSettings);
         } catch (InvalidSettingsException ise) {
             m_logger.error("Could not copy node, reason: " + ise.getMessage());
@@ -259,7 +290,15 @@ public final class Node {
     public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_name = settings.getString(CFG_NAME);
-
+        // in versions before KNIME 1.2.0, there were no misc settings
+        // in the dialog, we must use caution here: if they are not present
+        // we use the default, i.e. all is kept on disc.
+        if (settings.containsKey(CFG_MISC_SETTINGS)) {
+            loadMiscSettingsFrom(
+                    settings.getNodeSettings(CFG_MISC_SETTINGS), true);
+        } else {
+            m_outDataPortsMemoryPolicy = MemoryPolicy.CacheOnDisc;
+        }
         NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
         if (m_model instanceof SpecialNodeModel) {
             ((SpecialNodeModel)m_model).loadSettingsFrom(null, modelSettings,
@@ -624,6 +663,16 @@ public final class Node {
             return m_outModelPorts[newPortID].getPortName();
         }
     }
+    
+    /**
+     * Get the policy for the data outports, that is, keep the output
+     * in main memory or write it to disc. This method is used from within the 
+     * ExecutionContext when the derived NodeModel is executing.
+     * @return The memory policy to use.
+     */
+    MemoryPolicy getOutDataMemoryPolicy() {
+        return m_outDataPortsMemoryPolicy;
+    }
 
     /**
      * Delegate method to the model's <code>isAutoExecutable()</code> method.
@@ -829,13 +878,15 @@ public final class Node {
             // some other error - should never happen!
             m_logger.fatal("Fatal error", e);
             resetAndConfigure();
-            m_status = new NodeStatus.Error("Execute failed: " + e.getMessage());
+            m_status = new NodeStatus.Error(
+                    "Execute failed: " + e.getMessage());
             return false;
         } catch (Exception e) {
             // execution failed
             m_logger.error("Execute failed", e);
             resetAndConfigure();
-            m_status = new NodeStatus.Error("Execute failed: " + e.getMessage());
+            m_status = new NodeStatus.Error(
+                    "Execute failed: " + e.getMessage());
             return false;
         } finally {
             if (m_status != null) {
@@ -920,10 +971,12 @@ public final class Node {
             reset(false);
         } catch (Exception e) {
             m_logger.error("Reset failed", e);
-            m_status = new NodeStatus.Warning("Reset failed: " + e.getMessage());
+            m_status = new NodeStatus.Warning(
+                    "Reset failed: " + e.getMessage());
         } catch (Error e) {
             m_logger.fatal("Reset failed", e);
-            m_status = new NodeStatus.Warning("Reset failed: " + e.getMessage());
+            m_status = new NodeStatus.Warning(
+                    "Reset failed: " + e.getMessage());
         }
 
         // configure
@@ -1300,8 +1353,8 @@ public final class Node {
                 // if an in spec is null
                 if (errorMsg.length() > 0) {
                     throw new InvalidSettingsException(
-                            "Node can't be configured due to missing input spec(s): "
-                                    + errorMsg);
+                            "Node can't be configured due to missing " 
+                            + "input spec(s): " + errorMsg);
                 }
     
                 // call configure model to create output table specs
@@ -1517,7 +1570,8 @@ public final class Node {
 
     private static final String CFG_ISEXECUTED = "isExecuted";
 
-    private static final String CFG_MODEL = "model";
+    /** The sub settings entry where the model can save its setup. */
+    static final String CFG_MODEL = "model";
 
     private static final String CFG_SPEC_FILES = "spec_files";
 
@@ -1559,6 +1613,8 @@ public final class Node {
         settings.addBoolean(CFG_ISCONFIGURED, isConfigured());
         // write executed flag
         settings.addBoolean(CFG_ISEXECUTED, isExecuted());
+        // write the internal misc information, e.g. memory usage of outports
+        saveMiscSettingsTo(settings.addNodeSettings(CFG_MISC_SETTINGS));
 
         // write model
         final NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
@@ -1767,8 +1823,49 @@ public final class Node {
         NodeSettings newSettings = new NodeSettings(this.getName());
         m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
         // validate settings
-        m_model.validateSettings(newSettings);
+        loadMiscSettingsFrom(
+                newSettings.getNodeSettings(CFG_MISC_SETTINGS), false);
+        m_model.validateSettings(newSettings.getNodeSettings(CFG_MODEL));
     }
+
+    /** Helper method that adds a new sub settings object to the argument, to
+     * which then it will add misc information, i.e. the memory policy for
+     * the data outports. 
+     * @param settings To write to.
+     */
+    private void saveMiscSettingsTo(final NodeSettingsWO settings) {
+        settings.addString(CFG_MEMORY_POLICY, 
+                m_outDataPortsMemoryPolicy.toString());
+    } // saveMiscSettingsFrom(NodeSettingsWO)
+
+    /** Helper method that analyses the argument settings and read the 
+     * memory policy for data outports. Called from the validate and from
+     * the loadModelSettings method.
+     * @param settings The settings to read from
+     * @param writeLocalFields True if to also write the local members, if
+     * false we validate only.
+     * @throws InvalidSettingsException If any information for retrieving this
+     * information is missing or invalid.
+     */
+    private void loadMiscSettingsFrom(final NodeSettingsRO settings, 
+            final boolean writeLocalFields)
+    throws InvalidSettingsException {
+        String memoryPolicy = settings.getString(Node.CFG_MEMORY_POLICY);
+        if (memoryPolicy == null) {
+            throw new InvalidSettingsException(
+            "Can't use null memory policy.");
+        }
+        MemoryPolicy p;
+        try {
+            p = MemoryPolicy.valueOf(memoryPolicy);
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException(
+                    "Invalid memory policy: " + memoryPolicy);
+        }
+        if (writeLocalFields) {
+            m_outDataPortsMemoryPolicy = p;
+        }
+    } // loadMiscSettingsFrom(NodeSettingsRO)
 
     /**
      * Reads the current settings from the dialog and writes them into the
@@ -1781,8 +1878,13 @@ public final class Node {
         // save new dialog's config into new object
         NodeSettings newSettings = new NodeSettings(this.getName());
         m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
+        // if this method is called, the dialog was at least open, so the
+        // the misc information is present (note: there were no misc infos 
+        // before KNIME 1.2.0)
+        loadMiscSettingsFrom(
+                newSettings.getNodeSettings(CFG_MISC_SETTINGS), true);
         // and apply it to the model
-        m_model.loadSettingsFrom(newSettings);
+        m_model.loadSettingsFrom(newSettings.getNodeSettings(CFG_MODEL));
     }
 
     /**
@@ -1795,9 +1897,11 @@ public final class Node {
         try {
             // save new dialog's config into new object
             NodeSettings dialogSettings = new NodeSettings("Compare");
-            NodeSettings modelSettings = new NodeSettings("Compare");
             m_dialogPane.finishEditingAndSaveSettingsTo(dialogSettings);
-            m_model.saveSettingsTo(modelSettings);
+            NodeSettings modelSettings = new NodeSettings("Compare");
+            saveMiscSettingsTo(
+                    modelSettings.addNodeSettings(CFG_MISC_SETTINGS));
+            m_model.saveSettingsTo(modelSettings.addNodeSettings(CFG_MODEL));
             // check for equality
             return dialogSettings.isIdentical(modelSettings);
         } catch (InvalidSettingsException ise) {
@@ -1819,9 +1923,14 @@ public final class Node {
     private void loadDialogSettingsFromModel() throws NotConfigurableException {
         // get the model's current settings ...
         NodeSettings currSettings = new NodeSettings(this.getName());
-        m_model.saveSettingsTo(currSettings);
+        NodeSettingsWO modelSettings = currSettings.addNodeSettings(CFG_MODEL);
+        m_model.saveSettingsTo(modelSettings);
+        NodeSettingsWO miscSettings = 
+            currSettings.addNodeSettings(CFG_MISC_SETTINGS);
+        saveMiscSettingsTo(miscSettings);
         // ... to init the dialog
-        m_dialogPane.loadSettingsFrom(currSettings, getInDataTableSpecs());
+        m_dialogPane.internalLoadSettingsFrom(
+                currSettings, getInDataTableSpecs());
     }
 
     /**
@@ -1903,15 +2012,15 @@ public final class Node {
     private int boundModelContentInPort(final int inPortID) {
         // predictor params port ids are the indecies above the data port ids
         if ((inPortID < getNrDataInPorts())
-                || (inPortID >= getNrModelContentInPorts() + getNrDataInPorts())) {
+                || (inPortID >= getNrModelContentInPorts() 
+                        + getNrDataInPorts())) {
             throw new IndexOutOfBoundsException(
                     "Invalid ModelContent input-port number: "
                             + inPortID
                             + " (valid range: ["
                             + getNrDataInPorts()
-                            + "..."
-                            + (getNrModelContentInPorts() + getNrDataInPorts() - 1)
-                            + "])");
+                            + "..." + (getNrModelContentInPorts() 
+                                    + getNrDataInPorts() - 1) + "])");
         }
         return inPortID;
     }

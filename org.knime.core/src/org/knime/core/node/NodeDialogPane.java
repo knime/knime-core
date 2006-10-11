@@ -24,6 +24,7 @@ package org.knime.core.node;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.FlowLayout;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
@@ -41,6 +43,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.Node.MemoryPolicy;
 
 
 /**
@@ -54,6 +57,8 @@ import org.knime.core.data.DataTableSpec;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeDialogPane {
+    
+    private static final String TAB_NAME_MISCELLANEOUS = "Miscellaneous";
 
     /**
      * Tabbed pane in the center of the dialog, which holds the components added
@@ -69,6 +74,11 @@ public abstract class NodeDialogPane {
 
     /** Node reference set once which is informed about the dialog's apply. */
     private Node m_node;
+    
+    /** The additional tab in which the user can set the memory options. 
+     * This field is null when m_node has no data outports. 
+     */
+    private MetaSettingsTab m_metaTab;
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
@@ -97,6 +107,10 @@ public abstract class NodeDialogPane {
     final void setNode(final Node node) {
         assert (m_node == null && node != null);
         m_node = node;
+        if (m_node.getNrDataOutPorts() > 0) {
+            m_metaTab = new MetaSettingsTab();
+            addTab(TAB_NAME_MISCELLANEOUS, m_metaTab);
+        }
     }
 
     /**
@@ -138,7 +152,66 @@ public abstract class NodeDialogPane {
     public final JPanel getPanel() {
         return m_panel;
     }
-
+    
+    /** Method being called from the node when the dialog shall load the
+     * settings from a NodeSettingsRO object. This method will call the
+     * abstract loadSettingsFrom method and finally load internals
+     * (i.e. memory policy of outports, if any).
+     * @param settings To load from.
+     * @param specs The DTSs from the inports.
+     * @throws NotConfigurableException 
+     * If loadSettingsFrom throws this exception.
+     * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     */
+    final void internalLoadSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        NodeSettingsRO modelSettings;
+        try {
+            modelSettings = settings.getNodeSettings(Node.CFG_MODEL);
+        } catch (InvalidSettingsException ise) {
+            modelSettings = new NodeSettings("empty");
+        }
+        loadSettingsFrom(modelSettings, specs);
+        try {
+            NodeSettingsRO subSettings = 
+                settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            if (m_node.getNrDataOutPorts() > 0) {
+                String memoryPolicy = subSettings.getString(
+                        Node.CFG_MEMORY_POLICY, 
+                        MemoryPolicy.CacheOnDisc.toString());
+                MemoryPolicy policy;
+                try {
+                    policy = MemoryPolicy.valueOf(memoryPolicy);
+                } catch (IllegalArgumentException iae) {
+                    policy = MemoryPolicy.CacheInMemory;
+                }
+                m_metaTab.setStatus(policy.equals(MemoryPolicy.CacheInMemory));
+            }
+        } catch (InvalidSettingsException ise) {
+            m_metaTab.setStatus(/*cacheInMemory=*/false);
+        }
+    }
+    
+    /**
+     * Called from the node when the current settings shall be writting to 
+     * a NodeSettings object. It will call the abstract saveSettingsTo method
+     * and finally write meta settings to the argument object. Meta settings 
+     * @param settings To write to. Forwarded to abstract saveSettings method.
+     * @throws InvalidSettingsException If any of the writing fails.
+     */
+    final void internalSaveSettingsTo(final NodeSettingsWO settings)
+        throws InvalidSettingsException {
+        saveSettingsTo(settings.addNodeSettings(Node.CFG_MODEL));
+        NodeSettingsWO subSettings = 
+            settings.addNodeSettings(Node.CFG_MISC_SETTINGS);
+        if (m_node.getNrDataOutPorts() > 0) {
+            boolean isInMemory = m_metaTab.getStatus();
+            MemoryPolicy p = isInMemory ? MemoryPolicy.CacheInMemory
+                    : MemoryPolicy.CacheOnDisc;
+            subSettings.addString(Node.CFG_MEMORY_POLICY, p.toString());
+        }
+    }
+    
     /**
      * Invoked before the dialog window is opened. The settings object passed,
      * contains the current settings of the corresponding node model. The model
@@ -193,7 +266,7 @@ public abstract class NodeDialogPane {
     void finishEditingAndSaveSettingsTo(final NodeSettingsWO settings) 
         throws InvalidSettingsException {
         commitComponentsRecursively(getPanel());
-        saveSettingsTo(settings);
+        internalSaveSettingsTo(settings);
     }
 
     /**
@@ -295,7 +368,13 @@ public abstract class NodeDialogPane {
             }
         });
         m_tabs.put(title, comp);
-        m_pane.addTab(title, comp);
+        int metaIndex = m_pane.indexOfComponent(m_metaTab);
+        // make sure the Miscallaneous tab is always the last tab.
+        if (metaIndex >= 0) {
+            m_pane.insertTab(title, null, comp, null, metaIndex);
+        } else {
+            m_pane.addTab(title, comp);
+        }
         // convert all light weight popup components to non-light weight
         noLightWeight(comp);
     }
@@ -349,6 +428,34 @@ public abstract class NodeDialogPane {
     protected final void removeTab(final String name) {
         m_pane.remove(getTab(name));
         m_tabs.remove(name);
+    }
+    
+    private static class MetaSettingsTab extends JPanel {
+        private final JCheckBox m_checkBoxes;
+        /** Inits GUI. */
+        public MetaSettingsTab() {
+            super(new FlowLayout(FlowLayout.LEFT, 15, 15));
+            m_checkBoxes = new JCheckBox("Keep data output in memory.");
+            m_checkBoxes.setToolTipText("When this option is checked, the " 
+                    + "output data is kept in main memory, resulting in " 
+                    + "faster execution of successing nodes but also in more "
+                    + "memory usage.");
+            add(m_checkBoxes);
+        }
+        
+        /** Get the status of the checkbox, i.e. either checked or unchecked.
+         * @return If checked or not.
+         */
+        boolean getStatus() {
+            return m_checkBoxes.isSelected();
+        }
+        
+        /** Set the status of the checkbox.
+         * @param status The status.
+         */
+        void setStatus(final boolean status) {
+            m_checkBoxes.setSelected(status);
+        }
     }
 
 } // NodeDialogPane
