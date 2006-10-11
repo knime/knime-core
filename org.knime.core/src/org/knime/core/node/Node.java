@@ -1822,10 +1822,10 @@ public final class Node {
         // save new dialog's config into new object
         NodeSettings newSettings = new NodeSettings(this.getName());
         m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
+        m_model.validateSettings(newSettings.getNodeSettings(CFG_MODEL));
         // validate settings
         loadMiscSettingsFrom(
                 newSettings.getNodeSettings(CFG_MISC_SETTINGS), false);
-        m_model.validateSettings(newSettings.getNodeSettings(CFG_MODEL));
     }
 
     /** Helper method that adds a new sub settings object to the argument, to
@@ -1850,20 +1850,22 @@ public final class Node {
     private void loadMiscSettingsFrom(final NodeSettingsRO settings, 
             final boolean writeLocalFields)
     throws InvalidSettingsException {
-        String memoryPolicy = settings.getString(Node.CFG_MEMORY_POLICY);
-        if (memoryPolicy == null) {
-            throw new InvalidSettingsException(
-            "Can't use null memory policy.");
-        }
-        MemoryPolicy p;
-        try {
-            p = MemoryPolicy.valueOf(memoryPolicy);
-        } catch (IllegalArgumentException iae) {
-            throw new InvalidSettingsException(
-                    "Invalid memory policy: " + memoryPolicy);
-        }
-        if (writeLocalFields) {
-            m_outDataPortsMemoryPolicy = p;
+        if (getNrDataOutPorts() > 0) {
+            String memoryPolicy = settings.getString(Node.CFG_MEMORY_POLICY);
+            if (memoryPolicy == null) {
+                throw new InvalidSettingsException(
+                "Can't use null memory policy.");
+            }
+            MemoryPolicy p;
+            try {
+                p = MemoryPolicy.valueOf(memoryPolicy);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                        "Invalid memory policy: " + memoryPolicy);
+            }
+            if (writeLocalFields) {
+                m_outDataPortsMemoryPolicy = p;
+            }
         }
     } // loadMiscSettingsFrom(NodeSettingsRO)
 
@@ -1878,13 +1880,13 @@ public final class Node {
         // save new dialog's config into new object
         NodeSettings newSettings = new NodeSettings(this.getName());
         m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
+        // and apply it to the model
+        m_model.loadSettingsFrom(newSettings.getNodeSettings(CFG_MODEL));
         // if this method is called, the dialog was at least open, so the
         // the misc information is present (note: there were no misc infos 
         // before KNIME 1.2.0)
         loadMiscSettingsFrom(
                 newSettings.getNodeSettings(CFG_MISC_SETTINGS), true);
-        // and apply it to the model
-        m_model.loadSettingsFrom(newSettings.getNodeSettings(CFG_MODEL));
     }
 
     /**
