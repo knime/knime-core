@@ -152,8 +152,14 @@
             factory-class="org.knime.base.node.viz.property.color.ColorManagerNodeFactory"
             id="org.knime.base.node.viz.property.color.ColorManagerNodeFactory">
       </node>
-            <node
-                  after="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
+      <node
+	        after="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
+            id="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory">
+      </node>
+      <node
+                  after="org.knime.base.node.viz.property.size.ShapeManagerNodeFactory"
                   category-path="/view/property"
                   factory-class="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
                   id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">

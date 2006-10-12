@@ -25,6 +25,7 @@
 package org.knime.core.data;
 
 import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 
 /**
@@ -51,6 +52,9 @@ public class DataColumnSpecCreator {
 
     /** Holds the SizeHandler if one was set. */
     private SizeHandler m_sizeHandler = null;
+    
+    /** Holds the ShapeHandler if one was set. */
+    private ShapeHandler m_shapeHandler = null;
 
     /** Holds the ColorHandler if one was set. */
     private ColorHandler m_colorHandler = null;
@@ -91,6 +95,8 @@ public class DataColumnSpecCreator {
         assert m_properties != null; // correct specs have non-null
         // property size
         m_sizeHandler = cspec.getSizeHandler();
+        // property shape
+        m_shapeHandler = cspec.getShapeHandler();
         // property color
         m_colorHandler = cspec.getColorHandler();
 
@@ -161,6 +167,15 @@ public class DataColumnSpecCreator {
     }
     
     /**
+     * Set new ShapeHandler.
+     * 
+     * @param shapeHdl the new ShapeHandler
+     */
+    public void setShapeHandler(final ShapeHandler shapeHdl) {
+        m_shapeHandler = shapeHdl;
+    }
+    
+    /**
      * Set new ColorHandler.
      * 
      * @param colorHdl the new ColorHandler
@@ -183,6 +198,6 @@ public class DataColumnSpecCreator {
      */
     public DataColumnSpec createSpec() {
         return new DataColumnSpec(m_name, m_type, m_domain, m_properties,
-                m_sizeHandler, m_colorHandler);
+                m_sizeHandler, m_colorHandler, m_shapeHandler);
     }
 }

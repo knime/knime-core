@@ -22,6 +22,7 @@
 package org.knime.core.data;
 
 import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
@@ -37,8 +38,8 @@ import org.knime.core.node.config.ConfigWO;
  * internal structure into a new instance.
  * 
  * <p>
- * In addition, a SizeHandler and/or ColorHandler can be set to retrieved 
- * viewing properties for certain attribute values.
+ * In addition, a SizeHandler and/or ColorHandler and/or ShapeHandler can be set
+ * to retrieved viewing properties for certain attribute values.
  * 
  * @see DataColumnSpecCreator
  * @see DataTableSpec
@@ -63,6 +64,9 @@ public final class DataColumnSpec {
     /** Holds the SizeHandler if one was set. */
     private final SizeHandler m_sizeHandler;
 
+    /** Holds the ShapeHandler if one was set. */
+    private final ShapeHandler m_shapeHandler;
+
     /** Holds the ColorHandler if one was set. */
     private final ColorHandler m_colorHandler;
     
@@ -77,10 +81,12 @@ public final class DataColumnSpec {
      * @param props additional properties, must not be null
      * @param sizeHdl the SizeHandler or null
      * @param colorHdl the ColorHandler or null
+     * @param shapeHdl the ShapeHandler or null
      */
     DataColumnSpec(final String name, final DataType type,
             final DataColumnDomain domain, final DataColumnProperties props,
-            final SizeHandler sizeHdl, final ColorHandler colorHdl) {
+            final SizeHandler sizeHdl, final ColorHandler colorHdl,
+            final ShapeHandler shapeHdl) {
         assert name != null;
         assert type != null;
         assert domain != null;
@@ -91,6 +97,7 @@ public final class DataColumnSpec {
         m_properties = props;
         m_sizeHandler = sizeHdl;
         m_colorHandler = colorHdl;
+        m_shapeHandler = shapeHdl;
     }
 
     /**
@@ -143,6 +150,16 @@ public final class DataColumnSpec {
      */
     public SizeHandler getSizeHandler() {
         return m_sizeHandler;
+    }
+    
+    /**
+     * Returns the ShapeHandler defined on this column, if available (otherwise
+     * null will be returned).
+     * 
+     * @return attached ShapeHandler or null.
+     */
+    public ShapeHandler getShapeHandler() {
+        return m_shapeHandler;
     }
     
     /**
@@ -221,10 +238,11 @@ public final class DataColumnSpec {
     private static final String CFG_COLUMN_PROPS  = "column_properties";
     private static final String CFG_COLORS        = "color_handler";
     private static final String CFG_SIZES         = "size_handler";
+    private static final String CFG_SHAPES        = "shape_handler";
     
     /**
-     * Saves name, type, domain and properties and - if available - color and 
-     * size property to the given <code>Config</code>. 
+     * Saves name, type, domain and properties and - if available - color, size,
+     * and shape property to the given <code>Config</code>. 
      * @param config Write properties into.
      */
     public void save(final ConfigWO config) {
@@ -237,13 +255,16 @@ public final class DataColumnSpec {
         }
         if (m_sizeHandler != null) {
             m_sizeHandler.save(config.addConfig(CFG_SIZES));
-        }   
+        }
+        if (m_shapeHandler != null) {
+            m_shapeHandler.save(config.addConfig(CFG_SHAPES));
+        }
     }
     
     /**
      * Reads name, type, domain, and properties from the given 
-     * <code>Config</code> and - if available - size and color property; return 
-     * a new <code>DataColumnSpec</code> object.
+     * <code>Config</code> and - if available - size, shape, and color property;
+     * return a new <code>DataColumnSpec</code> object.
      * @param config To read properties from.
      * @return A new column spec object.
      * @throws InvalidSettingsException If one of the non-optinal properties is
@@ -265,7 +286,12 @@ public final class DataColumnSpec {
         if (config.containsKey(CFG_SIZES)) {
             size = SizeHandler.load(config.getConfig(CFG_SIZES));
         }
-        return new DataColumnSpec(name, type, domain, properties, size, color);
+        ShapeHandler shape = null;
+        if (config.containsKey(CFG_SHAPES)) {
+            shape = ShapeHandler.load(config.getConfig(CFG_SHAPES));
+        }
+        return new DataColumnSpec(name, type, domain, properties, size, color,
+                shape);
     }
 
 } // DataColumnSpec

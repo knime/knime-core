@@ -24,34 +24,37 @@
  */
 package org.knime.core.data.property;
 
-import java.awt.Color;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.property.ColorHandler.ColorModel;
+import org.knime.core.data.property.ShapeFactory.Shape;
+import org.knime.core.data.property.ShapeHandler.ShapeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 
 /**
- * Color model which maps a set of <code>DataCell</code> objects to 
- * <code>Color</code>.
+ * Nominal <code>ShapeModel</code> which maps a set of <code>DataCell</code> 
+ * element to <code>Shape</code>.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
  */
-public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
+public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
     
-    /** Maps DataCell values to ColorAttr. */
-    private final Map<DataCell, ColorAttr> m_map;
+    /** Maps DataCell values to Shape. */
+    private final Map<DataCell, Shape> m_map;
     
     /**
-     * Creates new ColorHandler based on a mapping.
-     * @param map Mapping form DataCell values to ColorAttr objects.
+     * Creates new nominal <code>ShapeModel</code> based on a mapping.
+     * @param map Mapping form <code>DataCell</code> values to 
+     *            <code>Shape</code> objects.
      * @throws IllegalArgumentException If the map is null.
      */
-    public ColorModelNominal(final Map<DataCell, ColorAttr> map) {
+    public ShapeModelNominal(final Map<DataCell, Shape> map) {
         if (map == null)  {
             throw new IllegalArgumentException("Mapping must not be null.");
         }
@@ -59,17 +62,17 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     }
 
     /**
-     * Returns a ColorAttr for the given DataCell value, or 
-     * <code>ColorAttr.DEFAULT</code> if not set.
-     * @param dc A DataCell value to get color for.
-     * @return A ColorAttr for a DataCell value.
+     * Returns a Shape for the given DataCell value, or 
+     * <code>ShapeFactory.DEFAULT</code> if not set.
+     * @param dc A DataCell value to get shape for.
+     * @return A Shape for a DataCell value.
      */
-    public ColorAttr getColorAttr(final DataCell dc) {
-        ColorAttr color = m_map.get(dc);
-        if (color == null) {
-            return ColorAttr.DEFAULT;
+    public Shape getShape(final DataCell dc) {
+        Shape shape = m_map.get(dc);
+        if (shape == null) {
+            return ShapeFactory.getShape(ShapeFactory.DEFAULT);
         }
-        return color;
+        return shape;
     }
     
     /**
@@ -84,71 +87,65 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     private static final String CFG_KEYS = "keys";
     
     /**
-     * Saves the <code>DataCell</code> to <code>Color</code> mapping to the 
-     * given <code>Config</code>. The color is split into red, green, blue, and
-     * alpha component which are stored as int array.
+     * Saves the <code>DataCell</code> to <code>Shape</code> mapping to the 
+     * given <code>Config</code>.
      * @param config Save settings to.
-     * @see org.knime.core.data.property.ColorHandler.ColorModel
-     *      #save(ConfigWO)
      * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
      */
     public void save(final ConfigWO config) {
         ConfigWO keyConfig = config.addConfig(CFG_KEYS);
-        for (Map.Entry<DataCell, ColorAttr> e : m_map.entrySet()) {
+        for (Map.Entry<DataCell, Shape> e : m_map.entrySet()) {
             DataCell key = e.getKey();
             keyConfig.addDataCell(key.toString(), key);
-            Color color = e.getValue().getColor();
-            config.addIntArray(key.toString(), 
-                    color.getRed(), color.getGreen(), 
-                    color.getBlue(), color.getAlpha());
+            Shape shape = e.getValue();
+            config.addString(key.toString(), shape.toString());
         }
     }
     
     /**
-     * Read color settings from given <code>Config</code> and returns a new
-     * <code>ColorModelNominal</code> object.
-     * @param config Reads color model from.
-     * @return A new <code>ColorModelNominal</code> object.
-     * @throws InvalidSettingsException If the color model settings could not
-     *         be read.
+     * Reads Shape settings from given <code>Config</code> and returns a new
+     * <code>ShapeModelNominal</code> object.
+     * @param config Reads shape model from.
+     * @return A new <code>ShapeModelNominal</code> object.
+     * @throws InvalidSettingsException If the <code>ShapeModel</code> settings
+     *         could not be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static ColorModelNominal load(final ConfigRO config) 
+    public static ShapeModelNominal load(final ConfigRO config) 
             throws InvalidSettingsException {
-        Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
+        Map<DataCell, Shape> map = new HashMap<DataCell, Shape>();
         ConfigRO keyConfig = config.getConfig(CFG_KEYS);
         for (String key : keyConfig.keySet()) {
-            int[] value = config.getIntArray(key.toString());
-            Color color = new Color(value[0], value[1], value[2], value[3]);
+            String shape = config.getString(key.toString());
             DataCell cell = keyConfig.getDataCell(key);
-            map.put(cell, ColorAttr.getInstance(color));
+            map.put(cell, ShapeFactory.getShape(shape));
         }
-        return new ColorModelNominal(map);
+        return new ShapeModelNominal(map);
     }
 
     /**
-     * @return A String for this <code>ColorModel</code> as list of 
-     * <code>DataCell</code> to <code>Color</code> mapping.
+     * @return A String for this <code>ShapeModel</code> as list of 
+     * <code>DataCell</code> to <code>Shape</code> mapping.
      */
-    public String printColorMapping() {
-        StringBuffer buf = new StringBuffer();
+    public String printShapeMapping() {
+        StringBuilder buf = new StringBuilder();
         for (DataCell cell : m_map.keySet()) {
-            Color color = m_map.get(cell).getColor();
+            Shape shape = m_map.get(cell);
             if (buf.length() > 0) {
                 buf.append(",");
             }
-            buf.append(cell.toString() + "->" + color.toString());
+            buf.append(cell.toString() + "->" + shape.toString());
         }
         return "[" + buf.toString() + "]";
     }
       
     /**
-     * @return <i>Nominal ColorModel</i>
+     * @return <i>Nominal ShapeModel</i>
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return "Nominal ColorModel";
+        return "Nominal ShapeModel";
     }
     
 }   

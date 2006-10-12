@@ -27,13 +27,10 @@ package org.knime.base.node.viz.property.size;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.data.replace.ReplacedColumnsTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.data.property.SizeModelDouble;
 import org.knime.core.node.BufferedDataTable;
@@ -87,39 +84,33 @@ public class SizeManagerNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         assert (data != null && data.length == 1 && data[INPORT] != null);
-        if (m_column == null
-                || !data[INPORT].getDataTableSpec().containsName(m_column)) {
-            return new BufferedDataTable[]{null};
-        }
         DataTableSpec inSpec = data[INPORT].getDataTableSpec();
-        int columnIndex = inSpec.findColumnIndex(m_column);
-        // find selected column index
-        // create new DataTableSpec with the added size handler
-        DataColumnSpec cspec = inSpec.getColumnSpec(m_column);
-        DataColumnSpecCreator dtsCont = new DataColumnSpecCreator(cspec);
-        // get the domain range for the double size handler
-        double minimum = ((DoubleValue)cspec.getDomain().getLowerBound())
-                .getDoubleValue();
-        double maximum = ((DoubleValue)cspec.getDomain().getUpperBound())
-                .getDoubleValue();
+        DataColumnSpec[] newColSpecs = new DataColumnSpec[inSpec
+                .getNumColumns()];
+        for (int i = 0; i < newColSpecs.length; i++) {
+            DataColumnSpec cspec = inSpec.getColumnSpec(i);
+            DataColumnSpecCreator dtsCont = new DataColumnSpecCreator(cspec);
+            if (cspec.getName().equals(m_column)) {
+                // get the domain range for the double size handler
+                double minimum = 
+                    ((DoubleValue)cspec.getDomain().getLowerBound())
+                        .getDoubleValue();
+                double maximum = 
+                    ((DoubleValue)cspec.getDomain().getUpperBound())
+                        .getDoubleValue();
 
-        dtsCont.setSizeHandler(new SizeHandler(new SizeModelDouble(minimum,
-                maximum)));
-        final DataTableSpec newSpec = ReplacedColumnsTable.createTableSpec(
-                inSpec, dtsCont.createSpec(), columnIndex);
-        // create new Table, which returns new Spec but iterator of original
-        // table
-        DataTable outTable = new DataTable() {
-            public DataTableSpec getDataTableSpec() {
-                return newSpec;
+                dtsCont.setSizeHandler(
+                        new SizeHandler(new SizeModelDouble(minimum,
+                        maximum)));
             }
-
-            public RowIterator iterator() {
-                return data[INPORT].iterator();
-            }
-        };
-        return new BufferedDataTable[]{exec.createBufferedDataTable(outTable,
-                exec)};
+            newColSpecs[i] = dtsCont.createSpec();
+        }
+        final DataTableSpec newSpec = new DataTableSpec(newColSpecs);
+        BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
+                data[INPORT], newSpec);
+        // return original table with SizeHandler
+        return new BufferedDataTable[]{changedSpecTable};
+        
     }
 
     /**
