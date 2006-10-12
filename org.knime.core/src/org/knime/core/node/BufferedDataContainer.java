@@ -97,13 +97,14 @@ public class BufferedDataContainer extends DataContainer {
     /** Check the node if its outport memory policy says we should keep 
      * everything in memory.
      * @param The node to check.
-     * @return Integer.MAX_VALUE if 
-     * node.getOutDataMemoryPolicy().equals(MemoryPolicy.CacheInMemory), 
-     * otherwise 0.
+     * @return Cells to be kept in memory.
      */
     private static int getMaxCellsInMemory(final Node node) {
-        if (node.getOutDataMemoryPolicy().equals(MemoryPolicy.CacheInMemory)) {
+        MemoryPolicy p = node.getOutDataMemoryPolicy();
+        if (p.equals(MemoryPolicy.CacheInMemory)) {
             return Integer.MAX_VALUE;
+        } else if (p.equals(MemoryPolicy.CacheSmallInMemory)) {
+            return DataContainer.MAX_CELLS_IN_MEMORY;
         } else {
             return 0;
         }
