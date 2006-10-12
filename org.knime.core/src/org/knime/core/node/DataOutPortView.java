@@ -43,8 +43,8 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
-import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableView;
 
 
@@ -60,8 +60,6 @@ final class DataOutPortView extends NodeOutPortView {
     private final JTabbedPane m_tabs;
     
     private final TableView m_specView;
-
-    private final TableView m_hiliteView;
 
     private final TableView m_dataView;
 
@@ -91,17 +89,14 @@ final class DataOutPortView extends NodeOutPortView {
 
         m_tabs = new JTabbedPane();
         m_specView = new TableView();
-        m_hiliteView = new TableView();
         m_dataView = new TableView();
         m_propsView = new TableView();
         m_dataView.getHeaderTable().setShowColorInfo(false);
         m_specView.getHeaderTable().setShowColorInfo(false);
-        m_hiliteView.getHeaderTable().setShowColorInfo(false);
         m_propsView.getHeaderTable().setShowColorInfo(false);
         m_tabs.addTab("Data", m_dataView);
         m_tabs.addTab("DataTableSpec", m_specView);
         m_tabs.addTab("Annotated Props", m_propsView);
-        m_tabs.addTab("HiLiteHandler", m_hiliteView);
 
         m_tabs.setBackground(NodeView.COLOR_BACKGROUND);
         cont.add(m_tabs, BorderLayout.CENTER);
@@ -155,50 +150,12 @@ final class DataOutPortView extends NodeOutPortView {
     }
     
 
-    /**
-     * Sets a new HiLiteHandler to dislplay.
-     * 
-     * @param newHilitHdlr The new hilite handler to display in the view.
-     */
-    void updateHiliteHandler(final HiLiteHandler newHilitHdlr) {
-        m_hiliteView.setDataTable(createHiLiteTable(newHilitHdlr));
-    }
-
-    private DataTable createHiLiteTable(final HiLiteHandler hiLiteHdl) {
-        // for now we just display the pointer value.
-        // Otherwise we would have to register as listener and recreate
-        // the datatables completely each time something changes in the handlers
-        String[] names = {"ClassName", "InstanceID", "fullString"};
-        DataType[] types = {StringCell.TYPE, StringCell.TYPE,
-                StringCell.TYPE};
-        DataRow[] rows = new DataRow[1];
-        DataCell rowID = new StringCell("HiLiteHdlr");
-
-        if (hiLiteHdl != null) {
-            String fullname = hiLiteHdl.toString();
-            String classname = hiLiteHdl.getClass().getSimpleName();
-            String id = "id=" + System.identityHashCode(hiLiteHdl); 
-            rows[0] = new DefaultRow(rowID, new DataCell[]{
-                    new StringCell(classname),
-                    new StringCell(id),
-                    new StringCell(fullname)});
-        } else {
-            rows[0] = new DefaultRow(rowID, new DataCell[]{
-                    new StringCell("<null>"),
-                    new StringCell("<null>"),
-                    new StringCell("<null>")});
-        }
-
-        return new DefaultTable(rows, names, types);
-
-    }
-
     private DataTable createPropsTable(final DataTableSpec tSpec) {
         if (tSpec != null) {
             int numOfCols = tSpec.getNumColumns(); // output has as many cols
             String[]   colNames = new String[numOfCols];
             DataType[] colTypes = new DataType[numOfCols];
-            // colnames are the same than incoming, types are all StringTypes
+            // colnames are the same as incoming, types are all StringTypes
             for (int c = 0; c < numOfCols; c++) {
                 colNames[c] = tSpec.getColumnSpec(c).getName();
                 colTypes[c] = StringCell.TYPE;
@@ -273,9 +230,10 @@ final class DataOutPortView extends NodeOutPortView {
                     maxNumValues = v.size();
                 }
             }
-            int numRows = maxNumValues + 6;
-            // + 4 for 'Name', 'Type', lower bound, and upper bound, colorHdl,
-            // and sizeHdl
+            // + 7 for 'Name', 'Type', lower bound, and upper bound, colorHdl,
+            // sizeHdl and shapeHdl
+            final int extraRows = 7;
+            int numRows = maxNumValues + extraRows;
             rows = new DataRow[numRows];
 
             // now, generate those rows:
@@ -325,7 +283,21 @@ final class DataOutPortView extends NodeOutPortView {
             }
             rows[3] = new DefaultRow(new StringCell("SizeHandler"), cols);
             
-            // Row[4]: displays the lower bound of the domain
+            // Row[4]: shows where the shape handler is attached to.
+            cols = new DataCell[numCols];
+            for (int c = 0; c < numCols; c++) {
+                if (spec.getColumnSpec(c).getShapeHandler() == null) {
+                    cols[c] = new StringCell("");
+                } else {
+                    ShapeHandler hdl = spec.getColumnSpec(c).getShapeHandler();
+                    String hdlrStr = hdl.toString();
+                    hdlrStr += " (id=" + System.identityHashCode(hdl) + ")";
+                    cols[c] = new StringCell(hdlrStr);
+                }
+            }
+            rows[4] = new DefaultRow(new StringCell("ShapeHandler"), cols);
+            
+            // Row[5]: displays the lower bound of the domain
             cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
                 String boundText = "<null>";
@@ -335,8 +307,10 @@ final class DataOutPortView extends NodeOutPortView {
                 }
                 cols[c] = new StringCell(boundText);
             }
-            rows[4] = new DefaultRow(new StringCell("lower bound"), cols);
-            // Row[5]: shows the upper bound value of the domain
+            
+            rows[5] = new DefaultRow(new StringCell("lower bound"), cols);
+
+            // Row[6]: shows the upper bound value of the domain
             cols = new DataCell[numCols];
             for (int c = 0; c < numCols; c++) {
                 String boundText = "<null>";
@@ -346,10 +320,10 @@ final class DataOutPortView extends NodeOutPortView {
                 }
                 cols[c] = new StringCell(boundText);
             }
-            rows[5] = new DefaultRow(new StringCell("upper bound"), cols);
+            rows[6] = new DefaultRow(new StringCell("upper bound"), cols);
 
             
-            // from row 6: show the nominal values of that column. If any.
+            // from row 7: show the nominal values of that column. If any.
             Iterator<DataCell> emptyIter = new ArrayList<DataCell>().iterator();
             Iterator<?>[] valueIter = new Iterator<?>[numCols];
             // store an iterator for _each_ column
@@ -364,7 +338,7 @@ final class DataOutPortView extends NodeOutPortView {
             }
             DataCell emptyStringCell = new StringCell("");
 
-            for (int r = 6; r < numRows; r++) {
+            for (int r = extraRows - 1; r < numRows; r++) {
                 cols = new DataCell[numCols];
                 for (int c = 0; c < numCols; c++) {
                     if (!valueIter[c].hasNext()) {

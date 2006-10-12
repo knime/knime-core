@@ -159,10 +159,6 @@ public final class DataOutPort extends NodeOutPort
             for (NodeInPort inPort : super.getConnectedInPorts()) {
                 ((DataInPort) inPort).newHiLitHandlerAvailable();
             }
-            if (getPortView() != null) {
-                ((DataOutPortView) getPortView()).updateHiliteHandler(
-                        m_hiliteHdl);
-            }
         }
     }
     
@@ -177,7 +173,6 @@ public final class DataOutPort extends NodeOutPort
             super.setPortView(new DataOutPortView(nodeName, getPortName()));
             ((DataOutPortView) getPortView()).updateDataTable(m_dataTable);
             ((DataOutPortView) getPortView()).updateDataTableSpec(m_tableSpec);
-            ((DataOutPortView) getPortView()).updateHiliteHandler(m_hiliteHdl);
         }
         getPortView().openView();
     }
