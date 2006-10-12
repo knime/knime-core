@@ -42,6 +42,7 @@ import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
 import org.knime.base.node.mine.regression.linear.view.LinRegDataProvider;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
+import org.knime.base.util.math.MathUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -265,7 +266,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                     + ")");
         }
         exec.setMessage("Calculating pseudo inverse...");
-        double[][] ataInverse = MatrixOperation.inverse(ata);
+        double[][] ataInverse = MathUtils.inverse(ata);
         checkForNaN(ataInverse);
         // multiply with A^T and b, i.e. (A^T x A)^-1 x A^T x b
         double[] outcome = new double[nrUnknown];
