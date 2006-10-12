@@ -50,6 +50,8 @@ public class ProgressFigure extends RectangleFigure {
     /** absolute height of this figure. * */
     public static final int HEIGHT = 12;
 
+    private static final int UNKNOW_PROGRESS_BAR_WIDTH = 6;
+
     private static final Font PROGRESS_FONT;
 
     static {
@@ -71,6 +73,12 @@ public class ProgressFigure extends RectangleFigure {
      */
     private String m_progressMessage;
 
+    private boolean m_unknownProgress = false;
+
+    private int m_unknownProgressBarRenderingPosition;
+
+    private int m_unknownProgressBarDirection;
+
     /**
      * The progress in percent.
      */
@@ -84,6 +92,8 @@ public class ProgressFigure extends RectangleFigure {
         setOpaque(true);
         setFill(true);
         setOutline(true);
+
+        m_unknownProgressBarRenderingPosition = 0;
 
         // no border
         // setBorder(SimpleEtchedBorder.singleton);
@@ -155,7 +165,7 @@ public class ProgressFigure extends RectangleFigure {
      */
     @Override
     public void paintFigure(final Graphics graphics) {
-        graphics.setBackgroundColor(getBackgroundColor());
+
         super.paintFigure(graphics);
 
         // paint the specified bar length for the progress
@@ -169,14 +179,82 @@ public class ProgressFigure extends RectangleFigure {
         int y = r.y + localLineWidth / 2;
         int w = r.width - Math.max(1, localLineWidth);
         int h = r.height - Math.max(1, localLineWidth);
-        graphics.drawRectangle(x + 1, y + 1, 17, h - 2);
-        graphics.setFont(PROGRESS_FONT);
-        String progressString = "75 %";
 
-        graphics.setXORMode(true);
-        graphics.setForegroundColor(ColorConstants.white);
-        graphics.drawString(progressString, x + w / 2 - (int)(progressString.length()
-                * 3), y - 4);
+        if (!m_unknownProgress) {
+
+            graphics.drawRectangle(x + 1, y + 1, 17, h - 2);
+            graphics.setFont(PROGRESS_FONT);
+            String progressString = "75 %";
+
+            graphics.setXORMode(true);
+            graphics.setForegroundColor(ColorConstants.white);
+            graphics.drawString(progressString, x + w / 2
+                    - (int)(progressString.length() * 3), y - 4);
+        } else {
+
+            graphics.setForegroundColor(ColorConstants.darkBlue);
+
+            int xPos = x + 1 + m_unknownProgressBarRenderingPosition;
+
+            // calculate the rendering direction
+            if (m_unknownProgressBarRenderingPosition + 8
+                    + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH) {
+                m_unknownProgressBarDirection = -1;
+            } else if (m_unknownProgressBarRenderingPosition <= 0) {
+                m_unknownProgressBarDirection = 1;
+            }
+
+            graphics.drawRectangle(xPos, y + 1, UNKNOW_PROGRESS_BAR_WIDTH,
+                    h - 2);
+
+            m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
+
+        }
+    }
+
+    /**
+     * Stops the rendering of an unknown progress.
+     */
+    public void stopUnknownProgress() {
+        m_unknownProgress = false;
+    }
+
+    /**
+     * Activates this progress bar to render an unknown progress.
+     */
+    public void activateUnknownProgress() {
+        m_unknownProgress = true;
+
+        final Display display = Display.getCurrent();
+
+        final Runnable repaintRun = new Runnable() {
+
+            public void run() {
+                repaint();
+            };
+        };
+
+        new Thread() {
+
+            public void run() {
+
+                Object object = new Object();
+
+                while (m_unknownProgress) {
+
+                    synchronized (object) {
+                        try {
+                            object.wait(100);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    display.syncExec(repaintRun);
+                }
+            }
+
+        }.start();
     }
 
     /**
