@@ -150,6 +150,86 @@ public final class MathUtils {
     }
 
     /**
+     * Calculates the inverse matrix of a given matrix. The implementation
+     * applies the decomposition according to Gauss-Jordan identifying pivot
+     * elements.
+     * 
+     * @param aOrig the original matrix
+     * @return the inverse matrix
+     * @throws ArithmeticException if the matrix is not a square matrix or the
+     *             inverse can not be computed (because of linear dependencies)
+     * @throws NullPointerException if the argument is <code>null</code> or
+     *             contains <code>null</code> elements
+     */
+    public static double[][] inverse(final double[][] aOrig) {
+        final int size = aOrig.length;
+        double[][] a = new double[size][];
+        for (int r = 0; r < size; r++) {
+            if (aOrig[r].length != size) {
+                throw new ArithmeticException(
+                        "Can't compute inverse of non-square matrix.");
+            }
+            double[] buf = new double[size];
+            System.arraycopy(aOrig[r], 0, buf, 0, size);
+            a[r] = buf;
+        }
+        double[][] e = new double[size][size];
+        int[] rowOrder = new int[size];
+        for (int i = 0; i < size; i++) {
+            rowOrder[i] = i;
+            e[i][i] = 1.0;
+        }
+        // over all columns
+        for (int c = 0; c < size; c++) {
+            // (a) determine pivot row, pivot element is at (c, P[c])
+            int l = c;
+            double max = Math.abs(a[rowOrder[l]][c]);
+            // over all rows
+            for (int r = c + 1; r < size; r++) {
+                double value = Math.abs(a[rowOrder[r]][c]);
+                if (value > max) {
+                    max = value;
+                    l = r;
+                }
+            }
+            if (max == 0.0) {
+                throw new ArithmeticException("No solution.");
+            }
+            int swap = rowOrder[c];
+            rowOrder[c] = rowOrder[l];
+            rowOrder[l] = swap;
+            l = rowOrder[c];
+            // normalize pivot row
+            double pivotValue = a[l][c];
+            for (int c1 = 0; c1 < size; c1++) {
+                a[l][c1] = a[l][c1] / pivotValue;
+                e[l][c1] = e[l][c1] / pivotValue;
+            }
+            for (int r1 = 0; r1 < size; r1++) {
+                if (rowOrder[r1] != l) {
+                    for (int c1 = 0; c1 < size; c1++) {
+                        if (c1 != c) {
+                            a[rowOrder[r1]][c1] -= a[rowOrder[r1]][c]
+                                    * a[l][c1];
+                        }
+                        e[rowOrder[r1]][c1] -= a[rowOrder[r1]][c] * e[l][c1];
+                    }
+                }
+            }
+            for (int r1 = 0; r1 < size; r1++) {
+                if (rowOrder[r1] != l) {
+                    a[rowOrder[r1]][c] = 0.0;
+                }
+            }
+        }
+        double[][] inverse = new double[size][];
+        for (int r = 0; r < size; r++) {
+            inverse[r] = e[rowOrder[r]];
+        }
+        return inverse;
+    }
+    
+    /**
      * Normalizes the matrix relative to the mean of the input data and to the
      * standard deviation.
      * 
