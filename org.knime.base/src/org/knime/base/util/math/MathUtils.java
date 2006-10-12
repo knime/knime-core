@@ -358,4 +358,27 @@ public final class MathUtils {
 
         return denormMatrix;
     }
+    
+    
+    /**
+     * Computes the spectral norm of the given matrix.
+     * It is defined as the square root of the maximum absolute value of the
+     * eigenvalues of the product of the matrix with its transposed form.
+     * @param matrix the matrix to compute the norm for.
+     * @return the spectral norm of the matrix.
+     */
+    public static double spectralNorm(final double[][] matrix) {
+        double[][] matrixTransposed = transpose(matrix);
+        EigenvalueDecomposition evd = new EigenvalueDecomposition(
+                            multiply(matrix, matrixTransposed));
+        double maxR = Double.MIN_VALUE;
+        double[] real = evd.get1DRealD();
+        double[] imag = evd.get1DImagD();
+        for (int i = 0; i < real.length; i++) {
+            double r = Math.sqrt((real[i] * real[i]) + (imag[i] * imag[i]));
+            maxR = Math.max(r, maxR);
+        }
+        return Math.sqrt(maxR);
+    }
+    
 }
