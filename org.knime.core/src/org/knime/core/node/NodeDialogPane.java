@@ -25,24 +25,30 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 
-import javax.swing.JCheckBox;
+import javax.swing.AbstractButton;
+import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.Node.MemoryPolicy;
 
 
@@ -78,7 +84,7 @@ public abstract class NodeDialogPane {
     /** The additional tab in which the user can set the memory options. 
      * This field is null when m_node has no data outports. 
      */
-    private MetaSettingsTab m_metaTab;
+    private MiscSettingsTab m_miscTab;
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
@@ -108,8 +114,8 @@ public abstract class NodeDialogPane {
         assert (m_node == null && node != null);
         m_node = node;
         if (m_node.getNrDataOutPorts() > 0) {
-            m_metaTab = new MetaSettingsTab();
-            addTab(TAB_NAME_MISCELLANEOUS, m_metaTab);
+            m_miscTab = new MiscSettingsTab();
+            addTab(TAB_NAME_MISCELLANEOUS, m_miscTab);
         }
     }
 
@@ -178,24 +184,24 @@ public abstract class NodeDialogPane {
             if (m_node.getNrDataOutPorts() > 0) {
                 String memoryPolicy = subSettings.getString(
                         Node.CFG_MEMORY_POLICY, 
-                        MemoryPolicy.CacheOnDisc.toString());
+                        MemoryPolicy.CacheSmallInMemory.toString());
                 MemoryPolicy policy;
                 try {
                     policy = MemoryPolicy.valueOf(memoryPolicy);
                 } catch (IllegalArgumentException iae) {
                     policy = MemoryPolicy.CacheInMemory;
                 }
-                m_metaTab.setStatus(policy.equals(MemoryPolicy.CacheInMemory));
+                m_miscTab.setStatus(policy);
             }
         } catch (InvalidSettingsException ise) {
-            m_metaTab.setStatus(/*cacheInMemory=*/false);
+            m_miscTab.setStatus(MemoryPolicy.CacheInMemory);
         }
     }
     
     /**
      * Called from the node when the current settings shall be writting to 
      * a NodeSettings object. It will call the abstract saveSettingsTo method
-     * and finally write meta settings to the argument object. Meta settings 
+     * and finally write misc settings to the argument object. Misc settings 
      * @param settings To write to. Forwarded to abstract saveSettings method.
      * @throws InvalidSettingsException If any of the writing fails.
      */
@@ -205,10 +211,8 @@ public abstract class NodeDialogPane {
         NodeSettingsWO subSettings = 
             settings.addNodeSettings(Node.CFG_MISC_SETTINGS);
         if (m_node.getNrDataOutPorts() > 0) {
-            boolean isInMemory = m_metaTab.getStatus();
-            MemoryPolicy p = isInMemory ? MemoryPolicy.CacheInMemory
-                    : MemoryPolicy.CacheOnDisc;
-            subSettings.addString(Node.CFG_MEMORY_POLICY, p.toString());
+            MemoryPolicy pol = m_miscTab.getStatus();
+            subSettings.addString(Node.CFG_MEMORY_POLICY, pol.toString());
         }
     }
     
@@ -368,10 +372,10 @@ public abstract class NodeDialogPane {
             }
         });
         m_tabs.put(title, comp);
-        int metaIndex = m_pane.indexOfComponent(m_metaTab);
+        int miscIndex = m_pane.indexOfComponent(m_miscTab);
         // make sure the Miscallaneous tab is always the last tab.
-        if (metaIndex >= 0) {
-            m_pane.insertTab(title, null, comp, null, metaIndex);
+        if (miscIndex >= 0) {
+            m_pane.insertTab(title, null, comp, null, miscIndex);
         } else {
             m_pane.addTab(title, comp);
         }
@@ -430,32 +434,70 @@ public abstract class NodeDialogPane {
         m_tabs.remove(name);
     }
     
-    private static class MetaSettingsTab extends JPanel {
-        private final JCheckBox m_checkBoxes;
+    private static class MiscSettingsTab extends JPanel {
+        private final ButtonGroup m_group;
+        
         /** Inits GUI. */
-        public MetaSettingsTab() {
-            super(new FlowLayout(FlowLayout.LEFT, 15, 15));
-            m_checkBoxes = new JCheckBox("Keep data output in memory.");
-            m_checkBoxes.setToolTipText("When this option is checked, the " 
-                    + "output data is kept in main memory, resulting in " 
-                    + "faster execution of successing nodes but also in more "
-                    + "memory usage.");
-            add(m_checkBoxes);
+        public MiscSettingsTab() {
+            super(new BorderLayout());
+            m_group = new ButtonGroup();
+            JRadioButton cacheAll = new JRadioButton("Keep all in memory.");
+            cacheAll.setActionCommand(MemoryPolicy.CacheInMemory.toString());
+            m_group.add(cacheAll);
+            cacheAll.setToolTipText(
+                    "All generated output data is kept in main memory, " 
+                    + "resulting in faster execution of successing nodes but "
+                    + "also in more memory usage.");
+            JRadioButton cacheSmall = new JRadioButton(
+                    "Keep only small tables in memory.");
+            cacheSmall.setActionCommand(
+                    MemoryPolicy.CacheSmallInMemory.toString());
+            m_group.add(cacheSmall);
+            cacheSmall.setToolTipText("Tables with less than "
+                    + DataContainer.MAX_CELLS_IN_MEMORY + " cells are kept in "
+                    + "main memory, otherwise swapped to disc.");
+            JRadioButton cacheOnDisc = new JRadioButton(
+                    "Write tables to disc.");
+            cacheOnDisc.setActionCommand(MemoryPolicy.CacheOnDisc.toString());
+            m_group.add(cacheOnDisc);
+            cacheOnDisc.setToolTipText("All output is immediately " 
+                    + "written to disc to save main memory usage.");
+            final int s = 15;
+            JPanel north = new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
+            north.add(new JLabel("Select memory policy"));
+            add(north, BorderLayout.NORTH);
+            JPanel bigCenter = 
+                new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
+            JPanel center = new JPanel(new GridLayout(0, 1));
+            center.add(cacheAll);
+            center.add(cacheSmall);
+            center.add(cacheOnDisc);
+            bigCenter.add(center);
+            add(bigCenter, BorderLayout.CENTER);
         }
         
-        /** Get the status of the checkbox, i.e. either checked or unchecked.
-         * @return If checked or not.
+        /** Get the memory policy for the currently selected radio button.
+         * @return The corresponding policy.
          */
-        boolean getStatus() {
-            return m_checkBoxes.isSelected();
+        MemoryPolicy getStatus() {
+            String memoryPolicy = m_group.getSelection().getActionCommand();
+            return MemoryPolicy.valueOf(memoryPolicy);
         }
         
-        /** Set the status of the checkbox.
-         * @param status The status.
+        /** Select the radio button for the given policy.
+         * @param policy The one to use.
          */
-        void setStatus(final boolean status) {
-            m_checkBoxes.setSelected(status);
+        void setStatus(final MemoryPolicy policy) {
+            for (Enumeration<AbstractButton> e = m_group.getElements(); 
+                e.hasMoreElements();) {
+                AbstractButton m = e.nextElement();
+                if (m.getActionCommand().equals(policy.toString())) {
+                    m.setSelected(true);
+                    return;
+                }
+            }
+            assert false;
         }
-    }
+    } // class MiscSettingsTab
 
 } // NodeDialogPane

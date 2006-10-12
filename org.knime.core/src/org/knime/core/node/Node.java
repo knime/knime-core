@@ -137,6 +137,9 @@ public final class Node {
     static enum MemoryPolicy {
         /** Hold output in memory. */
         CacheInMemory, 
+        /** Cache only small tables in memory, i.e. with cell count
+         * <= DataContainer.MAX_CELLS_IN_MEMORY. */
+        CacheSmallInMemory,
         /** Buffer on disc. */
         CacheOnDisc
     }
@@ -230,8 +233,8 @@ public final class Node {
 
         // init data output ports
         m_outDataPorts = new DataOutPort[m_model.getNrDataOuts()];
-        // default option: keep on disc (can be changed in dialog)
-        m_outDataPortsMemoryPolicy = MemoryPolicy.CacheOnDisc;
+        // default option: keep small tables in mem (can be changed in dialog)
+        m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
         for (int i = 0; i < m_outDataPorts.length; i++) {
             m_outDataPorts[i] = new DataOutPort(i, this);
             m_outDataPorts[i].setPortName(m_factory.getOutportDataName(i));
@@ -297,7 +300,7 @@ public final class Node {
             loadMiscSettingsFrom(
                     settings.getNodeSettings(CFG_MISC_SETTINGS), true);
         } else {
-            m_outDataPortsMemoryPolicy = MemoryPolicy.CacheOnDisc;
+            m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
         }
         NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
         if (m_model instanceof SpecialNodeModel) {
@@ -344,6 +347,13 @@ public final class Node {
 
         // read model and load settings
         try {
+            
+            // MISC settings may not be available in workflow written in 
+            // KNIME 1.1.0 or before.
+            if (settings.containsKey(CFG_MISC_SETTINGS)) {
+                loadMiscSettingsFrom(
+                        settings.getNodeSettings(CFG_MISC_SETTINGS), true);
+            }
             NodeSettingsRO modelSettings = settings.getNodeSettings(CFG_MODEL);
             if (m_model instanceof SpecialNodeModel) {
                 ExecutionMonitor execSub = execMon.createSubProgress(0.25);
