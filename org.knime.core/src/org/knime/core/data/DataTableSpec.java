@@ -32,12 +32,13 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.knime.core.data.property.ColorAttr;
+import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-
 
 /**
  * DataTableSpecs are used in two ways: As meta information to specify the
@@ -56,6 +57,11 @@ import org.knime.core.node.config.ConfigWO;
  * possible values in a column are known), you have to create a new instance of
  * a <code>DataTableSpec</code> carrying the new information. This spec can
  * then be propagated in the flow.
+ * 
+ * <p>
+ * In addtion, the table spec provides a single SizeManager and/or ColorManager
+ * and/or ShapeManager if available. These property handlers can be used to 
+ * access size, color, and shape by row.
  * 
  * @see DataTable
  * @see DataColumnSpec
@@ -78,6 +84,9 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /** The index of the column holding the ColorHandler or -1 if not set. */
     private final int m_colorHandlerColIndex;
+    
+    /** The index of the column holding the ShapeHandler or -1 if not set. */
+    private final int m_shapeHandlerColIndex;
    
     /** Keeps column to column index mapping for faster access. */
     private final Map<String, Integer> m_colIndexMap 
@@ -157,8 +166,9 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
             m_colIndexMap.put(colSpecs[i].getName(), i);
             m_columnSpecs[i] = colSpecs[i];
         }
-        m_sizeHandlerColIndex = searchSizeHandler();
+        m_sizeHandlerColIndex  = searchSizeHandler();
         m_colorHandlerColIndex = searchColorHandler();
+        m_shapeHandlerColIndex = searchShapeHandler();
     }
 
     /**
@@ -336,6 +346,21 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         return idx;
     }
 
+    private int searchShapeHandler() {
+        int idx = -1;
+        for (int i = 0; i < m_columnSpecs.length; i++) {
+            if (m_columnSpecs[i].getShapeHandler() != null) {
+                if (idx == -1) {
+                    idx = i;
+                } else {
+                    LOGGER.coding("Found more ShapeHandlers for columns: "
+                            + idx + " and " + i + ".");
+                }
+            }
+        }
+        return idx;
+    }
+    
     /**
      * @return The name of this table spec.
      */
@@ -391,6 +416,21 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                 .getColorAttr(row.getCell(m_colorHandlerColIndex));
     }
 
+    /**
+     * Return the shape that an object should have when displaying information
+     * concerning this row (for instance in a scatterplot).
+     * 
+     * @param row the row for which the shape is requested
+     * @return color
+     */
+    public Shape getRowShape(final DataRow row) {
+        if (m_shapeHandlerColIndex == -1) {
+            return ShapeFactory.getShape(ShapeFactory.DEFAULT);
+        }
+        return m_columnSpecs[m_shapeHandlerColIndex].getShapeHandler()
+                .getShape(row.getCell(m_shapeHandlerColIndex));
+    }
+    
     /**
      * Returns column information of the column for the provided column name.
      * This method returns <code>null</code> if the argument is
