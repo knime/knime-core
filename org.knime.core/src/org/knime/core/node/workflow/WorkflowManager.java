@@ -134,8 +134,10 @@ public class WorkflowManager implements WorkflowListener {
             }
         }
 
-        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>(),
-                m_waitingNodes = new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
+        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = 
+            new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
+        private final Map<NodeContainer, NodeProgressMonitor> m_waitingNodes = 
+            new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
 
         private final Object m_addLock = new Object(),
                 m_transferLock = new Object(), m_finishLock = new Object();
@@ -280,8 +282,8 @@ public class WorkflowManager implements WorkflowListener {
          */
         private void startNewNodes(final boolean watchdog) {
             synchronized (m_finishLock) {
-                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = m_waitingNodes
-                        .entrySet().iterator();
+                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = 
+                    m_waitingNodes.entrySet().iterator();
                 while (it.hasNext()) {
                     Map.Entry<NodeContainer, NodeProgressMonitor> e = it.next();
                     if (e.getKey().isExecutable()) {
@@ -316,11 +318,10 @@ public class WorkflowManager implements WorkflowListener {
                 if (m_runningNodes.size() == 0) {
                     if (m_waitingNodes.size() > 0) {
                         if (watchdog) {
-                            LOGGER
-                                    .error("Whoa there, the watchdog found a "
-                                            + "possible deadlock situation! Some nodes "
-                                            + "are still waiting, but none is running"
-                                            + m_waitingNodes);
+                            LOGGER.error("Whoa there, the watchdog found a "
+                                    + "possible deadlock situation! Some nodes "
+                                    + "are still waiting, but none is running"
+                                    + m_waitingNodes);
                         } else {
                             LOGGER.warn("Some nodes were still waiting but "
                                     + "none is running: " + m_waitingNodes);
@@ -374,8 +375,8 @@ public class WorkflowManager implements WorkflowListener {
         public void stateChanged(final NodeStatus state, final int id) {
             if ((state instanceof NodeStatus.EndExecute)
                     || (state instanceof NodeStatus.ExecutionCanceled)) {
-                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = m_runningNodes
-                        .entrySet().iterator();
+                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = 
+                    m_runningNodes.entrySet().iterator();
                 while (it.hasNext()) {
                     NodeContainer nc = it.next().getKey();
                     if (nc.getID() == id) {
@@ -394,6 +395,19 @@ public class WorkflowManager implements WorkflowListener {
                         
                         if (nc.getStatus() instanceof NodeStatus.Error) {
                             cancelExecution(nc.getAllSuccessors());
+                        } else if (nc.isExecuted()) {
+                            List<NodeContainer> autoNodes =
+                                new ArrayList<NodeContainer>();
+                            // check if auto-executable nodes are following
+                            for (NodeContainer[] row : nc.getSuccessors()) {
+                                for (NodeContainer cont : row) {
+                                    if (cont.isAutoExecutable()
+                                            && cont.isExecutable()) {
+                                       autoNodes.add(cont);
+                                    }
+                                }
+                            }
+                            addWaitingNodes(autoNodes);
                         }
                     }
                 }
@@ -499,23 +513,29 @@ public class WorkflowManager implements WorkflowListener {
      */
     public static final String WORKFLOW_FILE = "workflow.knime";
 
-    private final List<WeakReference<WorkflowManager>> m_children = new ArrayList<WeakReference<WorkflowManager>>();
+    private final List<WeakReference<WorkflowManager>> m_children = 
+        new ArrayList<WeakReference<WorkflowManager>>();
 
     // quick access to connections
-    private final Map<Integer, ConnectionContainer> m_connectionsByID = new HashMap<Integer, ConnectionContainer>();
+    private final Map<Integer, ConnectionContainer> m_connectionsByID = 
+        new HashMap<Integer, ConnectionContainer>();
 
     // change listener support
-    private final CopyOnWriteArrayList<WorkflowListener> m_eventListeners = new CopyOnWriteArrayList<WorkflowListener>();
+    private final CopyOnWriteArrayList<WorkflowListener> m_eventListeners = 
+        new CopyOnWriteArrayList<WorkflowListener>();
 
     private final WorkflowExecutor m_executor;
 
     // quick access to IDs via Nodes
-    private final Map<NodeContainer, Integer> m_idsByNode = new HashMap<NodeContainer, Integer>();
+    private final Map<NodeContainer, Integer> m_idsByNode = 
+        new HashMap<NodeContainer, Integer>();
 
     // quick access to nodes by ID
-    private final Map<Integer, NodeContainer> m_nodesByID = new LinkedHashMap<Integer, NodeContainer>();
+    private final Map<Integer, NodeContainer> m_nodesByID = 
+        new LinkedHashMap<Integer, NodeContainer>();
 
-    private final MyNodeStateListener m_nodeStateListener = new MyNodeStateListener();
+    private final MyNodeStateListener m_nodeStateListener = 
+        new MyNodeStateListener();
 
     private final WorkflowManager m_parent;
 
@@ -524,7 +544,8 @@ public class WorkflowManager implements WorkflowListener {
     // internal variables to allow generation of unique indices
     private final MutableInteger m_runningNodeID;
 
-    private final List<NodeContainer> m_detachedNodes = new ArrayList<NodeContainer>();
+    private final List<NodeContainer> m_detachedNodes = 
+        new ArrayList<NodeContainer>();
 
     /**
      * Create new Workflow.
@@ -681,7 +702,8 @@ public class WorkflowManager implements WorkflowListener {
 
         // notify listeners
         LOGGER.debug("Added " + newNode.getNameWithID());
-        fireWorkflowEvent(new WorkflowEvent.NodeAdded(newNodeID, null, newNode));
+        fireWorkflowEvent(
+                new WorkflowEvent.NodeAdded(newNodeID, null, newNode));
 
         LOGGER.debug("done, ID=" + newNodeID);
         return newNode;
@@ -1108,7 +1130,8 @@ public class WorkflowManager implements WorkflowListener {
         int numIn = nodeCont.getNrInPorts();
         int numOut = nodeCont.getNrOutPorts();
 
-        List<ConnectionContainer> connections = new ArrayList<ConnectionContainer>();
+        List<ConnectionContainer> connections = 
+            new ArrayList<ConnectionContainer>();
         // collect incoming connections
         for (int i = 0; i < numIn; i++) {
             ConnectionContainer c = getIncomingConnectionAt(nodeCont, i);
@@ -1164,7 +1187,8 @@ public class WorkflowManager implements WorkflowListener {
                         break;
                     }
                 }
-                assert (myNodeContainer != null) : "Did not find my node container";
+                assert (myNodeContainer != null) : "Did not find my "
+                    + "node container";
 
                 m_parent.findExecutableNodes(myNodeContainer, nodes);
             }
@@ -1283,7 +1307,8 @@ public class WorkflowManager implements WorkflowListener {
         while (!pred.isEmpty()) {
             NodeContainer nodeCont = pred.removeFirst();
             for (NodeContainer nc : nodeCont.getPredecessors()) {
-                if (nc.isConfigured() && !nc.isExecuted() && !pred.contains(nc)) {
+                if (nc.isConfigured() && !nc.isExecuted() 
+                        && !pred.contains(nc)) {
                     pred.add(nc);
                     nodes.add(nc);
                 }
@@ -1397,7 +1422,8 @@ public class WorkflowManager implements WorkflowListener {
      */
     public List<ConnectionContainer> getOutgoingConnectionsAt(
             final NodeContainer container, final int portNum) {
-        List<ConnectionContainer> foundConnections = new ArrayList<ConnectionContainer>();
+        List<ConnectionContainer> foundConnections = 
+            new ArrayList<ConnectionContainer>();
 
         // If the node is contained, process it
         if (container != null) {
@@ -1518,7 +1544,9 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         // read nodes
-        NodeSettingsRO nodes = settings.getNodeSettings(KEY_NODES); // Node-Subconfig
+        
+        // Node-Subconfig
+        NodeSettingsRO nodes = settings.getNodeSettings(KEY_NODES); 
         // get all keys in there
         for (String nodeKey : nodes.keySet()) {
             NodeSettingsRO nodeSetting = null;
@@ -1654,7 +1682,8 @@ public class WorkflowManager implements WorkflowListener {
             m_idsByNode.remove(container);
 
             LOGGER.debug("Removed: " + container.getNameWithID());
-            fireWorkflowEvent(new WorkflowEvent.NodeRemoved(id, container, null));
+            fireWorkflowEvent(
+                    new WorkflowEvent.NodeRemoved(id, container, null));
         } else {
             LOGGER.error("Could not find (and remove): " + container);
             throw new IllegalArgumentException(
@@ -1902,8 +1931,8 @@ public class WorkflowManager implements WorkflowListener {
     public void shutdown() {
         m_executor.cancelExecution();
 
-        Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries = m_idsByNode
-                .entrySet().iterator();
+        Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries = 
+            m_idsByNode.entrySet().iterator();
 
         while (nodeContaierEntries.hasNext()) {
             Map.Entry<NodeContainer, Integer> entry = nodeContaierEntries
