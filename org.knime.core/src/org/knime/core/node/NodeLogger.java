@@ -93,10 +93,12 @@ public final class NodeLogger {
     }
 
     /** Keeps set of <code>NodeLogger</code> elements by classname as key. */
-    private static final HashMap<String, NodeLogger> LOGGERS = new HashMap<String, NodeLogger>();
+    private static final HashMap<String, NodeLogger> LOGGERS = 
+        new HashMap<String, NodeLogger>();
 
     /** Map of additionally added writers: Writer -> Appender. */
-    private static final HashMap<Writer, WriterAppender> WRITER = new HashMap<Writer, WriterAppender>();
+    private static final HashMap<Writer, WriterAppender> WRITER = 
+        new HashMap<Writer, WriterAppender>();
 
     /**
      * Maximum number of chars (10000) printed on <code>System.out</code> and
@@ -174,9 +176,11 @@ public final class NodeLogger {
         l.info("#                                                           #");
         l.info("#############################################################");
         if (FILE_APPENDER instanceof LogfileAppender) {
-            l.info("# For more details see:                                     #");
+            l.info("# For more details see:" 
+                    + "                                     #");
             l.info("# " + ((LogfileAppender)FILE_APPENDER).getFile());
-            l.info("#-----------------------------------------------------------#");
+            l.info("#-----------------------------------------------" 
+                    + "------------#");
         }
 
         l.info("# logging date=" + new Date());
@@ -184,9 +188,8 @@ public final class NodeLogger {
         l.info("# java.vm.version=" + System.getProperty("java.vm.version"));
         l.info("# java.vendor=" + System.getProperty("java.vendor"));
         l.info("# os.name=" + System.getProperty("os.name"));
-        l
-                .info("# number of CPUs="
-                        + Runtime.getRuntime().availableProcessors());
+        l.info("# number of CPUs=" 
+                + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (ASSERT ? "on" : "off"));
         l.info("#############################################################");
     }
