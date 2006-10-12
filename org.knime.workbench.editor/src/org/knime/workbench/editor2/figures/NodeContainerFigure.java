@@ -368,6 +368,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // and set the progress bar
         if (!isChild(m_progressFigure)) {
+            m_progressFigure.activateUnknownProgress();
             add(m_progressFigure, 3);
         }
     }
@@ -377,6 +378,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // remove both intergangable onse
         if (isChild(m_progressFigure)) {
             remove(m_progressFigure);
+            m_progressFigure.stopUnknownProgress();
         }
 
         // and set the progress bar
