@@ -358,41 +358,4 @@ public final class MathUtils {
 
         return denormMatrix;
     }
-
-    private static void print(double[][] matrix) {
-        for (double[] row : matrix) {
-            for (double field : row) {
-                System.out.print(field + "\t");
-            }
-            System.out.print("\n");
-        }
-    }
-
-    public static void main(String[] args) {
-
-        double[][] m1 = {{-0.678, -0.735}, {-0.735, 0.678}};
-        double[][] m2 = {{0.69, 0.49}, {-1.31, -1.21}, {0.39, 0.99}};
-
-        System.out.println("Orignial eigen vectors:");
-        print(m1);
-        System.out.println("Orignial normalized data:");
-        print(m2);
-
-        m1 = transpose(m1);
-        m2 = transpose(m2);
-
-        System.out.println("Transposed eigen vectors:");
-        print(m1);
-        System.out.println("Transposed normalized data:");
-        print(m2);
-
-        m1 = multiply(m1, m2);
-        System.out.println("Multiplied matrix:");
-        print(m1);
-
-        m1 = transpose(m1);
-        System.out.println("Back transposed multiplied matrix:");
-        print(m1);
-
-    }
 }
