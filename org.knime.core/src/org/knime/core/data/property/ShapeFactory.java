@@ -141,6 +141,10 @@ public final class ShapeFactory {
         
         private static final double BORDER_SIZE = 0.1;
         
+        /**
+         * 
+         * @return the shape as an icon.
+         */
         public Icon getIcon() {
             return new Icon() {
                 public final int getIconHeight() {
@@ -366,16 +370,18 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
             return new Asterisk();
         }
 
+
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
-         * java.awt.Graphics, boolean, boolean, boolean)
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
+         * java.awt.Graphics, boolean, boolean)
          */
         @Override
         public void paintShape(final Graphics g, final boolean selected, 
@@ -393,8 +399,10 @@ public final class ShapeFactory {
             
         }
 
+
         /**
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -410,9 +418,10 @@ public final class ShapeFactory {
      */
     private class Circle extends Shape {
         
+
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -420,8 +429,9 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
-         * java.awt.Graphics, boolean, boolean, boolean)
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
+         * java.awt.Graphics, boolean, boolean)
          */
         @Override
         public void paintShape(final Graphics g, final boolean selected, 
@@ -431,9 +441,10 @@ public final class ShapeFactory {
             g.fillOval(x, y, getWidth(), getHeight());
         }
         
+
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -450,16 +461,18 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
             return new Cross();
         }
 
+
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
-         * java.awt.Graphics, boolean, boolean, boolean)
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
+         * java.awt.Graphics, boolean, boolean)
          */
         @Override
         public void paintShape(final Graphics g, final boolean selected, 
@@ -483,7 +496,7 @@ public final class ShapeFactory {
 
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -501,7 +514,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -510,7 +523,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
          * java.awt.Graphics, boolean, boolean)
          */
         @Override
@@ -531,7 +544,8 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -548,7 +562,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -557,7 +571,7 @@ public final class ShapeFactory {
 
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
          * java.awt.Graphics, boolean, boolean)
          */
         @Override
@@ -577,7 +591,8 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -594,7 +609,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -602,8 +617,9 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
-         * java.awt.Graphics, boolean, boolean, boolean)
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
+         * java.awt.Graphics, boolean, boolean)
          */
         @Override
         public void paintShape(final Graphics g, final boolean selected,
@@ -617,7 +633,7 @@ public final class ShapeFactory {
 
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -634,7 +650,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -642,8 +658,9 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
-         * java.awt.Graphics, boolean, boolean, boolean)
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
+         * java.awt.Graphics, boolean, boolean)
          */
         @Override
         public void paintShape(final Graphics g, final boolean selected, 
@@ -658,7 +675,8 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -675,7 +693,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -683,8 +701,9 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
-         * java.awt.Graphics, boolean, boolean, boolean)
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
+         * java.awt.Graphics, boolean, boolean)
          */
         @Override
         public void paintShape(final Graphics g, 
@@ -701,7 +720,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -719,7 +738,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -727,7 +746,8 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
          * java.awt.Graphics, boolean, boolean)
          */
         @Override
@@ -746,7 +766,8 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
@@ -763,7 +784,7 @@ public final class ShapeFactory {
         
         /**
          * 
-         * @see org.knime.core.data.property.ShapeFactory#newInstance()
+         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
          */
         @Override
         public Shape newInstance() {
@@ -771,7 +792,8 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#paintShape(
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
          * java.awt.Graphics, boolean, boolean)
          */
         @Override
@@ -792,7 +814,8 @@ public final class ShapeFactory {
         }
 
         /**
-         * @see org.knime.core.data.property.ShapeFactory#toString()
+         * 
+         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
          */
         @Override
         public String toString() {
