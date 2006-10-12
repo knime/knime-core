@@ -80,7 +80,7 @@ public class DataContainer implements RowAppender {
      * Number of cells that are cached without being written to the 
      * temp file (see Buffer implementation).
      */
-    private static final int MAX_CELLS_IN_MEMORY = 20000;
+    public static final int MAX_CELLS_IN_MEMORY = 100000;
     
     /**
      * The number of possible values being kept at most. If the number of
