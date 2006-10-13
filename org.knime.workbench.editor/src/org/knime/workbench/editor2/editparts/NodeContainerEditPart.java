@@ -352,6 +352,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED,
                                 state.getMessage());
                     }
+                } else if (state instanceof NodeStatus.Queued) {
+
+                    fig.setState(NodeContainerFigure.STATE_QUEUED,
+                            state.getMessage());
+
                 } else if (state instanceof NodeStatus.StartExecute) {
                     fig.setState(NodeContainerFigure.STATE_EXECUTING, state
                             .getMessage());

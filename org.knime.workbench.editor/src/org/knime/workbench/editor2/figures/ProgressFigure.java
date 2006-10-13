@@ -79,6 +79,8 @@ public class ProgressFigure extends RectangleFigure {
 
     private int m_unknownProgressBarDirection;
 
+    private boolean m_executing;
+
     /**
      * The progress in percent.
      */
@@ -180,35 +182,37 @@ public class ProgressFigure extends RectangleFigure {
         int w = r.width - Math.max(1, localLineWidth);
         int h = r.height - Math.max(1, localLineWidth);
 
-        if (!m_unknownProgress) {
+        if (m_executing) {
+            if (!m_unknownProgress) {
 
-            graphics.drawRectangle(x + 1, y + 1, 17, h - 2);
-            graphics.setFont(PROGRESS_FONT);
-            String progressString = "75 %";
+                graphics.drawRectangle(x + 1, y + 1, 17, h - 2);
+                graphics.setFont(PROGRESS_FONT);
+                String progressString = "75 %";
 
-            graphics.setXORMode(true);
-            graphics.setForegroundColor(ColorConstants.white);
-            graphics.drawString(progressString, x + w / 2
-                    - (int)(progressString.length() * 3), y - 4);
-        } else {
+                graphics.setXORMode(true);
+                graphics.setForegroundColor(ColorConstants.white);
+                graphics.drawString(progressString, x + w / 2
+                        - (int)(progressString.length() * 3), y - 4);
+            } else {
 
-            graphics.setForegroundColor(ColorConstants.darkBlue);
+                graphics.setForegroundColor(ColorConstants.darkBlue);
 
-            int xPos = x + 1 + m_unknownProgressBarRenderingPosition;
+                int xPos = x + 1 + m_unknownProgressBarRenderingPosition;
 
-            // calculate the rendering direction
-            if (m_unknownProgressBarRenderingPosition + 8
-                    + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH) {
-                m_unknownProgressBarDirection = -1;
-            } else if (m_unknownProgressBarRenderingPosition <= 0) {
-                m_unknownProgressBarDirection = 1;
+                // calculate the rendering direction
+                if (m_unknownProgressBarRenderingPosition + 8
+                        + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH) {
+                    m_unknownProgressBarDirection = -1;
+                } else if (m_unknownProgressBarRenderingPosition <= 0) {
+                    m_unknownProgressBarDirection = 1;
+                }
+
+                graphics.drawRectangle(xPos, y + 1, UNKNOW_PROGRESS_BAR_WIDTH,
+                        h - 2);
+
+                m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
+
             }
-
-            graphics.drawRectangle(xPos, y + 1, UNKNOW_PROGRESS_BAR_WIDTH,
-                    h - 2);
-
-            m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
-
         }
     }
 
@@ -286,5 +290,15 @@ public class ProgressFigure extends RectangleFigure {
 
             return new Dimension(prefWidth, prefHeight);
         }
+    }
+
+    /**
+     * Sets the mode of this progress bar. The modes are executing or queued
+     * 
+     * @param executing if true the mode is executing otherwise the progress
+     *            should be displayed as queued.
+     */
+    public void setMode(final boolean executing) {
+        m_executing = executing;
     }
 }

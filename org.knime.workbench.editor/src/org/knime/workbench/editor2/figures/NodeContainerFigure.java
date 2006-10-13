@@ -112,8 +112,11 @@ public class NodeContainerFigure extends RectangleFigure {
     /** State: Node ready, but idle. * */
     public static final int STATE_READY = 1;
 
-    /** State: Node has been scheduled for execution * */
-    // public static final int STATE_QUEUED = 2;
+    /**
+     * State: The node is in the workflow manager queue wating for execution.
+     */
+    public static final int STATE_WAITING_FOR_EXEC = 2;
+
     /** State: Node is currently being executed. * */
     public static final int STATE_EXECUTING = 3;
 
@@ -125,6 +128,9 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /** State: Error. * */
     public static final int STATE_ERROR = 6;
+
+    /** State: Node queued for execution (waiting). * */
+    public static final int STATE_QUEUED = 7;
 
     private static final Font FONT_NORMAL;
 
@@ -359,7 +365,15 @@ public class NodeContainerFigure extends RectangleFigure {
         return false;
     }
 
-    private void setProgressBar() {
+    /**
+     * Replaces the status ampel with the progress bar. This is done once the
+     * node is queued or executing.
+     * 
+     * @param executing if true the progress bar displays a moving progress if
+     *            fals an empty progress bar is set indicating the waiting
+     *            situation.
+     */
+    private void setProgressBar(final boolean executing) {
 
         // remove both intergangable onse
         if (isChild(m_statusFigure)) {
@@ -368,8 +382,15 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // and set the progress bar
         if (!isChild(m_progressFigure)) {
-            m_progressFigure.activateUnknownProgress();
+
             add(m_progressFigure, 3);
+        }
+        
+        if (executing) {
+            m_progressFigure.setMode(true);
+            m_progressFigure.activateUnknownProgress();
+        } else {
+            m_progressFigure.setMode(false);
         }
     }
 
@@ -419,9 +440,15 @@ public class NodeContainerFigure extends RectangleFigure {
             m_heading.setFont(FONT_EXECUTING);
             m_heading.setEnabled(true);
 
-            setProgressBar();
+            setProgressBar(true);
             m_heading.setFont(FONT_EXECUTING);
             // m_contentFigure.removeWarningSign();
+            break;
+        case STATE_QUEUED:
+            m_heading.setFont(FONT_NORMAL);
+            m_heading.setEnabled(true);
+
+            setProgressBar(false);
             break;
         case STATE_EXECUTED:
             m_heading.setFont(FONT_EXECUTED);
