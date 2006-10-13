@@ -32,6 +32,7 @@ package org.knime.core.node;
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class NodeStatus {
+    
     /** Node reset. */
     public static class Reset extends NodeStatus {
         /**
@@ -45,6 +46,21 @@ public abstract class NodeStatus {
          * @param messsage an additional message
          */
         public Reset(final String messsage) { super(messsage); }
+    }
+    
+    /** Node queued. */
+    public static class Queued extends NodeStatus {
+        /**
+         * Creates a new "queued" node status.
+         */
+        public Queued() { super(); }
+
+        /**
+         * Creates a new "queued" node status.
+         * 
+         * @param messsage an additional message
+         */
+        public Queued(final String messsage) { super(messsage); }
     }
     
     /** Node execution started. */

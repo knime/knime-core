@@ -167,6 +167,9 @@ public class WorkflowManager implements WorkflowListener {
                     MyNodePM pm = new MyNodePM(nc);
                     synchronized (m_addLock) {
                         m_waitingNodes.put(nc, pm);
+                        
+                        // inform the node that it is queued now
+                        nc.queuedForExecution();
                     }
 
                     fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc.getID(),

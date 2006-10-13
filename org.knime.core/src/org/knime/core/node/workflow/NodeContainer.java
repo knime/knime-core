@@ -440,7 +440,7 @@ public class NodeContainer implements NodeStateListener {
                 }
             }
         }
-        
+
         return succ;
     }
 
@@ -1072,7 +1072,7 @@ public class NodeContainer implements NodeStateListener {
         };
         if (pm != null) {
             pm.setMessage("Scheduled for execution...");
-            // removed (P.O. 1 Sept.2006) 
+            // removed (P.O. 1 Sept.2006)
             // pm.setProgress(0.0);
         }
         return KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(r);
@@ -1164,5 +1164,13 @@ public class NodeContainer implements NodeStateListener {
      */
     public boolean isFullyConnected() {
         return m_node.isFullyConnected();
+    }
+
+    /**
+     * Informs this node container that it is queued for execution. Thus, the
+     * container can inform its listeners.
+     */
+    public void queuedForExecution() {
+        notifyStateListeners(new NodeStatus.Queued());
     }
 }
