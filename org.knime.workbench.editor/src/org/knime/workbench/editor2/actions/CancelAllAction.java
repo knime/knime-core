@@ -117,5 +117,9 @@ public class CancelAllAction extends AbstractNodeAction {
 
         LOGGER.debug("(Cancel all)  cancel all running jobs.");
         getManager().cancelExecution();
+        
+//      Give focus to the editor again. Otherwise the actions (selection)
+        // is not updated correctly.
+        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
 }
