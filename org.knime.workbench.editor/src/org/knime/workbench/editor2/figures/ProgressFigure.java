@@ -242,13 +242,11 @@ public class ProgressFigure extends RectangleFigure {
 
             public void run() {
 
-                Object object = new Object();
-
                 while (m_unknownProgress) {
 
-                    synchronized (object) {
+                    synchronized (this) {
                         try {
-                            object.wait(100);
+                            wait(100);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
