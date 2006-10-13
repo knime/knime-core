@@ -34,10 +34,12 @@ package org.knime.core.util;
  */
 public final class MutableInteger extends Number {
     private static final long serialVersionUID = -1576835000083239940L;
+
     private volatile int m_i;
-    
+
     /**
      * Creates a new mutable integer.
+     * 
      * @param i the start value
      */
     public MutableInteger(final int i) {
@@ -78,31 +80,41 @@ public final class MutableInteger extends Number {
 
     /**
      * Sets the value of this integer.
+     * 
      * @param newValue the new value
      */
     public void setValue(final int newValue) {
         m_i = newValue;
     }
-    
-    
+
     /**
      * Increments this integer by one.
+     * 
      * @return the new value
      */
     public int inc() {
         return ++m_i;
     }
-    
-    
+
+    /**
+     * Adds the given value to this mutable integer.
+     * 
+     * @param value the value to add
+     */
+    public void add(final int value) {
+        m_i += value;
+    }
+
     /**
      * Decrements this integer by one.
+     * 
      * @return the new value
      */
     public int dec() {
         return --m_i;
     }
 
-    /** 
+    /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -110,17 +122,17 @@ public final class MutableInteger extends Number {
         if (!(obj instanceof Number)) {
             return false;
         }
-        return ((Number) obj).intValue() == m_i;
+        return ((Number)obj).intValue() == m_i;
     }
 
-    /** 
+    /**
      * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
         return m_i;
     }
-    
+
     /**
      * @see java.lang.Object#toString()
      */
@@ -129,5 +141,3 @@ public final class MutableInteger extends Number {
         return Integer.toString(m_i);
     }
 }
-
-
