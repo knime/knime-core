@@ -15,10 +15,10 @@
 			filtered out, i.e. they will not be in the output table.
 			The dialog allows to set the following parameters:
 		</intro>
-        <option name="Skip rows"> Duplicate row keys occuring in the second 
-			table are not appended to the output table. </option>
+        <option name="Skip rows"> Duplicate row identifiers (RowID) occuring in the 
+	        second table are not appended to the output table. </option>
         <option name="Append suffix"> The output table will contain all rows, but
-            duplicate row keys are labeled with a suffix. </option>
+            duplicate row identifiers are labeled with a suffix. </option>
             
         <option name="Use intersection of columns">
         	Use ony the columns that appear in both input tables. Any other

@@ -34,7 +34,7 @@
 		    be specified by row number, or set to the end of the table, causing 
 		    all remaining rows to be in/excluded.
 		</option>
-	    <option name="Row ID pattern">If filter by row key is selected, specify
+	    <option name="Row ID pattern">If filter by row ID is selected, specify
 	    	a regular expression, which is matched against the row ID of each row.
 	    	A checkmark can be set, if a case sensitive match should be performed
 	    	and if the row ID should start with the specified pattern.

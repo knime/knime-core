@@ -6,7 +6,7 @@
     <fullDescription>
         <intro>
 			Transposes the entire input table by swapping rows and columns. The new column
-		    names are provided by the former (old) row ids and the new row keys are 
+		    names are provided by the former (old) row IDs and the new row identifiers are 
 		    the former (old) column names. The new column type is the most specific
 		    base type and applies to all cells in one row.
 		</intro>

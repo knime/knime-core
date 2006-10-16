@@ -10,11 +10,11 @@
 			port) provides the left part of the output table and the second table
 			(bottom input port) provides the columns for the right part. Thus, the output 
 			table has as many rows as both of the input tables (given that both tables
-			contain exactly the same row keys) and as many columns as the sum of both 
-			column counts. If a row key only occurs in one of the two tables,
+			contain exactly the same row identifier (IDs)) and as many columns as the sum of both 
+			column counts. If a row ID only occurs in one of the two tables,
 			the remaining part (the column that should have been provided by the 
 			other table) is filled with missing cells. <b>NOTE</b>: This node may have 
-			high (runtime) complexity if the tables contain different row keys
+			high (runtime) complexity if the tables contain different row IDs
 			or the rows are sorted differently. (If they have the same keys in the
 			same order, this node has linear complexity.) 
 		</intro>

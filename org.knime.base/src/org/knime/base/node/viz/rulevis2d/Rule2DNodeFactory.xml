@@ -12,7 +12,7 @@
 		Displays crisp or fuzzy rules in two selectable dimensions;
 		the data points explained by the rules are also displayed.
 		The rules are displayed in the color defined by their referring 
-		RowKey color attribute. They may be selected and hilited. 
+		row identifier (ID) color attribute. They may be selected and hilited. 
 		Fuzzy rules are displayed with their core and their support area, 
 		with increasing transparency to the edges.
 		Note, the node always expects a org.knime.core.data.FuzzyIntervalValue 
