@@ -77,7 +77,7 @@ public final class FileAnalyzer {
      *         settings if guessing was just too hard.
      * @throws IOException if there was an error reading from the URL
      */
-    static FileReaderNodeSettings analyze(
+    public static FileReaderNodeSettings analyze(
             final FileReaderNodeSettings userSettings) throws IOException {
         if (userSettings.getDataFileLocation() == null) {
             throw new IllegalArgumentException("Must specify a valid file "

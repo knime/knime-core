@@ -140,7 +140,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Creates an empty settings object. It contains no default values.
      */
-    FileReaderNodeSettings() {
+    public FileReaderNodeSettings() {
         m_columnProperties = new Vector<ColProperty>();
 
         m_numOfColumns = -1;
@@ -318,7 +318,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      *         <code>null</code> if the current settings are invalid
      * 
      */
-    DataTableSpec createDataTableSpec() {
+    public DataTableSpec createDataTableSpec() {
 
         // first check if the settings are in a state we can create a valid
         // table spec for.
