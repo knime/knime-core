@@ -295,7 +295,11 @@ public class ExecutionMonitor {
         }
         
         private String calcNewMessage(final String message) {
-            m_lastMessage = m_parentMessage + " - " + message;
+            if (m_parentMessage != null) {
+                m_lastMessage = m_parentMessage + " - " + message;
+            } else {
+                m_lastMessage = message;
+            }
             return m_lastMessage;
         }
     }
