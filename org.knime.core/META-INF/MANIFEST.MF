@@ -49,3 +49,6 @@ Provide-Package: junit.awtui,
  org.knime.core.node.workflow,
  org.knime.core.util,
  org.knime.core.xml
+Bundle-Activator: org.knime.core.internal.CorePlugin
+Require-Bundle: org.eclipse.core.runtime
+Eclipse-AutoStart: true

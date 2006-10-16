@@ -223,7 +223,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             ConsoleViewAppender.WARN_APPENDER
                     .write(KNIMEConstants.WELCOME_MESSAGE);
             ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
-                    + KNIMEConstants.KNIME_HOME_DIR + File.separator
+                    + KNIMEConstants.getKNIMEHomeDir() + File.separator
                     + NodeLogger.LOG_FILE + "\n");
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);

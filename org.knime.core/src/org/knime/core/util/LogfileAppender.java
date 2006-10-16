@@ -51,7 +51,7 @@ public class LogfileAppender extends FileAppender {
      */
     public LogfileAppender() {
         // get user home
-        final String tmpDir = KNIMEConstants.KNIME_HOME_DIR + File.separator;
+        final String tmpDir = KNIMEConstants.getKNIMEHomeDir() + File.separator;
         // check if home/.knime exists
         File tempDir = new File(tmpDir);
         if (!tempDir.exists()) {

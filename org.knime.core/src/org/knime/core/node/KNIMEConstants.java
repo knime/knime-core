@@ -29,6 +29,7 @@ import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
+import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 
 
@@ -47,13 +48,9 @@ public final class KNIMEConstants {
     public static final String VERSION = "1.1.0";
 
     /**
-     * The directory where knime will put log files and configuration files.
-     * This is in <code>$USER_HOME$/.knime</code> where
-     * <code>$USER_HOME$</code> is the user's home directory. This variable
-     * does not have a trailing file separator character.
+     * KNIME home directory.
      */
-    public static final String KNIME_HOME_DIR = System.getProperty("user.home")
-            + File.separator + ".knime";
+    private static File knimeHomeDir;
 
     /**
      * <i>Welcome to KNIME Konstanz Information Miner</i>.
@@ -74,6 +71,8 @@ public final class KNIMEConstants {
 
     /** Load icon. */
     static {
+        File knimeHome = KNIMEPath.getKNIMEHomeDirPath();
+        knimeHomeDir = knimeHome;
         ImageIcon icon;
         try {
             ClassLoader loader = KNIMEConstants.class.getClassLoader();
@@ -88,20 +87,22 @@ public final class KNIMEConstants {
         } catch (Exception e) {
             // do nothing.
         }
-        
-        File knimeDir = new File(KNIME_HOME_DIR);
-        if (!knimeDir.exists()) {
-            if (!knimeDir.mkdirs()) {
-                System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                System.err.println("  Could not create '" + knimeDir + "'");
-                System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            }
-        }
     }
 
     /** The global thread pool from which all threads should be taken. */
     public static final ThreadPool GLOBAL_THREAD_POOL =
         new ThreadPool(2 * Runtime.getRuntime().availableProcessors());
+    
+    /** 
+     * The directory where knime will put log files and configuration files.
+     * If started in eclipse, this is usually ${workspace_path}/.metadata/knime.
+     * Otherwise it's in the current working directory.
+     * This variable does not have a trailing file separator character.
+     * @return The KNIME home dir.
+     */
+    public static final String getKNIMEHomeDir() {
+        return knimeHomeDir.getAbsolutePath();
+    }
     
     /**
      * Hides public constructor.

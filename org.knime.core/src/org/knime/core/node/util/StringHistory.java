@@ -87,7 +87,7 @@ public final class StringHistory {
      */
     private StringHistory(final int maxLength, final String id) {
         m_maxLength = maxLength;
-        String file = KNIMEConstants.KNIME_HOME_DIR + File.separator
+        String file = KNIMEConstants.getKNIMEHomeDir() + File.separator
             + "history_" + id + ".txt";
         m_historyFile = new File(file);
         m_list = new LinkedList<String>();

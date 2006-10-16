@@ -118,7 +118,7 @@ public final class NodeLogger {
      */
     static {
         // check if KNIME log4j config exisist in users home
-        File knimeDir = new File(KNIMEConstants.KNIME_HOME_DIR);
+        File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
         File log4j = new File(knimeDir, "log4j-1.1.0.xml");
         if (!log4j.exists()) {
             InputStream in = NodeLogger.class.getClassLoader()
