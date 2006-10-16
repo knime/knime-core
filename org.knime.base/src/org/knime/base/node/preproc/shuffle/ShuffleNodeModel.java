@@ -29,12 +29,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Vector;
 
+import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -42,8 +44,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NoSettingsNodeModel;
 import org.knime.core.node.NodeLogger;
-
-import org.knime.base.data.append.row.AppendedRowsTable;
 
 /**
  * Implementation of the Fisher Yates shuffle, that guarantees that all n!
@@ -104,7 +104,9 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         int nrRows = 0;
-
+        
+        ExecutionMonitor subExec1 = exec.createSubProgress(0.7);
+        ExecutionMonitor subExec2 = exec.createSubProgress(0.3);
         Vector<RowKey> tmpKeys = new Vector<RowKey>();
         for (RowIterator r = inData[0].iterator(); r.hasNext(); nrRows++) {
             /*
@@ -112,7 +114,7 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
              * is shuffled.
              */
             tmpKeys.add(r.next().getKey());
-            exec.checkCanceled();
+            subExec1.checkCanceled();
         }
 
         m_shuffleArr = tmpKeys.toArray(new RowKey[]{});
@@ -144,14 +146,15 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
 
         for (int i = 0; i < contArr.length; i++) {
             double progress = (double)i / (double)contArr.length;
-            exec.setProgress(progress, "Shuffling..." + (int)(progress * 100)
-                    + "%");
-            exec.checkCanceled();
+            subExec1.setProgress(progress, 
+                    "Shuffling..." + (int)(progress * 100) + "%");
+            subExec1.checkCanceled();
             DataRow[] rows;
             if (i != nrContainer - 1) {
                 rows = new DataRow[containersize];
             } else {
-                rows = new DataRow[nrRows - ((nrContainer - 1) * containersize)];
+                rows = new DataRow[nrRows - ((nrContainer - 1) 
+                        * containersize)];
             }
             RowIterator rowIt = inData[0].iterator();
             int nrfound = 0;
@@ -184,8 +187,20 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
             i++;
         }
         AppendedRowsTable mergeTable = new AppendedRowsTable(tables);
-        return new BufferedDataTable[]{exec.createBufferedDataTable(mergeTable,
-                exec)};
+        BufferedDataContainer out = 
+            exec.createDataContainer(mergeTable.getDataTableSpec(), true);
+        int count = 0;
+        int totalCount = inData[0].getRowCount();
+        for (DataRow row : mergeTable) {
+            out.addRowToTable(row);
+            subExec2.setProgress(
+                    count / (double)totalCount, "Caching output, row " + count 
+                    + "/" + totalCount + " (\"" + row.getKey() + "\")");
+            count++;
+            subExec2.checkCanceled();
+        }
+        out.close();
+        return new BufferedDataTable[]{out.getTable()};
     }
 
     /**
