@@ -81,6 +81,10 @@ public class XValidateModel extends MetaNodeModel {
     private final XValidateSettings m_settings = new XValidateSettings();
 
     private DataTable m_confusionMatrix;
+    
+    private int m_correctCount;
+    private int m_falseCount;
+    private int m_nrRows;
 
     private XValidatePartitionModel m_partitionModel;
 
@@ -205,6 +209,9 @@ public class XValidateModel extends MetaNodeModel {
 
         DataTableSpec out = createOutSpec();
         BufferedDataContainer con = exec.createDataContainer(out);
+        m_nrRows = 0;
+        m_correctCount = 0;
+        m_falseCount = 0;
         for (int i = 0; i < m_settings.validations(); i++) {
             DataRow r = new DefaultRow(
                     new RowKey("Validation" + (i + 1)),
@@ -212,6 +219,9 @@ public class XValidateModel extends MetaNodeModel {
                     new IntCell(testSize[i]),
                     new IntCell(errorCountTest[i]));
             con.addRowToTable(r);
+            m_nrRows += testSize[i];
+            m_falseCount += errorCountTest[i];
+            m_correctCount += testSize[i] - errorCountTest[i];
         }
         con.close();
         return new BufferedDataTable[]{con.getTable()};
@@ -224,6 +234,57 @@ public class XValidateModel extends MetaNodeModel {
      */
     public DataTable getConfusionMatrix() {
         return m_confusionMatrix;
+    }
+    
+    /**
+     * Get the correct classification count, i.e. where both columns agree.
+     * 
+     * @return the count of rows where the two columns have an equal value or -1
+     *         if the node is not executed
+     */
+    public int getCorrectCount() {
+        return m_correctCount;
+    }
+    
+    /**
+     * Returns the error of wrong classfied pattern in percentage of the number
+     * of patterns.
+     * 
+     * @return the 1.0 - classification accuracy
+     */
+    public float getError() {
+        float error;
+        long totalNumberDataSets = getFalseCount() + getCorrectCount();
+        if (totalNumberDataSets == 0) {
+            error = Float.NaN;
+        } else {
+            float ratio = 100.0f / totalNumberDataSets;
+            error = ratio * getFalseCount();
+        }
+        return error;
+    }
+
+    /**
+     * Get the misclassification count, i.e. where both columns have different
+     * values.
+     * 
+     * @return the count of rows where the two columns have an unequal value or
+     *         -1 if the node is not executed
+     */
+    public int getFalseCount() {
+        return m_falseCount;
+    }
+
+    /**
+     * Get the number of rows in the input table. This count can be different
+     * from {@link #getFalseCount()} + {@link #getCorrectCount()}, though it
+     * must be at least the sum of both. The difference is the number of rows
+     * containing a missing value in either of the target columns.
+     * 
+     * @return number of rows in input table
+     */
+    public int getNrRows() {
+        return m_nrRows;
     }
 
     /**
@@ -287,6 +348,12 @@ public class XValidateModel extends MetaNodeModel {
             final ExecutionMonitor exec) throws IOException {
         File f = new File(internDir, "confusionMatrix.zip");
         m_confusionMatrix = DataContainer.readFromZip(f);
+        File statistics = new File(internDir, "statistics.xml");
+        NodeSettingsRO s = NodeSettings.loadFromXML(
+                new BufferedInputStream(new FileInputStream(statistics)));
+        m_nrRows = s.getInt("nrRows", -1);
+        m_falseCount = s.getInt("errorCount", -1);
+        m_correctCount = s.getInt("correctCount", -1);
     }
 
     /**
@@ -300,6 +367,13 @@ public class XValidateModel extends MetaNodeModel {
         if (m_confusionMatrix != null) {
             File f = new File(internDir, "confusionMatrix.zip");
             DataContainer.writeToZip(m_confusionMatrix, f, exec);
+            File statistics = new File(internDir, "statistics.xml");
+            NodeSettings s = new NodeSettings("statistics");
+            s.addInt("nrRows", m_nrRows);
+            s.addInt("errorCount", m_falseCount);
+            s.addInt("correctCount", m_correctCount);
+            s.saveToXML(new BufferedOutputStream(
+                    new FileOutputStream(statistics)));
         }
     }
 

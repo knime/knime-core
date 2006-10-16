@@ -22,6 +22,13 @@
  */
 package org.knime.base.node.meta.xvalidation;
 
+import java.awt.FlowLayout;
+
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import org.knime.core.data.DataTable;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.tableview.TableView;
@@ -31,7 +38,12 @@ import org.knime.core.node.tableview.TableView;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class XValidateView extends NodeView {
-    private final TableView m_table;
+    private final TableView m_tableView;
+    private JLabel m_correct;
+
+    private JLabel m_wrong;
+
+    private JLabel m_error;
     
     /**
      * Creates a new view for the cross validation node.
@@ -40,9 +52,36 @@ public class XValidateView extends NodeView {
      */
     public XValidateView(final NodeModel nodeModel) {
         super(nodeModel);
-        m_table = new TableView();
-        m_table.setShowColorInfo(false);
-        setComponent(m_table);
+
+        m_tableView = new TableView();
+        m_tableView.setShowColorInfo(false);
+
+        JPanel summary1 = new JPanel();
+        summary1.setLayout(new FlowLayout());
+        summary1.add(new JLabel("Correct classified:"));
+        m_correct = new JLabel("n/a");
+        summary1.add(m_correct);
+
+        JPanel summary2 = new JPanel();
+        summary2.setLayout(new FlowLayout());
+        summary2.add(new JLabel("Wrong classified:"));
+        m_wrong = new JLabel("n/a");
+        summary2.add(m_wrong);
+
+        JPanel summary3 = new JPanel();
+        summary3.setLayout(new FlowLayout());
+        summary3.add(new JLabel("Error:"));
+        m_error = new JLabel("n/a");
+        summary3.add(m_error);
+        summary3.add(new JLabel("%"));
+
+        JPanel outerPanel = new JPanel();
+        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
+        outerPanel.add(m_tableView);
+        outerPanel.add(summary1);
+        outerPanel.add(summary2);
+        outerPanel.add(summary3);
+        setComponent(outerPanel);
     }
 
     /**
@@ -50,8 +89,22 @@ public class XValidateView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        m_table.setDataTable(((XValidateModel) getNodeModel())
-                .getConfusionMatrix());
+        XValidateModel model = (XValidateModel) getNodeModel(); 
+        DataTable scoreTable = model.getConfusionMatrix();
+        if (scoreTable == null) {
+            // model is not executed yet, or was reset.
+            m_tableView.setDataTable(null);
+            m_correct.setText(" n/a ");
+            m_wrong.setText(" n/a ");
+            m_error.setText(" n/a ");
+            return;
+        }
+
+        // now set the values in the components to get them displayed
+        m_tableView.setDataTable(scoreTable);
+        m_correct.setText(String.valueOf(model.getCorrectCount()));
+        m_wrong.setText(String.valueOf(model.getFalseCount()));
+        m_error.setText(String.valueOf(model.getError()));    
     }
 
     /**
