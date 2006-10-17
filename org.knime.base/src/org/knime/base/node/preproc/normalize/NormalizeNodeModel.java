@@ -28,8 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
+import org.knime.base.data.normalize.AffineTransTable;
 import org.knime.base.data.normalize.Normalizer;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
@@ -37,6 +37,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -103,12 +106,19 @@ public class NormalizeNodeModel extends NodeModel {
      * Columns to use for normalization.
      */
     private String[] m_columns;
+    
+    /**
+     * The model content.
+     */
+    private ModelContentRO m_content;
+    
+    private static final String CFG_MODEL_NAME = "normalize";
 
     /**
      * One input, one output.
      */
     NormalizeNodeModel() {
-        super(1, 1);
+        super(1, 1, 0, 1);
     }
 
     /**
@@ -157,7 +167,7 @@ public class NormalizeNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         Normalizer ntable = new Normalizer(inData[0], m_columns);
-        DataTable outTable;
+        AffineTransTable outTable;
         switch (m_mode) {
         case MINMAX_MODE:
             outTable = ntable.doMinMaxNorm(m_max, m_min, exec);
@@ -171,8 +181,28 @@ public class NormalizeNodeModel extends NodeModel {
         default:
             throw new Exception("No mode set");
         }
+        m_content = new ModelContent(CFG_MODEL_NAME);
+        outTable.save((ModelContent)m_content);
         BufferedDataTable bft = exec.createBufferedDataTable(outTable, exec);
         return new BufferedDataTable[]{bft};
+    }
+    
+    /**
+     * @see NodeModel#saveModelContent(int, ModelContentWO)
+     */
+    @Override
+    protected void saveModelContent(final int index, 
+            final ModelContentWO predParams) throws InvalidSettingsException {
+        m_content.copyTo(predParams);
+    }
+    
+    /**
+     * @see NodeModel#loadModelContent(int, ModelContentRO)
+     */
+    @Override
+    protected void loadModelContent(final int index, 
+            final ModelContentRO predParams) throws InvalidSettingsException {
+        m_content = predParams.getModelContent(CFG_MODEL_NAME);
     }
 
     /**
@@ -213,7 +243,7 @@ public class NormalizeNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
+        m_content = null;
     }
 
     /**

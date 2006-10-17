@@ -237,7 +237,7 @@ public final class Normalizer {
      * @throws CanceledExecutionException if user canceled
      * @return the normalized DataTable
      */
-    public DataTable doDecimalScaling(final ExecutionMonitor exec)
+    public AffineTransTable doDecimalScaling(final ExecutionMonitor exec)
             throws CanceledExecutionException {
         StatisticsTable st = new StatisticsTable(m_table, exec);
         String[] includes = getNames();

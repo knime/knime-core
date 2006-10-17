@@ -35,6 +35,9 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 
 
 /**
@@ -55,28 +58,11 @@ public class AffineTransTable implements DataTable {
     private final double[] m_scales;
 
     private final double[] m_translations;
+    
+    private final String[] m_includeNames;
 
     /**
-     * Convenience constructor for package scope classes that make sure that all
-     * sanity checks are met.
-     * 
-     * @param table the table to wrap
-     * @param scales the scales for each dimension, make sure that it has the
-     *            same length as a row has cells, non double columns MUST have
-     *            {@link Double#NaN} as value in this argument
-     * @param translations the translation operator, similar to
-     *            <code>scales</code>
-     */
-    AffineTransTable(final DataTable table, final double[] scales,
-            final double[] translations) {
-        m_table = table;
-        m_scales = scales;
-        m_translations = translations;
-        m_spec = generateNewSpec();
-    }
-
-    /**
-     * Creates new table given "some" parameters.
+     * Creates new table given the following parameters.
      * 
      * @param table the Table to wrap
      * @param names the names of the column to scale
@@ -104,6 +90,7 @@ public class AffineTransTable implements DataTable {
         }
         double[] myScales = new double[spec.getNumColumns()];
         double[] myTrans = new double[spec.getNumColumns()];
+        String[] myIncludes = new String[spec.getNumColumns()];
         Arrays.fill(myScales, Double.NaN);
         Arrays.fill(myTrans, Double.NaN);
         for (int i = 0; i < names.length; i++) {
@@ -119,11 +106,14 @@ public class AffineTransTable implements DataTable {
             }
             myScales[index] = scales[i];
             myTrans[index] = translations[i];
+            myIncludes[index] = names[i];
         }
+        m_includeNames = myIncludes;
         m_table = table;
         m_scales = myScales;
         m_translations = myTrans;
-        m_spec = generateNewSpec();
+        m_spec = generateNewSpec(
+                table.getDataTableSpec(), m_scales, m_translations);
     }
 
     /**
@@ -144,16 +134,16 @@ public class AffineTransTable implements DataTable {
     /**
      * Creates a new DataTableSpec. The target column's type is set to
      * DoubleType, the domain is adjusted.
-     * 
-     * @return DataTableSpec for this table
      */
-    private DataTableSpec generateNewSpec() {
-        DataTableSpec tabSpec = m_table.getDataTableSpec();
+    private static DataTableSpec generateNewSpec(
+            final DataTableSpec tabSpec, 
+            final double[] scales,
+            final double[] translations) {
         DataColumnSpec[] specs = new DataColumnSpec[tabSpec.getNumColumns()];
-        for (int i = 0; i < m_scales.length; i++) {
+        for (int i = 0; i < scales.length; i++) {
             DataColumnSpec colSpec = tabSpec.getColumnSpec(i);
             DataColumnDomain colDomain = tabSpec.getColumnSpec(i).getDomain();
-            if (Double.isNaN(m_scales[i])) {
+            if (Double.isNaN(scales[i])) {
                 specs[i] = colSpec;
             } else {
                 // determine domain
@@ -161,14 +151,14 @@ public class AffineTransTable implements DataTable {
                 DataCell oldUp = colDomain.getUpperBound();
                 if (oldUp != null && !oldUp.isMissing()) {
                     double oldVal = ((DoubleValue)oldUp).getDoubleValue();
-                    double newVal = m_scales[i] * oldVal + m_translations[i];
+                    double newVal = scales[i] * oldVal + translations[i];
                     up = new DoubleCell(newVal);
                 }
                 DataCell low = null;
                 DataCell oldLow = colDomain.getLowerBound();
                 if (oldLow != null && !oldLow.isMissing()) {
                     double oldVal = ((DoubleValue)oldLow).getDoubleValue();
-                    double newVal = m_scales[i] * oldVal + m_translations[i];
+                    double newVal = scales[i] * oldVal + translations[i];
                     low = new DoubleCell(newVal);
                 }
                 DataColumnDomain dom = new DataColumnDomainCreator(low, up)
@@ -182,5 +172,110 @@ public class AffineTransTable implements DataTable {
             }
         }
         return new DataTableSpec(specs);
+    }
+    
+    private static final String CFG_NAME = "column_name";
+    private static final String CFG_SCALE = "column_scale";
+    private static final String CFG_TRANSLATE = "column_translate";
+    
+    /** Saves internals to the argument settings object. This object is supposed
+     * to be the only one writing to this (sub)setting object.
+     * @param settings To write to.
+     */
+    public void save(final ModelContentWO settings) {
+        for (int i = 0; i < m_includeNames.length; i++) {
+            String name = m_includeNames[i];
+            double scale = m_scales[i];
+            double transl = m_translations[i];
+            if (name == null) {
+                assert Double.isNaN(scale) && Double.isNaN(transl);
+                continue;
+            }
+            ModelContentWO sub = settings.addModelContent(name);
+            sub.addString(CFG_NAME, name);
+            sub.addDouble(CFG_SCALE, scale);
+            sub.addDouble(CFG_TRANSLATE, transl);
+        }
+    }
+    
+    /** Reads the meta information from the settings object and constructs
+     * a AffineTransTable based on this information and the given DataTable.
+     * @param table The table to which the normalization is applied.
+     * @param settings The normalization information.
+     * @return A new table wrapping <code>table</code> but normalized according
+     * to <code>settings</code>.
+     * @throws InvalidSettingsException If the settings are incomplete 
+     * or cannot be applied to spec.
+     */
+    public static AffineTransTable load(final DataTable table, 
+            final ModelContentRO settings) throws InvalidSettingsException {
+        /* Note: this is not very nice here. I copied code from the 
+         * createSpec method. A better way would be to have a object containing
+         * teh scales, translations, etc. information.
+         */
+        DataTableSpec spec = table.getDataTableSpec();
+        double[] scales = new double[spec.getNumColumns()];
+        double[] translations = new double[spec.getNumColumns()];
+        Arrays.fill(scales, Double.NaN);
+        Arrays.fill(translations, Double.NaN);
+        String[] names = new String[spec.getNumColumns()];
+        for (String key : settings.keySet()) {
+            ModelContentRO sub = settings.getModelContent(key);
+            String name = sub.getString(CFG_NAME);
+            int index = spec.findColumnIndex(name);
+            if (index < 0) {
+                throw new InvalidSettingsException("Can't apply setting to " 
+                        + "input table spec, no such column: " + name);
+            }
+            DataColumnSpec old = spec.getColumnSpec(index);
+            if (!old.getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Can't apply setting to " 
+                        + "input table spec, column '" + name 
+                        + "' is not double compatible.");
+            }
+            double scale = sub.getDouble(CFG_SCALE);
+            double trans = sub.getDouble(CFG_TRANSLATE);
+            scales[index] = scale;
+            translations[index] = trans;
+            names[index] = name;
+        }
+        return new AffineTransTable(table, names, scales, translations);
+    }
+    
+    /** Reads the meta information from the settings object and constructs
+     * the DataTableSpec, which would be the outcome when a table complying with
+     * <code>spec</code> were fet to the load method.
+     * @param spec The original input spec.
+     * @param settings The normalization information.
+     * @return The DataTableSpec of the normalized table.
+     * @throws InvalidSettingsException If the settings are incomplete 
+     * or cannot be applied to spec.
+     */
+    public static DataTableSpec createSpec(final DataTableSpec spec, 
+            final ModelContentRO settings) throws InvalidSettingsException {
+        double[] scales = new double[spec.getNumColumns()];
+        double[] translations = new double[spec.getNumColumns()];
+        Arrays.fill(scales, Double.NaN);
+        Arrays.fill(translations, Double.NaN);
+        for (String key : settings.keySet()) {
+            ModelContentRO sub = settings.getModelContent(key);
+            String name = sub.getString(CFG_NAME);
+            int index = spec.findColumnIndex(name);
+            if (index < 0) {
+                throw new InvalidSettingsException("Can't apply setting to " 
+                        + "input table spec, no such column: " + name);
+            }
+            DataColumnSpec old = spec.getColumnSpec(index);
+            if (!old.getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Can't apply setting to " 
+                        + "input table spec, column '" + name 
+                        + "' is not double compatible.");
+            }
+            double scale = sub.getDouble(CFG_SCALE);
+            double trans = sub.getDouble(CFG_TRANSLATE);
+            scales[index] = scale;
+            translations[index] = trans;
+        }
+        return generateNewSpec(spec, scales, translations);
     }
 }
