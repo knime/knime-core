@@ -109,6 +109,7 @@ import org.knime.core.node.workflow.WorkflowInExecutionException;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
@@ -143,9 +144,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** Clipboard name. */
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
-//    private static final int LINE_WIDTH_FOR_SELECTED_NODES = 2;
-//
-//    private static final int LINE_WIDTH_FOR_UNSELECTED_NODES = 1;
+    // private static final int LINE_WIDTH_FOR_SELECTED_NODES = 2;
+    //
+    // private static final int LINE_WIDTH_FOR_UNSELECTED_NODES = 1;
 
     /**
      * The static clipboard for copy/cut/paste.
@@ -190,10 +191,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private boolean m_closed;
 
-//    /**
-//     * Remembers all nodes whose connections are painted bold.
-//     */
-//    private StructuredSelection m_boldNodeParts;
+    // /**
+    // * Remembers all nodes whose connections are painted bold.
+    // */
+    // private StructuredSelection m_boldNodeParts;
 
     /**
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
@@ -443,7 +444,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void dispose() {
-        
+
         // remember that this editor has been closed
         m_closed = true;
 
@@ -511,6 +512,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction execute = new ExecuteAction(this);
         AbstractNodeAction executeAll = new ExecuteAllAction(this);
         AbstractNodeAction cancelAll = new CancelAllAction(this);
+        AbstractNodeAction cancel = new CancelAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
         AbstractNodeAction setNameAndDescription = new SetNameAndDescriptionAction(
@@ -532,6 +534,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(execute);
         m_actionRegistry.registerAction(executeAll);
         m_actionRegistry.registerAction(cancelAll);
+        m_actionRegistry.registerAction(cancel);
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
         m_actionRegistry.registerAction(setNameAndDescription);
@@ -1029,7 +1032,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         // remember the work done so far
                         m_workedSoFar = worked;
                     }
-            
+
                     if (pe.hasMessage()) {
                         m_progressMonitor.subTask(pe.getMessage());
                     } else {
@@ -1246,76 +1249,77 @@ public class WorkflowEditor extends GraphicalEditor implements
         // selected nodes "bold" (helps to differentiate the connections)
         // and paint the connections or the not any more selected nodes
         // normal
-//        StructuredSelection structuredSelection = null;
-//        if (selection instanceof StructuredSelection) {
-//
-//            structuredSelection = (StructuredSelection)selection;
-//
-//            // revert the bold connections for all old selections
-//            // if available
-//            if (m_boldNodeParts != null) {
-//                for (Object element : m_boldNodeParts.toList()) {
-//
-//                    if (element instanceof NodeContainerEditPart) {
-//
-//                        // make the connections normal
-//                        makeConnectionsNormal((NodeContainerEditPart)element);
-//                    } else if (element instanceof ConnectionContainerEditPart) {
-//
-//                        makeConnectionNormal((ConnectionContainerEditPart)element);
-//                    }
-//
-//                }
-//            }
-//
-//            // paint the connections of the new selection bold
-//            for (Object element : structuredSelection.toList()) {
-//
-//                if (element instanceof NodeContainerEditPart) {
-//
-//                    // make the connections bold
-//                    makeConnectionsBold((NodeContainerEditPart)element);
-//                } else if (element instanceof ConnectionContainerEditPart) {
-//
-//                    makeConnectionBold((ConnectionContainerEditPart)element);
-//                }
-//            }
-//        }
+        // StructuredSelection structuredSelection = null;
+        // if (selection instanceof StructuredSelection) {
+        //
+        // structuredSelection = (StructuredSelection)selection;
+        //
+        // // revert the bold connections for all old selections
+        // // if available
+        // if (m_boldNodeParts != null) {
+        // for (Object element : m_boldNodeParts.toList()) {
+        //
+        // if (element instanceof NodeContainerEditPart) {
+        //
+        // // make the connections normal
+        // makeConnectionsNormal((NodeContainerEditPart)element);
+        // } else if (element instanceof ConnectionContainerEditPart) {
+        //
+        // makeConnectionNormal((ConnectionContainerEditPart)element);
+        // }
+        //
+        // }
+        // }
+        //
+        // // paint the connections of the new selection bold
+        // for (Object element : structuredSelection.toList()) {
+        //
+        // if (element instanceof NodeContainerEditPart) {
+        //
+        // // make the connections bold
+        // makeConnectionsBold((NodeContainerEditPart)element);
+        // } else if (element instanceof ConnectionContainerEditPart) {
+        //
+        // makeConnectionBold((ConnectionContainerEditPart)element);
+        // }
+        // }
+        // }
 
         // remember the new selection as the old one
-//        m_boldNodeParts = structuredSelection;
+        // m_boldNodeParts = structuredSelection;
 
     }
 
-//    private void makeConnectionNormal(
-//            final ConnectionContainerEditPart connectionPart) {
-//        ((PolylineConnection)connectionPart.getFigure())
-//                .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
-//    }
-//
-//    private void makeConnectionBold(
-//            final ConnectionContainerEditPart connectionPart) {
-//        ((PolylineConnection)connectionPart.getFigure())
-//                .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
-//    }
+    // private void makeConnectionNormal(
+    // final ConnectionContainerEditPart connectionPart) {
+    // ((PolylineConnection)connectionPart.getFigure())
+    // .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
+    // }
+    //
+    // private void makeConnectionBold(
+    // final ConnectionContainerEditPart connectionPart) {
+    // ((PolylineConnection)connectionPart.getFigure())
+    // .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
+    // }
 
-//    private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
-//
-//        for (ConnectionContainerEditPart connectionPart : nodePart
-//                .getAllConnections()) {
-//
-//            makeConnectionBold(connectionPart);
-//        }
-//    }
-//
-//    private void makeConnectionsNormal(final NodeContainerEditPart nodePart) {
-//
-//        for (ConnectionContainerEditPart connectionPart : nodePart
-//                .getAllConnections()) {
-//
-//            makeConnectionNormal(connectionPart);
-//        }
-//    }
+    // private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
+    //
+    // for (ConnectionContainerEditPart connectionPart : nodePart
+    // .getAllConnections()) {
+    //
+    // makeConnectionBold(connectionPart);
+    // }
+    // }
+    //
+    // private void makeConnectionsNormal(final NodeContainerEditPart nodePart)
+    // {
+    //
+    // for (ConnectionContainerEditPart connectionPart : nodePart
+    // .getAllConnections()) {
+    //
+    // makeConnectionNormal(connectionPart);
+    // }
+    // }
 
     /**
      * Called when the command stack has changed, that is, a GEF command was
@@ -1369,9 +1373,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 // job.schedule();
 
                 Object o = m_dummyNodeJobs.put(event.getID(), job);
-                  assert (o == null);
-                
-                
+                assert (o == null);
+
             }
         } else if (event instanceof WorkflowEvent.NodeStarted) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
@@ -1379,8 +1382,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.debug("'Node Started' event received for "
                         + event.getOldValue());
                 j.setStateMessage("Executing");
-                j.schedule();
+                //j.schedule();
             }
+
+            // this code is for the new progress monitor
+            NodeContainer nc = (NodeContainer)event.getOldValue();
+            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
+            pm.addProgressListener(nc.getProgressListener());
+
         } else if (event instanceof WorkflowEvent.NodeFinished) {
             ProgressMonitorJob j = m_dummyNodeJobs.remove(event.getID());
             if (j != null) {

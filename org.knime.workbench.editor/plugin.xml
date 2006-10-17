@@ -115,7 +115,18 @@
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Cancel all running nodes"/>               
+               tooltip="Cancel all running nodes"/>     
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.CancelEditorAction"
+               definitionId="knime.commands.cancel"
+               disabledIcon="icons/cancel_disabled.PNG"
+               icon="icons/cancel.PNG"
+               id="org.knime.workbench.editor.actions.cancel"
+               label="Cancel"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Cancel all selected, running nodes"/>                   
          <action
                class="org.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
                definitionId="knime.commands.executeAndOpenView"
@@ -205,7 +216,18 @@
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Cancel all running nodes"/>               
+               tooltip="Cancel all running nodes"/>
+        <action
+               class="org.knime.workbench.editor2.actions.delegates.CancelEditorAction"
+               definitionId="knime.commands.cancel"
+               disabledIcon="icons/cancel_disabled.PNG"
+               icon="icons/cancel.PNG"
+               id="org.knime.workbench.editor.actions.cancel"
+               label="Cancel"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Cancel all selected, running nodes"/>               
          <action
                class="org.knime.workbench.editor2.actions.delegates.ExecuteAndOpenViewEditorAction"
                definitionId="knime.commands.executeAndOpenView"

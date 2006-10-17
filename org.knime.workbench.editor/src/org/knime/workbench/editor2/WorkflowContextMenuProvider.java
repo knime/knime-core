@@ -41,6 +41,7 @@ import org.knime.core.node.meta.MetaNodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.EditMetaWorkflowAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
@@ -135,6 +136,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         ((AbstractNodeAction)action).update();
         // execute and open first view
         action = m_actionRegistry.getAction(ExecuteAndOpenViewAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // cancel execution
+        action = m_actionRegistry.getAction(CancelAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
         // reset

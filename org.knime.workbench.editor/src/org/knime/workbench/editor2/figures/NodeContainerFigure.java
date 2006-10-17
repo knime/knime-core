@@ -48,6 +48,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.NodeProgressListener;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.workbench.editor2.ImageRepository;
 
@@ -385,13 +386,18 @@ public class NodeContainerFigure extends RectangleFigure {
 
             add(m_progressFigure, 3);
         }
-        
+
         if (executing) {
             m_progressFigure.setMode(true);
+            m_progressFigure.setStateMessage("Executing");
             m_progressFigure.activateUnknownProgress();
         } else {
             m_progressFigure.setMode(false);
+            m_progressFigure.setStateMessage("Queued");
         }
+        
+        // clean the progress bar tooltip
+        m_progressFigure.setToolTip(new Label(""));
     }
 
     private void setStatusAmple() {
@@ -1112,6 +1118,18 @@ public class NodeContainerFigure extends RectangleFigure {
     public void unmark() {
 
         m_contentFigure.m_backgroundIcon.remove(m_contentFigure.m_deleteIcon);
+    }
+
+    /**
+     * Returns the progresslistener of this node container figure. NOTE: This
+     * listener can be registered at progressmonitors accepting this kind of
+     * listeners. The listener will update and render the progress of this node
+     * directly at the node container figure.
+     * 
+     * @return this nodes progress listener
+     */
+    public NodeProgressListener getProgressListener() {
+        return m_progressFigure;
     }
 
 }

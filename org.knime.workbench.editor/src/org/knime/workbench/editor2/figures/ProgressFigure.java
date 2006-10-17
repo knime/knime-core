@@ -26,7 +26,6 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
-import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.RectangleFigure;
@@ -36,13 +35,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.NodeProgressEvent;
+import org.knime.core.node.NodeProgressListener;
 
 /**
  * This figure creates the progress bar within a node container figure.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class ProgressFigure extends RectangleFigure {
+public class ProgressFigure extends RectangleFigure implements
+        NodeProgressListener {
 
     /** absolute width of this figure. * */
     public static final int WIDTH = 32;
@@ -68,11 +70,6 @@ public class ProgressFigure extends RectangleFigure {
         PROGRESS_FONT = new Font(current, name, height, SWT.NORMAL);
     }
 
-    /**
-     * The progress message.
-     */
-    private String m_progressMessage;
-
     private boolean m_unknownProgress = false;
 
     private int m_unknownProgressBarRenderingPosition;
@@ -81,10 +78,13 @@ public class ProgressFigure extends RectangleFigure {
 
     private boolean m_executing;
 
-    /**
-     * The progress in percent.
-     */
-    private Label m_progressLabel;
+    private int m_currentWorked;
+
+    private String m_currentProgressMessage = "";
+
+    private String m_stateMessage;
+
+    private Display m_currentDisplay;
 
     /**
      * Creates a new node figure.
@@ -110,18 +110,6 @@ public class ProgressFigure extends RectangleFigure {
         setLayoutManager(layout);
         // FlowLayout layout = new FlowLayout(true);
         // layout.setMajorAlignment(FlowLayout.ALIGN_LEFTTOP);
-
-        // progress message (Label)
-        m_progressMessage = "Progress message.";
-        setToolTip(new Label(m_progressMessage));
-
-        // progress label within the progress bar
-        m_progressLabel = new Label("70 %");
-        new ProgressPart();
-        m_progressLabel
-                .setBackgroundColor(m_progressLabel.getBackgroundColor());
-        // add(new ProgressPart());
-        // add(m_progressLabel);
 
     }
 
@@ -185,9 +173,16 @@ public class ProgressFigure extends RectangleFigure {
         if (m_executing) {
             if (!m_unknownProgress) {
 
-                graphics.drawRectangle(x + 1, y + 1, 17, h - 2);
+                // calculate the progress bar width from the percentage
+                // current worked value
+                int barWidth = (int)Math.round((double)(WIDTH - 10)
+                        / (double)100 * (double)m_currentWorked);
+
+                graphics.drawRectangle(x + 1, y + 1, barWidth, h - 2);
                 graphics.setFont(PROGRESS_FONT);
-                String progressString = "75 %";
+
+                // create the percentage string
+                String progressString = m_currentWorked + "%";
 
                 graphics.setXORMode(true);
                 graphics.setForegroundColor(ColorConstants.white);
@@ -200,7 +195,7 @@ public class ProgressFigure extends RectangleFigure {
                 int xPos = x + 1 + m_unknownProgressBarRenderingPosition;
 
                 // calculate the rendering direction
-                if (m_unknownProgressBarRenderingPosition + 8
+                if (m_unknownProgressBarRenderingPosition + 7
                         + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH) {
                     m_unknownProgressBarDirection = -1;
                 } else if (m_unknownProgressBarRenderingPosition <= 0) {
@@ -229,16 +224,20 @@ public class ProgressFigure extends RectangleFigure {
     public void activateUnknownProgress() {
         m_unknownProgress = true;
 
-        final Display display = Display.getCurrent();
+        // reset the worked value
+        m_currentWorked = 0;
+
+        m_currentDisplay = Display.getCurrent();
 
         final Runnable repaintRun = new Runnable() {
 
             public void run() {
+
                 repaint();
             };
         };
 
-        new Thread() {
+        new Thread("Unknown Progress Timer") {
 
             public void run() {
 
@@ -252,42 +251,11 @@ public class ProgressFigure extends RectangleFigure {
                         }
                     }
 
-                    display.syncExec(repaintRun);
+                    m_currentDisplay.asyncExec(repaintRun);
                 }
             }
 
         }.start();
-    }
-
-    /**
-     * Represents a bit of progress in the progress bar.
-     * 
-     * @author Chrsitoph Sieb, University of Konstanz
-     */
-    private class ProgressPart extends Figure {
-        private static final int PARTWIDTH = 10;
-
-        /**
-         * Creates a progress part with a default background color.
-         */
-        ProgressPart() {
-            setBackgroundColor(ColorConstants.blue);
-        }
-
-        /**
-         * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
-         */
-        @Override
-        public Dimension getPreferredSize(final int wHint, final int hHint) {
-
-            // the width is fixed
-            int prefWidth = PARTWIDTH;
-
-            // the height stays of that of the progress bar
-            int prefHeight = HEIGHT;
-
-            return new Dimension(prefWidth, prefHeight);
-        }
     }
 
     /**
@@ -298,5 +266,76 @@ public class ProgressFigure extends RectangleFigure {
      */
     public void setMode(final boolean executing) {
         m_executing = executing;
+    }
+
+    /**
+     * Updates UI after progress has changed.
+     * 
+     * @see org.knime.core.node.NodeProgressListener
+     *      #progressChanged(NodeProgressEvent)
+     */
+    public synchronized void progressChanged(final NodeProgressEvent pe) {
+
+        String message = pe.getMessage();
+
+        int newWorked = m_currentWorked;
+        if (pe.hasProgress()) {
+            double progress = pe.getProgress().doubleValue();
+            newWorked = (int)Math.round(Math.max(0, Math.min(progress * 100,
+                    100)));
+        }
+
+        // if something changed, change the values and repaint
+        boolean changed = false;
+        if (newWorked > m_currentWorked) {
+
+            // switch to known progress
+            // this causes another rendering type and stops the thread
+            // for unknown redering triggering started in
+            // activateUnknownProgress
+            m_unknownProgress = false;
+
+            m_currentWorked = newWorked;
+            changed = true;
+        }
+
+        if (!m_currentProgressMessage.equals(message)) {
+
+            m_currentProgressMessage = message == null ? "" : m_stateMessage
+                    + " - " + message;
+            // set the message to the tooltip
+            setToolTip(new Label(m_currentProgressMessage));
+
+            changed = true;
+        }
+
+        if (changed) {
+            assert m_currentDisplay != null;
+            try {
+                m_currentDisplay.syncExec(new Runnable() {
+                    public void run() {
+
+                        try {
+                            repaint();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Sets the state message. This message is something like: Executing or
+     * Waiting or Queued, etc. The message is always appended before the
+     * progress message.
+     * 
+     * @param stateMessage the state message to show
+     */
+    public void setStateMessage(final String stateMessage) {
+        m_stateMessage = stateMessage;
     }
 }

@@ -20,37 +20,35 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   25.05.2005 (Florian Georg): created
+ *   18.10.2006 (sieb): created
  */
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
-
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to cancel all nodes that are running.
+ * Action to cancel a node.
  * 
- * @author Christoph sieb, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
-public class CancelAllAction extends AbstractNodeAction {
+public class CancelAction extends AbstractNodeAction {
+
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(CancelAllAction.class);
+            .getLogger(CancelAction.class);
 
     /** unique ID for this action. * */
-    public static final String ID = "knime.action.cancelall";
+    public static final String ID = "knime.action.cancel";
 
     /**
      * 
      * @param editor The workflow editor
      */
-    public CancelAllAction(final WorkflowEditor editor) {
+    public CancelAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -67,7 +65,7 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Cancel all";
+        return "Cancel";
     }
 
     /**
@@ -75,7 +73,7 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/executeAll.PNG");
+        return ImageRepository.getImageDescriptor("icons/cancel.png");
     }
 
     /**
@@ -83,23 +81,34 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Cancel all running nodes.";
+        return "Cancel the execution of the selected node(s)";
     }
 
     /**
-     * @return <code>true</code>, if at least one node is running
+     * @return true if at least one selected node is executing or queued
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
     protected boolean calculateEnabled() {
-        if (getManager() == null) {
-            return false;
+
+        NodeContainerEditPart[] parts = getSelectedNodeParts();
+
+        // enable if we have at least one executing or queued node in our
+        // selection
+        boolean atLeastOneNodeIsCancelable = false;
+        for (int i = 0; i < parts.length; i++) {
+            atLeastOneNodeIsCancelable |= getManager().isQueued(
+                    parts[i].getNodeContainer());
+            atLeastOneNodeIsCancelable |= parts[i].getNodeContainer()
+                    .isExecuting();
         }
-        return getManager().executionInProgress();
+        return atLeastOneNodeIsCancelable;
+
     }
 
     /**
-     * This cancels all running jobs.
+     * This cancels all the selected nodes. Note that this is all controlled by
+     * the WorkflowManager object of the currently open editor.
      * 
      * @see org.knime.workbench.editor2.actions.AbstractNodeAction
      *      #runOnNodes(org.knime.workbench.editor2.
@@ -107,16 +116,13 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
-        mb.setText("Confirm cancel all...");
-        mb.setMessage("Do you really want to cancel all running node(s) ?");
-        if (mb.open() != SWT.YES) {
-            return;
-        }
+        LOGGER.debug("Creating cancel job for " + nodeParts.length
+                + " node(s)...");
+        WorkflowManager manager = getManager();
 
-        LOGGER.debug("(Cancel all)  cancel all running jobs.");
-        getManager().cancelExecution();
+        for (NodeContainerEditPart p : nodeParts) {
+            manager.cancelExecution(p.getNodeContainer());
+        }
 
         try {
             // Give focus to the editor again. Otherwise the actions (selection)

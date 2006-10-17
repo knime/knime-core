@@ -196,6 +196,13 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // init the user specified node name
         nodeFigure.setCustomName(getNodeContainer().getCustomName());
 
+        // get the node progress listener of the created figure and
+        // pass it to the node container (model) so that the listener
+        // can be used later to register at progress monitors
+
+        getNodeContainer()
+                .setProgressListener(nodeFigure.getProgressListener());
+
         return nodeFigure;
     }
 
@@ -354,8 +361,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     }
                 } else if (state instanceof NodeStatus.Queued) {
 
-                    fig.setState(NodeContainerFigure.STATE_QUEUED,
-                            state.getMessage());
+                    fig.setState(NodeContainerFigure.STATE_QUEUED, state
+                            .getMessage());
 
                 } else if (state instanceof NodeStatus.StartExecute) {
                     fig.setState(NodeContainerFigure.STATE_EXECUTING, state
