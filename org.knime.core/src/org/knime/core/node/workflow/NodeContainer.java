@@ -734,6 +734,14 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
+     * Returns if this node is currently being executed.
+     * @return <code>true</code> if is executing, <code>false</code> otherwise
+     */
+    public boolean isExecuting() {
+        return m_executionRunning;
+    }
+    
+    /**
      * Check if node can be executed - this is also true if all nodes leading up
      * to this node can be executed. In a GUI this would mean that this node
      * will show up "yellow".

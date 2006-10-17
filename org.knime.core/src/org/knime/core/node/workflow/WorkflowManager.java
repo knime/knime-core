@@ -485,6 +485,17 @@ public class WorkflowManager implements WorkflowListener {
             return true;
         }
 
+        
+        /**
+         * Returns if the given node is currently queued and waiting for
+         * execution.
+         * @param cont any node container
+         * @return <code>true</code> if the node is queued, <code>false</code>
+         * otherwise
+         */
+        public boolean isQueued(final NodeContainer cont) {
+            return m_waitingNodes.containsKey(cont);
+        }
     }
 
     /** Key for connections. */
@@ -1358,10 +1369,6 @@ public class WorkflowManager implements WorkflowListener {
         for (WorkflowListener l : m_eventListeners) {
             l.workflowChanged(event);
         }
-
-        // if (m_parent != null) {
-        // m_parent.fireWorkflowEvent(event);
-        // }
     }
 
     /**
@@ -1950,5 +1957,16 @@ public class WorkflowManager implements WorkflowListener {
         for (int i = sortedNodes.size() - 1; i >= 0; i--) {
             sortedNodes.get(i).cleanup();
         }
+    }
+    
+    /**
+     * Returns if the given node is currently queued and waiting for
+     * execution.
+     * @param cont any node container
+     * @return <code>true</code> if the node is queued, <code>false</code>
+     * otherwise
+     */
+    public boolean isQueued(final NodeContainer cont) {
+        return m_executor.isQueued(cont);
     }
 }
