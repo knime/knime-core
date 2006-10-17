@@ -338,7 +338,7 @@ final class DataOutPortView extends NodeOutPortView {
             }
             DataCell emptyStringCell = new StringCell("");
 
-            for (int r = extraRows - 1; r < numRows; r++) {
+            for (int r = extraRows; r < numRows; r++) {
                 cols = new DataCell[numCols];
                 for (int c = 0; c < numCols; c++) {
                     if (!valueIter[c].hasNext()) {
@@ -350,7 +350,7 @@ final class DataOutPortView extends NodeOutPortView {
                     }
                 }
                 rows[r] = new DefaultRow(
-                        new StringCell("Val_" + (r - 5)), cols);
+                        new StringCell("Val_" + (r - extraRows)), cols);
             }
 
         } else {
