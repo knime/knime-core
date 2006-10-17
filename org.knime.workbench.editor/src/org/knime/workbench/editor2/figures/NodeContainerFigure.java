@@ -381,21 +381,32 @@ public class NodeContainerFigure extends RectangleFigure {
             remove(m_statusFigure);
         }
 
+        boolean alreadySet = false;
         // and set the progress bar
         if (!isChild(m_progressFigure)) {
 
+            // reset the progress first
+            m_progressFigure.reset();
             add(m_progressFigure, 3);
+        } else {
+            // if already set, remember this
+            alreadySet = true;
         }
 
         if (executing) {
             m_progressFigure.setMode(true);
             m_progressFigure.setStateMessage("Executing");
-            m_progressFigure.activateUnknownProgress();
+
+            // if the progress bar was not set already
+            // init it with an unknown progress first
+            if (!alreadySet) {
+                m_progressFigure.activateUnknownProgress();
+            }
         } else {
             m_progressFigure.setMode(false);
             m_progressFigure.setStateMessage("Queued");
         }
-        
+
         // clean the progress bar tooltip
         m_progressFigure.setToolTip(new Label(""));
     }
@@ -1131,5 +1142,4 @@ public class NodeContainerFigure extends RectangleFigure {
     public NodeProgressListener getProgressListener() {
         return m_progressFigure;
     }
-
 }

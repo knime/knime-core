@@ -25,8 +25,6 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
@@ -125,13 +123,13 @@ public class ExecuteAction extends AbstractNodeAction {
         }
 
         try {
-            Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
-                    .showView("org.eclipse.ui.views.ProgressView");
+//            Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
+//                    .showView("org.eclipse.ui.views.ProgressView");
 
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-        } catch (PartInitException e) {
+        } catch (Exception e) {
             // ignore
         }
     }

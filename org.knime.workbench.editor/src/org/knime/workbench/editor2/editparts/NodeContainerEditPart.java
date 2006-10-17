@@ -344,7 +344,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     // check status of node
                     updateNodeStatus();
                 } else if (state instanceof NodeStatus.Configured) {
-                    if (getNodeContainer().isExecutableUpToHere()) {
+
+                    // it is possible that configured events are received
+                    // even though the node is queued or executing
+                    // (Meta nodes or consecutive nodes when the previous one
+                    // finished executing)
+                    // thus, these cases are checked before a configured (ready)
+                    // or not configured is set
+                    if (nodeContainer.isExecuting()) {
+                        fig.setState(NodeContainerFigure.STATE_EXECUTING, state
+                                .getMessage());
+                    } else if (getWorkflow().isQueued(nodeContainer)) {
+                        fig.setState(NodeContainerFigure.STATE_QUEUED, state
+                                .getMessage());
+                    } else if (getNodeContainer().isExecutableUpToHere()) {
                         fig.setState(NodeContainerFigure.STATE_READY, state
                                 .getMessage());
                     } else {

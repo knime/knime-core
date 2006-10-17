@@ -91,6 +91,8 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public ProgressFigure() {
 
+        m_currentDisplay = Display.getCurrent();
+
         setOpaque(true);
         setFill(true);
         setOutline(true);
@@ -227,7 +229,7 @@ public class ProgressFigure extends RectangleFigure implements
         // reset the worked value
         m_currentWorked = 0;
 
-        m_currentDisplay = Display.getCurrent();
+        //m_currentDisplay = Display.getCurrent();
 
         final Runnable repaintRun = new Runnable() {
 
@@ -251,7 +253,7 @@ public class ProgressFigure extends RectangleFigure implements
                         }
                     }
 
-                    m_currentDisplay.asyncExec(repaintRun);
+                    m_currentDisplay.syncExec(repaintRun);
                 }
             }
 
@@ -337,5 +339,13 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public void setStateMessage(final String stateMessage) {
         m_stateMessage = stateMessage;
+    }
+
+    /**
+     * Resets the work amount and message text.
+     */
+    public void reset() {
+        m_currentProgressMessage = "";
+        m_currentWorked = 0;
     }
 }
