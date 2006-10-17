@@ -42,18 +42,22 @@ public class CorePlugin extends Plugin {
         super.start(context);
         try {
             URL workspaceURL = Platform.getInstanceLocation().getURL();
-            File workspaceDir = new File(workspaceURL.toURI());
-            File metaDataFile = new File(workspaceDir, ".metadata");
-            if (!metaDataFile.exists()) {
-                metaDataFile.mkdir();
+            if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
+                // we can create our home only in local workspaces
+                File workspaceDir = new File(workspaceURL.getPath());
+                File metaDataFile = new File(workspaceDir, ".metadata");
+                if (!metaDataFile.exists()) {
+                    metaDataFile.mkdir();
+                }
+                File knimeHomeDir = new File(metaDataFile, "knime");
+                if (!knimeHomeDir.exists()) {
+                    knimeHomeDir.mkdir();
+                }
+                KNIMEPath.setKNIMEHomeDir(knimeHomeDir.getAbsoluteFile());
             }
-            File knimeHomeDir = new File(metaDataFile, "knime");
-            if (!knimeHomeDir.exists()) {
-                knimeHomeDir.mkdir();
-            }
-            KNIMEPath.setKNIMEHomeDir(knimeHomeDir.getAbsoluteFile());
+
         } catch (Exception e) {
-            // the logger will use the "user.dir" as knime home, unfortunately. 
+            // the logger will use the "user.dir" as knime home, unfortunately.
             NodeLogger.getLogger(getClass()).warn(
                     "Can't init knime home dir to workspace path.", e);
         }
