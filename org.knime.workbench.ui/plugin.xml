@@ -41,11 +41,11 @@
                relationship="left"
                relative="org.eclipse.ui.console.ConsoleView">
          </view>
-         <view
+         <!--view
                closeable="false"
                relationship="stack"
                relative="org.eclipse.ui.console.ConsoleView"
-               id="org.eclipse.ui.views.ProgressView"/>
+               id="org.eclipse.ui.views.ProgressView"/-->
          <view
                closeable="true"
                id="org.knime.workbench.helpview"
@@ -57,7 +57,7 @@
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
          <viewShortcut id="org.eclipse.ui.console.ConsoleView"/>
-         <viewShortcut id="org.eclipse.ui.views.ProgressView"/>
+         <!--viewShortcut id="org.eclipse.ui.views.ProgressView"/-->
          <viewShortcut
                id="org.eclipse.ui.views.ContentOutline">
          </viewShortcut>
