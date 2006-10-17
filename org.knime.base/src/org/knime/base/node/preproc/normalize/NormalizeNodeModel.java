@@ -197,15 +197,6 @@ public class NormalizeNodeModel extends NodeModel {
     }
     
     /**
-     * @see NodeModel#loadModelContent(int, ModelContentRO)
-     */
-    @Override
-    protected void loadModelContent(final int index, 
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        m_content = predParams.getModelContent(CFG_MODEL_NAME);
-    }
-
-    /**
      * @see org.knime.core.node.NodeModel#loadInternals (java.io.File,
      *      org.knime.core.node.ExecutionMonitor)
      */
