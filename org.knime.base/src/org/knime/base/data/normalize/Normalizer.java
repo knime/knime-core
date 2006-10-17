@@ -30,14 +30,10 @@ import org.knime.base.data.statistics.StatisticsTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -165,7 +161,8 @@ public final class Normalizer {
      * @throws CanceledExecutionException if user canceled
      * @return normalized DataTable
      */
-    public DataTable doMinMaxNorm(final double newmax, final double newmin,
+    public AffineTransTable doMinMaxNorm(
+            final double newmax, final double newmin,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         ExecutionMonitor statisticsExec = exec.createSubProgress(.5);
         StatisticsTable st = new StatisticsTable(m_table, statisticsExec);
@@ -208,7 +205,7 @@ public final class Normalizer {
      * @throws CanceledExecutionException if user canceled
      * @return the normalized DataTable
      */
-    public DataTable doZScoreNorm(final ExecutionMonitor exec)
+    public AffineTransTable doZScoreNorm(final ExecutionMonitor exec)
             throws CanceledExecutionException {
         ExecutionMonitor statisticsExec = exec.createSubProgress(.5);
         StatisticsTable st = new StatisticsTable(m_table, statisticsExec);
@@ -243,61 +240,25 @@ public final class Normalizer {
     public DataTable doDecimalScaling(final ExecutionMonitor exec)
             throws CanceledExecutionException {
         StatisticsTable st = new StatisticsTable(m_table, exec);
+        String[] includes = getNames();
         double[] max = st.getdoubleMax();
         double[] min = st.getdoubleMin();
-        DataTableSpec spec = m_table.getDataTableSpec();
-        String[] includes = getNames();
-        DataContainer normalizedRows = new DataContainer(generateNewSpec(
-                m_table.getDataTableSpec(), includes));
-        // process all Rows
-        RowIterator rowIt = m_table.iterator();
-        // TODO: check if we can retrieve the nrRows from somewhere else!
-        // int nrRows = m_table.getRowCount();
-        int rowcounter = 0;
-        while (rowIt.hasNext()) {
-            exec.checkCanceled();
-            rowcounter++;
-            // exec.setProgress((double) rowcounter
-            // / (double) nrRows, "Normalizing");
-            DataRow oldrow = rowIt.next();
-            DataCell[] newrow = new DataCell[oldrow.getNumCells()];
-            int index = 0;
-            for (int j = 0; j < newrow.length; j++) {
-                DataColumnSpec cSpec = spec.getColumnSpec(j);
-                
-                // process only selected columns
-                if ((index < m_colindices.length) 
-                        && (j == m_colindices[index])) {
-                    // process only double (or derivated) columns
-                    if (cSpec.getType().isCompatible(DoubleValue.class)) {
-                        if (!(oldrow.getCell(j).isMissing())) {
-                            double maxvalue = Math.abs(max[j]) 
-                            > Math.abs(min[j]) ? Math.abs(max[j]) 
-                                    : Math.abs(min[j]); 
-                            int exp = 0;
-                            while (Math.abs(maxvalue) > 1) {
-                                maxvalue = maxvalue / 10;
-                                exp++;
-                            }
-                            DoubleValue dc = (DoubleValue)oldrow.getCell(j);
-                            double v = dc.getDoubleValue();
-                            double newv = v / Math.pow(10, exp);
-                            newrow[j] = new DoubleCell(newv);
-                        } else {
-                            newrow[j] = oldrow.getCell(j);
-                        }
-                    }
-                    index++;
-                } else {
-                    newrow[j] = oldrow.getCell(j);
-                }
-
+        double[] scales = new double[m_colindices.length];
+        double[] transforms = new double[m_colindices.length];
+        for (int i = 0; i < m_colindices.length; i++) {
+            int trueIndex = m_colindices[i];
+            double absMax = Math.abs(max[trueIndex]);
+            double absMin = Math.abs(min[trueIndex]);
+            double maxvalue = absMax > absMin ? absMax : absMin; 
+            int exp = 0;
+            while (Math.abs(maxvalue) > 1) {
+                maxvalue = maxvalue / 10;
+                exp++;
             }
-            DataRow temp = new DefaultRow(oldrow.getKey(), newrow);
-            normalizedRows.addRowToTable(temp);
+            scales[i] = 1.0 / Math.pow(10, exp);
+            transforms[i] = 0.0;
         }
-        normalizedRows.close();
-        return normalizedRows.getTable();
+        return new AffineTransTable(m_table, includes, scales, transforms);
     }
 
     /* Get the names for all included columns. */
