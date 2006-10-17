@@ -48,6 +48,7 @@ import org.knime.core.node.NodeInPort;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeOutPort;
+import org.knime.core.node.NodeProgressListener;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -193,6 +194,12 @@ public class NodeContainer implements NodeStateListener {
     private boolean m_deletable = true;
 
     private final WorkflowManager m_wfm;
+
+    /**
+     * This is the progress listener of the monitor directly associated with
+     * this node.
+     */
+    private NodeProgressListener m_progressListener;
 
     /**
      * Create new container using a node factory and a predefined ID.
@@ -1180,5 +1187,26 @@ public class NodeContainer implements NodeStateListener {
      */
     public void queuedForExecution() {
         notifyStateListeners(new NodeStatus.Queued());
+    }
+
+    /**
+     * Returns the progress listener for the node container. NOTE: this listener
+     * is not directly used in the container. The "container" just holds this
+     * listener until it is needed to listen.
+     * 
+     * @return the progress listener
+     */
+    public NodeProgressListener getProgressListener() {
+        return m_progressListener;
+    }
+
+    /**
+     * Sets the progress listener for the node container. NOTE: this listener is
+     * not directly used in the container. The "container" just holds this
+     * listener until it is needed to listen.
+     * 
+     */
+    public void setProgressListener(final NodeProgressListener progressListener) {
+        m_progressListener = progressListener;
     }
 }

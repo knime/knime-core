@@ -80,11 +80,17 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = 
                         PROGMONS.iterator(); it.hasNext();) {
                     DefaultNodeProgressMonitor p = it.next().get();
+
                     if (p == null) {
                         it.remove(); // not active anymore
                     } else if (p.m_changed) {
-                        p.fireProgressChanged(); // something has changed
+                        try {
+                            p.fireProgressChanged(); // something has changed
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
+                    
                 }
             }
         }  
