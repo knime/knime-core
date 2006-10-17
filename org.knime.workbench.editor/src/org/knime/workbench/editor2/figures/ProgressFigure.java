@@ -52,7 +52,7 @@ public class ProgressFigure extends RectangleFigure implements
     /** absolute height of this figure. * */
     public static final int HEIGHT = 12;
 
-    private static final int UNKNOW_PROGRESS_BAR_WIDTH = 6;
+    private static final int UNKNOW_PROGRESS_BAR_WIDTH = 10;
 
     private static final Font PROGRESS_FONT;
 
@@ -112,7 +112,6 @@ public class ProgressFigure extends RectangleFigure implements
         setLayoutManager(layout);
         // FlowLayout layout = new FlowLayout(true);
         // layout.setMajorAlignment(FlowLayout.ALIGN_LEFTTOP);
-
     }
 
     /**
@@ -162,25 +161,23 @@ public class ProgressFigure extends RectangleFigure implements
 
         // paint the specified bar length for the progress
         graphics.setForegroundColor(ColorConstants.darkBlue);
-        int localLineWidth = HEIGHT / 2;
-        graphics.setLineStyle(Graphics.LINE_SOLID);
-        graphics.setLineWidth(localLineWidth);
+        graphics.setBackgroundColor(ColorConstants.darkBlue);
 
         Rectangle r = getBounds();
-        int x = r.x + localLineWidth / 2;
-        int y = r.y + localLineWidth / 2;
-        int w = r.width - Math.max(1, localLineWidth);
-        int h = r.height - Math.max(1, localLineWidth);
+        int x = r.x;
+        int y = r.y;
+        int w = r.width;
+        int h = r.height;
 
         if (m_executing) {
             if (!m_unknownProgress) {
 
                 // calculate the progress bar width from the percentage
                 // current worked value
-                int barWidth = (int)Math.round((double)(WIDTH - 10)
+                int barWidth = (int)Math.round((double)WIDTH
                         / (double)100 * (double)m_currentWorked);
 
-                graphics.drawRectangle(x + 1, y + 1, barWidth, h - 2);
+                graphics.fillRectangle(x, y, barWidth, h);
                 graphics.setFont(PROGRESS_FONT);
 
                 // create the percentage string
@@ -189,23 +186,23 @@ public class ProgressFigure extends RectangleFigure implements
                 graphics.setXORMode(true);
                 graphics.setForegroundColor(ColorConstants.white);
                 graphics.drawString(progressString, x + w / 2
-                        - (int)(progressString.length() * 3), y - 4);
+                        - (int)(progressString.length() * 4), y - 1);
             } else {
 
                 graphics.setForegroundColor(ColorConstants.darkBlue);
 
-                int xPos = x + 1 + m_unknownProgressBarRenderingPosition;
+                int xPos = x + m_unknownProgressBarRenderingPosition;
 
                 // calculate the rendering direction
-                if (m_unknownProgressBarRenderingPosition + 7
+                if (m_unknownProgressBarRenderingPosition
                         + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH) {
                     m_unknownProgressBarDirection = -1;
                 } else if (m_unknownProgressBarRenderingPosition <= 0) {
                     m_unknownProgressBarDirection = 1;
                 }
 
-                graphics.drawRectangle(xPos, y + 1, UNKNOW_PROGRESS_BAR_WIDTH,
-                        h - 2);
+                
+                graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH, h);
 
                 m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
 
@@ -229,7 +226,7 @@ public class ProgressFigure extends RectangleFigure implements
         // reset the worked value
         m_currentWorked = 0;
 
-        //m_currentDisplay = Display.getCurrent();
+        // m_currentDisplay = Display.getCurrent();
 
         final Runnable repaintRun = new Runnable() {
 
@@ -347,5 +344,6 @@ public class ProgressFigure extends RectangleFigure implements
     public void reset() {
         m_currentProgressMessage = "";
         m_currentWorked = 0;
+        m_unknownProgress = true;
     }
 }
