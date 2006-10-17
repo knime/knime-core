@@ -174,8 +174,8 @@ public class ProgressFigure extends RectangleFigure implements
 
                 // calculate the progress bar width from the percentage
                 // current worked value
-                int barWidth = (int)Math.round((double)WIDTH
-                        / (double)100 * (double)m_currentWorked);
+                int barWidth = (int)Math.round((double)WIDTH / (double)100
+                        * (double)m_currentWorked);
 
                 graphics.fillRectangle(x, y, barWidth, h);
                 graphics.setFont(PROGRESS_FONT);
@@ -201,7 +201,6 @@ public class ProgressFigure extends RectangleFigure implements
                     m_unknownProgressBarDirection = 1;
                 }
 
-                
                 graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH, h);
 
                 m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
@@ -233,6 +232,7 @@ public class ProgressFigure extends RectangleFigure implements
             public void run() {
 
                 repaint();
+                
             };
         };
 
@@ -249,7 +249,7 @@ public class ProgressFigure extends RectangleFigure implements
                             e.printStackTrace();
                         }
                     }
-
+                    
                     m_currentDisplay.syncExec(repaintRun);
                 }
             }
@@ -263,8 +263,18 @@ public class ProgressFigure extends RectangleFigure implements
      * @param executing if true the mode is executing otherwise the progress
      *            should be displayed as queued.
      */
-    public void setMode(final boolean executing) {
+    public void setExecuting(final boolean executing) {
         m_executing = executing;
+    }
+
+    /**
+     * Get the mode of this progress bar. The modes are executing or queued
+     * 
+     * @return executing if true the mode is executing otherwise the progress
+     *         should be displayed as queued.
+     */
+    public boolean isExecuting() {
+        return m_executing;
     }
 
     /**
@@ -305,7 +315,6 @@ public class ProgressFigure extends RectangleFigure implements
             // set the message to the tooltip
             setToolTip(new Label(m_currentProgressMessage));
 
-            changed = true;
         }
 
         if (changed) {

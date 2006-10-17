@@ -394,16 +394,19 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         if (executing) {
-            m_progressFigure.setMode(true);
+            
+            // temporarily remember the execution state of the progress bar
+            boolean barExecuting = m_progressFigure.isExecuting();
+            m_progressFigure.setExecuting(true);
             m_progressFigure.setStateMessage("Executing");
 
             // if the progress bar was not set already
             // init it with an unknown progress first
-            if (!alreadySet) {
+            if (!alreadySet || !barExecuting) {
                 m_progressFigure.activateUnknownProgress();
             }
         } else {
-            m_progressFigure.setMode(false);
+            m_progressFigure.setExecuting(false);
             m_progressFigure.setStateMessage("Queued");
         }
 
@@ -417,6 +420,7 @@ public class NodeContainerFigure extends RectangleFigure {
         if (isChild(m_progressFigure)) {
             remove(m_progressFigure);
             m_progressFigure.stopUnknownProgress();
+            m_progressFigure.setExecuting(false);
         }
 
         // and set the progress bar
