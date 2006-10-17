@@ -53,7 +53,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
@@ -163,17 +162,19 @@ public class XValidateModel extends MetaNodeModel {
                     "Validating in iteration " + (i + 1));
 
             m_partitionModel.setPartitionNumber((short)i);
-            if (i > 0) {
-                m_partitionModel.setIgnoreNextReset(true);
-            }
-            internalWFM().resetAndConfigureAll();
-            m_partitionModel.setIgnoreNextReset(false);
-            // m_filter.setTestPartition((byte) i);
-            KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
-                public void run() {
-                    internalWFM().executeAll(true);
-                }
-            });
+            resetAndConfigureInternalWF();
+            executeInternalWF();
+            
+//            if (i > 0) {
+//                m_partitionModel.setIgnoreNextReset(true);
+//            }
+//            internalWFM().resetAndConfigureAll();
+//            m_partitionModel.setIgnoreNextReset(false);
+//            KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
+//                public void run() {
+//                    internalWFM().executeAll(true);
+//                }
+//            });
 
             exec.checkCanceled();
             if (innerExecCanceled()) {
@@ -197,7 +198,7 @@ public class XValidateModel extends MetaNodeModel {
                 }
                 testSize[i]++;
             }
-            errors[i] = 100.0 * errorCountTest[i] / (double)testSize[i];
+            errors[i] = 100.0 * errorCountTest[i] / testSize[i];
         }
 
         String[] keys = new String[allClasses.size()];
