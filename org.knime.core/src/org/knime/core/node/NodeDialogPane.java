@@ -64,7 +64,8 @@ import org.knime.core.node.Node.MemoryPolicy;
  */
 public abstract class NodeDialogPane {
     
-    private static final String TAB_NAME_MISCELLANEOUS = "Miscellaneous";
+    private static final String TAB_NAME_MISCELLANEOUS = 
+        "General Node Settings";
 
     /**
      * Tabbed pane in the center of the dialog, which holds the components added
@@ -464,7 +465,7 @@ public abstract class NodeDialogPane {
                     + "written to disc to save main memory usage.");
             final int s = 15;
             JPanel north = new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
-            north.add(new JLabel("Select memory policy"));
+            north.add(new JLabel("Select memory policy for data outport(s)"));
             add(north, BorderLayout.NORTH);
             JPanel bigCenter = 
                 new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
