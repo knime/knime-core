@@ -147,8 +147,9 @@ public class XValidateModel extends MetaNodeModel {
                 classToIndex.put(row.getCell(classColIndex), classCount++);
             }
         }
-        allClasses.add(DataType.getMissingCell());
-        classToIndex.put(DataType.getMissingCell(), classCount++);
+        if (allClasses.add(DataType.getMissingCell())) {
+            classToIndex.put(DataType.getMissingCell(), classCount++);
+        }
 
         int[][] confusionMatrix = new int[allClasses.size()][allClasses.size()];
 
