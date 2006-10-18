@@ -38,6 +38,7 @@ import java.util.zip.GZIPOutputStream;
 import javax.swing.UIManager;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeDialogPane.MiscNodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.meta.MetaInputModel;
@@ -1507,10 +1508,12 @@ public final class Node {
     }
 
     /**
-     * @return <code>true</code> if a dialog is available.
+     * 
+     * @return <code>true</code> if a dialog is available or the number of data
+     *         outports is greater than zero.
      */
     public boolean hasDialog() {
-        return m_factory.hasDialog();
+        return m_factory.hasDialog() || (getNrDataOutPorts() > 0);
     }
 
     /**
@@ -1562,7 +1565,13 @@ public final class Node {
         if (hasDialog()) {
             // init dialog pane, if not done yet.
             if (m_dialogPane == null) {
-                m_dialogPane = m_factory.createNodeDialogPane();
+                if (m_factory.hasDialog()) {
+                    m_dialogPane = m_factory.createNodeDialogPane();
+                } else {
+                    assert (getNrDataOutPorts() > 0);
+                    m_dialogPane = new MiscNodeDialogPane();
+                }
+                // set the node into the dialog
                 m_dialogPane.setNode(this);
             }
             // load settings into the dialog

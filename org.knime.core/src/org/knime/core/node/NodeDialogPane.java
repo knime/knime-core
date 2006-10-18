@@ -79,7 +79,9 @@ public abstract class NodeDialogPane {
      */
     private final LinkedHashMap<String, Component> m_tabs;
 
-    /** Node reference set once which is informed about the dialog's apply. */
+    /** Node reference set once which is informed about the dialog's apply. 
+     * @deprecated This member as NodeContainer will be moved into the 
+     *             {@link NodeDialog}. */
     private Node m_node;
     
     /** The additional tab in which the user can set the memory options. 
@@ -110,6 +112,8 @@ public abstract class NodeDialogPane {
      * Sets the node for this dialog. Can only be called once.
      * 
      * @param node The underlying node.
+     * @deprecated The <code>Node</code> member inside the dialog pane is
+     *             obsolete.
      */
     final void setNode(final Node node) {
         assert (m_node == null && node != null);
@@ -500,5 +504,35 @@ public abstract class NodeDialogPane {
             assert false;
         }
     } // class MiscSettingsTab
+    
+    /**
+     * <code>NodeDialogPane</code> that only keeps a 
+     * <i>General Node Settings</i> tab. Load and save methods are left blank.
+     * 
+     * @author Thomas Gabriel, University of Konstanz
+     */
+    static class MiscNodeDialogPane extends NodeDialogPane {
+        
+        /**
+         * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, 
+         *      DataTableSpec[])
+         */
+        @Override
+        protected void loadSettingsFrom(final NodeSettingsRO settings, 
+                final DataTableSpec[] specs) throws NotConfigurableException {
+
+        }
+
+        /**
+         * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+         */
+        @Override
+        protected void saveSettingsTo(final NodeSettingsWO settings)
+                throws InvalidSettingsException {
+            
+        }
+        
+    }
+        
 
 } // NodeDialogPane
