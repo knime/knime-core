@@ -180,11 +180,6 @@
             id="org.knime.base.node.mine.scorer.ScorerNodeFactory">
       </node>
       <node
-            category-path="/mining/modeleval"
-            factory-class="org.knime.base.node.mine.scorer.hilitescorer.HiliteScorerNodeFactory"
-            id="org.knime.base.node.mine.scorer.hilitescorer.HiliteScorerNodeFactory">
-      </node>
-      <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory"
             id="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory">
