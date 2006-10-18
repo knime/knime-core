@@ -91,6 +91,7 @@ public class NormalizeNodeDialog extends NodeDialogPane {
     /**
      * Creates a new dialog for the Normalize Node.
      */
+    @SuppressWarnings("unchecked")
     NormalizeNodeDialog() {
         super();
         JPanel panel = generateContent();

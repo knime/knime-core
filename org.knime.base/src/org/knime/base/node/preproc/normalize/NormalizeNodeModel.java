@@ -112,7 +112,8 @@ public class NormalizeNodeModel extends NodeModel {
      */
     private ModelContentRO m_content;
     
-    private static final String CFG_MODEL_NAME = "normalize";
+    /** The config key under which the model is stored. */
+    static final String CFG_MODEL_NAME = "normalize";
 
     /**
      * One input, one output.
@@ -193,7 +194,8 @@ public class NormalizeNodeModel extends NodeModel {
     @Override
     protected void saveModelContent(final int index, 
             final ModelContentWO predParams) throws InvalidSettingsException {
-        m_content.copyTo(predParams);
+        ModelContentWO sub = predParams.addModelContent(CFG_MODEL_NAME);
+        m_content.copyTo(sub);
     }
     
     /**

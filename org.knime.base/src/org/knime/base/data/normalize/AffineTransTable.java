@@ -211,33 +211,24 @@ public class AffineTransTable implements DataTable {
             final ModelContentRO settings) throws InvalidSettingsException {
         /* Note: this is not very nice here. I copied code from the 
          * createSpec method. A better way would be to have a object containing
-         * teh scales, translations, etc. information.
+         * the scales, translations, etc. information.
          */
-        DataTableSpec spec = table.getDataTableSpec();
-        double[] scales = new double[spec.getNumColumns()];
-        double[] translations = new double[spec.getNumColumns()];
+        int colCount = settings.keySet().size();
+        double[] scales = new double[colCount];
+        double[] translations = new double[colCount];
         Arrays.fill(scales, Double.NaN);
         Arrays.fill(translations, Double.NaN);
-        String[] names = new String[spec.getNumColumns()];
+        String[] names = new String[colCount];
+        int index = 0;
         for (String key : settings.keySet()) {
             ModelContentRO sub = settings.getModelContent(key);
             String name = sub.getString(CFG_NAME);
-            int index = spec.findColumnIndex(name);
-            if (index < 0) {
-                throw new InvalidSettingsException("Can't apply setting to " 
-                        + "input table spec, no such column: " + name);
-            }
-            DataColumnSpec old = spec.getColumnSpec(index);
-            if (!old.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("Can't apply setting to " 
-                        + "input table spec, column '" + name 
-                        + "' is not double compatible.");
-            }
             double scale = sub.getDouble(CFG_SCALE);
             double trans = sub.getDouble(CFG_TRANSLATE);
             scales[index] = scale;
             translations[index] = trans;
             names[index] = name;
+            index++;
         }
         return new AffineTransTable(table, names, scales, translations);
     }
