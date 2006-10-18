@@ -162,12 +162,12 @@ public class XValidateModel extends MetaNodeModel {
                     "Validating in iteration " + (i + 1));
 
             m_partitionModel.setPartitionNumber((short)i);
+            if (i > 0) {
+                m_partitionModel.setIgnoreNextReset(true);
+            }
             resetAndConfigureInternalWF();
             executeInternalWF();
             
-//            if (i > 0) {
-//                m_partitionModel.setIgnoreNextReset(true);
-//            }
 //            internalWFM().resetAndConfigureAll();
 //            m_partitionModel.setIgnoreNextReset(false);
 //            KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
