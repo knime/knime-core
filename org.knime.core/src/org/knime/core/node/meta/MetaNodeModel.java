@@ -123,15 +123,20 @@ public class MetaNodeModel extends SpecialNodeModel implements
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (!m_resetFromInterior) {
-            for (int i = 0; (i < m_dataInModels.length) 
-                && (i < inSpecs.length); i++) {
-                m_dataInModels[i].setDataTableSpec(inSpecs[i]);
-                internalWFM().configureNode(m_dataInContainer[i].getID());
-            }
-
-            for (int i = inSpecs.length; i < m_dataInModels.length; i++) {
-                m_dataInModels[i].setDataTableSpec(inSpecs[inSpecs.length - 1]);
-                internalWFM().configureNode(m_dataInContainer[i].getID());
+            m_resetFromInterior = true;
+            try {
+                for (int i = 0; (i < m_dataInModels.length) 
+                    && (i < inSpecs.length); i++) {
+                    m_dataInModels[i].setDataTableSpec(inSpecs[i]);
+                    internalWFM().configureNode(m_dataInContainer[i].getID());
+                }
+    
+                for (int i = inSpecs.length; i < m_dataInModels.length; i++) {
+                    m_dataInModels[i].setDataTableSpec(inSpecs[inSpecs.length - 1]);
+                    internalWFM().configureNode(m_dataInContainer[i].getID());
+                }
+            } finally {
+                m_resetFromInterior = false;
             }
         }
 
