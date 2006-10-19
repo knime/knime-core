@@ -32,12 +32,13 @@
 <!ELEMENT option (#PCDATA | p | h | br | b | i | u | a)* >
 <!ATTLIST option name CDATA #REQUIRED>
 
-<!ELEMENT p (#PCDATA | br | b | i | u | a)* >
+<!ELEMENT p (#PCDATA | br | b | i | u | a | tt)* >
 <!ELEMENT h (#PCDATA) >
 <!ELEMENT b (#PCDATA) >
 <!ELEMENT i (#PCDATA) >
 <!ELEMENT u (#PCDATA) >
 <!ELEMENT a (#PCDATA) >
+<!ELEMENT tt (#PCDATA) >
 <!ELEMENT br EMPTY >
 <!ATTLIST a href CDATA #REQUIRED>
 
