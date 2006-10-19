@@ -1058,8 +1058,14 @@ public final class Node {
                 m_status = new NodeStatus.Warning("Node does not check for "
                         + "null argument in loadModelContent().");
             } catch (InvalidSettingsException ise) {
-                m_status = new NodeStatus.Warning("Could not load model"
-                        + " settings into the node.");
+                m_status =
+                        new NodeStatus.Warning("Could not load model"
+                                + " settings into the node.");
+            } catch (Throwable t) {
+                m_logger.coding("loadModelContent() throws Exception: ", t);
+                m_status =
+                        new NodeStatus.Error("Could not load model"
+                                + " settings into the node: " + t.getMessage());
             }
         }
 
@@ -1177,6 +1183,9 @@ public final class Node {
             // reset hilite handler in this node.
             // This triggers hilite handler propagation through the output ports
             setHiLiteHandler(inPortID, null);
+            // re-create out table specs, as incoming table specs/models are
+            // gone.
+            configure();
         } else { // then this is a ModelContent port
             /*
              * reset the ModelContent of this inport, previously pushed in and
@@ -1185,20 +1194,40 @@ public final class Node {
             int realId = inPortID - getNrDataInPorts();
             try {
                 m_model.loadModelContent(realId, null);
+                // re-create out table specs, as incoming table specs/models are
+                // gone.
+                configure();
             } catch (NullPointerException e) {
                 /*
-                 * if the nodemodel implementation of the loadPredictorParams is
+                 * if the nodemodel implementation of the loadModelContent is
                  * correct we will not end up here.
                  */
-                m_logger.coding("Incorrect implementation of "
-                        + "method NodeModel.loadModelContent(): "
-                        + "It must handle null parameters");
-            } catch (InvalidSettingsException ise) {
-                // ignore, since we tried to load null settings.
+                String message = "Incorrect implementation of "
+                    + "method NodeModel.loadModelContent(): "
+                    + "It must handle null parameters";
+                
+                m_logger.coding(message);
+                
+                m_status = 
+                    new NodeStatus.Error(message);
+            notifyStateListeners(m_status);
+            } catch (Throwable t) {
+                /*
+                 * if the nodemodel implementation of the loadModelContent is
+                 * correct we will not end up here.
+                 */
+                String message =
+                        "Implementation error: NodeModel.loadModelContent()"
+                                + " must handle null parameters";
+
+                m_logger.coding(message, t);
+
+                m_status =
+                        new NodeStatus.Error(message);
+                notifyStateListeners(m_status);
             }
         }
-        // re-create out table specs, as incoming table specs/models are gone.
-        configure();
+        
 
         if (m_model instanceof SpecialNodeModel) {
             ((SpecialNodeModel)m_model).inportWasDisconnected(inPortID);
@@ -1285,19 +1314,40 @@ public final class Node {
         try {
             int realId = inPortID - getNrDataInPorts();
             m_model.loadModelContent(realId, predParams);
+            
+            // NOTE: configure was previously invoked at the end of the method
+            // as this is not neccessary and also would reset state messages
+            // set in the catch blocks the configure is only invoked,
+            // if the model could be properly set
+            configure();
+            
         } catch (InvalidSettingsException ise) {
+            // NOTE: this reset was added to ensure that the node is reset
+            // (not configured - see the above NOTE) after an exception has 
+            // been thrown during model load
+            reset(false);
             m_logger.warn("Unable to load ModelContent: " + ise.getMessage());
             m_status = new NodeStatus.Error("Could not load ModelContent: "
                     + ise.getMessage());
             notifyStateListeners(m_status);
+            
         } catch (NullPointerException npe) {
-            m_logger.coding("Model needs to check for null argument.");
+            reset(false);
+
             m_status = new NodeStatus.Error(
                     "Could not load ModelContent due to null argument.");
             notifyStateListeners(m_status);
-        }
-        configure();
-
+        } catch (Throwable e) {
+            reset(false);
+            m_logger.coding("Error occured: ", e);
+            m_status =
+                    new NodeStatus.Error(
+                            "Could not load ModelContent due to an error: "
+                                    + e.getMessage());
+            notifyStateListeners(m_status);
+        } 
+        
+        
     }
 
     /**

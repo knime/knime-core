@@ -1523,6 +1523,12 @@ public class WorkflowManager implements WorkflowListener {
                             + " -> reset and configure.";
                     LOGGER.error(msg, ise);
                     failedNodes.add(newNode);
+                } catch (Throwable e) {
+                    String msg = "Unable to load node: "
+                        + newNode.getNameWithID()
+                        + " -> reset and configure.";
+                    LOGGER.error(msg, e);
+                    failedNodes.add(newNode);
                 }
                 progMon.setProgress(nodeCounter / topSortNodes().size());
                 // progMon.setMessage("Prog: " + nodeCounter
