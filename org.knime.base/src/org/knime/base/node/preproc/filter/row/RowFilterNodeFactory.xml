@@ -27,7 +27,18 @@
 			for range filtering. When using a regular expression, you can set a checkmark, 
 			if you want a case sensitive match to be made. If a range is specified,
 			you specify only one boundary, the other is then set to
-			(plus or minus) infinity.
+			(plus or minus) infinity. <br />
+			Here are some examples of regular expression:<br />
+			<code>$foo.*<code> matches anything that starts with "foo". The dollar
+			stands for the beginning of the word, the dot matches any (one) character,
+			and the asterisk allows any number (including zero) of the previous character.<br />
+			<code>[0-9]*</code> matches any string of digits (including the empty string).
+			The <code>[</code> <code>]</code> define a set of characters (they could be
+			added individually like <code>[0123456789]</code>, or by range). This set
+			matches any (one) character included in the set.<br />
+			<code>
+			
+
 		</option>
 	    <option name="Row number range">If filter by range is selected, specify
 		    the first row number to in/exclude. The end of the range can either 
