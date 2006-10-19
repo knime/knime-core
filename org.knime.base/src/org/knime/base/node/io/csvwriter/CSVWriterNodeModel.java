@@ -71,6 +71,9 @@ public class CSVWriterNodeModel extends NodeModel {
 
     /** Identifier in NodeSettings object if writing row header. */
     static final String CFGKEY_ROWHEADER = "writeRowHeader";
+    
+    /** Identifier in NodeSettings object if append to output. */
+    static final String CFGKEY_APPEND = "isAppendToFile";
 
     /** Identfier for missing pattern. */
     static final String CFGKEY_MISSING = "missing";
@@ -83,6 +86,9 @@ public class CSVWriterNodeModel extends NodeModel {
 
     /** write row header in file? */
     private boolean m_writeRowHeader;
+    
+    /** append to file, if exists. */
+    private boolean m_isAppend;
 
     /** string to be used for missing cells. */
     private String m_missingPattern;
@@ -105,6 +111,7 @@ public class CSVWriterNodeModel extends NodeModel {
         }
         settings.addBoolean(CFGKEY_COLHEADER, m_writeColHeader);
         settings.addBoolean(CFGKEY_ROWHEADER, m_writeRowHeader);
+        settings.addBoolean(CFGKEY_APPEND, m_isAppend);
         settings.addString(CFGKEY_MISSING, m_missingPattern);
     }
 
@@ -120,6 +127,8 @@ public class CSVWriterNodeModel extends NodeModel {
                     + "contain comma: " + missing);
         }
         settings.getString(CFGKEY_FILE);
+        settings.getBoolean(CFGKEY_COLHEADER);
+        settings.getBoolean(CFGKEY_ROWHEADER);
     }
 
     /**
@@ -136,8 +145,9 @@ public class CSVWriterNodeModel extends NodeModel {
         } catch (MalformedURLException mue) {
             forhistory = null;
         }
-        m_writeColHeader = settings.getBoolean(CFGKEY_COLHEADER, true);
-        m_writeRowHeader = settings.getBoolean(CFGKEY_ROWHEADER, true);
+        m_writeColHeader = settings.getBoolean(CFGKEY_COLHEADER);
+        m_writeRowHeader = settings.getBoolean(CFGKEY_ROWHEADER);
+        m_isAppend = settings.getBoolean(CFGKEY_APPEND);
         m_missingPattern = settings.getString(CFGKEY_MISSING, "");
         StringHistory history = StringHistory.getInstance(FILE_HISTORY_ID);
         if (forhistory != null) {
@@ -156,7 +166,7 @@ public class CSVWriterNodeModel extends NodeModel {
             IOException {
         DataTable in = data[0];
         File file = new File(m_fileName);
-        CSVWriter writer = new CSVWriter(new FileWriter(file));
+        CSVWriter writer = new CSVWriter(new FileWriter(file, m_isAppend));
         writer.setWriteColHeader(m_writeColHeader);
         writer.setWriteRowHeader(m_writeRowHeader);
         writer.setMissing(m_missingPattern);
@@ -259,8 +269,10 @@ public class CSVWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("Cannot write to file \""
                     + file.getAbsolutePath() + "\".");
         }
-        // here it exists and we can write it: warn user!
-        setWarningMessage("Selected output file exists and will be "
-                + "overwritten!");
+        // here it exists and we can write it: warn user if we will overwrite
+        if (!m_isAppend) {
+            setWarningMessage("Selected output file exists and will be "
+                    + "overwritten!");
+        }
     }
 }

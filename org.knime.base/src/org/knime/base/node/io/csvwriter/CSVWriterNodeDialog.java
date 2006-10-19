@@ -57,6 +57,9 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     /** Checkbox for writing column header. */
     private final JCheckBox m_rowHeaderChecker;
 
+    /** Checkbox if append to output file (if exists). */
+    private final JCheckBox m_appendChecker;
+
     /** text field for missing pattern. */
     private final JTextField m_missingField;
 
@@ -81,10 +84,11 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
 
         m_colHeaderChecker = new JCheckBox("Write column header");
         m_rowHeaderChecker = new JCheckBox("Write row header");
+        m_appendChecker = new JCheckBox("Append to output file");
         m_missingField = new JTextField(3);
         m_missingField.setMaximumSize(new Dimension(40, 20));
-        m_missingField
-                .setToolTipText("Pattern for missing values. If unsure, simply leave empty");
+        m_missingField.setToolTipText(
+                "Pattern for missing values. If unsure, simply leave empty");
         final JPanel missingPanel = new JPanel();
         missingPanel.setLayout(new BoxLayout(missingPanel, BoxLayout.X_AXIS));
         missingPanel.add(m_missingField);
@@ -99,6 +103,10 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         rowHeaderPane.setLayout(new BoxLayout(rowHeaderPane, BoxLayout.X_AXIS));
         rowHeaderPane.add(m_rowHeaderChecker);
         rowHeaderPane.add(Box.createHorizontalGlue());
+        final JPanel appendPane = new JPanel();
+        appendPane.setLayout(new BoxLayout(appendPane, BoxLayout.X_AXIS));
+        appendPane.add(m_appendChecker);
+        appendPane.add(Box.createHorizontalGlue());
 
         optionsPanel.add(missingPanel);
         optionsPanel.add(Box.createVerticalStrut(5));
@@ -106,7 +114,9 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         optionsPanel.add(Box.createVerticalStrut(5));
         optionsPanel.add(rowHeaderPane);
         optionsPanel.add(Box.createVerticalStrut(5));
-
+        optionsPanel.add(appendPane);
+        optionsPanel.add(Box.createVerticalStrut(5));
+        
         final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(filePanel);
@@ -128,6 +138,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                 CSVWriterNodeModel.CFGKEY_COLHEADER, true);
         boolean writeRowHeader = settings.getBoolean(
                 CSVWriterNodeModel.CFGKEY_ROWHEADER, true);
+        boolean isAppend = settings.getBoolean(
+                CSVWriterNodeModel.CFGKEY_APPEND, true);
         String missing = settings.getString(CSVWriterNodeModel.CFGKEY_MISSING,
                 "");
         m_textBox.updateHistory();
@@ -135,6 +147,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_missingField.setText(missing);
         m_colHeaderChecker.setSelected(writeColHeader);
         m_rowHeaderChecker.setSelected(writeRowHeader);
+        m_appendChecker.setSelected(isAppend);
     }
 
     /**
@@ -151,11 +164,14 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         }
         boolean writeColHeader = m_colHeaderChecker.isSelected();
         boolean writeRowHeader = m_rowHeaderChecker.isSelected();
+        boolean isAppend = m_appendChecker.isSelected();
         String missing = m_missingField.getText();
         settings.addString(CSVWriterNodeModel.CFGKEY_MISSING, missing);
-        settings
-                .addBoolean(CSVWriterNodeModel.CFGKEY_COLHEADER, writeColHeader);
-        settings
-                .addBoolean(CSVWriterNodeModel.CFGKEY_ROWHEADER, writeRowHeader);
+        settings.addBoolean(
+                CSVWriterNodeModel.CFGKEY_COLHEADER, writeColHeader);
+        settings.addBoolean(
+                CSVWriterNodeModel.CFGKEY_ROWHEADER, writeRowHeader);
+        settings.addBoolean(
+                CSVWriterNodeModel.CFGKEY_APPEND, isAppend);
     }
 }

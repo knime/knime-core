@@ -25,6 +25,10 @@
  		<option name="Write Row Header">If checked, the row headers will be
  			added to the output, as first item in each row.
 			</option>		
+ 		<option name="Append to output file">If checked, the output is appended
+ 		to the output file (if it exists). If not checked and the file does 
+ 		exist, the file will be overwritten.
+			</option>		
  		
 	</fullDescription>
 	
