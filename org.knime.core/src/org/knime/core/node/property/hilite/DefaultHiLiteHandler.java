@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Default implementation for a <code>HiLiteHandler</code> which receives
@@ -47,6 +48,8 @@ import org.knime.core.data.DataCell;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DefaultHiLiteHandler implements HiLiteHandler {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(DefaultHiLiteHandler.class);
 
     /** List of registered <code>HiLiteListener</code>s to fire event to. */
     private final CopyOnWriteArrayList<HiLiteListener> m_listenerList;
@@ -282,7 +285,11 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     protected void fireHiLiteEventInternal(final KeyEvent event) {
         assert (event != null);
         for (HiLiteListener l : m_listenerList) {
-            l.hiLite(event);
+            try {
+                l.hiLite(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }
         }
     }
 
@@ -295,7 +302,11 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     protected void fireUnHiLiteEventInternal(final KeyEvent event) {
         assert (event != null);
         for (HiLiteListener l : m_listenerList) {
-            l.unHiLite(event);
+            try {
+                l.unHiLite(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }
         }
     }
     
@@ -304,7 +315,11 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      */
     protected void fireClearHiLiteEventInternal() {
         for (HiLiteListener l : m_listenerList) {
-            l.unHiLiteAll();
+            try {
+                l.unHiLiteAll();
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }
         }
     }
 

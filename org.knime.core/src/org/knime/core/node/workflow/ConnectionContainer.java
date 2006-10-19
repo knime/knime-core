@@ -277,7 +277,11 @@ public class ConnectionContainer {
         WorkflowEvent event = new WorkflowEvent.ConnectionExtrainfoChanged(-1,
                 null, getExtraInfo());
         for (WorkflowListener l : m_listeners) {
-            l.workflowChanged(event);
+            try {
+                l.workflowChanged(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }                
         }
     }
 

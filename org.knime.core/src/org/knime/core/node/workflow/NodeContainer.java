@@ -892,7 +892,12 @@ public class NodeContainer implements NodeStateListener {
      */
     protected void notifyStateListeners(final NodeStatus state) {
         for (NodeStateListener listener : m_eventListeners) {
-            listener.stateChanged(state, m_id);
+            try {
+                listener.stateChanged(state, m_id);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying node container "
+                        + " listeners", t);
+            }
         }
     }
 

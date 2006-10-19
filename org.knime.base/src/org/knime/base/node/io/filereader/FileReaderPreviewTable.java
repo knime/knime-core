@@ -31,6 +31,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -45,7 +46,9 @@ import org.knime.core.data.RowIterator;
  * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderPreviewTable extends FileTable {
-
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(FileReaderPreviewTable.class);
+    
     private String m_errorMsg;
 
     private int m_errorLine;
@@ -139,7 +142,11 @@ public class FileReaderPreviewTable extends FileTable {
     private void fireErrorOccuredEvent() {
         ChangeEvent event = new ChangeEvent(this);
         for (ChangeListener l : m_listeners) {
-            l.stateChanged(event);
+            try {
+                l.stateChanged(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }
         }
     }
 }

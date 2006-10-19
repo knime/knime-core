@@ -1368,7 +1368,11 @@ public class WorkflowManager implements WorkflowListener {
      */
     private void fireWorkflowEvent(final WorkflowEvent event) {
         for (WorkflowListener l : m_eventListeners) {
-            l.workflowChanged(event);
+            try {
+                l.workflowChanged(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying workflow listeners", t);
+            }
         }
     }
 

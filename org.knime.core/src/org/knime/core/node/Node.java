@@ -2129,7 +2129,11 @@ public final class Node {
      */
     void notifyStateListeners(final NodeStatus state) {
         for (NodeStateListener listener : m_stateListeners) {
-            listener.stateChanged(state, -1);
+            try {
+                listener.stateChanged(state, -1);
+            } catch (Throwable t) {
+                m_logger.error("Exception while notifying node listeners", t);
+            }
         }
     }
 

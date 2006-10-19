@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -37,7 +38,8 @@ import org.knime.core.data.DataCell;
  * @author Simona Pintilie, University of Konstanz
  */
 public class DefaultVisibilityHandler implements VisibilityHandler {
-
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(DefaultVisibilityHandler.class);
     
     /**
      * Keeps list of registered <code>HiLiteListener</code> to fire event to.
@@ -223,7 +225,11 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     private void fireSelectionEvent(final VisibilityEvent event) {
         assert (event != null);
         for (VisibilityListener l : m_listenerList) {
-            l.select(event);
+            try {
+                l.select(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }                
         }
     }
 
@@ -236,7 +242,11 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     private void fireUnSelectionEvent(final VisibilityEvent event) {
         assert (event != null);
         for (VisibilityListener l : m_listenerList) {
-            l.unselect(event);
+            try {
+                l.unselect(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }                
         }
     }
     
@@ -249,7 +259,11 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     private void fireMakeVisibleEvent(final VisibilityEvent event) {
         assert (event != null);
         for (VisibilityListener l : m_listenerList) {
-            l.makeVisible(event);
+            try {
+                l.makeVisible(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }                
         }
     }
 
@@ -262,7 +276,11 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     private void fireMakeInvisibleEvent(final VisibilityEvent event) {
         assert (event != null);
         for (VisibilityListener l : m_listenerList) {
-            l.makeInvisible(event);
+            try {
+                l.makeInvisible(event);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }
         }
     }
 }

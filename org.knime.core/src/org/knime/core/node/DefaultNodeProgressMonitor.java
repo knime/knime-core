@@ -41,7 +41,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
-
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(DefaultNodeProgressMonitor.class);
+    
     /** The cancel requested flag. */
     private boolean m_cancelExecute;
 
@@ -274,7 +276,11 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         m_changed = false;
         NodeProgressEvent pe = new NodeProgressEvent(m_progress, m_message);
         for (NodeProgressListener l : m_listeners) {
-            l.progressChanged(pe);
+            try {
+                l.progressChanged(pe);
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }                
         }
     }
     
