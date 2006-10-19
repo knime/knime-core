@@ -219,7 +219,8 @@ public class CSVWriter extends BufferedWriter {
      * @param removeFromStrings remove sep chars from strings (another Excel
      *            feature)
      */
-    public void setSepChar(final char sepChar, final boolean removeFromStrings) {
+    public void setSepChar(final char sepChar, 
+            final boolean removeFromStrings) {
         m_sepChar = sepChar;
         m_removeSepCharInStrings = removeFromStrings;
     }
