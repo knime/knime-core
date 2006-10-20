@@ -100,7 +100,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param configName the config name under which the values are stored in 
      * the config.
      * @param label explanation of the component
-     * @param excluded ture if the excluded columns should be stored in the 
+     * @param excluded true if the excluded columns should be stored in the 
      * config, false if the included columns should be stored.
      * @param allowedTypes filter for the columns all column not compatible 
      * with any of the allowed types are not displayed.
