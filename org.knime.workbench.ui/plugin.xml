@@ -2,6 +2,16 @@
 <?eclipse version="3.0"?>
 <plugin>
 
+<extension
+         point="org.eclipse.ui.views">
+      <view
+            category="org.knime.workbench.ui.category"
+            class="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
+            icon="icons/view.png"
+            id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
+            name="Workflow Projects"/>
+   </extension>
+
      <extension
          point="org.eclipse.ui.perspectives">
       <perspective
@@ -19,7 +29,7 @@
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
          <view
-               id="org.knime.workbench.navigator.view.KnimeResourceNavigator"
+               id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
                ratio="0.2"
                relationship="left"
                relative="org.eclipse.ui.editorss"/>
@@ -27,7 +37,7 @@
                id="org.knime.workbench.repository.view.RepositoryView"
                ratio="0.3"
                relationship="bottom"
-               relative="org.knime.workbench.navigator.view.KnimeResourceNavigator"/>
+               relative="org.knime.workbench.ui.navigator.KnimeResourceNavigator"/>
          <view
                closeable="false"
                visible="true"
@@ -65,7 +75,7 @@
          <viewShortcut
                id="org.eclipse.pde.runtime.LogView">
          </viewShortcut>
-         <viewShortcut id="org.knime.workbench.navigator.view.KnimeResourceNavigator"/>
+         <viewShortcut id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"/>
          <viewShortcut id="org.knime.workbench.repository.view.RepositoryView"/>
       </perspectiveExtension>
       <perspectiveExtension

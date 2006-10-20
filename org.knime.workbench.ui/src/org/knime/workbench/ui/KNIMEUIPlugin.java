@@ -29,6 +29,9 @@ package org.knime.workbench.ui;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -45,6 +48,9 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     // The shared instance.
     private static KNIMEUIPlugin plugin;
+
+    // image registry
+    private ImageRegistry m_imageRegistry;
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
@@ -117,13 +123,78 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     public ResourceBundle getResourceBundle() {
         try {
             if (m_resourceBundle == null) {
-                m_resourceBundle = ResourceBundle
-                        .getBundle("org.knime.workbench.ui.Resources");
+                m_resourceBundle =
+                        ResourceBundle
+                                .getBundle("org.knime.workbench.ui.Resources");
             }
         } catch (MissingResourceException x) {
             m_resourceBundle = null;
         }
         return m_resourceBundle;
+    }
+
+    /**
+     * Returns a (cached) image from the image registry.
+     * 
+     * @param descriptor The image descriptor
+     * @return The image, or a default image if missing.
+     */
+    public Image getImage(final ImageDescriptor descriptor) {
+
+        if (descriptor == null) {
+            return null;
+        }
+
+        // create the registry if needed
+        if (m_imageRegistry == null) {
+            m_imageRegistry = new ImageRegistry();
+        }
+        // try to lookup previously cached image
+
+        Image img = m_imageRegistry.get(descriptor.toString());
+
+        // if null, create the image and store it in the registry for further
+        // requests
+        if (img == null) {
+            img = descriptor.createImage(true);
+            m_imageRegistry.put(descriptor.toString(), img);
+        }
+
+        return img;
+    }
+
+    /**
+     * This only works for images located in the KNIMERepositry Plugin !
+     * 
+     * @param filename The filename, relative to the KNIMERepositryPlugin root
+     * @return The image, default will be supplied if missing.
+     */
+    public Image getImage(final String filename) {
+        return this.getImage(PLUGIN_ID, filename);
+    }
+
+    /**
+     * Load a image from the given location from within the plugin.
+     * 
+     * @param pluginID The ID of the hosting plugin
+     * @param filename The elative filename
+     * @return The image, a default will be returned if file was missing.
+     */
+    public Image getImage(final String pluginID, final String filename) {
+        return this.getImage(this.getImageDescriptor(pluginID, filename));
+
+    }
+
+    /**
+     * Returns a image descriptor.
+     * 
+     * @param pluginID The plugin ID
+     * @param filename Th relative filename
+     * @return The descriptor, or null
+     */
+    public ImageDescriptor getImageDescriptor(final String pluginID,
+            final String filename) {
+        return AbstractUIPlugin.imageDescriptorFromPlugin(pluginID, filename);
     }
 
 }

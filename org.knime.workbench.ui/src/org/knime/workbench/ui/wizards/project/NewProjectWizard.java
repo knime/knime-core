@@ -57,9 +57,9 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.navigator.view.KnimeResourceNavigator;
 import org.knime.workbench.ui.builder.KNIMEProjectBuilder;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
+import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 
 /**
  * Wizard for the creation of a new modeller project. TODO FIXME not yet
@@ -173,8 +173,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 for (IViewReference reference : page.getViewReferences()) {
                     IViewPart viewPart = reference.getView(true);
                     if (viewPart instanceof KnimeResourceNavigator) {
-                        TreeViewer viewer = ((KnimeResourceNavigator)viewPart)
-                                .getViewer();
+                        TreeViewer viewer =
+                                ((KnimeResourceNavigator)viewPart).getViewer();
                         viewer.refresh();
                         viewer.expandToLevel(2);
 
@@ -217,8 +217,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         //
         // 2. Create the optional files, if wanted
         //
-        final IFile defaultFile = project
-                .getFile(WorkflowManager.WORKFLOW_FILE);
+        final IFile defaultFile =
+                project.getFile(WorkflowManager.WORKFLOW_FILE);
 
         InputStream is = new ByteArrayInputStream("".getBytes());
         defaultFile.create(is, true, monitor);
@@ -229,8 +229,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         monitor.setTaskName("Opening file for editing...");
         getShell().getDisplay().asyncExec(new Runnable() {
             public void run() {
-                IWorkbenchPage page = PlatformUI.getWorkbench()
-                        .getActiveWorkbenchWindow().getActivePage();
+                IWorkbenchPage page =
+                        PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                                .getActivePage();
                 try {
                     IDE.openEditor(page, defaultFile, true);
                 } catch (PartInitException e) {
@@ -244,8 +245,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     }
 
     private void throwCoreException(final String message) throws CoreException {
-        IStatus status = new Status(IStatus.ERROR,
-                "org.knime.workbench.ui", IStatus.OK, message, null);
+        IStatus status =
+                new Status(IStatus.ERROR, "org.knime.workbench.ui", IStatus.OK,
+                        message, null);
         throw new CoreException(status);
     }
 }
