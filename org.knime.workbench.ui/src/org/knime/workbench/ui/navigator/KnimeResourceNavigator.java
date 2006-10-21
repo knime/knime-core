@@ -46,7 +46,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
 import org.eclipse.ui.internal.Workbench;
@@ -345,6 +344,19 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         menu.insertBefore(id, new Separator());
         menu.insertBefore(id, new OpenKnimeProjectAction(this));
         menu.insertBefore(id, new Separator());
+
+        // another bad workaround to replace the first "New" menu manager
+        // with the "Create New Workflow" action
+        // store all items, remove all, add the action and then
+        // add all but the first one
+        IContributionItem[] items = menu.getItems();
+        for (IContributionItem item : items) {
+            menu.remove(item);
+        }
+        menu.add(new NewKnimeWorkflowAction(Workbench.getInstance()));
+        for (int i = 1; i < items.length; i++) {
+            menu.add(items[i]);
+        }
 
     }
 }
