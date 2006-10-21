@@ -46,6 +46,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
 import org.eclipse.ui.internal.Workbench;
