@@ -127,6 +127,27 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
+     * Add colors for a pattern given as a row of values.
+     * This is a leaf so we will simply add the color to our list.
+     * 
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @throws Exception if something went wrong (unknown attriubte for example)
+     */
+    @Override
+    public final void addCoveredColor(final DataRow row,
+            final DataTableSpec spec) throws Exception {
+        Color col = spec.getRowColor(row).getColor();
+        if (m_coveredColors.containsKey(col)) {
+            Double oldCount = m_coveredColors.get(col);
+            m_coveredColors.remove(col);
+            m_coveredColors.put(col, new Double(oldCount.doubleValue() + 1.0));
+        } else {
+            m_coveredColors.put(col, new Double(1.0));
+        }
+    }
+
+    /**
      * @return set of data cells which are the row keys that are covered by this
      *         leaf node
      */

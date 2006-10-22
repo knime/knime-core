@@ -273,6 +273,19 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
             throws Exception;
 
     /**
+     * Add colors for a row of values if they fall within a specific
+     * node/branch. Used if we don't want to (or can't anymore) store
+     * the pattern itself. We still want the color pie chart to be
+     * correct.
+     * 
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @throws Exception if something went wrong (unknown attriubte for example)
+     */
+    public abstract void addCoveredColor(DataRow row, DataTableSpec spec)
+            throws Exception;
+
+    /**
      * @return set of data cells which are the row keys that are covered by all
      *         nodes of this branch
      */

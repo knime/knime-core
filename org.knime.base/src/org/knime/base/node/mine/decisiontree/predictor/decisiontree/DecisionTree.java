@@ -104,6 +104,19 @@ public class DecisionTree implements Serializable {
     }
 
     /**
+     * Add color of a new pattern to this tree. Does NOT store pattern ID
+     * but only it's color (if available) in the leaves.
+     * 
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @throws Exception if something went wrong (unknown attriubte for example)
+     */
+    public final void addCoveredColor(final DataRow row,
+            final DataTableSpec spec) throws Exception {
+        m_rootNode.addCoveredColor(row, spec);
+    }
+    
+    /**
      * Determine class counts for a new pattern given as a row of values.
      * Returns a HashMap listing counts for all classes.
      * 

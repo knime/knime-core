@@ -169,6 +169,34 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
+     * Add colors for a pattern given as a row of values.
+     * This is a leaf so we will simply add the color to our list.
+     * 
+     * @param cell the cell to be used for the split at this level
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @throws Exception if something went wrong (unknown attriubte for example)
+     */
+    @Override
+    public void addCoveredColor(final DataCell cell, final DataRow row,
+            final DataTableSpec spec) throws Exception {
+        double value = ((DoubleValue)cell).getDoubleValue();
+        if (value <= m_threshold) {
+            super.getChildNodeAt(0).addCoveredColor(row, spec);
+        } else {
+            super.getChildNodeAt(1).addCoveredColor(row, spec);
+        }
+        Color col = spec.getRowColor(row).getColor();
+        if (m_coveredColors.containsKey(col)) {
+            Double oldCount = m_coveredColors.get(col);
+            m_coveredColors.remove(col);
+            m_coveredColors.put(col, new Double(oldCount.doubleValue() + 1.0));
+        } else {
+            m_coveredColors.put(col, new Double(1.0));
+        }
+    }
+
+    /**
      * @see DecisionTreeNode
      *      #coveredColors()
      */

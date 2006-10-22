@@ -291,9 +291,56 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * @param cell the call to be used for classification at this node
      * @param row input pattern
      * @param spec the corresponding table spec
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     public abstract void addCoveredPattern(DataCell cell, DataRow row,
+            DataTableSpec spec) throws Exception;
+
+    /**
+     * @see DecisionTreeNode
+     *      #addCoveredColor(org.knime.core.data.DataRow,
+     *      org.knime.core.data.DataTableSpec)
+     */
+    @Override
+    public final void addCoveredColor(final DataRow row,
+            final DataTableSpec spec) throws Exception {
+        assert (spec != null);
+        if (m_splitAttr != null) {
+            if (spec != m_previousSpec) {
+                m_previousIndex = spec.findColumnIndex(m_splitAttr);
+                if (m_previousIndex == -1) {
+                    LOGGER.error(spec.toString());
+                    throw new Exception("Decision Tree Prediction failed."
+                           + " Could not find attribute '" + m_splitAttr + "'");
+                }
+                m_previousSpec = spec;
+            }
+            assert (m_previousIndex != -1);
+            DataCell cell = row.getCell(m_previousIndex);
+            if (cell.isMissing()) {
+                // of we can not determine the split at this node because
+                // value is missing, we add the row to each child
+                for (DecisionTreeNode child : m_child) {
+                    child.addCoveredColor(row, spec);
+                }
+                return;
+            }
+            addCoveredColor(cell, row, spec);
+            return;
+        }
+        addCoveredColor(null, row, spec);
+    }
+
+    /**
+     * Add colors for patterns given as a row of values if they fall
+     * within a specific node. 
+     * 
+     * @param cell the call to be used for classification at this node
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @throws Exception if something went wrong (unknown attribute for example)
+     */
+    public abstract void addCoveredColor(DataCell cell, DataRow row,
             DataTableSpec spec) throws Exception;
 
     /**

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -39,8 +40,6 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.knime.base.data.util.DataCellStringMapper;
 
 /**
  * 
@@ -149,6 +148,39 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
                 + "Ignoring pattern.");
     }
 
+    /**
+     * Add colors for a pattern given as a row of values.
+     * This is a leaf so we will simply add the color to our list.
+     * 
+     * @param cell the cell to be used for the split at this level
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @throws Exception if something went wrong (unknown attriubte for example)
+     */
+    @Override
+    public void addCoveredColor(final DataCell cell, final DataRow row,
+            final DataTableSpec spec) throws Exception {
+        for (int i = 0; i < m_splitValues.length; i++) {
+            if (m_splitValues[i].equals(cell)) {
+                super.getChildNodeAt(i).addCoveredColor(row, spec);
+                Color col = spec.getRowColor(row).getColor();
+                if (m_coveredColors.containsKey(col)) {
+                    Double oldCount = m_coveredColors.get(col);
+                    m_coveredColors.remove(col);
+                    m_coveredColors.put(col, new Double(
+                            oldCount.doubleValue() + 1.0));
+                } else {
+                    m_coveredColors.put(col, new Double(1.0));
+                }
+                return;
+            }
+        }
+        LOGGER.error("Decision Tree HiLiteAdder failed."
+                + " Could not find branch for value '" + cell.toString()
+                + "' for attribute '" + getSplitAttr().toString() + "'."
+                + "Ignoring pattern.");
+    }
+    
     /**
      * @see DecisionTreeNode#coveredColors()
      */

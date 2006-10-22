@@ -143,9 +143,14 @@ public class DecTreePredictorNodeModel extends NodeModel {
                 cl = m_decTree.classifyPattern(thisRow, inData[INDATAPORT]
                         .getDataTableSpec());
                 if (coveredPattern < m_maxNumCoveredPattern) {
+                    // remember this one for HiLite support
                     m_decTree.addCoveredPattern(thisRow, inData[INDATAPORT]
                             .getDataTableSpec());
                     coveredPattern++;
+                } else {
+                    // too many patterns for HiLite - at least remember color
+                    m_decTree.addCoveredColor(thisRow, inData[INDATAPORT]
+                            .getDataTableSpec());
                 }
                 nrPattern++;
             } catch (Exception e) {
