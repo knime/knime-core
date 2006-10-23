@@ -27,18 +27,12 @@ package org.knime.base.node.preproc.sorter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Vector;
 
-import org.knime.core.data.DataRow;
+import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainer;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -48,15 +42,14 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * This class implements the {@link NodeModel} for the sorter node. The input
  * table is segmented into containers that are sorted with guaranteed n*log(n)
  * performance, based on a selection of columns and a corresponding order
  * (ascending/descending). In the end, all sorted containers are merged together
  * and transformed in a output datatable. To compare two datarows, the
- * Comparator compares the {@link org.knime.core.data.DataCell}s with
- * their <code>compareTo</code>-method on each position.
+ * Comparator compares the {@link org.knime.core.data.DataCell}s with their
+ * <code>compareTo</code>-method on each position.
  * 
  * @see org.knime.core.data.container.DataContainer
  * @see java.util.Arrays#sort(java.lang.Object[], int, int,
@@ -90,35 +83,10 @@ public class SorterNodeModel extends NodeModel {
     private List<String> m_inclList = null;
 
     /*
-     * Number of rows for each container
-     */
-    private static final int CONTAINERSIZE = 1000;
-
-    /*
-     * Number of Rows
-     */
-    private int m_nrRows = 0;
-
-    /*
      * Array containing information about the sort order for each column. true:
      * ascending false: descending
      */
     private boolean[] m_sortOrder = null;
-
-    /*
-     * Array containing indices of the columns that will be sorted
-     */
-    private int[] m_indices;
-
-    /*
-     * The DataTableSpec
-     */
-    private DataTableSpec m_spec;
-
-    /*
-     * The RowComparator to compare two DataRows (inner class)
-     */
-    private final RowComparator m_rowComparator = new RowComparator();
 
     /**
      * Inits a new <code>SorterNodeModel</code> with one in- and one output.
@@ -149,136 +117,19 @@ public class SorterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        m_spec = inData[INPORT].getDataTableSpec();
-        // get the column indices of the columns that will be sorted
-        // also make sure that m_inclList and m_sortOrder both exist
-        if (m_inclList == null) {
-            throw new Exception("List of colums to include (incllist) is "
-                    + "not set in the model");
-        } else {
-            m_indices = new int[m_inclList.size()];
-        }
-        if (m_sortOrder == null) {
-            throw new Exception("Sortorder array is " + "not set in the model");
-        }
+
         // If no columns are set, we do not start the sorting process
         if (m_inclList.size() == 0) {
             setWarningMessage("No columns were selected - returning "
                     + " original table");
             return new BufferedDataTable[]{inData[INPORT]};
-        } else {
-            Vector<DataContainer> containerVector = new Vector<DataContainer>();
-            int pos = -1;
-            for (int i = 0; i < m_inclList.size(); i++) {
-                String dc = m_inclList.get(i);
-                pos = m_spec.findColumnIndex(dc);
-                if (pos == -1) {
-                    throw new Exception("Could not find column name:"
-                            + dc.toString());
-                }
-                m_indices[i] = pos;
-            }
-            // Initialize RowIterator
-            RowIterator rowIt = inData[INPORT].iterator();
-            int nrRows = inData[0].getRowCount();
-            m_nrRows = 0;
-            // wrap all DataRows in Containers of size containerSize
-            // sort each container before it is'stored'.
-            BufferedDataContainer newContainer = exec.createDataContainer(
-                    m_spec, false);
-            int nrRowsinContainer = 0;
-            ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
-            ExecutionMonitor subexec = exec.createSubProgress(.5);
-            while (rowIt.hasNext()) {
-                subexec.setProgress((double)m_nrRows / (double)nrRows,
-                        "Reading in data... ");
-                exec.checkCanceled();
-                if (newContainer.isClosed()) {
-                    newContainer = exec.createDataContainer(m_spec, false);
-                    nrRowsinContainer = 0;
-                    containerrowlist = new ArrayList<DataRow>();
-                }
-                DataRow row = rowIt.next();
-                m_nrRows++;
-                nrRowsinContainer++;
-                containerrowlist.add(row);
-                if (nrRowsinContainer == CONTAINERSIZE) {
-                    exec.checkCanceled();
-                    // sort list
-                    DataRow[] temparray = new DataRow[containerrowlist.size()];
-                    temparray = containerrowlist.toArray(temparray);
-                    subexec.setMessage("Presorting Container");
-                    Arrays
-                            .sort(temparray, 0, temparray.length,
-                                    m_rowComparator);
-                    // write in container
-                    for (int i = 0; i < temparray.length; i++) {
-                        newContainer.addRowToTable(temparray[i]);
-                    }
-                    newContainer.close();
-                    containerVector.add(newContainer);
-                }
-            }
-            if (nrRowsinContainer % CONTAINERSIZE != 0) {
-                exec.checkCanceled();
-                // sort list
-                DataRow[] temparray = new DataRow[containerrowlist.size()];
-                temparray = containerrowlist.toArray(temparray);
-                Arrays.sort(temparray, 0, temparray.length, m_rowComparator);
-                // write in container
-                for (int i = 0; i < temparray.length; i++) {
-                    newContainer.addRowToTable(temparray[i]);
-                }
-                newContainer.close();
-                containerVector.add(newContainer);
-            }
-
-            // merge all sorted containers together
-            BufferedDataContainer mergeContainer = exec.createDataContainer(
-                    m_spec, false);
-
-            // an array of RowIterators gives access to all (sorted) containers
-            RowIterator[] currentRowIterators = new RowIterator[containerVector
-                    .size()];
-            DataRow[] currentRowValues = new DataRow[containerVector.size()];
-
-            // Initialize both arrays
-            for (int c = 0; c < containerVector.size(); c++) {
-                DataContainer tempContainer = containerVector.get(c);
-                DataTable tempTable = tempContainer.getTable();
-                currentRowIterators[c] = tempTable.iterator();
-            }
-            for (int c = 0; c < containerVector.size(); c++) {
-                currentRowValues[c] = currentRowIterators[c].next();
-            }
-            int position = -1;
-
-            // find the smallest/biggest element of all, put it in
-            // mergeContainer
-            ExecutionMonitor subexec2 = exec.createSubProgress(.5);
-            for (int i = 0; i < m_nrRows; i++) {
-                subexec2.setProgress((double)i / (double)m_nrRows, "Merging");
-                exec.checkCanceled();
-                position = findNext(currentRowValues);
-                mergeContainer.addRowToTable(currentRowValues[position]);
-                if (currentRowIterators[position].hasNext()) {
-                    currentRowValues[position] = currentRowIterators[position]
-                            .next();
-                } else {
-                    currentRowIterators[position] = null;
-                    currentRowValues[position] = null;
-                }
-            }
-            // Everything should be written out in the MergeContainer
-            for (int i = 0; i < currentRowIterators.length; i++) {
-                assert (currentRowValues[i] == null);
-                assert (currentRowIterators[i] == null);
-            }
-            mergeContainer.close();
-            BufferedDataTable dt = mergeContainer.getTable();
-            assert (dt != null);
-            return new BufferedDataTable[]{dt};
         }
+
+        // create a sorted table
+        SortedTable sortedTable =
+                new SortedTable(inData[INPORT], m_inclList, m_sortOrder, exec);
+        
+        return new BufferedDataTable[]{sortedTable.getBufferedDataTable()};
     }
 
     /**
@@ -286,7 +137,8 @@ public class SorterNodeModel extends NodeModel {
      */
     @Override
     public void reset() {
-        m_nrRows = 0;
+
+        // do nothing yet
     }
 
     /**
@@ -311,27 +163,6 @@ public class SorterNodeModel extends NodeModel {
             }
         }
         return new DataTableSpec[]{inSpecs[INPORT]};
-    }
-
-    /*
-     * This method finds the next DataRow (position) that should be inserted in
-     * the MergeContainer
-     */
-    private int findNext(final DataRow[] currentValues) {
-        int min = 0;
-        while (currentValues[min] == null) {
-            min++;
-        }
-
-        for (int i = min + 1; i < currentValues.length; i++) {
-            if (currentValues[i] != null) {
-                if (m_rowComparator.compare(currentValues[i],
-                        currentValues[min]) < 0) {
-                    min = i;
-                }
-            }
-        }
-        return min;
     }
 
     /**
@@ -389,54 +220,6 @@ public class SorterNodeModel extends NodeModel {
             m_inclList.add(inclList[i]);
         }
         m_sortOrder = settings.getBooleanArray(SORTORDER_KEY);
-    }
-
-    /**
-     * The private class RowComparator is used to compare two DataRows. It
-     * implements the Comparator-interface, so we can use the Arrays.sort method
-     * to sort an array of DataRows. If both DataRows are null they are
-     * considered as equal. A null DataRow is considered as 'less than' an
-     * initialized DataRow. On each position, the DataCells of the two DataRows
-     * are compared with their compareTo-method.
-     * 
-     * @author Nicolas Cebron, University of Konstanz
-     */
-    private class RowComparator implements Comparator<DataRow> {
-
-        /**
-         * This method compares two DataRows based on a comparison for each
-         * DataCell and the sorting order (m_sortOrder) for each column.
-         * 
-         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-         */
-        public int compare(final DataRow dr1, final DataRow dr2) {
-
-            if (dr1 == dr2) {
-                return 0;
-            }
-            if (dr1 == null) {
-                return 1;
-            }
-            if (dr2 == null) {
-                return -1;
-            }
-
-            assert (dr1.getNumCells() == dr2.getNumCells());
-
-            for (int i = 0; i < m_indices.length; i++) {
-                // only if the cell is in the includeList
-                // same column means that they have the same type
-                DataValueComparator comp = m_spec.getColumnSpec(m_indices[i])
-                        .getType().getComparator();
-                int cellComparison = comp.compare(dr1.getCell(m_indices[i]),
-                        dr2.getCell(m_indices[i]));
-
-                if (cellComparison != 0) {
-                    return (m_sortOrder[i] ? cellComparison : -cellComparison);
-                }
-            }
-            return 0; // all cells in the DataRow have the same value
-        }
     }
 
     /**
