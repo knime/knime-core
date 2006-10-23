@@ -155,7 +155,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
             throws NotConfigurableException {
         m_targetColumn.removeAllItems();
         if (spec == null || spec.getNumColumns() == 0) {
-            throw new NotConfigurableException("No column to select.");
+            throw new NotConfigurableException("Data spec is empty.");
         }
         for (int i = 0; i < spec.getNumColumns(); i++) {
             m_targetColumn.addItem(spec.getColumnSpec(i));
