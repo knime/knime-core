@@ -29,17 +29,17 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 
 
 /**
- * The interface all value interfaces of data cells are derived from. 
- * <code>DataCell</code>s implement different <code>DataValue</code> interfaces
- * to allow access to generic (or complex) fields from the cell. Typically a 
- * <code>DataValue</code> brings along its own (set of) renderer, an icon 
- * (which is displayed in table column headers, for instance) and a comparator, 
- * which are all defined through the definition of a static member UTITLITY. 
- * For more information regarding definition of new data cells see the
- * <a href="package-summary.html">package description</a> and the
- * <a href="doc-files/newtypes.html">manual on how to define new types</a>, 
- * in particular the <a href="doc-files/newtypes.html#newtypes">
- * remarks on DataValue</a>
+ * The interface all value interfaces of data cells are derived from.
+ * <code>{@link DataCell}</code>s implement different <code>DataValue</code>
+ * interfaces to allow access to generic (or complex) fields from the cell.
+ * Typically a <code>DataValue</code> brings along its own (set of) renderer,
+ * an icon (which is displayed in table column headers, for instance) and a
+ * comparator, which are all defined through the definition of a static member
+ * UTITLITY. For more information regarding definition of new data cells see the
+ * <a href="package-summary.html">package description</a> and the <a
+ * href="doc-files/newtypes.html">manual on how to define new types</a>, in
+ * particular the <a href="doc-files/newtypes.html#newtypes"> remarks on
+ * <code>DataValue</code></a>
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -53,7 +53,7 @@ public interface DataValue {
     public static final UtilityFactory UTILITY = new UtilityFactory();
 
     /** Implementation of the meta information to a <code>DataValue</code>.
-     * DataValue implemenations with customized meta information must provide
+     * DataValue implementations with customized meta information must provide
      * a static final member called UTILTIY of this class.
      */
     public static class UtilityFactory {
@@ -82,7 +82,8 @@ public interface DataValue {
             ICON = icon;
         }
         
-        /** Only subclasses are allowed to instantiate this class. This
+        /**
+         * Only subclasses are allowed to instantiate this class. This
          * constructor does nothing.
          */
         protected UtilityFactory() {

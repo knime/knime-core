@@ -26,7 +26,7 @@
 package org.knime.core.data;
 
 /**
- * Comparator returned by the <code>FuzzyIntervalValue</code> datacell type.
+ * Comparator returned by the {@link FuzzyIntervalValue} datacell type.
  *  
  * @see org.knime.core.data.FuzzyIntervalValue.FuzzyIntervalUtilityFactory
  * @author Michael Berthold, University of Konstanz
@@ -34,12 +34,13 @@ package org.knime.core.data;
 public class FuzzyIntervalValueComparator extends DataValueComparator {
 
     /**
-     * The compare function called by the abstract DataValueComparator class.
-     * The comparison is based on the border values returned by
+     * The compare function called by the abstract {@link DataValueComparator}
+     * class. The comparison is based on the border values returned by the
      * <code>FuzzyIntervalValue.get{Min,Max}{Core,Support}()</code> methods.
      * Note that comparing fuzzy intervals is far from trivial - we base the
      * comparison used here on the center of gravities of the fuzzy sets. Do not
-     * call this method directly. Use <code>DataCell.compareTo</code> instead.
+     * call this method directly. Use
+     * {@link DataValueComparator#compare(DataCell, DataCell)} instead.
      * 
      * @see org.knime.core.data.DataValueComparator
      *      #compareDataValues(DataValue, DataValue)

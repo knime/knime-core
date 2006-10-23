@@ -42,14 +42,14 @@ import org.knime.core.node.config.ConfigWO;
 
 /**
  * DataTableSpecs are used in two ways: As meta information to specify the
- * structure of a <code>DataTable</code> (at a time when the actual table
- * still doesn't exist), and as part of a <code>DataTable</code> object to
+ * structure of a {@link DataTable} (at a time when the actual table
+ * still doesn't exist), and as part of a {@link DataTable} object to
  * store the structure of the table.
  * 
  * <p>
  * The spec specifies the characteristics i.e. column numbers, as well as column
  * types, names, and other column oriented information through a collection of
- * <code>DataColumnSpec</code>s.
+ * {@link DataColumnSpec} objects.
  * 
  * <p>
  * Once a <code>DataTableSpec</code> is initialized, it must be final. That
@@ -59,9 +59,9 @@ import org.knime.core.node.config.ConfigWO;
  * then be propagated in the flow.
  * 
  * <p>
- * In addtion, the table spec provides a single SizeManager and/or ColorManager
+ * In addtion, the table spec provides a single SizeManager, ColorManager
  * and/or ShapeManager if available. These property handlers can be used to 
- * access size, color, and shape by row.
+ * assign size, color, and shape to a row.
  * 
  * @see DataTable
  * @see DataColumnSpec
@@ -88,7 +88,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     /** The index of the column holding the ShapeHandler or -1 if not set. */
     private final int m_shapeHandlerColIndex;
    
-    /** Keeps column to column index mapping for faster access. */
+    /** Keeps column name to column index mapping for faster access. */
     private final Map<String, Integer> m_colIndexMap 
         = new HashMap<String, Integer>();
 
@@ -111,7 +111,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Creates a new <code>DataTableSpec</code>, which is built from an array
-     * of <code>DataColumnSpec</code> elements.
+     * of {@link DataColumnSpec} elements.
      * 
      * @param colSpecs An array containing information about all columns.
      * @throws NullPointerException If the given column spec or one of its
@@ -127,7 +127,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Creates a new <code>DataTableSpec</code>, which is built from an array
-     * of <code>DataColumnSpec</code> elements.
+     * of {@link DataColumnSpec} elements.
      * 
      * @param colSpecs An array containing information about all columns.
      * @param name This spec's name, if <code>null</code> a default name is
@@ -173,8 +173,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Creates a new <code>DataTableSpec</code> based on a list of names and
-     * types. The constructor uses the <code>DefaultDataColumnSpec</code> but
-     * does not create additional information (values, ...).
+     * types. The constructor uses the {@link DataColumnSpec} but does not
+     * create additional information (values, ...).
      * 
      * @param names An array of names.
      * @param types An array of types.
@@ -190,7 +190,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Creates a new <code>DataTableSpec</code> based on a list of names and
-     * types. The constructor uses the <code>DefaultDataColumnSpec</code> but
+     * types. The constructor uses the {@link DataColumnSpec} but
      * does not create additional information (values, ...).
      * 
      * @param name This spec's identifier, if null a default name will be used.
@@ -406,7 +406,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * concerning this row (for instance in a scatterplot).
      * 
      * @param row the row for which the color is requested
-     * @return color
+     * @return a color attr object holding the colors associate to that row.
      */
     public ColorAttr getRowColor(final DataRow row) {
         if (m_colorHandlerColIndex == -1) {
@@ -421,7 +421,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * concerning this row (for instance in a scatterplot).
      * 
      * @param row the row for which the shape is requested
-     * @return color
+     * @return the shape object associated with this row.
      */
     public Shape getRowShape(final DataRow row) {
         if (m_shapeHandlerColIndex == -1) {
@@ -436,7 +436,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * This method returns <code>null</code> if the argument is
      * <code>null</code>.
      * 
-     * @param column The column to find spec for.
+     * @param column The column name to find the spec for.
      * @return The column specification or null if not available.
      */
     public DataColumnSpec getColumnSpec(final String column) {
@@ -577,7 +577,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Checks if this spec contains a column with a type compatible to the given
-     * <code>DataValue</code> class. This method returns <code>false</code>
+     * {@link DataValue} class. This method returns <code>false</code>
      * if the argument is <code>null</code>.
      * 
      * @param valueClass the class of the data value interface to check for.
@@ -598,7 +598,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
 
     /**
-     * The string summary of all column spec of this table spec.
+     * The string summary of all column specs of this table spec.
      * 
      * @return A string summary of all column specs.
      */
@@ -615,8 +615,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
 
     /**
-     * Allows to iterate over all <code>DataColumnSpec</code>s in an easy
-     * way.
+     * Allows to iterate over all contained {@link DataColumnSpec} elements in 
+     * an easy way.
      * 
      * @see java.lang.Iterable#iterator()
      */
@@ -633,9 +633,9 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     private static final String CFG_COLUMN_SPEC = "column_spec_";
     
     /**
-     * Saves name and all <code>DataColumnSpec</code> objects to the given
-     * <code>Config</code> object.
-     * @param config Write column properties into this object.
+     * Saves spec name and all {@link DataColumnSpec} objects to the given
+     * {@link ConfigWO} object.
+     * @param config Write spec and column properties into this object.
      */
     public void save(final ConfigWO config) {
         config.addString(CFG_SPEC_NAME, m_name);
@@ -647,12 +647,13 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
     
     /**
-     * Reads a DataColumnSpec objects from the given <code>Config</code> and 
-     * returns a new <code>DataTableSpec</code> object.
-     * @param config Read specs from.
-     * @return A new table spec object.
-     * @throws InvalidSettingsException If the name, number of columns, or
-     *         a column spec could not be read,
+     * Reads all {@link DataColumnSpec} objects from the given {@link ConfigRO}
+     * and returns a new <code>DataTableSpec</code> object containing them.
+     * 
+     * @param config Object to read column specs from.
+     * @return A new table spec object containing the just read columns.
+     * @throws InvalidSettingsException If the name, number of columns, or a
+     *             column spec could not be read,
      */
     public static DataTableSpec load(final ConfigRO config) 
             throws InvalidSettingsException {

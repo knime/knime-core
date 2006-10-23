@@ -34,7 +34,7 @@ package org.knime.core.data;
 public class StringValueComparator extends DataValueComparator {
 
     /**
-     * Compares to <code>StringValue</code> based on their lexicographical 
+     * Compares two {@link StringValue}s based on their lexicographical 
      * order.
      * @see org.knime.core.data.DataValueComparator
      *          #compareDataValues(DataValue, DataValue)

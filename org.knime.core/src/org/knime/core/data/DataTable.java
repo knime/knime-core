@@ -29,14 +29,14 @@ package org.knime.core.data;
  * columns and ordered rows.
  * 
  * <p>
- * Each <code>DataTable</code> is a container of <code>DataRow</code>
- * elements which are returned by the <code>RowIterator</code>. Each row must
- * have the same number of <code>DataCell</code> elements (columns), is
- * read-only, and must provide a unique row identifier for each row element. A
- * table also contains a <code>DataTableSpec</code> member which provides
+ * Each <code>DataTable</code> is a container of {@link DataRow}
+ * elements which are returned by the {@link RowIterator}. Each row must
+ * have the same number of {@link DataCell} elements (columns), is
+ * read-only, and must provide a unique row identifier. A
+ * table also contains a {@link DataTableSpec} member which provides
  * information about the structure of the table. For each column specifics like
- * name, type, and possible values etc. are kept in a <code>ColumnSpec</code>,
- * which can be retrieved from the <code>DataTableSpec</code> by column index.
+ * name, type, and possible values etc. are kept in a {@link DataColumnSpec},
+ * which can be retrieved from the {@link DataTableSpec} by column index.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
@@ -47,7 +47,7 @@ package org.knime.core.data;
 public interface DataTable extends Iterable<DataRow> {
 
     /**
-     * Returns the <code>DataTableSpec</code> object of this table which
+     * Returns the {@link DataTableSpec} object of this table which
      * specifies the structure of this data table.
      * 
      * @return the DataTableSpec of this table.

@@ -39,21 +39,26 @@ a unique name. Each row consists of a certain number of cells (which
 contain the actual data) and a unique row identifier. The data in a
 DataTable is read-only.<br>
 <br>
-A DataTable contains a DataTableSpec (see <code>DataTableSpec.java</code>) 
+A DataTable contains a {@link org.knime.core.data.DataTableSpec DataTableSpec} 
+(see <code>DataTableSpec.java</code>) 
 object which describes the structure of the table (the number of columns, the
-column types, etc.) and a RowIterator (see <code>RowIterator.java</code>) which
-allows to iterate over the rows of the table and actually access
-the data.<br>
+column types, etc.) and a {@link org.knime.core.data.RowIterator RowIterator}
+(see <code>RowIterator.java</code>) which allows to iterate over the rows of the 
+table and actually access the data.<br>
 <br>
-A RowIterator returns a DataRow (see <code>DataRow.java</code>), which allows 
-access to each DataCell (see <code>DataCell.java</code>) in this row by index 
-(the index of the column). The number of rows is not known up-front, the iterator
-indicates when it reaches the end of the table.
+A RowIterator returns a {@link org.knime.core.data.DataRow DataRow} 
+(see <code>DataRow.java</code>), which allows 
+access to each {@link org.knime.core.data.DataCell DataCell} 
+(see <code>DataCell.java</code>) in this row by index 
+(the index of the column). The number of rows is not known up-front (not in all 
+tables), the iterator indicates when it reaches the end of the table.
 There is no random access to rows of the data table. The
 underlying source could be sequential and of arbitrary size. Thus the
-general DataTable interface doesn't provide any random access methods.<br>
+general {@link org.knime.core.data.DataTable DataTable} interface doesn't provide 
+any random access methods.<br>
 <br>
-The DataTableSpec contains the meta information of the data table.
+The {@link org.knime.core.data.DataTableSpec DataTableSpec} contains the meta 
+information of the data table.
 It can be used to query the columns' name, type, and the number of
 columns. In addition to that it is also used to pass information
 along to connected successors to let them know of the structure of
@@ -64,17 +69,18 @@ predecessor, it can be set up after it received the DataTableSpec.<br>
 <img alt="Accessing the data in a DataTable" src="doc-files/datatable_scrn.gif"
  style="width: 527px; height: 612px;"><br>
 <br>
-DataCells are of certain type, depending on the type of data appearing
-in the corresponding column. For each type of data cell certain objects exist
-descriping the cell's properties, capabilities and compatibilities. This is the
-<code>DataCell</code> derivative implementing <code>DataValue</code>, which defines how to 
-access the value stored in the data cell. 
+{@link org.knime.core.data.DataCell DataCell} are of certain type, depending on 
+the type of data appearing in the corresponding column. For each type of data 
+cell certain objects exist descriping the cell's properties, capabilities and 
+compatibilities. This is the {@link org.knime.core.data.DataCell DataCell} 
+derivative implementing {@link org.knime.core.data.DataValue DataValue}, which 
+defines how to access the value stored in the data cell. 
 
-<p>Read more on datacells <a HREF="doc-files/newtypes.html">here</a> 
+<p>Read more on data cells <a HREF="doc-files/newtypes.html">here</a> 
 and in the <a HREF="doc-files/faq.html">FAQ<a>.
 <br>
 <br>
-Default implementations of DataCells can be found in the <code>data.def</code>
+Default implementations of DataCells can be found in the {@link org.knime.core.data.def def}
 package. These implementations store the value of the cell in a member of the 
 corresponding Java data type.<br>
 <br>

@@ -26,7 +26,7 @@
 package org.knime.core.data;
 
 /**
- * Comparator returned DoubleValue interface.
+ * Comparator returned by the {@link DoubleValue} interface.
  * 
  * @see org.knime.core.data.DoubleValue#UTILITY
  * @author Michael Berthold, University of Konstanz
@@ -34,11 +34,11 @@ package org.knime.core.data;
 public class DoubleValueComparator extends DataValueComparator {
 
     /**
-     * Compares to <code>DoubleValue</code> based on their generic 
+     * Compares two {@link DoubleValue}s based on their generic 
      * <code>double</code>.
      * 
-     * @param v1 the first <code>DoubleValue</code> to compare the other with
-     * @param v2 the other <code>DoubleValue</code> to compare the first with
+     * @param v1 the first {@link DoubleValue} to compare the other with
+     * @param v2 the other {@link DoubleValue} to compare the first with
      * @return what a comparator is supposed to return.
      * 
      * @throws ClassCastException If one of the arguments is 

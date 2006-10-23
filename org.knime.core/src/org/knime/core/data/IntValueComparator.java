@@ -26,7 +26,7 @@
 package org.knime.core.data;
 
 /**
- * Comparator returned by the IntValue interface. 
+ * Comparator returned by the {@link IntValue} interface. 
  *
  * @see org.knime.core.data.IntValue#UTILITY
  * @see org.knime.core.data.IntValue.IntUtilityFactory
@@ -35,7 +35,7 @@ package org.knime.core.data;
 public class IntValueComparator extends DataValueComparator {
 
     /**
-     * Compares two <code>IntValue</code>s based in their <code>int</code>.
+     * Compares two {@link IntValue}s based on their <code>int</code>.
      * @see org.knime.core.data.DataValueComparator
      *          #compareDataValues(DataValue, DataValue)
      */

@@ -26,7 +26,7 @@
 package org.knime.core.data;
 
 /**
- * Comparator returned by the <code>FuzzyNumberValue</code> datacell type. 
+ * Comparator returned by the {@link FuzzyNumberValue} datacell type. 
  *
  * @see org.knime.core.data.FuzzyNumberValue.FuzzyNumberUtilityFactory
  * @author Michael Berthold, University of Konstanz
@@ -34,7 +34,7 @@ package org.knime.core.data;
 public class FuzzyNumberValueComparator extends DataValueComparator {
 
     /**
-     * Compares to <code>FuzzyNumberValue</code> based in their
+     * Compares two {@link FuzzyNumberValue}s based in their
      * core value, min support value, or their max support value (in this 
      * order if the comparison returns 0).
      * @see org.knime.core.data.DataValueComparator

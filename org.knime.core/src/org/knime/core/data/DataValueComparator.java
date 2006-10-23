@@ -28,9 +28,9 @@ package org.knime.core.data;
 import java.util.Comparator;
 
 /**
- * The comparator used to compare two <code>DataValue</code> objects. An
+ * The comparator used to compare two {@link DataValue} objects. An
  * instance of this class is returned by each
- * <code>DataValue#UtilityFactory</code> implementation to compare two values.
+ * {@link DataValue.UtilityFactory} implementation to compare two values.
  * Implementations can safely assume that objects passed to the
  * <code>compareDataValue</code> method are typecastable to that type of that
  * DataValue returning this comparator.
@@ -65,8 +65,6 @@ public abstract class DataValueComparator implements Comparator<DataCell> {
      *         o1 is larger than o2, otherwise zero. Note: return value zero is
      *         not equivalent to o1 equals o2.
      * 
-     * @throws ClassCastException If <code>o1</code> or <code>o2</code> not
-     *             of type <code>DataCell</code>.
      * @throws NullPointerException If one or the other object is
      *             <code>null</code>.
      * 

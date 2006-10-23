@@ -32,8 +32,9 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.StringValueRenderer;
 
 
-/** 
- * Interface of a <code>StringCell</code>, forces method to return string value.
+/**
+ * Interface of a {@link org.knime.core.data.def.StringCell}, forces method to
+ * return string value.
  * 
  * @author M. Berthold, University of Konstanz
  */
