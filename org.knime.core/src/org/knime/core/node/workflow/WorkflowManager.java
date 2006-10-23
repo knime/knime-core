@@ -577,7 +577,11 @@ public class WorkflowManager implements WorkflowListener {
      * nodes and connection are initialzied, and - if available -
      * <code>NodeSettings</code>, <code>DataTableSpec</code>,
      * <code>DataTable</code>, and <code>ModelContent</code> are loaded
-     * into each node.
+     * into each node.<br />
+     * This constructor does essentially nothing else than calling
+     * {@link #WorkflowManager()} and {@link #load(File, NodeProgressMonitor)}.
+     * The "problem" with this constructor is, that once an error occurs while
+     * loading the workflow you won't have the manager at hand afterwards.
      * 
      * @param workflowFile the location of the workflow file,
      *            {@link #WORKFLOW_FILE}
