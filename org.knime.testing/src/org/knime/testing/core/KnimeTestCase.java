@@ -27,6 +27,7 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
 
 import junit.framework.Assert;
@@ -77,6 +78,9 @@ public class KnimeTestCase extends TestCase {
         } catch (CanceledExecutionException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } catch (WorkflowException ex) {
+            // TODO Auto-generated catch block
+            ex.printStackTrace();
         }
     }
 
