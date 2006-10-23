@@ -43,6 +43,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -63,6 +64,9 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  */
 final class ColorManagerNodeDialogPane extends NodeDialogPane implements
         ItemListener {
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            ColorManagerNodeDialogPane.class);
 
     /** Keeps all columns. */
     private final JComboBox m_columns = new JComboBox();
@@ -118,7 +122,8 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
             }
         }
         // init color chooser and the value combo box
-        final JColorChooser jcc = new JColorChooser(new MyColorSelectionModel());
+        final JColorChooser jcc = new JColorChooser(
+                new MyColorSelectionModel());
         // combo holding the values for a certain column
         final Color dftColor = ColorAttr.DEFAULT.getColor();
         jcc.setColor(dftColor);
@@ -177,36 +182,44 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
         // remove all columns
         m_columns.removeItemListener(this);
         m_columns.removeAllItems();
+        
         // reset nominal and range panel
         m_nominal.removeAllElements();
         m_range.removeAllElements();
 
+        // index of the last column with nominal values
         int hasNominals = -1;
+        // index of the last column with numeric ranges defined
         int hasRanges = -1;
+        
         // read settings and write into the map
         String target = settings.getString(
-                ColorManagerNodeModel.SELECTED_COLUMN, null);
+                ColorNodeModel.SELECTED_COLUMN, null);
+        
         // null = not specified, true = nominal, and false = range
         Boolean nominalSelected = null;
         try {
-            nominalSelected = settings
-                    .getBoolean(ColorManagerNodeModel.IS_NOMINAL);
+            nominalSelected = settings.getBoolean(ColorNodeModel.IS_NOMINAL);
         } catch (InvalidSettingsException ise) {
-            ColorManagerNodeModel.LOGGER.debug("Nominal/Range selection flag"
+            LOGGER.debug("Nominal/Range selection flag"
                     + " not available.");
         }
 
+        // find last columns for nominal values and numeric ranges defined
         for (int i = 0; i < specs[0].getNumColumns(); i++) {
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
             DataColumnDomain domain = cspec.getDomain();
+            // nominal values defined
             if (domain.hasValues()) {
                 m_nominal.add(cspec.getName(), domain.getValues());
                 // select last possible nominal column
                 hasNominals = i;
             }
+            // numeric ranges defined
             if (cspec.getType().isCompatible(DoubleValue.class)) {
                 DataCell lower = domain.getLowerBound();
                 DataCell upper = domain.getUpperBound();
+                // lower and upper bound can be null
                 m_range.add(cspec.getName(), lower, upper);
                 if (hasRanges == -1) { // select first range column found
                     hasRanges = i;
@@ -214,51 +227,50 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
             }
         }
 
-        // check for not configurable
+        // check for not configurable: no column found
         if (hasNominals == -1 && hasRanges == -1) {
             throw new NotConfigurableException("Please provide input table"
                     + " with at least one column with either nominal and/or"
                     + " lower and upper bounds defined.");
         }
 
-        // update selected column index
-        if (target == null
-                || !specs[0].containsName(target)
-                || (!specs[0].getColumnSpec(target).getDomain().hasValues() && !specs[0]
-                        .getColumnSpec(target).getDomain().hasBounds())) {
+        // update target column if: (1) null, (2) not in spec, (3+4) does not
+        // have possible values defined AND is not compatible with DoubleType
+        if (target == null || !specs[0].containsName(target)
+                || (!specs[0].getColumnSpec(target).getDomain().hasValues() 
+                &&  !specs[0].getColumnSpec(target).getType().isCompatible(
+                        DoubleValue.class))) {
             // select first nominal column if nothing could be selected
             if (hasNominals > -1) {
                 target = specs[0].getColumnSpec(hasNominals).getName();
                 nominalSelected = true;
             } else {
-                if (hasRanges > -1) { // otherwise the first range column
+                // otherwise the first range column
+                if (hasRanges > -1) { 
                     target = specs[0].getColumnSpec(hasRanges).getName();
                     nominalSelected = false;
-                } else {
-                    target = null;
-                    nominalSelected = null;
+                } else { // 
+                    assert false : "Both, nominal and range column are not "
+                        + "available!";
                 }
             }
-        } else {
+        } else { // we have a valid target column
+            boolean domValues = 
+                specs[0].getColumnSpec(target).getDomain().hasValues();
+            // nothing selected before
             if (nominalSelected == null) {
-                nominalSelected = specs[0].getColumnSpec(target).getDomain()
-                        .hasValues();
-            } else {
-                if (nominalSelected
-                        && !specs[0].getColumnSpec(target).getDomain()
-                                .hasValues()) {
+                // select nominal, if possible values found
+                nominalSelected = domValues;
+            } else { // nominal or range?
+                // nominal! but no possible values
+                if (nominalSelected && !domValues) {
+                    // use range column
                     nominalSelected = false;
-                } else {
-                    if (!nominalSelected
-                            && !specs[0].getColumnSpec(target).getDomain()
-                                    .hasBounds()) {
-                        nominalSelected = true;
-                    }
                 }
             }
         }
 
-        // nominal
+        // nominal column selected
         if (hasNominals > -1) {
             m_nominal.loadSettings(settings, target);
             if (nominalSelected) {
@@ -267,7 +279,8 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
         } else {
             m_nominal.select(null);
         }
-        // range
+        
+        // numeric range column selected
         if (hasRanges > -1) {
             m_range.loadSettings(settings, target);
             if (!nominalSelected) {
@@ -277,7 +290,7 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
             m_range.select(null);
         }
 
-        // add columns
+        // add all columns
         int cols = specs[0].getNumColumns();
         for (int i = 0; i < cols; i++) {
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
@@ -286,7 +299,10 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
                 m_columns.setSelectedIndex(i);
             }
         }
+        
+        // inform about column change
         columnChanged(target, nominalSelected);
+        // register column change listener
         m_columns.addItemListener(this);
     }
 
@@ -303,15 +319,15 @@ final class ColorManagerNodeDialogPane extends NodeDialogPane implements
             throws InvalidSettingsException {
         assert (settings != null);
         String cell = getSelectedItem();
-        settings.addString(ColorManagerNodeModel.SELECTED_COLUMN, cell);
+        settings.addString(ColorNodeModel.SELECTED_COLUMN, cell);
         if (cell != null) {
             if (m_buttonNominal.isSelected() && m_buttonNominal.isEnabled()) {
-                settings.addBoolean(ColorManagerNodeModel.IS_NOMINAL, true);
+                settings.addBoolean(ColorNodeModel.IS_NOMINAL, true);
                 m_nominal.saveSettings(settings);
             } else {
                 if (m_buttonRange.isSelected() && m_buttonRange.isEnabled()) {
                     settings.addBoolean(
-                            ColorManagerNodeModel.IS_NOMINAL, false);
+                            ColorNodeModel.IS_NOMINAL, false);
                     m_range.saveSettings(settings);
                 } else {
                     throw new InvalidSettingsException("No color settings for "

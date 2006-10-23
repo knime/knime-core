@@ -216,10 +216,10 @@ public class ColorManagerDialogRange extends JPanel {
         assert m_columnModel.getSize() == 2;
         ColorManagerIcon i0 = (ColorManagerIcon)m_columnModel.getElementAt(0);
         settings
-                .addInt(ColorManagerNodeModel.MIN_COLOR, i0.getColor().getRGB());
+                .addInt(ColorNodeModel.MIN_COLOR, i0.getColor().getRGB());
         ColorManagerIcon i1 = (ColorManagerIcon)m_columnModel.getElementAt(1);
         settings
-                .addInt(ColorManagerNodeModel.MAX_COLOR, i1.getColor().getRGB());
+                .addInt(ColorNodeModel.MAX_COLOR, i1.getColor().getRGB());
     }
 
     /**
@@ -232,9 +232,9 @@ public class ColorManagerDialogRange extends JPanel {
         if (column == null) {
             return;
         }
-        Color c0 = new Color(settings.getInt(ColorManagerNodeModel.MIN_COLOR,
+        Color c0 = new Color(settings.getInt(ColorNodeModel.MIN_COLOR,
                 Color.RED.getRGB()));
-        Color c1 = new Color(settings.getInt(ColorManagerNodeModel.MAX_COLOR,
+        Color c1 = new Color(settings.getInt(ColorNodeModel.MAX_COLOR,
                 Color.GREEN.getRGB()));
         DataCellColorEntry[] ex = m_map.get(column);
         if (ex == null) {

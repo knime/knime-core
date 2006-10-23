@@ -24,10 +24,19 @@
  */
 package org.knime.base.node.viz.property.color;
 
+import static org.knime.base.node.viz.property.color.ColorNodeModel.SELECTED_COLUMN;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -36,9 +45,10 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColorAppenderNodeModel extends ColorManagerNodeModel {
-    private NodeSettings m_settings = null;
+public class ColorAppenderNodeModel extends NodeModel {
 
+    private final ColorNodeModel m_colorModel;
+    
     /**
      * Create model.
      * 
@@ -50,6 +60,7 @@ public class ColorAppenderNodeModel extends ColorManagerNodeModel {
     public ColorAppenderNodeModel(final int dataIns, final int dataOuts,
             final int modelIns, final int modelOuts) {
         super(dataIns, dataOuts, modelIns, modelOuts);
+        m_colorModel = new ColorNodeModel();
     }
 
     /**
@@ -65,17 +76,15 @@ public class ColorAppenderNodeModel extends ColorManagerNodeModel {
             final ModelContentRO predParams) throws InvalidSettingsException {
         assert index == 0;
         if (predParams == null) {
-            m_settings = null;
-            throw new InvalidSettingsException("Color model not available.");
+            m_colorModel.resetColorMapping();
+        } else {
+            m_colorModel.validateSettings(predParams);
+            String column = m_colorModel.getSelectedColumn();
+            m_colorModel.loadValidatedSettingsFrom(predParams);
+            if (column != null) {
+                m_colorModel.setSelectedColumn(column);
+            }
         }
-        m_settings = new NodeSettings(predParams.getKey());
-        predParams.copyTo(m_settings);
-        String column = super.getSelectedColumn();
-        if (column != null) {
-            m_settings.addString(SELECTED_COLUMN, column);
-        }
-        super.validateSettings(m_settings);
-        super.loadValidatedSettingsFrom(m_settings);
     }
 
     /**
@@ -84,10 +93,10 @@ public class ColorAppenderNodeModel extends ColorManagerNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        checkColorModel();
-        String column = settings.getString(SELECTED_COLUMN);
-        m_settings.addString(SELECTED_COLUMN, column);
-        super.validateSettings(m_settings);
+        String column = settings.getString(SELECTED_COLUMN, null);
+        if (column == null) {
+            throw new InvalidSettingsException("No column selected.");
+        }
     }
 
     /**
@@ -97,10 +106,8 @@ public class ColorAppenderNodeModel extends ColorManagerNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        checkColorModel();
         String column = settings.getString(SELECTED_COLUMN);
-        m_settings.addString(SELECTED_COLUMN, column);
-        super.loadValidatedSettingsFrom(m_settings);
+        m_colorModel.setSelectedColumn(column);
     }
 
     /**
@@ -108,12 +115,7 @@ public class ColorAppenderNodeModel extends ColorManagerNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        String column = super.getSelectedColumn();
-        if (column == null) {
-            if (m_settings != null) {
-                column = m_settings.getString(SELECTED_COLUMN, null);
-            }
-        }
+        String column = m_colorModel.getSelectedColumn();
         settings.addString(SELECTED_COLUMN, column);
     }
 
@@ -123,13 +125,46 @@ public class ColorAppenderNodeModel extends ColorManagerNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        checkColorModel();
-        return super.configure(inSpecs);
+        return m_colorModel.configure(inSpecs);
     }
 
-    private void checkColorModel() throws InvalidSettingsException {
-        if (m_settings == null) {
-            throw new InvalidSettingsException("Color model not available.");
-        }
+    /**
+     * @see org.knime.core.node.NodeModel#execute(BufferedDataTable[], 
+     *      org.knime.core.node.ExecutionContext)
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
+            final ExecutionContext exec) throws Exception {
+        return m_colorModel.execute(inData, exec);
+    }
+
+    /**
+     * @see NodeModel#loadInternals(java.io.File, 
+     *      org.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        
+    }
+
+    /**
+     * @see org.knime.core.node.NodeModel#reset()
+     */
+    @Override
+    protected void reset() {
+        
+    }
+    
+    /**
+     * @see NodeModel#saveInternals(java.io.File, 
+     *      org.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        
     }
 }

@@ -82,15 +82,10 @@ public class ColorAppenderNodeDialogPane extends NodeDialogPane {
             m_columns.addItem(cspec);
         }
         String selColumn = settings.getString(
-                ColorManagerNodeModel.SELECTED_COLUMN, null);
+                ColorNodeModel.SELECTED_COLUMN, null);
         if (selColumn != null) {
             DataColumnSpec cspec = specs[0].getColumnSpec(selColumn);
             m_columns.setSelectedItem(cspec);
-        }
-        try {
-            validateSettings();
-        } catch (InvalidSettingsException ise) {
-            throw new NotConfigurableException(ise.getMessage());
         }
     }
 
@@ -104,7 +99,7 @@ public class ColorAppenderNodeDialogPane extends NodeDialogPane {
         if (o == null) {
             throw new InvalidSettingsException("No column selected.");
         }
-        settings.addString(ColorManagerNodeModel.SELECTED_COLUMN,
+        settings.addString(ColorNodeModel.SELECTED_COLUMN,
                 ((DataColumnSpec)o).getName());
     }
 }

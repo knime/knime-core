@@ -65,7 +65,8 @@ class ColorManagerIcon implements Icon {
      * @param prefix The label's prefix.
      * @param color The inital color.
      */
-    ColorManagerIcon(final DataCell cell, final String prefix, final Color color) {
+    ColorManagerIcon(final DataCell cell, final String prefix, 
+            final Color color) {
         m_color = color;
         m_cell = cell;
         m_prefix = prefix;

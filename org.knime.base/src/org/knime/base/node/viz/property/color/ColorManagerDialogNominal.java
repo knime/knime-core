@@ -130,7 +130,8 @@ final class ColorManagerDialogNominal extends JPanel {
      * @param set the set of possible values for this column
      */
     void add(final String column, final Set<DataCell> set) {
-        LinkedHashMap<DataCell, Color> map = new LinkedHashMap<DataCell, Color>();
+        LinkedHashMap<DataCell, Color> map = 
+            new LinkedHashMap<DataCell, Color>();
         if (set != null && !set.isEmpty()) {
             int idx = -1;
             for (DataCell cell : set) {
@@ -173,7 +174,7 @@ final class ColorManagerDialogNominal extends JPanel {
                 vals[i] = icon.getCell();
                 settings.addInt(vals[i].toString(), icon.getColor().getRGB());
             }
-            settings.addDataCellArray(ColorManagerNodeModel.VALUES, vals);
+            settings.addDataCellArray(ColorNodeModel.VALUES, vals);
         } else {
             throw new InvalidSettingsException("Make sure the selected column "
                     + "has nominal values defined within the domain.");
@@ -191,7 +192,7 @@ final class ColorManagerDialogNominal extends JPanel {
             return;
         }
         DataCell[] vals = settings.getDataCellArray(
-                ColorManagerNodeModel.VALUES, (DataCell[])null);
+                ColorNodeModel.VALUES, (DataCell[])null);
         if (vals == null) {
             return;
         }
