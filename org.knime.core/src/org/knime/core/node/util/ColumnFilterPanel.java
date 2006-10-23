@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.core.data.util;
+package org.knime.core.node.util;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -57,7 +57,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 
 /**
