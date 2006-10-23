@@ -587,10 +587,12 @@ public class WorkflowManager implements WorkflowListener {
      * @throws CanceledExecutionException if loading was canceled
      * @throws IOException if the workflow file can not be found or files to
      *             load node internals
+     * @throws WorkflowException if an exception occurs while loading the
+     *  workflow structure 
      */
     public WorkflowManager(final File workflowFile,
             final NodeProgressMonitor progMon) throws InvalidSettingsException,
-            CanceledExecutionException, IOException {
+            CanceledExecutionException, IOException, WorkflowException {
         this();
         try {
             load(workflowFile, progMon);
@@ -1469,11 +1471,13 @@ public class WorkflowManager implements WorkflowListener {
      * @throws CanceledExecutionException if loading was canceled
      * @throws WorkflowInExecutionException if the workflow is currently being
      *             executed
+     * @throws WorkflowException if an exception occurs while loading the
+     *  workflow structure
      */
     public synchronized void load(final File workflowFile,
             final NodeProgressMonitor progMon) throws IOException,
             InvalidSettingsException, CanceledExecutionException,
-            WorkflowInExecutionException {
+            WorkflowInExecutionException, WorkflowException {
         checkForRunningNodes("Workflow cannot be loaded");
 
         if (!workflowFile.isFile()
@@ -1554,17 +1558,21 @@ public class WorkflowManager implements WorkflowListener {
      * 
      * @param settings read settings from
      * @throws InvalidSettingsException if an error occurs during reading
+     * @throws WorkflowException if an exception occurs while loading the
+     *  workflow
      */
     private void load(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+            throws InvalidSettingsException, WorkflowException {
         // read running ids for new nodes and connections
         if (m_parent == null) {
             m_runningNodeID.setValue(settings.getInt(KEY_RUNNING_NODE_ID));
             m_runningConnectionID
                     .setValue(settings.getInt(KEY_RUNNING_CONN_ID));
         }
-
-        // read nodes
+        
+        final WorkflowException workflowException = new WorkflowException(
+            "Error while loading workflow");
+        WorkflowException lastEx = workflowException;
         
         // Node-Subconfig
         NodeSettingsRO nodes = settings.getNodeSettings(KEY_NODES); 
@@ -1579,17 +1587,26 @@ public class WorkflowManager implements WorkflowListener {
                 NodeContainer newNode = new NodeContainer(nodeSetting, this);
                 addNodeWithID(newNode);
             } catch (InstantiationException ex) {
+                lastEx = new WorkflowException("Error while loading node",
+                        lastEx, ex);
                 LOGGER.error("Could not create factory object of type "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (IllegalAccessException ex) {
+                lastEx = new WorkflowException("Error while loading node",
+                        lastEx, ex);
                 LOGGER.error("Could not access factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (ClassNotFoundException ex) {
+                lastEx = new WorkflowException("Error while loading node",
+                        lastEx, ex);
                 LOGGER.error("Could not find factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
+            } catch (Throwable t) {
+                lastEx = new WorkflowException("Error while loading node",
+                        lastEx, t);                
             }
         }
 
@@ -1606,10 +1623,16 @@ public class WorkflowManager implements WorkflowListener {
                         connectionConfig, this);
                 addConnection(cc);
             } catch (Exception ex) {
+                lastEx = new WorkflowException("Error while adding connection",
+                        lastEx, ex);                
                 LOGGER.error("Could not create connection: " + connectionKey
                         + " reason: " + ex.getMessage());
                 LOGGER.debug(connectionConfig, ex);
             }
+        }
+        
+        if (lastEx != workflowException) {
+            throw workflowException;
         }
     }
 

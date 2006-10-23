@@ -40,6 +40,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowInExecutionException;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -59,11 +60,11 @@ public final class RadialBasisFunctionFlow {
      * 
      * @param trn the training data file
      * @param tst the test data file
-     * 
      */
     private RadialBasisFunctionFlow(final String trn, final String tst)
             throws IOException, CanceledExecutionException,
-            WorkflowInExecutionException, InvalidSettingsException {
+            WorkflowInExecutionException, InvalidSettingsException,
+            WorkflowException {
 
         LOGGER.info("Train data: " + trn);
         LOGGER.info("Test data: " + tst);

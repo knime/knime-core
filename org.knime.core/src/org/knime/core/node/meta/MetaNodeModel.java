@@ -47,6 +47,7 @@ import org.knime.core.node.NodeStatus;
 import org.knime.core.node.SpecialNodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowInExecutionException;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -456,11 +457,14 @@ public class MetaNodeModel extends SpecialNodeModel implements
                         internalWFM().load(f, new DefaultNodeProgressMonitor());
                     } catch (IOException ex) {
                         throw new InvalidSettingsException(
-                                "Could not load internal workflow");
+                                "Could not load internal workflow", ex);
                     } catch (CanceledExecutionException ex) {
                         throw new InvalidSettingsException(
                                 "Loading of internal workflow has been " 
-                                + "interrupted by user");
+                                + "interrupted by user", ex);
+                    } catch (WorkflowException ex) {
+                        throw new InvalidSettingsException(
+                            "Could not load internal workflow", ex);
                     }
 
                 } catch (WorkflowInExecutionException ex) {
