@@ -18,7 +18,7 @@
  */
 package org.knime.base.node.util;
 
-import org.knime.core.data.util.ColumnFilterPanel;
+import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  * 
