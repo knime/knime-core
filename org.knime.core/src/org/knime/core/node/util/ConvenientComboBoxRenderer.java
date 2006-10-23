@@ -16,7 +16,7 @@
  * History
  *   21.08.2006 (Fabian Dill): created
  */
-package org.knime.core.node.defaultnodedialog;
+package org.knime.core.node.util;
 
 import java.awt.Component;
 import java.awt.FontMetrics;
