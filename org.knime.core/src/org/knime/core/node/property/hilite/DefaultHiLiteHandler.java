@@ -169,7 +169,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param ids a set of row IDs to set hilited
      * @throws NullPointerException if the set or one of its elements is
      *      <code>null</code>
-     * @deprecated Use {@link #fireHiLiteEvent(Set<DataCell>)} instead
+     * @deprecated Use {@link #fireHiLiteEvent(Set)} instead
      */
     public synchronized void hiLite(final Set<DataCell> ids) {
         fireHiLiteEvent(ids);
@@ -215,7 +215,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param ids a set of row IDs to set unhilited
      * @throws NullPointerException if the set or one of its elements is
      *      <code>null</code>
-     * @deprecated Use {@link #fireUnHiLiteEvent(Set<DataCell>)} instead
+     * @deprecated Use {@link #fireUnHiLiteEvent(Set)} instead
      */
     public synchronized void unHiLite(final Set<DataCell> ids) {
         fireUnHiLiteEvent(ids);

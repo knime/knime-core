@@ -260,9 +260,8 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
     
     /**
      * 
-     * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler#
-     * unHiLiteAll()
-     * @deprecated Use {@link #fireClearHiLiteEvent(Set)} instead
+     * @see DefaultHiLiteHandler#unHiLiteAll()
+     * @deprecated Use {@link #fireClearHiLiteEvent()} instead
      */
     @Override
     public void unHiLiteAll() {
