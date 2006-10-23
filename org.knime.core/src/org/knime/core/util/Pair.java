@@ -66,8 +66,8 @@ public final class Pair<T, M> {
         if (!(o instanceof Pair)) { return false; }
         
         Pair p = (Pair) o;
-        if (m_first.equals(p.m_first)) { return false; }
-        if (m_second.equals(p.m_second)) { return false; }
+        if (!m_first.equals(p.m_first)) { return false; }
+        if (!m_second.equals(p.m_second)) { return false; }
         return true;
     }
 
