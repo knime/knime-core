@@ -84,7 +84,7 @@ class NoKeyBuffer extends Buffer {
     }
     /**
      * Does nothing as row keys are not stored.
-     * @see Buffer#writeRowKey(RowKey)
+     * @see Buffer#writeRowKey(RowKey, DCObjectOutputStream)
      */
     @Override
     void writeRowKey(final RowKey key, final DCObjectOutputStream outStream) 

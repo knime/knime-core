@@ -68,6 +68,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
      * @return Result from delegate object.
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return m_input.hashCode();
     }
