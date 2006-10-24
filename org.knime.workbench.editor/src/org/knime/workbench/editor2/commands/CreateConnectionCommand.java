@@ -152,13 +152,38 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public boolean canExecute() {
-        return (m_sourceNode != null)
-                && (m_targetNode != null)
-                //&& (!(m_sourceNode.isLocked()))
-                && (!(m_targetNode.isLocked()))
-                && (m_manager.canAddConnection(m_sourceNode.getNodeContainer()
-                        .getID(), m_sourcePortID, m_targetNode
-                        .getNodeContainer().getID(), m_targetPortID));
+
+        if (m_targetPortID < 0) {
+            return false;
+        }
+        if (m_sourceNode == m_targetNode) {
+            return false;
+        }
+        if ((m_sourceNode == null) || (m_targetNode == null)) {
+
+            // do not inform the user!! this check is just for the different
+            // stages during a connection creation (dragging) such that it is
+            // known once two nodes are selected to connect
+            return false;
+        }
+        if (m_targetNode.isLocked()) {
+
+            return false;
+        }
+
+        // let check the workflow manager if the connection can be created
+        // in case it can not an exception is thrown which is caught and
+        // displayed to the user
+        try {
+            m_manager.checkAddConnection(m_sourceNode.getNodeContainer()
+                    .getID(), m_sourcePortID, m_targetNode.getNodeContainer()
+                    .getID(), m_targetPortID);
+        } catch (Exception e) {
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -178,9 +203,34 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public void execute() {
-        m_connection = m_manager.addConnection(
-                  m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
-                  m_targetNode.getNodeContainer().getID(), m_targetPortID);
+
+        // let check the workflow manager if the connection can be created
+        // in case it can not an exception is thrown which is caught and
+        // displayed to the user
+        try {
+            m_manager.checkAddConnection(m_sourceNode.getNodeContainer()
+                    .getID(), m_sourcePortID, m_targetNode.getNodeContainer()
+                    .getID(), m_targetPortID);
+
+            m_connection =
+                    m_manager.addConnection(m_sourceNode.getNodeContainer()
+                            .getID(), m_sourcePortID, m_targetNode
+                            .getNodeContainer().getID(), m_targetPortID);
+
+        } catch (Exception e) {
+            showInfoMessage("Connection could not be created.",
+                    "The two nodes could not be connected due to "
+                            + "the following reason:\n " + e.getMessage());
+        }
+    }
+
+    private void showInfoMessage(final String header, final String message) {
+        MessageBox mb =
+                new MessageBox(Display.getDefault().getActiveShell(),
+                        SWT.ICON_INFORMATION | SWT.OK);
+        mb.setText(header);
+        mb.setMessage(message);
+        mb.open();
     }
 
     /**
@@ -192,13 +242,13 @@ public class CreateConnectionCommand extends Command {
         try {
             m_manager.removeConnection(m_connection);
         } catch (WorkflowInExecutionException ex) {
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_INFORMATION | SWT.OK);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("operation not allowed");
             mb.setMessage("You cannot remove a connection while the workflow"
                     + " is in execution.");
-            mb.open();            
+            mb.open();
         }
     }
 }
