@@ -32,6 +32,7 @@ import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
@@ -56,6 +57,12 @@ public class ProgressFigure extends RectangleFigure implements
 
     private static final Font PROGRESS_FONT;
 
+    private static final Color PROGRESS_BAR_BACKGROUND_COLOR =
+            new Color(null, 220, 220, 220);
+
+    // private static final Color PROGRESS_BAR_COLOR = new Color(null, 240, 200,
+    // 10);
+
     static {
         Display current = Display.getCurrent();
         Font systemFont = current.getSystemFont();
@@ -66,7 +73,6 @@ public class ProgressFigure extends RectangleFigure implements
             name = systemFontData[0].getName();
             // height = systemFontData[0].getHeight();
         }
-
         PROGRESS_FONT = new Font(current, name, height, SWT.NORMAL);
     }
 
@@ -112,6 +118,7 @@ public class ProgressFigure extends RectangleFigure implements
         setLayoutManager(layout);
         // FlowLayout layout = new FlowLayout(true);
         // layout.setMajorAlignment(FlowLayout.ALIGN_LEFTTOP);
+        setOutline(false);
     }
 
     /**
@@ -157,11 +164,11 @@ public class ProgressFigure extends RectangleFigure implements
     @Override
     public void paintFigure(final Graphics graphics) {
 
-        super.paintFigure(graphics);
+        // super.paintFigure(graphics);
 
         // paint the specified bar length for the progress
-        graphics.setForegroundColor(ColorConstants.darkBlue);
-        graphics.setBackgroundColor(ColorConstants.darkBlue);
+        graphics.setForegroundColor(ColorConstants.black);
+        graphics.setBackgroundColor(PROGRESS_BAR_BACKGROUND_COLOR);
 
         Rectangle r = getBounds();
         int x = r.x;
@@ -169,13 +176,37 @@ public class ProgressFigure extends RectangleFigure implements
         int w = r.width;
         int h = r.height;
 
+        // defines a polygon within the bounds of this figure with round
+        // edges
+        int firstLeftX = x;
+        int secondLeftX = x + 1;
+        int firstRightX = x + w - 2;
+        int secondRightX = x + w - 1;
+        int firstUpperY = y;
+        int secondUpperY = y + 1;
+        int firstLowerY = y + h - 2;
+        int secondLowerY = y + h - 1;
+
+        int[] pointList =
+                {secondLeftX, firstUpperY, firstRightX, firstUpperY,
+                        secondRightX, secondUpperY, secondRightX, firstLowerY,
+                        firstRightX, secondLowerY, secondLeftX, secondLowerY,
+                        firstLeftX, firstLowerY, firstLeftX, secondUpperY};
+
+        graphics.fillPolygon(pointList);
+        graphics.drawPolygon(pointList);
+
+        graphics.setForegroundColor(ColorConstants.darkBlue);
+        graphics.setBackgroundColor(ColorConstants.darkBlue);
+
         if (m_executing) {
             if (!m_unknownProgress) {
 
                 // calculate the progress bar width from the percentage
                 // current worked value
-                int barWidth = (int)Math.round((double)WIDTH / (double)100
-                        * (double)m_currentWorked);
+                int barWidth =
+                        (int)Math.round((double)WIDTH / (double)100
+                                * (double)m_currentWorked);
 
                 graphics.fillRectangle(x, y, barWidth, h);
                 graphics.setFont(PROGRESS_FONT);
@@ -191,19 +222,38 @@ public class ProgressFigure extends RectangleFigure implements
 
                 graphics.setForegroundColor(ColorConstants.darkBlue);
 
-                int xPos = x + m_unknownProgressBarRenderingPosition;
-
                 // calculate the rendering direction
                 if (m_unknownProgressBarRenderingPosition
-                        + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH) {
+                        + UNKNOW_PROGRESS_BAR_WIDTH > WIDTH) {
                     m_unknownProgressBarDirection = -1;
                 } else if (m_unknownProgressBarRenderingPosition <= 0) {
                     m_unknownProgressBarDirection = 1;
                 }
 
-                graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH, h);
+                // defines a polygon bar with round edges
+                firstLeftX =
+                        firstLeftX + m_unknownProgressBarRenderingPosition - 1;
+                secondLeftX = firstLeftX + 1;
+                firstRightX = firstLeftX + UNKNOW_PROGRESS_BAR_WIDTH;
+                secondRightX = firstRightX + 1;
+                firstUpperY = firstUpperY + 1;
+                secondUpperY = firstUpperY + 1;
+                firstLowerY = firstUpperY + h - 4;
+                secondLowerY = firstLowerY + 2;
 
-                m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
+                int[] movingBar =
+                        {secondLeftX, firstUpperY, firstRightX, firstUpperY,
+                                secondRightX, secondUpperY, secondRightX,
+                                firstLowerY, firstRightX, secondLowerY,
+                                secondLeftX, secondLowerY, firstLeftX,
+                                firstLowerY, firstLeftX, secondUpperY};
+
+                graphics.fillPolygon(movingBar);
+                // graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH,
+                // h);
+
+                m_unknownProgressBarRenderingPosition +=
+                        m_unknownProgressBarDirection;
 
             }
         }
@@ -232,7 +282,7 @@ public class ProgressFigure extends RectangleFigure implements
             public void run() {
 
                 repaint();
-                
+
             };
         };
 
@@ -249,7 +299,7 @@ public class ProgressFigure extends RectangleFigure implements
                             e.printStackTrace();
                         }
                     }
-                    
+
                     m_currentDisplay.syncExec(repaintRun);
                 }
             }
@@ -290,8 +340,8 @@ public class ProgressFigure extends RectangleFigure implements
         int newWorked = m_currentWorked;
         if (pe.hasProgress()) {
             double progress = pe.getProgress().doubleValue();
-            newWorked = (int)Math.round(Math.max(0, Math.min(progress * 100,
-                    100)));
+            newWorked =
+                    (int)Math.round(Math.max(0, Math.min(progress * 100, 100)));
         }
 
         // if something changed, change the values and repaint
@@ -310,8 +360,8 @@ public class ProgressFigure extends RectangleFigure implements
 
         if (!m_currentProgressMessage.equals(message)) {
 
-            m_currentProgressMessage = message == null ? "" : m_stateMessage
-                    + " - " + message;
+            m_currentProgressMessage =
+                    message == null ? "" : m_stateMessage + " - " + message;
             // set the message to the tooltip
             setToolTip(new Label(m_currentProgressMessage));
 
@@ -345,6 +395,11 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public void setStateMessage(final String stateMessage) {
         m_stateMessage = stateMessage;
+
+        m_currentProgressMessage = m_stateMessage;
+
+        // set the message to the tooltip
+        setToolTip(new Label(m_currentProgressMessage));
     }
 
     /**
