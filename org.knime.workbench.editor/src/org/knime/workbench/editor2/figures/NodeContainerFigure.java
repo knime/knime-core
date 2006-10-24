@@ -76,36 +76,36 @@ public class NodeContainerFigure extends RectangleFigure {
     public static final int HEIGHT = 48;
 
     /** Red traffic light. * */
-    public static final Image RED = ImageRepository
-            .getImage("icons/ampel_red.png");
+    public static final Image RED =
+            ImageRepository.getImage("icons/ampel_red.png");
 
     /** Yellow traffic light. * */
-    public static final Image YELLOW = ImageRepository
-            .getImage("icons/ampel_yellow.png");
+    public static final Image YELLOW =
+            ImageRepository.getImage("icons/ampel_yellow.png");
 
     /** Green traffic light. * */
-    public static final Image GREEN = ImageRepository
-            .getImage("icons/ampel_green.png");
+    public static final Image GREEN =
+            ImageRepository.getImage("icons/ampel_green.png");
 
     /** Info sign. * */
-    public static final Image INFO_SIGN = ImageRepository
-            .getImage("icons/roundInfo.jpg");
+    public static final Image INFO_SIGN =
+            ImageRepository.getImage("icons/roundInfo.jpg");
 
     /** Warning sign. * */
-    public static final Image WARNING_SIGN = ImageRepository
-            .getImage("icons/warning.gif");
+    public static final Image WARNING_SIGN =
+            ImageRepository.getImage("icons/warning.gif");
 
     /** Warning sign. * */
-    public static final Image WARNING_SIGN_TINY = ImageRepository
-            .getImage("icons/warningTiny.gif");
+    public static final Image WARNING_SIGN_TINY =
+            ImageRepository.getImage("icons/warningTiny.gif");
 
     /** Error sign. * */
-    public static final Image ERROR_SIGN = ImageRepository
-            .getImage("icons/error.jpg");
+    public static final Image ERROR_SIGN =
+            ImageRepository.getImage("icons/error.jpg");
 
     /** Delete sign. * */
-    public static final Image DELETE_SIGN = ImageRepository
-            .getImage("icons/delete.png");
+    public static final Image DELETE_SIGN =
+            ImageRepository.getImage("icons/delete.png");
 
     /** State: Node not configured. * */
     public static final int STATE_NOT_CONFIGURED = 0;
@@ -394,7 +394,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         if (executing) {
-            
+
             // temporarily remember the execution state of the progress bar
             boolean barExecuting = m_progressFigure.isExecuting();
             m_progressFigure.setExecuting(true);
@@ -528,6 +528,12 @@ public class NodeContainerFigure extends RectangleFigure {
         if (parentBounds.height > 0) {
             prefHeight = parentBounds.height;
         }
+        prefHeight =
+                m_heading.getPreferredSize().height
+                        + m_contentFigure.getPreferredSize().height
+                        + m_infoWarnErrorPanel.getPreferredSize().height
+                        + m_statusFigure.getPreferredSize().height
+                        + m_name.getPreferredSize().height + 8;
         return new Dimension(prefWidth, prefHeight);
     }
 
@@ -591,32 +597,32 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private Label m_deleteIcon;
 
-        private static final String BACKGROUND_OTHER = "icons/node/"
-                + "background_other.png";
+        private static final String BACKGROUND_OTHER =
+                "icons/node/" + "background_other.png";
 
-        private static final String BACKGROUND_SOURCE = "icons/node/"
-                + "background_source.png";
+        private static final String BACKGROUND_SOURCE =
+                "icons/node/" + "background_source.png";
 
-        private static final String BACKGROUND_SINK = "icons/node/"
-                + "background_sink.png";
+        private static final String BACKGROUND_SINK =
+                "icons/node/" + "background_sink.png";
 
-        private static final String BACKGROUND_LEARNER = "icons/node/"
-                + "background_learner.png";
+        private static final String BACKGROUND_LEARNER =
+                "icons/node/" + "background_learner.png";
 
-        private static final String BACKGROUND_PREDICTOR = "icons/node/"
-                + "background_predictor.png";
+        private static final String BACKGROUND_PREDICTOR =
+                "icons/node/" + "background_predictor.png";
 
-        private static final String BACKGROUND_MANIPULATOR = "icons/node/"
-                + "background_manipulator.png";
+        private static final String BACKGROUND_MANIPULATOR =
+                "icons/node/" + "background_manipulator.png";
 
-        private static final String BACKGROUND_META = "icons/node/"
-                + "background_meta.png";
+        private static final String BACKGROUND_META =
+                "icons/node/" + "background_meta.png";
 
-        private static final String BACKGROUND_VIEWER = "icons/node/"
-                + "background_viewer.png";
+        private static final String BACKGROUND_VIEWER =
+                "icons/node/" + "background_viewer.png";
 
-        private static final String BACKGROUND_UNKNOWN = "icons/node/"
-                + "background_unknown.png";
+        private static final String BACKGROUND_UNKNOWN =
+                "icons/node/" + "background_unknown.png";
 
         private Label m_backgroundIcon;
 
@@ -719,8 +725,8 @@ public class NodeContainerFigure extends RectangleFigure {
             // overlay the image with the warning sign
             Image icon = m_baseIcon;
 
-            OverlayImage overlayImage = new OverlayImage(icon,
-                    WARNING_SIGN_TINY);
+            OverlayImage overlayImage =
+                    new OverlayImage(icon, WARNING_SIGN_TINY);
 
             // parameters are only dummy values. not needed!
             overlayImage.drawCompositeImage(0, 0);
