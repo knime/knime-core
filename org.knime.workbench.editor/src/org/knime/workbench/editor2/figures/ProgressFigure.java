@@ -57,6 +57,8 @@ public class ProgressFigure extends RectangleFigure implements
 
     private static final Font PROGRESS_FONT;
 
+    private static final Font QUEUED_FONT;
+
     private static final Color PROGRESS_BAR_BACKGROUND_COLOR =
             new Color(null, 220, 220, 220);
 
@@ -74,6 +76,7 @@ public class ProgressFigure extends RectangleFigure implements
             // height = systemFontData[0].getHeight();
         }
         PROGRESS_FONT = new Font(current, name, height, SWT.NORMAL);
+        QUEUED_FONT = new Font(current, name, 7, SWT.NORMAL);
     }
 
     private boolean m_unknownProgress = false;
@@ -208,7 +211,29 @@ public class ProgressFigure extends RectangleFigure implements
                         (int)Math.round((double)WIDTH / (double)100
                                 * (double)m_currentWorked);
 
-                graphics.fillRectangle(x, y, barWidth, h);
+                firstLeftX =
+                        firstLeftX - 1;
+                secondLeftX = firstLeftX + 1;
+                firstRightX = firstLeftX + barWidth;
+                secondRightX = firstRightX + 1;
+                firstUpperY = firstUpperY + 1;
+                secondUpperY = firstUpperY + 1;
+                firstLowerY = firstUpperY + h - 4;
+                secondLowerY = firstLowerY + 2;
+                
+//              NOTE: the - 1 is a workaround due to a problem in
+                // the rendering routine of fillPolygon
+                // if not used the lower right corner is not smooth
+                int[] progressBar =
+                        {secondLeftX, firstUpperY, firstRightX, firstUpperY,
+                                secondRightX, secondUpperY, secondRightX,
+                                firstLowerY, firstRightX - 1, secondLowerY,
+                                secondLeftX, secondLowerY, firstLeftX,
+                                firstLowerY, firstLeftX, secondUpperY};
+
+                graphics.fillPolygon(progressBar);
+
+                //graphics.fillRectangle(x, y, barWidth, h);
                 graphics.setFont(PROGRESS_FONT);
 
                 // create the percentage string
@@ -241,17 +266,19 @@ public class ProgressFigure extends RectangleFigure implements
                 firstLowerY = firstUpperY + h - 4;
                 secondLowerY = firstLowerY + 2;
 
-                // NOTE: the - 1 is a workaround due to a problem in 
+                // NOTE: the - 1 is a workaround due to a problem in
                 // the rendering routine of fillPolygon
                 // if not used the lower right corner is not smooth
-                int[] movingBar =
+                int[] unknwonBar =
                         {secondLeftX, firstUpperY, firstRightX, firstUpperY,
                                 secondRightX, secondUpperY, secondRightX,
                                 firstLowerY, firstRightX - 1, secondLowerY,
                                 secondLeftX, secondLowerY, firstLeftX,
                                 firstLowerY, firstLeftX, secondUpperY};
 
-                graphics.fillPolygon(movingBar);
+                graphics.fillPolygon(unknwonBar);
+
+                
                 // graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH,
                 // h);
 
@@ -259,7 +286,13 @@ public class ProgressFigure extends RectangleFigure implements
                         m_unknownProgressBarDirection;
 
             }
+        } else {
+            // draw "Queued"
+            String queuedString = "queued";
+            graphics.setFont(QUEUED_FONT);
+            graphics.drawString(queuedString, x + 1, y);
         }
+
     }
 
     /**
