@@ -83,7 +83,7 @@ public class PortLocator implements Locator {
         Rectangle parentBounds = m_parent.getContentFigure().getBounds()
                 .getCopy();
 
-        int portHeight = parentBounds.height
+        int portHeight = (parentBounds.height - 10)
                 / (m_maxDataPorts + m_maxModelPorts);
         int portWidth = parentBounds.width / 2;
 
@@ -101,13 +101,13 @@ public class PortLocator implements Locator {
                 position = m_portIndex + (m_maxModelPorts);
             }
 
-            y = parentBounds.getTopLeft().y + (position * portHeight);
+            y = parentBounds.getTopLeft().y  + 5 + (position * portHeight);
 
         } else {
 
             x = parentBounds.getCenter().x + 4;
 
-            y = parentBounds.getTopRight().y + (m_portIndex * portHeight);
+            y = parentBounds.getTopRight().y + 5 + (m_portIndex * portHeight);
         }
 
         Rectangle portBounds = new Rectangle(new Point(x, y), new Dimension(
