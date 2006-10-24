@@ -34,7 +34,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * Wrapper for a connection in a workflow. The connection knows which
  * <code>NodeContainer</code> s it contects and also knows about the port
@@ -50,8 +49,8 @@ import org.knime.core.node.NodeSettingsWO;
 public class ConnectionContainer {
 
     // The logger for static methods
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeContainer.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(NodeContainer.class);
 
     // unique id
     private final int m_id;
@@ -73,7 +72,7 @@ public class ConnectionContainer {
     // listeners for changes to the extra info can register here. Other
     // information (source/destination) can not change!
     private final CopyOnWriteArrayList<WorkflowListener> m_listeners =
-        new CopyOnWriteArrayList<WorkflowListener>();
+            new CopyOnWriteArrayList<WorkflowListener>();
 
     /**
      * Creates a new container holding a connection of a workflow, storing both
@@ -93,6 +92,10 @@ public class ConnectionContainer {
         }
         if (targetNode == null) {
             throw new NullPointerException("target node must not be null");
+        }
+        if (sourceNode == targetNode) {
+            throw new IllegalArgumentException(
+                    "Source and target node must be different.");
         }
         m_id = id;
         m_sourceNode = sourceNode;
@@ -167,8 +170,9 @@ public class ConnectionContainer {
                 // extraInfo = (ConnectionExtraInfo) (Class
                 // .forName(extraInfoClassName)
                 // .newInstance());
-                extraInfo = (ConnectionExtraInfo)GlobalClassCreator
-                        .createClass(extraInfoClassName).newInstance();
+                extraInfo =
+                        (ConnectionExtraInfo)GlobalClassCreator.createClass(
+                                extraInfoClassName).newInstance();
                 // and load content of extrainfo
                 extraInfo.load(config);
                 setExtraInfo(extraInfo);
@@ -274,14 +278,15 @@ public class ConnectionContainer {
      * Notifies listeners about extra info changes.
      */
     private void fireExtraInfoChanged() {
-        WorkflowEvent event = new WorkflowEvent.ConnectionExtrainfoChanged(-1,
-                null, getExtraInfo());
+        WorkflowEvent event =
+                new WorkflowEvent.ConnectionExtrainfoChanged(-1, null,
+                        getExtraInfo());
         for (WorkflowListener l : m_listeners) {
             try {
                 l.workflowChanged(event);
             } catch (Throwable t) {
                 LOGGER.error("Exception while notifying listeners", t);
-            }                
+            }
         }
     }
 
