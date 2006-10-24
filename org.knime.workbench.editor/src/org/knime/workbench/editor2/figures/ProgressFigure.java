@@ -224,9 +224,9 @@ public class ProgressFigure extends RectangleFigure implements
 
                 // calculate the rendering direction
                 if (m_unknownProgressBarRenderingPosition
-                        + UNKNOW_PROGRESS_BAR_WIDTH > WIDTH) {
+                        + UNKNOW_PROGRESS_BAR_WIDTH > WIDTH + 1) {
                     m_unknownProgressBarDirection = -1;
-                } else if (m_unknownProgressBarRenderingPosition <= 0) {
+                } else if (m_unknownProgressBarRenderingPosition < 0) {
                     m_unknownProgressBarDirection = 1;
                 }
 
@@ -241,10 +241,13 @@ public class ProgressFigure extends RectangleFigure implements
                 firstLowerY = firstUpperY + h - 4;
                 secondLowerY = firstLowerY + 2;
 
+                // NOTE: the - 1 is a workaround due to a problem in 
+                // the rendering routine of fillPolygon
+                // if not used the lower right corner is not smooth
                 int[] movingBar =
                         {secondLeftX, firstUpperY, firstRightX, firstUpperY,
                                 secondRightX, secondUpperY, secondRightX,
-                                firstLowerY, firstRightX, secondLowerY,
+                                firstLowerY, firstRightX - 1, secondLowerY,
                                 secondLeftX, secondLowerY, firstLeftX,
                                 firstLowerY, firstLeftX, secondUpperY};
 
