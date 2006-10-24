@@ -524,11 +524,11 @@ public class NodeContainerFigure extends RectangleFigure {
         if (parentBounds.width > 0) {
             prefWidth = parentBounds.width;
         }
-        int prefHeight = super.getPreferredSize(-1, -1).height;
-        if (parentBounds.height > 0) {
-            prefHeight = parentBounds.height;
-        }
-        prefHeight =
+//        int prefHeight = super.getPreferredSize(-1, -1).height;
+//        if (parentBounds.height > 0) {
+//            prefHeight = parentBounds.height;
+//        }
+        int prefHeight =
                 m_heading.getPreferredSize().height
                         + m_contentFigure.getPreferredSize().height
                         + m_infoWarnErrorPanel.getPreferredSize().height
