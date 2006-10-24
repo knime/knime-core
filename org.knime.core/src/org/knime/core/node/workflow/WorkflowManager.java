@@ -778,13 +778,51 @@ public class WorkflowManager implements WorkflowListener {
      * @param inPort Index of the incoming port
      * @return <code>true</code> if a connection can be added,
      *         <code>false</code> otherwise
+     * @deprecated use the method {@link WorkflowManager#
+     *             checkAddConnection(int, int, int, int)} as this method throws
+     *             an exception with detailed information instead just a boolean
+     *             value.
      */
     public boolean canAddConnection(final int sourceNode, final int outPort,
             final int targetNode, final int inPort) {
+
+        // applies the new checkAddConnection method to emulate this old
+        // deprecated method
+        try {
+            checkAddConnection(sourceNode, outPort, targetNode, inPort);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if a connection can be added between the given nodes. If not, an
+     * exception is thrown to deliver detailed information about the reason:
+     * <ul>
+     * <li>Some of the nodeIDs are invalid,</li>
+     * <li>some of the port-numbers are invalid,</li>
+     * <li>there's already a connection that ends at the given in-port,</li>
+     * <li>or (new) this connection would create a loop in the workflow</li>
+     * </ul>
+     * 
+     * @param sourceNode ID of the source node
+     * @param outPort Index of the outgoing port
+     * @param targetNode ID of the target node
+     * @param inPort Index of the incoming port
+     * @throws Exception if the two nodes can not be connected
+     */
+    public void checkAddConnection(final int sourceNode, final int outPort,
+            final int targetNode, final int inPort) throws Exception {
+
         if ((sourceNode < 0) || (outPort < 0) || (targetNode < 0)
                 || (inPort < 0)) {
             // easy sanity check failed - return false;
-            return false;
+            throw new IndexOutOfBoundsException("Invalid node/port indices: "
+                    + "Source node: " + sourceNode + " Target node: "
+                    + targetNode + " Outport: " + outPort + " Inport: "
+                    + inPort);
         }
 
         NodeContainer src = m_nodesByID.get(sourceNode);
@@ -792,9 +830,10 @@ public class WorkflowManager implements WorkflowListener {
 
         if ((src == null) || (targ == null)) {
             // Nodes don't exist (whyever) - return failure
-            LOGGER.error("WFM: checking for connection between non existing"
-                    + " nodes!");
-            return false;
+            String message =
+                    "WFM: checking for connection between non existing"
+                            + " nodes!";
+            throw new IllegalArgumentException(message);
         }
 
         boolean portNumsValid =
@@ -803,16 +842,17 @@ public class WorkflowManager implements WorkflowListener {
                         && (inPort >= 0);
         if (!portNumsValid) {
             // port numbers don't exist - return failure
-            LOGGER.error("WFM: checking for connection for non existing"
-                    + " ports!");
-            return false;
+            String message =
+                    "WFM: checking for connection for non existing" + " ports!";
+            throw new IllegalArgumentException(message);
         }
 
         ConnectionContainer conn = getIncomingConnectionAt(targ, inPort);
         boolean hasConnection = (conn != null);
         if (hasConnection) {
             // input port already has a connection - return failure
-            return false;
+            String message = "WFM: Input port already has a connection.";
+            throw new IllegalArgumentException(message);
         }
 
         boolean isDataConn =
@@ -821,16 +861,21 @@ public class WorkflowManager implements WorkflowListener {
                 !targ.isDataInPort(inPort) && !src.isDataOutPort(outPort);
         if (!isDataConn && !isModelConn) {
             // trying to connect data to model port - return failure
-            return false;
+            String message =
+                    "WFM: Data port can not be connected to a model port.";
+            throw new IllegalArgumentException(message);
         }
 
+        // check for loops
         boolean loop = targ.isFollowedBy(src);
-        // if (loop) {
-        // LOGGER.warn("Attempt to create loop (from node id:" + srcC.getID()
-        // + ", port:" + inPort + " to node id:" + targC.getID()
-        // + ", port:" + outPort + ")");
-        // }
-        return !loop;
+        if (loop) {
+
+            String message =
+                    "Attempt to create loop (from node id:" + sourceNode
+                            + ", port:" + inPort + " to node id:" + targetNode
+                            + ", port:" + outPort + ")";
+            throw new IllegalArgumentException(message);
+        }
     }
 
     /**
