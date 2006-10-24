@@ -226,7 +226,7 @@ public class ProgressFigure extends RectangleFigure implements
                 if (m_unknownProgressBarRenderingPosition
                         + UNKNOW_PROGRESS_BAR_WIDTH > WIDTH + 1) {
                     m_unknownProgressBarDirection = -1;
-                } else if (m_unknownProgressBarRenderingPosition < 0) {
+                } else if (m_unknownProgressBarRenderingPosition <= 0) {
                     m_unknownProgressBarDirection = 1;
                 }
 
