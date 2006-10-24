@@ -116,14 +116,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     public final void addCoveredPattern(final DataRow row,
             final DataTableSpec spec) throws Exception {
         m_coveredPattern.add(row.getKey().getId());
-        Color col = spec.getRowColor(row).getColor();
-        if (m_coveredColors.containsKey(col)) {
-            Double oldCount = m_coveredColors.get(col);
-            m_coveredColors.remove(col);
-            m_coveredColors.put(col, new Double(oldCount.doubleValue() + 1.0));
-        } else {
-            m_coveredColors.put(col, new Double(1.0));
-        }
+        addCoveredColor(row, spec);
     }
 
     /**

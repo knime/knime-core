@@ -90,16 +90,17 @@ public class DecisionTreeNodeView extends JPanel {
             g.setColor(Color.LIGHT_GRAY);
             g.fillArc(0, 2, sqLen - 4, sqLen - 4, 0, 360);
             HashMap<Color, Double> colorCounts = m_node.coveredColors();
-            if (colorCounts.size() <= 1) {
-                // only one color: no color manager or pure leaf
+            if (colorCounts.size() <= 0) {
+                // no patterns ever made it into this node: don't do anything
+                // gray circle is already painted (important to catch because
+                // c4.5 puts the stats (counts!) of the parent node into this
+                // node as well.
+            } else if (colorCounts.size() == 1) {
+                // only one color: pure leaf
                 double totalCount = m_node.getEntireClassCount();
                 double ownCount = m_node.getOwnClassCount();
                 int angle = (int)(ownCount * 360 / totalCount);
-                Color c = this.getForeground();
-                if (colorCounts.size() == 1) {
-                    // if we have one color (we usually should) pick first one
-                    c = colorCounts.keySet().iterator().next();
-                }
+                Color c = colorCounts.keySet().iterator().next();
                 g.setColor(c);
                 g.fillArc(0, 2, sqLen - 4, sqLen - 4, 0, angle);
             } else {
@@ -140,18 +141,23 @@ public class DecisionTreeNodeView extends JPanel {
             int height = dim.height;
             g.setColor(this.getParent().getBackground());
             g.fillRect(0, 0, width - 1, height - 1);
-            g.setColor(this.getForeground());
-            double ownCount = m_node.getEntireClassCount();
-            double parentCount = ownCount;
-            if (m_node.getParent() != null) {
-                parentCount = ((DecisionTreeNode)m_node.getParent())
-                        .getEntireClassCount();
+            if (m_node.coveredColors().size() > 0) {
+                // we need to do this check for colors to determine if any
+                // patterns actually made it into this node. C4.5 keeps
+                // counts of parent node for empty nodes!
+                g.setColor(this.getForeground());
+                double ownCount = m_node.getEntireClassCount();
+                double parentCount = ownCount;
+                if (m_node.getParent() != null) {
+                    parentCount = ((DecisionTreeNode)m_node.getParent())
+                            .getEntireClassCount();
+                }
+                int barHeight = height - 4;
+                int fillHeight = (int)(ownCount * barHeight / parentCount);
+                g.drawRect(0, 1, width - 4, barHeight + 1);
+                g.setColor(Color.ORANGE);
+                g.fillRect(1, 2 + barHeight - fillHeight, width - 5, fillHeight);
             }
-            int barHeight = height - 4;
-            int fillHeight = (int)(ownCount * barHeight / parentCount);
-            g.drawRect(0, 1, width - 4, barHeight + 1);
-            g.setColor(Color.ORANGE);
-            g.fillRect(1, 2 + barHeight - fillHeight, width - 5, fillHeight);
         }
     }
 }

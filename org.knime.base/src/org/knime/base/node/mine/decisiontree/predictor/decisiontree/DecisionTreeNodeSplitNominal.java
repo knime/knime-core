@@ -127,25 +127,31 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
             final DataTableSpec spec) throws Exception {
+        // first add pattern to the branch that matches the cell's value
+        boolean notFound = true;
         for (int i = 0; i < m_splitValues.length; i++) {
             if (m_splitValues[i].equals(cell)) {
                 super.getChildNodeAt(i).addCoveredPattern(row, spec);
-                Color col = spec.getRowColor(row).getColor();
-                if (m_coveredColors.containsKey(col)) {
-                    Double oldCount = m_coveredColors.get(col);
-                    m_coveredColors.remove(col);
-                    m_coveredColors.put(col, new Double(
-                            oldCount.doubleValue() + 1.0));
-                } else {
-                    m_coveredColors.put(col, new Double(1.0));
-                }
-                return;
+                notFound = false;
+                break;
             }
         }
-        LOGGER.error("Decision Tree HiLiteAdder failed."
-                + " Could not find branch for value '" + cell.toString()
-                + "' for attribute '" + getSplitAttr().toString() + "'."
-                + "Ignoring pattern.");
+        if (notFound) {
+            LOGGER.error("Decision Tree HiLiteAdder failed."
+                    + " Could not find branch for value '" + cell.toString()
+                    + "' for attribute '" + getSplitAttr().toString() + "'."
+                    + "Ignoring pattern.");
+        }
+        Color col = spec.getRowColor(row).getColor();
+        if (m_coveredColors.containsKey(col)) {
+            Double oldCount = m_coveredColors.get(col);
+            m_coveredColors.remove(col);
+            m_coveredColors.put(col, new Double(
+                    oldCount.doubleValue() + 1.0));
+        } else {
+            m_coveredColors.put(col, new Double(1.0));
+        }
+        return;
     }
 
     /**

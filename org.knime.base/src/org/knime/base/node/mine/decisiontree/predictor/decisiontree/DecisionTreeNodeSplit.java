@@ -25,12 +25,14 @@
  */
 package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
 
+import java.awt.Color;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Set;
 
 import javax.swing.tree.TreeNode;
 
+import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -39,8 +41,6 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Node;
-
-import org.knime.base.data.util.DataCellStringMapper;
 
 /**
  * An abstract implementation of an inner node of a decision tree, i.e. one that
@@ -270,7 +270,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             assert (m_previousIndex != -1);
             DataCell cell = row.getCell(m_previousIndex);
             if (cell.isMissing()) {
-                // of we can not determine the split at this node because
+                // if we can not determine the split at this node because
                 // value is missing, we add the row to each child
                 for (DecisionTreeNode child : m_child) {
                     child.addCoveredPattern(row, spec);
@@ -288,7 +288,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * node. Usually only Leafs will actually hold a list of RowKeys, all
      * intermediate nodes will collect "their" information recursively.
      * 
-     * @param cell the call to be used for classification at this node
+     * @param cell the cell to be used for classification at this node
      * @param row input pattern
      * @param spec the corresponding table spec
      * @throws Exception if something went wrong (unknown attribute for example)
@@ -349,6 +349,13 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      */
     @Override
     public abstract Set<DataCell> coveredPattern();
+
+    /**
+     * @see DecisionTreeNode
+     *      #coveredColors()
+     */
+    @Override
+    public abstract HashMap<Color, Double> coveredColors();
 
     /**
      * @see DecisionTreeNode
