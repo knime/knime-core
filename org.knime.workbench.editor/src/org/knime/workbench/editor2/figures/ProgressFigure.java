@@ -62,6 +62,8 @@ public class ProgressFigure extends RectangleFigure implements
     private static final Color PROGRESS_BAR_BACKGROUND_COLOR =
             new Color(null, 220, 220, 220);
 
+    private static final Color PROGRESS_BAR_COLOR = ColorConstants.darkBlue;
+
     // private static final Color PROGRESS_BAR_COLOR = new Color(null, 240, 200,
     // 10);
 
@@ -199,8 +201,8 @@ public class ProgressFigure extends RectangleFigure implements
         graphics.fillPolygon(pointList);
         graphics.drawPolygon(pointList);
 
-        graphics.setForegroundColor(ColorConstants.darkBlue);
-        graphics.setBackgroundColor(ColorConstants.darkBlue);
+        graphics.setForegroundColor(ColorConstants.white);
+        graphics.setBackgroundColor(PROGRESS_BAR_COLOR);
 
         if (m_executing) {
             if (!m_unknownProgress) {
@@ -211,8 +213,7 @@ public class ProgressFigure extends RectangleFigure implements
                         (int)Math.round((double)WIDTH / (double)100
                                 * (double)m_currentWorked);
 
-                firstLeftX =
-                        firstLeftX - 1;
+                firstLeftX = firstLeftX - 1;
                 secondLeftX = firstLeftX + 1;
                 firstRightX = firstLeftX + barWidth;
                 secondRightX = firstRightX + 1;
@@ -220,8 +221,8 @@ public class ProgressFigure extends RectangleFigure implements
                 secondUpperY = firstUpperY + 1;
                 firstLowerY = firstUpperY + h - 4;
                 secondLowerY = firstLowerY + 2;
-                
-//              NOTE: the - 1 is a workaround due to a problem in
+
+                // NOTE: the - 1 is a workaround due to a problem in
                 // the rendering routine of fillPolygon
                 // if not used the lower right corner is not smooth
                 int[] progressBar =
@@ -233,7 +234,7 @@ public class ProgressFigure extends RectangleFigure implements
 
                 graphics.fillPolygon(progressBar);
 
-                //graphics.fillRectangle(x, y, barWidth, h);
+                // graphics.fillRectangle(x, y, barWidth, h);
                 graphics.setFont(PROGRESS_FONT);
 
                 // create the percentage string
@@ -278,7 +279,6 @@ public class ProgressFigure extends RectangleFigure implements
 
                 graphics.fillPolygon(unknwonBar);
 
-                
                 // graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH,
                 // h);
 
