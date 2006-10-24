@@ -30,6 +30,9 @@ import java.util.Set;
  * Column domain creator used to initialize possible values, lower and upper
  * bounds using <code>DataCell</code> objects.
  * 
+ * @see DataColumnDomain
+ * @see #createDomain()
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DataColumnDomainCreator {
@@ -84,7 +87,7 @@ public class DataColumnDomainCreator {
      */
     public DataColumnDomainCreator(final DataCell lowerBound,
             final DataCell upperBound) {
-        this((Set<DataCell>)null, lowerBound, upperBound);
+        this((Set<DataCell>) null, lowerBound, upperBound);
     }
 
     /**
@@ -97,8 +100,15 @@ public class DataColumnDomainCreator {
      */
     public DataColumnDomainCreator(final DataCell[] values, 
             final DataCell lowerBound, final DataCell upperBound) {
-        this((values == null ? null : new LinkedHashSet<DataCell>(Arrays
-                .asList(values))), lowerBound, upperBound);
+        this(lowerBound, upperBound);
+        if (values != null) {
+            // store a unmodifable copy of the value set in the same order
+            Set<DataCell> set = new LinkedHashSet<DataCell>(
+                    Arrays.asList(values));
+            m_values = Collections.unmodifiableSet(set);
+        } else {
+            m_values = null;
+        }
     }
 
     /**
@@ -111,43 +121,46 @@ public class DataColumnDomainCreator {
      */
     public DataColumnDomainCreator(final Set<DataCell> values,
             final DataCell lowerBound, final DataCell upperBound) {
-        if (values != null) {
-            // store a unmodifable copy of the value set in the same order
-            m_values = Collections.unmodifiableSet(values);
-        } else {
-            m_values = null;
-        }
-        m_lowerBound = lowerBound;
-        m_upperBound = upperBound;
+        setValues(values);
+        setLowerBound(lowerBound);
+        setUpperBound(upperBound);
     }
 
     /**
-     * Creates a read-only column domain based on the internal values.
-     * @return Column domain object.
+     * Creates a read-only column domain object based on the internal values.
+     * @return A new instance of a {@link DataColumnDomain} object.
      */
     public DataColumnDomain createDomain() {
         return new DataColumnDomain(m_lowerBound, m_upperBound, m_values);
     }
     
     /**
-     * Sets a new set of nominal values which can be null.
-     * @param values Set of nominal values.
+     * Sets a (new) <code>Set</code> of nominal values which can be 
+     * <code>null</code>. The values are copied into a unmodifiable set.
+     * @param values <code>Set</code> of nominal values as <code>DataCell</code>
+     *        objects.
      */
     public void setValues(final Set<DataCell> values) {
-        m_values = values;
+        if (values != null) {
+            // store a unmodifable copy of the value set in the same order
+            Set<DataCell> set = new LinkedHashSet<DataCell>(values);
+            m_values = Collections.unmodifiableSet(set);
+        } else {
+            m_values = null;
+        }
     }
 
     /**
-     * Sets a new lower bound which can be null.
-     * @param lower The new lower bound.
+     * Sets a (new) lower bound which can be null.
+     * @param lower The (new) lower bound.
      */
     public void setLowerBound(final DataCell lower) {
         m_lowerBound = lower;
     }
 
     /**
-     * Sets new upper bound which can be null.
-     * @param upper The new upper bound.
+     * Sets (new) upper bound which can be null.
+     * @param upper The (new) upper bound.
      */
     public void setUpperBound(final DataCell upper) {
         m_upperBound = upper;

@@ -30,22 +30,23 @@ import java.io.Serializable;
 
 import org.knime.core.data.def.StringCell;
 
-
 /**
- * Key for a specific row which holds an identifier 
- * (of type <code>DataCell</code>).
+ * Key for a specific row which holds an identifier(of type {@link DataCell}).
  * 
- * @author M. Berthold, University of Konstanz
+ * @see DataRow
+ * @see RowIterator
+ * 
+ * @author Michael Berthold, University of Konstanz
  */
 public final class RowKey implements Serializable {
 
-    // private members holding row id
+    /** private members holding non-null row id. */
     private final DataCell m_id;
 
     /**
-     * Creates a row key based on a <code>DataCell</code> as id.
+     * Creates a row key based on a {@link DataCell} as id.
      * 
-     * @param id identifier for a <code>DataRow</code>.
+     * @param id identifier for a {@link DataRow}.
      * @throws NullPointerException If argument is <code>null</code>.
      */
     public RowKey(final DataCell id) {
@@ -56,9 +57,9 @@ public final class RowKey implements Serializable {
     }
     
     /**
-     * Creates a row key based on a String as id. 
+     * Creates a row key based on a {@link String} as id. 
      * 
-     * @param id identifier for a <code>DataRow</code>.
+     * @param id identifier for a {@link DataRow}.
      * @throws NullPointerException If argument is null.
      */
     public RowKey(final String id) {
@@ -73,9 +74,9 @@ public final class RowKey implements Serializable {
     }
 
     /**
-     * Returns the string representation of this row id <code>DataCell</code>.
+     * Returns the string representation of this row id.
      * 
-     * @see Object#toString()
+     * @see DataCell#toString()
      */
     @Override
     public String toString() {
@@ -83,8 +84,9 @@ public final class RowKey implements Serializable {
     }
 
     /**
-     * Compares two row keys.
-     * @see java.lang.Object#equals(java.lang.Object)
+     * Compares two row keys by their {@link DataCell} id.
+     * 
+     * @see DataCell#equals(Object)
      */
     @Override
     public boolean equals(final Object obj) {
@@ -98,7 +100,7 @@ public final class RowKey implements Serializable {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * @see DataCell#hashCode()
      */
     @Override
     public int hashCode() {

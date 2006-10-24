@@ -28,9 +28,11 @@ import java.util.Iterator;
 
 /** 
  * Classes extending this class will iterate over the rows of a 
- * <code>DataTable</code>. Each DataTable generates and returns its specific
+ * {@link DataTable}. Each DataTable generates and returns its specific
  * <code>RowIterator</code>. <code>RowIterator</code>s return rows of DataTables
- * one by one and always in the same order.<br>
+ * one by one and always in the same order.
+ *
+ * <p>
  * Use RowIterators as follows: 
  * <pre>
  * DataTable table = ...;
@@ -38,7 +40,9 @@ import java.util.Iterator;
  *     DataRow row = it.next();
  *     ...
  * }
- * </pre><br>
+ * </pre>
+ * 
+ * <p>
  * or, if you don't need access to the iterator:
  * <pre>
  * DataTable table =...;
@@ -47,10 +51,13 @@ import java.util.Iterator;
  * }
  * </pre>
  * 
- * <p>The difference of this class to a generic Iterator&lt;DataRow&gt;
+ * <p>
+ * Note, the difference of this class to a generic Iterator&lt;DataRow&gt;
  * is that it does not allow to remove elements. 
  * 
  * @see DataRow
+ * @see RowKey
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class RowIterator implements Iterator<DataRow> {
@@ -67,7 +74,7 @@ public abstract class RowIterator implements Iterator<DataRow> {
     
     /** 
      * Iterates over a collection of <code>DataRow</code> elements and always 
-     * returns the next element in the iteration.
+     * returns the next element of the iteration.
      * @return the next row in the <code>DataTable</code>.
      * @throws java.util.NoSuchElementException if there are no more rows.
      */
@@ -76,14 +83,14 @@ public abstract class RowIterator implements Iterator<DataRow> {
     /**
      * Method of the Java Iterator. NOT supported by the DataTable iterator!
      * DataTables are read-only objects after their creation.
-     * Do not call this method. It will throw an exception if called.
+     * Do not call this method, it will throw an exception.
      * 
      * @exception UnsupportedOperationException if the <tt>remove</tt>
      *        operation is not supported by this Iterator.
      */
     public final void remove() {
         throw new UnsupportedOperationException("Can't remove row from table."
-                + "Data tables are read-only.");
+                + " Data tables are read-only.");
     }
 
 }

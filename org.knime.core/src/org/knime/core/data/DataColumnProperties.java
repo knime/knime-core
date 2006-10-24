@@ -34,32 +34,35 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 
-
 /**
  * Property map that contains (labeled) annotations assigned to a column. This
  * class implements a slim, read only version of java's <code>Properties</code> 
- * class. This class is used by the <code>DataColumnSpec</code>.
+ * class, whereby all related methods delegate to the underlying property
+ * object. This class is used by the <code>DataColumnSpec</code>.
  * 
  * @see java.util.Properties
  * @see org.knime.core.data.DataColumnSpec#getProperties()
  * 
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class DataColumnProperties implements Cloneable {
 
-   private final Properties m_props;
+    /** Keeps a map of data column properties. */
+    private final Properties m_props;
     
-    /** Creates an empty DataColumnProperties object. */
+    /** 
+     * Creates an empty DataColumnProperties object. 
+     */
     public DataColumnProperties() {
         this(new Hashtable<String, String>());
     }
     
     /**
      * Creates a properties object containing the (key, value) pairs from the
-     * argument. The argument must not be null (but may be empty). Any 
-     * subsequent change to the argument is not reflected in this object.
-     * @param content  Where to get the properties from
-     * @throws NullPointerException If the argument is null.
+     * argument. The argument must not be <code>null</code> (but may be empty). 
+     * Any subsequent change to the argument is not reflected in this object.
+     * @param content  Where to get the properties from.
+     * @throws NullPointerException If the argument is <code>null</code>.
      */
     public DataColumnProperties(final Hashtable<String, String> content) {
         m_props = new Properties();
@@ -72,6 +75,7 @@ public final class DataColumnProperties implements Cloneable {
      * @param key The requested key.
      * @return <code>true</code> if <code>key</code> is contained in this
      *         property object, <code>false</code> otherwise.
+     * @throws  NullPointerException  if the key is <code>null</code>.
      * 
      * @see java.util.Properties#containsKey(Object)
      */
@@ -180,7 +184,7 @@ public final class DataColumnProperties implements Cloneable {
     
     /**
      * Hash code based on underlying <code>java.util.Properties</code> class.
-     * @see Object#hashCode() 
+     * @see Properties#hashCode() 
      */
     @Override
     public int hashCode() {

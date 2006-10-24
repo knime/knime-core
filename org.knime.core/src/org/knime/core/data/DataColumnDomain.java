@@ -22,43 +22,51 @@
 package org.knime.core.data;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 
 
 /**
- * A column domain object holds information about one column's domain, that are,
- * possible values, and an upper and lower bound - if available.
+ * Final <code>DataColumnDomain</code> object holds meta infos about one column,
+ * that are, possible values, and an upper and a lower bound - if available. 
+ * This object can only be created by the corresponding 
+ * {@link DataColumnDomainCreator} within this package and therefor is 
+ * read-only.
+ * 
  * <p>
  * Note: It is crutial that the creator of a column domain ensures that the data
- * filled in is correct. In the sense that no value in the data table will be
+ * filled in is correct. In the sense, that no value in the data table will be
  * outside the provided bounds and that no other value appears in that column
- * than the one listed in the array returned by <code>getValues()</code>. It
- * is assumed that the domain - if available - contains reliable data. If you
- * are not sure about the data to come in your column, don't provide a domain.
+ * than the one listed in the array returned by {@link #getValues()}. It is 
+ * assumed that the domain - if available - contains reliable data. If you
+ * are not sure about the data to come in your column, don't provide a meta 
+ * domain infos (<code>null</code>).
+ * 
+ * @see DataColumnDomainCreator
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DataColumnDomain {
+    
+    /** Config key for the lower bound. */
+    private static final String CFG_LOWER_BOUND = "lower_bound";
+    
+    /** Config key for the upper bound. */
+    private static final String CFG_UPPER_BOUND = "upper_bound";
+    
+    /** Config key for possible values. */
+    private static final String CFG_POSS_VALUES = "possible_values";
 
-    /**
-     * Lower bound value or <code>null</code>.
-     */
+    /** Lower bound value or <code>null</code>. */
     private final DataCell m_lowerBound;
 
-    /**
-     * Upper bound value or <code>null</code>.
-     */
+    /** Upper bound value or <code>null</code>. */
     private final DataCell m_upperBound;
 
-    /**
-     * Set of possible values or <code>null</code>.
-     */
+    /** Set of possible values or <code>null</code>. */
     private final Set<DataCell> m_values;
 
     /**
@@ -66,9 +74,9 @@ public final class DataColumnDomain {
      * values. All arguments can be <code>null</code> in case non of these
      * properties are avaiable.
      * 
-     * @param lower The lower bound value.
-     * @param upper The upper bound value.
-     * @param values A set of nominal values.
+     * @param lower The lower bound value or <code>null</code>.
+     * @param upper The upper bound value or <code>null</code>.
+     * @param values A set of nominal values or <code>null</code>.
      */
     DataColumnDomain(final DataCell lower, final DataCell upper,
             final Set<DataCell> values) {
@@ -78,31 +86,30 @@ public final class DataColumnDomain {
     }
 
     /**
-     * Return all possible values in this column. Note that this array can be
+     * Returns all possible values in this column. Note that this array can be
      * <code>null</code> if this information is not available (for continuous
      * double values, for example) and that the <code>DataCell</code>s in the
      * returned array do not have to be of the same type (but the column type
-     * should be compatible to all of their values).<br>
-     * If the returned array is not null, the corresponding column must not
-     * contain any value other than the ones contained in the array. The array
-     * could contain a superset of the values in the table though.
+     * should be compatible to all of their values).
+     *  
+     * <p>
+     * If the returned set is not <code>null</code>, the corresponding column
+     * must not contain any value other than the ones contained in the set. 
+     * The set could contain a superset of the values in the table though.
      * 
-     * @return An array of possible values or <code>null</code>.
+     * @return An <code>Set</code> of possible <code>DataCell</code> values or 
+     *         <code>null</code>.
      * 
      * @see #hasValues()
      */
     public Set<DataCell> getValues() {
-        // in order to keep the domain read-only, return a copy of the set
-        if (m_values != null) {
-            return Collections.unmodifiableSet(m_values);
-        } else {
-            return null;
-        }
+        return m_values;
     }
 
     /**
-     * @return true, if this column spec has nominal values defined (i.e. the
-     *         <code>getValues</code> method returns a non-null value).
+     * Returns <code>true</code> if the values are not <code>null</code>.
+     * @return <code>true</code>, if this column has nominal values defined (
+     *         i.e. the <code>#getValues</code> method returns a non-null set).
      * 
      * @see #getValues()
      */
@@ -113,10 +120,15 @@ public final class DataColumnDomain {
     /**
      * Return the lower bound of the domain of this column, if available. Note
      * that this value does not necessarily need to actually occur in the
-     * corresponding <code>DataTable</code> but it is describing the range of
+     * corresponding {@link DataTable} but it is describing the range of
      * the domain of this attribute.
      * 
-     * @return a DataCell with the lowest possible value or <code>null</code>.
+     * <p>
+     * Usually this value is compatible with type <code>DoubleValue</code>
+     * corresponding to an nummeric left interval border.
+     * 
+     * @return A <code>DataCell</code> with the lowest possible value or 
+     *         <code>null</code>.
      * 
      * @see #hasLowerBound()
      */
@@ -125,7 +137,8 @@ public final class DataColumnDomain {
     }
 
     /**
-     * @return true, if the lower bound value has been defined.
+     * Returns <code>true</code>, if a lower bound is defined.
+     * @return <code>true</code>, if the lower bound value has been defined.
      * 
      * @see #getLowerBound()
      */
@@ -136,10 +149,15 @@ public final class DataColumnDomain {
     /**
      * Return the upper bound of the domain of this column, if available. Note
      * that this value does not necessarily need to actually occur in the
-     * corresponding <code>DataTable</code> but it is describing the range of
+     * corresponding {@link DataTable} but it is describing the range of
      * the domain of this attribute.
      * 
-     * @return a DataCell with the largest possible value or <code>null</code>.
+     * <p>
+     * Usually this value is compatible with type <code>DoubleValue</code>
+     * corresponding to an nummeric right interval border.
+     * 
+     * @return A <code>DataCell</code> with the largest possible value or 
+     *         <code>null</code>.
      * 
      * @see #hasUpperBound()
      */
@@ -148,7 +166,8 @@ public final class DataColumnDomain {
     }
 
     /**
-     * @return true, if the upper bound value has been defined.
+     * Returns <code>true</code>, if an upper bound is defined.
+     * @return <code>true</code>, if the upper bound value has been defined.
      * 
      * @see #getUpperBound()
      */
@@ -157,18 +176,23 @@ public final class DataColumnDomain {
     }
 
     /**
-     * @return true, if lower and upper bound are defined.
+     * Returns <code>true</code> if both, lower and upper bound, are defined.
+     * @return <code>true</code>, if lower and upper bound are defined.
      */
     public boolean hasBounds() {
-        return this.hasLowerBound() && this.hasUpperBound();
+        return hasLowerBound() && hasUpperBound();
     }
 
     /**
      * Compares this domain with the other one by the possible values and lower
-     * and upper bound.
+     * and upper bound and returns <code>true</code> if both are the same. 
      * 
      * @param obj The other domain to compare with.
-     * @return true if possible values, and lower and upper bounds are equal.
+     * @return <code>true</code> if aöö possible values, and lower and upper 
+     *         bounds are the same.
+     * 
+     * @see Set#equals(Object)
+     * @see DataCell#equals(Object)
      */
     @Override
     public boolean equals(final Object obj) {
@@ -181,30 +205,49 @@ public final class DataColumnDomain {
         if (!(obj instanceof DataColumnDomain)) {
             return false;
         }
+        
+        // check if properties are available in both domains
         DataColumnDomain domain = (DataColumnDomain)obj;
+        // check if one or the other has possible values defined
         if (hasValues() ^ domain.hasValues()) {
             return false;
         }
+        // check if one or the other has a lower bound defined
         if (hasLowerBound() ^ domain.hasLowerBound()) {
             return false;
         }
+        // check if one or the other has a upper bound defined
         if (hasUpperBound() ^ domain.hasUpperBound()) {
             return false;
         }
-        boolean ret = true;
+
+        // if both domains have possible values defined
         if (hasValues() && domain.hasValues()) {
-            ret &= getValues().equals(domain.getValues());
+            // compare them
+            if (!getValues().equals(domain.getValues())) {
+                return false;
+            }
         }
+        // if both domains have lower bounds defined
         if (hasLowerBound() && domain.hasLowerBound()) {
-            ret &= getLowerBound().equals(domain.getLowerBound());
+            if (!getLowerBound().equals(domain.getLowerBound())) {
+                return false;
+            }
         }
+        // if both domains have upper bounds defined
         if (hasUpperBound() && domain.hasUpperBound()) {
-            ret &= getUpperBound().equals(domain.getUpperBound());
+            if (!getUpperBound().equals(domain.getUpperBound())) {
+                return false;
+            }
         }
-        return ret;
+        
+        // done, both domains are equal
+        return true;
     }
 
     /**
+     * Returns a hash code computed as xor based in the hash codes of the lower,
+     * upper bound, and each possible value - if available.
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -241,44 +284,51 @@ public final class DataColumnDomain {
         return "lower=" + lower + ",upper=" + upper + ",values=" + values;
     }
 
-    private static final String CFG_LOWER_BOUND = "lower_bound";
-    private static final String CFG_UPPER_BOUND = "upper_bound";
-    private static final String CFG_POSS_VALUES = "possible_values";
-
     /**
      * Save this domain to the given <code>Config</code> including lower and
-     * upper bound, and possible values - if available.
+     * upper bound, and possible values or null - if not available.
      * 
      * @param config The <code>Config</code> to write into.
      */
     public void save(final Config config) {
         assert config.keySet().isEmpty() : "Subconfig must be empty: "
                 + Arrays.toString(config.keySet().toArray());
-        config.addDataCell(CFG_LOWER_BOUND, m_lowerBound);
-        config.addDataCell(CFG_UPPER_BOUND, m_upperBound);
-        if (m_values != null) {
+        if (hasLowerBound()) {
+            config.addDataCell(CFG_LOWER_BOUND, m_lowerBound);
+        }
+        if (hasUpperBound()) {
+            config.addDataCell(CFG_UPPER_BOUND, m_upperBound);
+        }
+        if (hasValues()) {
             DataCell[] values = m_values.toArray(new DataCell[0]);
             config.addDataCellArray(CFG_POSS_VALUES, values);
         }
     }
 
     /**
-     * Reads lower and upper bound from <code>Config</code>, and possible
-     * values if available.
+     * Reads lower and upper bound from <code>ConfigRO</code>, and possible
+     * values if available. 
      * 
      * @param config To read entries from.
      * @return A new domain object with the read properties.
-     * @throws InvalidSettingsException If lower or upper bound are ot defined.
      */
-    public static DataColumnDomain load(final ConfigRO config)
-            throws InvalidSettingsException {
-        DataCell lower = config.getDataCell(CFG_LOWER_BOUND);
-        DataCell upper = config.getDataCell(CFG_UPPER_BOUND);
+    public static DataColumnDomain load(final ConfigRO config) {
+        DataCell lower = null;
+        if (config.containsKey(CFG_LOWER_BOUND)) {
+            lower = config.getDataCell(CFG_LOWER_BOUND, null);
+        }
+        DataCell upper = null;
+        if (config.containsKey(CFG_UPPER_BOUND)) {
+            upper = config.getDataCell(CFG_UPPER_BOUND, null);
+        }
         Set<DataCell> values = null;
         if (config.containsKey(CFG_POSS_VALUES)) {
-            values = new LinkedHashSet<DataCell>();
-            values.addAll(Arrays.asList(config
-                    .getDataCellArray(CFG_POSS_VALUES)));
+            DataCell[] valArray = config.getDataCellArray(CFG_POSS_VALUES,
+                    (DataCell[]) null);
+            if (valArray != null) {
+                values = new LinkedHashSet<DataCell>();
+                values.addAll(Arrays.asList(valArray));
+            }
         }
         return new DataColumnDomain(lower, upper, values);
     }
