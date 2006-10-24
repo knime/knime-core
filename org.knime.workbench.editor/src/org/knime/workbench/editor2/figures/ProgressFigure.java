@@ -201,7 +201,7 @@ public class ProgressFigure extends RectangleFigure implements
         graphics.fillPolygon(pointList);
         graphics.drawPolygon(pointList);
 
-        graphics.setForegroundColor(ColorConstants.white);
+        graphics.setForegroundColor(ColorConstants.gray);
         graphics.setBackgroundColor(PROGRESS_BAR_COLOR);
 
         if (m_executing) {
