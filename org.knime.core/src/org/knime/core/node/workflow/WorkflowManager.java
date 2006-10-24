@@ -134,10 +134,11 @@ public class WorkflowManager implements WorkflowListener {
             }
         }
 
-        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes = 
-            new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
-        private final Map<NodeContainer, NodeProgressMonitor> m_waitingNodes = 
-            new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
+        private final Map<NodeContainer, NodeProgressMonitor> m_runningNodes =
+                new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
+
+        private final Map<NodeContainer, NodeProgressMonitor> m_waitingNodes =
+                new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
 
         private final Object m_addLock = new Object(),
                 m_transferLock = new Object(), m_finishLock = new Object();
@@ -160,17 +161,17 @@ public class WorkflowManager implements WorkflowListener {
                 // avoid that a node is removed from m_waitingNodes but not yet
                 // inserted into m_runningNodes
                 synchronized (m_transferLock) {
-                    b = m_waitingNodes.containsKey(nc)
-                            || m_runningNodes.containsKey(nc);
+                    b =
+                            m_waitingNodes.containsKey(nc)
+                                    || m_runningNodes.containsKey(nc);
                 }
                 if (!b) {
                     MyNodePM pm = new MyNodePM(nc);
                     synchronized (m_addLock) {
                         m_waitingNodes.put(nc, pm);
-                        
-                       
+
                     }
-                    
+
                     // inform the node that it is queued now
                     nc.queuedForExecution();
                     fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc.getID(),
@@ -237,6 +238,10 @@ public class WorkflowManager implements WorkflowListener {
             }
 
             for (NodeContainer nc : cancelNodes) {
+
+                nc.stateChanged(
+                        new NodeStatus.Configured("Removed from queue"), nc
+                                .getID());
                 fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc.getID(),
                         null, null));
             }
@@ -286,8 +291,8 @@ public class WorkflowManager implements WorkflowListener {
          */
         private void startNewNodes(final boolean watchdog) {
             synchronized (m_finishLock) {
-                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = 
-                    m_waitingNodes.entrySet().iterator();
+                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it =
+                        m_waitingNodes.entrySet().iterator();
                 while (it.hasNext()) {
                     Map.Entry<NodeContainer, NodeProgressMonitor> e = it.next();
                     if (e.getKey().isExecutable()) {
@@ -322,10 +327,11 @@ public class WorkflowManager implements WorkflowListener {
                 if (m_runningNodes.size() == 0) {
                     if (m_waitingNodes.size() > 0) {
                         if (watchdog) {
-                            LOGGER.error("Whoa there, the watchdog found a "
-                                    + "possible deadlock situation! Some nodes "
-                                    + "are still waiting, but none is running"
-                                    + m_waitingNodes);
+                            LOGGER
+                                    .error("Whoa there, the watchdog found a "
+                                            + "possible deadlock situation! Some nodes "
+                                            + "are still waiting, but none is running"
+                                            + m_waitingNodes);
                         } else {
                             LOGGER.warn("Some nodes were still waiting but "
                                     + "none is running: " + m_waitingNodes);
@@ -343,7 +349,6 @@ public class WorkflowManager implements WorkflowListener {
             }
         }
 
-        
         private boolean checkForDeadlock(final NodeContainer cont) {
             if (!cont.isExecutable() && !cont.isExecuted()) {
                 boolean predStillWaiting = false;
@@ -354,24 +359,24 @@ public class WorkflowManager implements WorkflowListener {
                         break;
                     }
                 }
-                
+
                 if (!predStillWaiting) {
                     LOGGER.warn("The node " + cont + " is not executable but "
                             + "waiting for execution and "
                             + "all its predecessor are already executed.");
                     return false;
                 }
-                
+
                 for (NodeContainer pred : cont.getPredecessors()) {
                     if (!checkForDeadlock(pred)) {
                         return false;
                     }
                 }
             }
-            
+
             return true;
         }
-        
+
         /**
          * @see org.knime.core.node.NodeStateListener
          *      #stateChanged(org.knime.core.node.NodeStatus, int)
@@ -379,8 +384,8 @@ public class WorkflowManager implements WorkflowListener {
         public void stateChanged(final NodeStatus state, final int id) {
             if ((state instanceof NodeStatus.EndExecute)
                     || (state instanceof NodeStatus.ExecutionCanceled)) {
-                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it = 
-                    m_runningNodes.entrySet().iterator();
+                Iterator<Map.Entry<NodeContainer, NodeProgressMonitor>> it =
+                        m_runningNodes.entrySet().iterator();
                 while (it.hasNext()) {
                     NodeContainer nc = it.next().getKey();
                     if (nc.getID() == id) {
@@ -396,18 +401,18 @@ public class WorkflowManager implements WorkflowListener {
                         if (state instanceof NodeStatus.ExecutionCanceled) {
                             cancelExecution(nc.getAllSuccessors());
                         }
-                        
+
                         if (nc.getStatus() instanceof NodeStatus.Error) {
                             cancelExecution(nc.getAllSuccessors());
                         } else if (nc.isExecuted()) {
                             List<NodeContainer> autoNodes =
-                                new ArrayList<NodeContainer>();
+                                    new ArrayList<NodeContainer>();
                             // check if auto-executable nodes are following
                             for (NodeContainer[] row : nc.getSuccessors()) {
                                 for (NodeContainer cont : row) {
                                     if (cont.isAutoExecutable()
                                             && cont.isExecutable()) {
-                                       autoNodes.add(cont);
+                                        autoNodes.add(cont);
                                     }
                                 }
                             }
@@ -486,13 +491,13 @@ public class WorkflowManager implements WorkflowListener {
             return true;
         }
 
-        
         /**
          * Returns if the given node is currently queued and waiting for
          * execution.
+         * 
          * @param cont any node container
          * @return <code>true</code> if the node is queued, <code>false</code>
-         * otherwise
+         *         otherwise
          */
         public boolean isQueued(final NodeContainer cont) {
             return m_waitingNodes.containsKey(cont);
@@ -515,8 +520,8 @@ public class WorkflowManager implements WorkflowListener {
     private static final String KEY_RUNNING_NODE_ID = "runningNodeID";
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(WorkflowManager.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(WorkflowManager.class);
 
     /** Workflow version. */
     private static final String CFG_VERSION = "version";
@@ -528,29 +533,29 @@ public class WorkflowManager implements WorkflowListener {
      */
     public static final String WORKFLOW_FILE = "workflow.knime";
 
-    private final List<WeakReference<WorkflowManager>> m_children = 
-        new ArrayList<WeakReference<WorkflowManager>>();
+    private final List<WeakReference<WorkflowManager>> m_children =
+            new ArrayList<WeakReference<WorkflowManager>>();
 
     // quick access to connections
-    private final Map<Integer, ConnectionContainer> m_connectionsByID = 
-        new HashMap<Integer, ConnectionContainer>();
+    private final Map<Integer, ConnectionContainer> m_connectionsByID =
+            new HashMap<Integer, ConnectionContainer>();
 
     // change listener support
-    private final CopyOnWriteArrayList<WorkflowListener> m_eventListeners = 
-        new CopyOnWriteArrayList<WorkflowListener>();
+    private final CopyOnWriteArrayList<WorkflowListener> m_eventListeners =
+            new CopyOnWriteArrayList<WorkflowListener>();
 
     private final WorkflowExecutor m_executor;
 
     // quick access to IDs via Nodes
-    private final Map<NodeContainer, Integer> m_idsByNode = 
-        new HashMap<NodeContainer, Integer>();
+    private final Map<NodeContainer, Integer> m_idsByNode =
+            new HashMap<NodeContainer, Integer>();
 
     // quick access to nodes by ID
-    private final Map<Integer, NodeContainer> m_nodesByID = 
-        new LinkedHashMap<Integer, NodeContainer>();
+    private final Map<Integer, NodeContainer> m_nodesByID =
+            new LinkedHashMap<Integer, NodeContainer>();
 
-    private final MyNodeStateListener m_nodeStateListener = 
-        new MyNodeStateListener();
+    private final MyNodeStateListener m_nodeStateListener =
+            new MyNodeStateListener();
 
     private final WorkflowManager m_parent;
 
@@ -559,8 +564,8 @@ public class WorkflowManager implements WorkflowListener {
     // internal variables to allow generation of unique indices
     private final MutableInteger m_runningNodeID;
 
-    private final List<NodeContainer> m_detachedNodes = 
-        new ArrayList<NodeContainer>();
+    private final List<NodeContainer> m_detachedNodes =
+            new ArrayList<NodeContainer>();
 
     /**
      * Create new Workflow.
@@ -592,7 +597,7 @@ public class WorkflowManager implements WorkflowListener {
      * @throws IOException if the workflow file can not be found or files to
      *             load node internals
      * @throws WorkflowException if an exception occurs while loading the
-     *  workflow structure 
+     *             workflow structure
      */
     public WorkflowManager(final File workflowFile,
             final NodeProgressMonitor progMon) throws InvalidSettingsException,
@@ -684,8 +689,9 @@ public class WorkflowManager implements WorkflowListener {
                     + " does not exist.");
         }
 
-        ConnectionContainer newConnection = new ConnectionContainer(
-                m_runningConnectionID.inc(), nodeOut, portOut, nodeIn, portIn);
+        ConnectionContainer newConnection =
+                new ConnectionContainer(m_runningConnectionID.inc(), nodeOut,
+                        portOut, nodeIn, portIn);
         addConnection(newConnection);
         return newConnection;
     }
@@ -723,8 +729,7 @@ public class WorkflowManager implements WorkflowListener {
 
         // notify listeners
         LOGGER.debug("Added " + newNode.getNameWithID());
-        fireWorkflowEvent(
-                new WorkflowEvent.NodeAdded(newNodeID, null, newNode));
+        fireWorkflowEvent(new WorkflowEvent.NodeAdded(newNodeID, null, newNode));
 
         LOGGER.debug("done, ID=" + newNodeID);
         return newNode;
@@ -792,9 +797,10 @@ public class WorkflowManager implements WorkflowListener {
             return false;
         }
 
-        boolean portNumsValid = (src.getNrOutPorts() > outPort)
-                && (targ.getNrInPorts() > inPort) && (outPort >= 0)
-                && (inPort >= 0);
+        boolean portNumsValid =
+                (src.getNrOutPorts() > outPort)
+                        && (targ.getNrInPorts() > inPort) && (outPort >= 0)
+                        && (inPort >= 0);
         if (!portNumsValid) {
             // port numbers don't exist - return failure
             LOGGER.error("WFM: checking for connection for non existing"
@@ -809,10 +815,10 @@ public class WorkflowManager implements WorkflowListener {
             return false;
         }
 
-        boolean isDataConn = targ.isDataInPort(inPort)
-                && src.isDataOutPort(outPort);
-        boolean isModelConn = !targ.isDataInPort(inPort)
-                && !src.isDataOutPort(outPort);
+        boolean isDataConn =
+                targ.isDataInPort(inPort) && src.isDataOutPort(outPort);
+        boolean isModelConn =
+                !targ.isDataInPort(inPort) && !src.isDataOutPort(outPort);
         if (!isDataConn && !isModelConn) {
             // trying to connect data to model port - return failure
             return false;
@@ -888,8 +894,8 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized void clear() throws WorkflowInExecutionException {
         checkForRunningNodes("Workflow cannot be cleared");
 
-        List<NodeContainer> containers = new ArrayList<NodeContainer>(
-                m_nodesByID.values());
+        List<NodeContainer> containers =
+                new ArrayList<NodeContainer>(m_nodesByID.values());
         for (NodeContainer nc : containers) {
             removeNode(nc);
         }
@@ -995,11 +1001,11 @@ public class WorkflowManager implements WorkflowListener {
                 continue;
             }
 
-            ConnectionContainer newConn = new ConnectionContainer(
-                    m_runningConnectionID.inc(), m_nodesByID.get(idMap
-                            .get(oldSourceID)), cc.getSourcePortID(),
-                    m_nodesByID.get(idMap.get(oldTargetID)), cc
-                            .getTargetPortID());
+            ConnectionContainer newConn =
+                    new ConnectionContainer(m_runningConnectionID.inc(),
+                            m_nodesByID.get(idMap.get(oldSourceID)), cc
+                                    .getSourcePortID(), m_nodesByID.get(idMap
+                                    .get(oldTargetID)), cc.getTargetPortID());
             addConnection(newConn);
             // add the id to the new ids
             newConnectionIDs.add(newConn.getID());
@@ -1059,8 +1065,8 @@ public class WorkflowManager implements WorkflowListener {
                 final int oldId = nodeSetting.getInt(NodeContainer.KEY_ID);
                 final int newId = m_runningNodeID.inc();
                 nodeSetting.addInt(NodeContainer.KEY_ID, newId);
-                final NodeContainer newNode = new NodeContainer(nodeSetting,
-                        this);
+                final NodeContainer newNode =
+                        new NodeContainer(nodeSetting, this);
                 newNode.loadSettings(nodeSetting);
 
                 // adapt custom name in case it has still the node id string
@@ -1068,7 +1074,7 @@ public class WorkflowManager implements WorkflowListener {
                 if (customName.equals("Node " + oldId)) {
                     newNode.setCustomName("Node " + newId);
                 }
-                
+
                 newNode.resetAndConfigure();
 
                 // change the id, as this id is already in use (it was copied)
@@ -1090,16 +1096,18 @@ public class WorkflowManager implements WorkflowListener {
         NodeSettings connections = settings.getNodeSettings(KEY_CONNECTIONS);
         for (String connectionKey : connections.keySet()) {
             // retrieve config object for next connection
-            NodeSettings connectionConfig = connections
-                    .getNodeSettings(connectionKey);
+            NodeSettings connectionConfig =
+                    connections.getNodeSettings(connectionKey);
             // and add appropriate connection to workflow
             try {
                 // get the new id from the map
                 // read ids and port indices
-                int oldSourceID = ConnectionContainer
-                        .getSourceIdFromConfig(connectionConfig);
-                int oldTargetID = ConnectionContainer
-                        .getTargetIdFromConfig(connectionConfig);
+                int oldSourceID =
+                        ConnectionContainer
+                                .getSourceIdFromConfig(connectionConfig);
+                int oldTargetID =
+                        ConnectionContainer
+                                .getTargetIdFromConfig(connectionConfig);
 
                 // check if both (source and target node have been selected
                 // if not, the connection is omitted
@@ -1108,9 +1116,9 @@ public class WorkflowManager implements WorkflowListener {
                     continue;
                 }
 
-                ConnectionContainer cc = new ConnectionContainer(
-                        m_runningConnectionID.inc(), connectionConfig, this,
-                        idMap);
+                ConnectionContainer cc =
+                        new ConnectionContainer(m_runningConnectionID.inc(),
+                                connectionConfig, this, idMap);
                 addConnection(cc);
                 // add the id to the new ids
                 newConnectionIDs.add(cc.getID());
@@ -1151,8 +1159,8 @@ public class WorkflowManager implements WorkflowListener {
         int numIn = nodeCont.getNrInPorts();
         int numOut = nodeCont.getNrOutPorts();
 
-        List<ConnectionContainer> connections = 
-            new ArrayList<ConnectionContainer>();
+        List<ConnectionContainer> connections =
+                new ArrayList<ConnectionContainer>();
         // collect incoming connections
         for (int i = 0; i < numIn; i++) {
             ConnectionContainer c = getIncomingConnectionAt(nodeCont, i);
@@ -1162,8 +1170,8 @@ public class WorkflowManager implements WorkflowListener {
         }
         // collect outgoing connections
         for (int i = 0; i < numOut; i++) {
-            List<ConnectionContainer> cArr = getOutgoingConnectionsAt(nodeCont,
-                    i);
+            List<ConnectionContainer> cArr =
+                    getOutgoingConnectionsAt(nodeCont, i);
             if (cArr != null) {
                 connections.addAll(cArr);
             }
@@ -1209,7 +1217,7 @@ public class WorkflowManager implements WorkflowListener {
                     }
                 }
                 assert (myNodeContainer != null) : "Did not find my "
-                    + "node container";
+                        + "node container";
 
                 m_parent.findExecutableNodes(myNodeContainer, nodes);
             }
@@ -1328,8 +1336,7 @@ public class WorkflowManager implements WorkflowListener {
         while (!pred.isEmpty()) {
             NodeContainer nodeCont = pred.removeFirst();
             for (NodeContainer nc : nodeCont.getPredecessors()) {
-                if (nc.isConfigured() && !nc.isExecuted() 
-                        && !pred.contains(nc)) {
+                if (nc.isConfigured() && !nc.isExecuted() && !pred.contains(nc)) {
                     pred.add(nc);
                     nodes.add(nc);
                 }
@@ -1443,8 +1450,8 @@ public class WorkflowManager implements WorkflowListener {
      */
     public List<ConnectionContainer> getOutgoingConnectionsAt(
             final NodeContainer container, final int portNum) {
-        List<ConnectionContainer> foundConnections = 
-            new ArrayList<ConnectionContainer>();
+        List<ConnectionContainer> foundConnections =
+                new ArrayList<ConnectionContainer>();
 
         // If the node is contained, process it
         if (container != null) {
@@ -1476,7 +1483,7 @@ public class WorkflowManager implements WorkflowListener {
      * @throws WorkflowInExecutionException if the workflow is currently being
      *             executed
      * @throws WorkflowException if an exception occurs while loading the
-     *  workflow structure
+     *             workflow structure
      */
     public synchronized void load(final File workflowFile,
             final NodeProgressMonitor progMon) throws IOException,
@@ -1491,10 +1498,10 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         // load workflow topology
-        NodeSettingsRO settings = NodeSettings.loadFromXML(new FileInputStream(
-                workflowFile));
-        m_loadedVersion = settings.getString(CFG_VERSION,
-                KNIMEConstants.VERSION);
+        NodeSettingsRO settings =
+                NodeSettings.loadFromXML(new FileInputStream(workflowFile));
+        m_loadedVersion =
+                settings.getString(CFG_VERSION, KNIMEConstants.VERSION);
         load(settings);
 
         File parentDir = workflowFile.getParentFile();
@@ -1514,31 +1521,33 @@ public class WorkflowManager implements WorkflowListener {
                 execMon.checkCanceled();
                 execMon.setMessage("Loading node: " + newNode.getNameWithID());
                 try {
-                    NodeSettingsRO nodeSetting = settings.getNodeSettings(
-                            KEY_NODES).getNodeSettings(
-                            "node_" + newNode.getID());
-                    String nodeFileName = nodeSetting
-                            .getString(KEY_NODE_SETTINGS_FILE);
+                    NodeSettingsRO nodeSetting =
+                            settings.getNodeSettings(KEY_NODES)
+                                    .getNodeSettings("node_" + newNode.getID());
+                    String nodeFileName =
+                            nodeSetting.getString(KEY_NODE_SETTINGS_FILE);
                     File nodeFile = new File(parentDir, nodeFileName);
-                    NodeProgressMonitor subProgMon = execMon.createSubProgress(
-                            1.0 / topSortNodes().size()).getProgressMonitor();
+                    NodeProgressMonitor subProgMon =
+                            execMon.createSubProgress(
+                                    1.0 / topSortNodes().size())
+                                    .getProgressMonitor();
                     newNode.load(loadID, nodeFile, subProgMon);
                 } catch (IOException ioe) {
-                    String msg = "Unable to load node: "
-                            + newNode.getNameWithID()
-                            + " -> reset and configure.";
+                    String msg =
+                            "Unable to load node: " + newNode.getNameWithID()
+                                    + " -> reset and configure.";
                     LOGGER.error(msg, ioe);
                     failedNodes.add(newNode);
                 } catch (InvalidSettingsException ise) {
-                    String msg = "Unable to load node: "
-                            + newNode.getNameWithID()
-                            + " -> reset and configure.";
+                    String msg =
+                            "Unable to load node: " + newNode.getNameWithID()
+                                    + " -> reset and configure.";
                     LOGGER.error(msg, ise);
                     failedNodes.add(newNode);
                 } catch (Throwable e) {
-                    String msg = "Unable to load node: "
-                        + newNode.getNameWithID()
-                        + " -> reset and configure.";
+                    String msg =
+                            "Unable to load node: " + newNode.getNameWithID()
+                                    + " -> reset and configure.";
                     LOGGER.error(msg, e);
                     failedNodes.add(newNode);
                 }
@@ -1563,7 +1572,7 @@ public class WorkflowManager implements WorkflowListener {
      * @param settings read settings from
      * @throws InvalidSettingsException if an error occurs during reading
      * @throws WorkflowException if an exception occurs while loading the
-     *  workflow
+     *             workflow
      */
     private void load(final NodeSettingsRO settings)
             throws InvalidSettingsException, WorkflowException {
@@ -1573,13 +1582,13 @@ public class WorkflowManager implements WorkflowListener {
             m_runningConnectionID
                     .setValue(settings.getInt(KEY_RUNNING_CONN_ID));
         }
-        
-        final WorkflowException workflowException = new WorkflowException(
-            "Error while loading workflow");
+
+        final WorkflowException workflowException =
+                new WorkflowException("Error while loading workflow");
         WorkflowException lastEx = workflowException;
-        
+
         // Node-Subconfig
-        NodeSettingsRO nodes = settings.getNodeSettings(KEY_NODES); 
+        NodeSettingsRO nodes = settings.getNodeSettings(KEY_NODES);
         // get all keys in there
         for (String nodeKey : nodes.keySet()) {
             NodeSettingsRO nodeSetting = null;
@@ -1591,26 +1600,30 @@ public class WorkflowManager implements WorkflowListener {
                 NodeContainer newNode = new NodeContainer(nodeSetting, this);
                 addNodeWithID(newNode);
             } catch (InstantiationException ex) {
-                lastEx = new WorkflowException("Error while loading node",
-                        lastEx, ex);
+                lastEx =
+                        new WorkflowException("Error while loading node",
+                                lastEx, ex);
                 LOGGER.error("Could not create factory object of type "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (IllegalAccessException ex) {
-                lastEx = new WorkflowException("Error while loading node",
-                        lastEx, ex);
+                lastEx =
+                        new WorkflowException("Error while loading node",
+                                lastEx, ex);
                 LOGGER.error("Could not access factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (ClassNotFoundException ex) {
-                lastEx = new WorkflowException("Error while loading node",
-                        lastEx, ex);
+                lastEx =
+                        new WorkflowException("Error while loading node",
+                                lastEx, ex);
                 LOGGER.error("Could not find factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (Throwable t) {
-                lastEx = new WorkflowException("Error while loading node",
-                        lastEx, t);                
+                lastEx =
+                        new WorkflowException("Error while loading node",
+                                lastEx, t);
             }
         }
 
@@ -1618,23 +1631,25 @@ public class WorkflowManager implements WorkflowListener {
         NodeSettingsRO connections = settings.getNodeSettings(KEY_CONNECTIONS);
         for (String connectionKey : connections.keySet()) {
             // retrieve config object for next connection
-            NodeSettingsRO connectionConfig = connections
-                    .getNodeSettings(connectionKey);
+            NodeSettingsRO connectionConfig =
+                    connections.getNodeSettings(connectionKey);
             // and add appropriate connection to workflow
             ConnectionContainer cc = null;
             try {
-                cc = new ConnectionContainer(m_runningConnectionID.inc(),
-                        connectionConfig, this);
+                cc =
+                        new ConnectionContainer(m_runningConnectionID.inc(),
+                                connectionConfig, this);
                 addConnection(cc);
             } catch (Exception ex) {
-                lastEx = new WorkflowException("Error while adding connection",
-                        lastEx, ex);                
+                lastEx =
+                        new WorkflowException("Error while adding connection",
+                                lastEx, ex);
                 LOGGER.error("Could not create connection: " + connectionKey
                         + " reason: " + ex.getMessage());
                 LOGGER.debug(connectionConfig, ex);
             }
         }
-        
+
         if (lastEx != workflowException) {
             throw workflowException;
         }
@@ -1730,8 +1745,7 @@ public class WorkflowManager implements WorkflowListener {
             m_idsByNode.remove(container);
 
             LOGGER.debug("Removed: " + container.getNameWithID());
-            fireWorkflowEvent(
-                    new WorkflowEvent.NodeRemoved(id, container, null));
+            fireWorkflowEvent(new WorkflowEvent.NodeRemoved(id, container, null));
         } else {
             LOGGER.error("Could not find (and remove): " + container);
             throw new IllegalArgumentException(
@@ -1840,12 +1854,12 @@ public class WorkflowManager implements WorkflowListener {
             progMon.setMessage("Saving node: " + nextNode.getNameWithID());
             // create node directory based on the nodes name and id
             // all chars which are not letter or number are replaced by '_'
-            String nodeDirID = nextNode.getName().replaceAll("[^a-zA-Z0-9 ]",
-                    "_")
-                    + " (#" + nextNode.getID() + ")";
+            String nodeDirID =
+                    nextNode.getName().replaceAll("[^a-zA-Z0-9 ]", "_") + " (#"
+                            + nextNode.getID() + ")";
             // and save it to it's own config object
-            NodeSettingsWO nextNodeConfig = nodes.addNodeSettings("node_"
-                    + nextNode.getID());
+            NodeSettingsWO nextNodeConfig =
+                    nodes.addNodeSettings("node_" + nextNode.getID());
             String nodeFileName = nodeDirID + "/" + Node.SETTINGS_FILE_NAME;
             nextNodeConfig.addString(KEY_NODE_SETTINGS_FILE, nodeFileName);
             File nodeFile = new File(parentDir, nodeFileName);
@@ -1854,8 +1868,9 @@ public class WorkflowManager implements WorkflowListener {
                 throw new IOException("Unable to create dir: " + nodeDir);
             }
 
-            NodeProgressMonitor subProgMon = execMon.createSubProgress(
-                    1.0 / m_nodesByID.size()).getProgressMonitor();
+            NodeProgressMonitor subProgMon =
+                    execMon.createSubProgress(1.0 / m_nodesByID.size())
+                            .getProgressMonitor();
             nextNode.save(nextNodeConfig, nodeFile, subProgMon);
             nodeNum++;
             progMon.setProgress((double)nodeNum / m_nodesByID.size());
@@ -1864,8 +1879,8 @@ public class WorkflowManager implements WorkflowListener {
         NodeSettingsWO connections = settings.addNodeSettings(KEY_CONNECTIONS);
         for (ConnectionContainer cc : m_connectionsByID.values()) {
             // and save it to it's own config object
-            NodeSettingsWO nextConnectionConfig = connections
-                    .addNodeSettings("connection_" + cc.getID());
+            NodeSettingsWO nextConnectionConfig =
+                    connections.addNodeSettings("connection_" + cc.getID());
             cc.save(nextConnectionConfig);
         }
         settings.saveToXML(new FileOutputStream(workflowFile));
@@ -1979,12 +1994,12 @@ public class WorkflowManager implements WorkflowListener {
     public void shutdown() {
         m_executor.cancelExecution();
 
-        Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries = 
-            m_idsByNode.entrySet().iterator();
+        Iterator<Map.Entry<NodeContainer, Integer>> nodeContaierEntries =
+                m_idsByNode.entrySet().iterator();
 
         while (nodeContaierEntries.hasNext()) {
-            Map.Entry<NodeContainer, Integer> entry = nodeContaierEntries
-                    .next();
+            Map.Entry<NodeContainer, Integer> entry =
+                    nodeContaierEntries.next();
 
             entry.getKey().closeAllViews();
             entry.getKey().closeAllPortViews();
@@ -1996,13 +2011,13 @@ public class WorkflowManager implements WorkflowListener {
             sortedNodes.get(i).cleanup();
         }
     }
-    
+
     /**
-     * Returns if the given node is currently queued and waiting for
-     * execution.
+     * Returns if the given node is currently queued and waiting for execution.
+     * 
      * @param cont any node container
      * @return <code>true</code> if the node is queued, <code>false</code>
-     * otherwise
+     *         otherwise
      */
     public boolean isQueued(final NodeContainer cont) {
         return m_executor.isQueued(cont);
