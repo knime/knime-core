@@ -50,6 +50,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
@@ -166,7 +167,10 @@ public abstract class NodeFactory {
             Thread.currentThread().setContextClassLoader(
                     ClassLoader.getSystemClassLoader());
             DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+
+            // sets validation with DTD file
             f.setValidating(true);
+
             parser = f.newDocumentBuilder();
 
             DefaultHandler dh = new DefaultHandler() {
@@ -184,10 +188,9 @@ public abstract class NodeFactory {
                         return super.resolveEntity(pubId, sysId);
                     }
                 }
-
             };
             parser.setEntityResolver(dh);
-            parser.setErrorHandler(dh);
+            // parser.setErrorHandler(dh);            
 
             StreamSource stylesheet = new StreamSource(NodeFactory.class
                     .getClassLoader().getResourceAsStream(
@@ -272,6 +275,14 @@ public abstract class NodeFactory {
             Document doc = null;
             Exception exception = null;
             try {
+                parser.setErrorHandler(new DefaultHandler() {
+                    @Override
+                    public void error(final SAXParseException ex)
+                    throws SAXException {
+                        m_logger.coding("XML node file does not conform with"
+                                + " DTD: " + ex.getMessage(), ex);
+                    }
+                });
                 doc = parser.parse(new InputSource(propInStream));
             } catch (SAXException ex) {
                 exception = ex;
