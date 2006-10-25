@@ -1557,8 +1557,17 @@ public class WorkflowManager implements WorkflowListener {
         // data files are loaded using a repository of reference tables;
         // these lines serves to init the repository so nodes can put their data
         // into this map, the repository is deleted when the loading is done
-        int loadID = System.identityHashCode(this);
-        BufferedDataTable.initRepository(loadID);
+
+        // meta workflows must use their grand*-parent editor's id
+        // and only the grand-parent may initialize the repository with the id
+        WorkflowManager wfm = this;
+        while (wfm.m_parent != null) {
+            wfm = wfm.m_parent;
+        }
+        int loadID = System.identityHashCode(wfm);
+        if (wfm == this) {
+            BufferedDataTable.initRepository(loadID);
+        }
         ArrayList<NodeContainer> failedNodes = new ArrayList<NodeContainer>();
         // get all keys in there
         try {
@@ -1606,7 +1615,13 @@ public class WorkflowManager implements WorkflowListener {
             }
         } finally {
             // put into a finally block because that may release much of memory
-            BufferedDataTable.clearRepository(loadID);
+
+            // only the wfm that create the repos may clear it, otherwise
+            // the meta workflow clears it and not-yet-loaded nodes
+            // in the parent cannot be loaded
+            if (wfm == this) {
+                BufferedDataTable.clearRepository(loadID);
+            }
         }
         for (NodeContainer newNode : failedNodes) {
             resetAndConfigureNode(newNode.getID());
