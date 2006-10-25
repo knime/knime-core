@@ -22,8 +22,8 @@
 package org.knime.core.node;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -65,8 +65,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * timer task iterates over this list and informs the monitors about
      * new progress information. 
      */
-    private static final ArrayList<WeakReference<DefaultNodeProgressMonitor>> 
-       PROGMONS = new ArrayList<WeakReference<DefaultNodeProgressMonitor>>();
+    private static final 
+        List<WeakReference<DefaultNodeProgressMonitor>> PROGMONS = new 
+        CopyOnWriteArrayList<WeakReference<DefaultNodeProgressMonitor>>();
     
     /** If progress has changed. */
     private boolean m_changed = false;
@@ -78,22 +79,20 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private static final TimerTask TASK = new TimerTask() {
         @Override
         public void run() {
-            synchronized (PROGMONS) {
-                for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = 
-                        PROGMONS.iterator(); it.hasNext();) {
-                    DefaultNodeProgressMonitor p = it.next().get();
+            for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = 
+                    PROGMONS.iterator(); it.hasNext();) {
+                DefaultNodeProgressMonitor p = it.next().get();
 
-                    if (p == null) {
-                        it.remove(); // not active anymore
-                    } else if (p.m_changed) {
-                        try {
-                            p.fireProgressChanged(); // something has changed
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                if (p == null) {
+                    it.remove(); // not active anymore
+                } else if (p.m_changed) {
+                    try {
+                        p.fireProgressChanged(); // something has changed
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    
                 }
+                
             }
         }  
     };
