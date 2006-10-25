@@ -22,7 +22,8 @@
  * History
  *   01.03.2005 (mb): created
  *   23.05.2006 (mb): eliminated member holding ColorAttr
- *   21.06.06 (bw & po): reviewed
+ *   21.06.2006 (bw & po): reviewed
+ *   25.10.2006 (tg): cleanup
  */
 package org.knime.core.data;
 

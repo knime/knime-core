@@ -20,7 +20,8 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Dec 9, 2005 (wiswedel): created
+ *   09.12.2005 (bw): created
+ *   25.10.2006 (tg): cleanup
  */
 package org.knime.core.data;
 

@@ -21,6 +21,7 @@
  * 
  * History
  *   02.02.2006 (mb): created
+ *   25.10.2006 (tg): cleanup
  */
 package org.knime.core.data;
 
@@ -37,7 +38,7 @@ import org.knime.core.data.property.SizeHandler;
  * be read-only after creation.
  * 
  * <p>
- * In addtion, a {@link ColorHandler}, {@link SizeHandler}, and/or 
+ * In addition, a {@link ColorHandler}, {@link SizeHandler}, and/or 
  * {@link ShapeHandler} can be set optionally to specify color, shape, and size.
  * An {@link DataColumnProperties} object can be used to specify annotations
  * as key-value pairs. 

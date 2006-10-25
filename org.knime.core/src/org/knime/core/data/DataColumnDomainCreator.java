@@ -18,6 +18,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
+ * 
+ * History
+ *   25.10.2006 (tg): cleanup
  */
 package org.knime.core.data;
 
@@ -102,7 +105,7 @@ public class DataColumnDomainCreator {
             final DataCell lowerBound, final DataCell upperBound) {
         this(lowerBound, upperBound);
         if (values != null) {
-            // store a unmodifable copy of the value set in the same order
+            // store a unmodifiable copy of the value set in the same order
             Set<DataCell> set = new LinkedHashSet<DataCell>(
                     Arrays.asList(values));
             m_values = Collections.unmodifiableSet(set);
@@ -142,7 +145,7 @@ public class DataColumnDomainCreator {
      */
     public void setValues(final Set<DataCell> values) {
         if (values != null) {
-            // store a unmodifable copy of the value set in the same order
+            // store a unmodifiable copy of the value set in the same order
             Set<DataCell> set = new LinkedHashSet<DataCell>(values);
             m_values = Collections.unmodifiableSet(set);
         } else {

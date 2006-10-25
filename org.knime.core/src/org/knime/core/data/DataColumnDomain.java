@@ -18,6 +18,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
+ * 
+ * History
+ *   25.10.2006 (tg): cleanup
  */
 package org.knime.core.data;
 
@@ -28,16 +31,15 @@ import java.util.Set;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 
-
 /**
  * Final <code>DataColumnDomain</code> object holds meta infos about one column,
  * that are, possible values, and an upper and a lower bound - if available. 
  * This object can only be created by the corresponding 
- * {@link DataColumnDomainCreator} within this package and therefor is 
+ * {@link DataColumnDomainCreator} within this package and therefore is 
  * read-only.
  * 
  * <p>
- * Note: It is crutial that the creator of a column domain ensures that the data
+ * Note: It is crucial that the creator of a column domain ensures that the data
  * filled in is correct. In the sense, that no value in the data table will be
  * outside the provided bounds and that no other value appears in that column
  * than the one listed in the array returned by {@link #getValues()}. It is 
@@ -72,7 +74,7 @@ public final class DataColumnDomain {
     /**
      * Create new column name with lower and upper bounds, and set of possible
      * values. All arguments can be <code>null</code> in case non of these
-     * properties are avaiable.
+     * properties are available.
      * 
      * @param lower The lower bound value or <code>null</code>.
      * @param upper The upper bound value or <code>null</code>.
@@ -125,7 +127,7 @@ public final class DataColumnDomain {
      * 
      * <p>
      * Usually this value is compatible with type <code>DoubleValue</code>
-     * corresponding to an nummeric left interval border.
+     * corresponding to an numeric left interval border.
      * 
      * @return A <code>DataCell</code> with the lowest possible value or 
      *         <code>null</code>.
@@ -154,7 +156,7 @@ public final class DataColumnDomain {
      * 
      * <p>
      * Usually this value is compatible with type <code>DoubleValue</code>
-     * corresponding to an nummeric right interval border.
+     * corresponding to an numeric right interval border.
      * 
      * @return A <code>DataCell</code> with the largest possible value or 
      *         <code>null</code>.

@@ -20,7 +20,8 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   21.06.06 (bw & po): reviewed
+ *   21.06.2006 (bw & po): reviewed
+ *   25.10.2006 (tg): cleanup
  */
 package org.knime.core.data;
 

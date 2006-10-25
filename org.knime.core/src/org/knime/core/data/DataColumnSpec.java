@@ -18,6 +18,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
+ * 
+ * History
+ *    25.10.2006 (tg): cleanup
  */
 package org.knime.core.data;
 
@@ -214,7 +217,7 @@ public final class DataColumnSpec {
 
     /**
      * Two column specs are equal with domain if the column name, type, domain
-     * and propertiesmatch.
+     * and properties match.
      * @see java.lang.Object#equals(java.lang.Object)
      * @param spec The spec to check equality.
      * @return <code>true</code> if name, type, domain, and properties match.
@@ -280,7 +283,7 @@ public final class DataColumnSpec {
      *        information read.
      * @param config To read properties from.
      * @return A new column spec object.
-     * @throws InvalidSettingsException If one of the non-optinal properties is
+     * @throws InvalidSettingsException If one of the non-optional properties is
      *         not available or can't be initialized.
      * @throws NullPointerException If the config object is <code>null</code>.
      */
