@@ -71,7 +71,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/executeAll.gif");
+        return ImageRepository.getImageDescriptor("icons/executeAll.PNG");
     }
 
     /**
