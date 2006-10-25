@@ -69,23 +69,29 @@ public abstract class NodeInPort extends NodePort {
      * @throws NullPointerException If the port to connect to is null.
      */
     public final NodeOutPort connectPort(final NodeOutPort connPort) {
-        if (connPort == null) {
-            throw new NullPointerException(
-                    "The port to connect can't be null.");
-        }
-        if (this instanceof NodePort.DataPort
-                && !(connPort instanceof NodePort.DataPort)) {
-            throw new IllegalArgumentException("Port types don't match.");
-        }
-        if (this instanceof NodePort.ModelContentPort
-                && !(connPort instanceof NodePort.ModelContentPort)) {
-            throw new IllegalArgumentException("Port types don't match.");
-        }
+        
+        // check if the outport can be connected to this inport
+        checkConnectPort(connPort);
+        
         NodeOutPort tmp = m_connOutPort;
         m_connOutPort = connPort;
         m_connOutPort.addInPort(this);
         getNode().inportHasNewConnection(getPortID());
         return tmp;
+    }
+    
+    /**
+     * Checks if the outport can be connected to this inport. This method just
+     * checks basic stuff like "not null". Detailed, port type dependant things
+     * are checked in overriden methods of special port types.
+     * 
+     * @param connPort the outport to check
+     */
+    public void checkConnectPort(final NodeOutPort connPort) {
+        if (connPort == null) {
+            throw new NullPointerException("The port to connect "
+                    + "can't be null.");
+        }
     }
 
     /**

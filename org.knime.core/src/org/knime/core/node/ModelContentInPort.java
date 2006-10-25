@@ -66,5 +66,22 @@ public final class ModelContentInPort extends NodeInPort implements
     void newModelContentAvailable(final ModelContentRO predParams) {
         getNode().inportHasNewModelContent(super.getPortID(), predParams);
     }
+    
+    /**
+     * Checks if the out port to connect is a model port.
+     * 
+     * @see org.knime.core.node.NodeInPort#
+     *      checkConnectPort(org.knime.core.node.NodeOutPort)
+     */
+    @Override
+    public void checkConnectPort(final NodeOutPort connPort) {
 
+        super.checkConnectPort(connPort);
+
+        if (!(connPort instanceof NodePort.ModelContentPort)) {
+            throw new IllegalArgumentException(
+                    "Port types don't match. Outport to connect "
+                            + "is not a model port.");
+        }
+    }
 }

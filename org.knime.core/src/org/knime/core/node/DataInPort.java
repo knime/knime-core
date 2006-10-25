@@ -35,8 +35,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DataInPort extends NodeInPort 
-    implements NodePort.DataPort {
+public final class DataInPort extends NodeInPort implements NodePort.DataPort {
 
     /**
      * Creates new input data port.
@@ -119,4 +118,21 @@ public final class DataInPort extends NodeInPort
         getNode().inportHasNewHiLiteHandler(getPortID());
     }
 
+    /**
+     * Checks if the out port to connect is a data port.
+     * 
+     * @see org.knime.core.node.NodeInPort#
+     *      checkConnectPort(org.knime.core.node.NodeOutPort)
+     */
+    @Override
+    public void checkConnectPort(final NodeOutPort connPort) {
+
+        super.checkConnectPort(connPort);
+
+        if (!(connPort instanceof NodePort.DataPort)) {
+            throw new IllegalArgumentException(
+                    "Port types don't match. The outport to connect "
+                            + "is not a data port.");
+        }
+    }
 }

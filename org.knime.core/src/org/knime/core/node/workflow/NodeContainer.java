@@ -394,6 +394,20 @@ public class NodeContainer implements NodeStateListener {
         m_node.getInPort(inPort)
                 .connectPort(outNode.m_node.getOutPort(outPort));
     }
+    
+    /**
+     * Checks if the inport can be connected to the outport.
+     * 
+     * @param inPort the index of the inport
+     * @param outNode the predecessor node
+     * @param outPort the index of the output port
+     */
+    void checkConnectPorts(final int inPort, final NodeContainer outNode,
+            final int outPort) {
+        
+        m_node.getInPort(inPort)
+                .checkConnectPort(outNode.m_node.getOutPort(outPort));
+    }
 
     /**
      * @see Node#removeInternals()

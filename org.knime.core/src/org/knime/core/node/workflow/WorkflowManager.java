@@ -643,6 +643,9 @@ public class WorkflowManager implements WorkflowListener {
         int outPort = cc.getSourcePortID();
         int inPort = cc.getTargetPortID();
 
+        // check if the outport can be connected to the inport
+        inNode.checkConnectPorts(inPort, outNode, outPort);
+
         m_connectionsByID.put(cc.getID(), cc);
 
         // add outgoing edge
