@@ -14,7 +14,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0">Datatable being transfered into the subflow</dataIn>
-		<dataOut index="0">Datatable coming out of the subflow</dataOut>
+		<dataIn index="0" name="Input table">Datatable being transfered into the subflow</dataIn>
+		<dataOut index="0" name="Output table">Datatable coming out of the subflow</dataOut>
 	</ports>	
 </knimeNode>

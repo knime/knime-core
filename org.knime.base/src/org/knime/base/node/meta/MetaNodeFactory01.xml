@@ -14,6 +14,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0">Datatable coming out of the subflow</dataOut>
+		<dataOut index="0" name="Output table">Datatable coming out of the subflow</dataOut>
 	</ports>	
 </knimeNode>
