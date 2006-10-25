@@ -22,6 +22,7 @@
 package org.knime.core.node;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
@@ -79,20 +80,28 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private static final TimerTask TASK = new TimerTask() {
         @Override
         public void run() {
+            // for maintenance only
+            List<WeakReference<DefaultNodeProgressMonitor>> deadList = 
+                new ArrayList<WeakReference<DefaultNodeProgressMonitor>>();
             for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = 
                     PROGMONS.iterator(); it.hasNext();) {
-                DefaultNodeProgressMonitor p = it.next().get();
+                WeakReference<DefaultNodeProgressMonitor> next = it.next();
+                DefaultNodeProgressMonitor p = next.get();
 
                 if (p == null) {
-                    it.remove(); // not active anymore
+                    deadList.add(next);
                 } else if (p.m_changed) {
                     try {
                         p.fireProgressChanged(); // something has changed
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOGGER.warn("Exception (\"" 
+                                + e.getClass().getSimpleName() + "\") " 
+                                + " during event notification.", e);
                     }
                 }
-                
+            }
+            if (!deadList.isEmpty()) {
+                PROGMONS.removeAll(deadList);
             }
         }  
     };
@@ -115,10 +124,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         m_cancelExecute = false;
         m_progress = null;
         m_message = null;
-        synchronized (PROGMONS) {
-            // add this progress monitor to the list of active ones
-            PROGMONS.add(new WeakReference<DefaultNodeProgressMonitor>(this));
-        }
+        // add this progress monitor to the list of active ones
+        PROGMONS.add(new WeakReference<DefaultNodeProgressMonitor>(this));
     }
 
     /**
