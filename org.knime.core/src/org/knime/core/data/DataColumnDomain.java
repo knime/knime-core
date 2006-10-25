@@ -188,7 +188,7 @@ public final class DataColumnDomain {
      * and upper bound and returns <code>true</code> if both are the same. 
      * 
      * @param obj The other domain to compare with.
-     * @return <code>true</code> if aöö possible values, and lower and upper 
+     * @return <code>true</code> if all possible values, and lower and upper 
      *         bounds are the same.
      * 
      * @see Set#equals(Object)
