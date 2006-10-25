@@ -40,7 +40,7 @@ class NoKeyBuffer extends Buffer {
     
     private static final RowKey DUMMY_KEY = new RowKey("non-existing");
     
-    private static final String VERSION = "noRowKeyContainer_1.0.0";
+    private static final String VERSION = "noRowKeyContainer_1.1.0";
     
     /**
      * For writing.
