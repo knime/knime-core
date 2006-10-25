@@ -275,6 +275,9 @@ public class SortedTable implements DataTable {
          * DataCell and the sorting order (m_sortOrder) for each column.
          * 
          * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         * @param dr1 one data row
+         * @param dr2 another datarow to be compared with dr1
+         * @return -1 if dr1 < dr2, 0 if dr1 == dr2 and 1 if dr1 > dr2
          */
         public int compare(final DataRow dr1, final DataRow dr2) {
 
