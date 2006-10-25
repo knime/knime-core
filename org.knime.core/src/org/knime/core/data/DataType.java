@@ -52,22 +52,23 @@ import org.knime.core.node.config.ConfigWO;
 
 
 /**
- * The class for each type associated with a certain implementation of a data
- * cell. It essentially keeps the list of compatible (i.e. castable) data cell
- * types, the list of renderers for this type, and (potentially more than one)
- * comparator for data cells of this type. Also, it will be used to create a
- * common super type for two given cell types in case they are not compatible
- * to each other (this new "type" will be represented by the intersection of
- * the DataValues the two types contain).
+ * Type description associated with a certain implementation of a
+ * {@link DataCell}. It essentially keeps the list of compatible (i.e.
+ * castable) {@link DataValue} interfaces, the list of renderers for this type,
+ * and (potentially more than one) comparator for data cells of this type. Also,
+ * it will be used to create a common super type for two given cell types in
+ * case they are not compatible to each other (this new "type" will be
+ * represented by the intersection of the DataValues the two types contain).
  * 
- * <p>On details of data types in KNIME see the 
- * <a href="package-summary.html">package description</a> and the 
- * <a href="doc-files/newtypes.html">manual on how to define customized 
- * data types</a>.
- *
+ * <p>
+ * On details of data types in KNIME see the <a
+ * href="package-summary.html">package description</a> and the <a
+ * href="doc-files/newtypes.html">
+ * manual on how to define customized data types</a>.
+ * 
  * @see org.knime.core.data.DataCell
  * @see org.knime.core.data.DataValue
- * @author B. Wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class DataType {
 
@@ -134,7 +135,7 @@ public final class DataType {
             new HashMap<Class<? extends DataValue>, UtilityFactory>();
     
     /** Internal access method to determine the preferred DataValue class to
-     * a given DataCell implemenation. This method tries to invoke a static 
+     * a given DataCell implementation. This method tries to invoke a static 
      * method on the argument with the following signature
      * <pre>
      *   public static Class<? extends DataValue> getPreferredValueClass()
@@ -143,10 +144,14 @@ public final class DataType {
      * exists but has the wrong scope or return value, a warning message is 
      * logged and null is returned. 
      * @param cl The runtime class of the DataCell.
-     * @return Its preferred value interface or null.
+     * @return Its preferred value interface or <code>null</code>.
+     * @throws NullPointerException If the argument is <code>null</code>.
      */
     private static Class<? extends DataValue> getPreferredValueClassFor(
             final Class<? extends DataCell> cl) {
+        if (cl == null) {
+            throw new NullPointerException("Class argument must not be null.");
+        }
         Exception exception = null;
         try {
             Method method = cl.getMethod("getPreferredValueClass");
@@ -171,7 +176,7 @@ public final class DataType {
         } catch (ClassCastException cce) {
             exception = cce;
         }
-        LOGGER.coding("Class \"" + cl.getSimpleName() + " has a problem " 
+        LOGGER.coding("Class \"" + cl.getSimpleName() + "\" has a problem " 
                 + "with the static method \"getPreferredValueClass\", " 
                 + "Caught an " + exception.getClass().getSimpleName(), 
                 exception);
@@ -185,14 +190,18 @@ public final class DataType {
      * </pre>
      * If no such field exists, this method returns the factory of one of the 
      * super interfaces (if everything fails, DataValue will have a correct 
-     * implemenation). If it exists but has the wrong scope or modifiers, 
+     * implementation). If it exists but has the wrong scope or modifiers, 
      * a warning message is logged and the member of one of the super interface
      * is returned.
      * @param cl The runtime class of the DataCell.
      * @return The utility factory given in the cell implementation.
+     * @throws NullPointerException If the argument is <code>null</code>.
      */
     public static UtilityFactory getUtilityFor(
         final Class<? extends DataValue> cl) {
+        if (cl == null) {
+            throw new NullPointerException("Class argument must not be null.");
+        }
         UtilityFactory result = VALUE_CLASS_TO_UTILITY.get(cl);
         if (result == null) {
             Exception exception = null;
@@ -242,10 +251,14 @@ public final class DataType {
      * @param cl The datacell's class
      * @return The DataCellSerializer defined in the DataCell implementation
      * or <code>null</code> if no such serializer is available.
+     * @throws NullPointerException If the argument is <code>null</code>.
      */
     @SuppressWarnings("unchecked") // access to CLASS_TO_SERIALIZER_MAP
     public static final <T extends DataCell> 
         DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
+        if (cl == null) {
+            throw new NullPointerException("Class argument must not be null.");
+        }
         if (CLASS_TO_SERIALIZER_MAP.containsKey(cl)) {
             return CLASS_TO_SERIALIZER_MAP.get(cl);
         }
@@ -356,7 +369,7 @@ public final class DataType {
     /**
      * A cell representing a missing data cell with no value. The type
      * of the returned data cell will be compatible to any DataValue interface
-     * (altough you can't cast the returned cell to the value) and will have
+     * (although you can't cast the returned cell to the value) and will have
      * default icons, renderers and comparators.
      * @return Singleton of a missing cell.
      */
@@ -376,6 +389,7 @@ public final class DataType {
         Class[] interfaces = current.getInterfaces();
         for (Class<?> c : interfaces) {
             if (DataValue.class.isAssignableFrom(c)) {
+                @SuppressWarnings("unchecked")
                 Class<? extends DataValue> cv = (Class<? extends DataValue>)c;
                 // hash the utility object
                 getUtilityFor(cv);
@@ -447,7 +461,7 @@ public final class DataType {
     
     /** Constructor that is used when the preferred value class shall change
      * in the given DataType. This DataType is typically never assigned
-     * to one particular DataCell class (otherwise the constroctur
+     * to one particular DataCell class (otherwise the constructor
      * DataType(Class) would have been used) and therefore this type is not
      * cached.
      * @param type The type to clone.
@@ -522,10 +536,10 @@ public final class DataType {
     /**
      * Returns the set of all renderers that are available for this DataType.
      * The returned DataValueRendererFamily will contain all renderers that are
-     * supported or available through the compatible DataValue interfaces. If
-     * no renderer was declared by the DataValue interfaces, this method will 
-     * make sure that at least a default renderer (using the 
-     * <code>DataCell</code>'s<code>toString()</code> method) is returned.
+     * supported or available through the compatible {@link DataValue} 
+     * interfaces. If no renderer was declared by the DataValue interfaces, 
+     * this method will make sure that at least a default renderer (using the 
+     * {@link DataCell#toString() DataCell's toString()} method) is returned. 
      * 
      * @param spec The column spec to the column for which the renderer will be
      *            used. Most of the renderer implementations won't need column
@@ -554,18 +568,15 @@ public final class DataType {
 
     /**
      * Checks if the given <code>DataValue.class</code> is compatible to this
-     * type. If it returns <code>true</code> the datacells of this type can be
-     * typecasted to the <code>valueClass</code>. This method returns
-     * <code>false</code> if the argument is <code>null</code>.
+     * type. If it returns <code>true</code> the {@link DataCell}s of this 
+     * type can be type-casted to the <code>valueClass</code>. This 
+     * method returns <code>false</code> if the argument is <code>null</code>.
      * 
-     * @param valueClass Class to check compatibilty for.
+     * @param valueClass Class to check compatibility for.
      * @return <code>true</code> if compatible.
      */
     public final boolean isCompatible(
             final Class<? extends DataValue> valueClass) {
-        // The DataType for the MissingCell is compatible to everything.
-        // TODO Think over, do missing cells need to be compatible to 
-        // everything? Better to nothing?
         if (m_cellClass != null && m_cellClass.equals(MissingCell.class)) {
             return true;
         }
@@ -593,8 +604,12 @@ public final class DataType {
      * @param type the type to test the supertypeness of this for.
      * @return true if this type is a (one of many possible) supertype of the
      *         argument type.
+     * @throws NullPointerException If the type argument is <code>null</code>.
      */
     public final boolean isASuperTypeOf(final DataType type) {
+        if (type == null) {
+            throw new NullPointerException("Type argument must not be null.");
+        }
         if (type == this) {
             // we get out of here easy
             return true;
@@ -654,7 +669,7 @@ public final class DataType {
      * Returns a type which is compatible to only those values both given types
      * are compatible to. I.e. it contains the intersection of both value lists.
      * This super type can be safely asked for a comparator for cells of both
-     * specified types, or a renderer for datacells of any of the given types.
+     * specified types, or a renderer for DataCells of any of the given types.
      * The returned object could be one of the arguments passed in, if one type
      * is compatible to all (and more) types the other is compatible to.
      * <p>
@@ -735,7 +750,7 @@ public final class DataType {
 
     /**
      * Returns the simple name of the cell class (if any) or "Non-native" +
-     * the abbreviations of all comptabible values classes.
+     * the abbreviations of all compatible values classes.
      * 
      * @see java.lang.Object#toString()
      */
@@ -759,6 +774,7 @@ public final class DataType {
      * @throws InvalidSettingsException If the <code>DataType</code> could not
      *         be loaded from the given <code>Config</code>.
      */
+    @SuppressWarnings("unchecked") // type casts
     public static final DataType load(final ConfigRO config) 
             throws InvalidSettingsException {
         String cellClassName = config.getString(CFG_CELL_NAME);
@@ -823,7 +839,7 @@ public final class DataType {
     }
    
     /**
-     * Implemenation of the missing cell. This datacell does not implement
+     * Implementation of the missing cell. This DataCell does not implement
      * any DataValue interfaces but is compatible to any value class. 
      * This class is the very only implementation whose isMissing() method 
      * returns true. 

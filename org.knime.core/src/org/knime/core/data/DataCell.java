@@ -34,53 +34,63 @@ import java.io.Serializable;
  * <p>
  * 
  * Derived classes will extend this class and implement (at least one) interface
- * derived from <code>DataValue</code>. The instantiated derived object must
- * be read-only, no setter methods must be implemented.
+ * derived from {@link DataValue}. The instantiated derived object must be
+ * read-only, no setter methods must be implemented.
  * 
- * <p>This class implements Serializable. However, if you define a custom
- * <code>DataCell</code> implementation, consider to implement a factory that 
- * takes care of reading/writing a cell to a {@link java.io.DataInput} or 
- * {@link java.io.DataOutput} source. Ordinary Java serialization is 
- * considerably slower than using such a factory. To register such a factory, 
- * define a static method having the following signature:
- * <pre>
- *  public static final DataCellSerializer&lt;YourCellClass&gt; 
- *      getCellSerializer() {
- *    ...
- *  }
- * </pre>
- * where <i>YourCellClass</i> is the name of your customized 
- * <code>DataCell</code>.
- * This method will be called whenever the cell at hand needs to be written 
- * using reflection. This method is only called once, i.e. the first time
- * that it is used.
+ * <p>
+ * This class implements {@link Serializable java.io.Serializable}. However, if
+ * you define a custom <code>DataCell</code> implementation, consider to
+ * implement a factory that takes care of reading/writing a cell to a
+ * {@link java.io.DataInput java.io.DataInput} or
+ * {@link java.io.DataOutput java.io.DataOutput} source. Ordinary Java
+ * serialization is considerably slower than using such a factory. To register
+ * such a factory, define a static method having the following signature:
  * 
- * <p>Since <code>DataCell</code> may implement different {@link DataValue}
- * interfaces but only one is the <i>native</i> value class, consider to 
- * implement a static method in your derived class with the following signature:
  * <pre>
- *   public static final Class<? extends DataValue> getPreferredValueClass() {
- *       ...
+ *   public static final {@link DataCellSerializer}&lt;YourCellClass&gt; 
+ *       getCellSerializer() {
+ *     ...
  *   }
  * </pre>
- * This method is called when the runtime {@link DataType} of the cell is 
- * created using reflection. The associated {@link DataType} will set the 
- * renderer, icon, and comparator of this native value class as default. 
- * If you don't specify such method, the order on the value interfaces 
- * is undefined.
  * 
- * <p>For further details on data types, see also the 
- * <a href="package-summary.html">package description</a> and the 
- * <a href="doc-files/newtypes.html">manual on defining new KNIME cell 
- * types</a>.
+ * where <i>YourCellClass</i> is the name of your customized
+ * <code>DataCell</code>. This method will be called whenever the cell at
+ * hand needs to be written using reflection. This method is only called once,
+ * i.e. the first time that it is used.
+ * 
+ * <p>
+ * Since <code>DataCell</code> may implement different {@link DataValue}
+ * interfaces but only one is the <i>native</i> value class, consider to
+ * implement a static method in your derived class with the following signature:
+ * 
+ * <pre>
+ *    public static final Class&lt;? extends DataValue&gt; 
+ *      getPreferredValueClass() {
+ *        ...
+ *    }
+ * </pre>
+ * 
+ * This method is called when the runtime {@link DataType} of the cell is
+ * created using reflection. The associated {@link DataType} will set the
+ * renderer, icon, and comparator of this native value class as default. If you
+ * don't specify such method, the order on the value interfaces is undefined.
+ * 
+ * <p>
+ * For further details on data types, see also the <a
+ * href="package-summary.html">package description</a> and the <a
+ * href="doc-files/newtypes.html">manual on defining new KNIME cell types</a>.
+ * 
  * @see DataType
- * @see org.knime.core.data.DataCellSerializer
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class DataCell implements DataValue, Serializable {
 
     /**
-     * Returns this cell's <code>DataType</code>.
+     * Returns this cell's <code>DataType</code>. This method is provided for 
+     * convenience only, it is a shortcut for 
+     * <code>DataType.getType(o.getClass())</code>, where <i>o</i> is the 
+     * runtime data cell object (i.e. the object on which this method is 
+     * called).
      * @return The <code>DataType</code>.
      * @see DataType#getType(Class)
      */
@@ -93,6 +103,7 @@ public abstract class DataCell implements DataValue, Serializable {
      * returns <code>false</code>. If you need to represent a missing cell
      * use the static method DataType.getMissingCell().
      * @return If the cell represents a missing value.
+     * @see DataType#getMissingCell()
      */
     public final boolean isMissing() {
         /* 
@@ -106,7 +117,7 @@ public abstract class DataCell implements DataValue, Serializable {
         return isMissingInternal();
     }
     
-    /** Internal implemenation of getMissing(). It will return 
+    /** Internal implementation of getMissing(). It will return 
      * <code>false</code> and is only overridden in the missing cell 
      * implementation.
      * @return <code>false</code>.
@@ -126,11 +137,11 @@ public abstract class DataCell implements DataValue, Serializable {
     public abstract String toString();
 
     /**
-     * Implements an equal method which returns <code>true</code> only if both
+     * Implements the equals method which returns <code>true</code> only if both
      * cells are of the same class and are equal. For that, this final method
-     * calls the type specific <code>equalsDataCell</code> method, which all
-     * derived data cells must provide. It handles the missing value and null
-     * cases, in all other cases it delegates to the specific method.
+     * calls the type specific {@link #equalsDataCell(DataCell)} method,
+     * which all derived data cells must provide. It handles the missing value 
+     * and null cases, in all other cases it delegates to the specific method.
      * 
      * @param o The other object to check.
      * @return <b>true </b> if this instance and the given object are instances
