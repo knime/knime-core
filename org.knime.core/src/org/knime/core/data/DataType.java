@@ -690,6 +690,17 @@ public final class DataType {
             throw new NullPointerException("Cannot build super type of"
                     + " a null type");
         }
+        // if one of the types represents the missing cell type, we
+        // return the other type. 
+        if (type1.m_cellClass != null 
+                && type1.m_cellClass.equals(MissingCell.class)) {
+            return type2;
+        }
+        if (type2.m_cellClass != null 
+                && type2.m_cellClass.equals(MissingCell.class)) {
+            return type1;
+        }
+            
         // handles also the equals case
         if (type1.isASuperTypeOf(type2)) {
             return type1;
