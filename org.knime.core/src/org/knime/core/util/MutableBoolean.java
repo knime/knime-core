@@ -78,6 +78,7 @@ public class MutableBoolean {
      * 
      * @return a string representation of this object.
      */
+    @Override
     public String toString() {
         return m_value ? "true" : "false";
     }
