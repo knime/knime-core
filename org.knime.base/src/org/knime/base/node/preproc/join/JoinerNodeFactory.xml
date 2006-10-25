@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./joiner.png" type="Manipulator">
-    <name>Joiner</name>         
+    <name>Joiner</name>
     <shortDescription>Joins two tables based on their row keys.</shortDescription>
     <fullDescription>
         <intro>
@@ -33,8 +33,8 @@
 			or the missing columns rom the one table can be replaced by missing cells
 			(like an OUTER JOIN in SQL).
 		</option>
-		</fullDescription>                  
-    <ports>                 
+		</fullDescription>
+    <ports>
         <dataIn index="0" name="Left table">Table contributing to the left part of the output table.</dataIn>
         <dataIn index="1" name="Right table">Table contributing to the right part of the output table.</dataIn>
         <dataOut index="0" name="Joined table">Joined Table.</dataOut>
