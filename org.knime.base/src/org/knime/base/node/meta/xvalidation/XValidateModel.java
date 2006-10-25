@@ -170,7 +170,7 @@ public class XValidateModel extends MetaNodeModel {
             executeInternalWF();
             
 //            internalWFM().resetAndConfigureAll();
-//            m_partitionModel.setIgnoreNextReset(false);
+            m_partitionModel.setIgnoreNextReset(false);
 //            KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
 //                public void run() {
 //                    internalWFM().executeAll(true);
