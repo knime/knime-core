@@ -30,13 +30,13 @@ import java.io.IOException;
  * Interface for proxies that can read/write specific <code>DataCell</code>
  * implementations. Using DataCellSerializer is considerably faster than using 
  * ordinary Java serialization. Objects of this class are returned in a static 
- * method in a <code>DataCell</code> implementation. For furter details see the
+ * method in a <code>DataCell</code> implementation. For further details see the
  * {@link org.knime.core.data.DataCell DataCell description} and the 
  * <a href="doc-files/newtypes.html#newtypes">manual</a> on how to define 
  * new types in KNIME.  
  * 
  * @param <T> A DataCell implementation being read/written.
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public interface DataCellSerializer<T extends DataCell> {
 
