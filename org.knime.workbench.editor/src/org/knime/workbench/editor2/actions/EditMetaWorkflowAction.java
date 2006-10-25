@@ -45,7 +45,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 public class EditMetaWorkflowAction extends Action {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(OpenPortViewAction.class);
+            .getLogger(EditMetaWorkflowAction.class);
 
     /**
      * The meta node to open the editor for.
@@ -143,7 +143,7 @@ public class EditMetaWorkflowAction extends Action {
 
         } catch (Exception e) {
             LOGGER.error("Meta-workflow editor could not be created for: "
-                    + m_nodeContainer.nodeToString() + ": " + e.getMessage());
+                    + m_nodeContainer.nodeToString() + ": ", e);
         }
     }
 }

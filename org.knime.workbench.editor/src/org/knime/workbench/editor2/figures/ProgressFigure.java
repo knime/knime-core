@@ -391,6 +391,12 @@ public class ProgressFigure extends RectangleFigure implements
             m_unknownProgress = false;
 
             m_currentWorked = newWorked;
+
+            // to ensure that a 100 % bar is not shown the current work
+            // can be at most 99%
+            if (m_currentWorked > 99) {
+                m_currentWorked = 99;
+            }
             changed = true;
         }
 

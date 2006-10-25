@@ -73,8 +73,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * the system double click time
      */
     // private static final long DOUBLE_CLICK_TIME = 400;
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeContainerEditPart.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(NodeContainerEditPart.class);
 
     /**
      * Remembers the time of the last <code>MousePressed</code> event. This is
@@ -220,9 +220,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private void performDirectEdit() {
 
         if (m_directEditManager == null) {
-            m_directEditManager = new NodeEditManager(this,
-                    new UserNodeNameCellEditorLocator(
-                            (NodeContainerFigure)getFigure()));
+            m_directEditManager =
+                    new NodeEditManager(this,
+                            new UserNodeNameCellEditorLocator(
+                                    (NodeContainerFigure)getFigure()));
         }
 
         m_directEditManager.show();
@@ -320,8 +321,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     // provide some info from the extra info object to the
                     // figure
                     ModellingNodeExtraInfo ei = null;
-                    ei = (ModellingNodeExtraInfo)getNodeContainer()
-                            .getExtraInfo();
+                    ei =
+                            (ModellingNodeExtraInfo)getNodeContainer()
+                                    .getExtraInfo();
 
                     //
                     // if not already initialized, do this now.
@@ -467,12 +469,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // icon = null;
         // }
         // }
-        icon = ImageRepository.getScaledImage(getNodeContainer().getIcon(), 16,
-                16);
+        icon =
+                ImageRepository.getScaledImage(getNodeContainer().getIcon(),
+                        16, 16);
         // get default image if null
         if (icon == null) {
-            icon = ImageRepository.getScaledImage(NodeFactory.getDefaultIcon(),
-                    16, 16);
+            icon =
+                    ImageRepository.getScaledImage(
+                            NodeFactory.getDefaultIcon(), 16, 16);
         }
         if (icon != null) {
             f.setIcon(icon);
@@ -488,8 +492,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         if (isExecuted) {
             f.setState(NodeContainerFigure.STATE_EXECUTED, null);
         } else {
-            boolean isExecutable = getNodeContainer().isExecutableUpToHere();
-            if (isExecutable) {
+            if (getNodeContainer().isExecuting()) {
+                f.setState(NodeContainerFigure.STATE_EXECUTING, null);
+            } else if (getWorkflow().isQueued(getNodeContainer())) {
+                f.setState(NodeContainerFigure.STATE_QUEUED, null);
+            } else if (getNodeContainer().isExecutableUpToHere()) {
                 f.setState(NodeContainerFigure.STATE_READY, null);
             } else {
                 f.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, null);
@@ -568,7 +575,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public ConnectionContainerEditPart[] getOutgoingConnections() {
 
-        Vector<ConnectionContainerEditPart> result = new Vector<ConnectionContainerEditPart>();
+        Vector<ConnectionContainerEditPart> result =
+                new Vector<ConnectionContainerEditPart>();
 
         for (Object part : getChildren()) {
 
@@ -586,7 +594,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public ConnectionContainerEditPart[] getIncomingConnections() {
 
-        Vector<ConnectionContainerEditPart> result = new Vector<ConnectionContainerEditPart>();
+        Vector<ConnectionContainerEditPart> result =
+                new Vector<ConnectionContainerEditPart>();
 
         for (Object part : getChildren()) {
 
@@ -608,8 +617,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         ConnectionContainerEditPart[] out = getOutgoingConnections();
         ConnectionContainerEditPart[] in = getIncomingConnections();
 
-        ConnectionContainerEditPart[] result = new ConnectionContainerEditPart[out.length
-                + in.length];
+        ConnectionContainerEditPart[] result =
+                new ConnectionContainerEditPart[out.length + in.length];
         System.arraycopy(in, 0, result, 0, in.length);
         System.arraycopy(out, 0, result, in.length, out.length);
 
@@ -641,12 +650,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // This is embedded in a special JFace wrapper dialog
         //
         try {
-            WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
-                    .getActiveShell(), container);
+            WrappedNodeDialog dlg =
+                    new WrappedNodeDialog(
+                            Display.getCurrent().getActiveShell(), container);
             dlg.open();
         } catch (NotConfigurableException ex) {
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_WARNING | SWT.OK);
             mb.setText("Dialog cannot be opened");
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());

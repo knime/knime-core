@@ -940,6 +940,11 @@ public class NodeContainerFigure extends RectangleFigure {
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();
+            
+            // the font is just set due to a bug in the getPreferedSize
+            // method of a lable which accesses the font somewhere
+            // if not set a nullpointer is thrown
+            m_label.setFont(FONT_NORMAL);
 
             // m_label.setIconAlignment(PositionConstants.CENTER);
             add(m_label);
