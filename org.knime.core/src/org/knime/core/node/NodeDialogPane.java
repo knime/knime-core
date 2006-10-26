@@ -454,7 +454,7 @@ public abstract class NodeDialogPane {
                     + "resulting in faster execution of successing nodes but "
                     + "also in more memory usage.");
             JRadioButton cacheSmall = new JRadioButton(
-                    "Keep only small tables in memory.");
+                    "Keep only small tables in memory.", true);
             cacheSmall.setActionCommand(
                     MemoryPolicy.CacheSmallInMemory.toString());
             m_group.add(cacheSmall);
