@@ -526,9 +526,8 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         
         int widthOfHeading = m_heading.getPreferredSize().width;
-        int widthOfContentFigure = m_contentFigure.getPreferredSize().width;
         
-        prefWidth = Math.max(widthOfContentFigure, widthOfHeading);
+        prefWidth = Math.max(WIDTH, widthOfHeading);
 
         int prefHeight =
                 m_heading.getPreferredSize().height

@@ -1145,8 +1145,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         checkThread.start();
 
                         m_manager.save(file, progressMonitor);
-                        pm.subTask("Finished.");
-                        pm.done();
+                        
                     } catch (FileNotFoundException fnfe) {
                         LOGGER.fatal("File not found", fnfe);
                         exceptionMessage.append("File access problems: "
@@ -1185,6 +1184,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                         monitor.setCanceled(true);
                     } finally {
                         checkThread.finished();
+                        pm.subTask("Finished.");
+                        pm.done();
                     }
 
                 }
