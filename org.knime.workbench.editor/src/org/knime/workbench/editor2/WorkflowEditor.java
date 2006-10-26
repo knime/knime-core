@@ -123,6 +123,7 @@ import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
+import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -462,7 +463,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 we = we.getNextException();
                 counter++;
             }
-            
+
             // show message
             showInfoMessage(sb.toString());
         }
@@ -723,7 +724,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
-        
+
         // register listener to check wether the underlying knime file (input)
         // has been deleted or renamed
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
@@ -1145,7 +1146,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         checkThread.start();
 
                         m_manager.save(file, progressMonitor);
-                        
+
                     } catch (FileNotFoundException fnfe) {
                         LOGGER.fatal("File not found", fnfe);
                         exceptionMessage.append("File access problems: "
@@ -1443,7 +1444,16 @@ public class WorkflowEditor extends GraphicalEditor implements
             // this code is for the new progress monitor
             NodeContainer nc = (NodeContainer)event.getOldValue();
             NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
-            pm.addProgressListener(nc.getProgressListener());
+
+            NodeProgressListener currentListener;
+
+            currentListener = nc.getProgressListener();
+            if (currentListener == null) {
+                currentListener = new ProgressFigure();
+                nc.setProgressListener(currentListener);
+            }
+
+            pm.addProgressListener(currentListener);
 
         } else if (event instanceof WorkflowEvent.NodeFinished) {
             ProgressMonitorJob j = m_dummyNodeJobs.remove(event.getID());

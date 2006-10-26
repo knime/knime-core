@@ -200,8 +200,10 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Creates a new node figure.
+     * 
+     * @param progressFigure the progress figure for this node
      */
-    public NodeContainerFigure() {
+    public NodeContainerFigure(final ProgressFigure progressFigure) {
 
         m_backgroundColor = ColorConstants.white;
 
@@ -247,7 +249,12 @@ public class NodeContainerFigure extends RectangleFigure {
         m_statusFigure = new StatusFigure();
 
         // progress bar
-        m_progressFigure = new ProgressFigure();
+        if (progressFigure != null) {
+            m_progressFigure = progressFigure;
+        } else {
+            m_progressFigure = new ProgressFigure();
+        }
+        m_progressFigure.setCurrentDisplay(Display.getCurrent());
         m_progressFigure.setOpaque(true);
 
         // Additional status (warning/error sign)
@@ -416,6 +423,9 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private void setStatusAmple() {
 
+        // in every case reset the progress bar
+        m_progressFigure.reset();
+        
         // remove both intergangable onse
         if (isChild(m_progressFigure)) {
             remove(m_progressFigure);
@@ -524,9 +534,9 @@ public class NodeContainerFigure extends RectangleFigure {
         if (parentBounds.width > 0) {
             prefWidth = parentBounds.width;
         }
-        
+
         int widthOfHeading = m_heading.getPreferredSize().width;
-        
+
         prefWidth = Math.max(WIDTH, widthOfHeading);
 
         int prefHeight =
@@ -941,7 +951,7 @@ public class NodeContainerFigure extends RectangleFigure {
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();
-            
+
             // the font is just set due to a bug in the getPreferedSize
             // method of a lable which accesses the font somewhere
             // if not set a nullpointer is thrown

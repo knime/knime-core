@@ -64,6 +64,10 @@ public class ProgressFigure extends RectangleFigure implements
 
     private static final Color PROGRESS_BAR_COLOR = ColorConstants.darkBlue;
 
+    private static final boolean POLYGONBAR = true;
+
+    private static final boolean ON = true;
+
     // private static final Color PROGRESS_BAR_COLOR = new Color(null, 240, 200,
     // 10);
 
@@ -181,25 +185,34 @@ public class ProgressFigure extends RectangleFigure implements
         int w = r.width;
         int h = r.height;
 
-        // defines a polygon within the bounds of this figure with round
-        // edges
-        int firstLeftX = x;
-        int secondLeftX = x + 1;
-        int firstRightX = x + w - 2;
-        int secondRightX = x + w - 1;
-        int firstUpperY = y;
-        int secondUpperY = y + 1;
-        int firstLowerY = y + h - 2;
-        int secondLowerY = y + h - 1;
+        int firstLeftX, secondLeftX, firstRightX, secondRightX;
+        int firstUpperY, secondUpperY, firstLowerY, secondLowerY;
 
-        int[] pointList =
-                {secondLeftX, firstUpperY, firstRightX, firstUpperY,
-                        secondRightX, secondUpperY, secondRightX, firstLowerY,
-                        firstRightX, secondLowerY, secondLeftX, secondLowerY,
-                        firstLeftX, firstLowerY, firstLeftX, secondUpperY};
+        if (POLYGONBAR) {
 
-        graphics.fillPolygon(pointList);
-        graphics.drawPolygon(pointList);
+            // defines a polygon within the bounds of this figure with round
+            // edges
+            firstLeftX = x;
+            secondLeftX = x + 1;
+            firstRightX = x + w - 2;
+            secondRightX = x + w - 1;
+            firstUpperY = y;
+            secondUpperY = y + 1;
+            firstLowerY = y + h - 2;
+            secondLowerY = y + h - 1;
+
+            int[] pointList =
+                    {secondLeftX, firstUpperY, firstRightX, firstUpperY,
+                            secondRightX, secondUpperY, secondRightX,
+                            firstLowerY, firstRightX, secondLowerY,
+                            secondLeftX, secondLowerY, firstLeftX, firstLowerY,
+                            firstLeftX, secondUpperY};
+
+            graphics.fillPolygon(pointList);
+            graphics.drawPolygon(pointList);
+        } else {
+            graphics.fillRectangle(x, y, w - 1, h - 1);
+        }
 
         graphics.setForegroundColor(ColorConstants.gray);
         graphics.setBackgroundColor(PROGRESS_BAR_COLOR);
@@ -213,26 +226,32 @@ public class ProgressFigure extends RectangleFigure implements
                         (int)Math.round((double)WIDTH / (double)100
                                 * (double)m_currentWorked);
 
-                firstLeftX = firstLeftX - 1;
-                secondLeftX = firstLeftX + 1;
-                firstRightX = firstLeftX + barWidth;
-                secondRightX = firstRightX + 1;
-                firstUpperY = firstUpperY + 1;
-                secondUpperY = firstUpperY + 1;
-                firstLowerY = firstUpperY + h - 4;
-                secondLowerY = firstLowerY + 2;
+                if (POLYGONBAR) {
 
-                // NOTE: the - 1 is a workaround due to a problem in
-                // the rendering routine of fillPolygon
-                // if not used the lower right corner is not smooth
-                int[] progressBar =
-                        {secondLeftX, firstUpperY, firstRightX, firstUpperY,
-                                secondRightX, secondUpperY, secondRightX,
-                                firstLowerY, firstRightX - 1, secondLowerY,
-                                secondLeftX, secondLowerY, firstLeftX,
-                                firstLowerY, firstLeftX, secondUpperY};
+                    firstLeftX = firstLeftX - 1;
+                    secondLeftX = firstLeftX + 1;
+                    firstRightX = firstLeftX + barWidth;
+                    secondRightX = firstRightX + 1;
+                    firstUpperY = firstUpperY + 1;
+                    secondUpperY = firstUpperY + 1;
+                    firstLowerY = firstUpperY + h - 4;
+                    secondLowerY = firstLowerY + 2;
 
-                graphics.fillPolygon(progressBar);
+                    // NOTE: the - 1 is a workaround due to a problem in
+                    // the rendering routine of fillPolygon
+                    // if not used the lower right corner is not smooth
+                    int[] progressBar =
+                            {secondLeftX, firstUpperY, firstRightX,
+                                    firstUpperY, secondRightX, secondUpperY,
+                                    secondRightX, firstLowerY, firstRightX - 1,
+                                    secondLowerY, secondLeftX, secondLowerY,
+                                    firstLeftX, firstLowerY, firstLeftX,
+                                    secondUpperY};
+
+                    graphics.fillPolygon(progressBar);
+                } else {
+                    graphics.drawRectangle(x - 1, y - 1, barWidth, h - 2);
+                }
 
                 // graphics.fillRectangle(x, y, barWidth, h);
                 graphics.setFont(PROGRESS_FONT);
@@ -256,28 +275,36 @@ public class ProgressFigure extends RectangleFigure implements
                     m_unknownProgressBarDirection = 1;
                 }
 
-                // defines a polygon bar with round edges
-                firstLeftX =
-                        firstLeftX + m_unknownProgressBarRenderingPosition - 1;
-                secondLeftX = firstLeftX + 1;
-                firstRightX = firstLeftX + UNKNOW_PROGRESS_BAR_WIDTH;
-                secondRightX = firstRightX + 1;
-                firstUpperY = firstUpperY + 1;
-                secondUpperY = firstUpperY + 1;
-                firstLowerY = firstUpperY + h - 4;
-                secondLowerY = firstLowerY + 2;
+                if (POLYGONBAR) {
+                    // defines a polygon bar with round edges
+                    firstLeftX =
+                            firstLeftX + m_unknownProgressBarRenderingPosition
+                                    - 1;
+                    secondLeftX = firstLeftX + 1;
+                    firstRightX = firstLeftX + UNKNOW_PROGRESS_BAR_WIDTH;
+                    secondRightX = firstRightX + 1;
+                    firstUpperY = firstUpperY + 1;
+                    secondUpperY = firstUpperY + 1;
+                    firstLowerY = firstUpperY + h - 4;
+                    secondLowerY = firstLowerY + 2;
 
-                // NOTE: the - 1 is a workaround due to a problem in
-                // the rendering routine of fillPolygon
-                // if not used the lower right corner is not smooth
-                int[] unknwonBar =
-                        {secondLeftX, firstUpperY, firstRightX, firstUpperY,
-                                secondRightX, secondUpperY, secondRightX,
-                                firstLowerY, firstRightX - 1, secondLowerY,
-                                secondLeftX, secondLowerY, firstLeftX,
-                                firstLowerY, firstLeftX, secondUpperY};
+                    // NOTE: the - 1 is a workaround due to a problem in
+                    // the rendering routine of fillPolygon
+                    // if not used the lower right corner is not smooth
+                    int[] unknwonBar =
+                            {secondLeftX, firstUpperY, firstRightX,
+                                    firstUpperY, secondRightX, secondUpperY,
+                                    secondRightX, firstLowerY, firstRightX - 1,
+                                    secondLowerY, secondLeftX, secondLowerY,
+                                    firstLeftX, firstLowerY, firstLeftX,
+                                    secondUpperY};
 
-                graphics.fillPolygon(unknwonBar);
+                    graphics.fillPolygon(unknwonBar);
+                } else {
+                    graphics.fillRectangle(x
+                            + m_unknownProgressBarRenderingPosition - 1, y - 1,
+                            UNKNOW_PROGRESS_BAR_WIDTH, h - 2);
+                }
 
                 // graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH,
                 // h);
@@ -306,12 +333,27 @@ public class ProgressFigure extends RectangleFigure implements
      * Activates this progress bar to render an unknown progress.
      */
     public void activateUnknownProgress() {
+
+        // if switched off, return
+        if (!ON) {
+            return;
+        }
+
+        // check if there is still a progress to render
+        if (m_currentWorked > 0) {
+            m_unknownProgress = false;
+            repaint();
+            return;
+        }
+
         m_unknownProgress = true;
 
         // reset the worked value
         m_currentWorked = 0;
 
-        // m_currentDisplay = Display.getCurrent();
+        if (m_currentDisplay == null) {
+            return;
+        }
 
         final Runnable repaintRun = new Runnable() {
 
@@ -371,6 +413,10 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public synchronized void progressChanged(final NodeProgressEvent pe) {
 
+        if (!ON) {
+            return;
+        }
+
         String message = pe.getMessage();
 
         int newWorked = m_currentWorked;
@@ -407,6 +453,10 @@ public class ProgressFigure extends RectangleFigure implements
             // set the message to the tooltip
             setToolTip(new Label(m_currentProgressMessage));
 
+        }
+
+        if (m_currentDisplay == null) {
+            return;
         }
 
         if (changed) {
@@ -451,5 +501,19 @@ public class ProgressFigure extends RectangleFigure implements
         m_currentProgressMessage = "";
         m_currentWorked = 0;
         m_unknownProgress = true;
+    }
+
+    /**
+     * To set the current display. Null display is not set.
+     * 
+     * @param currentDisplay the dipsplay to set
+     */
+    public void setCurrentDisplay(final Display currentDisplay) {
+
+        if (currentDisplay == null) {
+            return;
+        }
+
+        m_currentDisplay = currentDisplay;
     }
 }
