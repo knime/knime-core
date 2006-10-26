@@ -28,11 +28,14 @@
 <!ELEMENT shortDescription (#PCDATA) >
 
 <!ELEMENT fullDescription (intro, option*) >
-<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a)* >
+<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a | ul | ol)* >
 <!ELEMENT option (#PCDATA | p | h | br | b | i | u | a)* >
 <!ATTLIST option name CDATA #REQUIRED>
 
-<!ELEMENT p (#PCDATA | br | b | i | u | a | tt)* >
+<!ELEMENT p (#PCDATA | br | b | i | u | a | tt | ul | ol)* >
+<!ELEMENT ul (li)+ >
+<!ELEMENT ol (li)+ >
+<!ELEMENT li (#PCDATA) >
 <!ELEMENT h (#PCDATA) >
 <!ELEMENT b (#PCDATA) >
 <!ELEMENT i (#PCDATA) >
