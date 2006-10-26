@@ -52,9 +52,11 @@
 <!ELEMENT predParamIn (#PCDATA) >
 <!ATTLIST predParamIn index CDATA #REQUIRED>
 <!ATTLIST predParamIn name CDATA #REQUIRED>
+<!ATTLIST predParamIn type CDATA "default">
 <!ELEMENT predParamOut (#PCDATA) >
 <!ATTLIST predParamOut index CDATA #REQUIRED>
 <!ATTLIST predParamOut name CDATA #REQUIRED>
+<!ATTLIST predParamOut type CDATA "default">
 
 <!ELEMENT views (view+) >
 <!ELEMENT view (#PCDATA) >
