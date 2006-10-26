@@ -72,7 +72,7 @@ public class SortedTable implements DataTable {
      * Array containing information about the sort order for each column. true:
      * ascending false: descending
      */
-    private boolean[] m_sortOrder;
+    private boolean[] m_sortAscending;
 
     /**
      * Creates a sorted table from the given table and the sorting parameters.
@@ -83,8 +83,9 @@ public class SortedTable implements DataTable {
      *            represents the first sort criteria, the second the second
      *            criteria and so on.
      * 
-     * @param sortOrder the sort order; each field corresponds to the column in
-     *            the list of included columns
+     * @param sortAscending the sort order; each field corresponds to the column
+     *            in the list of included columns. true: ascending false:
+     *            descending
      * 
      * @param exec the execution context used to create the the buffered data
      *            table and indicate the progress
@@ -92,7 +93,7 @@ public class SortedTable implements DataTable {
      * @throws Exception if the parameters are not specified correctly
      */
     public SortedTable(final BufferedDataTable dataTable,
-            final List<String> inclList, final boolean[] sortOrder,
+            final List<String> inclList, final boolean[] sortAscending,
             final ExecutionContext exec) throws Exception {
 
         m_spec = dataTable.getDataTableSpec();
@@ -105,8 +106,8 @@ public class SortedTable implements DataTable {
             m_indices = new int[inclList.size()];
         }
 
-        m_sortOrder = sortOrder;
-        if (m_sortOrder == null) {
+        m_sortAscending = sortAscending;
+        if (m_sortAscending == null) {
             throw new Exception("Sortorder array is " + "not set in the model");
         }
 
@@ -304,7 +305,8 @@ public class SortedTable implements DataTable {
                                 .getCell(m_indices[i]));
 
                 if (cellComparison != 0) {
-                    return (m_sortOrder[i] ? cellComparison : -cellComparison);
+                    return (m_sortAscending[i] ? cellComparison
+                            : -cellComparison);
                 }
             }
             return 0; // all cells in the DataRow have the same value
