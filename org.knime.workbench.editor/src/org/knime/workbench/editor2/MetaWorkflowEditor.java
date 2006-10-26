@@ -34,7 +34,6 @@ import org.knime.core.node.NodeStatus;
 import org.knime.core.node.meta.MetaInputModel;
 import org.knime.core.node.meta.MetaOutputModel;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
