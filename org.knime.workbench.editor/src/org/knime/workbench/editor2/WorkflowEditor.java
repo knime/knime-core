@@ -433,11 +433,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         setSite(site);
         setInput(input);
 
-        // register listener to check wether the underlying knime file
-        // has been deleted or renamed
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
-                IResourceChangeEvent.POST_CHANGE);
-
         // add this as a CommandStackListener
         getCommandStack().addCommandStackListener(this);
 
@@ -512,7 +507,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
 
-        // register resource listener..
+        // remove resource listener..
         if (m_fileResource != null) {
             m_fileResource.getWorkspace().removeResourceChangeListener(this);
         }
@@ -728,6 +723,11 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
+        
+        // register listener to check wether the underlying knime file (input)
+        // has been deleted or renamed
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
+                IResourceChangeEvent.POST_CHANGE);
 
         setDefaultInput(input);
         // we only support file inputs
