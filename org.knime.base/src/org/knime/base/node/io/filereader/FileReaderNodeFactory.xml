@@ -59,6 +59,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0">Datatable just read from the file</dataOut>
+		<dataOut index="0" name="File Table">Datatable just read from the file</dataOut>
 	</ports>	
 </knimeNode>
