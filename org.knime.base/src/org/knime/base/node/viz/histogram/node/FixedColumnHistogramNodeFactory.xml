@@ -19,7 +19,6 @@
 			<li>Crosshair cursor</li>
 			<li>...</li>
 			</ol>
-		</p>
 		The bars are colored by the number of rows per color attribute.
 		<p>To allow the work with huge datasets the user has to specify the desired
 		x and aggregation column before opening the view. For more interaction
