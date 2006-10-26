@@ -253,7 +253,7 @@ public final class NodeLogger {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
         l.info("#                                                           #");
-        l.info("# Welcome to KNIME v1.1.0 (Build August 16, 2006)           #");
+        l.info("# Welcome to KNIME v1.1.2 (Build October 26, 2006)          #");
         l.info("# the Konstanz Information Miner                            #");
         l.info("# Based on Eclipse 3.2, www.eclipse.org                     #");
         l.info("# Uses: Java5, GEF, Log4J, Weka, JFreeChart                 #");
