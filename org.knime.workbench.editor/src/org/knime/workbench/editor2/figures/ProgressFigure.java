@@ -24,6 +24,8 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import java.util.Vector;
+
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
 import org.eclipse.draw2d.Graphics;
@@ -73,6 +75,8 @@ public class ProgressFigure extends RectangleFigure implements
 
     private static final boolean INVOKE_DISPLAY = true;
 
+    private static final UnknownProgressTimer unknownProgressTimer;
+
     // private static final Color PROGRESS_BAR_COLOR = new Color(null, 240, 200,
     // 10);
 
@@ -88,6 +92,10 @@ public class ProgressFigure extends RectangleFigure implements
         }
         PROGRESS_FONT = new Font(current, name, height, SWT.NORMAL);
         QUEUED_FONT = new Font(current, name, 7, SWT.NORMAL);
+
+        // instantiate and start the unkown progress timer
+        unknownProgressTimer = new UnknownProgressTimer();
+        unknownProgressTimer.start();
     }
 
     private boolean m_unknownProgress = false;
@@ -104,7 +112,7 @@ public class ProgressFigure extends RectangleFigure implements
 
     private String m_stateMessage;
 
-    private Display m_currentDisplay;
+    private static Display m_currentDisplay;
 
     private MouseEvent m_mouseEvent;
 
@@ -122,7 +130,9 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public ProgressFigure() {
 
-        m_currentDisplay = Display.getCurrent();
+        if (m_currentDisplay != null) {
+            m_currentDisplay = Display.getCurrent();
+        }
 
         setOpaque(true);
         setFill(true);
@@ -284,6 +294,7 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public void stopUnknownProgress() {
         m_unknownProgress = false;
+        unknownProgressTimer.removeFigure(this);
     }
 
     /**
@@ -312,25 +323,27 @@ public class ProgressFigure extends RectangleFigure implements
             return;
         }
 
-        new Thread("Unknown Progress Timer") {
+        unknownProgressTimer.addFigure(this);
 
-            public void run() {
-
-                while (m_unknownProgress) {
-
-                    try {
-                        Thread.sleep(500);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    if (INVOKE_DISPLAY) {
-                        m_currentDisplay.syncExec(m_repaintObject);
-                    }
-                }
-            }
-
-        }.start();
+        // new Thread("Unknown Progress Timer") {
+        //
+        // public void run() {
+        //
+        // while (m_unknownProgress) {
+        //
+        // try {
+        // Thread.sleep(500);
+        // } catch (Exception e) {
+        // e.printStackTrace();
+        // }
+        //
+        // if (INVOKE_DISPLAY) {
+        // m_currentDisplay.syncExec(m_repaintObject);
+        // }
+        // }
+        // }
+        //
+        // }.start();
     }
 
     /**
@@ -383,6 +396,7 @@ public class ProgressFigure extends RectangleFigure implements
             // for unknown redering triggering started in
             // activateUnknownProgress
             m_unknownProgress = false;
+            unknownProgressTimer.removeFigure(this);
 
             m_currentWorked = newWorked;
 
@@ -403,14 +417,16 @@ public class ProgressFigure extends RectangleFigure implements
             if (!m_currentProgressMessage.equals(meString)
                     && m_mouseEvent != null) {
 
-                m_currentDisplay.syncExec(new Runnable() {
-                    public void run() {
-                        getToolTipHelper().displayToolTipNear(
-                                ProgressFigure.this,
-                                new Label(m_currentProgressMessage),
-                                m_mouseEvent.x, m_mouseEvent.y);
-                    }
-                });
+                if (m_currentDisplay != null) {
+                    m_currentDisplay.syncExec(new Runnable() {
+                        public void run() {
+                            getToolTipHelper().displayToolTipNear(
+                                    ProgressFigure.this,
+                                    new Label(m_currentProgressMessage),
+                                    m_mouseEvent.x, m_mouseEvent.y);
+                        }
+                    });
+                }
             }
 
         }
@@ -450,6 +466,7 @@ public class ProgressFigure extends RectangleFigure implements
         m_currentProgressMessage = "";
         m_currentWorked = 0;
         m_unknownProgress = true;
+        unknownProgressTimer.removeFigure(this);
         m_mouseEvent = null;
 
         if (getToolTipHelper() != null) {
@@ -510,22 +527,22 @@ public class ProgressFigure extends RectangleFigure implements
 
     private ProgressToolTipHelper getToolTipHelper() {
 
-        if (m_toolTipHelper == null) {
+        // if (m_toolTipHelper == null) {
 
-            IFigure parent = getParent();
-            if (parent != null) {
+        IFigure parent = getParent();
+        if (parent != null) {
 
-                WorkflowFigure workflowFigure =
-                        (WorkflowFigure)getParent().getParent();
-                if (workflowFigure != null) {
+            WorkflowFigure workflowFigure =
+                    (WorkflowFigure)getParent().getParent();
+            if (workflowFigure != null) {
 
-                    m_toolTipHelper = workflowFigure.getProgressToolTipHelper();
-                    // new ProgressToolTipHelper(m_currentDisplay
-                    // .getActiveShell());
-                }
+                m_toolTipHelper = workflowFigure.getProgressToolTipHelper();
+                // new ProgressToolTipHelper(m_currentDisplay
+                // .getActiveShell());
             }
-
         }
+
+        // }
 
         return m_toolTipHelper;
     }
@@ -539,4 +556,65 @@ public class ProgressFigure extends RectangleFigure implements
         // TODO Auto-generated method stub
 
     }
+
+    private static class UnknownProgressTimer extends Thread {
+
+        private Vector<ProgressFigure> m_figuresToPaint =
+                new Vector<ProgressFigure>();
+
+        public UnknownProgressTimer() {
+
+            super("Unknown Progress Timer");
+        }
+
+        public void run() {
+
+            while (true) {
+
+                // if the queue is empty wait for the next
+                // figure to render
+                if (m_figuresToPaint.size() == 0) {
+                    synchronized (this) {
+                        try {
+                            wait();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (INVOKE_DISPLAY) {
+                    if (m_currentDisplay != null) {
+                        m_currentDisplay.syncExec(new Runnable() {
+                            public void run() {
+
+                                for (ProgressFigure figure : m_figuresToPaint) {
+                                    figure.repaint();
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        public void addFigure(final ProgressFigure figure) {
+
+            m_figuresToPaint.add(figure);
+            synchronized (this) {
+                this.notify();
+            }
+
+        }
+
+        public void removeFigure(final ProgressFigure figure) {
+            m_figuresToPaint.remove(figure);
+        }
+    }
+
 }
