@@ -73,7 +73,7 @@ public class CancelAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/cancel.PNG");
+        return ImageRepository.getImageDescriptor("icons/cancel.GIF");
     }
     
     

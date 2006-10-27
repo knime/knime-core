@@ -77,7 +77,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/executeAndView.PNG");
+        return ImageRepository.getImageDescriptor("icons/executeAndView.GIF");
     }
     
     
