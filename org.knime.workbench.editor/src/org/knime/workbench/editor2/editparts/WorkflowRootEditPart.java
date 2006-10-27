@@ -156,11 +156,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         getWorkflowManager().removeListener(this);
         getViewer().getEditDomain().getCommandStack()
                 .removeCommandStackListener(this);
-
-        // remove the tooltip helper
-        if (m_toolTipHelper != null) {
-            m_toolTipHelper.dispose();
-        }
     }
 
     /**
