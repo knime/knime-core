@@ -55,6 +55,41 @@ public class AppendedColumnRow implements DataRow {
         m_appendCell = appendCell;
     }
 
+
+    /**
+     * Create a new row with the <code>baseRow</code> providing the first cells
+     * and <code>appendedRow</code> providing the following cells. Which cells
+     * from the second row should be appended is passed in
+     * <code>appendColumn</code> (<code>true</code> for adding the cells at
+     * the index, <code>false</code> for not adding it).
+     * 
+     * @param baseRow row with the first cells
+     * @param appendedRow row with the cells to append
+     * @param appendColumn array with entries set to <code>true</code>, if the
+     * corresponding cells from the second row should be added
+     */
+    public AppendedColumnRow(final DataRow baseRow, final DataRow appendedRow,
+            final boolean[] appendColumn) {
+        if (appendColumn.length != appendedRow.getNumCells()) {
+            throw new IllegalArgumentException("Number of columns to append "
+                    + "is unequal to the number of cells in the appended row");
+        }
+        m_baseRow = baseRow;
+
+        int k = 0;
+        for (int i = 0; i < appendColumn.length; i++) {
+            if (appendColumn[i]) { k++; }
+        }
+        
+        m_appendCell = new DataCell[k];
+        k = 0;
+        for (int i = 0; i < appendColumn.length; i++) {
+            if (appendColumn[i]) {
+                m_appendCell[k++] = appendedRow.getCell(i);
+            }
+        }
+    }
+    
     /**
      * @see org.knime.core.data.DataRow#getNumCells()
      */
