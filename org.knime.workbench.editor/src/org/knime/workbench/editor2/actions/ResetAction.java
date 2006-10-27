@@ -78,6 +78,17 @@ public class ResetAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/resetNode.gif");
     }
+    
+    
+
+    /**
+     * @see org.eclipse.jface.action.Action#getDisabledImageDescriptor()
+     */
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getImageDescriptor(
+                "icons/resetNode_disabled.gif");
+    }
 
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()

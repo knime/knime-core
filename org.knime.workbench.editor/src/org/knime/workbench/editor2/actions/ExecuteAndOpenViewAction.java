@@ -79,6 +79,17 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/executeAndView.PNG");
     }
+    
+    
+
+    /**
+     * @see org.eclipse.jface.action.Action#getDisabledImageDescriptor()
+     */
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getImageDescriptor(
+                "icons/executeAndView_diabled.PNG");
+    }
 
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()

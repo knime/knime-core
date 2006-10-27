@@ -75,7 +75,18 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/executeAll.PNG");
+        return ImageRepository.getImageDescriptor("icons/cancelAll.PNG");
+    }
+    
+    
+
+    /**
+     * @see org.eclipse.jface.action.Action#getDisabledImageDescriptor()
+     */
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getImageDescriptor(
+                "icons/cancelAll_disabled.PNG");
     }
 
     /**

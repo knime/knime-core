@@ -73,6 +73,17 @@ public class ExecuteAllAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/executeAll.PNG");
     }
+    
+    
+
+    /**
+     * @see org.eclipse.jface.action.Action#getDisabledImageDescriptor()
+     */
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getImageDescriptor(
+                "icons/executeAll_disabled.PNG");
+    }
 
     /**
      * @see org.eclipse.jface.action.IAction#getToolTipText()
