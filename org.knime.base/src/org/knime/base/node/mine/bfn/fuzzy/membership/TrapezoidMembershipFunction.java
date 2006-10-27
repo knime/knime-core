@@ -22,12 +22,13 @@
 package org.knime.base.node.mine.bfn.fuzzy.membership;
 
 import org.knime.core.data.DoubleValue;
+import org.knime.core.util.MutableDouble;
 
 /**
  * Trapezoid membership function with four values for support and core left and
  * right values whereby the support region can be defined infinity. The anchor
  * need to be a value within the core-region. If the anchor's value is changed,
- * the core- and support-region is adjusted if necessay. If the core-region
+ * the core- and support-region is adjusted if necessary. If the core-region
  * changes, the support-region is - if necessary - adjusted. But not the other
  * way around in both cases.
  * 
@@ -40,10 +41,9 @@ public class TrapezoidMembershipFunction extends MembershipFunction {
      * @param anchor The initial value.
      * @param min Minimum value.
      * @param max Maximum value.
-     * @see MembershipFunction#MembershipFunction(DoubleValue, double, double)
      */
     public TrapezoidMembershipFunction(final DoubleValue anchor,
-            final double min, final double max) {
+            final MutableDouble min, final MutableDouble max) {
         super(anchor, min, max);
     }
 }

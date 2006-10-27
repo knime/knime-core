@@ -34,17 +34,18 @@ import org.knime.core.node.ModelContent;
  * Basic interface for all basis function algorithms. Provides the function
  * getNewBasisFunction(.) to initialize a new prototype. This interface is
  * needed in order to create new prototypes in the general BasisFunctionLearner.
- * Hence a BasisFunctionLearner would be initalized with an object of type
- * BasisFunctionFactory. It is used as interclass to init BasisFunction(s). One
+ * Hence a BasisFunctionLearner would be initialized with an object of type
+ * BasisFunctionFactory. It is used as inter-class to init BasisFunction(s). One
  * implementation of the BasisFunctionFactory; here represents the
  * RadialBasisFunctionFactory object.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
  * @see RadialBasisFunctionLearnerRow
- * @see #commit(RowKey, DataCell,DataRow)
+ * @see #commit(RowKey, DataCell, DataRow, int)
  */
 class RadialBasisFunctionFactory extends BasisFunctionFactory {
+    
     /** theta minus value. */
     private final double m_thetaMinus;
 
@@ -90,14 +91,15 @@ class RadialBasisFunctionFactory extends BasisFunctionFactory {
      * @param key this row's key
      * @param row the initial center vector
      * @param classInfo the class info
-     * @return a new row
+     * @param numPat The overall number of pattern used for training.
+     * @return A new basisfunction.
      */
     @Override
     public final BasisFunctionLearnerRow commit(final RowKey key,
-            final DataCell classInfo, final DataRow row) {
+            final DataCell classInfo, final DataRow row, final int numPat) {
         return new RadialBasisFunctionLearnerRow(key, classInfo, row,
-                m_thetaMinus, m_thetaPlus, super.getDistance(), super
-                        .isHierarchical());
+                m_thetaMinus, m_thetaPlus, super.getDistance(), numPat, 
+                super.isHierarchical());
     }
 
     /**

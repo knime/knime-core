@@ -28,18 +28,20 @@ import org.knime.core.data.def.FuzzyIntervalCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.util.MutableDouble;
 
 /**
  * Trapezoid membership function with four values for support and core left and
  * right values whereby the support region can be defined infinity. The anchor
  * need to be a value within the core-region. If the anchor's value is changed,
- * the core- and support-region is adjusted if necessay. If the core-region
+ * the core- and support-region is adjusted if necessary. If the core-region
  * changes, the support-region is - if necessary - adjusted. But not the other
  * way around in both cases.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public class MembershipFunction {
+    
     /** left support. */
     private double m_suppLeft;
 
@@ -65,35 +67,16 @@ public class MembershipFunction {
     private boolean m_suppRightMax;
 
     /** left border of the input domain of this feature value. */
-    private final double m_min;
+    private final MutableDouble m_min;
 
     /** right border of the input domain of this feature value. */
-    private final double m_max;
+    private final MutableDouble m_max;
 
-    /**
-     * Minimum flag <i>min</i>.
-     */
+    /** Minimum flag <i>min</i>. */
     static final String MIN_FLAG = "min";
 
-    /**
-     * Maximum flag <i>max</i>.
-     */
+    /** Maximum flag <i>max</i>. */
     static final String MAX_FLAG = "max";
-
-    /**
-     * Creates a new memebership function with the given bounds.
-     * @param min Lower value.
-     * @param max Upper value.
-     */
-    protected MembershipFunction(final double min, final double max) {
-        assert (min <= max);
-        m_min = min;
-        m_max = max;
-        m_suppLeftMax = true; // left side unconstrained
-        m_suppRightMax = true; // right side unconstrained
-        m_suppLeft = Double.NaN; // not used if left support unconstrained
-        m_suppRight = Double.NaN; // not used if right support unconstrained
-    }
 
     /**
      * Creates a new membership function based on the given model content.
@@ -103,8 +86,8 @@ public class MembershipFunction {
     public MembershipFunction(final ModelContentRO pp)
             throws InvalidSettingsException {
         m_missing = pp.getBoolean("is_missing");
-        m_min = pp.getDouble("min");
-        m_max = pp.getDouble("max");
+        m_min = new MutableDouble(pp.getDouble("min"));
+        m_max = new MutableDouble(pp.getDouble("max"));
         if (m_missing) {
             m_anchor = Double.NaN;
             m_suppLeftMax = true; // left side unconstrained
@@ -140,15 +123,25 @@ public class MembershipFunction {
      * @param min the minimum left border
      * @param max the maximum right border
      */
-    public MembershipFunction(final DoubleValue anchor, final double min,
-            final double max) {
-        this(repairMin(min, anchor), repairMax(max, anchor));
+    public MembershipFunction(final DoubleValue anchor, 
+            final MutableDouble min, final MutableDouble max) {
+        if (!Double.isNaN(min.doubleValue()) 
+                && !Double.isNaN(max.doubleValue())) {
+            assert (min.doubleValue() <= max.doubleValue());
+        }
+        m_min = min;
+        m_max = max;
+        m_suppLeftMax = true; // left side unconstrained
+        m_suppRightMax = true; // right side unconstrained
+        m_suppLeft = Double.NaN; // not used if left support unconstrained
+        m_suppRight = Double.NaN; // not used if right support unconstrained
         if (anchor != null) {
             m_missing = false;
             m_anchor = anchor.getDoubleValue();
             // core has no spread initially
             m_coreLeft = m_anchor;
             m_coreRight = m_anchor;
+            repairMinMax(m_anchor);
         } else {
             m_missing = true;
             assert m_missing;
@@ -156,65 +149,19 @@ public class MembershipFunction {
         }
     }
 
-    private static double repairMin(final double min, final DoubleValue anchor) {
-        if (anchor == null) {
-            return min;
-        } else {
-            return Math.min(min, anchor.getDoubleValue());
-        }
-    }
-
-    private static double repairMax(final double max, final DoubleValue anchor) {
-        if (anchor == null) {
-            return max;
-        } else {
-            return Math.max(max, anchor.getDoubleValue());
-        }
-    }
-
     /**
-     * Creates a new trapezoid membership function with its given anchor and the -{@link Double#MAX_VALUE}
-     * resp. {@link Double#MAX_VALUE} to assign the min and max border.
-     * 
-     * @param anchor the initial center point of this fuzzy function
+     * Minimum and maximum are adapted to the (new) value.
+     * @param value The new value for min and max.
      */
-    public MembershipFunction(final DoubleValue anchor) {
-        this(anchor, -Double.MAX_VALUE, Double.MAX_VALUE);
-    }
-
-    /**
-     * Creates a new membership function with -{@link Double#MAX_VALUE} and
-     * {@link Double#MAX_VALUE} as global min vs. max; the anchor is undefined
-     * and therefore this membership missing.
-     */
-    public MembershipFunction() {
-        this(-Double.MAX_VALUE, Double.MAX_VALUE);
-        m_missing = true;
-        m_anchor = Double.NaN;
-    }
-
-    /**
-     * Returns the membership's min value.
-     * 
-     * @return the min value
-     */
-    public double getMin() {
-        if (isMissingIntern()) {
-            assert (false);
+    protected final void repairMinMax(final double value) {
+        double min = m_min.doubleValue();
+        if (Double.isNaN(min) || value < min) {
+            m_min.setValue(value);
         }
-        return m_min;
-    }
-
-    /**
-     * Returns the membership's max value.
-     * 
-     * @return the max value
-     */
-    public double getMax() {
-        if (isMissingIntern()) {
-            assert (false);
+        double max = m_max.doubleValue();
+        if (Double.isNaN(max) || value > max) {
+            m_max.setValue(value);
         }
-        return m_max;
     }
 
     /**
@@ -223,6 +170,7 @@ public class MembershipFunction {
      * @param value the value to set
      */
     public void setSuppLeft(final double value) {
+        repairMinMax(value);
         if (isMissingIntern()) {
             assert (false);
         }
@@ -254,6 +202,7 @@ public class MembershipFunction {
      * @param anchor the new value for the core borders and anchor
      */
     public void setAnchor(final double anchor) {
+        repairMinMax(anchor);
         m_anchor = anchor;
         if (isMissingIntern()) {
             m_missing = false;
@@ -270,6 +219,7 @@ public class MembershipFunction {
      * @param value to set
      */
     public void setCoreLeft(final double value) {
+        repairMinMax(value);
         if (isMissingIntern()) {
             assert (false);
         }
@@ -289,6 +239,7 @@ public class MembershipFunction {
      * @param value to set
      */
     public void setCoreRight(final double value) {
+        repairMinMax(value);
         if (isMissingIntern()) {
             assert (false);
         }
@@ -308,6 +259,7 @@ public class MembershipFunction {
      * @param value to set
      */
     public void setSuppRight(final double value) {
+        repairMinMax(value);
         if (isMissingIntern()) {
             assert (false);
         }
@@ -453,7 +405,16 @@ public class MembershipFunction {
         if (isMissingIntern()) {
             assert false;
         }
-        return (m_suppLeftMax ? m_min : m_suppLeft);
+        if (!m_suppLeftMax) {
+            return m_suppLeft;
+        } else {
+            double min = m_min.doubleValue();
+            if (Double.isNaN(min)) {
+                return m_coreRight;
+            } else {
+                return min;
+            }
+        }
     }
 
     /**
@@ -490,10 +451,16 @@ public class MembershipFunction {
      * @return support right border
      */
     public double getMaxSupport() {
-        if (isMissingIntern()) {
-            assert (false);
+        if (!m_suppRightMax) {
+            return m_suppRight;
+        } else {
+            double max = m_max.doubleValue();
+            if (Double.isNaN(max)) {
+                return m_coreLeft;
+            } else {
+                return max;
+            }
         }
-        return (m_suppRightMax ? m_max : m_suppRight);
     }
 
     /**
@@ -664,8 +631,8 @@ public class MembershipFunction {
      */
     public final void save(final ModelContentWO pp) {
         pp.addBoolean("is_missing", isMissingIntern());
-        pp.addDouble("min", getMin());
-        pp.addDouble("max", getMax());
+        pp.addDouble("min", m_min.doubleValue());
+        pp.addDouble("max", m_max.doubleValue());
         if (!isMissingIntern()) {
             pp.addBoolean("is_support_left_max", isSuppLeftMax());
             if (!isSuppLeftMax()) {

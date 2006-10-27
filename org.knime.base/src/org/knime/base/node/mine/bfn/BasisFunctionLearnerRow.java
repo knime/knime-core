@@ -23,7 +23,6 @@ package org.knime.base.node.mine.bfn;
 
 import java.io.PrintStream;
 import java.util.Iterator;
-import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -57,7 +56,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     /** Level of detail, by default all are assigned to 1. */
     private IntCell m_level = null;
 
-    /** <code>true</code> if an addtional column show the hierarchy level. */
+    /** <code>true</code> if an additional column show the hierarchy level. */
     private final boolean m_hierarchy;
 
     /**
@@ -207,8 +206,8 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * Computes the overlapping of two basis functions.
      * 
      * @param symetric if the result is proportional to both basis functions,
-     *            and thus symetric, or if it is proportional to the area of the
-     *            basis function on which the function is called
+     *            and thus symmetric, or if it is proportional to the area of 
+     *            the basisfunction on which the function is called.
      * @param bf the other basisfunction to compute overlapping with
      * @return if both are overlapping
      */
@@ -292,7 +291,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     final void coverIntern(final DataRow row) {
         assert (row != null);
         // increase covered pattern
-        addCovered(row.getKey().getId(), m_classInfo);
+        getPredictorRow().addCovered(row.getKey().getId(), m_classInfo);
         // called in derived class
         cover(row);
     }
@@ -434,20 +433,5 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     public int hashCode() {
         return getAnchor().hashCode() * m_classInfo.hashCode();
     }
-
-    /**
-     * Covers the given example.
-     * @param key The example's id.
-     * @param classInfo The example's class label.
-     */
-    public final void addCovered(final DataCell key, final DataCell classInfo) {
-        getPredictorRow().addCovered(key, classInfo);
-    }
-
-    /**
-     * @return A set of covered examples' ids.
-     */
-    public final Set<DataCell> getAllCoveredPattern() {
-        return getPredictorRow().getAllCoveredPattern();
-    }
+    
 }

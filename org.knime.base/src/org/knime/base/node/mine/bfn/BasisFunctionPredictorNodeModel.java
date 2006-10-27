@@ -51,9 +51,12 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
+    
     private String m_applyColumn = "BF (Predictor)";
 
     private double m_dontKnow = -1.0;
+    
+    private boolean m_ignoreDontKnow = false;
 
     private final List<BasisFunctionPredictorRow> m_bfs = 
         new ArrayList<BasisFunctionPredictorRow>();
@@ -88,7 +91,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                 m_applyColumn, 
                 m_modelSpec[m_modelSpec.length - 1].getType()).createSpec();
         colreg.append(new BasisFunctionPredictorCellFactory(
-                dataSpec, m_modelSpec, m_bfs, targetSpec, m_dontKnow, false));
+                dataSpec, m_modelSpec, m_bfs, targetSpec, m_dontKnow, true));
         
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 data[0], colreg, exec.createSubProgress(1.0))};
@@ -200,9 +203,11 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         // prediction column name
         m_applyColumn = settings
                 .getString(BasisFunctionPredictorNodeDialog.APPLY_COLUMN);
-        // dont know class
+        // don't know class
         m_dontKnow = settings
                 .getDouble(BasisFunctionPredictorNodeDialog.DONT_KNOW_PROP);
+        m_ignoreDontKnow = settings.getBoolean(
+                BasisFunctionPredictorNodeDialog.CFG_DONT_KNOW_IGNORE, false);
     }
 
     /**
@@ -213,9 +218,12 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         // prediction column name
         settings.addString(BasisFunctionPredictorNodeDialog.APPLY_COLUMN,
                 m_applyColumn);
-        // dont know class
+        // don't know class
         settings.addDouble(BasisFunctionPredictorNodeDialog.DONT_KNOW_PROP,
                 m_dontKnow);
+        settings.addBoolean(
+                BasisFunctionPredictorNodeDialog.CFG_DONT_KNOW_IGNORE, 
+                m_ignoreDontKnow);
     }
 
     /**
@@ -236,7 +244,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         if (s == null || s.length() == 0) {
             sb.append("Empty prediction column name not allowed.\n");
         }
-        // dont know class
+        // don't know class
         try {
             settings.getDouble(BasisFunctionPredictorNodeDialog.DONT_KNOW_PROP);
         } catch (InvalidSettingsException ise) {

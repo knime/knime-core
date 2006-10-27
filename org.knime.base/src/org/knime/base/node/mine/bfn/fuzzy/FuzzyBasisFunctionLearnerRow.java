@@ -30,6 +30,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.util.MutableDouble;
 
 /**
  * Extends the general {@link FuzzyBasisFunctionLearnerRow} object to act as
@@ -55,11 +56,13 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param shrink A function to shrink rules.
      * @param min An array if minimum bounds, for each input dimension.
      * @param max An array if maximum bounds, for each input dimension.
-     * @param isHierarchical If hierarchical rules have to be commited.            
+     * @param numPat The overall number of pattern used for training. 
+     * @param isHierarchical If hierarchical rules have to be commited.
      */
     FuzzyBasisFunctionLearnerRow(final RowKey key, final DataCell classInfo,
             final DataRow centroid, final int norm, final int shrink,
-            final double[] min, final double[] max, final boolean isHierarchical) {
+            final MutableDouble[] min, final MutableDouble[] max, 
+            final int numPat, final boolean isHierarchical) {
         super(key, centroid, classInfo, isHierarchical);
         m_shrink = Shrink.SHRINKS[shrink];
         assert (min.length == centroid.getNumCells());
@@ -79,7 +82,7 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         }
 
         m_predRow = new FuzzyBasisFunctionPredictorRow(key.getId(), classInfo,
-                mem, norm);
+                mem, norm, numPat);
         m_predRow.addCovered(centroid.getKey().getId(), classInfo);
     }
 
@@ -263,7 +266,7 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
                     // if the right side is unconstrained or
                     // value is in support region
                     if (m_predRow.getMemship(i).isSuppRightMax()
-                            || value < m_predRow.getMemship(i).getMaxSupport()) {
+                           || value < m_predRow.getMemship(i).getMaxSupport()) {
                         // if the value is in the core region
                         if (value <= m_predRow.getMemship(i).getMaxCore()) {
                             // gets loss value

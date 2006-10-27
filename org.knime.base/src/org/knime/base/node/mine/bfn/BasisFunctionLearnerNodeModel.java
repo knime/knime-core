@@ -37,14 +37,13 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerTable.MissingValueReplacementFunction;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -196,7 +195,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
      * 
      * @param data the input trainings data at index 0
      * @param exec the execution monitor
-     * @return the ouput fuzzy rule model
+     * @return the output fuzzy rule model
      * @throws CanceledExecutionException if the training was canceled
      */
     @Override
@@ -219,12 +218,15 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                 }
             }
         }
-        // add traget column at the end
+        // add target column at the end
         columns.add(m_target);
 
         // filter selected columns from input data
         String[] cols = columns.toArray(new String[]{});
-        DataTable trainData = new FilterColumnTable(data[0], cols);
+        ColumnRearranger colRe = new ColumnRearranger(tSpec);
+        colRe.keepOnly(cols);
+        BufferedDataTable trainData = exec.createColumnRearrangeTable(
+                data[0], colRe, exec);
 
         // print settings info
         LOGGER.debug("distance     : " + getDistance());
@@ -291,7 +293,8 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         // missing
         // missing replacement method
         int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, -1);
-        if (missing < 0 || missing > BasisFunctionLearnerTable.MISSINGS.length) {
+        if (missing < 0 
+                || missing > BasisFunctionLearnerTable.MISSINGS.length) {
             msg.append("Missing replacement function index out of range: "
                     + missing);
         }

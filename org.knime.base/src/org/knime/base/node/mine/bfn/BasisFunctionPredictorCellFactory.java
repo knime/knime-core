@@ -63,7 +63,7 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
         super(targetSpec);
         m_model = null;
         m_dontKnowClass = 0.0;
-        m_normalize = false;
+        m_normalize = true;
         m_filteredRows = null;
     }
 
@@ -76,7 +76,7 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
      * @param modelSpecs names and types of the rule model
      * @param model the trained model as list of rows
      * @param applyColumn the name of the applied column
-     * @param dontKnowClass the <i>don't know</i> class propability
+     * @param dontKnowClass the <i>don't know</i> class probability
      * @param normalize if true, resulting class degrees are normalized to sum
      *        up to one.
      * @throws NullPointerException if one of the arguments is <code>null</code>
@@ -107,7 +107,7 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
     }
     
     /**
-     * Predicts an unknow row to the given model.
+     * Predicts an unknown row to the given model.
      * 
      * @param row The row to predict
      * @param model to this model
@@ -118,7 +118,7 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
     public static final Map<DataCell, double[]> predict(final DataRow row,
             final List<BasisFunctionPredictorRow> model,
             final double dontKnowClass, final boolean normalize) {
-        // number of predcited classes: classLabel->activation,#hits
+        // number of predicted classes: classLabel->activation,#hits
         final LinkedHashMap<DataCell, double[]> map = 
             new LinkedHashMap<DataCell, double[]>();
         DataCell missing = DataType.getMissingCell();
@@ -133,7 +133,8 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
                 dontKnow = new double[]{bf.getDontKnowClassDegree(), 0.0};
                 map.put(missing, dontKnow);
             } else {
-                map.put(missing, new double[]{0.0, 0.0});
+                dontKnow = new double[]{0.0, 0.0};
+                map.put(missing, dontKnow);
                 return map;
             }
         }
@@ -150,7 +151,7 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
             if (map.containsKey(classInfo)) {
                 // get current activation
                 act = map.get(classInfo)[0];
-                // get number of bfs for this class
+                // get number of basisfunctions for this class
                 cls = map.get(classInfo)[1] + 1.0;
             }
             // per default
@@ -165,16 +166,20 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
         }
 
         if (normalize) {
-            double overall = 0.0;
+            double overall = dontKnow[0];
             for (DataCell classLabel : map.keySet()) {
-                double[] value = map.get(classLabel);
-                overall += value[0];
+                if (!classLabel.isMissing()) {
+                    double[] value = map.get(classLabel);
+                    overall += value[0];
+                }
             }
             if (overall > 0.0) {
                 for (DataCell classLabel : map.keySet()) {
-                    double[] value = map.get(classLabel);
-                    map.put(classLabel, new double[]{value[0] / overall,
-                            value[1]});
+                    if (!classLabel.isMissing()) {
+                        double[] value = map.get(classLabel);
+                        value[0] = value[0] / overall;
+                        assert (value[0] >= 0.0 && value[0] <= 1.0);
+                    }
                 }
             }
         }

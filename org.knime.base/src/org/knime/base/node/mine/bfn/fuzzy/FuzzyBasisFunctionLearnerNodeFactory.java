@@ -33,6 +33,7 @@ import org.knime.core.node.NodeView;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class FuzzyBasisFunctionLearnerNodeFactory extends NodeFactory {
+    
     /**
      * @see org.knime.core.node.NodeFactory#createNodeModel()
      */

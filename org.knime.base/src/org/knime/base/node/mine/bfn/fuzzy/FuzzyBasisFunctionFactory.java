@@ -36,17 +36,19 @@ import org.knime.core.node.ModelContent;
  * Basic interface for all basis function algorithms. Provides the function
  * getNewBasisFunction(.) to initialize a new prototype. This interface is
  * needed in order to create new prototypes in the general BasisFunctionLearner.
- * Hence a BasisFunctionLearner would be initalized with an object of type
- * BasisFunctionFactory. It is used as interclass to init BasisFunction(s). One
+ * Hence a BasisFunctionLearner would be initialized with an object of type
+ * BasisFunctionFactory. It is used as inter-class to init BasisFunction(s). One
  * implementation of the BasisFunctionFactory; here represents the
  * FuzzyBasisFunctionFactory object.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
  * @see FuzzyBasisFunctionLearnerRow
- * @see #commit(RowKey,DataCell,DataRow)
+ * 
+ * @see #commit(RowKey, DataCell, DataRow, int)
  */
 public final class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
+    
     /** The choice of fuzzy norm. */
     private final int m_norm;
 
@@ -94,13 +96,15 @@ public final class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
      * @param key the key for this row
      * @param row the initial center vector
      * @param classInfo the class info
-     * @return a new row
+     * @param numPat The overall number of pattern used for training.
+     * @return A new basisfunction 
      */
     @Override
     public BasisFunctionLearnerRow commit(final RowKey key,
-            final DataCell classInfo, final DataRow row) {
+            final DataCell classInfo, final DataRow row, final int numPat) {
         return new FuzzyBasisFunctionLearnerRow(key, classInfo, row, m_norm,
-                m_shrink, super.getMins(), getMaxs(), super.isHierarchical());
+                m_shrink, getMinimums(), getMaximums(), numPat, 
+                isHierarchical());
     }
 
     /**

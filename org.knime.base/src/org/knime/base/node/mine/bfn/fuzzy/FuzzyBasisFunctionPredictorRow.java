@@ -45,7 +45,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
 
     /**
      * Everything below this threshold causes an activation, also don't know
-     * class propability.
+     * class probability.
      */
     private static final double MINACT = 0.0;
 
@@ -55,11 +55,12 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param classLabel The class label of this rule.
      * @param mem An array of membership functions each per dimension. 
      * @param norm A fuzzy norm to combine activations via all dimensions.
+     * @param numPat The overall number of pattern used for training. 
      */
     FuzzyBasisFunctionPredictorRow(final DataCell key,
             final DataCell classLabel, final MembershipFunction[] mem,
-            final int norm) {
-        super(key, classLabel, MINACT);
+            final int norm, final int numPat) {
+        super(key, classLabel, numPat, MINACT);
         m_norm = norm;
         m_mem = mem;
     }
@@ -115,7 +116,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     }
 
     /**
-     * Composes the degree of membership by using the disjunktion of the
+     * Composes the degree of membership by using the disjunction of the
      * tco-norm operator.
      * 
      * @param row the row to compute the activation from
@@ -157,11 +158,11 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             double value = ((DoubleValue)cell).getDoubleValue();
             // act in current dimension
             double act = m_mem[i].getActivation(value);
-            // shortes, lowest poss. memship degree already reached, return
+            // shortest, lowest poss. memship degree already reached, return
             if (act == 0.0) {
                 return act;
             }
-            // calculates the new degree using inorm
+            // calculates the new degree using norm index
             degree = Norm.NORMS[m_norm].computeTNorm(degree, act);
             assert (0.0 <= degree && degree <= 1.0);
         }

@@ -75,8 +75,8 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
         // theta minus
         c.insets = new Insets(15, 15, 5, 15);
         m_thetaMinus = new JSpinner();
-        JSpinner.DefaultEditor editorMinus = (JSpinner.DefaultEditor)m_thetaMinus
-                .getEditor();
+        JSpinner.DefaultEditor editorMinus = (JSpinner.DefaultEditor) 
+                m_thetaMinus.getEditor();
         editorMinus.getTextField().setColumns(8);
         m_thetaMinus.setModel(new SpinnerNumberModel(0.0, 0.0,
                 Double.POSITIVE_INFINITY, 0.1));

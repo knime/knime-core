@@ -52,30 +52,36 @@ public abstract class BasisFunctionPredictorRow {
     private final double m_dontKnowDegree;
 
     /** Keeps the data cell ids of all pattern covered by this basisfunction. */
-    private Map<DataCell, Set<DataCell>> m_coveredPattern = new LinkedHashMap<DataCell, Set<DataCell>>();
+    private Map<DataCell, Set<DataCell>> m_coveredPattern = 
+        new LinkedHashMap<DataCell, Set<DataCell>>();
 
     private int m_correctCovered = 0;
 
     private int m_wrongCovered = 0;
+    
+    private final int m_numPat;
 
     /**
      * Creates new predictor row.
      * 
      * @param key the key of this row
      * @param classLabel class label of the target attribute
-     * @param dontKnowDegree dont know probability
+     * @param dontKnowDegree don't know probability
+     * @param numPat The overall number of pattern used for training. 
      */
     protected BasisFunctionPredictorRow(final DataCell key,
-            final DataCell classLabel, final double dontKnowDegree) {
+            final DataCell classLabel, final int numPat, 
+            final double dontKnowDegree) {
         m_key = key;
         m_classLabel = classLabel;
         m_dontKnowDegree = dontKnowDegree;
+        m_numPat = numPat;
     }
 
     /**
      * Creates new predictor row on model content.
      * 
-     * @param pp the model content to read the new predcitor row from
+     * @param pp the model content to read the new predictor row from
      * @throws InvalidSettingsException if the model content is invalid
      */
     public BasisFunctionPredictorRow(final ModelContentRO pp)
@@ -85,6 +91,8 @@ public abstract class BasisFunctionPredictorRow {
         m_dontKnowDegree = pp.getDouble("dont_know_class");
         m_correctCovered = pp.getInt("correct_covered");
         m_wrongCovered = pp.getInt("wrong_covered");
+        m_numPat = pp.getInt("number_pattern", 
+                m_correctCovered + m_wrongCovered);
         ModelContentRO coveredContent = pp.getModelContent("covered_instances");
         DataCell[] classes = coveredContent.getDataCellArray("classes");
         for (int i = 0; i < classes.length; i++) {
@@ -108,7 +116,7 @@ public abstract class BasisFunctionPredictorRow {
     public abstract double compose(DataRow row, double act);
 
     /**
-     * @return <i>don't know</i> class propability
+     * @return <i>don't know</i> class probability
      */
     public final double getDontKnowClassDegree() {
         return m_dontKnowDegree;
@@ -119,6 +127,13 @@ public abstract class BasisFunctionPredictorRow {
      */
     public final DataCell getClassLabel() {
         return m_classLabel;
+    }
+    
+    /**
+     * @return Number of pattern used for training.
+     */
+    public int getNumPattern() {
+        return m_numPat;
     }
 
     /**
@@ -131,7 +146,7 @@ public abstract class BasisFunctionPredictorRow {
     }
 
     /**
-     * Returns the number of corrrectly covered data pattern.
+     * Returns the number of correctly covered data pattern.
      * 
      * @return the current number of covered input pattern
      */
@@ -155,6 +170,22 @@ public abstract class BasisFunctionPredictorRow {
         m_coveredPattern.clear();
         m_correctCovered = 0;
         m_wrongCovered = 0;
+    }
+    
+    /**
+     * @return The ratio of the number of all (correctly and wrong) covered 
+     *         pattern to all pattern used for training. 
+     */
+    public final double getSupport() {
+        return getNumAllCoveredPattern() / m_numPat; 
+    }
+    
+    /**
+     * @return The ratio of the number of all correctly covered pattern to all 
+     *         pattern used for training. 
+     */
+    public final double getConfidence() {
+        return getNumCorrectCoveredPattern() / m_numPat; 
     }
 
     /**
@@ -180,8 +211,8 @@ public abstract class BasisFunctionPredictorRow {
     }
 
     /**
-     * Returns a set which contains all input trainings pattern covered by this
-     * basis funtion.
+     * Returns a set which contains all input training pattern covered by this
+     * basis function.
      * 
      * @return set of covered input pattern
      */
@@ -211,6 +242,7 @@ public abstract class BasisFunctionPredictorRow {
         pp.addDouble("dont_know_class", m_dontKnowDegree);
         pp.addInt("correct_covered", m_correctCovered);
         pp.addInt("wrong_covered", m_wrongCovered);
+        pp.addInt("number_pattern", m_numPat);
         ModelContentWO covContent = pp.addModelContent("covered_instances");
         covContent.addDataCellArray("classes", m_coveredPattern.keySet()
                 .toArray(new DataCell[0]));

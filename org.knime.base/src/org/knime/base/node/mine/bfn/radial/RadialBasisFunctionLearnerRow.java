@@ -32,18 +32,18 @@ import org.knime.core.data.RowKey;
  * This class extends the general
  * {@link BasisFunctionLearnerRow} in order to
  * use radial basis function prototypes for training. This prototype keeps an
- * gaussian functions is internal representation. This function is created
- * infinity which means cover the entrie domain. During training the function is
+ * Gaussian functions is internal representation. This function is created
+ * infinity which means cover the entry domain. During training the function is
  * shrinked if new conflicting instances are obmitted. Therefore two parameters
  * have been introduced. One is <code>m_thetaMinus</code> which is used to
- * desribe an upper bound of conflicting instances; and 
+ * describe an upper bound of conflicting instances; and 
  * <code>m_thetaPlus</code>, to lower bound for non-conflicting instances.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     
-    /** The upper bound for confliction instances. */
+    /** The upper bound for conflicting instances. */
     private final double m_thetaMinus;
 
     /** The lower bound for non-conflicting instances. */
@@ -53,22 +53,24 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     private final RadialBasisFunctionPredictorRow m_predRow;
 
     /**
-     * Creates a new radial basisfunction using the center vertor as the anchor
-     * of the gaussian function and also assigns class label for this prototype.
-     * The gaussian function is be initialized infinity covering the entire
+     * Creates a new radial basisfunction using the center vector as the anchor
+     * of the Gaussian function and also assigns class label for this prototype.
+     * The Gaussian function is be initialized infinity covering the entire
      * domain.
      * 
      * @param key the key of this row
      * @param classInfo the class info assigned to this basisfunction
      * @param center the initial center vector
-     * @param thetaMinus upper bound for confliction instances
+     * @param thetaMinus upper bound for conflicting instances
      * @param thetaPlus lower bound for non-conflicting instances
-     * @param distance choice of the distance function between patterns
-     * @param isHierarchical true if the rule is hierarchical, false otherwise
+     * @param distance choice of the distance function between patterns.
+     * @param numPat The overall number of pattern used for training. 
+     * @param isHierarchical true if the rule is hierarchical, false otherwise.
      */
     RadialBasisFunctionLearnerRow(final RowKey key, final DataCell classInfo,
             final DataRow center, final double thetaMinus,
             final double thetaPlus, final int distance,
+            final int numPat,
             final boolean isHierarchical) {
         super(key, center, classInfo, isHierarchical);
         m_thetaMinus = thetaMinus;
@@ -76,7 +78,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         m_thetaPlus = thetaPlus;
         assert (m_thetaPlus >= 0.0 && m_thetaPlus <= 1.0);
         m_predRow = new RadialBasisFunctionPredictorRow(key.getId(), center,
-                classInfo, m_thetaMinus, distance);
+                classInfo, m_thetaMinus, distance, numPat);
         m_predRow.addCovered(center.getKey().getId(), classInfo);
     }
 
@@ -145,8 +147,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * basisfunctions.
      * 
      * @param symmetric if the result is proportional to both basis functions,
-     *            and thus symetric, or if it is proportional to the area of the
-     *            basis function on which the function is called
+     *            and thus symmetric, or if it is proportional to the area of 
+     *            the basis function on which the function is called.
      * @param bf the other radial basisfunction to compute the overlap with
      * @return <code>true</code> if both radial basisfunctions overlap
      */
@@ -187,7 +189,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
 
     /**
      * Compares this basis function with the other one by its standard deviation
-     * if the number of covered pattern is equal otherhwise use this
+     * if the number of covered pattern is equal otherwise use this
      * identification.
      * 
      * @param other the basisfunction the compare coverage with

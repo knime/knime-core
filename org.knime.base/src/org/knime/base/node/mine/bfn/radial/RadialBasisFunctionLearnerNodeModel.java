@@ -37,7 +37,9 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class RadialBasisFunctionLearnerNodeModel extends BasisFunctionLearnerNodeModel {
+class RadialBasisFunctionLearnerNodeModel 
+        extends BasisFunctionLearnerNodeModel {
+    
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RadialBasisFunctionLearnerNodeModel.class);
@@ -105,8 +107,8 @@ class RadialBasisFunctionLearnerNodeModel extends BasisFunctionLearnerNodeModel 
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         super.saveSettingsTo(settings);
         // theta minus
-        settings
-                .addDouble(RadialBasisFunctionFactory.THETA_MINUS, m_thetaMinus);
+        settings.addDouble(RadialBasisFunctionFactory.THETA_MINUS, 
+                m_thetaMinus);
         // theta plus
         settings.addDouble(RadialBasisFunctionFactory.THETA_PLUS, m_thetaPlus);
     }

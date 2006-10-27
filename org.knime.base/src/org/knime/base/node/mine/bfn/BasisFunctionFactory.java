@@ -35,6 +35,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.util.MutableDouble;
 
 
 /**
@@ -60,9 +61,9 @@ public abstract class BasisFunctionFactory {
     /** <code>true</code> if hierarchical model is trained. */
     private final boolean m_hierarchy;
 
-    private final double[] m_mins;
+    private final MutableDouble[] m_mins;
 
-    private final double[] m_maxs;
+    private final MutableDouble[] m_maxs;
 
     /**
      * Creates new basisfunction factory with the given spec to extract min/max
@@ -81,26 +82,26 @@ public abstract class BasisFunctionFactory {
         m_distance = distance;
         // hierarchical?
         m_hierarchy = hierarchy;
-        // init mins and max from domain
+        // init mins and maxs from domain
         int nrColumns = spec.getNumColumns() - 1; // without target
-        m_mins = new double[nrColumns];
-        m_maxs = new double[nrColumns];
+        m_mins = new MutableDouble[nrColumns];
+        m_maxs = new MutableDouble[nrColumns];
         for (int i = 0; i < nrColumns; i++) {
             DataColumnDomain domain = spec.getColumnSpec(i).getDomain();
-            double min = -Double.MAX_VALUE;
-            double max = Double.MIN_VALUE;
+            m_mins[i] = new MutableDouble(Double.NaN);
+            m_maxs[i] = new MutableDouble(Double.NaN);
             if (domain.hasBounds()) {
                 DataCell lower = domain.getLowerBound();
                 if (lower.getType().isCompatible(DoubleValue.class)) {
-                    min = ((DoubleValue)lower).getDoubleValue();
+                    m_mins[i].setValue(
+                            ((DoubleValue)lower).getDoubleValue());
                 }
                 DataCell upper = domain.getUpperBound();
                 if (upper.getType().isCompatible(DoubleValue.class)) {
-                    max = ((DoubleValue)upper).getDoubleValue();
+                    m_maxs[i].setValue(
+                            ((DoubleValue)upper).getDoubleValue());
                 }
             }
-            m_mins[i] = min;
-            m_maxs[i] = max;
         }
         DataTableSpec modelSpec = createModelSpec(spec, target, type);
         if (hierarchy) {
@@ -118,7 +119,7 @@ public abstract class BasisFunctionFactory {
      * 
      * @return the lower bounds.
      */
-    public final double[] getMins() {
+    public final MutableDouble[] getMinimums() {
         return m_mins;
     }
 
@@ -126,7 +127,7 @@ public abstract class BasisFunctionFactory {
      * 
      * @return the upper bounds.
      */
-    public final double[] getMaxs() {
+    public final MutableDouble[] getMaximums() {
         return m_maxs;
     }
 
@@ -170,8 +171,8 @@ public abstract class BasisFunctionFactory {
         int targetIndex = inSpec.findColumnIndex(target);
         list.add(inSpec.getColumnSpec(targetIndex));
         // new table spec
-        DataTableSpec ret = new DataTableSpec(list
-                .toArray(new DataColumnSpec[]{}));
+        DataTableSpec ret = new DataTableSpec(
+                list.toArray(new DataColumnSpec[]{}));
         return ret;
     }
 
@@ -206,10 +207,11 @@ public abstract class BasisFunctionFactory {
      * @param key this row's key
      * @param classInfo data cell contains class info
      * @param row the initial center vector
+     * @param numPat The overall number of pattern used for training. 
      * @return a new row of a certain type
      */
     public abstract BasisFunctionLearnerRow commit(final RowKey key,
-            final DataCell classInfo, final DataRow row);
+            final DataCell classInfo, final DataRow row, final int numPat);
     /** Key for the distance function. */
     static final String CFG_DISTANCE = "distance";
     /** Key whether a hierarchical model is trained. */

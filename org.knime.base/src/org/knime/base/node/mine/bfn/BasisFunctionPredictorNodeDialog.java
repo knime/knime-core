@@ -21,6 +21,7 @@
  */
 package org.knime.base.node.mine.bfn;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -29,6 +30,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
@@ -56,14 +58,19 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
     private final JRadioButton m_dftButton;
 
     private final JRadioButton m_setButton;
+    
+    private final JCheckBox m_ignButton;
 
     private final JSpinner m_dontKnow;
 
     /** Key for the applied column: <i>apply_column</i>. */
     public static final String APPLY_COLUMN = "apply_column";
 
-    /** Key for don't know propability for the unknown class. */
+    /** Key for don't know probability for the unknown class. */
     public static final String DONT_KNOW_PROP = "dont_know_prop";
+    
+    /** Config key if dont know should be ignored. */
+    public static final String CFG_DONT_KNOW_IGNORE = "ignore_dont_know";
 
     /**
      * Creates a new predictor dialog to set a name for the applied column.
@@ -81,13 +88,18 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         normPanel.add(m_apply);
         p.add(normPanel);
 
-        // add don't know propability
-        m_dftButton = new JRadioButton("Default ");
+        // add don't know probability
+        m_dftButton = new JRadioButton("Default ", true);
         m_setButton = new JRadioButton("Use ");
+        m_ignButton = new JCheckBox("Ignore ", true);
+        m_ignButton.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                selectionChanged();
+            }
+        });
         ButtonGroup bg = new ButtonGroup();
         bg.add(m_dftButton);
         bg.add(m_setButton);
-        m_dftButton.setSelected(true);
         m_dontKnow = new JSpinner();
         JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_dontKnow
                 .getEditor();
@@ -95,12 +107,17 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         m_dontKnow.setModel(new SpinnerNumberModel(0.0, 0.0,
                 Double.POSITIVE_INFINITY, 0.1));
         m_dontKnow.setPreferredSize(new Dimension(75, 25));
-        JPanel dontKnowPanel = new JPanel(new FlowLayout());
+        JPanel dontKnowPanel = new JPanel(new BorderLayout());
         dontKnowPanel.setBorder(BorderFactory
                 .createTitledBorder(" Don't Know Class "));
-        dontKnowPanel.add(m_dftButton);
-        dontKnowPanel.add(m_setButton);
-        dontKnowPanel.add(m_dontKnow);
+        dontKnowPanel.add(m_ignButton, BorderLayout.NORTH);
+        JPanel dftPanel = new JPanel(new FlowLayout());
+        dftPanel.setBorder(BorderFactory
+                .createTitledBorder(""));
+        dftPanel.add(m_dftButton);
+        dftPanel.add(m_setButton);
+        dftPanel.add(m_dontKnow);
+        dontKnowPanel.add(dftPanel, BorderLayout.CENTER);
         p.add(dontKnowPanel);
 
         m_dftButton.addActionListener(new ActionListener() {
@@ -118,6 +135,22 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         // add fuzzy learner tab
         super.addTab("Applied Column", p);
     }
+    
+    private void selectionChanged() {
+        if (m_ignButton.isSelected()) {
+            m_dftButton.setEnabled(false);
+            m_setButton.setEnabled(false);
+            m_dontKnow.setEnabled(false);
+        } else {
+            m_dftButton.setEnabled(true);
+            m_setButton.setEnabled(true);
+            if (m_dftButton.isSelected()) {
+                m_dontKnow.setEnabled(false);
+            } else {
+                m_dontKnow.setEnabled(true);
+            }
+        }
+    }
 
     /**
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
@@ -128,16 +161,21 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         // prediction column name
         String apply = settings.getString(APPLY_COLUMN, "");
         m_apply.setText(apply);
-        // dont know class
-        double value = settings.getDouble(DONT_KNOW_PROP, -1.0);
-        if (value < 0.0) {
-            m_dftButton.setSelected(true);
-            m_dontKnow.setEnabled(false);
+        if (settings.getBoolean(CFG_DONT_KNOW_IGNORE, false)) {
+            m_ignButton.setSelected(true);
+            m_dontKnow.setValue(new Double(0.0));
         } else {
-            m_setButton.setSelected(true);
-            m_dontKnow.setEnabled(true);
-            m_dontKnow.setValue(new Double(value));
+            m_ignButton.setSelected(false);
+            double value = settings.getDouble(DONT_KNOW_PROP, -1.0);
+            if (value < 0.0) {
+                m_dftButton.setSelected(true);
+                m_dontKnow.setValue(new Double(0.0));
+            } else {
+                m_setButton.setSelected(true);
+                m_dontKnow.setValue(new Double(value));
+            }
         }
+        selectionChanged();
     }
 
     /**
@@ -152,12 +190,17 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
             throw new InvalidSettingsException("Empty name not allowed.");
         }
         settings.addString(APPLY_COLUMN, s);
-        // dont know class
-        if (m_dftButton.isSelected()) {
-            settings.addDouble(DONT_KNOW_PROP, -1.0);
+        if (m_ignButton.isSelected()) {
+            settings.addBoolean(CFG_DONT_KNOW_IGNORE, true);
+            settings.addDouble(DONT_KNOW_PROP, 0.0);
         } else {
-            Double value = (Double)m_dontKnow.getValue();
-            settings.addDouble(DONT_KNOW_PROP, value.doubleValue());
+            settings.addBoolean(CFG_DONT_KNOW_IGNORE, false);
+            if (m_dftButton.isSelected()) {
+                settings.addDouble(DONT_KNOW_PROP, -1.0);
+            } else {
+                Double value = (Double)m_dontKnow.getValue();
+                settings.addDouble(DONT_KNOW_PROP, value.doubleValue());
+            }
         }
     }
 }

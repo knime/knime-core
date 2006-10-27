@@ -52,10 +52,11 @@ public final class VolumeBorderBasedShrink implements Shrink {
      * leftSuppLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy membership function
      * @return loss in distance assessed to the left dimension of the support
      */
-    public double leftSuppLoss(final double value, final MembershipFunction mem) {
+    public double leftSuppLoss(final double value,
+            final MembershipFunction mem) {
 
         // value on the border
         if (mem.getMinSupport() == value) {
@@ -69,10 +70,11 @@ public final class VolumeBorderBasedShrink implements Shrink {
      * leftCoreLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy membership function
      * @return loss in distance assessed to the core region
      */
-    public double leftCoreLoss(final double value, final MembershipFunction mem) {
+    public double leftCoreLoss(final double value, 
+            final MembershipFunction mem) {
 
         // value on the border
         if (mem.getMinCore() == value) {
@@ -85,10 +87,11 @@ public final class VolumeBorderBasedShrink implements Shrink {
      * rightSuppLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy membership function
      * @return loss in distance assessed to the right dimension of the support
      */
-    public double rightSuppLoss(final double value, final MembershipFunction mem) {
+    public double rightSuppLoss(final double value, 
+            final MembershipFunction mem) {
         // value on the border
         if (mem.getMaxSupport() == value) {
             return Double.MIN_VALUE;
@@ -101,10 +104,11 @@ public final class VolumeBorderBasedShrink implements Shrink {
      * rightCoreLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy trapezoid membership function
      * @return loss in distance assessed to the core region
      */
-    public double rightCoreLoss(final double value, final MembershipFunction mem) {
+    public double rightCoreLoss(final double value, 
+            final MembershipFunction mem) {
 
         // value on the border
         if (mem.getMaxCore() == value) {

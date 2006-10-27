@@ -63,11 +63,12 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param classLabel The class label.
      * @param thetaMinus Theta minus.
      * @param distance Distance measurement.
+     * @param numPat The overall number of pattern used for training. 
      */
     RadialBasisFunctionPredictorRow(final DataCell key, final DataRow center,
             final DataCell classLabel, final double thetaMinus,
-            final int distance) {
-        super(key, classLabel, thetaMinus);
+            final int distance, final int numPat) {
+        super(key, classLabel, numPat, thetaMinus);
         m_distance = distance;
         m_center = new double[center.getNumCells()];
         for (int i = 0; i < m_center.length; i++) {
@@ -149,11 +150,13 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      */
     @Override
     public final double compose(final DataRow row, final double act) {
-        assert (row != null);
-        assert (act >= 0.0);
-        // compute current activation of input row
-        // TODO incorporate weights
-        return act + computeActivation(row);
+        assert (row != null && act >= 0.0);
+        double all = getNumPattern();
+        double cov = getNumCorrectCoveredPattern();
+//        NodeLogger.getLogger("SUPPORT").warn("support=" 
+//                + getNumCorrectCoveredPattern() / all);
+        assert (all > 0 && cov > 0);
+        return computeActivation(row) + act;
     }
 
     /**
@@ -199,7 +202,7 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     }
 
     /**
-     * Returns a string represenation of this basisfunction and the super
+     * Returns a string representation of this basisfunction and the super
      * implementation. Here, the method adds properties such as the center
      * vector and the standard deviation.
      * 

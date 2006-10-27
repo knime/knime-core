@@ -22,22 +22,21 @@
 package org.knime.base.node.mine.bfn.fuzzy.membership;
 
 import org.knime.core.data.DoubleValue;
+import org.knime.core.util.MutableDouble;
 
 /**
  * Triangle membership function with three values core/anchor and support-left
  * and -right whereby the support region can be defined infinity at the
- * begining. If the anchor's value is changed, the support-region is adjusted if
- * necessay, but not the other way around.
+ * beginning. If the anchor's value is changed, the support-region is adjusted 
+ * if necessary, but not the other way around.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class TriangleMembershipFunction extends MembershipFunction {
-    private TriangleMembershipFunction(final double min, final double max) {
-        super(min, max);
-    }
+
 
     /**
-     * Creates a new triagle membership function with its given anchor and two
+     * Creates a new triangle membership function with its given anchor and two
      * values used to assign the min and max border.
      * 
      * @param anchor the initial center point of this fuzzy function
@@ -45,28 +44,8 @@ public final class TriangleMembershipFunction extends MembershipFunction {
      * @param max the maximum right border
      */
     public TriangleMembershipFunction(final DoubleValue anchor,
-            final double min, final double max) {
+            final MutableDouble min, final MutableDouble max) {
         super(anchor, min, max);
-    }
-
-    /**
-     * Creates a new triangle membership function with its given anchor and the
-     * -{@link Double#MAX_VALUE} resp. {@link Double#MAX_VALUE} to
-     * assign the min and max border.
-     * 
-     * @param anchor the initial center point of this fuzzy function
-     */
-    public TriangleMembershipFunction(final DoubleValue anchor) {
-        this(anchor, -Double.MAX_VALUE, Double.MAX_VALUE);
-    }
-
-    /**
-     * Creates a new membership function with -{@link Double#MAX_VALUE} and
-     * {@link Double#MAX_VALUE} as global min vs. max; the anchor is undefined
-     * and therefore this membership missing.
-     */
-    public TriangleMembershipFunction() {
-        this(-Double.MAX_VALUE, Double.MAX_VALUE);
     }
 
     /**
@@ -76,7 +55,7 @@ public final class TriangleMembershipFunction extends MembershipFunction {
      */
     @Override
     public void setCoreLeft(final double value) {
-
+        repairMinMax(value);
     }
 
     /**
@@ -94,6 +73,6 @@ public final class TriangleMembershipFunction extends MembershipFunction {
      */
     @Override
     public void setCoreRight(final double value) {
-
+        repairMinMax(value);
     }
 }
