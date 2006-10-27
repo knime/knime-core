@@ -97,10 +97,10 @@ public final class ColorAttr implements Serializable {
      */
     private static final HashMap<Color, ColorAttr> COLORATTRS;
     
-    private static final float S_NORMAL = 1f;
-    private static final float S_SELECT = 0.2f;
-    private static final float B_NORMAL = 0.5f;
-    private static final float B_HILITE = 1f;
+//    private static final float S_NORMAL = 1f;
+//    private static final float S_SELECT = 0.2f;
+//    private static final float B_NORMAL = 0.5f;
+//    private static final float B_HILITE = 1f;
     
     /*
      * Inits Color to ColorAttr map and the default ColorAttr which is also
@@ -130,15 +130,19 @@ public final class ColorAttr implements Serializable {
         Color.RGBtoHSB(attColor.getRed(), attColor.getGreen(),
                 attColor.getBlue(), hsbVals);
         // normal color with  low brightness
-        m_attrColor = Color.getHSBColor(hsbVals[0], S_NORMAL, B_NORMAL);
-        // selection color with lower saturation and a bit brighter
-        m_attrColorSelected = Color.getHSBColor(hsbVals[0], S_SELECT, 
-                    B_NORMAL + 0.2f);
-        // hilite color with full saturation and full brightness
-        m_attrColorHilite = Color.getHSBColor(hsbVals[0], S_NORMAL, B_HILITE);
-        // hilite and selected with full brightness and lower saturation.
-        m_attrColorSelectedHilite = Color.getHSBColor(hsbVals[0], S_SELECT, 
-                B_HILITE);
+//        m_attrColor = Color.getHSBColor(hsbVals[0], S_NORMAL, B_NORMAL);
+//        // selection color with lower saturation and a bit brighter
+//        m_attrColorSelected = Color.getHSBColor(hsbVals[0], S_SELECT, 
+//                    B_NORMAL + 0.2f);
+//        // hilite color with full saturation and full brightness
+//        m_attrColorHilite = Color.getHSBColor(hsbVals[0], S_NORMAL, B_HILITE);
+//        // hilite and selected with full brightness and lower saturation.
+//        m_attrColorSelectedHilite = Color.getHSBColor(hsbVals[0], S_SELECT, 
+//                B_HILITE);
+        m_attrColor = attColor;
+        m_attrColorHilite = attColor;
+        m_attrColorSelected = attColor;
+        m_attrColorSelectedHilite = attColor;
         
         
         /* old version -> mixed yellow into hilited color 

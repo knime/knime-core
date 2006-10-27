@@ -21,10 +21,8 @@ package org.knime.core.data.property;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
@@ -70,28 +68,24 @@ public final class ShapeFactory {
     private static Map<String, Shape> shapes;
     
     static {
-        ShapeFactory s = new ShapeFactory();
         shapes = new LinkedHashMap<String, Shape>();
-        shapes.put(RECTANGLE, s.new Rectangle());
-        shapes.put(DEFAULT, s.new Rectangle());
-        shapes.put(CIRCLE, s.new Circle());
-        shapes.put(TRIANGLE, s.new Triangle());
-        shapes.put(REVERSE_TRIANGLE, s.new ReverseTriangle());
-        shapes.put(DIAMOND, s.new Diamond());
-        shapes.put(ASTERISK, s.new Asterisk());
-        shapes.put(CROSS, s.new Cross());
-        shapes.put(X_SHAPE, s.new XShape());
-        shapes.put(HORIZONTAL_LINE, s.new HorizontalStroke());
-        shapes.put(VERTICAL_LINE, s.new VerticalStroke());
+        shapes.put(RECTANGLE, new Rectangle());
+        shapes.put(DEFAULT, new Rectangle());
+        shapes.put(CIRCLE, new Circle());
+        shapes.put(TRIANGLE, new Triangle());
+        shapes.put(REVERSE_TRIANGLE, new ReverseTriangle());
+        shapes.put(DIAMOND, new Diamond());
+        shapes.put(ASTERISK, new Asterisk());
+        shapes.put(CROSS, new Cross());
+        shapes.put(X_SHAPE, new XShape());
+        shapes.put(HORIZONTAL_LINE, new HorizontalStroke());
+        shapes.put(VERTICAL_LINE, new VerticalStroke());
     }
     
-    
-    /**
-     * Register all shapes.
-     *
-     */
-    private ShapeFactory() {         
+    private ShapeFactory() {
+        
     }
+    
     
     /**
      * 
@@ -123,23 +117,13 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    public abstract class Shape {
+    public abstract static class Shape {
         
-        private Shape() {
-            
-        }
+        private static final int DEFAULT_SIZE = 11;
         
-        private int m_width = 11;
+        private static final double BORDER_SIZE = 0.2;
         
-        private int m_height = 11;
-        
-        private ColorAttr m_color = ColorAttr.DEFAULT;
-        
-        private int m_x = 0;
-        
-        private int m_y = 0;
-        
-        private static final double BORDER_SIZE = 0.1;
+        private static final float DASH_FACTOR = 0.4f;
         
         /**
          * 
@@ -148,160 +132,70 @@ public final class ShapeFactory {
         public Icon getIcon() {
             return new Icon() {
                 public final int getIconHeight() {
-                    return getHeight();
+                    return DEFAULT_SIZE;
                 }
                 
                 public final int getIconWidth() {
-                    return getWidth();
+                    return DEFAULT_SIZE;
                 }
                 
                 public void paintIcon(final Component c, final Graphics g, 
                         final int x, final int y) {
-                    m_x = x + (m_width / 2);
-                    m_y = y + (m_height / 2);
+                    int dotX = x + (DEFAULT_SIZE / 2);
+                    int dotY = y + (DEFAULT_SIZE / 2);
                     g.setXORMode(Color.lightGray);
                     ((Graphics2D)g).setRenderingHint(
                             RenderingHints.KEY_ANTIALIASING, 
                             RenderingHints.VALUE_ANTIALIAS_ON);
-                    paintDot(g, false, false, false);
+                    paint(g, dotX, dotY, DEFAULT_SIZE, 
+                            ColorAttr.DEFAULT.getColor(), false, false, false);
                     g.setPaintMode();
                 }
             };
         };
         
-        /**
-         * 
-         * @param position the position, normally the center of the shape.
-         */
-        public void setPosition(final Point position) {
-            m_x = position.x;
-            m_y = position.y;
-        }
-        
-        /**
-         * 
-         * @return the position, normally the center of the shape.
-         */
-        public Point getPosition() {
-            return new Point(m_x, m_y);
-        }
-        
-        /**
-         * 
-         * @param x the x position, normally the center of the shape.
-         */
-        public void setXPosition(final int x) {
-            m_x = x;
-        }
-        
-        /**
-         * 
-         * @param y the y position, normally the center of the shape.
-         */
-        public void setYPosition(final int y) {
-            m_y = y;
-        }
-        
-        /**
-         * 
-         * @return the x position, normally the center of the shape.
-         */
-        public int getXPosition() {
-            return m_x;
-        }
-        
-        /**
-         * 
-         * @return the y position, normally the center of the shape.
-         */
-        public int getYPosition() {
-            return m_y;
-        }
-        
-        /**
-         * 
-         * @return the width of the shape.
-         */
-        public int getWidth() {
-            return m_width;
-        }
-        
-        /**
-         * 
-         * @return the height of the shape.
-         */
-        public int getHeight() {
-            return m_height;
-        }
-        
-        /**
-         * 
-         * @param width the width of the shape.
-         */
-        public void setWidth(final int width) {
-            m_width = width;
-        }
-        
-        /**
-         * 
-         * @param height the height of the shape.
-         */
-        public void setHeight(final int height) {
-            m_height = height;
-        }
-        
-        /**
-         * 
-         * @param dimension the dimension of the shape.
-         */
-        public void setDimension(final Dimension dimension) {
-            m_width = (int)dimension.getWidth();
-            m_height = (int)dimension.getHeight();
-        }
-        
-        /**
-         * 
-         * @return the dimension of the shape.
-         */
-        public Dimension getDimension() {
-            return new Dimension(m_width, m_height);
-        }
-        
-        /**
-         * 
-         * @param color the color of the shape
-         */
-        public void setColor(final ColorAttr color) {
-            m_color = color;
-        }
-        
-        /**
-         * 
-         * @return the color of the shape
-         */
-        public ColorAttr getColor() {
-            return m_color;
-        }
         
         /**
          * Paints the hilite border.
          * @param g the graphics object.
+         * @param x the x center position
+         * @param y the y center position
+         * @param size the dimension of the shape
+         * @param hilited falg whether the shape is hilited
          * @param selected flag whether the dot is selected
          */
-        public void paintBorder(final Graphics g, final boolean selected) {
-            int borderSize = (int)Math.ceil(BORDER_SIZE * getWidth());
-            if (borderSize == 0) {
-                borderSize = 1;
+        public void paintBorder(final Graphics g, final int x, 
+                final int y, final int size, final boolean hilited, 
+                final boolean selected) {
+            int borderSize = (int)Math.ceil(BORDER_SIZE * size);
+            if (borderSize < 2) {
+                borderSize = 2;
+            }
+            float dash = DASH_FACTOR * size;
+            if (dash == 0) {
+                dash = 1;
             }
             Color backupColor = g.getColor();
-            int x = (int)(getXPosition() - (getWidth() / 2.0)) - borderSize;
-            int y = (int)(getYPosition() - (getHeight() / 2.0)) - borderSize;
+            int rectX = (int)(x - (size / 2.0)) - borderSize;
+            int rectY = (int)(y - (size / 2.0)) - borderSize;
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
-            g2.setColor(getColor().getBorderColor(selected, true));
-            g2.setStroke(new BasicStroke(borderSize));
-            g2.drawRect(x, y, getWidth() + (2 * borderSize), 
-                    getHeight() + (2 * borderSize));
+            if (hilited) {
+                g2.setColor(ColorAttr.HILITE);
+                Stroke stroke = new BasicStroke(borderSize);
+                g2.setStroke(stroke);
+                g2.drawRect(rectX, rectY, size + (2 * borderSize), 
+                        size + (2 * borderSize));
+            }
+            if (selected) {
+                g2.setColor(Color.BLACK);
+                Stroke selectionStroke = new BasicStroke(borderSize, 
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, 
+                        new float[]{dash}, 0);
+                g2.setStroke(selectionStroke);
+                g2.drawRect(rectX, rectY, size + (2 * borderSize), 
+                        size + (2 * borderSize));                
+            }
             g2.setColor(backupColor);
             g2.setStroke(backupStroke);
         }
@@ -309,11 +203,16 @@ public final class ShapeFactory {
         /**
          * Paints the dot and if hilited a border around the dot.
          * @param g the graphics object.
+         * @param x the x position (center of the shape)
+         * @param y the y position (center of the shape)
+         * @param size the size (width and height)
+         * @param color the normal color of the shape
          * @param hilited flag whether dot is hilited
          * @param selected flag whether dot is selected.
          * @param faded flag whether point is faded.
          */
-        public void paintDot(final Graphics g, 
+        public void paint(final Graphics g, final int x, final int y, 
+                final int size, final Color color,
                 final boolean hilited, final boolean selected, 
                 final boolean faded) {
             Color backupColor = g.getColor();
@@ -324,12 +223,12 @@ public final class ShapeFactory {
                     g.setColor(ColorAttr.INACTIVE_SELECTED);                
                 }
             } else {
-                g.setColor(getColor().getColor(selected, hilited));
+                g.setColor(color);
             }
-            paintShape(g, selected, hilited);
-//            if (hilited) {
-//                paintBorder(g, selected);
-//            }
+            paintShape(g, x, y, size, selected, hilited);
+            if (hilited || selected) {
+                paintBorder(g, x, y, size, hilited, selected);
+            }
             g.setColor(backupColor);
         }
         
@@ -337,17 +236,15 @@ public final class ShapeFactory {
         /**
          * Paints the shape.
          * @param g the graphics object
+         * @param x the center x position
+         * @param y the center y position
+         * @param size the dimension of the shape
          * @param hilited flag whether the shape is hilited
          * @param selected flag whether the shape is selected
          */
-        public abstract void paintShape(final Graphics g, 
+        public abstract void paintShape(final Graphics g,
+                final int x, final int y, final int size, 
                 final boolean selected, final boolean hilited);
-        
-        /**
-         * 
-         * @return a new instance of the shape implementation.
-         */
-        public abstract Shape newInstance();
         
         /**
          * 
@@ -364,34 +261,23 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class Asterisk extends Shape {
-        
-        
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new Asterisk();
-        }
-
+    private static class Asterisk extends Shape {
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
+        public void paintShape(final Graphics g, final int x, final int y,
+                final int size, final boolean selected, 
                 final boolean hilited) {
-            int x1 = getXPosition() - (getWidth() / 2);
-            int x2 = getXPosition();
-            int x3 = getXPosition() + (getWidth() / 2);
-            int y1 = getYPosition() - (getHeight() / 2);
-            int y2 = getYPosition();
-            int y3 = getYPosition() + (getHeight() / 2);
+            int x1 = x - (size / 2);
+            int x2 = x;
+            int x3 = x + (size / 2);
+            int y1 = y - (size / 2);
+            int y2 = y;
+            int y3 = y + (size / 2);
             g.drawLine(x1, y3, x3, y1);
             g.drawLine(x1, y2, x3, y2);
             g.drawLine(x1, y1, x3, y3);
@@ -416,29 +302,20 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class Circle extends Shape {
-        
-
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new Circle();
-        }
+    private static class Circle extends Shape {
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
+        public void paintShape(final Graphics g, final int x, final int y,
+                final int size, final boolean selected, 
                 final boolean hilited) {
-            int x = (int)(getXPosition() - (getWidth() / 2.0));
-            int y = (int)(getYPosition() - (getHeight() / 2.0));
-            g.fillOval(x, y, getWidth(), getHeight());
+            int circleX = (int)(x - (size / 2.0));
+            int circleY = (int)(y - (size / 2.0));
+            g.fillOval(circleX, circleY, size, size);
         }
         
 
@@ -457,37 +334,28 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class Cross extends Shape {
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new Cross();
-        }
-
+    private static class Cross extends Shape {
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
+        public void paintShape(final Graphics g, final int x, final int y, 
+                final int size, final boolean selected, 
                 final boolean hilited) {
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
             if (selected || hilited) {
                 g2.setStroke(new BasicStroke(2));
             }
-            int x1 = (int)(getXPosition() - (getWidth() / 2.0));
-            int x2 = getXPosition();
-            int x3 = (int)(getXPosition() + (getWidth() / 2.0));
-            int y1 = (int)(getYPosition() - (getHeight() / 2.0));
-            int y2 = getYPosition();
-            int y3 = (int)(getYPosition() + (getHeight() / 2.0));
+            int x1 = (int)(x - (size / 2.0));
+            int x2 = x;
+            int x3 = (int)(x + (size / 2.0));
+            int y1 = (int)(y - (size / 2.0));
+            int y2 = y;
+            int y3 = (int)(y + (size / 2.0));
             g2.drawLine(x2, y1, x2, y3);
             g2.drawLine(x1, y2, x3, y2);
             g2.setStroke(backupStroke);
@@ -510,31 +378,23 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class Diamond extends Shape {
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new Diamond();
-        }
-        
+    private static class Diamond extends Shape {
+
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
+        public void paintShape(final Graphics g, final int x, final int y,
+                final int size, final boolean selected, 
                 final boolean hilited) {
-            int x1 = getXPosition() - (getWidth() / 2);
-            int x2 = getXPosition();
-            int x3 = getXPosition() + (getWidth() / 2);
-            int y1 = getYPosition() - (getHeight() / 2);
-            int y2 = getYPosition();
-            int y3 = getYPosition() + (getHeight() / 2);
+            int x1 = x - (size / 2);
+            int x2 = x;
+            int x3 = x + (size / 2);
+            int y1 = y - (size / 2);
+            int y2 = y;
+            int y3 = y + (size / 2);
             Polygon polygon = new Polygon();
             polygon.addPoint(x1, y2);
             polygon.addPoint(x2, y1);
@@ -558,33 +418,23 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class HorizontalStroke extends Shape {
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new HorizontalStroke();
-        }
+    private static class HorizontalStroke extends Shape {
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
-                final boolean hilited) {
+        public void paintShape(final Graphics g, final int x, final int y, 
+                final int size, final boolean selected, final boolean hilited) {
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
             if (selected || hilited) {
                 g2.setStroke(new BasicStroke(2));
             }
-            int x1 = getXPosition() - (getWidth() / 2);
-            int x2 = getXPosition() + (getWidth() / 2);
-            int y = getYPosition();
+            int x1 = x - (size / 2);
+            int x2 = x + (size / 2);
             g.drawLine(x1, y, x2, y);
             g2.setStroke(backupStroke);
 
@@ -605,29 +455,20 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class Rectangle extends Shape { 
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new Rectangle();
-        }
+    private static class Rectangle extends Shape { 
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected,
-                final boolean hilited) {
+        public void paintShape(final Graphics g, final int x, final int y,
+                final int size, final boolean selected, final boolean hilited) {
             // draw here
-            int x = (int)(getXPosition() - (getWidth() / 2.0));
-            int y = (int)(getYPosition() - (getHeight() / 2.0));
-            g.fillRect(x, y, getWidth(), getHeight());
+            int rectX = (int)(x - (size / 2.0));
+            int rectY = (int)(y - (size / 2.0));
+            g.fillRect(rectX, rectY, size, size);
         }
 
 
@@ -646,31 +487,22 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class ReverseTriangle extends Shape {
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new ReverseTriangle();
-        }
+    private static class ReverseTriangle extends Shape {
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
-                final boolean hilited) {
+        public void paintShape(final Graphics g, final int x, final int y, 
+                final int size, final boolean selected, final boolean hilited) {
             // draw here
-            int x1 = (int)(getXPosition() - (getWidth() / 2.0));
-            int x2 = getXPosition();
-            int x3 = (int)(getXPosition() + (getWidth() / 2.0));
-            int y1 = (int)(getYPosition() + (getHeight() / 2.0));
-            int y2 = (int)(getYPosition() - (getHeight() / 2.0));
+            int x1 = (int)(x - (size / 2.0));
+            int x2 = x;
+            int x3 = (int)(x + (size / 2.0));
+            int y1 = (int)(y + (size / 2.0));
+            int y2 = (int)(y - (size / 2.0));
             g.fillPolygon(new int[]{x1, x2, x3}, new int[]{y2, y1, y2}, 3);
         }
 
@@ -689,31 +521,22 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class Triangle extends Shape {
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new Triangle();
-        }
+    private static class Triangle extends Shape {
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, 
-                final boolean selected, final boolean hilited) {
+        public void paintShape(final Graphics g, final int x, final int y, 
+                final int size, final boolean selected, final boolean hilited) {
             // draw here
-            int x1 = (int)(getXPosition() - (getWidth() / 2.0));
-            int x2 = getXPosition();
-            int x3 = (int)(getXPosition() + (getWidth() / 2.0));
-            int y1 = (int)(getYPosition() + (getHeight() / 2.0));
-            int y2 = (int)(getYPosition() - (getHeight() / 2.0));
+            int x1 = (int)(x - (size / 2.0));
+            int x2 = x;
+            int x3 = (int)(x + (size / 2.0));
+            int y1 = (int)(y + (size / 2.0));
+            int y2 = (int)(y - (size / 2.0));
             int y3 = y1;
             g.fillPolygon(new int[]{x1, x2, x3}, new int[]{y1, y2, y3}, 3);
         }
@@ -734,33 +557,24 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class VerticalStroke extends Shape {
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new VerticalStroke();
-        }
+    private static class VerticalStroke extends Shape {
+
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
-                final boolean hilited) {
+        public void paintShape(final Graphics g, final int x, final int y, 
+                final int size, final boolean selected, final boolean hilited) {
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
             if (selected || hilited) {
                 g2.setStroke(new BasicStroke(2));
             }
-            int x = getXPosition();
-            int y1 = getYPosition() - (getHeight() / 2);
-            int y2 = getYPosition() + (getHeight() / 2);
+            int y1 = y - (size / 2);
+            int y2 = y + (size / 2);
             g.drawLine(x, y1, x, y2);
             g2.setStroke(backupStroke);        
         }
@@ -780,34 +594,25 @@ public final class ShapeFactory {
      * 
      * @author Fabian Dill, University of Konstanz
      */
-    private class XShape extends Shape {
-        
-        /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#newInstance()
-         */
-        @Override
-        public Shape newInstance() {
-            return new XShape();
-        }
+    private static class XShape extends Shape {
 
         /**
          * 
          * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, boolean, boolean)
+         * java.awt.Graphics, int, int, int, boolean, boolean)
          */
         @Override
-        public void paintShape(final Graphics g, final boolean selected, 
-                final boolean hilited) {
+        public void paintShape(final Graphics g, final int x, final int y,
+                final int size, final boolean selected, final boolean hilited) {
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
             if (selected || hilited) {
                 g2.setStroke(new BasicStroke(2));
             }
-            int x1 = getXPosition() - (getWidth() / 2);
-            int x2 = getXPosition() + (getWidth() / 2);
-            int y1 = getYPosition() - (getHeight() / 2);
-            int y2 = getYPosition() + (getHeight() / 2);
+            int x1 = x - (size / 2);
+            int x2 = x + (size / 2);
+            int y1 = y - (size / 2);
+            int y2 = y + (size / 2);
             g.drawLine(x1, y1, x2, y2);
             g.drawLine(x1, y2, x2, y1);
             g2.setStroke(backupStroke);

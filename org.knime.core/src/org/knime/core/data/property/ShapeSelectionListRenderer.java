@@ -19,10 +19,8 @@
 package org.knime.core.data.property;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.RenderingHints;
 
 import javax.swing.DefaultListCellRenderer;
@@ -85,13 +83,10 @@ public class ShapeSelectionListRenderer extends DefaultListCellRenderer {
             Graphics2D g2 = (Graphics2D)g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON);
-            m_shape.setPosition(new Point(
-                    getPreferredSize().height / 2, 
-                    getPreferredSize().height / 2));
-            m_shape.setDimension(new Dimension(
-                    getPreferredSize().height - BORDER, 
-                    getPreferredSize().height - BORDER));
-            m_shape.paintShape(g, false, false);
+            int x = getPreferredSize().height / 2; 
+            int y = getPreferredSize().height / 2;
+            int size = getPreferredSize().height - BORDER;
+            m_shape.paintShape(g, x, y, size, false, false);
             g.drawString(m_shape.toString(), getPreferredSize().height + 2, 
                     (getPreferredSize().height / 2) + BORDER);
         }
