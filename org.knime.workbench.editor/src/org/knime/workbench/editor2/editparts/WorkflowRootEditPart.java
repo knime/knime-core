@@ -37,6 +37,7 @@ import org.eclipse.gef.SnapToGuides;
 import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.rulers.RulerProvider;
+import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -44,6 +45,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
+import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
 
@@ -56,8 +58,10 @@ import org.knime.workbench.editor2.figures.WorkflowLayout;
  */
 public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         WorkflowListener, CommandStackListener {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(WorkflowRootEditPart.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(WorkflowRootEditPart.class);
+
+    private ProgressToolTipHelper m_toolTipHelper;
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -86,18 +90,21 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     public Object getAdapter(final Class adapter) {
         if (adapter == SnapToHelper.class) {
             List<SnapToHelper> snapStrategies = new ArrayList<SnapToHelper>();
-            Boolean val = (Boolean)getViewer().getProperty(
-                    RulerProvider.PROPERTY_RULER_VISIBILITY);
+            Boolean val =
+                    (Boolean)getViewer().getProperty(
+                            RulerProvider.PROPERTY_RULER_VISIBILITY);
             if (false || val != null && val.booleanValue()) {
                 snapStrategies.add(new SnapToGuides(this));
             }
-            val = (Boolean)getViewer().getProperty(
-                    SnapToPortGeometry.PROPERTY_SNAP_ENABLED);
+            val =
+                    (Boolean)getViewer().getProperty(
+                            SnapToPortGeometry.PROPERTY_SNAP_ENABLED);
             if (true || val != null && val.booleanValue()) {
                 snapStrategies.add(new SnapToPortGeometry(this));
             }
-            val = (Boolean)getViewer().getProperty(
-                    SnapToGrid.PROPERTY_GRID_ENABLED);
+            val =
+                    (Boolean)getViewer().getProperty(
+                            SnapToGrid.PROPERTY_GRID_ENABLED);
             if (false || val != null && val.booleanValue()) {
                 snapStrategies.add(new SnapToGrid(this));
             }
@@ -134,7 +141,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         // add as listener on the command stack
         getViewer().getEditDomain().getCommandStack().addCommandStackListener(
                 this);
-
     }
 
     /**
@@ -151,6 +157,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         getViewer().getEditDomain().getCommandStack()
                 .removeCommandStackListener(this);
 
+        // remove the tooltip helper
+        if (m_toolTipHelper != null) {
+            m_toolTipHelper.dispose();
+        }
     }
 
     /**
@@ -161,6 +171,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected IFigure createFigure() {
+
         WorkflowFigure backgroundFigure = new WorkflowFigure();
 
         LayoutManager l = new WorkflowLayout();
@@ -221,5 +232,18 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     public void commandStackChanged(final EventObject event) {
         LOGGER.debug("WorkflowRoot: command stack changed");
 
+    }
+
+    /**
+     * @return the tooltip helper for this workflow part
+     */
+    public ProgressToolTipHelper getToolTipHelper() {
+        return m_toolTipHelper;
+    }
+
+    public void createToolTipHelper(final Shell underlyingShell) {
+        // create a tooltip helper for all child figures
+        m_toolTipHelper = new ProgressToolTipHelper(getViewer().getControl());
+        ((WorkflowFigure)getFigure()).setProgressToolTipHelper(m_toolTipHelper);
     }
 }

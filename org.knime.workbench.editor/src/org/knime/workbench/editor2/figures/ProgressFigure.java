@@ -27,7 +27,10 @@ package org.knime.workbench.editor2.figures;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.MouseEvent;
+import org.eclipse.draw2d.MouseMotionListener;
 import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -45,7 +48,7 @@ import org.knime.core.node.NodeProgressListener;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ProgressFigure extends RectangleFigure implements
-        NodeProgressListener {
+        NodeProgressListener, MouseMotionListener {
 
     /** absolute width of this figure. * */
     public static final int WIDTH = 32;
@@ -64,9 +67,11 @@ public class ProgressFigure extends RectangleFigure implements
 
     private static final Color PROGRESS_BAR_COLOR = ColorConstants.darkBlue;
 
-    private static final boolean POLYGONBAR = true;
-
     private static final boolean ON = true;
+
+    private static final boolean RENDER = true;
+
+    private static final boolean INVOKE_DISPLAY = true;
 
     // private static final Color PROGRESS_BAR_COLOR = new Color(null, 240, 200,
     // 10);
@@ -101,6 +106,17 @@ public class ProgressFigure extends RectangleFigure implements
 
     private Display m_currentDisplay;
 
+    private MouseEvent m_mouseEvent;
+
+    private ProgressToolTipHelper m_toolTipHelper;
+
+    private final Runnable m_repaintObject = new Runnable() {
+        public void run() {
+
+            repaint();
+        }
+    };
+
     /**
      * Creates a new node figure.
      */
@@ -128,6 +144,8 @@ public class ProgressFigure extends RectangleFigure implements
         // FlowLayout layout = new FlowLayout(true);
         // layout.setMajorAlignment(FlowLayout.ALIGN_LEFTTOP);
         setOutline(false);
+
+        addMouseMotionListener(this);
     }
 
     /**
@@ -167,159 +185,98 @@ public class ProgressFigure extends RectangleFigure implements
         super.fillShape(graphics);
     }
 
+    private void drawSmoothRect(final Graphics graphics, int x, int y, int w,
+            int h) {
+
+        graphics.drawLine(x + 1, y, x + w - 2, y);
+        graphics.drawLine(x + 1, y + h - 1, x + w - 2, y + h - 1);
+        graphics.drawLine(x, y + 1, x, y + h - 2);
+        graphics.drawLine(x + w - 1, y + 1, x + w - 1, y + h - 2);
+    }
+
+    // private void fillSmoothRect(final Graphics graphics, int x, int y, int w,
+    // int h) {
+    // graphics.fillRectangle(x + 1, y, w - 2, h);
+    // graphics.drawLine(x, y + 1, x, y + h - 2);
+    // graphics.drawLine(x + w - 1, y + 1, x + w - 1, y + h - 2);
+    //
+    // }
+
     /**
      * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
      */
     @Override
     public void paintFigure(final Graphics graphics) {
 
-        // super.paintFigure(graphics);
+        if (RENDER) {
+            // super.paintFigure(graphics);
 
-        // paint the specified bar length for the progress
-        graphics.setForegroundColor(ColorConstants.black);
-        graphics.setBackgroundColor(PROGRESS_BAR_BACKGROUND_COLOR);
+            // paint the specified bar length for the progress
+            graphics.setForegroundColor(ColorConstants.black);
+            graphics.setBackgroundColor(PROGRESS_BAR_BACKGROUND_COLOR);
 
-        Rectangle r = getBounds();
-        int x = r.x;
-        int y = r.y;
-        int w = r.width;
-        int h = r.height;
+            Rectangle r = getBounds();
+            int x = r.x;
+            int y = r.y;
+            int w = r.width;
+            int h = r.height;
 
-        int firstLeftX, secondLeftX, firstRightX, secondRightX;
-        int firstUpperY, secondUpperY, firstLowerY, secondLowerY;
+            graphics.fillRectangle(0, 0, 1000, 200);
 
-        if (POLYGONBAR) {
+            graphics.fillRectangle(x + 1, y + 1, w - 2, h - 2);
+            drawSmoothRect(graphics, x, y, w, h);
 
-            // defines a polygon within the bounds of this figure with round
-            // edges
-            firstLeftX = x;
-            secondLeftX = x + 1;
-            firstRightX = x + w - 2;
-            secondRightX = x + w - 1;
-            firstUpperY = y;
-            secondUpperY = y + 1;
-            firstLowerY = y + h - 2;
-            secondLowerY = y + h - 1;
+            graphics.setForegroundColor(PROGRESS_BAR_COLOR);
+            graphics.setBackgroundColor(PROGRESS_BAR_COLOR);
 
-            int[] pointList =
-                    {secondLeftX, firstUpperY, firstRightX, firstUpperY,
-                            secondRightX, secondUpperY, secondRightX,
-                            firstLowerY, firstRightX, secondLowerY,
-                            secondLeftX, secondLowerY, firstLeftX, firstLowerY,
-                            firstLeftX, secondUpperY};
+            if (m_executing) {
+                if (!m_unknownProgress) {
 
-            graphics.fillPolygon(pointList);
-            graphics.drawPolygon(pointList);
-        } else {
-            graphics.fillRectangle(x, y, w - 1, h - 1);
-        }
+                    // calculate the progress bar width from the percentage
+                    // current worked value
+                    int barWidth =
+                            (int)Math.round((double)(WIDTH - 2) / 100.0D
+                                    * (double)m_currentWorked);
 
-        graphics.setForegroundColor(ColorConstants.gray);
-        graphics.setBackgroundColor(PROGRESS_BAR_COLOR);
+                    graphics.fillRectangle(x + 1, y + 1, barWidth, h - 2);
 
-        if (m_executing) {
-            if (!m_unknownProgress) {
+                    // graphics.fillRectangle(x, y, barWidth, h);
+                    graphics.setFont(PROGRESS_FONT);
 
-                // calculate the progress bar width from the percentage
-                // current worked value
-                int barWidth =
-                        (int)Math.round((double)WIDTH / (double)100
-                                * (double)m_currentWorked);
+                    // create the percentage string
+                    String progressString = m_currentWorked + "%";
 
-                if (POLYGONBAR) {
-
-                    firstLeftX = firstLeftX - 1;
-                    secondLeftX = firstLeftX + 1;
-                    firstRightX = firstLeftX + barWidth;
-                    secondRightX = firstRightX + 1;
-                    firstUpperY = firstUpperY + 1;
-                    secondUpperY = firstUpperY + 1;
-                    firstLowerY = firstUpperY + h - 4;
-                    secondLowerY = firstLowerY + 2;
-
-                    // NOTE: the - 1 is a workaround due to a problem in
-                    // the rendering routine of fillPolygon
-                    // if not used the lower right corner is not smooth
-                    int[] progressBar =
-                            {secondLeftX, firstUpperY, firstRightX,
-                                    firstUpperY, secondRightX, secondUpperY,
-                                    secondRightX, firstLowerY, firstRightX - 1,
-                                    secondLowerY, secondLeftX, secondLowerY,
-                                    firstLeftX, firstLowerY, firstLeftX,
-                                    secondUpperY};
-
-                    graphics.fillPolygon(progressBar);
+                    graphics.setXORMode(true);
+                    graphics.setForegroundColor(ColorConstants.white);
+                    graphics.drawString(progressString, x + w / 2
+                            - (int)(progressString.length() * 4), y - 1);
                 } else {
-                    graphics.drawRectangle(x - 1, y - 1, barWidth, h - 2);
-                }
 
-                // graphics.fillRectangle(x, y, barWidth, h);
-                graphics.setFont(PROGRESS_FONT);
+                    graphics.setForegroundColor(ColorConstants.darkBlue);
 
-                // create the percentage string
-                String progressString = m_currentWorked + "%";
+                    // calculate the rendering direction
+                    if (m_unknownProgressBarRenderingPosition
+                            + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH - 2) {
+                        m_unknownProgressBarDirection = -1;
+                    } else if (m_unknownProgressBarRenderingPosition <= 0) {
+                        m_unknownProgressBarDirection = 1;
+                    }
 
-                graphics.setXORMode(true);
-                graphics.setForegroundColor(ColorConstants.white);
-                graphics.drawString(progressString, x + w / 2
-                        - (int)(progressString.length() * 4), y - 1);
-            } else {
-
-                graphics.setForegroundColor(ColorConstants.darkBlue);
-
-                // calculate the rendering direction
-                if (m_unknownProgressBarRenderingPosition
-                        + UNKNOW_PROGRESS_BAR_WIDTH > WIDTH + 1) {
-                    m_unknownProgressBarDirection = -1;
-                } else if (m_unknownProgressBarRenderingPosition <= 0) {
-                    m_unknownProgressBarDirection = 1;
-                }
-
-                if (POLYGONBAR) {
-                    // defines a polygon bar with round edges
-                    firstLeftX =
-                            firstLeftX + m_unknownProgressBarRenderingPosition
-                                    - 1;
-                    secondLeftX = firstLeftX + 1;
-                    firstRightX = firstLeftX + UNKNOW_PROGRESS_BAR_WIDTH;
-                    secondRightX = firstRightX + 1;
-                    firstUpperY = firstUpperY + 1;
-                    secondUpperY = firstUpperY + 1;
-                    firstLowerY = firstUpperY + h - 4;
-                    secondLowerY = firstLowerY + 2;
-
-                    // NOTE: the - 1 is a workaround due to a problem in
-                    // the rendering routine of fillPolygon
-                    // if not used the lower right corner is not smooth
-                    int[] unknwonBar =
-                            {secondLeftX, firstUpperY, firstRightX,
-                                    firstUpperY, secondRightX, secondUpperY,
-                                    secondRightX, firstLowerY, firstRightX - 1,
-                                    secondLowerY, secondLeftX, secondLowerY,
-                                    firstLeftX, firstLowerY, firstLeftX,
-                                    secondUpperY};
-
-                    graphics.fillPolygon(unknwonBar);
-                } else {
-                    graphics.fillRectangle(x
-                            + m_unknownProgressBarRenderingPosition - 1, y - 1,
+                    graphics.fillRectangle(x + 1
+                            + m_unknownProgressBarRenderingPosition, y + 1,
                             UNKNOW_PROGRESS_BAR_WIDTH, h - 2);
+
+                    m_unknownProgressBarRenderingPosition +=
+                            m_unknownProgressBarDirection;
+
                 }
-
-                // graphics.fillRectangle(xPos, y, UNKNOW_PROGRESS_BAR_WIDTH,
-                // h);
-
-                m_unknownProgressBarRenderingPosition +=
-                        m_unknownProgressBarDirection;
-
+            } else {
+                // draw "Queued"
+                String queuedString = "queued";
+                graphics.setFont(QUEUED_FONT);
+                graphics.drawString(queuedString, x + 1, y);
             }
-        } else {
-            // draw "Queued"
-            String queuedString = "queued";
-            graphics.setFont(QUEUED_FONT);
-            graphics.drawString(queuedString, x + 1, y);
         }
-
     }
 
     /**
@@ -355,30 +312,21 @@ public class ProgressFigure extends RectangleFigure implements
             return;
         }
 
-        final Runnable repaintRun = new Runnable() {
-
-            public void run() {
-
-                repaint();
-
-            };
-        };
-
         new Thread("Unknown Progress Timer") {
 
             public void run() {
 
                 while (m_unknownProgress) {
 
-                    synchronized (this) {
-                        try {
-                            wait(100);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                    try {
+                        Thread.sleep(500);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
 
-                    m_currentDisplay.syncExec(repaintRun);
+                    if (INVOKE_DISPLAY) {
+                        m_currentDisplay.syncExec(m_repaintObject);
+                    }
                 }
             }
 
@@ -448,10 +396,22 @@ public class ProgressFigure extends RectangleFigure implements
 
         if (!m_currentProgressMessage.equals(message)) {
 
+            String meString = m_currentProgressMessage;
             m_currentProgressMessage =
                     message == null ? "" : m_stateMessage + " - " + message;
-            // set the message to the tooltip
-            setToolTip(new Label(m_currentProgressMessage));
+
+            if (!m_currentProgressMessage.equals(meString)
+                    && m_mouseEvent != null) {
+
+                m_currentDisplay.syncExec(new Runnable() {
+                    public void run() {
+                        getToolTipHelper().displayToolTipNear(
+                                ProgressFigure.this,
+                                new Label(m_currentProgressMessage),
+                                m_mouseEvent.x, m_mouseEvent.y);
+                    }
+                });
+            }
 
         }
 
@@ -460,20 +420,9 @@ public class ProgressFigure extends RectangleFigure implements
         }
 
         if (changed) {
-            assert m_currentDisplay != null;
-            try {
-                m_currentDisplay.syncExec(new Runnable() {
-                    public void run() {
 
-                        try {
-                            repaint();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (INVOKE_DISPLAY) {
+                m_currentDisplay.syncExec(m_repaintObject);
             }
         }
     }
@@ -501,6 +450,12 @@ public class ProgressFigure extends RectangleFigure implements
         m_currentProgressMessage = "";
         m_currentWorked = 0;
         m_unknownProgress = true;
+        m_mouseEvent = null;
+
+        if (getToolTipHelper() != null) {
+            getToolTipHelper().hideTip();
+        }
+
     }
 
     /**
@@ -515,5 +470,73 @@ public class ProgressFigure extends RectangleFigure implements
         }
 
         m_currentDisplay = currentDisplay;
+    }
+
+    public void mouseDragged(MouseEvent me) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void mouseEntered(final MouseEvent me) {
+
+        m_mouseEvent = me;
+        // if there is a usefull progress message and there is a tooltip
+        // position indicating that a tooltip should be shown, set the
+        // tooltip
+        if (m_currentProgressMessage != null
+                && !m_currentProgressMessage.equals("") && m_mouseEvent != null) {
+
+            IFigure tip = new Label(m_currentProgressMessage);
+
+            // org.eclipse.swt.graphics.Point absolute;
+            // absolute =
+            // control.toDisplay(new org.eclipse.swt.graphics.Point(
+            // m_mouseEvent.x, m_mouseEvent.y));
+            getToolTipHelper().displayToolTipNear(ProgressFigure.this, tip,
+                    m_mouseEvent.x, m_mouseEvent.y);
+
+        }
+    }
+
+    public void mouseExited(MouseEvent me) {
+
+        m_mouseEvent = null;
+
+        if (m_toolTipHelper != null) {
+            // hides the tooltip
+            m_toolTipHelper.hideTip();
+        }
+    }
+
+    private ProgressToolTipHelper getToolTipHelper() {
+
+        if (m_toolTipHelper == null) {
+
+            IFigure parent = getParent();
+            if (parent != null) {
+
+                WorkflowFigure workflowFigure =
+                        (WorkflowFigure)getParent().getParent();
+                if (workflowFigure != null) {
+
+                    m_toolTipHelper = workflowFigure.getProgressToolTipHelper();
+                    // new ProgressToolTipHelper(m_currentDisplay
+                    // .getActiveShell());
+                }
+            }
+
+        }
+
+        return m_toolTipHelper;
+    }
+
+    public void mouseHover(MouseEvent me) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void mouseMoved(MouseEvent me) {
+        // TODO Auto-generated method stub
+
     }
 }

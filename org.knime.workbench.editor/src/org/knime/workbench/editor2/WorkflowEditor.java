@@ -123,6 +123,7 @@ import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -346,7 +347,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         createActions();
 
         m_loadingCanceled = false;
-
     }
 
     /**
@@ -680,7 +680,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 "org.knime.workbench.help.flow_editor_context");
 
         loadProperties();
-
+        ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart().getChildren().get(0))
+                .createToolTipHelper(getSite().getShell());
     }
 
     /**

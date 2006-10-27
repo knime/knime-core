@@ -34,11 +34,26 @@ import org.eclipse.draw2d.FreeformLayeredPane;
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowFigure extends FreeformLayeredPane {
+
+    private ProgressToolTipHelper m_progressToolTipHelper;
     /**
      * New workflow root figure.
      */
     public WorkflowFigure() {
         // not opaque, so that we can directly select on the "background" layer
         this.setOpaque(false);
+    
     }
+    
+    
+    public ProgressToolTipHelper getProgressToolTipHelper() {
+        return m_progressToolTipHelper;
+    }
+
+
+    public void setProgressToolTipHelper(ProgressToolTipHelper progressToolTipHelper) {
+        m_progressToolTipHelper = progressToolTipHelper;
+    }
+    
+    
 }
