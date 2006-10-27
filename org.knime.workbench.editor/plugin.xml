@@ -187,8 +187,8 @@
          <action
                class="org.knime.workbench.editor2.actions.delegates.ExecuteEditorAction"
                definitionId="knime.commands.execute"
-               disabledIcon="icons/execute_disabled.gif"
-               icon="icons/execute.gif"
+               disabledIcon="icons/execute_disabled.PNG"
+               icon="icons/execute.PNG"
                id="org.knime.workbench.editor.actions.execute"
                label="Execute"
                menubarPath="org.knime.workbench.editor.menu/group1"
@@ -198,8 +198,8 @@
          <action
                class="org.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
                definitionId="knime.commands.executeall"
-               disabledIcon="icons/executeAll_disabled.gif"
-               icon="icons/executeAll.gif"
+               disabledIcon="icons/executeAll_disabled.PNG"
+               icon="icons/executeAll.PNG"
                id="org.knime.workbench.editor.actions.executeall"
                label="Execute all"
                menubarPath="org.knime.workbench.editor.menu/group1"
