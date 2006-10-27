@@ -1,0 +1,368 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+
+  
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+
+  
+  <title>Structure of a NodeFactory.xml file</title>
+</head>
+
+
+<body>
+
+
+The XML file that must be provided with the node (or the NodeFactory).
+It descripes the node
+and its components as well as its ports - for the KNIME user.<br>
+
+
+<br>
+
+
+Here is a nonsense example, containing all possible sections. For the
+explanation of &nbsp;the sections (each marked with the
+corresponding number), please see below.<br>
+
+
+<br>
+
+
+<tt>&lt;?xml version="1.0" encoding="utf-8"?&gt;<br>
+
+
+&lt;!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN"
+"http://www.knime.org/Node.dtd"&gt;<br>
+
+
+&lt;knimeNode <span style="color: rgb(255, 0, 0); font-weight: bold;">(1)</span>icon="./myIcon.png"
+<span style="color: rgb(255, 0, 0); font-weight: bold;">(2)</span>type="NodeType"&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(255, 0, 0); font-weight: bold;">(3)</span>&lt;name&gt;MyNodeName&lt;/name&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp; <span style="font-weight: bold; color: rgb(255, 0, 0);">(4)</span>&lt;shortDescription&gt;Whatever
+myNode does in one sentence.&lt;/shortDescription&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp; <span style="font-weight: bold; color: rgb(255, 0, 0);">(5)</span>&lt;fullDescription&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="font-weight: bold; color: rgb(255, 0, 0);">(5.1)</span>&lt;intro&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;A
+description of the node's functionality and speciality.<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&lt;p&gt;You can create paragraphs and lists:<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&lt;ol&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;&lt;li&gt;Firstly&lt;/li&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&lt;li&gt;Secondly(Y
+axis)&lt;/li&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;&lt;li&gt;...&lt;/li&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&lt;/ol&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&lt;/p&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;For the
+full and exact specification of which tags are allowed in which<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+section, please refer to the DTD file (located in the
+org.knime.core.node<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+package or at the above URL.)&lt;/b&gt;&lt;/p&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp; &lt;/intro&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="font-weight: bold; color: rgb(255, 0, 0);">(5.2)</span>&lt;option
+name="Dialog option"&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If the node has a dialog, explain the options in the node's <br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+dialog here. Use names the user will be able to associate <br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+with the corresponding dialog option.<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;/option&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp; &lt;option name="Dialog
+option2"&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Add as
+many option sections as needed.<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;/option&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp; &lt;/fullDescription&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp; <span style="font-weight: bold; color: rgb(255, 0, 0);">(6)</span>&lt;ports&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;dataIn index="0" name="Left table"&gt;Descriptive text for
+the <br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+data coming through that port.&lt;/dataIn&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;dataIn index="1" name="Right table"&gt;This text will be
+displayed <br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+in the view.&lt;/dataIn&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;dataOut index="0" name="Joined table"&gt;While the 'name'
+is used <br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+in the menus.&lt;/dataOut&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;predParamIn index="0" name="Model"&gt;More about this
+port.&lt;/predParamIn&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;predParamOut index="0" name="Model"&gt;Description of the
+model <br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+coming through this port.&lt;/predParamOut&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp; &lt;/ports&gt;<br>
+
+
+&nbsp;&nbsp;&nbsp; <span style="font-weight: bold; color: rgb(255, 0, 0);">(7)</span>&lt;views&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&lt;view index="0" name="Award Winning View"&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;Verbosely descripe the view
+here.<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&lt;/view&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&lt;view index="1" name="Next View"&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;Add as many entries as you
+have views with that node.<br>
+
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&lt;/view&gt;<br>
+
+
+&nbsp;&nbsp; &nbsp;&lt;/views&gt;<br>
+
+
+&lt;/knimeNode&gt;<br>
+
+
+</tt>
+<br>
+
+
+If your node has no dialog, you probably won't have any
+<code>&lt;option&gt;&lt;/option&gt;</code>
+section. <br>
+
+
+If you have no view with your node, remove the
+<code>&lt;view&gt;&lt;/view&gt;</code>
+section.<br>
+
+
+Here is the description of the marked items above. If you copy&amp;paste the above, remove the red numbers from the text.<br>
+
+
+<ol>
+
+
+  <li>Specify your icon. If not set, the KNIME default icon will
+be used.</li>
+
+
+  <li>Specify the type. Legal types are: <code>Source</code>,
+    <code>Sink</code>, <code>Learner</code>, <code>Predictor</code>,
+    <code>Manipulator</code>, <code>Visualizer</code>,
+    <code>Meta</code>, or<code> Other</code></li>
+
+
+  <li>Provide a name in the <code>&lt;name&gt;</code>
+section. This
+name will
+be displayed in the node
+repository view, above the node, if it is dragged into workflow,
+and as the header in the node description view.</li>
+
+
+  <li>The <code>&lt;shortDescription&gt;</code>
+section should contain
+a one
+liner (like 80 to 100 chars)
+saying in short what the node does. It will be used in the node
+description view when&nbsp;multiple nodes are selected.</li>
+
+
+  <li>The <code>&lt;fulldescription&gt;</code>
+section contains an <code>&lt;intro&gt;</code>
+and&nbsp;optionally - possibly multiple - <code>&lt;option&gt;</code>
+sections. The options - if defined - will be listed in the node
+description view
+under "Dialog Options".</li>
+
+
+  
+  <dl>
+
+
+  
+  </dl>
+
+
+  
+  <ul>
+
+
+    <li>In
+the <code>&lt;intro&gt;</code> section you
+descripe the node's
+functionality. Explain when it does what. What it expects at its
+inports, which data will be delivered at its outports. You may also add
+references to external resources, like publications, algorithms, etc.</li>
+
+
+    <li>If the node has a dialog you should list all user
+adjustable settings in the list of options. For each option add an <code>&lt;option&gt;</code>
+section with a name (which will be the header for this item), descripe
+all possible settings and their consequences.</li>
+
+
+  
+  </ul>
+
+
+  <li>In the <code>&lt;ports&gt;</code>
+section, for each port of the
+node, add
+one of the following:<br>
+
+
+    
+    <div style="margin-left: 40px;"><code>&lt;dataIn
+index=""
+name=""&gt;description&lt;/dataIn&gt;</code>, for a
+data table
+input port,<br>
+
+
+    <code>&lt;dataOut index=""
+name=""&gt;description&lt;/dataOut&gt;</code>, for a
+data table
+output port,<br>
+
+
+    <code>&lt;predParamIn index="" name=""
+type=""&gt;description&lt;/predParamIn&gt;</code>, and<br>
+
+
+    <code>&lt;predParamOut index="" name=""
+type=""&gt;description&lt;/predParamOut&gt;</code>,
+for a content model input or output port.</div>
+
+
+The index&nbsp;
+must be the same index as used in the source code. The name provided
+will be
+displayed in the menus. The description (between the tags) shows up in
+the node description view. Model
+ports (for content/data models) have an optional '<code>type</code>'
+attribute. The GUI will allow only to connect ports with matching type
+atributes. If the type is not specified, the port connects to any type
+(but still
+only to model ports).</li>
+
+
+  <li>If your node comes with a, or multiple differnt views, add
+a <code>&lt;views&gt;</code> section. For each
+view, add a <code>&lt;view&gt;</code> tag, provide
+an <code>index</code> (the same as in the source code),
+and a <code>name</code>. The name will be shown in the
+menus, the descriptive text of the <code>view</code> tag, will be displayed in the node description view.</li>
+
+
+</ol>
+
+
+<br>
+
+
+</body>
+</html>
