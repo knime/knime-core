@@ -405,6 +405,10 @@
            category-path="/manipulation/column"
            factory-class="org.knime.base.node.preproc.normalize.NormalizeApplyNodeFactory"
            id="org.knime.base.node.preproc.normalize.NormalizeApplyNodeFactory"/>
+     <node
+           category-path="/manipulation/column"
+           factory-class="org.knime.base.node.preproc.colappender.ColAppenderNodeFactory"
+           id="org.knime.base.node.preproc.colappender.ColAppenderNodeFactory"/>
    </extension>
    
    
