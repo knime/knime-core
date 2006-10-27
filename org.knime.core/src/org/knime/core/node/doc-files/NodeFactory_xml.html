@@ -26,7 +26,7 @@
 
 This is the XML file that must be provided with the node (or the NodeFactory).
 It describes the node
-and its components as well as its ports - for the KNIME user.<br>
+and its components as well as its ports and views - for the KNIME user.<br>
 
 
 
@@ -352,7 +352,7 @@ section. <br>
 
 
 If you have no view for&nbsp;your node, remove the
-<code>&lt;view&gt;&lt;/view&gt;</code>
+<code>&lt;views&gt;&lt;/views&gt;</code>
 section.<br>
 
 
@@ -505,7 +505,7 @@ displayed in the menus. The description (between the tags) is shown in
 the node description view. Model
 ports (for content/data models) have an optional '<code>type</code>'
 attribute. The GUI will allow only to connect ports with matching type
-atributes. If the type is not specified, the port connects to any type
+attributes. If the type is not specified, the port connects to any type
 (but still
 only to model ports).</li>
 
