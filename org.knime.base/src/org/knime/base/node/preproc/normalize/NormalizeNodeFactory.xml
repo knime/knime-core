@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./normalize.png" type="Manipulator">         
-    <name>Normalizer</name>   
-
+<knimeNode icon="./normalize.png" type="Manipulator">
+    <name>Normalizer</name>
     <shortDescription>Normalizes the attributes of a table.</shortDescription>
     <fullDescription>
         <intro>
@@ -25,8 +24,8 @@
 			equal to 1.
 			All values in the column are then divided by 10 to the power of j. 
 		</option>
-	</fullDescription>                  
-    <ports>                 
+	</fullDescription>
+    <ports>
         <dataIn index="0" name="Table to normalize">Table requiring normalization of some or all columns.</dataIn>
         <dataOut index="0" name="Normalized table">Table with normalized columns.</dataOut>
         <predParamOut index="0" name="Normalize Model">Model containing normalization parameters, 
