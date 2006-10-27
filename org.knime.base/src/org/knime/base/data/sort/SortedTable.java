@@ -35,6 +35,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -74,6 +75,7 @@ public class SortedTable implements DataTable {
      */
     private boolean[] m_sortAscending;
 
+    
     /**
      * Creates a sorted table from the given table and the sorting parameters.
      * The table is sorted in the constructor.
@@ -95,6 +97,34 @@ public class SortedTable implements DataTable {
     public SortedTable(final BufferedDataTable dataTable,
             final List<String> inclList, final boolean[] sortAscending,
             final ExecutionContext exec) throws Exception {
+        this(dataTable, inclList, sortAscending, false, exec);
+    }
+    
+    /**
+     * Creates a sorted table from the given table and the sorting parameters.
+     * The table is sorted in the constructor.
+     * 
+     * @param dataTable the buffered data table to sort
+     * @param inclList the list with the columns to sort; the first column name
+     *            represents the first sort criteria, the second the second
+     *            criteria and so on.
+     * 
+     * @param sortAscending the sort order; each field corresponds to the column
+     *            in the list of included columns. true: ascending false:
+     *            descending
+     * @param sortInMemory <code>true</code> if the table should be sorted in
+     * memory, <code>false</code> if it should be sorted in disk. Sorting in
+     * memory is much faster but may fail if the data table is too big. 
+     * 
+     * @param exec the execution context used to create the the buffered data
+     *            table and indicate the progress
+     * 
+     * @throws Exception if the parameters are not specified correctly
+     */
+    public SortedTable(final BufferedDataTable dataTable,
+            final List<String> inclList, final boolean[] sortAscending,
+            final boolean sortInMemory,
+            final ExecutionContext exec) throws Exception {
 
         m_spec = dataTable.getDataTableSpec();
         // get the column indices of the columns that will be sorted
@@ -111,7 +141,6 @@ public class SortedTable implements DataTable {
             throw new Exception("Sortorder array is " + "not set in the model");
         }
 
-        Vector<DataContainer> containerVector = new Vector<DataContainer>();
         int pos = -1;
         for (int i = 0; i < inclList.size(); i++) {
             String dc = inclList.get(i);
@@ -122,6 +151,58 @@ public class SortedTable implements DataTable {
             }
             m_indices[i] = pos;
         }
+        
+        if (sortInMemory) {
+            sortInMemory(dataTable, inclList, sortAscending, exec);
+        } else {
+            sortOnDisk(dataTable, inclList, sortAscending, exec);
+        }
+    }
+    
+    
+    private void sortInMemory(final BufferedDataTable dataTable,
+            final List<String> inclList, final boolean[] sortAscending,
+            final ExecutionContext exec) throws CanceledExecutionException {
+        DataRow[] rows = new DataRow[dataTable.getRowCount()];
+        
+        final double max = 2 * dataTable.getRowCount();
+        int progress = 0;
+        exec.setMessage("Reading data");
+        int i = 0;
+        for (DataRow r : dataTable) {
+            // exec.checkCanceled();
+            if (i % 1000 == 0) {
+                exec.checkCanceled();
+                exec.setProgress(progress / max);
+            }
+            rows[i++] = r;
+            progress++;
+        }
+        
+        exec.setMessage("Sorting");
+        Arrays.sort(rows, new RowComparator());
+        
+        exec.setMessage("Creating sorted table");
+        BufferedDataContainer dc = exec.createDataContainer(
+                dataTable.getDataTableSpec());
+        for (i = 0; i < rows.length; i++) {
+            if (i % 1000 == 0) {
+                exec.checkCanceled();
+                exec.setProgress(progress / max);
+            }
+            dc.addRowToTable(rows[i]);
+            progress++;
+        }
+        dc.close();
+        
+        m_sortedTable = dc.getTable();
+    }
+
+
+    private void sortOnDisk(final BufferedDataTable dataTable,
+            final List<String> inclList, final boolean[] sortAscending,
+            final ExecutionContext exec) throws CanceledExecutionException {
+        Vector<DataContainer> containerVector = new Vector<DataContainer>();
         // Initialize RowIterator
         RowIterator rowIt = dataTable.iterator();
         int nrRows = dataTable.getRowCount();
