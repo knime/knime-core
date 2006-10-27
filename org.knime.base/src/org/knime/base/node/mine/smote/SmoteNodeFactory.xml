@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./smote.png" type="Manipulator">         
-    <name>SMOTE</name>         
-    <shortDescription>Oversamples data using the SMOTE algorithm by Chawla et. al.</shortDescription>
+<knimeNode icon="./smote.png" type="Manipulator">
+    <name>SMOTE</name>
+    <shortDescription>SMOTE algorithm by Chawla et. al.</shortDescription>
     <fullDescription>
         <intro>
 			Oversamples data using the 
@@ -37,7 +37,7 @@
 			of rows for each of the possible classes. 
 		</option>
 	</fullDescription>
-    <ports>                 
+    <ports>
         <dataIn index="0" name="Input data">Table containing labeled data for oversampling</dataIn>
         <dataOut index="0" name="Oversampled data">Oversampled data (input table with appended rows).</dataOut>
 	</ports>
