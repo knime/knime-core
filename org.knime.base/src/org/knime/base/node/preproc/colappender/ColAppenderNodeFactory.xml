@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd" >
+<knimeNode type="Manipulator">
+    <name>Column Appender</name>
+    <shortDescription>Appends column from one table to another based on a common key</shortDescription>
+    <fullDescription>
+        <intro>
+        This node adds the columns from the second table to the first table. The rows are mapped
+        bases on the values of cells in two columns that the user can choose. The first table may contain
+        the same value in several rows of the join column, whereas the second table must not. As a side effect
+        the output table is sorted on the join column.
+        </intro>
+        <option name="Column from left table">The column from the left table which should be used for joining rows</option>
+        <option name="Column from right table">The column from the right table which should be used for joining rows</option>
+        <option name="Duplicate handling">Determines the handling of column with the same name (except the join column) in both columns</option>
+        <option name="Row name suffix">The suffix appended to duplicate columns from the right table</option>
+    </fullDescription>
+    <ports>
+        <dataIn index="0" name="Base table">Base table</dataIn>
+        <dataIn index="1" name="Additional table">Table with additional columns</dataIn>
+        <dataOut index="0" name="Appended table">Base table with appended columns</dataOut>
+    </ports>
+</knimeNode>
