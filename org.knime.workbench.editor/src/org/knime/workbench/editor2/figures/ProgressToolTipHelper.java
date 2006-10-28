@@ -25,11 +25,13 @@ import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PopUpHelper;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Control;
+import org.knime.workbench.editor2.WorkflowEditor;
 
 /**
  * Implements a tool tip helper that is able to update a tooltip dynamically.
@@ -38,15 +40,19 @@ import org.eclipse.swt.widgets.Control;
  */
 public class ProgressToolTipHelper extends PopUpHelper {
 
+    private ZoomManager m_zoomManager;
+
     /**
      * Constructs a ProgressToolTipHelper to be associated with Control <i>c</i>.
      * 
      * @param c the control
      */
-    public ProgressToolTipHelper(final Control c) {
+    public ProgressToolTipHelper(final Control c, ZoomManager zoomManager) {
         super(c, SWT.TOOL | SWT.ON_TOP);
         getShell().setBackground(ColorConstants.tooltipBackground);
         getShell().setForeground(ColorConstants.tooltipForeground);
+
+        m_zoomManager = zoomManager;
     }
 
     /**
@@ -95,8 +101,13 @@ public class ProgressToolTipHelper extends PopUpHelper {
         if (tip != null) {
             getLightweightSystem().setContents(tip);
 
+            org.eclipse.draw2d.geometry.Point position =
+                    new org.eclipse.draw2d.geometry.Point(eventX, eventY);
+
+            WorkflowEditor.transposeZoom(m_zoomManager, position);
+
             Point absolute;
-            absolute = control.toDisplay(new Point(eventX, eventY));
+            absolute = control.toDisplay(new Point(position.x, position.y));
             Point displayPoint = computeWindowLocation(absolute.x, absolute.y);
 
             Dimension shellSize =

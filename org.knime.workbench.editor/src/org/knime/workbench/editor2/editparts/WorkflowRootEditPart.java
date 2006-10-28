@@ -36,6 +36,7 @@ import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.SnapToGuides;
 import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
@@ -238,7 +239,9 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
 
     public void createToolTipHelper(final Shell underlyingShell) {
         // create a tooltip helper for all child figures
-        m_toolTipHelper = new ProgressToolTipHelper(getViewer().getControl());
+        ZoomManager zoomManager = (ZoomManager)(getRoot().getViewer()
+                .getProperty(ZoomManager.class.toString()));
+        m_toolTipHelper = new ProgressToolTipHelper(getViewer().getControl(), zoomManager);
         ((WorkflowFigure)getFigure()).setProgressToolTipHelper(m_toolTipHelper);
     }
 }

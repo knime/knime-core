@@ -1726,6 +1726,23 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void removeEditor(final IEditorPart editor) {
         m_childEditors.remove(editor);
     }
+    
+    /**
+     * Transposes a point according to the given zoom manager.
+     * 
+     * @param zoomManager the zoom manager providing the zoom levels
+     * @param pointToAdapt the point to adapt
+     */
+    public static void transposeZoom(final ZoomManager zoomManager,
+            final Point pointToAdapt) {
+
+        
+        double zoomLevel = zoomManager.getZoom();
+
+        // adapt the location accordint to the zoom level
+        pointToAdapt.x = (int)(pointToAdapt.x * zoomLevel);
+        pointToAdapt.y = (int)(pointToAdapt.y * zoomLevel);
+    }
 
     /**
      * Adapts a point according to the given zoom manager.
