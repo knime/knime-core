@@ -557,11 +557,22 @@ public class ProgressFigure extends RectangleFigure implements
 
     }
 
+    /**
+     * Implements a thread that updates all figures passed to it. The thread for
+     * updating the unknown progress figures (cycling figures) is intended to
+     * run just one time. The advantage is that the expensive rendering on the
+     * display thread is only invoked once for all figures to render.
+     * 
+     * @author Christoph Sieb, University of Konstanz
+     */
     private static class UnknownProgressTimer extends Thread {
 
         private Vector<ProgressFigure> m_figuresToPaint =
                 new Vector<ProgressFigure>();
 
+        /**
+         * Creats an unknown progress timer for cycling progress bar rendering.
+         */
         public UnknownProgressTimer() {
 
             super("Unknown Progress Timer");
@@ -582,6 +593,8 @@ public class ProgressFigure extends RectangleFigure implements
                         }
                     }
                 }
+
+                // the figures are rendered all 500 ms
                 try {
                     Thread.sleep(500);
                 } catch (Exception e) {
@@ -593,8 +606,10 @@ public class ProgressFigure extends RectangleFigure implements
                         m_currentDisplay.syncExec(new Runnable() {
                             public void run() {
 
-                                for (ProgressFigure figure : m_figuresToPaint) {
-                                    figure.repaint();
+                                synchronized (m_figuresToPaint) {
+                                    for (ProgressFigure figure : m_figuresToPaint) {
+                                        figure.repaint();
+                                    }
                                 }
                             }
                         });
@@ -603,17 +618,35 @@ public class ProgressFigure extends RectangleFigure implements
             }
         }
 
+        /**
+         * Add a progress figure that should be rendered regularly. (Intended
+         * for cycling progress bars)
+         * 
+         * @param figure The figure to render regularly
+         */
         public void addFigure(final ProgressFigure figure) {
 
-            m_figuresToPaint.add(figure);
+            synchronized (m_figuresToPaint) {
+                m_figuresToPaint.add(figure);
+            }
+
             synchronized (this) {
                 this.notify();
             }
 
         }
 
+        /**
+         * Remove a figure that is no longer intended to be rendered regulary.
+         * 
+         * @param figure the figure to remove
+         */
         public void removeFigure(final ProgressFigure figure) {
-            m_figuresToPaint.remove(figure);
+
+            synchronized (m_figuresToPaint) {
+                m_figuresToPaint.remove(figure);
+            }
+
         }
     }
 
