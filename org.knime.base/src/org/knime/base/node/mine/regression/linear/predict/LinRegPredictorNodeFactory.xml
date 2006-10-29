@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./linear_regression_predict.png" type="Predictor">
-    <name>Linear Regression (Predictor)</name>         
+    <name>Linear Regression (Predictor)</name>
     <shortDescription>Predicts the response using a linear regression model.</shortDescription>
     <fullDescription>
         <intro>
@@ -13,9 +13,9 @@
 			doesn't have a dialog.
 		</intro>
 	</fullDescription>
-    <ports>                 
-        <predParamIn index="0" name="Model from Learner">Model from the linear regression learner node.</predParamIn>
+    <ports>
         <dataIn index="0" name="Data for prediction">Table for prediction.</dataIn>
         <dataOut index="0" name="Predicted data">Table from input with an additional prediction column.</dataOut>
+        <predParamIn index="0" name="Model from Learner">Model from the linear regression learner node.</predParamIn>
 	</ports>
 </knimeNode>
