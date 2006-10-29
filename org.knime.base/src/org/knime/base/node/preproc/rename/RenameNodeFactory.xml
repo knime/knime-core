@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./rename.png" type="Manipulator">         
-    <name>Rename</name>         
+<knimeNode icon="./rename.png" type="Manipulator">
+    <name>Rename</name>
     <shortDescription>Enables you to rename column names or to change their types.</shortDescription>
     <fullDescription>
         <intro>
@@ -12,7 +12,7 @@
 			a column can be either safely cast or transformed to.
 		</intro>
 	</fullDescription>
-    <ports>                 
+    <ports>
         <dataIn index="0" name="Any input table">Table whose columns shall be renamed/retyped.</dataIn>
         <dataOut index="0" name="Renamed/Retyped table">Table from input but with customized column specifications.</dataOut>
 	</ports>
