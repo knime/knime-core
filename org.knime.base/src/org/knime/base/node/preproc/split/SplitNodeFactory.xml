@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./splitter.png" type="Manipulator">         
-    <name>Splitter</name>    
+<knimeNode icon="./splitter.png" type="Manipulator">
+    <name>Splitter</name>
     <shortDescription>Splits the columns of the input table into two output tables.</shortDescription>
     <fullDescription>
         <intro>
@@ -19,7 +19,7 @@
 			output port).
 		</option>
 	</fullDescription>
-    <ports>                 
+    <ports>
         <dataIn index="0" name="Table to split">Table to split.</dataIn>
         <dataOut index="0" name="Splitted table, 1st partition">Input table with the columns from the dialog's left list.</dataOut>
         <dataOut index="1" name="Splitted table, 2nd partition">Input table with the columns from the dialog's right list.</dataOut>
