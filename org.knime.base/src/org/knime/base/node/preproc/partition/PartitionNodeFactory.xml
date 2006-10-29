@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./partition.png" type="Manipulator">         
-    <name>Partitioning</name>         
+<knimeNode icon="./partition.png" type="Manipulator">
+    <name>Partitioning</name>
     <shortDescription>Splits table into two partitions.</shortDescription>
     <fullDescription>
         <intro>
@@ -28,8 +28,8 @@
 			If you do not specify a random seed, the partitioning will differ
 	        when the node is re-executed.
 		</option>
-	</fullDescription>                  
-    <ports>                 
+	</fullDescription>
+    <ports>
         <dataIn index="0" name="Table to partition">Table to partition.</dataIn>
         <dataOut index="0" name="First partition (as defined in dialog)">
 	        First partition (as defined in dialog).</dataOut>
