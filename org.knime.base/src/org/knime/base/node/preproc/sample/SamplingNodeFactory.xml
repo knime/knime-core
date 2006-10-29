@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./sampling.png" type="Manipulator">         
-    <name>Row Sampling</name>         
+<knimeNode icon="./sampling.png" type="Manipulator">
+    <name>Row Sampling</name>
     <shortDescription>Extracts a sample (a bunch of rows) from the input data.</shortDescription>
     <fullDescription>
         <intro>
@@ -28,7 +28,7 @@
 			node is re-executed.
 		</option>
 	</fullDescription>
-    <ports>                 
+    <ports>
         <dataIn index="0" name="Table to sample from">Table to sample from.</dataIn>
         <dataOut index="0" name="The sampled table">The sampled table.</dataOut>
 	</ports>
