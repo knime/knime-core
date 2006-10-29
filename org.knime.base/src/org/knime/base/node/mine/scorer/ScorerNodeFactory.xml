@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Other" icon="./scorer.png">         
-    <name>Scorer</name>         
+<knimeNode type="Other" icon="./scorer.png">
+    <name>Scorer</name>
     <shortDescription>Compares two columns by their attribute value pairs.</shortDescription>
     <fullDescription>
         <intro>
@@ -14,9 +14,9 @@
 			matrix.
 		</intro>
 	</fullDescription>
-    <ports>                 
-        <dataIn index="0">Table containing at least two columns to compare.</dataIn>
-        <dataOut index="0">The confusion matrix.</dataOut>
+    <ports>
+        <dataIn index="0" name="Table to score">Table containing at least two columns to compare.</dataIn>
+        <dataOut index="0" name="Confusion matrix">The confusion matrix.</dataOut>
 	</ports>
 	<views>
 		<view index="0" name="Confusion Matrix View">
