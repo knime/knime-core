@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./append.png" type="Manipulator">         
-    <name>Concatenate</name>  
-    <shortDescription>Concatenates two tables row-wise.</shortDescription>         
-            
+<knimeNode icon="./append.png" type="Manipulator">
+    <name>Concatenate</name>
+    <shortDescription>Concatenates two tables row-wise.</shortDescription>
     <fullDescription>
         <intro>
             This node concatenates two tables. The table at inport 0 is given as the first
@@ -19,7 +18,6 @@
 	        second table are not appended to the output table. </option>
         <option name="Append suffix"> The output table will contain all rows, but
             duplicate row identifiers are labeled with a suffix. </option>
-            
         <option name="Use intersection of columns">
         	Use ony the columns that appear in both input tables. Any other
         	column is ignored and won't appear in the output table.
@@ -28,8 +26,8 @@
         	Use all columns available in the input tables. Fill rows with 
         	missing values if they miss cells for some columns.
         </option>
-		</fullDescription>                  
-    <ports>                 
+		</fullDescription>
+    <ports>
         <dataIn index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</dataIn>
         <dataIn index="1" name="Second table to concatenate">Table contributing the rows of the second part of the output table.</dataIn>
         <dataOut index="0" name="Concatenated table">Table with rows from both tables.</dataOut>
