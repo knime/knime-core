@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Other" icon="./entropyscore.png">         
-    <name>Entropy Scorer</name>         
+<knimeNode type="Other" icon="./entropyscore.png">
+    <name>Entropy Scorer</name>
     <shortDescription>Scorer for clustering results given a reference clustering.</shortDescription>
     <fullDescription>
         <intro>
@@ -16,7 +16,7 @@
 		      Fuzzy Clustering in Parallel Universes</a>, section 6: "Experimental results").
 		</intro>
 	</fullDescription>
-    <ports>                 
+    <ports>
         <dataIn index="0" name="Reference clustering">Table containing reference clustering.</dataIn>
         <dataIn index="1" name="Clustering to score">Table containing clustering (to score).</dataIn>
 	</ports>
