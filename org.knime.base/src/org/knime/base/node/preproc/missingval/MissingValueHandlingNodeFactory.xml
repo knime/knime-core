@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./missing.png" type="Manipulator">         
-    <name>Missing Value</name>         
+<knimeNode icon="./missing.png" type="Manipulator">
+    <name>Missing Value</name>
     <shortDescription>Filters or replaces missing values in a table.</shortDescription>
     <fullDescription>
         <intro>
@@ -37,8 +37,8 @@
 			Replaces the missing values with a static value set by the user. 
 			This option is available for Double, Integer, and String columns.
 	    </option>
-	</fullDescription>                  
-    <ports>                 
+	</fullDescription>
+    <ports>
         <dataIn index="0" name="Table with missing values">Table potentially containing missing values.</dataIn>
         <dataOut index="0" name="Corrected table">Table where missing values have been handled.</dataOut>
 	</ports>
