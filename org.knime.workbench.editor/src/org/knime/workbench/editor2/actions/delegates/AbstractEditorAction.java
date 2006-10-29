@@ -26,6 +26,7 @@ package org.knime.workbench.editor2.actions.delegates;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
@@ -100,18 +101,36 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         }
 
     }
+    
+    private final SelectionRunnable m_selectionRunnable =
+        new SelectionRunnable();
+
+    private class SelectionRunnable implements Runnable {
+        /** Flags to memorize if this runnable has already been queued. I 
+         * (Bernd) ran into serious problems when using meta nodes that 
+         * execute/reset nodes quickly (and frequently). There where 
+         * many (> 500000) runnables in the async-queue. */
+        private boolean m_isQueued;
+        public void run() {
+            m_isQueued = false;
+            ISelectionProvider p = m_editor.getSite().getSelectionProvider();
+            p.setSelection(p.getSelection());
+        }
+        
+        private void asyncExec() {
+            if (!m_isQueued) {
+                m_isQueued = true;
+                Display.getDefault().asyncExec(this);
+            }
+        }
+    }
 
     /**
      * @see org.knime.core.node.workflow.WorkflowListener
      *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
     public void workflowChanged(final WorkflowEvent event) {
-        Display.getDefault().asyncExec(new Runnable() {
-            public void run() {
-                m_editor.getSite().getSelectionProvider().setSelection(
-                    m_editor.getSite().getSelectionProvider().getSelection());
-            }
-        });
+        m_selectionRunnable.asyncExec();
     }
 
     /**
