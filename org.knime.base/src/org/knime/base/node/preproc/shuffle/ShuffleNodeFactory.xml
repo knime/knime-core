@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./shuffle.png" type="Manipulator">         
-    <name>Shuffle</name>      
+<knimeNode icon="./shuffle.png" type="Manipulator">
+    <name>Shuffle</name>
     <shortDescription>Shuffles the rows of the input tables.</shortDescription>
     <fullDescription>
         <intro>
@@ -9,7 +9,7 @@
 			It shuffles the rows of the input tables such that they are in random order.
 		</intro>
 	</fullDescription>
-    <ports>                 
+    <ports>
         <dataIn index="0" name="To be shuffled">
             Input table with the rows that should be shuffled.
         </dataIn>
