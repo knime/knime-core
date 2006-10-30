@@ -48,7 +48,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /** The cancel requested flag. */
     private boolean m_cancelExecute;
 
-    /** The progress of the excution between 0 and 1, or null if not available. 
+    /** Progress of the execution between 0 and 1, or null if not available. 
      */
     private Double m_progress;
 
