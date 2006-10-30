@@ -224,10 +224,11 @@ public class ColAppenderNodeModel extends NodeModel {
         
         int count = 0;
         final double max = leftTable.getRowCount();
+        List<DataCell> duplicateCells = new ArrayList<DataCell>();
         while (true) {
-            if (count % 1000 == 0) {
+            if (count++ % 1000 == 0) {
                 exec.checkCanceled();
-                exec.setProgress(count++ / max);
+                exec.setProgress(count / max);
             }
             
             if (leftCell.equals(rightCell)) {
@@ -260,9 +261,7 @@ public class ColAppenderNodeModel extends NodeModel {
 
                     if ((lastRightCell != null)
                             && (lastRightCell.equals(rightCell))) {
-                        throw new IllegalStateException(
-                                "Right table must not contain "
-                                + "duplicate values in the join column");
+                        duplicateCells.add(lastRightCell);
                     }
                     lastRightCell = rightCell;
                 } else {
@@ -272,6 +271,13 @@ public class ColAppenderNodeModel extends NodeModel {
         }
         
         dc.close();
+        
+        if (duplicateCells.size() > 0) {
+            setWarningMessage("Right table contained " + duplicateCells.size() 
+                    + " duplicate values in join column: "
+                    + (duplicateCells.size() <= 15 ? duplicateCells
+                            : duplicateCells.subList(0, 15) + "..."));
+        }
         return new BufferedDataTable[] {dc.getTable()};
     }
 
