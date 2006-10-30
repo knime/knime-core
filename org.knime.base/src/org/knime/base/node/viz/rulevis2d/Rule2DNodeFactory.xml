@@ -20,16 +20,16 @@
 		the same as the support.
 		</intro>
 	</fullDescription>
+		
+	<ports>
+		<dataIn index="0" name="Data point input">Input table with the data points explained by the rules</dataIn>
+		<dataIn index="1" name="Fuzzy Rule input">Input table with the rules explaining the data points. They must be provided
+        as a FuzzyIntervalValue per dimension.</dataIn>
+	</ports>	
 	
 	<views>
 		<view index="0" name="2D Rule View">
 			Displays rules and data points in 2D.
 		</view>
 	</views>
-	
-	<ports>
-		<dataIn index="0" name="Data point input">Input table with the data points explained by the rules</dataIn>
-		<dataIn index="1" name="Fuzzy Rule input">Input table with the rules explaining the data points. They must be provided
-        as a FuzzyIntervalValue per dimension.</dataIn>
-	</ports>	
 </knimeNode>

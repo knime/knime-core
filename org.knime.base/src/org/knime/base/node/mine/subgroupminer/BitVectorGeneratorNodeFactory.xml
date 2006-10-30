@@ -30,7 +30,7 @@
 			If the "parse from string column" is checked, select the column
 			containing the item ids.
 		</option>
-		<option key="Threshold above bits are set">
+		<option name="Threshold above bits are set">
 			If the "parse from string column" is unchecked, definition of the threshold
 			above the values is considered to be set bits. 
 			The threshold is inclusive.

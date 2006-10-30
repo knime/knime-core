@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./kmeans.png" type="Learner">         
-    <name>K-Means</name>      
+<knimeNode icon="./kmeans.png" type="Learner">
+    <name>K-Means</name>
     <shortDescription>Creates a crisp center based clustering.</shortDescription>
     <fullDescription>
         <intro>
@@ -19,13 +19,15 @@
 			independant of the accuracy improvement of the cluster centers.
 		</option>
 	</fullDescription>
-    <ports>                 
-        <dataIn index="0" name="Clustering input">Input to clustering. 
-            All numerical values and only these are considered for clustering.</dataIn>
+	
+    <ports>
+        <dataIn index="0" name="Clustering input">Input to clustering. All 
+        numerical values and only these are considered for clustering.</dataIn>
         <dataOut index="0" name="Labeled input">The input data labeled with the 
         cluster they are contained in.</dataOut>
         <predParamOut index="0" name="Prototypes">The prototypes of the clustering.</predParamOut>
 	</ports>
+	
 	<views>
 		<view index="0" name="Cluster View">
 			Displays the cluster prototypes in a tree-like structure, with each
