@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="./transpose.png">         
-    <name>Transpose</name>         
+<knimeNode type="Manipulator" icon="./transpose.png">
+    <name>Transpose</name>
     <shortDescription>Transposes a table by swapping rows and columns.</shortDescription>
     <fullDescription>
         <intro>
@@ -11,7 +11,7 @@
 		    base type and applies to all cells in one row.
 		</intro>
 	</fullDescription>
-    <ports>                 
+    <ports>
         <dataIn index="0" name="Table">Input data to transpose</dataIn>
         <dataOut index="0" name="Transposed Table">Table transposed by swapping rows and columns</dataOut>
 	</ports>

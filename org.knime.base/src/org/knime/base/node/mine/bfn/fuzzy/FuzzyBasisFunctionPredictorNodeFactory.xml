@@ -25,10 +25,10 @@
 	    rules.
     </option>
 	</fullDescription>
-	
+
 	<ports>
 		<dataIn index="0" name="Test Data">Test data must have the same column names and types as the fuzzy model.</dataIn>
-		<predParamIn index="0" name="Fuzzy Rule Model">Fuzzy rule model used to classify test data.</predParamIn>
+		<predParamIn index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">Fuzzy rule model used to classify test data.</predParamIn>
 		<dataOut index="0" name="Classified Test Data">Test data with one additional column.</dataOut>
-	</ports>	
+	</ports>
 </knimeNode>

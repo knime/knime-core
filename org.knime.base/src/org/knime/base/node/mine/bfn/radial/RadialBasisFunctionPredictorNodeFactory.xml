@@ -28,7 +28,7 @@
 	
 	<ports>
 		<dataIn index="0" name="Test Data">Test data must have same column names and types as the PNN model.</dataIn>
-		<predParamIn index="0" name="PNN Model">PNN model used to classify test data.</predParamIn>
+		<predParamIn index="0" name="PNN Model" type="PNNModel">PNN model used to classify test data.</predParamIn>
 		<dataOut index="0" name="Classified Test Data">Test data with one additional column.</dataOut>
 	</ports>	
 </knimeNode>

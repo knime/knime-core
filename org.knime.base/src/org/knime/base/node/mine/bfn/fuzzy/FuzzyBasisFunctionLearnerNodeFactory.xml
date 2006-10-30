@@ -48,7 +48,7 @@
 	<ports>
 		<dataIn index="0" name="Training Data">Data used for training. Should contain numeric data, as well as one target attribute for classification.</dataIn>
 		<dataOut index="0" name="Fuzzy Rule Table">Table with generated fuzzy rules, each dimension as fuzzy interval.</dataOut>
-		<predParamOut index="0" name="Fuzzy Rule Model">Generated fuzzy rule model can be used for prediction.</predParamOut>
+		<predParamOut index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">Generated fuzzy rule model can be used for prediction.</predParamOut>
 	</ports>	
 	<views>
 		<view index="0" name="Fuzzy Rule Model View">

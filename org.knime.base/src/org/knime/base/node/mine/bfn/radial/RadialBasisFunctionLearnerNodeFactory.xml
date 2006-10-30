@@ -54,7 +54,7 @@
 		<dataIn index="0" name="Training Data">Data used for training. Should contain numeric data, 
 		as well as one target attribute for classification.</dataIn>
 		<dataOut index="0" name="PNN Rule Table">Table with generated center vectors and a classification attribute.</dataOut>
-		<predParamOut index="0" name="PNN Rule Model">Generated PNN model can be used for prediction.</predParamOut>
+		<predParamOut index="0" name="PNN Rule Model" type="PNNModel">Generated PNN model can be used for prediction.</predParamOut>
 	</ports>	
 </knimeNode>
 
