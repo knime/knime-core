@@ -52,11 +52,10 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final long serialVersionUID = 7881989778083295425L;
 
     /** Defines the basic stroke which is used for the border of each bar. */
-    private static final BasicStroke BAR_OUTLINE_BASIC_STROKE = new BasicStroke(
-            2f);
+    private static final BasicStroke BAR_OUTLINE_BASIC_STROKE = 
+        new BasicStroke(2f);
 
-    /**
-     * Defines the color of the outline rectangle with a positive aggregation
+    /**Defines the color of the outline rectangle with a positive aggregation
      * value.
      */
     private static final Color BAR_OUTLINE_BASIC_COLOR = Color.GRAY;
@@ -65,22 +64,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final BasicStroke BAR_OUTLINE_SELECTED_STROKE = 
         new BasicStroke(4f);
     
-    /**
-     * Defines the color of the outline rectangle for selected bars.
-     */
+    /**Defines the color of the outline rectangle for selected bars.*/
     private static final Color BAR_OUTLINE_SELECTED_COLOR = Color.BLACK;
-    
-    /**
-     * Defines the stroke which is used for the border of bars with a negative
-     * aggregation value.
-    private static final BasicStroke BAR_OUTLINE_NEGATIVE_STROKE = 
-        new BasicStroke(6f);
 
-    /**
-     * Defines the color of the outline rectangle with a negative aggregation
-     * value.
-    private static final Color BAR_OUTLINE_NEGATIVE_COLOR = Color.RED;
-*/
     /** Defines the stroke of the rectangle which surrounds the bar label. */
     private static final BasicStroke LABEL_RECT_STROKE = new BasicStroke(1f);
 
@@ -97,7 +83,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /** Defines the stroke of the base line. */
     private static final BasicStroke BASE_LINE_STROKE = new BasicStroke(2f);
     
-    /** Defines the font of the info message which is displayed. */
+    /** Defines the font of the information message which is displayed. */
     private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
     /**
