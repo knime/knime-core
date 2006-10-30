@@ -198,6 +198,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             return;
         }
         final Graphics2D g2 = (Graphics2D)g;
+        //check if we have to display an information message
         if (m_infoMsg != null) {
             g2.setFont(INFO_MSG_FONT);
             final FontMetrics metrics = g2.getFontMetrics();
@@ -224,7 +225,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             final int screenWidth  = (int) getBounds().getWidth();
             g2.drawLine(0, yOffset, screenWidth, yOffset);
         }
-        // loop over all bars and draw them
+// loop over all bars and draw them
         for (BarVisModel bar : m_bars.values()) {
             BasicStroke rectStroke = BAR_OUTLINE_BASIC_STROKE;
             Color rectColor = BAR_OUTLINE_BASIC_COLOR;
@@ -232,13 +233,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 rectStroke = BAR_OUTLINE_SELECTED_STROKE;
                 rectColor = BAR_OUTLINE_SELECTED_COLOR;
             }
-            /*
-            // check for negative values
-            if (bar.getAggregationValue() < 0) {
-                rectStroke = BAR_OUTLINE_NEGATIVE_STROKE;
-                rectColor = BAR_OUTLINE_NEGATIVE_COLOR;
-            }*/
-            // I have to remove the stroke width from the bar dimensions.
+           
             final Rectangle barRect = bar.getRectangle();
             int noOfRows = bar.getNumberOfRows();
             double heightPerRow = 0;
@@ -251,7 +246,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             g2.draw(barRect);
             
             //set the start point for the y direction of the current bar
-            int startY = (int)(barRect.getY()); // + (rectStroke.getLineWidth()
+            int startY = (int)(barRect.getY());
             // Loop through all available colors of this bar to display them
             // inside the drawing rectangle
             for (ColorAttr colorAttr : bar.getSortedColors()) {
@@ -280,7 +275,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 if (noOfNotHiLite > 0) {
                     final Rectangle colorRect = calculateFillingRect(
                             heightPerRow, noOfNotHiLite, barRect, startY);
-                    // draw the highlight rows in a rectangle
                     // draw the unhighlight rows in a rectangle
                     g2.setPaint(colorAttr.getColor(bar.isSelected(), false));
                     g2.fill(colorRect);
@@ -334,7 +328,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 g2.drawString(label, textX, textY);
                 // set the original transformation
                 g2.setTransform(origTransform);
-            }
+            } //end of is a bar is selected
         } // end of the bar loop
         return;
     }
