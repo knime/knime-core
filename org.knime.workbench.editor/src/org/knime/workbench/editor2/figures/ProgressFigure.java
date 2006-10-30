@@ -420,10 +420,13 @@ public class ProgressFigure extends RectangleFigure implements
                 if (m_currentDisplay != null) {
                     m_currentDisplay.syncExec(new Runnable() {
                         public void run() {
-                            getToolTipHelper().displayToolTipNear(
-                                    ProgressFigure.this,
-                                    new Label(m_currentProgressMessage),
-                                    m_mouseEvent.x, m_mouseEvent.y);
+
+                            if (m_mouseEvent != null) {
+                                getToolTipHelper().displayToolTipNear(
+                                        ProgressFigure.this,
+                                        new Label(m_currentProgressMessage),
+                                        m_mouseEvent.x, m_mouseEvent.y);
+                            }
                         }
                     });
                 }

@@ -104,7 +104,7 @@ public class ProgressToolTipHelper extends PopUpHelper {
             org.eclipse.draw2d.geometry.Point position =
                     new org.eclipse.draw2d.geometry.Point(eventX, eventY);
 
-            WorkflowEditor.transposeZoom(m_zoomManager, position);
+            WorkflowEditor.transposeZoom(m_zoomManager, position, true);
 
             Point absolute;
             absolute = control.toDisplay(new Point(position.x, position.y));

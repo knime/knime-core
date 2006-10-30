@@ -1734,14 +1734,23 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param pointToAdapt the point to adapt
      */
     public static void transposeZoom(final ZoomManager zoomManager,
-            final Point pointToAdapt) {
+            final Point pointToAdapt,
+            final boolean adaptViewPortLocation) {
 
+        
         
         double zoomLevel = zoomManager.getZoom();
 
         // adapt the location accordint to the zoom level
         pointToAdapt.x = (int)(pointToAdapt.x * zoomLevel);
         pointToAdapt.y = (int)(pointToAdapt.y * zoomLevel);
+        
+        if (adaptViewPortLocation) {
+            Point viewPortLocation =
+                    zoomManager.getViewport().getViewLocation();
+            pointToAdapt.x -= viewPortLocation.x;
+            pointToAdapt.y -= viewPortLocation.y;
+        }
     }
 
     /**
