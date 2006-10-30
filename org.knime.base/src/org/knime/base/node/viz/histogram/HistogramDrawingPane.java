@@ -59,8 +59,17 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * Defines the color of the outline rectangle with a positive aggregation
      * value.
      */
-    private static final Color BAR_OUTLINE_BASIC_COLOR = Color.BLACK;
-
+    private static final Color BAR_OUTLINE_BASIC_COLOR = Color.GRAY;
+    
+    /** Defines the stroke of the line for selected bars. */
+    private static final BasicStroke BAR_OUTLINE_SELECTED_STROKE = 
+        new BasicStroke(4f);
+    
+    /**
+     * Defines the color of the outline rectangle for selected bars.
+     */
+    private static final Color BAR_OUTLINE_SELECTED_COLOR = Color.BLACK;
+    
     /**
      * Defines the stroke which is used for the border of bars with a negative
      * aggregation value.
@@ -233,6 +242,10 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         for (BarVisModel bar : m_bars.values()) {
             BasicStroke rectStroke = BAR_OUTLINE_BASIC_STROKE;
             Color rectColor = BAR_OUTLINE_BASIC_COLOR;
+            if (bar.isSelected()) {
+                rectStroke = BAR_OUTLINE_SELECTED_STROKE;
+                rectColor = BAR_OUTLINE_SELECTED_COLOR;
+            }
             /*
             // check for negative values
             if (bar.getAggregationValue() < 0) {
