@@ -39,6 +39,9 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -199,12 +202,15 @@ public class MLPPredictorNodeModel extends NodeModel {
             for (int i = 1; i <= m_nrPossValues; i++) {
                 name = "Neuron" + (i - 1);
                 type = DoubleCell.TYPE;
-                allappSpec[i] = new DataColumnSpecCreator(name, type)
-                        .createSpec();
+                allappSpec[i] =
+                        new DataColumnSpecCreator(name, type).createSpec();
             }
         }
-        BufferedDataTable bdt = exec.createBufferedDataTable(
-                new AppendedColumnTable(inData[0], mymlp, allappSpec), exec);
+        ColumnRearranger colre =
+                new ColumnRearranger(inData[0].getDataTableSpec());
+        colre.append(mymlp);
+        BufferedDataTable bdt =
+                exec.createColumnRearrangeTable(inData[0], colre, exec);
         return new BufferedDataTable[]{bdt};
     }
 
@@ -258,9 +264,9 @@ public class MLPPredictorNodeModel extends NodeModel {
      * 
      * @author Nicolas Cebron, University of Konstanz
      */
-    private class MLPClassificationFactory implements AppendedCellFactory {
+    private class MLPClassificationFactory implements CellFactory {
 
-        /*
+         /*
          * Flag whether regression is done or not.
          */
         private boolean m_regression;
@@ -287,7 +293,7 @@ public class MLPPredictorNodeModel extends NodeModel {
          * 
          * @see AppendedCellFactory#getAppendedCell(org.knime.core.data.DataRow)
          */
-        public DataCell[] getAppendedCell(final DataRow row) {
+        public DataCell[] getCells(final DataRow row) {
             double[] inputs = new double[m_faccolumns.length];
             for (int i = 0; i < m_faccolumns.length; i++) {
                 if (!row.getCell(m_faccolumns[i]).isMissing()) {
@@ -313,6 +319,34 @@ public class MLPPredictorNodeModel extends NodeModel {
                 }
             }
             return append;
+        }
+        
+        /**
+         * 
+         * @see org.knime.core.data.container.CellFactory#getColumnSpecs()
+         */
+        public DataColumnSpec[] getColumnSpecs() {
+            DataType type = StringCell.TYPE;
+            String name = "PredClass";
+            if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+                type = DoubleCell.TYPE;
+            } else if (m_mlp.getMode() == MultiLayerPerceptron
+                    .CLASSIFICATION_MODE) {
+                type = StringCell.TYPE;
+            } 
+            DataColumnSpec appendSpec = new DataColumnSpecCreator(name, type)
+                    .createSpec();
+            return new DataColumnSpec[] {appendSpec};
+        }
+
+        /**
+         * @see org.knime.core.data.container.CellFactory# setProgress(int, int,
+         *      org.knime.core.data.RowKey,
+         *      org.knime.core.node.ExecutionMonitor)
+         */
+        public void setProgress(final int curRowNr, final int rowCount,
+                final RowKey lastKey, final ExecutionMonitor exec) {
+            exec.setProgress((double)curRowNr / (double)rowCount, "Prediction");
         }
     }
 
