@@ -135,7 +135,7 @@ public class XValidateModel extends MetaNodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final int classColIndex = inData[0].getDataTableSpec().findColumnIndex(
+        int classColIndex = inData[0].getDataTableSpec().findColumnIndex(
                 m_settings.classColumnName());
         LinkedHashSet<DataCell> allClasses = new LinkedHashSet<DataCell>();
         Map<DataCell, Integer> classToIndex = new HashMap<DataCell, Integer>();
@@ -186,6 +186,8 @@ public class XValidateModel extends MetaNodeModel {
             }
 
             DataTable prediction = dataOutModel(0).getBufferedDataTable();
+            // it is possible, that the index has changed (e.g. some cols have been filtered out)
+            classColIndex = prediction.getDataTableSpec().findColumnIndex(m_settings.classColumnName());
             for (RowIterator it = prediction.iterator(); it.hasNext();) {
                 DataRow row = it.next();
 
