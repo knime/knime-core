@@ -29,7 +29,7 @@
 
 <!ELEMENT fullDescription (intro, option*) >
 <!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a | ul | ol | h3 | h4)* >
-<!ELEMENT option (#PCDATA | p | h | br | b | i | u | a)* >
+<!ELEMENT option (#PCDATA | p | h | br | b | i | u | a | ul | ol)* >
 <!ATTLIST option name CDATA #REQUIRED>
 
 <!ELEMENT p (#PCDATA | br | b | i | u | a | tt | ul | ol)* >
