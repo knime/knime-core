@@ -1,0 +1,35 @@
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2006
+ * University of Konstanz, Germany.
+ * Chair for Bioinformatics and Information Mining
+ * Prof. Dr. Michael R. Berthold
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+<body>
+The column appender node appends the columns of a table to another table. The
+user can choose two column in the two tables that contain the values upon which
+the rows are joined. The rows of the first table are always contained in the
+output table, values from rows from the second table only appear in the output
+if they match at least one row in the first table. If the join column in the
+second table contains the same column multiple times only the values from the 
+first row are appended and a warning is issued.<br />
+For the joining to be performed efficiently both tables are sorted prior before
+joining them. This means that also the output table will be sorted. The user
+can also choose to do the sorting completely in memory (which may fail if the
+tables are too big). Additionally rows from the first table that have no
+matching counterpart in the second table may be removed from the output.
+</body>

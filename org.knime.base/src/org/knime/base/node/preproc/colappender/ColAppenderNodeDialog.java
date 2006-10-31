@@ -55,8 +55,10 @@ public class ColAppenderNodeDialog extends NodeDialogPane {
     private final ColAppenderSettings m_settings = new ColAppenderSettings();
     private DataTableSpec[] m_specs;
     
+    @SuppressWarnings("unchecked") 
     private final ColumnSelectionComboxBox m_firstColumn =
         new ColumnSelectionComboxBox((Border) null, DataValue.class);
+    @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_secondColumn =
         new ColumnSelectionComboxBox((Border) null, DataValue.class);
     private final JRadioButton m_duplicateFail =
@@ -67,10 +69,8 @@ public class ColAppenderNodeDialog extends NodeDialogPane {
         new JRadioButton("Append suffix");
     private final JTextField m_suffix = new JTextField(10);
     
-    private final JCheckBox m_sortInMemory =
-        new JCheckBox();
-    private final JCheckBox m_innerJoin =
-        new JCheckBox();
+    private final JCheckBox m_sortInMemory = new JCheckBox();
+    private final JCheckBox m_innerJoin = new JCheckBox();
     
     /**
      * Creates the dialog.
