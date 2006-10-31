@@ -166,7 +166,15 @@ public class DBReaderDialogPane extends NodeDialogPane {
         // user
         m_user.setText(settings.getString("user", ""));
         // password
-        m_pass.setText("");
+        String password = settings.getString("password", "");
+        if (password != null && password.length() > 0) {
+            try {
+                password = DBReaderConnection.decrypt(password);
+            } catch (Exception e) {
+                LOGGER.warn("Could not decrypt password.");
+            }
+        }
+        m_pass.setText(password);
         // save loaded driver
         m_driverLoaded.clear();
         m_driverLoaded.addAll(Arrays.asList(settings.getStringArray(

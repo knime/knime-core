@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Source" icon="./database_reader.png">
-	<name>Database Reader</name>
+	<name>DB Reader Connection</name>
 	
 	<shortDescription>
-	    Establishes and opens a database access connection from which to read data.
+	    Establishes and opens a database access connection.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	     Establishes and opens a database access connection from which to read data. 
+	     Establishes and opens a database access connection. 
 	     Make sure you have your personal database driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
 	     by default only but you can use the load button to register additional drivers from Zip or Jar.
 		</intro>
@@ -38,6 +38,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0" name="Data from Database">Table with data read from the database</dataOut>
+		<predParamOut index="0" name="DB Connection">Database connection settings</predParamOut>
 	</ports>	
 </knimeNode>
