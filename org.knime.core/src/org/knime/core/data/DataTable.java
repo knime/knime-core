@@ -21,22 +21,22 @@
  * 
  * History
  *   09.01.2006(all): reviewed
+ *   29.10.2006(tm, cs): reviewed
  */
 package org.knime.core.data;
 
 /**
- * Most general data interface in table structure format with a fixed number of
- * columns and ordered rows.
+ * Most general data interface in table structure with a fixed number of columns
+ * and iterable rows (no random access).
  * 
  * <p>
- * Each <code>DataTable</code> is a container of {@link DataRow}
- * elements which are returned by the {@link RowIterator}. Each row must
- * have the same number of {@link DataCell} elements (columns), is
- * read-only, and must provide a unique row identifier. A
- * table also contains a {@link DataTableSpec} member which provides
- * information about the structure of the table. For each column specifics like
- * name, type, and possible values etc. are kept in a {@link DataColumnSpec},
- * which can be retrieved from the {@link DataTableSpec} by column index.
+ * Each <code>DataTable</code> is a container of {@link DataRow} elements
+ * which are returned by the {@link RowIterator}. Each row must have the same
+ * number of {@link DataCell} elements (columns), is read-only, and must provide
+ * a unique row identifier. A table also contains a {@link DataTableSpec} member
+ * which provides information about the structure of the table. The
+ * {@link DataTableSpec} consists of {@link DataColumnSpec}s which contain
+ * information about the column, e.g. name, type, and possible values etc.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
@@ -47,17 +47,17 @@ package org.knime.core.data;
 public interface DataTable extends Iterable<DataRow> {
 
     /**
-     * Returns the {@link DataTableSpec} object of this table which
-     * specifies the structure of this data table.
+     * Returns the {@link DataTableSpec} object of this table which gives
+     * informationa about the structure of this data table.
      * 
-     * @return the DataTableSpec of this table.
+     * @return the DataTableSpec of this table
      */
     DataTableSpec getDataTableSpec();
 
     /**
      * Returns a row iterator which returns each row one-by-one from the table.
      * 
-     * @return row iterator.
+     * @return row iterator
      * 
      * @see org.knime.core.data.DataRow
      */

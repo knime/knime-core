@@ -22,6 +22,7 @@
  * History
  *   02.02.2006 (mb): created
  *   25.10.2006 (tg): cleanup
+ *   31.10.2006 (tm, cs): reviewed
  */
 package org.knime.core.data;
 
@@ -30,18 +31,17 @@ import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 
 /**
- * A {@link DataColumnSpec} creator that allows (as the only such way from 
- * outside this package) to create a new <code>DataColumnSpec</code>. It can be 
- * created from an existing spec or by specifying a column name and 
- * {@link DataType}. Setter functions allow to overwrite all available members 
- * within the creator but the (later) created <code>DataColumnSpec</code> will 
- * be read-only after creation.
+ * A factory class to create a {@link DataColumnSpec} (as the only way from
+ * outside this package). It can be created from an existing spec or by
+ * specifying a column name and {@link DataType}. Setter functions allow to
+ * overwrite all available members within the creator but the (later) created
+ * {@link DataColumnSpec} will be read-only after creation.
  * 
  * <p>
- * In addition, a {@link ColorHandler}, {@link SizeHandler}, and/or 
+ * In addition, a {@link ColorHandler}, {@link SizeHandler}, and/or
  * {@link ShapeHandler} can be set optionally to specify color, shape, and size.
- * An {@link DataColumnProperties} object can be used to specify annotations
- * as key-value pairs. 
+ * An {@link DataColumnProperties} object can be used to specify annotations as
+ * key-value pairs.
  * 
  * @see DataColumnSpec
  * @see #createSpec()
@@ -64,22 +64,22 @@ public class DataColumnSpecCreator {
 
     /** Holds the SizeHandler if one was set or null. */
     private SizeHandler m_sizeHandler = null;
-    
+
     /** Holds the ShapeHandler if one was set or null. */
     private ShapeHandler m_shapeHandler = null;
 
     /** Holds the ColorHandler if one was set or null. */
     private ColorHandler m_colorHandler = null;
-    
+
     /**
-     * Initializes the creator with the given column name and type. The 
-     * <code>DataColumnProperties</code> left empty and color, size, and shape
-     * handler set to <code>null</code>.
+     * Initializes the creator with the given column name and type. The
+     * <code>DataColumnProperties</code> are left empty and color, size, and
+     * shape handler are set to <code>null</code>.
      * 
-     * @param name The column name.
-     * @param type The column type.
-     * @throws NullPointerException If either the column name or type is
-     *         <code>null</code>.
+     * @param name the column name
+     * @param type the column type
+     * @throws NullPointerException if either the column name or type is
+     *             <code>null</code>
      */
     public DataColumnSpecCreator(final String name, final DataType type) {
         setName(name);
@@ -89,10 +89,9 @@ public class DataColumnSpecCreator {
     }
 
     /**
-     * Constructor - start creation of new DataColumnSpec based on an old
-     * DataColumnSpec.
+     * Initializes the creator with a given {@link DataColumnSpec}.
      * 
-     * @param cspec old spec.
+     * @param cspec other spec
      */
     public DataColumnSpecCreator(final DataColumnSpec cspec) {
         m_name = cspec.getName();
@@ -101,7 +100,7 @@ public class DataColumnSpecCreator {
         assert m_type != null : " Column type must not be null!";
         m_domain = cspec.getDomain();
         assert m_domain != null : "domain must not be null!";
-        // copy properties
+        // get the immutable properties
         m_properties = cspec.getProperties();
         assert m_properties != null : "properties must not be null!";
         // property size
@@ -116,8 +115,8 @@ public class DataColumnSpecCreator {
     /**
      * Set (new) column name.
      * 
-     * @param name The (new) column name.
-     * @throws NullPointerException If the column name is <code>null</code>.
+     * @param name the (new) column name
+     * @throws NullPointerException if the column name is <code>null</code>
      */
     public void setName(final String name) {
         if (name == null) {
@@ -130,8 +129,8 @@ public class DataColumnSpecCreator {
     /**
      * Set (new) column type.
      * 
-     * @param type The (new) column type.
-     * @throws NullPointerException If the column type is <code>null</code>. 
+     * @param type the (new) column type
+     * @throws NullPointerException if the column type is <code>null</code>
      */
     public void setType(final DataType type) {
         if (type == null) {
@@ -142,11 +141,11 @@ public class DataColumnSpecCreator {
     }
 
     /**
-     * Set (new) domain. If a <code>null</code> domain is set, an empty domain 
+     * Set (new) domain. If a <code>null</code> domain is set, an empty domain
      * will be created.
      * 
-     * @param domain The (new) domain, if <code>null</code> an empty default 
-     *        domain will be created
+     * @param domain the (new) domain, if <code>null</code> an empty default
+     *            domain will be created
      */
     public void setDomain(final DataColumnDomain domain) {
         if (domain == null) {
@@ -157,11 +156,11 @@ public class DataColumnSpecCreator {
     }
 
     /**
-     * Set (new) column properties. If a <code>null</code> properties object is
-     * passed, a new empty property object will be created.
+     * Set (new) column properties. If a <code>null</code> properties object
+     * is passed, a new empty property object will be created.
      * 
-     * @param props The (new) properties, if <code>null</code> an empty props 
-     *        object is created.
+     * @param props the (new) properties, if <code>null</code> an empty props
+     *            object is created
      */
     public void setProperties(final DataColumnProperties props) {
         if (props == null) {
@@ -174,44 +173,47 @@ public class DataColumnSpecCreator {
     /**
      * Set (new) <code>SizeHandler</code> which can be <code>null</code>.
      * 
-     * @param sizeHdl The (new) <code>SizeHandler</code> or <code>null</code>.
+     * @param sizeHdl the (new) <code>SizeHandler</code> or <code>null</code>
      */
     public void setSizeHandler(final SizeHandler sizeHdl) {
         m_sizeHandler = sizeHdl;
     }
-    
+
     /**
      * Set (new) <code>ShapeHandler</code> which can be <code>null</code>.
      * 
-     * @param shapeHdl The (new) <code>ShapeHandler</code> or <code>null</code>.
+     * @param shapeHdl the (new) <code>ShapeHandler</code> or
+     *            <code>null</code>
      */
     public void setShapeHandler(final ShapeHandler shapeHdl) {
         m_shapeHandler = shapeHdl;
     }
-    
+
     /**
      * Set (new) <code>ColorHandler</code> which can be <code>null</code>.
      * 
-     * @param colorHdl The (new) <code>ColorHandler</code> or <code>null</code>.
+     * @param colorHdl the (new) <code>ColorHandler</code> or
+     *            <code>null</code>
      */
     public void setColorHandler(final ColorHandler colorHdl) {
         m_colorHandler = colorHdl;
     }
-    
+
     /**
-     * Removes all handler from this creator which are then <code>null</code>
-     * for the next call of <code>#createSpec()</code>.
+     * Removes all handlers from this creator which are then set to
+     * <code>null</code> for the next call of <code>#createSpec()</code>.
      */
     public void removeAllHandlers() {
         this.setSizeHandler(null);
         this.setColorHandler(null);
         this.setShapeHandler(null);
     }
-    
+
     /**
-     * Creates and returns a new <code>DataColumnSpec</code> using the 
+     * Creates and returns a new <code>DataColumnSpec</code> using the
      * internal properties of this creator.
-     * @return newly created <code>DataColumnSpec</code>.
+     * 
+     * @return newly created <code>DataColumnSpec</code>
      */
     public DataColumnSpec createSpec() {
         return new DataColumnSpec(m_name, m_type, m_domain, m_properties,

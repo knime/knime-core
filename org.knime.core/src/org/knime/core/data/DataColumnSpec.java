@@ -21,6 +21,7 @@
  * 
  * History
  *    25.10.2006 (tg): cleanup
+ *    31.10.2006 (tm, cs): reviewed
  */
 package org.knime.core.data;
 
@@ -32,10 +33,10 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * Final <code>DataColumnSpec</code> object describing the makeup of one column
- * in a {@link DataTable} containing information regarding type, name, domain,
- * data properties, and optionally color/size/shape handling. This class can 
- * only be created using the {@link DataColumnSpecCreator} withins this package.
+ * A <code>DataColumnSpec</code> describes one column in a {@link DataTable}.
+ * It contains information about type, name, domain, data properties, and
+ * optionally color/size/shape handling. This class can only be created using
+ * the {@link DataColumnSpecCreator} within this package.
  * 
  * @see DataColumnSpecCreator
  * @see DataTableSpec
@@ -65,42 +66,42 @@ public final class DataColumnSpec {
 
     /** Holds the ColorHandler if one was set or null. */
     private final ColorHandler m_colorHandler;
-    
+
     /** Config key for the column name. */
-    private static final String CFG_COLUMN_NAME   = "column_name";
-    
+    private static final String CFG_COLUMN_NAME = "column_name";
+
     /** Config key for the column type. */
-    private static final String CFG_COLUMN_TYPE   = "column_type";
-    
+    private static final String CFG_COLUMN_TYPE = "column_type";
+
     /** Config key for the domain information. */
     private static final String CFG_COLUMN_DOMAIN = "column_domain";
-    
+
     /** Config key for additional annotations. */
-    private static final String CFG_COLUMN_PROPS  = "column_properties";
-    
+    private static final String CFG_COLUMN_PROPS = "column_properties";
+
     /** Config key for the ColorHandler. */
-    private static final String CFG_COLORS        = "color_handler";
-    
+    private static final String CFG_COLORS = "color_handler";
+
     /** Config key for the SizeHandler. */
-    private static final String CFG_SIZES         = "size_handler";
-    
+    private static final String CFG_SIZES = "size_handler";
+
     /** Config key for the ShapeHandler. */
-    private static final String CFG_SHAPES        = "shape_handler";
-    
+    private static final String CFG_SHAPES = "shape_handler";
+
     /**
-     * Constructor taking all properties of this column spec as an argument. It
-     * creates a read-only <code>DataColumnSpec</code> and should only be called
-     * from the {@link DataColumnSpecCreator} in this package.
+     * Constructor taking all properties of this column spec as arguments. It
+     * creates a read-only <code>DataColumnSpec</code> and should only be
+     * called from the {@link DataColumnSpecCreator} in this package.
      * 
-     * @param name The name of the column, must not be <code>null</code>.
-     * @param type The type of the column, must not be <code>null</code>.
-     * @param domain The domain, must not be <code>null</code>.
-     * @param props Additional properties, must not be <code>null</code>.
-     * @param sizeHdl The <code>SizeHandler</code> or <code>null</code>.
-     * @param colorHdl The <code>ColorHandler</code> or <code>null</code>.
-     * @param shapeHdl The <code>ShapeHandler</code> or <code>null</code>.
-     * @throws NullPointerException If either column name, type, domain, or
-     *         properties are <code>null</code>.
+     * @param name the name of the column, must not be <code>null</code>
+     * @param type the type of the column, must not be <code>null</code>
+     * @param domain the domain, must not be <code>null</code>
+     * @param props additional properties, must not be <code>null</code>
+     * @param sizeHdl the <code>SizeHandler</code> or <code>null</code>
+     * @param colorHdl the <code>ColorHandler</code> or <code>null</code>
+     * @param shapeHdl the <code>ShapeHandler</code> or <code>null</code>
+     * @throws NullPointerException if either column name, type, domain, or
+     *             properties are <code>null</code>
      */
     DataColumnSpec(final String name, final DataType type,
             final DataColumnDomain domain, final DataColumnProperties props,
@@ -122,18 +123,18 @@ public final class DataColumnSpec {
     /**
      * Returns the name of this column.
      * 
-     * @return The column name.
+     * @return the column name
      */
     public String getName() {
         return m_name;
     }
 
     /**
-     * Returns column type as which is a subclass of <code>DataType</code>.
+     * Returns the column type which is a subclass of {@link DataType}.
      * 
-     * @return The <code>DataType</code> of this column. All data cells of this
-     *         column are type-castable to the native type of it.
-     *         
+     * @return the <code>DataType</code> of this column; all data cells of
+     *         this column are type-castable to its native type
+     * 
      * @see org.knime.core.data.DataType
      * @see org.knime.core.data.DataCell
      */
@@ -142,10 +143,11 @@ public final class DataColumnSpec {
     }
 
     /**
-     * Returns the domain of this column spec which includes meta-information
-     * such as bounds, possible values, etc.
+     * Returns the domain of this column spec including meta-information such as
+     * bounds, possible values, etc.
      * 
-     * @return The domain of the column spec. Could be empty, but never null.
+     * @return the domain of the column spec; can be empty, but never
+     *         <code>null</code>
      */
     public DataColumnDomain getDomain() {
         return m_domain;
@@ -153,40 +155,39 @@ public final class DataColumnSpec {
 
     /**
      * Returns the properties assigned to this column spec. These properties can
-     * be seen as some sort of annotations to identify particular column
-     * properties.
+     * be seen as some sort of annotations to this column.
      * 
-     * @return The column's annotation properties, never null.
+     * @return the column's annotation properties, never <code>null</code>
      */
     public DataColumnProperties getProperties() {
         return m_properties;
     }
 
     /**
-     * Returns the <code>SizeHandler</code> defined on this column, if available
-     * (otherwise <code>null</code> will be returned).
+     * Returns the <code>SizeHandler</code> defined on this column, if
+     * available. Otherwise <code>null</code> will be returned.
      * 
-     * @return Attached <code>SizeHandler</code> or <code>null</code>.
+     * @return attached <code>SizeHandler</code> or <code>null</code>
      */
     public SizeHandler getSizeHandler() {
         return m_sizeHandler;
     }
-    
+
     /**
-     * Returns the <code>ShapeHandler</code> defined on this column, if 
-     * available (otherwise <code>null</code> will be returned).
+     * Returns the <code>ShapeHandler</code> defined on this column, if
+     * available. Otherwise <code>null</code> will be returned.
      * 
-     * @return Attached <code>ShapeHandler</code> or <code>null</code>.
+     * @return atached <code>ShapeHandler</code> or <code>null</code>
      */
     public ShapeHandler getShapeHandler() {
         return m_shapeHandler;
     }
-    
+
     /**
-     * Returns the <code>ColorHandler</code> defined on this column, if 
-     * available (otherwise <code>null</code> will be returned).
+     * Returns the <code>ColorHandler</code> defined on this column, if
+     * available. Otherwise <code>null</code> will be returned.
      * 
-     * @return Attached <code>ColorHandler</code> or <code>null</code>.
+     * @return attached <code>ColorHandler</code> or <code>null</code>
      */
     public ColorHandler getColorHandler() {
         return m_colorHandler;
@@ -196,8 +197,8 @@ public final class DataColumnSpec {
      * Two column specs are equal if their name and type match. For a test
      * including the domain, see {@link #equalsWithDomain(DataColumnSpec)}.
      * 
-     * @param obj Another column spec to compare this to.
-     * @return <code>true</code> if column name and type match.
+     * @param obj another column spec to compare this column to
+     * @return <code>true</code> if column name and type match
      * 
      * @see #equalsWithDomain(DataColumnSpec)
      * @see java.lang.Object#equals(java.lang.Object)
@@ -211,16 +212,17 @@ public final class DataColumnSpec {
             return false;
         }
         final DataColumnSpec spec = (DataColumnSpec)obj;
-        return getName().equals(spec.getName()) 
-                    && getType().equals(spec.getType());
+        return getName().equals(spec.getName())
+                && getType().equals(spec.getType());
     }
 
     /**
      * Two column specs are equal with domain if the column name, type, domain
      * and properties match.
+     * 
      * @see java.lang.Object#equals(java.lang.Object)
-     * @param spec The spec to check equality.
-     * @return <code>true</code> if name, type, domain, and properties match.
+     * @param spec the spec to check equality
+     * @return <code>true</code> if name, type, domain, and properties match
      */
     public boolean equalsWithDomain(final DataColumnSpec spec) {
         if (spec == this) {
@@ -229,7 +231,7 @@ public final class DataColumnSpec {
         if (spec == null) {
             return false;
         }
-        return m_domain.equals(spec.getDomain())
+        return getDomain().equals(spec.getDomain())
                 && getProperties().equals(spec.getProperties())
                 && getName().equals(spec.getName())
                 && getType().equals(spec.getType());
@@ -237,6 +239,7 @@ public final class DataColumnSpec {
 
     /**
      * The hash code is computed based on the hash code of column name and type.
+     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -245,19 +248,21 @@ public final class DataColumnSpec {
     }
 
     /**
-     * Returns a String summary of this column spec including name and type.
-     * @return A String summary of this column spec with column name and type.
+     * Returns a string summary of this column spec including name and type.
+     * 
+     * @return a string summary of this column spec with column name and type
      */
     @Override
     public String toString() {
         return "name=" + getName() + ",type=" + getType();
     }
-    
+
     /**
-     * Saves name, type, domain, and properties and - if available - color, 
-     * size, and shape handler to the given <code>ConfigWO</code>. 
-     * @param config Write properties into.
-     * @throws NullPointerException If the config  object is <code>null</code>.
+     * Saves name, type, domain, and properties and - if available - color,
+     * size, and shape handler to the given <code>ConfigWO</code>.
+     * 
+     * @param config write properties into
+     * @throws NullPointerException if the config object is <code>null</code>
      */
     public void save(final ConfigWO config) {
         config.addString(CFG_COLUMN_NAME, m_name);
@@ -274,27 +279,27 @@ public final class DataColumnSpec {
             m_shapeHandler.save(config.addConfig(CFG_SHAPES));
         }
     }
-    
+
     /**
-     * Reads name, type, domain, and properties from the given 
-     * <code>ConfigRO</code> and - if available - size, shape, and color 
-     * handler.
-     * return A new <code>DataColumnSpec</code> object initialized with the 
-     *        information read.
-     * @param config To read properties from.
-     * @return A new column spec object.
-     * @throws InvalidSettingsException If one of the non-optional properties is
-     *         not available or can't be initialized.
-     * @throws NullPointerException If the config object is <code>null</code>.
+     * Reads name, type, domain, and properties from the given
+     * <code>ConfigRO</code> and - if available - size, shape, and color
+     * handler. Returns a new <code>DataColumnSpec</code> object initialized
+     * with the information read.
+     * 
+     * @param config to read properties from
+     * @return a new column spec object
+     * @throws InvalidSettingsException if one of the non-optional properties is
+     *             not available or can't be initialized
+     * @throws NullPointerException if the config object is <code>null</code>
      */
-    public static DataColumnSpec load(final ConfigRO config) 
+    public static DataColumnSpec load(final ConfigRO config)
             throws InvalidSettingsException {
         String name = config.getString(CFG_COLUMN_NAME);
         DataType type = DataType.load(config.getConfig(CFG_COLUMN_TYPE));
-        DataColumnDomain domain = 
-            DataColumnDomain.load(config.getConfig(CFG_COLUMN_DOMAIN));
-        DataColumnProperties properties = 
-            DataColumnProperties.load(config.getConfig(CFG_COLUMN_PROPS));
+        DataColumnDomain domain =
+                DataColumnDomain.load(config.getConfig(CFG_COLUMN_DOMAIN));
+        DataColumnProperties properties =
+                DataColumnProperties.load(config.getConfig(CFG_COLUMN_PROPS));
         ColorHandler color = null;
         if (config.containsKey(CFG_COLORS)) {
             color = ColorHandler.load(config.getConfig(CFG_COLORS));

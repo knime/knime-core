@@ -24,6 +24,7 @@
  *   23.05.2006 (mb): eliminated member holding ColorAttr
  *   21.06.2006 (bw & po): reviewed
  *   25.10.2006 (tg): cleanup
+ *   31.10.2006 (tm, cs): reviewed
  */
 package org.knime.core.data;
 
@@ -32,23 +33,22 @@ import java.io.Serializable;
 import org.knime.core.data.def.StringCell;
 
 /**
- * Key for a specific row which holds an identifier(of type {@link DataCell}).
+ * Key for a specific row which holds an identifier of type {@link DataCell}.
  * 
  * @see DataRow
- * @see RowIterator
  * 
  * @author Michael Berthold, University of Konstanz
  */
 public final class RowKey implements Serializable {
 
-    /** private members holding non-null row id. */
+    /** Private member holding non-null row id. */
     private final DataCell m_id;
 
     /**
-     * Creates a row key based on a {@link DataCell} as id.
+     * Creates a row key based on a {@link DataCell}.
      * 
-     * @param id identifier for a {@link DataRow}.
-     * @throws NullPointerException If argument is <code>null</code>.
+     * @param id identifier for a {@link DataRow}
+     * @throws NullPointerException if argument is <code>null</code>
      */
     public RowKey(final DataCell id) {
         if (id == null) {
@@ -58,17 +58,19 @@ public final class RowKey implements Serializable {
     }
     
     /**
-     * Creates a row key based on a {@link String} as id. 
+     * Creates a row key based on a {@link String}. 
      * 
-     * @param id identifier for a {@link DataRow}.
-     * @throws NullPointerException If argument is null.
+     * @param id identifier for a {@link DataRow}
+     * @throws NullPointerException if argument is <code>null</code>
      */
     public RowKey(final String id) {
         this(new StringCell(id));
     }
 
     /**
-     * @return An non-null, ID for a row.
+     * Returns the row key as {@link DataCell}.
+     * 
+     * @return an non-null, ID for a row
      */
     public DataCell getId() {
         return m_id;
@@ -85,7 +87,7 @@ public final class RowKey implements Serializable {
     }
 
     /**
-     * Compares two row keys by their {@link DataCell} id.
+     * Compares two row keys by their {@link DataCell}.
      * 
      * @see DataCell#equals(Object)
      */

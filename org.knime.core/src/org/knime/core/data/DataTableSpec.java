@@ -21,6 +21,7 @@
  * 
  * History
  *   09.01.2006(all): reviewed
+ *   29.10.2006(tm, cs): reviewed
  */
 package org.knime.core.data;
 
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.property.ColorAttr;
@@ -41,27 +43,30 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * DataTableSpecs are used in two ways: As meta information to specify the
- * structure of a {@link DataTable} (at a time when the actual table
- * still doesn't exist), and as part of a {@link DataTable} object to
- * store the structure of the table.
+ * <code>DataTableSpecs</code> specify the structure of a {@link DataTable}.
  * 
  * <p>
  * The spec specifies the characteristics i.e. column numbers, as well as column
  * types, names, and other column oriented information through a collection of
- * {@link DataColumnSpec} objects.
+ * {@link DataColumnSpec} objects. The names of the {@link DataColumnSpec}s
+ * must be unique identifiers within a <code>DataTableSpec</code>
  * 
  * <p>
- * Once a <code>DataTableSpec</code> is initialized, it must be final. That
- * is, if you want to add further information to a column (for instance, the
- * possible values in a column are known), you have to create a new instance of
- * a <code>DataTableSpec</code> carrying the new information. This spec can
- * then be propagated in the flow.
+ * Once a <code>DataTableSpec</code> is initialized, it must be immutable.
+ * That is, if you want to add further information to a column (for instance,
+ * the possible values in a column), you have to create a new instance of a
+ * <code>DataTableSpec</code> carrying the new information. A spec can be
+ * propagated from node to node via the ports so that succeeding nodes know
+ * about the table structure even if no data table is currently available.
  * 
  * <p>
- * In addtion, the table spec provides a single SizeManager, ColorManager
- * and/or ShapeManager if available. These property handlers can be used to 
- * assign size, color, and shape to a row.
+ * In addtion, the table spec provides a single {@link SizeHandler},
+ * {@link org.knime.core.data.property.ColorHandler} and/or
+ * {@link org.knime.core.data.property.ShapeHandler} if available. These
+ * property handlers can be used to assign size, color, and shape to a row. The
+ * handlers are associated with a column. If there is more than one column that
+ * provides a handler of a certain type (color, shape, size) the first handler
+ * is used.
  * 
  * @see DataTable
  * @see DataColumnSpec
@@ -70,152 +75,58 @@ import org.knime.core.node.config.ConfigWO;
  */
 public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DataTableSpec.class);
+    /** Key for column spec sub-configs. */
+    private static final String CFG_COLUMN_SPEC = "column_spec_";
 
-    /** Keep an array of column specs. */
-    private final DataColumnSpec[] m_columnSpecs;
+    /** Key for number of columns within this spec. */
+    private static final String CFG_NR_COLUMNS = "number_columns";
 
-    /** A name of this spec. */
-    private final String m_name;
+    /** Key for this specs name. */
+    private static final String CFG_SPEC_NAME = "spec_name";
 
-    /** The index of the column holding the SizeHandler or -1 if not set. */
-    private final int m_sizeHandlerColIndex;
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DataTableSpec.class);
 
-    /** The index of the column holding the ColorHandler or -1 if not set. */
-    private final int m_colorHandlerColIndex;
-    
-    /** The index of the column holding the ShapeHandler or -1 if not set. */
-    private final int m_shapeHandlerColIndex;
-   
-    /** Keeps column name to column index mapping for faster access. */
-    private final Map<String, Integer> m_colIndexMap 
-        = new HashMap<String, Integer>();
-
-    /**
-     * Creates an empty table spec with no columns defined and <i>default</i>
-     * as name.
-     */
-    public DataTableSpec() {
-        this("default");
-    }
-
-    /**
-     * Creates an empty table spec with no columns defined.
-     * 
-     * @param name This spec's name.
-     */
-    public DataTableSpec(final String name) {
-        this(name, new DataColumnSpec[0]);
-    }
-
-    /**
-     * Creates a new <code>DataTableSpec</code>, which is built from an array
-     * of {@link DataColumnSpec} elements.
-     * 
-     * @param colSpecs An array containing information about all columns.
-     * @throws NullPointerException If the given column spec or one of its
-     *             elements is <code>null</code>.
-     * @throws IllegalArgumentException If the parameter array contains
-     *             duplicates according to the
-     *             {@link DataColumnSpec#getName() DataColumnSpec.getName()}
-     *             method.
-     */
-    public DataTableSpec(final DataColumnSpec... colSpecs) {
-        this("default", colSpecs);
-    }
-
-    /**
-     * Creates a new <code>DataTableSpec</code>, which is built from an array
-     * of {@link DataColumnSpec} elements.
-     * 
-     * @param colSpecs An array containing information about all columns.
-     * @param name This spec's name, if <code>null</code> a default name is
-     *            assigned.
-     * @throws NullPointerException If the given column spec or one of its
-     *             elements is <code>null</code>.
-     * @throws IllegalArgumentException If the parameter array contains
-     *             duplicates according to the
-     *             {@link DataColumnSpec#getName() DataColumnSpec.getName()}
-     *             method.
-     */
-    public DataTableSpec(final String name, final DataColumnSpec... colSpecs) {
-        m_name = (name == null ? "default" : name);
-        final int colCount = colSpecs.length;
-        m_columnSpecs = new DataColumnSpec[colCount];
-        HashSet<String> hash = new HashSet<String>();
-        for (int i = 0; i < colCount; i++) {
-            // disallow duplicates
-            String currentName = colSpecs[i].getName();
-            if (currentName == null) {
-                throw new NullPointerException("Column name must not be null");
+    private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1,
+            final DataTableSpec spec2) {
+        final int l1 = spec1.getNumColumns();
+        final int l2 = spec2.getNumColumns();
+        // combine two column specs by copying them into one array of specs
+        DataColumnSpec[] columnSpecs = new DataColumnSpec[l1 + l2];
+        int idx = 0; // reused to iterate over spec1 then over spec2
+        // copy spec1
+        for (; idx < l1; idx++) {
+            DataColumnSpec currentColumn = spec1.getColumnSpec(idx);
+            String currentName = currentColumn.getName();
+            // check for duplicates
+            if (spec2.containsName(currentName)) {
+                // find the index in spec2 where the duplicate is located
+                int index = spec2.findColumnIndex(currentName);
+                throw new IllegalArgumentException(
+                        "Table specs to join contain the duplicate"
+                                + " column name \"" + currentName.toString()
+                                + "\" at position " + idx + " and " + index
+                                + ".");
             }
-            if (!hash.add(currentName)) {
-                // find duplicate indices for a nice error message.
-                for (int j = 0; j < i; j++) {
-                    String otherName = colSpecs[j].getName();
-                    if (currentName.equals(otherName)) {
-                        throw new IllegalArgumentException(
-                                "Duplicate column name \""
-                                        + currentName.toString()
-                                        + "\" at positions " + j + " and " + i
-                                        + ".");
-                    }
-                }
-            }
-            m_colIndexMap.put(colSpecs[i].getName(), i);
-            m_columnSpecs[i] = colSpecs[i];
+            columnSpecs[idx] = currentColumn;
         }
-        m_sizeHandlerColIndex  = searchSizeHandler();
-        m_colorHandlerColIndex = searchColorHandler();
-        m_shapeHandlerColIndex = searchShapeHandler();
+        // copy spec2
+        for (; idx < columnSpecs.length; idx++) {
+            columnSpecs[idx] = spec2.getColumnSpec(idx - l1);
+        }
+        return columnSpecs;
     }
 
     /**
-     * Creates a new <code>DataTableSpec</code> based on a list of names and
-     * types. The constructor uses the {@link DataColumnSpec} but does not
-     * create additional information (values, ...).
+     * Static helper method to create a {@link DataColumnSpec} array from the
+     * given names and types.
      * 
-     * @param names An array of names.
-     * @param types An array of types.
-     * @throws NullPointerException If names or types, or one of its elements is
-     *             <code>null</code>.
-     * @throws IllegalArgumentException If the <code>names</code> and
-     *             <code>types</code> arrays don't have the same length or if
-     *             the parameter array <code>names</code> contains duplicates.
-     */
-    public DataTableSpec(final String[] names, final DataType[] types) {
-        this("default", names, types);
-    }
-
-    /**
-     * Creates a new <code>DataTableSpec</code> based on a list of names and
-     * types. The constructor uses the {@link DataColumnSpec} but
-     * does not create additional information (values, ...).
-     * 
-     * @param name This spec's identifier, if null a default name will be used.
-     * @param names An array of names.
-     * @param types An array of types.
-     * @throws NullPointerException If names or types, or one of its elements is
-     *             <code>null</code>.
-     * @throws IllegalArgumentException If the <code>names</code> and
-     *             <code>types</code> arrays don't have the same length or if
-     *             the parameter array <code>names</code> contains duplicates.
-     */
-    public DataTableSpec(final String name, final String[] names,
-            final DataType[] types) {
-        this(name, createColumnSpecs(names, types));
-    }
-
-    /**
-     * Creates based an array of names and types and array of column specs.
-     * 
-     * @param names An array of column names.
-     * @param types An array of column types.
-     * @throws NullPointerException If one of the arrays is <code>null</code>.
-     * @throws IllegalArgumentException If the arrays do not have the same
-     *             length.
-     * @return An array of <code>DataColumnSpec</code> elements.
+     * @param names an array of column names
+     * @param types an array of column types
+     * @throws NullPointerException if one of the arrays is <code>null</code>
+     * @throws IllegalArgumentException if the arrays do not have the same
+     *             length
+     * @return an array of <code>DataColumnSpec</code> elements
      */
     public static final DataColumnSpec[] createColumnSpecs(
             final String[] names, final DataType[] types) {
@@ -241,11 +152,82 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                     }
                 }
             }
-            columnSpecs[i] = new DataColumnSpecCreator(names[i], types[i])
-                    .createSpec();
-           
+            columnSpecs[i] =
+                    new DataColumnSpecCreator(names[i], types[i]).createSpec();
+
         }
         return columnSpecs;
+    }
+
+    /**
+     * Reads all {@link DataColumnSpec} objects from the given {@link ConfigRO}
+     * and returns a new <code>DataTableSpec</code> object containing them.
+     * 
+     * @param config object to read column specs from
+     * @return a new table spec object containing the just read columns
+     * @throws InvalidSettingsException if the name, number of columns, or a
+     *             column spec could not be read
+     */
+    public static DataTableSpec load(final ConfigRO config)
+            throws InvalidSettingsException {
+        String name = config.getString(CFG_SPEC_NAME);
+        int ncols = config.getInt(CFG_NR_COLUMNS);
+        DataColumnSpec[] specs = new DataColumnSpec[ncols];
+        for (int i = 0; i < ncols; i++) {
+            ConfigRO column = config.getConfig(CFG_COLUMN_SPEC + i);
+            specs[i] = DataColumnSpec.load(column);
+        }
+        return new DataTableSpec(name, specs);
+    }
+
+    /** Keeps column name to column index mapping for faster access. */
+    private final Map<String, Integer> m_colIndexMap =
+            new HashMap<String, Integer>();
+
+    /** The index of the column holding the ColorHandler or -1 if not set. */
+    private final int m_colorHandlerColIndex;
+
+    /** Keep an array of column specs. */
+    private final DataColumnSpec[] m_columnSpecs;
+
+    /**
+     * The name of this spec (also applied to the table this spec belongs to).
+     */
+    private final String m_name;
+
+    /** The index of the column holding the ShapeHandler or -1 if not set. */
+    private final int m_shapeHandlerColIndex;
+
+    /** The index of the column holding the SizeHandler or -1 if not set. */
+    private final int m_sizeHandlerColIndex;
+
+    /**
+     * An unmodifiable List to create an iterator from. Therefore, remove
+     * operations are not allowed on an iterator object.
+     */
+    private final List<DataColumnSpec> m_columnSpecList;
+
+    /**
+     * Creates an empty <code>DataTableSpec</code> with no columns defined and
+     * <i>default</i> as name.
+     */
+    public DataTableSpec() {
+        this("default");
+    }
+
+    /**
+     * Creates a new <code>DataTableSpec</code>, which is built from an array
+     * of {@link DataColumnSpec} elements.
+     * 
+     * @param colSpecs an array containing information about all columns
+     * @throws NullPointerException if the given column spec or one of its
+     *             elements is <code>null</code>
+     * @throws IllegalArgumentException if the parameter array contains
+     *             duplicates according to the {@link DataColumnSpec#getName()}
+     *             method
+     */
+    public DataTableSpec(final DataColumnSpec... colSpecs) {
+        this("default", colSpecs);
     }
 
     /**
@@ -265,6 +247,60 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
 
     /**
+     * Creates an empty <code>DataTableSpec</code> with no columns defined.
+     * 
+     * @param name this spec's name
+     */
+    public DataTableSpec(final String name) {
+        this(name, new DataColumnSpec[0]);
+    }
+
+    /**
+     * Creates a new <code>DataTableSpec</code>, which is built from an array
+     * of {@link DataColumnSpec} elements.
+     * 
+     * @param colSpecs an array containing information about all columns
+     * @param name this spec's name, if <code>null</code> a default name is
+     *            assigned
+     * @throws NullPointerException if the given column spec or one of its
+     *             elements is <code>null</code>
+     * @throws IllegalArgumentException if the parameter array contains
+     *             duplicates according to the {@link DataColumnSpec#getName()}
+     *             method
+     */
+    public DataTableSpec(final String name, final DataColumnSpec... colSpecs) {
+        m_name = (name == null ? "default" : name);
+        final int colCount = colSpecs.length;
+        m_columnSpecs = new DataColumnSpec[colCount];
+        for (int i = 0; i < colCount; i++) {
+            // disallow duplicates
+            String currentName = colSpecs[i].getName();
+            if (currentName == null) {
+                throw new NullPointerException("Column name must not be null.");
+            }
+
+            Integer duplicateValue =
+                    m_colIndexMap.put(colSpecs[i].getName(), i);
+
+            // if the value is unequal null there is a duplicate value
+            // throw an exception
+            if (duplicateValue != null) {
+                throw new IllegalArgumentException("Duplicate column name \""
+                        + currentName.toString() + "\" at positions "
+                        + duplicateValue + " and " + i + ".");
+            }
+            m_columnSpecs[i] = colSpecs[i];
+        }
+        m_sizeHandlerColIndex = searchSizeHandler();
+        m_colorHandlerColIndex = searchColorHandler();
+        m_shapeHandlerColIndex = searchShapeHandler();
+
+        // create an unmodifiable list to create iterators from
+        m_columnSpecList =
+                Collections.unmodifiableList(Arrays.asList(m_columnSpecs));
+    }
+
+    /**
      * Constructor for a new <code>DataTableSpec</code> based on two existing
      * specifications that are to be concatenated.
      * 
@@ -281,54 +317,313 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         this(name, appendTableSpecs(spec1, spec2));
     }
 
-    private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1,
-            final DataTableSpec spec2) {
-        final int l1 = spec1.getNumColumns();
-        final int l2 = spec2.getNumColumns();
-        // combine two column specs by copying them into one array of specs
-        DataColumnSpec[] columnSpecs = new DataColumnSpec[l1 + l2];
-        int idx = 0; // reused to iterate over spec1 then over spec2
-        // copy spec1
-        for (; idx < l1; idx++) {
-            DataColumnSpec currentColumn = spec1.getColumnSpec(idx);
-            String currentName = currentColumn.getName();
-            // check for duplicates
-            if (spec2.containsName(currentName)) {
-                // find the index in spec2 where the duplicate is located
-                for (int i = 0; i < l2; i++) {
-                    if (currentName.equals(spec2.getColumnSpec(i).getName())) {
-                        throw new IllegalArgumentException(
-                                "Table specs to join contain the duplicate"
-                                        + " column name \""
-                                        + currentName.toString()
-                                        + "\" at position " + idx + " and " + i
-                                        + ".");
-                    }
-                }
-                throw new InternalError("Bug in ColumnSpec.containsName()");
-            }
-            columnSpecs[idx] = currentColumn;
-        }
-        // copy spec2
-        for (; idx < columnSpecs.length; idx++) {
-            columnSpecs[idx] = spec2.getColumnSpec(idx - l1);
-        }
-        return columnSpecs;
+    /**
+     * Creates a new <code>DataTableSpec</code> based on a list of names and
+     * types. The constructor uses the {@link DataColumnSpec} but does not
+     * create additional information (values, ...).
+     * 
+     * @param name this spec's identifier, if <code>null</code> a default name
+     *            will be used
+     * @param names an array of names
+     * @param types an array of types
+     * @throws NullPointerException if names or types, or one of its elements is
+     *             <code>null</code>
+     * @throws IllegalArgumentException if the <code>names</code> and
+     *             <code>types</code> arrays don't have the same length or if
+     *             the parameter array <code>names</code> contains duplicates
+     */
+    public DataTableSpec(final String name, final String[] names,
+            final DataType[] types) {
+        this(name, createColumnSpecs(names, types));
     }
 
-    private int searchSizeHandler() {
-        int idx = -1;
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            if (m_columnSpecs[i].getSizeHandler() != null) {
-                if (idx == -1) {
-                    idx = i;
-                } else {
-                    LOGGER.coding("Found more SizeHandlers for columns: " + idx
-                            + " and " + i + ".");
-                }
+    /**
+     * Creates a new <code>DataTableSpec</code> based on a list of names and
+     * types. The constructor uses the {@link DataColumnSpec} but does not
+     * create additional information (values, ...).
+     * 
+     * @param names an array of names
+     * @param types an array of types
+     * @throws NullPointerException if names or types, or one of its elements is
+     *             <code>null</code>
+     * @throws IllegalArgumentException if the <code>names</code> and
+     *             <code>types</code> arrays don't have the same length or if
+     *             the parameter array <code>names</code> contains duplicates
+     */
+    public DataTableSpec(final String[] names, final DataType[] types) {
+        this("default", names, types);
+    }
+
+    /**
+     * Checks if this spec contains a column with a type compatible to the given
+     * {@link DataValue} class. This method returns <code>false</code> if the
+     * argument is <code>null</code>.
+     * 
+     * @param valueClass the class of the data value interface to check for
+     * @return <code>true</code> if at least one column type in the spec is
+     *         compatible to the provided value
+     */
+    public boolean containsCompatibleType(
+            final Class<? extends DataValue> valueClass) {
+        if (valueClass == null) {
+            return false;
+        }
+        for (int i = 0; i < getNumColumns(); i++) {
+            if (getColumnSpec(i).getType().isCompatible(valueClass)) {
+                return true;
             }
         }
-        return idx;
+        return false;
+    }
+
+    /**
+     * Checks if the given column name occurs in this spec. This method returns
+     * <code>false</code> if the argument is <code>null</code>.
+     * 
+     * @param columnName the column name to check
+     * @return <code>true</code> if this spec contains the column name
+     */
+    public boolean containsName(final String columnName) {
+        return findColumnIndex(columnName) >= 0;
+    }
+
+    /**
+     * Returns <code>true</code> if <code>o</code> is a
+     * <code>DataTableSpec</code> equal to this. Two specs are equal if they
+     * have the same number of columns and the column specs of the same columns
+     * are equal (that implies that the order of the columns has to be the
+     * same). The domains of the column specs are not included into the
+     * comparison.
+     * 
+     * @see #equalsWithDomain(DataTableSpec)
+     * @param o the <code>DataTableSpec</code> to compare this with
+     * @return <code>true</code> if the two specs are identical, otherwise
+     *         <code>false</code>
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof DataTableSpec)) {
+            return false;
+        }
+        DataTableSpec spec = (DataTableSpec)o;
+        final int colCount = this.getNumColumns();
+        // must have same number of columns to be identical
+        if (spec.getNumColumns() != colCount) {
+            return false;
+        }
+        // all column types and names must match
+        for (int i = 0; i < colCount; i++) {
+            DataColumnSpec thisColumn = getColumnSpec(i);
+            DataColumnSpec otherColumn = spec.getColumnSpec(i);
+            if (!thisColumn.equals(otherColumn)) {
+                return false;
+            }
+        }
+        // both are identical
+        return true;
+    }
+
+    /**
+     * Checks if both table specs are equal; in contrast to
+     * {@link #equals(Object)} the domain of the columns must be equal as well.
+     * Two specs are equal if their {@link DataColumnSpec}s are equal according
+     * to the {@link DataColumnSpec#equalsWithDomain(DataColumnSpec)} method.
+     * This implies that both specs have to have the same number of columns and
+     * the order of the columns has to be the same.
+     * 
+     * @param spec the <code>DataTableSpec</code> to compare this with
+     * @return <code>true</code> if the two specs are identical, otherwise
+     *         <code>false</code>
+     * @see #equals(Object)
+     * @see DataColumnSpec#equalsWithDomain
+     */
+    public boolean equalsWithDomain(final DataTableSpec spec) {
+        if (spec == this) {
+            return true;
+        }
+        if (spec == null) {
+            return false;
+        }
+        final int colCount = this.getNumColumns();
+        // must have same number of columns to be identical
+        if (spec.getNumColumns() != colCount) {
+            return false;
+        }
+        // all column types and names must match
+        for (int i = 0; i < colCount; i++) {
+            DataColumnSpec thisColumn = getColumnSpec(i);
+            DataColumnSpec otherColumn = spec.getColumnSpec(i);
+            if (!thisColumn.equalsWithDomain(otherColumn)) {
+                return false;
+            }
+        }
+        // both are identical
+        return true;
+    }
+
+    /**
+     * Finds the column with the specified name in the TableSpec and returns its
+     * index, or -1 if the name doesn't exist in the table. This method returns
+     * -1 if the argument is <code>null</code>.
+     * 
+     * @param columnName the name to search for
+     * @return the index of the column with the specified name, or -1 if not
+     *         found.
+     */
+    public int findColumnIndex(final String columnName) {
+        if (columnName == null) {
+            return -1;
+        }
+        if (m_colIndexMap.get(columnName) == null) {
+            return -1;
+        }
+        return m_colIndexMap.get(columnName);
+    }
+
+    /**
+     * Returns column information of the column with the provided index.
+     * 
+     * @param index the column index within the table
+     * @return the column specification
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     */
+    public DataColumnSpec getColumnSpec(final int index) {
+        return m_columnSpecs[index];
+    }
+
+    /**
+     * Returns the {@link DataColumnSpec} of the column with the provided name.
+     * This method returns <code>null</code> if the argument is
+     * <code>null</code>.
+     * 
+     * @param column the column name to find the spec for
+     * @return the column specification or <code>null</code> if not available
+     */
+    public DataColumnSpec getColumnSpec(final String column) {
+        int columnIndex = findColumnIndex(column);
+        if (columnIndex == -1) {
+            return null;
+        }
+        return m_columnSpecs[columnIndex];
+    }
+
+    /**
+     * Returns the name of this <code>DataTableSpec</code>.
+     * 
+     * @return the name of this table spec
+     */
+    public String getName() {
+        return m_name;
+    }
+
+    /**
+     * Returns the number of columns.
+     * 
+     * @return the number of columns
+     */
+    public int getNumColumns() {
+        return m_columnSpecs.length;
+    }
+
+    /**
+     * Returns the color that an object should have when displaying information
+     * concerning this row (for instance in a scatterplot). The color is
+     * determined by the {@link ColorHandler} of this spec, which is associated
+     * with exactly one column. The color therefore depends on the value of the
+     * corresponding cell of the given row.
+     * 
+     * @param row the row for which the color is requested
+     * @return a color attr object holding the colors associate to that row
+     */
+    public ColorAttr getRowColor(final DataRow row) {
+        if (m_colorHandlerColIndex == -1) {
+            return ColorAttr.DEFAULT;
+        }
+        return m_columnSpecs[m_colorHandlerColIndex].getColorHandler()
+                .getColorAttr(row.getCell(m_colorHandlerColIndex));
+    }
+
+    /**
+     * Return the shape that an object should have when displaying information
+     * concerning this row (for instance in a scatterplot). The shape is
+     * determined by the {@link ShapeHandler} of this spec, which is associated
+     * with exactly one column. The shape therefore depends on the value of the
+     * corresponding cell of the given row.
+     * 
+     * @param row the row for which the shape is requested
+     * @return the shape object associated with this row
+     */
+    public Shape getRowShape(final DataRow row) {
+        if (m_shapeHandlerColIndex == -1) {
+            return ShapeFactory.getShape(ShapeFactory.DEFAULT);
+        }
+        return m_columnSpecs[m_shapeHandlerColIndex].getShapeHandler()
+                .getShape(row.getCell(m_shapeHandlerColIndex));
+    }
+
+    /**
+     * Return the size (in percent) that an object should have when displaying
+     * information concerning this row (for instance in a scatterplot). The size
+     * is determined by the {@link SizeHandler} of this spec, which is
+     * associated with exactly one column. The size therefore depends on the
+     * value of the corresponding cell of the given row.
+     * 
+     * @param row the row for which the size is requested
+     * @return size in [0,1] or -1 if an error occured (illegal cell, missing)
+     */
+    public double getRowSize(final DataRow row) {
+        if (m_sizeHandlerColIndex == -1) {
+            return SizeHandler.DEFAULT_SIZE;
+        }
+        return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler().getSize(
+                row.getCell(m_sizeHandlerColIndex));
+    }
+
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        /*
+         * this hash code ignores the order of the columns. Thus, two specs
+         * having the same columns (but in different order) end up with the same
+         * hash code. Hopefully, this is ok anyway.
+         */
+        int tempHash = 0;
+        for (int i = 0; i < getNumColumns(); i++) {
+            int colHash = getColumnSpec(i).hashCode();
+            tempHash ^= colHash;
+        }
+        return tempHash;
+    }
+
+    /**
+     * Returns an iterator for the contained {@link DataColumnSpec} elements.
+     * The iterator does not support the remove method (table specs are
+     * immutable).
+     * 
+     * @see java.lang.Iterable#iterator()
+     */
+    public Iterator<DataColumnSpec> iterator() {
+        return m_columnSpecList.iterator();
+    }
+
+    /**
+     * Saves the table spec name and all {@link DataColumnSpec}s to the given
+     * {@link ConfigWO} object.
+     * 
+     * @param config the config object to save this table specs to
+     */
+    public void save(final ConfigWO config) {
+        config.addString(CFG_SPEC_NAME, m_name);
+        config.addInt(CFG_NR_COLUMNS, m_columnSpecs.length);
+        for (int i = 0; i < m_columnSpecs.length; i++) {
+            ConfigWO column = config.addConfig(CFG_COLUMN_SPEC + i);
+            m_columnSpecs[i].save(column);
+        }
     }
 
     private int searchColorHandler() {
@@ -360,241 +655,20 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         return idx;
     }
-    
-    /**
-     * @return The name of this table spec.
-     */
-    public String getName() {
-        return m_name;
-    }
 
-    /**
-     * @return The number of columns in the table.
-     */
-    public int getNumColumns() {
-        return m_columnSpecs.length;
-    }
-
-    /**
-     * Returns column information of the column with the provided index.
-     * 
-     * @param index The column index within the table.
-     * @return The column specification.
-     * @throws ArrayIndexOutOfBoundsException If the index is out of range.
-     */
-    public DataColumnSpec getColumnSpec(final int index) {
-        return m_columnSpecs[index];
-    }
-
-    /**
-     * Return the size (in percent) that an object should have when displaying
-     * information concerning this row (for instance in a scatterplot).
-     * 
-     * @param row the row for which the size is requested
-     * @return size in [0,1] or -1 if an error occured (illegal cell, missing)
-     */
-    public double getRowSize(final DataRow row) {
-        if (m_sizeHandlerColIndex == -1) {
-            return SizeHandler.DEFAULT_SIZE;
-        }
-        return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler().getSize(
-                row.getCell(m_sizeHandlerColIndex));
-    }
-
-    /**
-     * Return the color that an object should have when displaying information
-     * concerning this row (for instance in a scatterplot).
-     * 
-     * @param row the row for which the color is requested
-     * @return a color attr object holding the colors associate to that row.
-     */
-    public ColorAttr getRowColor(final DataRow row) {
-        if (m_colorHandlerColIndex == -1) {
-            return ColorAttr.DEFAULT;
-        }
-        return m_columnSpecs[m_colorHandlerColIndex].getColorHandler()
-                .getColorAttr(row.getCell(m_colorHandlerColIndex));
-    }
-
-    /**
-     * Return the shape that an object should have when displaying information
-     * concerning this row (for instance in a scatterplot).
-     * 
-     * @param row the row for which the shape is requested
-     * @return the shape object associated with this row.
-     */
-    public Shape getRowShape(final DataRow row) {
-        if (m_shapeHandlerColIndex == -1) {
-            return ShapeFactory.getShape(ShapeFactory.DEFAULT);
-        }
-        return m_columnSpecs[m_shapeHandlerColIndex].getShapeHandler()
-                .getShape(row.getCell(m_shapeHandlerColIndex));
-    }
-    
-    /**
-     * Returns column information of the column for the provided column name.
-     * This method returns <code>null</code> if the argument is
-     * <code>null</code>.
-     * 
-     * @param column The column name to find the spec for.
-     * @return The column specification or null if not available.
-     */
-    public DataColumnSpec getColumnSpec(final String column) {
-        int columnIndex = findColumnIndex(column);
-        if (columnIndex == -1) {
-            return null;
-        }
-        return m_columnSpecs[columnIndex];
-    }
-
-    /**
-     * Returns <code>true</code> if <code>o</code> is a
-     * <code>DataTableSpec</code> equal to this. Two specs are equal if they
-     * have the same number of columns and the column specs of the same columns
-     * are equal (that implies that the order of the columns has to be the
-     * same). The domains of the column specs are not included into the
-     * comparison.
-     * 
-     * @see #equalsWithDomain(DataTableSpec)
-     * @param o The <code>DataTableSpec</code> to compare this with.
-     * @return <code>true</code> If the two specs are identical, otherwise
-     *         <code>false</code>.
-     */
-    @Override
-    public boolean equals(final Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof DataTableSpec)) {
-            return false;
-        }
-        DataTableSpec spec = (DataTableSpec)o;
-        final int colCount = this.getNumColumns();
-        // must have same number of columns to be identical
-        if (spec.getNumColumns() != colCount) {
-            return false;
-        }
-        // all column types and names must match
-        for (int i = 0; i < colCount; i++) {
-            DataColumnSpec thisColumn = getColumnSpec(i);
-            DataColumnSpec otherColumn = spec.getColumnSpec(i);
-            if (!thisColumn.equals(otherColumn)) {
-                return false;
+    private int searchSizeHandler() {
+        int idx = -1;
+        for (int i = 0; i < m_columnSpecs.length; i++) {
+            if (m_columnSpecs[i].getSizeHandler() != null) {
+                if (idx == -1) {
+                    idx = i;
+                } else {
+                    LOGGER.coding("Found more SizeHandlers for columns: " + idx
+                            + " and " + i + ".");
+                }
             }
         }
-        // both are identical
-        return true;
-    }
-
-    /**
-     * Compares this to the given object. It returns <code>true</code> if
-     * <code>spec</code> is identical to this. Two specs are equal if they
-     * have equal <code>DataColumnSpec</code>s according to their
-     * <code>equalWithDomain()</code> method. This implies that both specs
-     * have to have the same number of columns and the order of the columns has
-     * to be the same.
-     * 
-     * @param spec The <code>DataTableSpec</code> to compare this with.
-     * @return <code>true</code> If the two specs are identical, otherwise
-     *         <code>false</code>.
-     * @see #equals(Object)
-     * @see DataColumnSpec#equalsWithDomain
-     */
-    public boolean equalsWithDomain(final DataTableSpec spec) {
-        if (spec == this) {
-            return true;
-        }
-        if (spec == null) {
-            return false;
-        }
-        final int colCount = this.getNumColumns();
-        // must have same number of columns to be identical
-        if (spec.getNumColumns() != colCount) {
-            return false;
-        }
-        // all column types and names must match
-        for (int i = 0; i < colCount; i++) {
-            DataColumnSpec thisColumn = getColumnSpec(i);
-            DataColumnSpec otherColumn = spec.getColumnSpec(i);
-            if (!thisColumn.equalsWithDomain(otherColumn)) {
-                return false;
-            }
-        }
-        // both are identical
-        return true;
-    }
-
-    /**
-     * Combines the hashcode of all internal elements used to compare two
-     * DataTableSpecs during equals.
-     * 
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        /*
-         * this hash code ignores the order of the columns. Thus, two specs
-         * having the same columns (but in different order) end up with the same
-         * hash code. Hopefully, this is ok anyway.
-         */
-        int tempHash = 0;
-        for (int i = 0; i < getNumColumns(); i++) {
-            int colHash = getColumnSpec(i).hashCode();
-            tempHash ^= colHash;
-        }
-        return tempHash;
-    }
-
-    /**
-     * Checks if the given column name occurs in this spec. This method returns
-     * <code>false</code> if the argument is <code>null</code>.
-     * 
-     * @param columnName The column name to check.
-     * @return <code>true</code> if this spec contains the column name.
-     */
-    public boolean containsName(final String columnName) {
-        return findColumnIndex(columnName) >= 0;
-    }
-
-    /**
-     * Finds the column with the specified name in the TableSpec and returns its
-     * index, or -1 if the name doesn't exist in the table. This method returns
-     * -1 if the argument is <code>null</code>. 
-     * 
-     * @param columnName the name to search for
-     * @return the index of the column with the specified name, or -1 if not
-     *         found.
-     */
-    public int findColumnIndex(final String columnName) {
-        if (columnName == null) {
-            return -1; 
-        }
-        if (m_colIndexMap.get(columnName) == null) {
-            return -1;
-        } 
-        return m_colIndexMap.get(columnName);
-    }
-
-    /**
-     * Checks if this spec contains a column with a type compatible to the given
-     * {@link DataValue} class. This method returns <code>false</code>
-     * if the argument is <code>null</code>.
-     * 
-     * @param valueClass the class of the data value interface to check for.
-     * @return true if at least one column type in the spec is compatible to the
-     *         provided value
-     */
-    public boolean containsCompatibleType(
-            final Class<? extends DataValue> valueClass) {
-        if (valueClass == null) {
-            return false;
-        }
-        for (int i = 0; i < getNumColumns(); i++) {
-            if (getColumnSpec(i).getType().isCompatible(valueClass)) {
-                return true;
-            }
-        }
-        return false;
+        return idx;
     }
 
     /**
@@ -604,7 +678,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      */
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer("name=" + m_name + ",columns=[");
+        StringBuilder buffer =
+                new StringBuilder("name=" + m_name + ",columns=[");
         for (int i = 0; i < getNumColumns(); i++) {
             DataColumnSpec spec = getColumnSpec(i);
             buffer.append(i > 0 ? ", " : "");
@@ -612,59 +687,6 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         buffer.append("]");
         return buffer.toString();
-    }
-
-    /**
-     * Allows to iterate over all contained {@link DataColumnSpec} elements in 
-     * an easy way.
-     * 
-     * @see java.lang.Iterable#iterator()
-     */
-    public Iterator<DataColumnSpec> iterator() {
-        return (Collections.unmodifiableList(Arrays.asList(m_columnSpecs)))
-                .iterator();
-    }
-    
-    /** Key for this specs name. */
-    private static final String CFG_SPEC_NAME   = "spec_name";
-    /** Key for number of columns within this spec. */
-    private static final String CFG_NR_COLUMNS  = "number_columns";
-    /** Key for column spec sub-configs. */
-    private static final String CFG_COLUMN_SPEC = "column_spec_";
-    
-    /**
-     * Saves spec name and all {@link DataColumnSpec} objects to the given
-     * {@link ConfigWO} object.
-     * @param config Write spec and column properties into this object.
-     */
-    public void save(final ConfigWO config) {
-        config.addString(CFG_SPEC_NAME, m_name);
-        config.addInt(CFG_NR_COLUMNS, m_columnSpecs.length);
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            ConfigWO column = config.addConfig(CFG_COLUMN_SPEC + i);
-            m_columnSpecs[i].save(column);
-        }
-    }
-    
-    /**
-     * Reads all {@link DataColumnSpec} objects from the given {@link ConfigRO}
-     * and returns a new <code>DataTableSpec</code> object containing them.
-     * 
-     * @param config Object to read column specs from.
-     * @return A new table spec object containing the just read columns.
-     * @throws InvalidSettingsException If the name, number of columns, or a
-     *             column spec could not be read,
-     */
-    public static DataTableSpec load(final ConfigRO config) 
-            throws InvalidSettingsException {
-        String name = config.getString(CFG_SPEC_NAME);
-        int ncols = config.getInt(CFG_NR_COLUMNS);
-        DataColumnSpec[] specs = new DataColumnSpec[ncols]; 
-        for (int i = 0; i < ncols; i++) {
-            ConfigRO column = config.getConfig(CFG_COLUMN_SPEC + i);
-            specs[i] = DataColumnSpec.load(column);
-        }
-        return new DataTableSpec(name, specs);
     }
 
 } // DataTableSpec
