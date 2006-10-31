@@ -43,8 +43,8 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class SetNameAndDescriptionAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(SetNameAndDescriptionAction.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(SetNameAndDescriptionAction.class);
 
     /**
      * unique ID for this action.
@@ -79,7 +79,8 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/setNameDescription.PNG");
+        return ImageRepository
+                .getImageDescriptor("icons/setNameDescription.PNG");
     }
 
     /**
@@ -87,7 +88,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "To set/view the user specified node name and a context dependant description.";
+        return "Set/view the user specified node name and a context dependant description.";
     }
 
     /**
@@ -147,8 +148,9 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
         // open name and description dialog
         Shell parent = Display.getCurrent().getActiveShell();
 
-        NameDescriptionDialog dialog = new NameDescriptionDialog(parent,
-                container.getCustomName(), container.getDescription());
+        NameDescriptionDialog dialog =
+                new NameDescriptionDialog(parent, container.getCustomName(),
+                        container.getDescription());
 
         int result = dialog.open();
 
