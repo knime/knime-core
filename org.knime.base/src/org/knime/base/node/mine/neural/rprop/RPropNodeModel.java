@@ -76,7 +76,7 @@ public class RPropNodeModel extends NodeModel {
     /**
      * The maximum number of possible iterations.
      */
-    public static final int MAXNRITERATIONS = 1000;
+    public static final int MAXNRITERATIONS = 1000000;
 
     /**
      * The default number of iterations.

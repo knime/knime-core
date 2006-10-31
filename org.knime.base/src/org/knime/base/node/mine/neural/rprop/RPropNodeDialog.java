@@ -47,7 +47,7 @@ public class RPropNodeDialog extends DefaultNodeDialogPane {
         /* config-name: */RPropNodeModel.MAXITER_KEY,
         /* label: */"Maximum number of iterations: ",
         /* min: */1,
-        /* max: */99999,
+        /* max: */RPropNodeModel.MAXNRITERATIONS,
         /* default */20));
         this.addDialogComponent(new DialogComponentNumber(
         /* config-name: */RPropNodeModel.HIDDENLAYER_KEY,
