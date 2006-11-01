@@ -263,12 +263,14 @@ public class WorkflowManager implements WorkflowListener {
             synchronized (m_transferLock) {
                 for (NodeContainer nc : m_runningNodes.keySet()) {
                     if (wfm.m_nodesByID.values().contains(nc)) {
+                        LOGGER.debug("Node " + nc + " is still running");
                         return true;
                     }
                 }
 
                 for (NodeContainer nc : m_waitingNodes.keySet()) {
                     if (wfm.m_nodesByID.values().contains(nc)) {
+                        LOGGER.debug("Node " + nc + " is still waiting");
                         return true;
                     }
                 }
@@ -277,6 +279,8 @@ public class WorkflowManager implements WorkflowListener {
             for (WeakReference<WorkflowManager> wr : wfm.m_children) {
                 if (wr.get() != null) {
                     if (executionInProgress(wr.get())) {
+                        LOGGER.debug("Child WFM " + wr.get()
+                                + " is still running");
                         return true;
                     }
                 }
@@ -284,6 +288,7 @@ public class WorkflowManager implements WorkflowListener {
             return false;
         }
 
+                
         /**
          * Checks if new nodes are executable now and if so, starts them.
          * Threads waiting on m_waitingNodes are awakened if no nodes are
