@@ -278,17 +278,12 @@ public class WorkflowManager implements WorkflowListener {
 
             for (WeakReference<WorkflowManager> wr : wfm.m_children) {
                 if (wr.get() != null) {
-                    if (executionInProgress(wr.get())) {
-                        LOGGER.debug("Child WFM " + wr.get()
-                                + " is still running");
-                        return true;
-                    }
+                    assert !executionInProgress(wr.get()) : "No node is running, but a sub-workflow is running?!";
                 }
             }
             return false;
         }
 
-                
         /**
          * Checks if new nodes are executable now and if so, starts them.
          * Threads waiting on m_waitingNodes are awakened if no nodes are
