@@ -26,7 +26,7 @@ encapsulates a meta workflow. We distinguish between <b>MetaIONodes</b> that are
 responsible for translating the input/output of the outer workflow to the
 inner workflow and the <b>MetaNode</b> itself that holds an internal workflow.
 </p>
-<p>
+
 The following classes belong to the MetaNode:
 <ul>
 <li>MetaNodeContainer, MetaNode and MetaNodeModel</li>
@@ -38,14 +38,14 @@ accesses the inner meta-workflow through the MetaNode which access the
 underlying MetaNodeModel. Input DataTables are translated from the inports
 of the MetaNode in the inner workflow and from its outputs to the outports
 of the MetaNode.
-</p>
-<p>
+<br>
 The following classes belong to the MetaIONodes:
 <ul>
 <li>MetaInputNodeModel, MetaInputNode and MetaInputNodeContainer</li>
 <li>MetaOutputNodeModel, MetaOutputNode and MetaOutputNodeContainer</li>
 <li>MetaIONode and MetaIONodeContainer</li>
 </ul>
+<br>
 These nodes can only be used inside a MetaWorkflow. They are responsible for 
 translating the input at the MetaNode to the inner workflow and resp.
 translating the output to the output port of the MetaNode. The MetaInput
@@ -55,7 +55,9 @@ difference is that DataTables and DataTableSpecs are manually set resp. retrieve
 getter- and setter-methods. DataTables and DataTableSpecs are propagated from
 the NodeContainer through the Node to the NodeModel. The Factory of the 
 MetaInput and MetaOutputNode produces singletons.
+
+<p>
+If you want to write your own meta nodes, have a look at <a href="doc-files/howto.html">
+Howto write a meta node</a>.
 </p>
-<p>If you want to write your own meta nodes, have a look at <a href="doc-files/howto.html">
-Howto write a meta node</a>.</p>
 </body>

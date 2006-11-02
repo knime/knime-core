@@ -14,7 +14,8 @@ times and aggreate the results of each iteration in some way. Of course, meta
 nodes can also be used to just encapsulate the internal workflow to make the
 outer one less complicated.</p>
 
-<p>Implementing your own meta node is quite simple:
+
+Implementing your own meta node is quite simple:
 <ol>
   <li>Create a subclass of <code>org.knime.core.meta.MetaNodeModel</code>.</li>
   <li>If the output data table spec is known in advance, override the <code>configure</code>
@@ -84,6 +85,6 @@ the cross validation node. It creates a special partitioner node (that is
 flagged non-deleted in its constructor), executes the internal workflow a
 certain number of times and collectes the results of each iteration from the
 meta output node.
-</p>
+
 </body>
 </html>
