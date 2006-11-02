@@ -21,27 +21,30 @@
  * 
  * History
  *   09.01.2006(all): reviewed
+ *   02.11.2006 (tm, cs): reviewed
  */
 package org.knime.core.data;
 
-
-/**  
- * Container interface for a vector of <code>DataCell</code>s with a key
- * identifier.
+/**
+ * Container interface for a vector of {@link DataCell}s and a row key
+ * for unique identification.
  * 
- * <p>Each <code>DataRow</code> represents one row of a <code>DataTable</code> 
- * and contains a fixed number of <code>DataCell</code> elements which are 
- * directly accessible and read-only. In addition, each <code>DataRow</code> 
- * vector contains a unique identifier key (which is not part of the data 
+ * <p>
+ * Each <code>DataRow</code> represents one row of a {@link DataTable}
+ * and contains a fixed number of {@link DataCell} elements which are
+ * directly accessible and read-only. In addition, each <code>DataRow</code>
+ * contains a unique identifier key (which is not part of the data
  * vector).
- * <p>A <code>DataRow</code> must not contain a <code>null</code> element or
- * a <code>null</code> key.
+ * <p>
+ * A <code>DataRow</code> must not contain a <code>null</code> element or a
+ * <code>null</code> key.
  * 
- * <p>This <code>DataRow</code> interface extends the 
- * <code>java.util.Iterable</code> interface but does not allow the removal of 
- * <code>DataCell</code>. Implementors must therefore throw an 
- * <code>UnsupportedOperationException</code> in the Iterators remove method.
- *   
+ * <p>
+ * This <code>DataRow</code> interface extends the
+ * {@link Iterable} interface but does not allow the removal of
+ * {@link DataCell}s. Implementors must therefore throw an
+ * {@link UnsupportedOperationException} in the Iterators remove method.
+ * 
  * @author Thomas Gabriel, University of Konstanz
  * 
  * @see DataTable
@@ -50,26 +53,29 @@ package org.knime.core.data;
  * @see RowKey
  */
 public interface DataRow extends Iterable<DataCell> {
-    
-    /** 
+
+    /**
      * Returns the length of this row, i.e. the number of columns of the
-     * DataTable (not including the row identifier).
-     * @return Length of this row.
+     * DataTable (not including the row key).
+     * 
+     * @return length of this row
      */
     int getNumCells();
-    
-    /** 
-     * Returns the identifier key of this row.
-     * @return Identifier key.
+
+    /**
+     * Returns the row key.
+     * 
+     * @return the row key
      */
     RowKey getKey();
 
-    /** 
-     * Returns the <code>DataCell</code> at the provided index within this row.
-     * @param   index In this row.
-     * @return  DataCell at the provided index.
-     * @throws  IndexOutOfBoundsException If index out of range.
+    /**
+     * Returns the {@link DataCell} at the provided index within this
+     * row.
+     * 
+     * @param index the index of the cell to retrieve (indices start from 0)
+     * @return the {@link DataCell} at the given index
+     * @throws IndexOutOfBoundsException if the index is out of range
      */
     DataCell getCell(final int index);
-    
 }
