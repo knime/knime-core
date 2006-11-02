@@ -25,8 +25,10 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -43,15 +45,14 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigWO;
 
-
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBReaderConnectionNodeModel extends NodeModel {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DBReaderConnectionNodeModel.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DBReaderConnectionNodeModel.class);
 
     private String m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
 
@@ -63,14 +64,19 @@ class DBReaderConnectionNodeModel extends NodeModel {
 
     private String m_pass = "";
 
+    /**
+     * The name of the view created on the database defined by the given query.
+     */
+    private String m_viewName;
+
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
-    
-    static {        
+
+    static {
         try {
-            Class<?> driverClass = Class.forName(
-                    "sun.jdbc.odbc.JdbcOdbcDriver");
-            Driver theDriver = new WrappedDriver((Driver)driverClass
-                    .newInstance());
+            Class<?> driverClass =
+                    Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
+            Driver theDriver =
+                    new WrappedDriver((Driver)driverClass.newInstance());
             DriverManager.registerDriver(theDriver);
         } catch (Exception e) {
             LOGGER.warn("Could not load 'sun.jdbc.odbc.JdbcOdbcDriver'.");
@@ -80,6 +86,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
 
     /**
      * Creates a new database reader.
+     * 
      * @param dataIn data ins
      * @param dataOut data outs
      * @param modelIn model ins
@@ -89,14 +96,17 @@ class DBReaderConnectionNodeModel extends NodeModel {
             final int modelIn, final int modelOut) {
         super(dataIn, dataOut, modelIn, modelOut);
     }
-    
+
     /**
      * @see NodeModel#saveModelContent(int, ModelContentWO)
      */
     @Override
-    protected void saveModelContent(final int index, 
+    protected void saveModelContent(final int index,
             final ModelContentWO predParams) throws InvalidSettingsException {
         saveConfig(predParams);
+        
+        // additionally save the view name
+        predParams.addString("view", m_viewName);
     }
 
     /**
@@ -106,7 +116,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         saveConfig(settings);
     }
-    
+
     private void saveConfig(final ConfigWO settings) {
         settings.addString("driver", m_driver);
         settings.addString("statement", m_query);
@@ -163,7 +173,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
                 for (String fileName : m_driverLoaded) {
                     try {
                         DBDriverLoader.loadDriver(new File(fileName));
-                    } catch (Exception e2) {
+                     } catch (Exception e2) {
                         LOGGER.info("Could not load driver from: " 
                                 + loadedDriver, e2);
                     }
@@ -179,6 +189,21 @@ class DBReaderConnectionNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
+
+        // create a view on the database according to the given select
+        // statement
+        Connection conn =
+                DriverManager.getConnection(m_name, m_user, DBReaderConnection
+                        .decrypt(m_pass));
+
+        // create a unique view name
+        m_viewName = "VIEW_" + Long.toString(System.currentTimeMillis());
+        String viewCreateSQL =
+                "CREATE VIEW " + m_viewName + " AS " + m_query;
+
+        Statement stmt = conn.createStatement();
+        stmt.executeQuery(viewCreateSQL);
+
         return new BufferedDataTable[0];
     }
 
@@ -218,41 +243,40 @@ class DBReaderConnectionNodeModel extends NodeModel {
             throws InvalidSettingsException {
         return new DataTableSpec[0];
     }
-    
+
     /**
      * @return user name to login to the database
      */
     protected String getUser() {
         return m_user;
     }
-    
+
     /**
      * @return password used to login to the database
      */
     protected String getPassword() {
         return m_pass;
     }
-    
+
     /**
      * @return database driver to create connection
      */
     protected String getDriver() {
         return m_driver;
     }
-    
+
     /**
      * @return database name to create connection to
      */
     protected String getDatabaseName() {
         return m_name;
     }
-    
+
     /**
      * @return SQl query/statement to execute
      */
     protected String getQuery() {
         return m_query;
     }
-        
-    
+
 }
