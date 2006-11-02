@@ -58,7 +58,7 @@ import sun.misc.BASE64Encoder;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBReaderConnection implements DataTable {
+public final class DBReaderConnection implements DataTable {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBReaderConnection.class);
@@ -192,7 +192,7 @@ final class DBReaderConnection implements DataTable {
      * @return The decrypted password.
      * @throws Exception If something goes wrong.
      */
-    static String decrypt(final String password) throws Exception {
+    public static String decrypt(final String password) throws Exception {
         Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, mSECRETKEY);
         // perform the decryption
