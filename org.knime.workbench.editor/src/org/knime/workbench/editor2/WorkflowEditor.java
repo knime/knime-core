@@ -455,7 +455,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
         }
 
-        m_manager.shutdown();
+        // shutdown is only performed if this is not a meta-workflow editor
+        if (!(this instanceof MetaWorkflowEditor)) {
+            m_manager.shutdown();
+            m_manager.waitUntilFinished();
+        }
 
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
