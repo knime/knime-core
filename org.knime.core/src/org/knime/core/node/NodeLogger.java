@@ -92,7 +92,7 @@ public final class NodeLogger {
         ASSERT = flag;
     }
 
-    /** Keeps set of <code>NodeLogger</code> elements by classname as key. */
+    /** Keeps set of <code>NodeLogger</code> elements by class name as key. */
     private static final HashMap<String, NodeLogger> LOGGERS = 
         new HashMap<String, NodeLogger>();
 
@@ -117,7 +117,7 @@ public final class NodeLogger {
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
-        // check if KNIME log4j config exisist in users home
+        // check if KNIME log4j config exists in users home
         File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
         File log4j = new File(knimeDir, "log4j-1.1.0.xml");
         if (!log4j.exists()) {
@@ -392,8 +392,8 @@ public final class NodeLogger {
     }
 
     /**
-     * Writes CODING PROBLEM plus this message, as well as the the message of
-     * the throwable into this logger as error and debug.
+     * Writes <i>CODING PROBLEM</i> plus this message, as well as the the 
+     * message of the throwable into this logger as error and debug.
      * 
      * @param o The message to print.
      * @param t The throwable's message to print.
@@ -417,7 +417,7 @@ public final class NodeLogger {
     }
 
     /**
-     * Adds a new <code>java.io.Writer</code> with the given level to this
+     * Adds a new {@link java.io.Writer} with the given level to this
      * logger.
      * 
      * @param writer The writer to add.
@@ -445,7 +445,7 @@ public final class NodeLogger {
     }
 
     /**
-     * Removes the previously added <code>java.io.Writer</code> from the
+     * Removes the previously added {@link java.io.Writer} from the
      * logger.
      * 
      * @param writer The Writer to remove.
@@ -464,8 +464,9 @@ public final class NodeLogger {
 
     /**
      * Sets an new minimum logging level for all internal appenders, that are,
-     * log file, and System.out and System.err appender. The maximum loggings
-     * stays LEVEL.ALL for all appenders.
+     * log file, and <code>System.out</code> and <code>System.err</code> 
+     * appender. The maximum logging level stays <code>LEVEL.ALL</code> for all 
+     * appenders.
      * 
      * @param level The new minimum logging level.
      */
@@ -484,7 +485,7 @@ public final class NodeLogger {
     }
 
     /**
-     * Translates this loging levels into Log4J logging levels.
+     * Translates this logging levels into Log4J logging levels.
      * 
      * @param level The level to translate.
      * @return The Log4J logging level.
