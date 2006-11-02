@@ -148,9 +148,9 @@ class DBReaderConnectionNodeModel extends NodeModel {
         String[] loadedDriver = settings.getStringArray("loaded_driver");
         try {
             DBReaderConnection.decrypt(password);
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Could not decrypt password.", 
-                    e);
+        } catch (Exception e1) {
+            LOGGER.error("Could not decrypt password.", e1);
+            super.setWarningMessage("Could not decrypt password.");
         } finally {
             if (write) {
                 m_driver = driver;
@@ -163,9 +163,9 @@ class DBReaderConnectionNodeModel extends NodeModel {
                 for (String fileName : m_driverLoaded) {
                     try {
                         DBDriverLoader.loadDriver(new File(fileName));
-                    } catch (Exception e) {
+                    } catch (Exception e2) {
                         LOGGER.info("Could not load driver from: " 
-                                + loadedDriver);
+                                + loadedDriver, e2);
                     }
                 }
             }
