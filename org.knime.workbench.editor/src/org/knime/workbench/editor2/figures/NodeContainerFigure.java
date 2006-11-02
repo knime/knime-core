@@ -416,9 +416,6 @@ public class NodeContainerFigure extends RectangleFigure {
             m_progressFigure.setExecuting(false);
             m_progressFigure.setStateMessage("Queued");
         }
-
-        // clean the progress bar tooltip
-        m_progressFigure.setToolTip(new Label(""));
     }
 
     private void setStatusAmple() {

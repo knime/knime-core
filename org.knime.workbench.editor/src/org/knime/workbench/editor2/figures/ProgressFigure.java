@@ -457,9 +457,6 @@ public class ProgressFigure extends RectangleFigure implements
         m_stateMessage = stateMessage;
 
         m_currentProgressMessage = m_stateMessage;
-
-        // set the message to the tooltip
-        setToolTip(new Label(m_currentProgressMessage));
     }
 
     /**
