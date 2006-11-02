@@ -88,7 +88,11 @@
 		rules, the column with the fuzzy rule level must be choosen by 
 		selecting it in the drop down menu.
 	</option>
-		</fullDescription>
+	</fullDescription>
+		
+	<ports>
+		<dataIn name="Any input table" index="0">Datatable with integer columns to do clustering on</dataIn>
+	</ports>	
 		
 	<views>
 		<view index="0" name="Sota Tree View">
@@ -96,8 +100,5 @@
 		</view>
 	</views>
 	
-	<ports>
-		<dataIn name="Any input table" index="0">Datatable with integer columns to do clustering on</dataIn>
-	</ports>	
 </knimeNode>
 

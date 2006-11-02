@@ -18,14 +18,14 @@
 		Determines the maximum number of patterns the tree will store to
 		support HiLiting.
 		</option>		
-		
 	</fullDescription>
 	
 	<ports>
 		<dataIn index="0" name="Data to classify">Input data to classify</dataIn>
-		<predParamIn index="0" name="Decision Tree Model">A previously learned decission tree model</predParamIn>
 		<dataOut index="0" name="Classified Data">The input table with one column added containing the classification</dataOut>
+		<predParamIn index="0" name="Decision Tree Model">A previously learned decision tree model</predParamIn>
 	</ports>
+	
 	<views>
 		<view index="0" name="Decision Tree View">
 			The decision tree as given in the model port along with the 
