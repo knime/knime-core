@@ -60,7 +60,7 @@ information (min, max, possible value), a color handler, and so on
 for each of the columns. For further details on these specific
 classes see their class description and the <A HREF="faq.html">FAQ</A>
 on how to use them.</P>
-<a name="newtypes"/>
+<a name="newtypes"></a>
 <H1>New types in KNIME</H1>
 <P>KNIME allows to define customized types of data, e.g. a DataCell
 that carries a representation of a molecule. Specialized data types
@@ -116,7 +116,7 @@ two different classes/interfaces:</P>
 </OL>
 <UL>
 	<UL>
-		<LI><P><B>Native value class</B>: A DataCell may potentially
+		<LI><B>Native value class</B>: A DataCell may potentially
 		implement more than just one single DataValue interface. There is
 		no natural order on the implemented interfaces but one often
 		desires to have a “preferred” value class. (Think of the new
@@ -129,8 +129,9 @@ two different classes/interfaces:</P>
 		<pre>public static final Class&lt;? extends DataValue&gt; getNativeValueClass()</pre>
 		Implement this method and return a
 		DataValue class that your DataCell is implementing. If no such
-		method exists, the order on the implemented values is undefined.</P>
-		<LI><P><B>DataCellSerializer&lt;MyCell&gt;</B>: Knime frequently
+		method exists, the order on the implemented values is undefined.
+		</LI>
+		<LI><B>DataCellSerializer&lt;MyCell&gt;</B>: Knime frequently
 		buffers data to hard disc since DataTables can get arbitrarily big.
 		By default it uses Java-serialization (the base DataCell implements
 		java.io.Serializable). Since standard serialization is awfully
@@ -144,7 +145,8 @@ two different classes/interfaces:</P>
 		i.e. the generic paramater of the DataCellSerializer must be your
 		DataCell class. This method is called once (the first time such an
 		serializer is used). Be highly encouraged to implement it – it
-		pays off!</P>
+		pays off!
+		</LI>
 	</UL>
 	<P STYLE="font-weight: medium">The skeleton for the new DataCell
 	will look like:</P>
@@ -167,7 +169,7 @@ two different classes/interfaces:</P>
     }
     ...
 }</PRE><P>
-	</P>
+</P>
 </UL>
 </BODY>
 </HTML>
