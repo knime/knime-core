@@ -20,19 +20,17 @@
 ====================================================================
 -->
 <body>
-	<p>Node that oversample patterns in an input table.</p>
-	<p>The algorithm works roughly as follows: It oversamples patterns of 
-		a given class by drawing random representatives from the input table,
-		calculating their kNNs and then choosing any nearest neighbor and 
-		putting the new pattern along the line between the representative 
-		and its nearest neighbor.
-	<p>
-		The implementation is based on the 
-		<a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">SMOTE</a> algorithm:
-		<pre>
+<p>Node that oversample patterns in an input table.</p>
+<p>The algorithm works roughly as follows: It oversamples patterns of a
+given class by drawing random representatives from the input table, calculating
+their kNNs and then choosing any nearest neighbor and putting the new pattern
+along the line between the representative and its nearest neighbor.
+<p>The implementation is based on the <a
+  href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">SMOTE</a>
+algorithm:</p>
+<pre>
 		Chawla, N.V., Bowyer, K.W., Hall, L.O., Kegelmeyer, W.P. (2002) 
 		"SMOTE: Synthetic Minority Over-sampling Technique",
 		Journal of Artificial Intelligence Research, Volume 16, pages 321-357.
 		</pre>
-	</p>
 </body>

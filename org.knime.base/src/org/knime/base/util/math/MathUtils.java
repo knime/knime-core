@@ -193,7 +193,8 @@ public final class MathUtils {
                 }
             }
             if (max == 0.0) {
-                throw new ArithmeticException("No solution.");
+                throw new ArithmeticException("Cannot invert matrix, column "
+                        + c + " has only 0 entries.");
             }
             int swap = rowOrder[c];
             rowOrder[c] = rowOrder[l];

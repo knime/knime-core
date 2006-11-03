@@ -22,70 +22,70 @@
 -->
 <HTML>
 <HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Linux)">
-	<META NAME="CREATED" CONTENT="20060505;9381300">
-	<META NAME="CHANGED" CONTENT="20060505;18223500">
+<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+<TITLE></TITLE>
+<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Linux)">
+<META NAME="CREATED" CONTENT="20060505;9381300">
+<META NAME="CHANGED" CONTENT="20060505;18223500">
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1>Data representation in KNIME</H1>
-<P>KNIME uses DataCells to represent data (each DataCell holds one
-single entity, for instance a floating point value). An array of
-DataCells makes up a DataRow. There are a couple of default
-implementations of DataCell that hold specific types of data such as
-StringCell, IntCell, and DoubleCell. The entire
-data that is passed along nodes in the workflow is exposed in a
-DataTable, containing an unknown number of (equal-length) rows. All
-elements in a column must be compatible to the type that is assigned
-to the column, e.g. they must all be numeric or all must be a string.
-The following figure sketches a DataTable. 
+<P>KNIME uses DataCells to represent data (each DataCell holds one single
+entity, for instance a floating point value). An array of DataCells makes up a
+DataRow. There are a couple of default implementations of DataCell that hold
+specific types of data such as StringCell, IntCell, and DoubleCell. The entire
+data that is passed along nodes in the workflow is exposed in a DataTable,
+containing an unknown number of (equal-length) rows. All elements in a column
+must be compatible to the type that is assigned to the column, e.g. they must
+all be numeric or all must be a string. The following figure sketches a
+DataTable.</P>
+<P><IMG SRC="datatable.png" NAME="graphics1" ALIGN=LEFT WIDTH=561 HEIGHT=168
+  BORDER=0><BR>
+<BR>
 </P>
-<P><IMG SRC="datatable.png" NAME="graphics1" ALIGN=LEFT WIDTH=561 HEIGHT=168 BORDER=0><BR><BR>
+<P><BR>
+<BR>
 </P>
-<P><BR><BR>
+<P><BR>
+<BR>
 </P>
-<P><BR><BR>
+<P><BR>
+<BR>
 </P>
-<P><BR><BR>
+<P><BR>
+<BR>
 </P>
-<P><BR><BR>
-</P>
-<P>The meta information to a DataTable (number of columns, column
-specific information) is available through the DataTableSpec
-(DataTable#getDataTableSpec) which consists of a set of
-DataColumnSpec comprising a specific name (a String), type (a
-DataType, see below), and some (optional) properties such as domain
-information (min, max, possible value), a color handler, and so on
-for each of the columns. For further details on these specific
-classes see their class description and the <A HREF="faq.html">FAQ</A>
-on how to use them.</P>
+<P>The meta information to a DataTable (number of columns, column specific
+information) is available through the DataTableSpec (DataTable#getDataTableSpec)
+which consists of a set of DataColumnSpec comprising a specific name (a String),
+type (a DataType, see below), and some (optional) properties such as domain
+information (min, max, possible value), a color handler, and so on for each of
+the columns. For further details on these specific classes see their class
+description and the <A HREF="faq.html">FAQ</A> on how to use them.</P>
 <a name="newtypes"></a>
 <H1>New types in KNIME</H1>
-<P>KNIME allows to define customized types of data, e.g. a DataCell
-that carries a representation of a molecule. Specialized data types
-bring along their own renderer (e.g. to display the molecular
-structure), a customized icon (that is displayed, for instance in a
-column header to recognize the column's type), and a comparator. In
-order to implement a new type in KNIME, generally you have to create
-two different classes/interfaces:</P>
+<P>KNIME allows to define customized types of data, e.g. a DataCell that
+carries a representation of a molecule. Specialized data types bring along their
+own renderer (e.g. to display the molecular structure), a customized icon (that
+is displayed, for instance in a column header to recognize the column's type),
+and a comparator. In order to implement a new type in KNIME, generally you have
+to create two different classes/interfaces:</P>
 <OL>
-	<LI><P>An interface derived from <A HREF="../DataValue.html">DataValue</A>
-	defining access method(s) to the generic objects. This will be the
-	base interface to the new type and will also expose the meta
-	information (renderer and such). Since Java does not allow to
-	specify static members nor methods in interfaces (or any other class
-	definition), KNIME will access a member in that interface with the
-	following signature using reflection:</P>
-	<PRE STYLE="margin-bottom: 0.2in">public static final UtilityFactory UTILITY</PRE><P>
-	The class <A HREF="../DataValue.UtilityFactory.html">UtilityFactory</A>
-	has methods to retrieve specific information to this type
-	implementation. If you do not provide such a member, the reflection
-	mechanism will use the information from the super interface, i.e.
-	DataValue (though, no customized information is available in this
-	case). We advise to define the UtilityFactory as an inner class of
-	the interface. The new interface should be similar to:</P>
-	<PRE>public interface MyDataValue extends DataValue {
+  <LI>
+  <P>An interface derived from <A HREF="../DataValue.html">DataValue</A>
+  defining access method(s) to the generic objects. This will be the base
+  interface to the new type and will also expose the meta information (renderer
+  and such). Since Java does not allow to specify static members nor methods in
+  interfaces (or any other class definition), KNIME will access a member in that
+  interface with the following signature using reflection:</P>
+  <PRE STYLE="margin-bottom: 0.2in">public static final UtilityFactory UTILITY</PRE>
+  <P>The class <A HREF="../DataValue.UtilityFactory.html">UtilityFactory</A>
+  has methods to retrieve specific information to this type implementation. If
+  you do not provide such a member, the reflection mechanism will use the
+  information from the super interface, i.e. DataValue (though, no customized
+  information is available in this case). We advise to define the UtilityFactory
+  as an inner class of the interface. The new interface should be similar to:</P>
+  <PRE>public interface MyDataValue extends DataValue {
     
     /** Derived locally. */
     public static final UtilityFactory UTILITY = new UtilityFactory() {
@@ -97,60 +97,51 @@ two different classes/interfaces:</P>
 
  }
  </PRE>
-	<LI><P>A class derived from <A HREF="../DataCell.html">DataCell</A>
-	and implementing the interface defined in 1. and any DataValue
-	interface to which your new type should be compatible to (for
-	instance our new molecule type should also be able to return a
-	simple string representation of the molecule – it needs therefore
-	to implement StringValue). The first time the new DataCell is
-	instantiated, KNIME will parse the list of implemented DataValue
-	interfaces and make the list of compatible DataValues available
-	through the <A HREF="../DataType.html">DataType</A> that is
-	associated with the new cell implementation (the DataType is created
-	at runtime the first time the method
-	<A HREF="../DataType.html#getType(java.lang.Class)">DataType.getType(MyNewCell.class)</A>
-	is invoked – either directly or implicitly through
-	<A HREF="../DataCell.html#getType()">MyNewCell#getType()</A>).
-	There are a two important issues to respect when defining a new
-	DataCell:</P>
-</OL>
+  <LI>
+  <P>A class derived from <A HREF="../DataCell.html">DataCell</A> and
+  implementing the interface defined in 1. and any DataValue interface to which
+  your new type should be compatible to (for instance our new molecule type
+  should also be able to return a simple string representation of the molecule –
+  it needs therefore to implement StringValue). The first time the new DataCell
+  is instantiated, KNIME will parse the list of implemented DataValue interfaces
+  and make the list of compatible DataValues available through the <A
+    HREF="../DataType.html">DataType</A> that is associated with the new cell
+  implementation (the DataType is created at runtime the first time the method <A
+    HREF="../DataType.html#getType(java.lang.Class)">DataType.getType(MyNewCell.class)</A>
+  is invoked – either directly or implicitly through <A
+    HREF="../DataCell.html#getType()">MyNewCell#getType()</A>). There are a two
+  important issues to respect when defining a new DataCell:</P>
 <UL>
-	<UL>
-		<LI><B>Native value class</B>: A DataCell may potentially
-		implement more than just one single DataValue interface. There is
-		no natural order on the implemented interfaces but one often
-		desires to have a “preferred” value class. (Think of the new
-		molecule type from before, which is compatible to the new
-		MyDataValue interface but also to StringValue – both values
-		support a customized renderer: Which render should KNIME use by
-		default?) To overcome this situation, KNIME will attempt to call a
-		static method in the DataCell implementation with the following 
-		signature and use the returned value as “native” value class.
-		<pre>public static final Class&lt;? extends DataValue&gt; getNativeValueClass()</pre>
-		Implement this method and return a
-		DataValue class that your DataCell is implementing. If no such
-		method exists, the order on the implemented values is undefined.
-		</LI>
-		<LI><B>DataCellSerializer&lt;MyCell&gt;</B>: Knime frequently
-		buffers data to hard disc since DataTables can get arbitrarily big.
-		By default it uses Java-serialization (the base DataCell implements
-		java.io.Serializable). Since standard serialization is awfully
-		slow, we support reading/writing through an appropriate factory,
-		called <A HREF="../DataCellSerializer.html">DataCellSerializer</A>.
-		KNIME will check for (yet another) static method in your DataCell
-		implementation:
-		<pre>public static final DataCellSerializer&lt;MyCell&gt; getCellSerializer()</pre>
-		and if it finds such method, it will use this returned factory instead 
-		of serialization. Note, you also need to have the correct return type,
-		i.e. the generic paramater of the DataCellSerializer must be your
-		DataCell class. This method is called once (the first time such an
-		serializer is used). Be highly encouraged to implement it – it
-		pays off!
-		</LI>
-	</UL>
-	<P STYLE="font-weight: medium">The skeleton for the new DataCell
-	will look like:</P>
-	<PRE>public class MyCell extends DataCell implements MyValue, StringValue {
+  <LI><B>Native value class</B>: A DataCell may potentially implement more
+  than just one single DataValue interface. There is no natural order on the
+  implemented interfaces but one often desires to have a “preferred” value
+  class. (Think of the new molecule type from before, which is compatible to the
+  new MyDataValue interface but also to StringValue – both values support a
+  customized renderer: Which render should KNIME use by default?) To overcome
+  this situation, KNIME will attempt to call a static method in the DataCell
+  implementation with the following signature and use the returned value as
+  “native” value class. <pre>public static final Class&lt;? extends DataValue&gt; getNativeValueClass()</pre>
+  Implement this method and return a DataValue class that your DataCell is
+  implementing. If no such method exists, the order on the implemented values is
+  undefined.</LI>
+  <LI><B>DataCellSerializer&lt;MyCell&gt;</B>: Knime frequently buffers
+  data to hard disc since DataTables can get arbitrarily big. By default it uses
+  Java-serialization (the base DataCell implements java.io.Serializable). Since
+  standard serialization is awfully slow, we support reading/writing through an
+  appropriate factory, called <A HREF="../DataCellSerializer.html">DataCellSerializer</A>.
+  KNIME will check for (yet another) static method in your DataCell
+  implementation: <pre>public static final DataCellSerializer&lt;MyCell&gt; getCellSerializer()</pre>
+  and if it finds such method, it will use this returned factory instead of
+  serialization. Note, you also need to have the correct return type, i.e. the
+  generic paramater of the DataCellSerializer must be your DataCell class. This
+  method is called once (the first time such an serializer is used). Be highly
+  encouraged to implement it – it pays off!</LI>
+</UL>
+</LI>
+</OL>
+<P STYLE="font-weight: medium">The skeleton for the new DataCell will look
+like:</P>
+<PRE>public class MyCell extends DataCell implements MyValue, StringValue {
 
     public static final Class&lt;? extends DataValue&gt; getNativeValueClass() {
         return MyValue.class;
@@ -168,8 +159,7 @@ two different classes/interfaces:</P>
         };
     }
     ...
-}</PRE><P>
-</P>
-</UL>
+}</PRE>
+<P></P>
 </BODY>
 </HTML>

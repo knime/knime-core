@@ -22,11 +22,11 @@
 <body>
 This package contains the necessary classes for an interruptible framework.
 The <code>InterruptibleNodeModel</code> consists of three abstract methods:
-<li>
-	<ul><code>init(DataTable[] input)</code></ul>
-	<ul><code>executeOneIteration()</code></ul>
-	<ul><code>DataTable[] getOutput()</code></ul>
-</li>
+<ul>
+	<li><code>init(DataTable[] input)</code></li>
+	<li><code>executeOneIteration()</code></li>
+	<li><code>DataTable[] getOutput()</code></li>
+</ul>
 When an InterruptibleNodeModel is executed, first the <code>init m(DataTable[])</code> 
 method is called. The model starts with <code>paused = true</code>. 
 When this is set to <code>paused = false</code> the

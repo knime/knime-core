@@ -33,12 +33,12 @@ object, and<br>
 object. <p>
 
 In order to recreate a filter from a given config object there exists a
-rowfilter factory (see <code>RowFilterFactory</class>). The abstract RowFilter
+rowfilter factory (see <code>RowFilterFactory</code>). The abstract RowFilter
 adds an identifier string to the config object (before it delegates the
 actual saving of the settings to the derived class) and the factory reads
 this ID string (at loading time) to create the corresponding filter class. 
 As a consequence of this, each new filter must be registered with the
-<class>RowFilterFactory</class>. The wheres and hows can be easily figured
+<code>RowFilterFactory</code>. The wheres and hows can be easily figured
 out by looking at the comments in RowFilterFactory.java and to look at the
 existing examples there.
 
