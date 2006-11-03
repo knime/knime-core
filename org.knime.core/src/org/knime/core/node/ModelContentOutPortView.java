@@ -28,15 +28,24 @@ package org.knime.core.node;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Enumeration;
 
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 /**
- * A port view showing the port's ModelContent description.
+ * A port view showing the port's <code>ModelContent</code> as 
+ * <code>JTree</code>.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -48,10 +57,12 @@ final class ModelContentOutPortView extends NodeOutPortView {
     /** If no ModelContent available. */
     private static final TreeNode NO_TEXT 
         = new DefaultMutableTreeNode("<No Model>", false);
+    
+    private final JPopupMenu m_treePopup = new JPopupMenu();
 
     /**
      * A view showing the data model stored in the specified ModelContent
-     * ouput port.
+     * output port.
      * 
      * @param nodeName Name of the node the inspected port belongs to. Will
      *            be part of the frame's title.
@@ -64,10 +75,76 @@ final class ModelContentOutPortView extends NodeOutPortView {
         m_tree = new JTree();
         m_tree.setEditable(false);
         m_tree.setFont(new Font("Courier", Font.PLAIN, 12));
+        m_tree.setLargeModel(true);
+        m_tree.setRowHeight(20);
+        m_treePopup.setLightWeightPopupEnabled(false);
+        final JMenuItem expand = new JMenuItem("Expand");
+        expand.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent ae) {
+                TreePath[] tps = m_tree.getSelectionPaths();
+                if (tps != null) {
+                    for (TreePath tp : tps) {
+                        expandAll(tp);
+                    }
+                }
+            } 
+        });
+        m_treePopup.add(expand);
+        final JMenuItem collapse = new JMenuItem("Collapse");
+        collapse.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent ae) {
+                TreePath[] tps = m_tree.getSelectionPaths();
+                if (tps != null) {
+                    for (TreePath tp : tps) {
+                        collapseAll(tp);
+                    }
+                }
+            } 
+        });
+        m_treePopup.add(collapse);
+        m_tree.add(m_treePopup);
+        m_tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(final MouseEvent e) {
+                if (e.isPopupTrigger() && m_tree.getSelectionPaths() != null) {
+                    m_treePopup.show(m_tree, e.getX(), e.getY());
+                }
+            } 
+           @Override
+           public void mousePressed(final MouseEvent e) {
+               if (e.isPopupTrigger() && m_tree.getSelectionPaths() != null) {
+                   m_treePopup.show(m_tree, e.getX(), e.getY());
+               }
+           } 
+        });
         Container cont = getContentPane();
         cont.setLayout(new BorderLayout());
         cont.setBackground(NodeView.COLOR_BACKGROUND);
         cont.add(new JScrollPane(m_tree), BorderLayout.CENTER);
+    }
+    
+    private void expandAll(final TreePath parent) {
+        TreeNode node = (TreeNode) parent.getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (Enumeration e = node.children(); e.hasMoreElements();) {
+                TreeNode n = (TreeNode) e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandAll(path);
+            }
+        }
+        m_tree.expandPath(parent);
+    }
+    
+    private void collapseAll(final TreePath parent) {
+        TreeNode node = (TreeNode) parent.getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (Enumeration e = node.children(); e.hasMoreElements();) {
+                TreeNode n = (TreeNode) e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                collapseAll(path);
+            }
+        }
+        m_tree.expandPath(parent);
     }
 
     /**
