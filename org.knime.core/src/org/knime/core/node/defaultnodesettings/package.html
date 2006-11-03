@@ -24,7 +24,25 @@
 -->
 </head>
 <body>
-This package is going to contain the new default dialog components.
-They will use little models to hold, save and load the value of a component.
+This package contains default dialog components, which can be used to quickly 
+create a simple dialog. Components are provided for basic types, like string,
+boolean, integer or double numbers, and also for a list of column names.
+
+To create this default dialog, create a node dialog pane derived from 
+{@link org.knime.core.node.defaultnodesettings.DefaultNodeDialogPane DefaultNodeDialogPane}.
+In the constructor, add instances of the corresponding 
+{@link org.knime.core.node.defaultnodesettings.DialogComponent DialogComponents}. 
+Provide a new {@link org.knime.core.node.defaultnodesettings.SettingsModel SettingsModel}
+instance of appropriate type in the constructor call. Also, specify a unique 
+key (string), which you re-use in the NodeModel. In the NodeModel use new 
+instances of
+{@link org.knime.core.node.defaultnodesettings.SettingsModel  SettingsModels} 
+(the same type of model used when creating a default component) to
+retrieve the stored values. Settings models provide load and save methods and
+methods to get the values. <br>
+<br>
+For a more detailed story (with code examples) about how to create a default 
+dialog, please refer to the {@link doc-files/defaultDialogHowTo.html DefaultDialogHowto}.
+
 </body>
 </html>

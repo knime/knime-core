@@ -135,6 +135,7 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Set)
      * @see #update(DataTableSpec, boolean, String...)
      */
+    @SuppressWarnings("unchecked")
     public ColumnFilterPanel() {
         this(DataValue.class);
     }
@@ -456,21 +457,6 @@ public class ColumnFilterPanel extends JPanel {
 
     /**
      * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contain all column names
-     * from the spec afterwards.
-     * 
-     * @param spec the spec to retrieve the column names from
-     * @param exclude the flag if <code>excl</code> contains the columns to
-     *            exclude (otherwise include).
-     * @param excl the list of columns to exclude or include
-     */
-    public void update(final DataTableSpec spec, final boolean exclude,
-            final Set<String> excl) {
-        this.update(spec, exclude, (Collection<String>)excl);
-    }
-
-    /**
-     * Updates this filter panel by removing all current selections from the
      * include and exclude list. The include list will contains all column names
      * from the spec afterwards.
      * 
@@ -479,7 +465,7 @@ public class ColumnFilterPanel extends JPanel {
      *            exclude otherwise include
      * @param excl the list of columns to exclude or include
      */
-    private void update(final DataTableSpec spec, final boolean exclude,
+    public void update(final DataTableSpec spec, final boolean exclude,
             final Collection<String> excl) {
         assert (spec != null && excl != null);
         m_order.clear();
