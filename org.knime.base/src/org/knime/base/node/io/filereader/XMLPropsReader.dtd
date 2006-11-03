@@ -59,7 +59,7 @@
 <!ELEMENT FileTableSpec   (url, column_header, row_header, 
                            column_delimiter, row_delimiter?, 
                            (line_comment)?, (block_comment)?, 
-                           quote?, missing?)
+                           quote?)
 >
 <!ATTLIST FileTableSpec 
           id             CDATA              #REQUIRED
