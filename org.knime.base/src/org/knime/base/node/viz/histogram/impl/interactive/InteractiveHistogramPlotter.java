@@ -71,8 +71,8 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
-     * addDataRow(org.knime.core.data.DataRow)
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
+     * #addDataRow(org.knime.core.data.DataRow)
      */
     @Override
     public void addDataRow(final DataRow row) {
@@ -147,8 +147,8 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
-     * getHistogramDataModel()
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
+     * #getHistogramDataModel()
      */
     @Override
     public AbstractHistogramDataModel getHistogramDataModel() {

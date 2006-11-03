@@ -160,7 +160,8 @@ public class NormalizeNodeModel extends NodeModel {
     }
 
     /**
-     * New normalized {@link DataTable} is created depending on the mode.
+     * New normalized {@link org.knime.core.data.DataTable} is created depending
+     * on the mode.
      * 
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */

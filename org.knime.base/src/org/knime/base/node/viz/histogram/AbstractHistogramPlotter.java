@@ -166,8 +166,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
     /**
      * This is called during resize, or any other pane triggered event.
      * 
-     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
-     *      #updatePaintModel()
+     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
+     *  #updatePaintModel()
      */
     @Override
     public void updatePaintModel() {
@@ -873,8 +873,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
-     *      #getHiLiteMenu()
+     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D#getHiLiteMenu()
      */
     @Override
     public JMenu getHiLiteMenu() {
@@ -886,8 +885,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
     }
 
     /**
-     * @see org.knime.dev.node.view.plotter2D.AbstractPlotter2D
-     *      #fillPopupMenu(javax.swing.JPopupMenu)
+     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
+     *  #fillPopupMenu(javax.swing.JPopupMenu)
      */
     @Override
     protected void fillPopupMenu(final JPopupMenu menu) {

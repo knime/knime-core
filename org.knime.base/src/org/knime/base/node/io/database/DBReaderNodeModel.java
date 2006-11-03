@@ -101,10 +101,10 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
 
     }
 
+ 
     /**
-     * @see org.knime.base.node.io.
-     * database.DBReaderConnectionNodeModel#configure(
-     * org.knime.core.data.DataTableSpec[])
+     * @see org.knime.base.node.io.database.DBReaderConnectionNodeModel
+     *  #configure(org.knime.core.data.DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)

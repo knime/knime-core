@@ -121,8 +121,8 @@ public final class DataInPort extends NodeInPort implements NodePort.DataPort {
     /**
      * Checks if the out port to connect is a data port.
      * 
-     * @see org.knime.core.node.NodeInPort#
-     *      checkConnectPort(org.knime.core.node.NodeOutPort)
+     * @see org.knime.core.node.NodeInPort
+     *      #checkConnectPort(org.knime.core.node.NodeOutPort)
      */
     @Override
     public void checkConnectPort(final NodeOutPort connPort) {

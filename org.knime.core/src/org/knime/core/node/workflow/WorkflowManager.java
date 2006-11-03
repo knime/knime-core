@@ -781,11 +781,12 @@ public class WorkflowManager implements WorkflowListener {
      * @param inPort Index of the incoming port
      * @return <code>true</code> if a connection can be added,
      *         <code>false</code> otherwise
-     * @deprecated use the method {@link WorkflowManager#
-     *             checkAddConnection(int, int, int, int)} as this method throws
-     *             an exception with detailed information instead just a boolean
-     *             value.
+     * @deprecated use the method {@link WorkflowManager
+     *             #checkAddConnection(int, int, int, int)} as this method
+     *             throws an exception with detailed information instead just a
+     *             boolean value.
      */
+    @Deprecated
     public boolean canAddConnection(final int sourceNode, final int outPort,
             final int targetNode, final int inPort) {
 

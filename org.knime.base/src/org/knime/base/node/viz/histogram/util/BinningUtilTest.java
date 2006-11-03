@@ -34,8 +34,8 @@ public class BinningUtilTest extends TestCase {
 
     /**
      * Test method for {@link 
-     * org.knime.base.node.viz.histogram.util.BinningUtil#
-     * createBinInterval(double, double, int, 
+     * org.knime.base.node.viz.histogram.util.BinningUtil
+     * #createBinInterval(double, double, int, boolean) 
      * org.knime.core.data.DataColumnSpec)}.
      */
     public void testCreateBinInterval() {
@@ -74,8 +74,8 @@ public class BinningUtilTest extends TestCase {
 
     /**
      * Test method for {@link 
-     * org.knime.base.node.viz.histogram.util.BinningUtil#
-     * createBinStart(double, double)}.
+     * org.knime.base.node.viz.histogram.util.BinningUtil
+     * #createBinStart(double, double)}.
      */
     public void testCreateBinStart() {
         double minVal = 0;
@@ -99,8 +99,8 @@ public class BinningUtilTest extends TestCase {
 
     /**
      * Test method for {@link 
-     * org.knime.base.node.viz.histogram.util.BinningUtil#
-     * myRoundedBorders(double, double, int)}.
+     * org.knime.base.node.viz.histogram.util.BinningUtil
+     * #myRoundedBorders(double, double, int)}.
      */
     public void testMyRoundedBorders() {
         double value = 0;

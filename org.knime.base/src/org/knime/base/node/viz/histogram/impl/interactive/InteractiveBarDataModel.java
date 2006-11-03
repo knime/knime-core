@@ -35,7 +35,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 
-
 /**
  * Class which holds all information of a bar in a histogram view and provides
  * methods to retrieve information needed to present this bar like number of
@@ -46,14 +45,14 @@ import org.knime.core.data.property.ColorAttr;
 final class InteractiveBarDataModel extends AbstractBarDataModel {
 
     private double m_aggrValue = Double.NaN;
-    
+
     /**
      * <code>Hashtable</code> with the <code>RowKey</code> as
      * <code>DataCell</code> as key and the <code>DataRow</code> itself as
      * value.
      */
-    private Hashtable<DataCell, DataRow> m_rows = 
-        new Hashtable<DataCell, DataRow>();
+    private Hashtable<DataCell, DataRow> m_rows =
+            new Hashtable<DataCell, DataRow>();
 
     /**
      * Constructor for class HistogramBar.
@@ -62,7 +61,7 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
      * @param aggrColIDx the index of the aggregation column
      * @param aggrMethod the aggregation method
      */
-    protected InteractiveBarDataModel(final String caption, 
+    protected InteractiveBarDataModel(final String caption,
             final int aggrColIDx, final AggregationMethod aggrMethod) {
         super(caption, aggrColIDx, aggrColIDx, aggrMethod);
     }
@@ -85,15 +84,16 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel#
-     * setAggregationMethod(org.knime.base.node.viz.histogram.AggregationMethod)
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel
+     *      #setAggregationMethod(
+     *      org.knime.base.node.viz.histogram.AggregationMethod)
      */
     @Override
     public void setAggregationMethod(final AggregationMethod aggrMethod) {
         super.setAggregationMethod(aggrMethod);
         m_aggrValue = Double.NaN;
     }
-    
+
     /**
      * Sets the index of the new aggregation column.
      * 
@@ -125,7 +125,7 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
             return;
         }
     }
-    
+
     /**
      * @see AbstractBarDataModel#getAggregationValue()
      */
@@ -144,15 +144,15 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
     public Set<DataCell> getRowKeys() {
         return m_rows.keySet();
     }
-    
+
     /**
      * @see AbstractBarDataModel#createColorInformation(DataTableSpec)
      */
     @Override
-    public Hashtable<ColorAttr, Collection<RowKey>> 
-        createColorInformation(final DataTableSpec tableSpec) {
-        Hashtable<ColorAttr, Collection<RowKey>> rowsByColor = 
-            new Hashtable<ColorAttr, Collection<RowKey>>();
+    public Hashtable<ColorAttr, Collection<RowKey>> createColorInformation(
+            final DataTableSpec tableSpec) {
+        Hashtable<ColorAttr, Collection<RowKey>> rowsByColor =
+                new Hashtable<ColorAttr, Collection<RowKey>>();
         for (DataRow row : m_rows.values()) {
             ColorAttr colAtr = tableSpec.getRowColor(row);
             Collection<RowKey> colRows = rowsByColor.get(colAtr);

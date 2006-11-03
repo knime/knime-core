@@ -80,10 +80,10 @@ final class FixedColumnBarDataModel extends AbstractBarDataModel {
             m_aggrSum += ((DoubleValue)cell).getDoubleValue();
         }
     }
-    
+
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
-     * getNumberOfRows()
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel
+     *  #getNumberOfRows()
      */
     @Override
     public int getNumberOfRows() {
@@ -91,8 +91,8 @@ final class FixedColumnBarDataModel extends AbstractBarDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel#
-     * setAggregationColumn(int)
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel
+     *  #setAggregationColumn(int)
      */
     @Override
     protected void setAggregationColumn(final int aggrColIdx) {
@@ -103,8 +103,8 @@ final class FixedColumnBarDataModel extends AbstractBarDataModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel#
-     * getAggregationValue()
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel
+     *  #getAggregationValue()
      */
     @Override
     public double getAggregationValue() {
@@ -126,16 +126,16 @@ final class FixedColumnBarDataModel extends AbstractBarDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#getRowKeys()
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel#getRowKeys()
      */
     @Override
     public Set<DataCell> getRowKeys() {
         return m_rows.keySet();
     }
-    
+
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractBarDataModel#
-     * createColorInformation(org.knime.core.data.DataTableSpec)
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel
+     *  #createColorInformation(org.knime.core.data.DataTableSpec)
      */
     @Override
     public Hashtable<ColorAttr, Collection<RowKey>> 

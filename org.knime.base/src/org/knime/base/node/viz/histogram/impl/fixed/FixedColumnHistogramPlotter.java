@@ -23,58 +23,58 @@ package org.knime.base.node.viz.histogram.impl.fixed;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.BarVisModel;
-import org.knime.base.node.viz.histogram.HistogramDrawingPane;
-import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * This class is the controller between the data model of the
- * {@link InteractiveHistogramDataModel} class and the view 
- * {@link HistogramDrawingPane}. It creates the {@link BarVisModel} objects 
- * based on the {@link InteractiveBarDataModel} of the 
- * {@link InteractiveHistogramDataModel} class by enhancing these information 
- * with information about the size of the drawing space like height and width 
- * in pixel.
+ * {@link org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel}
+ * class and the view
+ * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates
+ * the {@link org.knime.base.node.viz.histogram.BarVisModel} objects based on
+ * the
+ * {@link org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel}
+ * of the
+ * {@link org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel}
+ * class by enhancing these information with information about the size of the
+ * drawing space like height and width in pixel.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
-    
+
     /**
      * Creates a new PlotterScrolling pane and associates it with the passed
      * view control panel.
      * 
      * @param initialWidth the width of the dialog at the creation time
      * @param spec the specification of the input data table
-     * @param histogramProps the <code>FixedColumnHistogramProperties</code> 
-     * with the view options for the user
+     * @param histogramProps the <code>FixedColumnHistogramProperties</code>
+     *            with the view options for the user
      * @param handler the hilite handler from the input port
      * @param xCol the x axis column which should be selected, if it's
      *            <code>null</code> the first column will be selected
      * @param aggrCol the name of the aggregation column
      */
-    public FixedColumnHistogramPlotter(final int initialWidth, 
+    public FixedColumnHistogramPlotter(final int initialWidth,
             final DataTableSpec spec,
             final FixedColumnHistogramProperties histogramProps,
-            final HiLiteHandler handler, final String xCol, 
-            final String aggrCol) {
+            final HiLiteHandler handler, final String xCol, final String aggrCol) {
         super(initialWidth, spec, histogramProps, handler, xCol, aggrCol);
-        setHistoData(new FixedColumnHistogramDataModel(spec, xCol, 
-                aggrCol, AggregationMethod.getDefaultMethod()));
+        setHistoData(new FixedColumnHistogramDataModel(spec, xCol, aggrCol,
+                AggregationMethod.getDefaultMethod()));
     }
-    
+
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
-     * addDataRow(org.knime.core.data.DataRow)
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
+     *      #addDataRow(org.knime.core.data.DataRow)
      */
     @Override
     public void addDataRow(final DataRow row) {
         if (getHistoData() == null) {
-            setHistoData(new FixedColumnHistogramDataModel(getDataTableSpec(), 
-                    getXColName(), getAggregationColName(), 
+            setHistoData(new FixedColumnHistogramDataModel(getDataTableSpec(),
+                    getXColName(), getAggregationColName(),
                     getAggregationMethod()));
         }
         super.addDataRow(row);
@@ -82,16 +82,14 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
 
     /*
      * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
-     * modelChanged(org.knime.core.data.DataTableSpec, java.lang.String)
-    public void modelChanged(final DataTableSpec spec, 
-            final String selectedXCol, final String aggrCol) {
-        setDataTableSpec(spec);
-        setAggregationColName(null);
-        setAggregationMethod(AggregationMethod.getDefaultMethod());
-        setBackground(ColorAttr.getBackground());
-        AbstractHistogramProperties props = getHistogramPropertiesPanel();
-        props.updateColumnSelection(spec, selectedXCol, aggrCol);
-        props.setUpdateHistogramSettings(this);
-        updatePaintModel();
-    }*/
+     *      modelChanged(org.knime.core.data.DataTableSpec, java.lang.String)
+     *      public void modelChanged(final DataTableSpec spec, final String
+     *      selectedXCol, final String aggrCol) { setDataTableSpec(spec);
+     *      setAggregationColName(null);
+     *      setAggregationMethod(AggregationMethod.getDefaultMethod());
+     *      setBackground(ColorAttr.getBackground());
+     *      AbstractHistogramProperties props = getHistogramPropertiesPanel();
+     *      props.updateColumnSelection(spec, selectedXCol, aggrCol);
+     *      props.setUpdateHistogramSettings(this); updatePaintModel(); }
+     */
 }

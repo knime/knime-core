@@ -531,9 +531,10 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     /**
      * Returns the color that an object should have when displaying information
      * concerning this row (for instance in a scatterplot). The color is
-     * determined by the {@link ColorHandler} of this spec, which is associated
-     * with exactly one column. The color therefore depends on the value of the
-     * corresponding cell of the given row.
+     * determined by the {@link org.knime.core.data.property.ColorHandler} of
+     * this spec, which is associated with exactly one column. The color
+     * therefore depends on the value of the corresponding cell of the given
+     * row.
      * 
      * @param row the row for which the color is requested
      * @return a color attr object holding the colors associate to that row
@@ -549,9 +550,10 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     /**
      * Return the shape that an object should have when displaying information
      * concerning this row (for instance in a scatterplot). The shape is
-     * determined by the {@link ShapeHandler} of this spec, which is associated
-     * with exactly one column. The shape therefore depends on the value of the
-     * corresponding cell of the given row.
+     * determined by the {@link org.knime.core.data.property.ShapeHandler} of
+     * this spec, which is associated with exactly one column. The shape
+     * therefore depends on the value of the corresponding cell of the given
+     * row.
      * 
      * @param row the row for which the shape is requested
      * @return the shape object associated with this row

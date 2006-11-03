@@ -70,8 +70,8 @@ public final class ModelContentInPort extends NodeInPort implements
     /**
      * Checks if the out port to connect is a model port.
      * 
-     * @see org.knime.core.node.NodeInPort#
-     *      checkConnectPort(org.knime.core.node.NodeOutPort)
+     * @see org.knime.core.node.NodeInPort
+     *      #checkConnectPort(org.knime.core.node.NodeOutPort)
      */
     @Override
     public void checkConnectPort(final NodeOutPort connPort) {

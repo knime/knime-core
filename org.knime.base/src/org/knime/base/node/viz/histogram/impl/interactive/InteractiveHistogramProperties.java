@@ -91,8 +91,8 @@ public class InteractiveHistogramProperties extends
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties#
-     * onApply()
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties
+     * #onApply()
      */
     @Override
     protected void onApply() {

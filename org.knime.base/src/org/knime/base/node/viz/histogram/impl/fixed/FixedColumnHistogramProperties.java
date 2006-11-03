@@ -56,8 +56,8 @@ public class FixedColumnHistogramProperties extends
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties#
-     * onSelectAggrMethod(java.lang.String)
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties
+     *  #onSelectAggrMethod(java.lang.String)
      */
     @Override
     protected void onSelectAggrMethod(final String actionCommand) {
@@ -67,8 +67,8 @@ public class FixedColumnHistogramProperties extends
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties#
-     * updateColumnSelection(org.knime.core.data.DataTableSpec, 
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties
+     * #updateColumnSelection(org.knime.core.data.DataTableSpec, 
      * java.lang.String, java.lang.String)
      */
     @Override

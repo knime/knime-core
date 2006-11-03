@@ -96,8 +96,8 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
     }
 
     /**
-     * @see org.knime.dev.node.view.histogram.AbstractHistogramDataModel#
-     * addDataRow(org.knime.core.data.DataRow)
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramDataModel
+     *  #addDataRow(org.knime.core.data.DataRow)
      */
     @Override
     public void addDataRow(final DataRow row) {
