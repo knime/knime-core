@@ -101,17 +101,30 @@ public final class DataType {
         private MissingCell() {
         }
         
+        /**
+         * 
+         * @see org.knime.core.data.DataCell#equalsDataCell(
+         * org.knime.core.data.DataCell)
+         */
         @Override
         public boolean equalsDataCell(final DataCell dc) {
             // guaranteed not to be called on and with a missing cell.....
             return false;
         }
 
+        /**
+         * 
+         * @see org.knime.core.data.DataCell#hashCode()
+         */
         @Override
         public int hashCode() {
             return toString().hashCode();
         }
 
+        /**
+         * 
+         * @see org.knime.core.data.DataCell#isMissingInternal()
+         */
         @Override
         boolean isMissingInternal() {
             return true;
@@ -125,6 +138,10 @@ public final class DataType {
             return INSTANCE;
         }
         
+        /**
+         * 
+         * @see org.knime.core.data.DataCell#toString()
+         */
         @Override
         public String toString() {
             return "?";
@@ -185,8 +202,9 @@ public final class DataType {
     /**
      * Recursive method that walks up the inheritance tree of a given class and 
      * determines all DataValue interfaces being implemented. Any such detected 
-     * interface will be added to a set. Used from the constructor to determine
-     * implemented interfaces of a DataCell class. 
+     * interface will be added to the passed set. Used from the constructor to 
+     * determine implemented interfaces of a DataCell class. 
+     * @see DataType#DataType(Class)
      */
     private static void addDataValueInterfaces(
             final Set<Class<? extends DataValue>> set, final Class<?> current) {
@@ -210,20 +228,16 @@ public final class DataType {
 
     /** 
      * Clones the given DataType but changes its preferred value class to the 
-     * passed preferred value. The returned DataType is compatible to all 
-     * value classes the given argument is compatible to but has a 
-     * different ordering in comparators, renderer, due to the new preferred 
-     * value. The returned value may or may not be 
-     * equal to the <code>from</code> DataType depending on the preferred value
-     * class of <code>from</code> and will be created newly 
-     * (no caching of DataTypes is done).
+     * passed preferred value. The returned non-native <code>DataType</code> 
+     * may or may not be equal to the <code>from</code> DataType depending on 
+     * the preferred value class of <code>from</code> and will be created newly.
      * 
-     * @param from The DataType to clone.
-     * @param preferred The new preferred value class.
-     * @return A cloned new DataType with the given preferred value class.
+     * @param from the DataType to clone
+     * @param preferred the new preferred value class
+     * @return a cloned new DataType with the given preferred value class
      * @throws IllegalArgumentException 
-     *  If <code>from.isCompatible(preferred)</code> returns <code>false</code>.
-     * @throws NullPointerException If any argument is <code>null</code>.
+     *  if <code>from.isCompatible(preferred)</code> returns <code>false</code>
+     * @throws NullPointerException If any argument is <code>null</code>
      */
     public static DataType cloneChangePreferredValue(final DataType from,
             final Class<? extends DataValue> preferred) {
@@ -231,16 +245,22 @@ public final class DataType {
     }
     
     /**
-     * Get a DataCellSerializer for the runtime class of a DataCell or 
-     * <code>null</code> if not supported. The DataCellSerializer is defined
+     * Returns a DataCellSerializer for the runtime class of a DataCell or 
+     * <code>null</code> if the passed class of type DataCell does not implement
+     * <pre>
+     *   public static &lt;T extends DataCell&gt; 
+     *       DataCellSerializer&lt;T&gt; getCellSerializer(
+     *       final Class&lt;T&gt; cl) {
+     * </pre>
+     * The DataCellSerializer is defined
      * through a static access method in DataCell. If no such method exists or
      * the method can't be invoked (using reflection), this method returns 
-     * <code>null</code> and ordinary java serialization needs to be used for
+     * <code>null</code> and ordinary java serialization is used for
      * storing/loading the cell. See also the class documentation of 
      * {@link DataCell} for more information on the static access method. 
-     * @param <T> The runtime class of the the DataCell.
-     * @param cl The datacell's class
-     * @return The DataCellSerializer defined in the DataCell implementation
+     * @param <T> the runtime class of the DataCell
+     * @param cl the datacell's class
+     * @return the DataCellSerializer defined in the DataCell implementation
      * or <code>null</code> if no such serializer is available.
      * @throws NullPointerException If the argument is <code>null</code>.
      */
@@ -373,7 +393,7 @@ public final class DataType {
      * A cell representing a missing data cell with no value. The type
      * of the returned data cell will be compatible to any DataValue interface
      * (although you can't cast the returned cell to the value) and will have
-     * default icons, renderers and comparators.
+     * default icons, renderers, and comparators.
      * @return Singleton of a missing cell.
      */
     public static DataCell getMissingCell() {
@@ -387,12 +407,12 @@ public final class DataType {
      * <pre>
      *   public static Class<? extends DataValue> getPreferredValueClass()
      * </pre>
-     * If no such method exists, this method silently returns null. If it 
+     * If no such method exists, this method returns null. If it 
      * exists but has the wrong scope or return value, a warning message is 
      * logged and null is returned. 
-     * @param cl The runtime class of the DataCell.
-     * @return Its preferred value interface or <code>null</code>.
-     * @throws NullPointerException If the argument is <code>null</code>.
+     * @param cl the runtime class of the DataCell
+     * @return its preferred value interface or <code>null</code>
+     * @throws NullPointerException if the argument is <code>null</code>
      */
     private static Class<? extends DataValue> getPreferredValueClassFor(
             final Class<? extends DataCell> cl) {
@@ -406,13 +426,14 @@ public final class DataType {
                 (Class<? extends DataValue>)method.invoke(null);
             LOGGER.debug(result.getSimpleName() + " is the preferred value "
                     + "class of cell implementation " + cl.getSimpleName() 
-                    + ", making sanity check");
+                    + ", made sanity check");
             return result;
         } catch (NoSuchMethodException nsme) {
             // no such method - perfectly ok, ignore it.
             LOGGER.debug("Class \"" + cl.getSimpleName() + "\" doesn't " 
                     + "have a default value class (it does not implement "
-                    + "a static method \"getPreferredValueClass()\").");
+                    + "a static method \"getPreferredValueClass()\"). " 
+                    + "Returning null");
             return null;
         } catch (InvocationTargetException ite) {
             exception = ite;
@@ -424,7 +445,8 @@ public final class DataType {
             exception = cce;
         }
         LOGGER.coding("Class \"" + cl.getSimpleName() + "\" has a problem " 
-                + "with the static method \"getPreferredValueClass\", " 
+                + "with the static method \"getPreferredValueClass\"."
+                + " Returning null. "
                 + "Caught an " + exception.getClass().getSimpleName(), 
                 exception);
         return null;
@@ -437,12 +459,12 @@ public final class DataType {
      * argument), the return value is created and hashed. The returned 
      * <code>DataType</code> will claim to be compatible to all 
      * <code>DataValue</code> classes the cell is implementing (i.e. what 
-     * <code>DataValue</code> interfaces does the <code>DataCell</code> at 
-     * hand implement) and will bundle meta information of the cell such as 
+     * <code>DataValue</code> interfaces are implemented by 
+     * <code>cl</code>) and will bundle meta information of the cell such as 
      * renderer, icon, and comparators.
      *  
      * <p>This method is the only way to determine the <code>DataType</code>
-     * of a <code>DataCell</code>; however, most standard cell implementations
+     * of a <code>DataCell</code>. However, most standard cell implementations
      * have a static member for convenience access, e.g. 
      * {@link org.knime.core.data.def.DoubleCell#TYPE DoubleCell.TYPE}.
      * 
@@ -450,10 +472,10 @@ public final class DataType {
      * @see DataValue
      * @see DataCell#getType()
      * 
-     * @param cl The runtime class of DataCell for which the DataType 
+     * @param cl the runtime class of DataCell for which the DataType 
      *         is requested
-     * @return The corresponding type <code>cl</code>, never <code>null</code>.
-     * @throws NullPointerException If the argument is <code>null</code>.
+     * @return the corresponding type <code>cl</code>, never <code>null</code>
+     * @throws NullPointerException if the argument is <code>null</code>
      */
     public static DataType getType(final Class<? extends DataCell> cl) {
         if (cl == null) {
@@ -466,6 +488,8 @@ public final class DataType {
         }
         return result;
     }
+    
+    /* bis hierhin ge-reviewt */
     
     /** 
      * Determines the <code>UtilityFactory</code> to a given 
@@ -523,7 +547,8 @@ public final class DataType {
         return result;
     }
     
-    /* Helper method that checks if the passed Type is a parameterized
+    /**
+     * Helper method that checks if the passed Type is a parameterized
      * type (like DataCellSerializer&lt;someType&gt; and that it is assignable
      * from the given cell class. This method is used to check if the return
      * class of getCellSerializer in a DataCell has the correct signature.
