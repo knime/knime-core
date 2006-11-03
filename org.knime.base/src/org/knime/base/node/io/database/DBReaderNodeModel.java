@@ -25,7 +25,6 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
-import java.sql.DriverManager;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -33,6 +32,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.util.KnimeEncryption;
 
 /**
  * 
@@ -60,7 +60,7 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
             Exception {
         exec.setProgress(-1, "Opening database connection...");
         try {
-            String password = DBReaderConnection.decrypt(getPassword());
+            String password = KnimeEncryption.decrypt(getPassword());
             m_load = new DBReaderConnection(
                     getDatabaseName(), getUser(), password, getQuery());
             return new BufferedDataTable[]{exec.createBufferedDataTable(m_load,
@@ -109,17 +109,11 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        try {
-            DriverManager.registerDriver(
-                    DBDriverLoader.getWrappedDriver(getDriver()));
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + getDriver());
-        }
+        registerDriver();
         
         DataTableSpec spec = null;
         try { 
-            String password = DBReaderConnection.decrypt(getPassword());
+            String password = KnimeEncryption.decrypt(getPassword());
             DBReaderConnection conn = new DBReaderConnection(
                     getDatabaseName(), getUser(), password, getQuery());
             conn.getDataTableSpec();

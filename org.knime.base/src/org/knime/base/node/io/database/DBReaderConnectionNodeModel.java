@@ -44,6 +44,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.util.KnimeEncryption;
 
 /**
  * 
@@ -104,7 +105,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
     protected void saveModelContent(final int index,
             final ModelContentWO predParams) throws InvalidSettingsException {
         saveConfig(predParams);
-        
+
         // additionally save the view name
         predParams.addString("view", m_viewName);
     }
@@ -145,8 +146,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
         loadSettings(settings, true);
     }
 
-    private void loadSettings(final NodeSettingsRO settings, 
-            final boolean write)
+    private void loadSettings(final NodeSettingsRO settings, final boolean write)
             throws InvalidSettingsException {
         String driver = settings.getString("driver");
         String statement = settings.getString("statement");
@@ -157,7 +157,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
         // loaded driver
         String[] loadedDriver = settings.getStringArray("loaded_driver");
         try {
-            DBReaderConnection.decrypt(password);
+            KnimeEncryption.decrypt(password);
         } catch (Exception e1) {
             LOGGER.error("Could not decrypt password.", e1);
             super.setWarningMessage("Could not decrypt password.");
@@ -173,8 +173,8 @@ class DBReaderConnectionNodeModel extends NodeModel {
                 for (String fileName : m_driverLoaded) {
                     try {
                         DBDriverLoader.loadDriver(new File(fileName));
-                     } catch (Exception e2) {
-                        LOGGER.info("Could not load driver from: " 
+                    } catch (Exception e2) {
+                        LOGGER.info("Could not load driver from: "
                                 + loadedDriver, e2);
                     }
                 }
@@ -193,13 +193,12 @@ class DBReaderConnectionNodeModel extends NodeModel {
         // create a view on the database according to the given select
         // statement
         Connection conn =
-                DriverManager.getConnection(m_name, m_user, DBReaderConnection
+                DriverManager.getConnection(m_name, m_user, KnimeEncryption
                         .decrypt(m_pass));
 
         // create a unique view name
         m_viewName = "VIEW_" + Long.toString(System.currentTimeMillis());
-        String viewCreateSQL =
-                "CREATE VIEW " + m_viewName + " AS " + m_query;
+        String viewCreateSQL = "CREATE VIEW " + m_viewName + " AS " + m_query;
 
         Statement stmt = conn.createStatement();
         stmt.executeQuery(viewCreateSQL);
@@ -241,7 +240,25 @@ class DBReaderConnectionNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+
+        registerDriver();
         return new DataTableSpec[0];
+    }
+
+    /**
+     * Registers the available JDBC drivers.
+     * 
+     * @throws InvalidSettingsException if the database drivers could not
+     *             registered
+     */
+    void registerDriver() throws InvalidSettingsException {
+        try {
+            DriverManager.registerDriver(DBDriverLoader
+                    .getWrappedDriver(getDriver()));
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Could not register database"
+                    + " driver: " + getDriver());
+        }
     }
 
     /**

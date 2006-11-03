@@ -21,7 +21,6 @@
  */
 package org.knime.base.node.io.database;
 
-import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -29,10 +28,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -49,9 +44,6 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 /**
  * Creates a connection to read from database. 
@@ -156,49 +148,6 @@ public final class DBReaderConnection implements DataTable {
             cspecs[i] = new DataColumnSpecCreator(name, newType).createSpec();
         }
         return new DataTableSpec(cspecs);
-    }
-
-    /**
-     * Secret for the password de- and encyption.
-     */
-    private static SecretKey mSECRETKEY;
-    static {
-        try {
-            mSECRETKEY = KeyGenerator.getInstance("DES").generateKey();
-        } catch (NoSuchAlgorithmException e) {
-            mSECRETKEY = null;
-        }
-    }
-
-    /**
-     * Enrypts password.
-     * 
-     * @param password Char array.
-     * @return The password encrypt.
-     * @throws Exception If something goes wrong.
-     */
-    static String encrypt(final char[] password) throws Exception {
-        // Create Cipher
-        Cipher desCipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-        desCipher.init(Cipher.ENCRYPT_MODE, mSECRETKEY);
-        byte[] ciphertext = desCipher.doFinal(new String(password).getBytes());
-        return new BASE64Encoder().encode(ciphertext);
-    }
-
-    /**
-     * Decrypts password.
-     * 
-     * @param password The password to decrypt.
-     * @return The decrypted password.
-     * @throws Exception If something goes wrong.
-     */
-    public static String decrypt(final String password) throws Exception {
-        Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, mSECRETKEY);
-        // perform the decryption
-        byte[] pw = new BASE64Decoder().decodeBuffer(password);
-        byte[] decryptedText = cipher.doFinal(pw);
-        return new String(decryptedText);
     }
 }
 

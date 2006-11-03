@@ -54,6 +54,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.SimpleFileFilter;
 
 
@@ -169,7 +170,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
         String password = settings.getString("password", "");
         if (password != null && password.length() > 0) {
             try {
-                password = DBReaderConnection.decrypt(password);
+                password = KnimeEncryption.decrypt(password);
             } catch (Exception e) {
                 LOGGER.warn("Could not decrypt password.");
             }
@@ -209,7 +210,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
         settings.addString("database", m_db.getText().trim());
         settings.addString("user", m_user.getText().trim());
         try {
-            settings.addString("password", DBReaderConnection.encrypt(m_pass
+            settings.addString("password", KnimeEncryption.encrypt(m_pass
                     .getPassword()));
         } catch (Exception e) {
             LOGGER.warn("Could not encrypt password.");

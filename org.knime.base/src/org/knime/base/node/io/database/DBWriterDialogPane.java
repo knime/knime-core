@@ -52,6 +52,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.SimpleFileFilter;
 
 
@@ -214,7 +215,7 @@ public class DBWriterDialogPane extends NodeDialogPane {
         settings.addString("user", m_user.getText().trim());
         settings.addString("table", m_table.getText().trim());
         try {
-            settings.addString("password", DBReaderConnection.encrypt(m_pass
+            settings.addString("password", KnimeEncryption.encrypt(m_pass
                     .getPassword()));
         } catch (Exception e) {
             LOGGER.warn("Could not encrypt password.");

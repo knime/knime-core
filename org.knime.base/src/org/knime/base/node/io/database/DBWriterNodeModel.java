@@ -47,6 +47,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.KnimeEncryption;
 
 /**
  * Database writer model which creates a new table and adds the entire table to
@@ -160,7 +161,7 @@ class DBWriterNodeModel extends NodeModel {
         // loaded driver
         String[] loadedDriver = settings.getStringArray("loaded_driver");
         try {
-            password = DBReaderConnection.decrypt(password);
+            password = KnimeEncryption.decrypt(password);
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not decrypt password", e);
         }
