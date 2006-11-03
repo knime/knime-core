@@ -28,6 +28,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.util.KnimeEncryption;
+import org.knime.workbench.editor2.EclipseEncryptionKeySupplier;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -63,6 +65,11 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+
+        // create a knime encryption supplier that reads in an encryption key
+        // from the user via a dialog
+        KnimeEncryption
+                .setEncryptionKeySupplier(new EclipseEncryptionKeySupplier());
     }
 
     /**
@@ -96,8 +103,8 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
      * @return The resource string
      */
     public static String getResourceString(final String key) {
-        ResourceBundle bundle = KNIMEEditorPlugin.getDefault()
-                .getResourceBundle();
+        ResourceBundle bundle =
+                KNIMEEditorPlugin.getDefault().getResourceBundle();
         try {
             return (bundle != null) ? bundle.getString(key) : key;
         } catch (MissingResourceException e) {
@@ -113,8 +120,9 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     public ResourceBundle getResourceBundle() {
         try {
             if (m_resourceBundle == null) {
-                m_resourceBundle = ResourceBundle
-                        .getBundle("org.knime.workbench.editor.Resources");
+                m_resourceBundle =
+                        ResourceBundle
+                                .getBundle("org.knime.workbench.editor.Resources");
             }
         } catch (MissingResourceException x) {
             m_resourceBundle = null;
