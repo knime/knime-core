@@ -227,4 +227,41 @@ public class ExecutionContext extends ExecutionMonitor {
         out.setOwnerRecursively(m_node);
         return out;
     }
+    
+    /**
+     * Creates a new execution context with a different max progress value.
+     * This method is the counterpart to {@link #createSubProgress(double)} 
+     * {@link ExecutionMonitor}. A sub execution contexts has the same 
+     * properties as this object but it only reports progress to a limited value
+     * of <code>maxProg</code>. It can therefore be used in, e.g. utility 
+     * classes which report progress in [0, 1], but whose progress is only
+     * a small contribution to the overall progress.
+     * @param maxProg The maximum progress, must be in [0,1]
+     * @return A new execution context.
+     */
+    public ExecutionContext createSubExecutionContext(final double maxProg) {
+        NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
+        return new ExecutionContext(subProgress, m_node);
+    }
+    
+    /**
+     * Creates a new execution context with a different max progress value and
+     * swallowing any report messages. This method is the counterpart to
+     * {@link #createSilentSubProgress(double)} in {@link ExecutionMonitor}. A
+     * sub execution contexts has the same properties as this object but it only
+     * reports progress to a limited value of <code>maxProg</code>. It will
+     * also ignore any message, which is set using the
+     * {@link #setMessage(String)} method. It can therefore be used in, e.g.
+     * utility classes which report progress in [0, 1], but whose progress is
+     * only a small contribution to the overall progress.
+     * 
+     * @param maxProg The maximum progress, must be in [0,1]
+     * @return A new execution context.
+     */
+    public ExecutionContext createSilentSubExecutionContext(
+            final double maxProg) {
+        NodeProgressMonitor subProgress = 
+            createSilentSubProgressMonitor(maxProg);
+        return new ExecutionContext(subProgress, m_node);
+    }
 }

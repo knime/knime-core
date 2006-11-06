@@ -129,12 +129,7 @@ public class ExecutionMonitor {
      * @throws IllegalArgumentException If the argument is not in (0, 1].
      */ 
     public ExecutionMonitor createSubProgress(final double maxProg) {
-        if (maxProg > 1.0 || maxProg < 0.0) {
-            throw new IllegalArgumentException(
-                    "Invalid sub progress size: " + maxProg);
-        }
-        SubNodeProgressMonitor subProgress = 
-            new SubNodeProgressMonitor(m_progress, maxProg);
+        NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
         return new ExecutionMonitor(subProgress);
     }
     
@@ -152,13 +147,40 @@ public class ExecutionMonitor {
      * @throws IllegalArgumentException If the argument is not in (0, 1].
      */ 
     public ExecutionMonitor createSilentSubProgress(final double maxProg) {
+        NodeProgressMonitor subProgress = 
+            createSilentSubProgressMonitor(maxProg);
+        return new ExecutionMonitor(subProgress);
+    }
+    
+    /** 
+     * Factory method to create a new sub progress monitor. Only for
+     * internal use (i.e. here and in ExecutionContext).
+     * @param maxProg The fraction of the progress this sub progress
+     * contributes to the whole progress 
+     * @return A new sub node progress monitor.
+     * @throws IllegalArgumentException If the argument is not in (0, 1].
+     */ 
+    NodeProgressMonitor createSubProgressMonitor(final double maxProg) {
         if (maxProg > 1.0 || maxProg < 0.0) {
             throw new IllegalArgumentException(
                     "Invalid sub progress size: " + maxProg);
         }
-        SilentSubNodeProgressMonitor subProgress = 
-            new SilentSubNodeProgressMonitor(m_progress, maxProg);
-        return new ExecutionMonitor(subProgress);
+        return new SubNodeProgressMonitor(m_progress, maxProg);
+    }
+    
+    /**
+     * Factory method to create a new silent sub progress monitor. Only for
+     * internal use (i.e. here an in ExecutionContext).
+     * @param maxProg The fraction of the progress this sub progress
+     * contributes to the whole progress 
+     * @return A new silent sub node progress monitor.
+     */
+    NodeProgressMonitor createSilentSubProgressMonitor(final double maxProg) {
+        if (maxProg > 1.0 || maxProg < 0.0) {
+            throw new IllegalArgumentException(
+                    "Invalid sub progress size: " + maxProg);
+        }
+        return new SilentSubNodeProgressMonitor(m_progress, maxProg);
     }
     
     /** Progress monitor that is used by "sub-progresses", it doesn't have
