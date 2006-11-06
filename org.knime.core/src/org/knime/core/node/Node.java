@@ -31,6 +31,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -1540,7 +1542,8 @@ public final class Node {
      * Closes all views.
      */
     public void closeAllViews() {
-        for (NodeView view : m_model.getViews()) {
+        Set<NodeView> views = new HashSet<NodeView>(m_model.getViews());
+        for (NodeView view : views) {
             view.closeView();
         }
     }
