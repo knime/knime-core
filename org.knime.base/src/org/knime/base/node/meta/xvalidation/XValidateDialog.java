@@ -51,6 +51,7 @@ public class XValidateDialog extends NodeDialogPane {
     private final JSpinner m_validations = new JSpinner(
             new SpinnerNumberModel(10, 2, 100, 1));
     private final JCheckBox m_randomSampling = new JCheckBox();
+    @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_classColumn = 
         new ColumnSelectionComboxBox((Border) null, StringValue.class);
     

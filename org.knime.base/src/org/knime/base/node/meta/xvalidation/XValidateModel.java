@@ -67,7 +67,7 @@ import org.knime.core.node.workflow.NodeContainer;
  * This model represents a cross validation node. The internal workflow must at
  * least consist of any learner and its predictor. The internal workflow has two
  * input nodes, the first provides the training data, the second the test data.
- * The output node must be feeded with the output table of the predictor which
+ * The output node must be fed with the output table of the predictor which
  * must have the prediction in its last column.
  * 
  * The input into the meta node is just any data table, the output consists of a
@@ -186,8 +186,10 @@ public class XValidateModel extends MetaNodeModel {
             }
 
             DataTable prediction = dataOutModel(0).getBufferedDataTable();
-            // it is possible, that the index has changed (e.g. some cols have been filtered out)
-            classColIndex = prediction.getDataTableSpec().findColumnIndex(m_settings.classColumnName());
+            // it is possible, that the index has changed 
+            // (e.g. some cols have been filtered out)
+            classColIndex = prediction.getDataTableSpec().findColumnIndex(
+                    m_settings.classColumnName());
             for (RowIterator it = prediction.iterator(); it.hasNext();) {
                 DataRow row = it.next();
 
