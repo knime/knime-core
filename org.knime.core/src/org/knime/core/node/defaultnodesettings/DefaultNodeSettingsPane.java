@@ -46,7 +46,7 @@ import org.knime.core.node.NotConfigurableException;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class DefaultNodeDialogPane extends NodeDialogPane {
+public class DefaultNodeSettingsPane extends NodeDialogPane {
     private final List<DialogComponent> m_dialogComponents;
 
     private final JPanel m_compositePanel;
@@ -59,7 +59,7 @@ public class DefaultNodeDialogPane extends NodeDialogPane {
     /**
      * Constructor for DefaultNodeDialogPane.
      */
-    public DefaultNodeDialogPane() {
+    public DefaultNodeSettingsPane() {
         super();
         m_dialogComponents = new ArrayList<DialogComponent>();
         m_compositePanel = new JPanel();

@@ -44,14 +44,14 @@ import org.knime.core.node.NotConfigurableException;
  * NodeDialog. Actual implementations will make sure the label and editable
  * components are placed nicely in the underlying JPanel and their models will
  * handle save/load to and from config objects. Using the
- * {@link org.knime.core.node.defaultnodesettings.DefaultNodeDialogPane} it is
+ * {@link org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane} it is
  * easy to add such Component to quickly assemble a dialog dealing with typical
  * parameters. <br>
  * Each component has a {@link SettingsModel} associated with it, which stores
  * the current value in the component and handles all value related operations,
  * like loading, saving, etc.
  * 
- * @see DefaultNodeDialogPane
+ * @see DefaultNodeSettingsPane
  * @see SettingsModel
  * 
  * @author M. Berthold, University of Konstanz
