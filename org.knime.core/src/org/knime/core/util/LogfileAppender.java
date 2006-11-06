@@ -82,7 +82,9 @@ public class LogfileAppender extends FileAppender {
         synchronized (m_logFile) {
             LogLog.debug("Compressing log file '" + m_logFile + "'");
             final File tmpFile = new File(m_logFile.getAbsolutePath() + ".old");
+            closeFile();
             m_logFile.renameTo(tmpFile);
+            setFile(m_logFile.getAbsolutePath());
     
             Thread t = new Thread() {
                 @Override
