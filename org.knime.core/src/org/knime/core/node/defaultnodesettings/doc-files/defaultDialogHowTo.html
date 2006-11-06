@@ -38,18 +38,15 @@
 
 <br>
 
-"Default dialogs" provide a convenient way to create a&nbsp;<code>NodeDialogPane</code>
-as dialog for a node, for
-a few simple variables, without going through the pain of creating
-swing components and layouts. <br>
-
+"Default dialog components" provide a convenient way to get user input for 
+a few basic settings through a dialog that can be easily created, without 
+going through the pain of creating swing components and layouts. <br>
 <br>
-
 We provide a couple of components that can be added to a default dialog
-pane, and allow the user to enter values. These values can be easily
+pane, and that allow the user to enter values. These values can be easily
 retrieved in the <code>NodeModel</code> then. There
 is no way (and no need) to layout these components - they will
-automatically show in the dialog above each other, in the order they
+automatically show in the dialog below each other, in the order they
 have been added. You can surround them with a border to make the dialog
 look nicer, but that's all. There is also no support for dependencies
 between components (like disabling components depending on the value of
@@ -66,7 +63,7 @@ storing, loading and validation. When you instantiate the
 component you must provide a settings model - when you want to load the
 entered value in your NodeModel, you use an instance of that same
 SettingsModel. To identify the value handled by the settings model, you
-must provide a unique configName for it.<br>
+must provide a unique configName (i.e. a string ID) for it.<br>
 
 <br>
 
@@ -430,7 +427,7 @@ SettingsModelIntegerBounded</td>
       <td>double getDoubleValue()<br>
 int getIntValue()</td>
       <td>Accepts a number (double or integer) in an editable spinner.
-The bounded models will not accept values outside the specified bounds.
+The bounded models will not accept values outside the specified range.
       </td>
     </tr>
     <tr>
@@ -443,7 +440,7 @@ SettingsModelIntegerBounded</td>
       <td>double getDoubleValue()<br>
 int getIntValue()</td>
       <td>Accepts a number (double or integer) in an EditField. The
-bounded models will not accept values outside the specified bounds.</td>
+bounded models will not accept values outside the specified range.</td>
     </tr>
     <tr>
       <td><img style="width: 304px; height: 38px;" alt="ScreenShot DlgComp Password" src="passwd.png"></td>
@@ -487,7 +484,7 @@ A</span>: The one specified in the settings model &nbsp;used by the
 NodeModel. Before the dialog opens the NodeModel's settings are
 transfered into the dialog. The NodeModel's settings are the default
 settings of the settings models (as long as no other settings were
-entered).<br>
+entered/set).<br>
 
 <br>
 <span style="text-decoration: underline;">Q</span>: <span style="text-decoration: underline;">When the user enters an invalid value some components are colored red, others aren't. Why?</span><br>
@@ -496,7 +493,8 @@ SettingsModel in the dialog and the NodeModel it should work.
 Especially if you expect numbers in a certain range, make sure you use
 bounded models in the dialog and the NodeModel - with the same upper
 and lower bounds! The coloring doesn't work if the NodeModel has a more
-restricted settings model than the dialog component.<br>
+restricted settings model than the dialog component, if it is the NodeModel
+that rejects the value.<br>
 <br>
 <span style="text-decoration: underline;">
 Q</span>: <span style="text-decoration: underline;">Why do I need to instantiate two SettingsModels for each component,
