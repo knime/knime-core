@@ -22,6 +22,13 @@
  		<option name="Write Column Header">If checked, the column names will be
  			written out in the first line of the output file.
 			</option>		
+ 		<option name="Skip column header when appended">
+ 			If checked, the column header will not be written when appended to
+ 			the output file. This is particularly useful when the csv writer is
+ 			used in a LOOPER node to report results. This option is ignored
+ 			when the column header is not written anyway or the file append option
+ 			is unset (see below).
+			</option>		
  		<option name="Write Row Header">If checked, the row headers will be
  			added to the output, as first item in each row.
 			</option>		

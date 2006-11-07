@@ -69,6 +69,11 @@ public class CSVWriterNodeModel extends NodeModel {
     /** Identifier in NodeSettings object if writing column header. */
     static final String CFGKEY_COLHEADER = "writeColHeader";
 
+    /** Identifier in NodeSettings object if writing column header 
+     * when file exists. */
+    static final String CFGKEY_COLHEADER_SKIP_ON_APPEND = 
+        "skipWriteColHeaderOnAppend";
+
     /** Identifier in NodeSettings object if writing row header. */
     static final String CFGKEY_ROWHEADER = "writeRowHeader";
     
@@ -89,12 +94,15 @@ public class CSVWriterNodeModel extends NodeModel {
     
     /** append to file, if exists. */
     private boolean m_isAppend;
+    
+    /** If to skip col header writing if file exists. */
+    private boolean m_writeColHeaderSkipOnAppend;
 
     /** string to be used for missing cells. */
     private String m_missingPattern;
 
     /**
-     * Construtor, sets port count.
+     * Constructor, sets port count.
      */
     public CSVWriterNodeModel() {
         super(1, 0);
@@ -110,6 +118,8 @@ public class CSVWriterNodeModel extends NodeModel {
             settings.addString(CFGKEY_FILE, m_fileName);
         }
         settings.addBoolean(CFGKEY_COLHEADER, m_writeColHeader);
+        settings.addBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND, 
+                m_writeColHeaderSkipOnAppend);
         settings.addBoolean(CFGKEY_ROWHEADER, m_writeRowHeader);
         settings.addBoolean(CFGKEY_APPEND, m_isAppend);
         settings.addString(CFGKEY_MISSING, m_missingPattern);
@@ -128,6 +138,7 @@ public class CSVWriterNodeModel extends NodeModel {
         }
         settings.getString(CFGKEY_FILE);
         settings.getBoolean(CFGKEY_COLHEADER);
+        settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND);
         settings.getBoolean(CFGKEY_ROWHEADER);
     }
 
@@ -146,6 +157,8 @@ public class CSVWriterNodeModel extends NodeModel {
             forhistory = null;
         }
         m_writeColHeader = settings.getBoolean(CFGKEY_COLHEADER);
+        m_writeColHeaderSkipOnAppend = 
+            settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND);
         m_writeRowHeader = settings.getBoolean(CFGKEY_ROWHEADER);
         m_isAppend = settings.getBoolean(CFGKEY_APPEND);
         m_missingPattern = settings.getString(CFGKEY_MISSING, "");
@@ -166,8 +179,12 @@ public class CSVWriterNodeModel extends NodeModel {
             IOException {
         DataTable in = data[0];
         File file = new File(m_fileName);
+        boolean writeColHeader = m_writeColHeader;
+        if (writeColHeader && file.exists()) {
+            writeColHeader = !m_writeColHeaderSkipOnAppend;
+        }
         CSVWriter writer = new CSVWriter(new FileWriter(file, m_isAppend));
-        writer.setWriteColHeader(m_writeColHeader);
+        writer.setWriteColHeader(writeColHeader);
         writer.setWriteRowHeader(m_writeRowHeader);
         writer.setMissing(m_missingPattern);
         try {
@@ -183,7 +200,7 @@ public class CSVWriterNodeModel extends NodeModel {
             throw cee;
         }
         writer.close();
-        // execution succefull return empty array
+        // execution successful return empty array
         return new BufferedDataTable[0];
     }
 
