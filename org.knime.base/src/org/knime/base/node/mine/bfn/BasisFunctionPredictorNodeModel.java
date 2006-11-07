@@ -125,6 +125,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                 idx++;
             }
         } else {
+            // reset model
             reset();
         }
     }
@@ -153,9 +154,8 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_bfs.size() >= 0) {
-            return null;
-            // throw new InvalidSettingsException("No model found.");
+        if (m_bfs.size() <= 0) {
+            throw new InvalidSettingsException("No model found.");
         }
         if (m_modelSpec == null || m_modelSpec.length == 0) {
             throw new InvalidSettingsException("No model spec found.");
