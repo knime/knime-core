@@ -22,6 +22,8 @@
 package org.knime.base.node.mine.scorer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -36,6 +38,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.IntCell;
@@ -47,6 +50,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -99,6 +103,15 @@ public class ScorerNodeModel extends NodeModel {
 
     /** holds the last scorer table for the view. */
     private DataTable m_lastResult;
+    
+    private static final String FILE_NAME_INTERNAL_SETT = "scorer_internals";
+    private static final String FILE_NAME_INTERNAL_RESULT = 
+        "scorer_result_table";
+    private static final String CFG_CORRECT_COUNT = "correct_count";
+    private static final String CFG_FALSE_COUNT = "false_count";
+    private static final String CFG_NUMBER_ROWS = "number_rows";
+ 
+    
 
     /** Inits a new <code>ScorerNodeModel</code> with one in- and one output. */
     ScorerNodeModel() {
@@ -213,23 +226,6 @@ public class ScorerNodeModel extends NodeModel {
     }
 
     /**
-     * Sets the columns that will be compared during execution.
-     * 
-     * @param first the first column
-     * @param second the second column
-     * @throws NullPointerException if one of the parameters is
-     *             <code>null</code>
-     */
-    void setCompareColumn(final String first, final String second) {
-        if ((first == null || second == null)) {
-            throw new NullPointerException("Must specify both columns to"
-                    + " compare!");
-        }
-        m_firstCompareColumn = first;
-        m_secondCompareColumn = second;
-    }
-
-    /**
      * @see NodeModel#configure(DataTableSpec[])
      */
     @Override
@@ -287,7 +283,7 @@ public class ScorerNodeModel extends NodeModel {
     }
 
     /**
-     * Returns the error of wrong classfied pattern in percentage of the number
+     * Returns the error of wrong classified pattern in percentage of the number
      * of patterns.
      * 
      * @return the 1.0 - classification accuracy
@@ -310,9 +306,8 @@ public class ScorerNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String col1 = settings.getString(FIRST_COMP_ID);
-        String col2 = settings.getString(SECOND_COMP_ID);
-        setCompareColumn(col1, col2);
+        m_firstCompareColumn = settings.getString(FIRST_COMP_ID);
+        m_secondCompareColumn = settings.getString(SECOND_COMP_ID);
     }
 
     /**
@@ -441,8 +436,27 @@ public class ScorerNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
-        // TODO: load last result and internal variables to restore
-        // view content (see reset())
+        // load internal values
+        File fSett = new File(internDir, FILE_NAME_INTERNAL_SETT);
+        if (fSett.exists() && fSett.canRead()) {
+            NodeSettingsRO sett = NodeSettings.loadFromXML(
+                    new FileInputStream(fSett));
+            try {
+                m_correctCount = sett.getInt(CFG_CORRECT_COUNT);
+                m_falseCount = sett.getInt(CFG_FALSE_COUNT);
+                m_nrRows = sett.getInt(CFG_NUMBER_ROWS);
+            } catch (InvalidSettingsException ise) {
+                IOException ioe = new IOException();
+                ioe.initCause(ise);
+                throw ioe;
+            }
+        } else {
+            throw new IOException("Could not load scorer internals. "
+                    + "File does not exist or can't be read: " + fSett);
+        }
+        // load scored table
+        File fTable = new File(internDir, FILE_NAME_INTERNAL_RESULT);
+        m_lastResult = DataContainer.readFromZip(fTable);
     }
 
     /**
@@ -452,7 +466,21 @@ public class ScorerNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
-        // TODO: load last result and internal variables to restore
-        // view content (see reset())
+        // save internal values
+        NodeSettings sett = new NodeSettings("ignored");
+        sett.addInt(CFG_CORRECT_COUNT, m_correctCount);
+        sett.addInt(CFG_FALSE_COUNT, m_falseCount);
+        sett.addInt(CFG_NUMBER_ROWS, m_nrRows);
+        File fSett = new File(internDir, FILE_NAME_INTERNAL_SETT);
+        sett.saveToXML(new FileOutputStream(fSett));
+        // save scored table
+        File fTable = new File(internDir, FILE_NAME_INTERNAL_RESULT);
+        try {
+            DataContainer.writeToZip(m_lastResult, fTable, exec);
+        } catch (CanceledExecutionException cee) {
+            IOException ioe = new IOException();
+            ioe.initCause(cee);
+            throw ioe;
+        }
     }
 }
