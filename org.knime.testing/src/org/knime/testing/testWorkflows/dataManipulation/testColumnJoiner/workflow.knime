@@ -161,7 +161,7 @@
     </config>
     <config key="node_3">
       <entry key="node_settings_file" type="xstring" value="Difference Checker (#3)/settings.xml"/>
-      <entry key="factory" type="xstring" value="org.knime.testing.differNode.DiffNodeFactory"/>
+      <entry key="factory" type="xstring" value="org.knime.testing.node.differNode.DiffNodeFactory"/>
       <entry key="id" type="xint" value="3"/>
       <entry key="customName" type="xstring" value="Node 3"/>
       <entry key="customDescription" type="xstring" isnull="true" value=""/>

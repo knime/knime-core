@@ -30,7 +30,7 @@
     </config>
     <config key="node_15">
       <entry key="node_settings_file" type="xstring" value="Difference Checker (#15)/settings.xml"/>
-      <entry key="factory" type="xstring" value="org.knime.testing.differNode.DiffNodeFactory"/>
+      <entry key="factory" type="xstring" value="org.knime.testing.node.differNode.DiffNodeFactory"/>
       <entry key="id" type="xint" value="15"/>
       <entry key="customName" type="xstring" value="Node 15"/>
       <entry key="customDescription" type="xstring" isnull="true" value=""/>
