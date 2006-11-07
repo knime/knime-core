@@ -66,7 +66,7 @@ public class XValidateModel extends MetaNodeModel {
     private XValidatePartitionModel m_partitionModel;
     private AggregateOutputNodeModel m_aggregateModel;
 
-    private NodeContainer m_partionNode;
+    private NodeContainer m_partitionNode;
     private NodeContainer m_aggregateNode;
 
     
@@ -165,10 +165,10 @@ public class XValidateModel extends MetaNodeModel {
             NodeSettingsRO s = NodeSettings.loadFromXML(in);
             in.close();
             try {
-                m_partionNode = internalWFM().getNodeContainerById(
+                m_partitionNode = internalWFM().getNodeContainerById(
                         s.getInt("partitionerNodeID"));
-                m_partionNode.retrieveModel(this);
-                m_partionNode.setDeletable(false);
+                m_partitionNode.retrieveModel(this);
+                m_partitionNode.setDeletable(false);
             } catch (Exception ex) {
                 throw new InvalidSettingsException(
                         "Could not find id of partitioner node");
@@ -182,7 +182,7 @@ public class XValidateModel extends MetaNodeModel {
                 throw new InvalidSettingsException(
                         "Could not find id of aggregator node");
             }
-        } else if (m_partionNode == null) {
+        } else if (m_partitionNode == null) {
             throw new InvalidSettingsException(
                 "Could not find ids of internal nodes");            
         }
@@ -222,7 +222,7 @@ public class XValidateModel extends MetaNodeModel {
         super.saveSettingsTo(nodeDir, settings, exec);
 
         NodeSettings s = new NodeSettings("XValInternals");
-        s.addInt("partitionerNodeID", m_partionNode.getID());
+        s.addInt("partitionerNodeID", m_partitionNode.getID());
         s.addInt("aggregateNodeID", m_aggregateNode.getID());
         OutputStream out = new BufferedOutputStream(new FileOutputStream(
                 new File(nodeDir, "internals.xml")));
@@ -237,7 +237,7 @@ public class XValidateModel extends MetaNodeModel {
     protected void addInternalConnections() {
         super.addInternalConnections();
         internalWFM().addConnection(
-                dataInNodeContainer(0).getID(), 0, m_partionNode.getID(), 0);
+                dataInNodeContainer(0).getID(), 0, m_partitionNode.getID(), 0);
         internalWFM().addConnection(
                 m_aggregateNode.getID(), 0, dataOutNodeContainer(0).getID(), 0);
         internalWFM().addConnection(
@@ -250,10 +250,10 @@ public class XValidateModel extends MetaNodeModel {
     @Override
     protected void addInternalNodes() {
         super.addInternalNodes();
-        m_partionNode = internalWFM().addNewNode(
+        m_partitionNode = internalWFM().addNewNode(
                 new XValidatePartitionerFactory());
-        m_partionNode.retrieveModel(this);
-        m_partionNode.setDeletable(false);
+        m_partitionNode.retrieveModel(this);
+        m_partitionNode.setDeletable(false);
         m_aggregateNode = internalWFM().addNewNode(
                 new AggregateOutputNodeFactory());
         m_aggregateNode.retrieveModel(this);
