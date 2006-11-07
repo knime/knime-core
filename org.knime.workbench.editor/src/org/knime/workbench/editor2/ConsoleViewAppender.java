@@ -26,7 +26,12 @@ package org.knime.workbench.editor2;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.LinkedList;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
@@ -195,6 +200,9 @@ public final class ConsoleViewAppender extends Writer {
         conMan.addConsoles(new IConsole[] {myConsole});
         return myConsole;
     }
+    
+    private static ConsoleWriteJob consoleWriteJob =
+        new ConsoleWriteJob();
 
     /**
      * @see java.io.Writer#write(char[], int, int)
@@ -202,20 +210,19 @@ public final class ConsoleViewAppender extends Writer {
     @Override
     public void write(final char[] cbuf, final int off, final int len)
             throws IOException {
-        // Fix Bug #462: sync execution causes deadlock at the root category
-        // Display.getDefault().syncExec(new Runnable() {
         // make new string here as the caller reuses the char[]
         final String str = new String(cbuf, off, len);
-        Display.getDefault().asyncExec(new Runnable() {            
-            public void run() {
-                MessageConsole console = findConsole(CONSOLE_NAME);
-                MessageConsoleStream out = console.newMessageStream();
-                //activateConsole();
-                out.setColor(m_color);
-                out.print(str);
-            }
-        });
-
+        // makes sure that the printing is not queued in the UI thread,
+        // to be changed when bug 
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=140540
+        // is fixed.
+        /*
+         * MessageConsole cons = findConsole(CONSOLE_NAME);
+         * final MessageConsoleStream out = cons.newMessageStream();
+         * out.setColor(m_color);
+         * out.print(str);
+         */
+        consoleWriteJob.add(this, str);
     }
 
     /**
@@ -232,5 +239,75 @@ public final class ConsoleViewAppender extends Writer {
     @Override
     public void close() throws IOException {
         // nothing to do here
+    }
+    
+    /**
+     * Little job (i.e. also thread) that prints messages to the console. It
+     * must not be the UI thread because of bug #140540:
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=140540
+     * @deprecated To be removed when the bug has been fixed 
+     * (I, BW, am on the cc list) 
+     */
+    private static class ConsoleWriteJob extends Job {
+        private final LinkedList<ConsoleStringTuple> m_queueEntries;
+        
+        /**
+         * 
+         */
+        public ConsoleWriteJob() {
+            super("Console Write Job");
+            setSystem(true);
+            m_queueEntries = new LinkedList<ConsoleStringTuple>();
+        }
+        
+        /**
+         * @param appender
+         * @param str
+         */
+        public void add(
+                final ConsoleViewAppender appender, final String str) {
+            synchronized (m_queueEntries) {
+                m_queueEntries.add(new ConsoleStringTuple(appender, str));
+                if (getState() == Job.SLEEPING || getState() == Job.NONE) {
+                    wakeUp();
+                    schedule();
+                }
+            }
+        }
+        
+        /**
+         * @see Job#run(IProgressMonitor)
+         */
+        @Override
+        protected IStatus run(final IProgressMonitor monitor) {
+            if (!monitor.isCanceled()) {
+                while (!m_queueEntries.isEmpty()) {
+                    ConsoleStringTuple first;
+                    synchronized (m_queueEntries) {
+                         first = m_queueEntries.removeFirst();
+                    }
+                    ConsoleViewAppender a = first.m_appender;
+                    MessageConsole cons = a.findConsole(CONSOLE_NAME);
+                    final MessageConsoleStream out =
+                        cons.newMessageStream();
+                    //activateConsole();
+                    out.setColor(a.m_color);
+                    out.print(first.m_string);
+                }
+            }
+            return Status.OK_STATUS;
+        }
+        
+        /** Two members: ConsoleViewAppender and the string to print. */
+        private static final class ConsoleStringTuple {
+            private final ConsoleViewAppender m_appender;
+            private final String m_string;
+            private ConsoleStringTuple(
+                    final ConsoleViewAppender appender, final String string) {
+                m_appender = appender;
+                m_string = string;
+            }
+        }
+        
     }
 }
