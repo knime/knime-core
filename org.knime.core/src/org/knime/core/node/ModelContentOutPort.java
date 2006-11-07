@@ -53,7 +53,13 @@ public final class ModelContentOutPort extends NodeOutPort implements
      * 
      * @param predParams The new <code>ModelContent</code> object or null.
      */
-    void setModelContent(final ModelContentRO predParams) {        
+    void setModelContent(final ModelContentRO predParams) {
+        // The order has been changed here in rev 5787 because
+        // Node.isExecutable checks if the ModelContentOutPorts of its
+        // predecessor(s) have a model set. It may node happen that isExecutable
+        // returns true even if the model here is still being loaded. Thus
+        // the model is really set into this port after the new model has been
+        // fully propagated.
         for (NodeInPort inPort : super.getConnectedInPorts()) {
             if (inPort instanceof ModelContentInPort) {
               ((ModelContentInPort)inPort).newModelContentAvailable(predParams);
