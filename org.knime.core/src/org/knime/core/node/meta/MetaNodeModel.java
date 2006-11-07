@@ -53,7 +53,7 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * This model is the heart of all meta workflows. It is reposnsible for
+ * This model is the heart of all meta workflows. It is responsible for
  * executing the inner workflow, for collecting its results and for the
  * communication with the outer flow. Therefore it needs some special
  * functionality and is therefore derived from
@@ -133,7 +133,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
                 }
     
                 for (int i = inSpecs.length; i < m_dataInModels.length; i++) {
-                    m_dataInModels[i].setDataTableSpec(inSpecs[inSpecs.length - 1]);
+                    m_dataInModels[i].setDataTableSpec(
+                            inSpecs[inSpecs.length - 1]);
                     internalWFM().configureNode(m_dataInContainer[i].getID());
                 }
             } finally {
@@ -641,17 +642,37 @@ public class MetaNodeModel extends SpecialNodeModel implements
      * Returns the data output model at the given index.
      * 
      * @param index the index
-     * @return a data ouput model
+     * @return a data output model
      */
     protected final DataOutputNodeModel dataOutModel(final int index) {
         return m_dataOutModels[index];
     }
 
     /**
+     * Returns the data output node container at the given index.
+     * 
+     * @param index the index
+     * @return the node container
+     */
+    protected final NodeContainer dataOutNodeContainer(final int index) {
+        return m_dataOutContainer[index];
+    }
+
+    /**
+     * Returns the data input node container at the given index.
+     * 
+     * @param index the index
+     * @return the node container
+     */
+    protected final NodeContainer dataInNodeContainer(final int index) {
+        return m_dataInContainer[index];
+    }
+
+    /**
      * Returns the model output model at the given index.
      * 
      * @param index the index
-     * @return a model ouput model
+     * @return a model output model
      */
     protected final ModelOutputNodeModel modelOutModel(final int index) {
         return m_modelOutModels[index];
