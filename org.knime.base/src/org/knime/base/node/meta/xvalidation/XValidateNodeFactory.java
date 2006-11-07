@@ -53,7 +53,7 @@ public class XValidateNodeFactory extends MetaNodeFactory {
      */
     @Override
     protected int getNrNodeViews() {
-        return 1;
+        return 0;
     }
 
     /**
@@ -63,7 +63,7 @@ public class XValidateNodeFactory extends MetaNodeFactory {
     @Override
     public NodeView createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
-        return new XValidateView(nodeModel);
+        return null;
     }
 
     /**

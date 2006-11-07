@@ -27,10 +27,8 @@
 	
 	<ports>
 		<dataIn index="0" name="Any datatable with class attribute">Any datatable with attributes and a class label</dataIn>
-		<dataOut index="0" name="Error rates">Error rates for all validations</dataOut>
+		<dataOut index="0" name="Prediction table">
+		Input table with additional column containing prediction</dataOut>
+		<dataOut index="1" name="Error rates">Error rates for all validations</dataOut>
 	</ports>
-	
-	<views>
-		<view index="0" name="Confusion Matrix View">The confusion matrix</view>
-	</views>
 </knimeNode>
