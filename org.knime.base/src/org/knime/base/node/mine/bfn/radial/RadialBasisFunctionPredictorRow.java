@@ -139,24 +139,20 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     }
 
     /**
-     * Sum of the given activation plus then newly calculated one for the given
+     * Sum of the given activation plus the newly calculated one for the given
      * row.
      * 
-     * @param row the new activation computed on
-     * @param act the activation to combine with
+     * @param act1 activation 1
+     * @param act2 activation 2
      * @return the sum of both activations; greater or equal to zero
      * 
      * @see #computeActivation(DataRow)
      */
     @Override
-    public final double compose(final DataRow row, final double act) {
-        assert (row != null && act >= 0.0);
-        double all = getNumPattern();
-        double cov = getNumCorrectCoveredPattern();
-//        NodeLogger.getLogger("SUPPORT").warn("support=" 
-//                + getNumCorrectCoveredPattern() / all);
-        assert (all > 0 && cov > 0);
-        return computeActivation(row) + act;
+    public final double compose(final double act1, final double act2) {
+        assert (act1 >= 0.0) : "act1=" + act1;
+        assert (act2 >= 0.0) : "act2=" + act2;
+        return act1 + act2;
     }
 
     /**
@@ -167,6 +163,7 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param row the row to compute activation for
      * @return activation for the given input row
      */
+    @Override
     public final double computeActivation(final DataRow row) {
         // if this basisfunction has not been shrunk yet
         if (m_notShrunk) {

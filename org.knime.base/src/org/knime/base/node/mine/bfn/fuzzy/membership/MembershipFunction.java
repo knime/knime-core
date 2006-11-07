@@ -410,7 +410,7 @@ public class MembershipFunction {
         } else {
             double min = m_min.doubleValue();
             if (Double.isNaN(min)) {
-                return m_coreRight;
+                return m_coreLeft;
             } else {
                 return min;
             }
@@ -456,7 +456,7 @@ public class MembershipFunction {
         } else {
             double max = m_max.doubleValue();
             if (Double.isNaN(max)) {
-                return m_coreLeft;
+                return m_coreRight;
             } else {
                 return max;
             }

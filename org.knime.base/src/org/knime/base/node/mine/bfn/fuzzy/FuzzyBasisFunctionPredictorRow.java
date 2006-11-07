@@ -39,6 +39,7 @@ import org.knime.core.node.ModelContentWO;
  * @author Thoams Gabriel, University of Konstanz
  */
 public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
+    
     private final MembershipFunction[] m_mem;
 
     private final int m_norm;
@@ -119,23 +120,19 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * Composes the degree of membership by using the disjunction of the
      * tco-norm operator.
      * 
-     * @param row the row to compute the activation from
-     * @param act the activation to compromise
+     * @param act1 activation 1
+     * @param act2 activation 2
      * @return the new activation array
      * 
      * @see #computeActivation(DataRow)
      * @see Norm#computeTCoNorm(double,double)
      */
     @Override
-    public double compose(final DataRow row, final double act) {
-        assert (row != null);
-        assert (0 <= act && act <= 1.0);
-        // already maximum reached
-        if (act == 1.0) {
-            return act;
-        }
-        // compute current activation of input row
-        return Norm.NORMS[m_norm].computeTCoNorm(act, computeActivation(row));
+    public double compose(final double act1, final double act2) {
+        assert (act1 >= 0.0 && act1 <= 1.0) : "act1=" + act1;
+        assert (act2 >= 0.0 && act2 <= 1.0) : "act2=" + act2;
+        // compute current activation (minimum) of input row
+        return Norm.NORMS[m_norm].computeTCoNorm(act1, act2);
     }
 
     /**
@@ -144,6 +141,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param row input pattern
      * @return membership degree
      */
+    @Override
     public double computeActivation(final DataRow row) {
         assert (m_mem.length == row.getNumCells());
         // sets degree to maximum
@@ -158,11 +156,11 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             double value = ((DoubleValue)cell).getDoubleValue();
             // act in current dimension
             double act = m_mem[i].getActivation(value);
-            // shortest, lowest poss. memship degree already reached, return
-            if (act == 0.0) {
-                return act;
+            if (i == 0) {
+                degree = act;
+                continue;
             }
-            // calculates the new degree using norm index
+            // calculates the new (minimum) degree using norm index
             degree = Norm.NORMS[m_norm].computeTNorm(degree, act);
             assert (0.0 <= degree && degree <= 1.0);
         }

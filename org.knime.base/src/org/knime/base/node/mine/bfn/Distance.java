@@ -26,7 +26,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 
 /**
- * Computes the euclidian distance between two vectors.
+ * Computes the Euclidian distance between two vectors.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

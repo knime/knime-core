@@ -50,8 +50,6 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
     
     private final double m_dontKnowClass;
     
-    private final boolean m_normalize;
-    
     private final int[] m_filteredRows;
     
     /**
@@ -63,7 +61,6 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
         super(targetSpec);
         m_model = null;
         m_dontKnowClass = 0.0;
-        m_normalize = true;
         m_filteredRows = null;
     }
 
@@ -77,21 +74,17 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
      * @param model the trained model as list of rows
      * @param applyColumn the name of the applied column
      * @param dontKnowClass the <i>don't know</i> class probability
-     * @param normalize if true, resulting class degrees are normalized to sum
-     *        up to one.
      * @throws NullPointerException if one of the arguments is <code>null</code>
      */
     public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
             final DataColumnSpec[] modelSpecs,
             final List<BasisFunctionPredictorRow> model,
-            final DataColumnSpec applyColumn, final double dontKnowClass,
-            final boolean normalize) {
+            final DataColumnSpec applyColumn, final double dontKnowClass) {
         super(applyColumn);
         // check input
         assert (model != null);
         assert (applyColumn != null);
         m_dontKnowClass = dontKnowClass;
-        m_normalize = normalize;
 
         // keep the model for later mapping
         if (model.size() == 0) {
@@ -111,107 +104,61 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
      * 
      * @param row The row to predict
      * @param model to this model
-     * @param dontKnowClass with this don't know class probability
-     * @param normalize if class degrees should be normalized
      * @return mapping class label to array of assigned class degrees
      */
     public static final Map<DataCell, double[]> predict(final DataRow row,
-            final List<BasisFunctionPredictorRow> model,
-            final double dontKnowClass, final boolean normalize) {
+            final List<BasisFunctionPredictorRow> model) {
         // number of predicted classes: classLabel->activation,#hits
         final LinkedHashMap<DataCell, double[]> map = 
             new LinkedHashMap<DataCell, double[]>();
-        DataCell missing = DataType.getMissingCell();
-        double[] dontKnow;
-        // add don't know class
-        if (dontKnowClass >= 0.0 && dontKnowClass <= 1.0) {
-            dontKnow = new double[]{dontKnowClass, 0.0};
-            map.put(missing, dontKnow);
-        } else {
-            if (model.size() > 0) {
-                BasisFunctionPredictorRow bf = model.iterator().next();
-                dontKnow = new double[]{bf.getDontKnowClassDegree(), 0.0};
-                map.put(missing, dontKnow);
-            } else {
-                dontKnow = new double[]{0.0, 0.0};
-                map.put(missing, dontKnow);
-                return map;
-            }
-        }
-
         // overall basisfunctions in the model
         for (Iterator<BasisFunctionPredictorRow> it = model.iterator(); 
                 it.hasNext();) {
-            BasisFunctionPredictorRow bf = it.next();
+            final BasisFunctionPredictorRow bf = it.next();
+            final int covered = bf.getNumCorrectCoveredPattern();
+            final double activation = bf.computeActivation(row);
             // get its class label
             DataCell classInfo = bf.getClassLabel();
-            double act = 0.0;
-            double cls = 0.0;
             // check if class label is already used
             if (map.containsKey(classInfo)) {
-                // get current activation
-                act = map.get(classInfo)[0];
-                // get number of basisfunctions for this class
-                cls = map.get(classInfo)[1] + 1.0;
-            }
-            // per default
-            act = bf.compose(row, act);
-            if (act >= dontKnowClass) {
-                // compute and set (new) activation degree
-                map.put(classInfo, new double[]{act, cls});
+                double[] value = map.get(classInfo);
+                value[1] = bf.compose(value[1], activation /* * covered */);
+                value[0] += covered;
             } else {
-                cls = map.get(missing)[1] + 1.0;
-                map.put(missing, new double[]{dontKnow[0], cls});
-            }
-        }
-
-        if (normalize) {
-            double overall = dontKnow[0];
-            for (DataCell classLabel : map.keySet()) {
-                if (!classLabel.isMissing()) {
-                    double[] value = map.get(classLabel);
-                    overall += value[0];
-                }
-            }
-            if (overall > 0.0) {
-                for (DataCell classLabel : map.keySet()) {
-                    if (!classLabel.isMissing()) {
-                        double[] value = map.get(classLabel);
-                        value[0] = value[0] / overall;
-                        assert (value[0] >= 0.0 && value[0] <= 1.0);
-                    }
-                }
+                map.put(classInfo, new double[]{covered, activation 
+                        /* * covered */});
             }
         }
         return map;
     }
     
-    private static DataCell findBestClass(final Map<DataCell, double[]> map) {
-        // find best class label
-        DataCell best = null;
-        // highest activation
-        double hact = -1.0;
-        // best class
-        double bcls = -1;
+    private static DataCell findBestClass(final Map<DataCell, double[]> map,
+            final double dontKnowClass) {
+        // find best class label, not yet set
+        DataCell best = DataType.getMissingCell();
+        // set default highest activation, not yet set
+        double hact = dontKnowClass;
+        // nothing covered yet
+        double bcls = 0;
         // overall class labels
-        for (DataCell cur : map.keySet()) {
-            double act = map.get(cur)[0];
-            assert (act >= 0.0) : "activation = " + act;
-            double cls = map.get(cur)[1];
-            assert (cls >= 0.0) : "hits = " + cls;
+        for (DataCell cell : map.keySet()) {
+            double[] value = map.get(cell);
+            double act = value[1];
+            assert (act >= 0.0) : "activation=" + act;
+            double cov = value[0];
+            assert (cov > 0.0) : "covered=" + cov;
             if (act > hact) {
                 hact = act;
-                bcls = cls;
-                best = cur;
+                bcls = cov;
+                best = cell;
             } else if (act == hact) {
-                if (cls > bcls) {
+                if (cov > bcls) {
                     hact = act;
-                    bcls = cls;
-                    best = cur;
+                    bcls = cov;
+                    best = cell;
                 }
             }
         }
-        assert (best != null);
         return best;
     }
 
@@ -222,7 +169,6 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
     @Override
     public DataCell getCell(final DataRow row) {
         DataRow wRow = new FilterColumnRow(row, m_filteredRows);
-        return findBestClass(
-                predict(wRow, m_model, m_dontKnowClass, m_normalize));
+        return findBestClass(predict(wRow, m_model), m_dontKnowClass);
     }
 }

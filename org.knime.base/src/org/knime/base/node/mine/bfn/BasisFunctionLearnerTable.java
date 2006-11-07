@@ -55,7 +55,7 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
  * The learning algorithm itself is based on two distinct phases. During the
  * training phase, miss-classified pattern either prompt the spontaneous
  * creation of new basisfunctions units (commitment) or the adjustment of
- * conflictingb asisfunction radi (shrinking of Basisfunctions belonging to
+ * conflicting basisfunction radi (shrinking of Basisfunctions belonging to
  * incorrect classes). To commit a new prototype, none of existing
  * Basisfunctions of the correct class has an activation above a certain
  * threshold and, after shrinking, no Basisfunction of a conflicting class is
@@ -169,8 +169,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
             exec.checkCanceled();
             String progMsg = "Learning... #rules=" + getNumBasisFunctions()
                     + " at #epoch=" + (m_cycles + 1);
-            exec.setProgress(Math.min(0.90, ((m_cycles + 1) * 10) / 100.0),
-                    progMsg);
+//            exec.setProgress(Math.min(0.90, ((m_cycles + 1) * 10) / 100.0),
+//                    progMsg);
             goon = false; // reset flag for a new run
 
             /* --- R E S E T --- */
@@ -414,7 +414,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
             // get current Basisfunction
             BasisFunctionLearnerRow bf = it.nextBasisFunction();
             // if no pattern is covered
-            int all = bf.getPredictorRow().getNumAllCoveredPattern();
+            int all = bf.getPredictorRow().getNumCorrectCoveredPattern();
             if (all <= t) {
                 // add Basisfunction to the list of remove ones.
                 removeBFs.add(bf);

@@ -103,17 +103,24 @@ public abstract class BasisFunctionPredictorRow {
         }
 
     }
+    
+    /**
+     * Computes the activation based on the given row for this basisfunction.
+     * @param row compute activation for
+     * @return activation between 0 and 1
+     */
+    public abstract double computeActivation(final DataRow row);
 
     /**
      * Composes the activation of the given array and of the calculated one
      * based on the given row. All values itself have to be between
      * <code>0</code> and <code>1</code>.
      * 
-     * @param row the row to compute the activation for
-     * @param act the current activation
+     * @param act1 activation 1
+     * @param act2 activation 2
      * @return the new activation compromising the given activation
      */
-    public abstract double compose(DataRow row, double act);
+    public abstract double compose(double act1, double act2);
 
     /**
      * @return <i>don't know</i> class probability
