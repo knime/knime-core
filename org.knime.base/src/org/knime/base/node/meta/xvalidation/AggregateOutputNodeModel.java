@@ -37,6 +37,7 @@ import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -63,7 +64,6 @@ public class AggregateOutputNodeModel extends NodeModel {
     
     private HashMap<RowKey, DataCell> m_predictMap;
     private ArrayList<DataRow> m_foldStatistics;
-    private DataType m_predictColType;
     
     private boolean m_isIgnoreReset;
     
@@ -112,12 +112,6 @@ public class AggregateOutputNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No such column: " + m_predictCol);
         }
-        if (m_predictColType == null) {
-            m_predictColType = in.getColumnSpec(predictColIndex).getType();
-        } else {
-            m_predictColType = DataType.getCommonSuperType(m_predictColType, 
-                    in.getColumnSpec(predictColIndex).getType());
-        }
         return new DataTableSpec[]{in, createSpecPort1()};
     }
     
@@ -125,21 +119,15 @@ public class AggregateOutputNodeModel extends NodeModel {
      * A column rearranger to be used for the first outport.
      * @param metaIn The input spec of the outer meta node. 
      * @return A new column rearranger.
-     * @throws InvalidSettingsException If not configured.
      */
-    ColumnRearranger createColumnRearrangerPort0(final DataTableSpec metaIn) 
-        throws InvalidSettingsException {
-        if (m_predictColType == null) {
-            throw new InvalidSettingsException("Internal aggregation node has" 
-                    + " not been configured.");
-        }
+    ColumnRearranger createColumnRearrangerPort0(final DataTableSpec metaIn) {
         String predictColName = "prediction";
         while (metaIn.containsName(predictColName)) {
             predictColName = predictColName.concat("_");
         }
         ColumnRearranger result = new ColumnRearranger(metaIn);
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                predictColName, m_predictColType); 
+                predictColName, StringCell.TYPE); 
         SingleCellFactory cellF = new SingleCellFactory(creator.createSpec()) {
             @Override
             public DataCell getCell(final DataRow row) {
@@ -255,7 +243,6 @@ public class AggregateOutputNodeModel extends NodeModel {
         if (!isIgnoreReset()) {
             m_foldStatistics = null;
             m_predictMap = null;
-            m_predictColType = null;
         }
     }
 
