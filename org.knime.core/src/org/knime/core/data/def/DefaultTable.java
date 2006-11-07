@@ -40,7 +40,7 @@ import org.knime.core.data.util.ObjectToDataCellConverter;
 /**
  * Default implementation of a <code>DataTable</code> object. This
  * implementation keeps the data in memory all the time. It's really meant only
- * for use with very small data tables. All others should rather use the 
+ * for use with very small data tables. All others should rather use the
  * {@link org.knime.core.data.container.DataContainer}.
  * 
  * There are basically two ways to initialize an instance of this class. Either
@@ -54,6 +54,13 @@ import org.knime.core.data.util.ObjectToDataCellConverter;
  * here.
  * 
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated DefaultTable will hold the entire data in main memory and should
+ *             therefore not be used anymore. Instead, you should consider to
+ *             use a {@link org.knime.core.data.container.DataContainer} (or in
+ *             a Node's {@link org.knime.core.node.NodeModel#execute(
+ *             BufferedDataTable[], ExecutionContext) execute method} a
+ *             {@link org.knime.core.node.BufferedDataTable} to create
+ *             DataTables).
  */
 public class DefaultTable implements DataTable {
 
