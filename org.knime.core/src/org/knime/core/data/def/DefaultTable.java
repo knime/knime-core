@@ -45,7 +45,7 @@ import org.knime.core.data.util.ObjectToDataCellConverter;
  * 
  * There are basically two ways to initialize an instance of this class. Either
  * by passing directly <code>DataRow</code> objects along with the column
- * names and types or by providing arbitray java objects (or generic classes
+ * names and types or by providing arbitrary java objects (or generic classes
  * like <code>int</code> and <code>double</code>) in a 2-D array. If one
  * wishes to get objects being wrapped in <code>DataCell</code>s other than
  * the default {@link org.knime.core.data.util.ObjectToDataCellConverter
