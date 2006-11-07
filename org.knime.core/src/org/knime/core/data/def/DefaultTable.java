@@ -36,7 +36,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.util.ObjectToDataCellConverter;
 
-
 /**
  * Default implementation of a <code>DataTable</code> object. This
  * implementation keeps the data in memory all the time. It's really meant only
@@ -58,7 +57,8 @@ import org.knime.core.data.util.ObjectToDataCellConverter;
  *             therefore not be used anymore. Instead, you should consider to
  *             use a {@link org.knime.core.data.container.DataContainer} (or in
  *             a Node's {@link org.knime.core.node.NodeModel#execute(
- *             BufferedDataTable[], ExecutionContext) execute method} a
+ *             org.knime.core.node.BufferedDataTable[], 
+ *             org.knime.core.node.ExecutionContext) execute method} a
  *             {@link org.knime.core.node.BufferedDataTable} to create
  *             DataTables).
  */
