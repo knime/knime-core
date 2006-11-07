@@ -85,6 +85,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      *            spec, false otherwise.
      * @see #update(DataTableSpec, Set, boolean)
      */
+    @SuppressWarnings("unchecked")
     public DialogComponentColumnFilter(final String configName,
             final String label, final boolean excluded) {
         this(configName, label, excluded, DataValue.class);
