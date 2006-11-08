@@ -7,7 +7,7 @@
   <config key="model">
     <entry key="TESTEVALUATOR" type="xstring" value="LearnerScoreComperator"/>
     <entry key="LOWERTOLLERANCE" type="xint" value="5"/>
-    <entry key="UPPERTOLLERANCE" type="xint" value="0"/>
+    <entry key="UPPERTOLLERANCE" type="xint" value="2"/>
   </config>
   <config key="spec_files"/>
 </config>
