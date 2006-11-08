@@ -22,6 +22,8 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -95,8 +97,14 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
                 display = Display.getDefault();
             }
 
-            Shell shell = new Shell(display);
-
+            Shell shell = new Shell(display, SWT.ON_TOP | SWT.SHELL_TRIM);
+            
+            try {
+                shell.setImage(ImageRepository.getImageDescriptor(
+                        "icons/knime.bmp").createImage());
+            } catch (Throwable e) {
+                // do nothing, is just the icon
+            }
             shell.setText(m_title);
             shell.setSize(300, 200);
             shell.forceActive();
@@ -113,21 +121,52 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             gridData.horizontalSpan = 2;
 
             final Label label = new Label(shell, SWT.NONE);
-            label.setText(m_text);
+            label.setText(m_text + "\n\n");
             label.setBounds(20, 15, 380, 260);
             label.setLayoutData(gridData);
 
             gridData = new GridData();
             gridData.horizontalAlignment = GridData.FILL;
             gridData.horizontalSpan = 1;
+            final Label keyLable = new Label(shell, SWT.NONE);
+            keyLable.setText("Encryption key:");
+            keyLable.setLayoutData(gridData);
+
+            gridData = new GridData();
+            gridData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_BEGINNING;
+            gridData.horizontalSpan = 1;
+            gridData.widthHint = 280;
+            final Text text = new Text(shell, SWT.PASSWORD | SWT.BORDER);
+            // text.setBounds(140, 270, 200, 20);
+            text.setSize(200, 20);
+            text.setLayoutData(gridData);
+
+            gridData = new GridData();
+            gridData.horizontalAlignment = GridData.FILL;
+            gridData.horizontalSpan = 2;
+            final Label spaceLabel = new Label(shell, SWT.NONE);
+            spaceLabel.setText("\n");
+            spaceLabel.setLayoutData(gridData);
+
+            gridData = new GridData();
+            gridData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_END;
+            gridData.widthHint = 80;
+            gridData.horizontalSpan = 1;
             final Button button = new Button(shell, SWT.PUSH);
             button.setText("OK");
-            button.setBounds(20, 270, 80, 20);
+            // button.setBounds(20, 270, 180, 20);
+            button.setSize(180, 20);
             button.setLayoutData(gridData);
 
-            final Text text = new Text(shell, SWT.PASSWORD | SWT.BORDER);
-            text.setBounds(140, 270, 100, 20);
-            button.setLayoutData(gridData);
+            gridData = new GridData();
+            gridData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_END;
+            gridData.widthHint = 80;
+            gridData.horizontalSpan = 1;
+            final Button cancel = new Button(shell, SWT.PUSH);
+            cancel.setText("Cancel");
+            // cancel.setBounds(20, 270, 180, 20);
+            cancel.setSize(180, 20);
+            cancel.setLayoutData(gridData);
 
             gridData = new GridData();
             gridData.horizontalAlignment = GridData.FILL;
@@ -149,6 +188,8 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
             shell.open();
 
+            text.setFocus();
+
             // Listener listener = new Listener() {
             // public void handleEvent(final Event event) {
             // if (event.widget == buttonOK) {
@@ -160,8 +201,8 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             // }
             // };
 
-            Listener buttonListener = new Listener() {
-                public void handleEvent(Event event) {
+            final Listener buttonListener = new Listener() {
+                public void handleEvent(final Event event) {
 
                     // check if the key is valid
                     if (text.getText().length() < 8) {
@@ -180,6 +221,35 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             };
 
             button.addListener(SWT.Selection, buttonListener);
+
+            KeyListener keyListener = new KeyListener() {
+
+                public void keyPressed(final KeyEvent e) {
+
+                    if (e.character == '\r') {
+                        buttonListener.handleEvent(null);
+                    }
+
+                }
+
+                public void keyReleased(final KeyEvent e) {
+                    // do nothing
+
+                }
+            };
+
+            text.addKeyListener(keyListener);
+            shell.addKeyListener(keyListener);
+
+            Listener cancelListener = new Listener() {
+                public void handleEvent(final Event event) {
+
+                    m_finished = true;
+                }
+
+            };
+
+            cancel.addListener(SWT.Selection, cancelListener);
 
             while (!shell.isDisposed() && !m_finished) {
                 if (!display.readAndDispatch())
