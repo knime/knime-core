@@ -33,6 +33,7 @@ import org.knime.core.node.workflow.WorkflowInExecutionException;
 import org.knime.core.node.workflow.WorkflowManager;
 
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Command that deletes a <code>ConnectionContainer</code> from the workflow
@@ -61,7 +62,14 @@ public class DeleteConnectionCommand extends Command {
      */
     @Override
     public boolean canExecute() {
-        return true;
+
+        NodeContainerEditPart part =
+                (NodeContainerEditPart)m_connection.getTarget().getParent();
+        // does the workflow status allow deletion of the selected node
+        // only if the workflow is not executing
+        boolean workflowAllowsDeletion =
+                m_manager.canBeDeleted(part.getNodeContainer());
+        return workflowAllowsDeletion;
     }
 
     /**
@@ -70,16 +78,16 @@ public class DeleteConnectionCommand extends Command {
     @Override
     public void execute() {
         try {
-            m_manager.removeConnection((ConnectionContainer) m_connection
+            m_manager.removeConnection((ConnectionContainer)m_connection
                     .getModel());
         } catch (WorkflowInExecutionException ex) {
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_INFORMATION | SWT.OK);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Operation not allowed");
             mb.setMessage("You cannot remove a connection while the workflow"
                     + " is in execution.");
-            mb.open();            
+            mb.open();
         }
     }
 }
