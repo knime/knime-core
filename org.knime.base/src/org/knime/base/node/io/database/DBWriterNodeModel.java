@@ -160,11 +160,7 @@ class DBWriterNodeModel extends NodeModel {
         String password = settings.getString("password", "");
         // loaded driver
         String[] loadedDriver = settings.getStringArray("loaded_driver");
-        try {
-            password = KnimeEncryption.decrypt(password);
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Could not decrypt password", e);
-        }
+        // write settings or skip it
         if (write) {
             m_driver = driver;
             m_url = database;
@@ -204,8 +200,10 @@ class DBWriterNodeModel extends NodeModel {
         exec.setProgress("Opening database connection...");
         Connection conn = null;
         try {
+            // decryt password
+            String password = KnimeEncryption.decrypt(m_pass);
             // create database connection
-            conn = DriverManager.getConnection(m_url, m_user, m_pass);
+            conn = DriverManager.getConnection(m_url, m_user, password);
             // write entire data
             new DBWriterConnection(conn, m_table, inData[0], exec, m_types);
         } finally {

@@ -213,7 +213,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
             settings.addString("password", KnimeEncryption.encrypt(m_pass
                     .getPassword()));
         } catch (Exception e) {
-            LOGGER.warn("Could not encrypt password.");
+            LOGGER.warn("Could not encrypt password.", e);
+            throw new InvalidSettingsException("Could not encrypt password.");
         }
         settings.addString("statement", m_statmnt.getText().trim());
         // save loaded driver

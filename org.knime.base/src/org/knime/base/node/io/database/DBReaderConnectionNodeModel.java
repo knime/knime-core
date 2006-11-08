@@ -146,8 +146,8 @@ class DBReaderConnectionNodeModel extends NodeModel {
         loadSettings(settings, true);
     }
 
-    private void loadSettings(final NodeSettingsRO settings, final boolean write)
-            throws InvalidSettingsException {
+    private void loadSettings(final NodeSettingsRO settings, 
+            final boolean write) throws InvalidSettingsException {
         String driver = settings.getString("driver");
         String statement = settings.getString("statement");
         String database = settings.getString("database");
@@ -156,27 +156,21 @@ class DBReaderConnectionNodeModel extends NodeModel {
         String password = settings.getString("password", "");
         // loaded driver
         String[] loadedDriver = settings.getStringArray("loaded_driver");
-        try {
-            KnimeEncryption.decrypt(password);
-        } catch (Exception e1) {
-            LOGGER.error("Could not decrypt password.", e1);
-            super.setWarningMessage("Could not decrypt password.");
-        } finally {
-            if (write) {
-                m_driver = driver;
-                m_query = statement;
-                m_name = database;
-                m_user = user;
-                m_pass = password;
-                m_driverLoaded.clear();
-                m_driverLoaded.addAll(Arrays.asList(loadedDriver));
-                for (String fileName : m_driverLoaded) {
-                    try {
-                        DBDriverLoader.loadDriver(new File(fileName));
-                    } catch (Exception e2) {
-                        LOGGER.info("Could not load driver from: "
-                                + loadedDriver, e2);
-                    }
+        // write settings or skip it
+        if (write) {
+            m_driver = driver;
+            m_query = statement;
+            m_name = database;
+            m_user = user;
+            m_pass = password;
+            m_driverLoaded.clear();
+            m_driverLoaded.addAll(Arrays.asList(loadedDriver));
+            for (String fileName : m_driverLoaded) {
+                try {
+                    DBDriverLoader.loadDriver(new File(fileName));
+                } catch (Exception e2) {
+                    LOGGER.info("Could not load driver from: "
+                            + loadedDriver, e2);
                 }
             }
         }
