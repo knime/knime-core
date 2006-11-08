@@ -216,12 +216,6 @@ public final class ConsoleViewAppender extends Writer {
         // to be changed when bug 
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=140540
         // is fixed.
-        /*
-         * MessageConsole cons = findConsole(CONSOLE_NAME);
-         * final MessageConsoleStream out = cons.newMessageStream();
-         * out.setColor(m_color);
-         * out.print(str);
-         */
         consoleWriteJob.add(this, str);
     }
 
@@ -282,16 +276,24 @@ public final class ConsoleViewAppender extends Writer {
         protected IStatus run(final IProgressMonitor monitor) {
             if (!monitor.isCanceled()) {
                 while (!m_queueEntries.isEmpty()) {
-                    ConsoleStringTuple first;
+                    final ConsoleStringTuple first;
                     synchronized (m_queueEntries) {
-                         first = m_queueEntries.removeFirst();
+                        first = m_queueEntries.removeFirst();
                     }
-                    ConsoleViewAppender a = first.m_appender;
+                    final ConsoleViewAppender a = first.m_appender;
                     MessageConsole cons = a.findConsole(CONSOLE_NAME);
                     final MessageConsoleStream out =
                         cons.newMessageStream();
-                    //activateConsole();
-                    out.setColor(a.m_color);
+                    // apparently the setColor invocation must take place
+                    // in the UI thread (otherwise exception to error log)
+                    // the print invocation must not take place in the UI
+                    // thread (because of the before mentioned bug)
+                    Display.getDefault().syncExec(new Runnable() {
+                        public void run() {
+                            //activateConsole();
+                            out.setColor(a.m_color);
+                        }
+                    });
                     out.print(first.m_string);
                 }
             }
