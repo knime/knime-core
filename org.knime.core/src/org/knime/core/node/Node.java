@@ -1399,6 +1399,9 @@ public final class Node {
             m_status = null;
     
             NodeStatus localStatus = null;
+            // need to init here as there may be an exception being thrown
+            // and then we copy the null elements of this array to their destin.
+            DataTableSpec[] newOutSpec = new DataTableSpec[getNrDataOutPorts()];
             // configure
             try {
                 String errorMsg = "";
@@ -1421,17 +1424,22 @@ public final class Node {
                 }
     
                 // call configure model to create output table specs
-                DataTableSpec[] newSpecs = m_model.configureModel(inSpecs);
+                DataTableSpec[] tempOutSpec = m_model.configureModel(inSpecs);
+                // set newly created array of specs, if returned array is null
+                if (tempOutSpec == null) {
+                    tempOutSpec = newOutSpec;
+                }
+                if (tempOutSpec.length != getNrDataOutPorts()) {
+                    m_logger.coding("configure() method returns " 
+                            + "array of wrong size (expected " 
+                            + getNrDataOutPorts() + ", got " 
+                            + tempOutSpec.length +  ")");
+                    throw new IndexOutOfBoundsException("Unable to configure "
+                            + "due to coding problem in NodeModel.configure()");
+                }
+                newOutSpec = tempOutSpec; 
                 // notify state listeners before the new specs are propagated
                 notifyStateListeners(new NodeStatus.Configured("Configured"));
-                /*
-                 * set the new specs in the output ports, which will propagate
-                 * them to connected successor nodes
-                 */
-                for (int p = 0; p < newSpecs.length; p++) {
-                    // update data table spec
-                    m_outDataPorts[p].setDataTableSpec(newSpecs[p]);
-                }
             } catch (InvalidSettingsException ise) {
                 if (isFullyConnected()) {
                     m_logger.warn("Configure failed: " + ise.getMessage());
@@ -1448,6 +1456,13 @@ public final class Node {
                 m_logger.fatal("Configure failed", e);
                 reset(true);
             } finally {
+                /* set the new specs in the output ports, which will propagate
+                 * them to connected successor nodes */
+                for (int p = 0; p < newOutSpec.length; p++) {
+                    // update data table spec
+                    m_outDataPorts[p].setDataTableSpec(newOutSpec[p]);
+                }
+
                 if (localStatus != null) {
                     m_status = localStatus;
                     notifyStateListeners(localStatus);
