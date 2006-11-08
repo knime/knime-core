@@ -33,6 +33,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This predictor cell factory predicts the passed rows using the underlying
@@ -51,6 +52,9 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
     private final double m_dontKnowClass;
     
     private final int[] m_filteredRows;
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            BasisFunctionPredictorCellFactory.class);
     
     /**
      * Create new predictor cell factory. Only used to create the 
@@ -152,6 +156,7 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
                 bcls = cov;
                 best = cell;
             } else if (act == hact) {
+                LOGGER.debug("activations are equal: " + act);
                 if (cov > bcls) {
                     hact = act;
                     bcls = cov;
