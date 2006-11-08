@@ -25,6 +25,7 @@ package org.knime.base.node.mine.smote;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Random;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
@@ -57,6 +58,9 @@ public class SmoteNodeModel extends NodeModel {
     /** NodeSettings key for kNN parameter. */
     public static final String CFG_KNN = "kNN";
 
+    /** NodeSettings key for random seed string. */
+    public static final String CFG_SEED = "seed";
+    
     /** Method: oversample all classes equally to a given rate. */
     public static final String METHOD_ALL = "oversample_all";
 
@@ -70,6 +74,8 @@ public class SmoteNodeModel extends NodeModel {
     private String m_class;
 
     private int m_kNN;
+
+    private Long m_seed;
 
     /**
      * Default constructor which sets one input, one output port.
@@ -88,6 +94,8 @@ public class SmoteNodeModel extends NodeModel {
             settings.addDouble(CFG_RATE, m_rate);
             settings.addString(CFG_CLASS, m_class);
             settings.addInt(CFG_KNN, m_kNN);
+            settings.addString(CFG_SEED, 
+                    m_seed != null ? Long.toString(m_seed) : null);
         }
     }
 
@@ -114,6 +122,8 @@ public class SmoteNodeModel extends NodeModel {
         String method = settings.getString(CFG_METHOD);
         double rate = 1.0;
         String clas = settings.getString(CFG_CLASS);
+        String seedString = settings.getString(CFG_SEED);
+        Long seed;
         int kNN = settings.getInt(CFG_KNN);
         if (METHOD_ALL.equals(method)) {
             // must be in there
@@ -130,11 +140,22 @@ public class SmoteNodeModel extends NodeModel {
         if (rate <= 0.0) {
             throw new InvalidSettingsException("Rate illegal: " + rate);
         }
+        if (seedString != null) {
+            try {
+                seed = Long.parseLong(seedString);
+            } catch (NumberFormatException nfe) {
+                throw new InvalidSettingsException(
+                        "Invalid seed: " + seedString);
+            }
+        } else {
+            seed = null;
+        }
         if (write) {
             m_method = method;
             m_rate = rate;
             m_class = clas;
             m_kNN = kNN;
+            m_seed = seed;
         }
     }
 
@@ -146,7 +167,13 @@ public class SmoteNodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         BufferedDataTable in = inData[0];
-        Smoter smoter = new Smoter(in, m_class, exec);
+        Random rand;
+        if (m_seed != null) {
+            rand = new Random(m_seed);
+        } else {
+            rand = new Random();
+        }
+        Smoter smoter = new Smoter(in, m_class, exec, rand);
         if (m_method.equals(METHOD_ALL)) {
             // count number of rows to add
             int nrRowsToAdd = 0;

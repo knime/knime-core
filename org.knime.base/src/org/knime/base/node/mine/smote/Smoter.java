@@ -30,6 +30,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Random;
 
+import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -40,14 +41,13 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-
-import org.knime.base.data.append.row.AppendedRowsTable;
 
 /**
  * Implementation of the <a
@@ -66,17 +66,18 @@ import org.knime.base.data.append.row.AppendedRowsTable;
  * @author Bernd Wiswedel, University of Konstanz
  */
 class Smoter {
-    private static final Random RANDOM = new Random();
 
     private final BufferedDataTable m_inTable;
 
     private final int m_targetCol;
 
-    private final DataContainer m_container;
+    private final BufferedDataContainer m_container;
 
     private final Map<DataCell, MutableInt> m_inStats;
 
     private int m_appendCounter;
+    
+    private final Random m_random;
 
     /**
      * Creates a new instance given the input table <code>in</code> and the
@@ -86,19 +87,22 @@ class Smoter {
      * @param colName the target column with class information
      * @param exec monitor to get canceled status from 
      *  (may be <code>null</code>)
+     * @param rand The random generator, may be <code>null</code>.
      * @throws CanceledExecutionException if execution is canceled
      */
     public Smoter(final BufferedDataTable in, final String colName,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+            final ExecutionContext exec, final Random rand) 
+        throws CanceledExecutionException {
         final int col = in.getDataTableSpec().findColumnIndex(colName);
         if (col < 0) {
             throw new IllegalArgumentException("Table doesn't contain column: "
                     + colName);
         }
+        m_random =  (rand == null ? new Random() : rand);
         m_inTable = in;
         m_targetCol = col;
         DataTableSpec outSpec = createFinalSpec(in.getDataTableSpec());
-        m_container = new DataContainer(outSpec);
+        m_container = exec.createDataContainer(outSpec);
         m_inStats = new HashMap<DataCell, MutableInt>();
         for (DataRow next : in) {
             checkCanceled(exec);
@@ -312,10 +316,10 @@ class Smoter {
      * <code>neighbors</code>.
      */
     private DataRow populate(final DataRow ref, final DataRow[] neighbors) {
-        final double fraction = RANDOM.nextDouble();
+        final double fraction = m_random.nextDouble();
         final DataRow neigh;
         if (neighbors.length > 0) {
-            neigh = neighbors[RANDOM.nextInt(neighbors.length)];
+            neigh = neighbors[m_random.nextInt(neighbors.length)];
         } else {
             neigh = ref;
         }
@@ -417,9 +421,9 @@ class Smoter {
     }
 
     /* Shuffles an int array. */
-    private static int[] shuffle(final int[] arg) {
+    private int[] shuffle(final int[] arg) {
         for (int i = arg.length; --i >= 0;) {
-            int index = RANDOM.nextInt(i + 1);
+            int index = m_random.nextInt(i + 1);
             int swap = arg[i];
             arg[i] = arg[index];
             arg[index] = swap;
