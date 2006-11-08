@@ -28,8 +28,6 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeDialogPanel;
-import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeModel;
-import org.knime.base.node.mine.bfn.BasisFunctionLearnerTable;
 import org.knime.base.node.mine.bfn.fuzzy.norm.Norm;
 import org.knime.base.node.mine.bfn.fuzzy.shrink.Shrink;
 import org.knime.core.data.DataTableSpec;
@@ -87,13 +85,8 @@ public class FuzzyBasisFunctionLearnerNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        // set selected target column
-        String target = settings.getString(
-                BasisFunctionLearnerNodeModel.TARGET_COLUMN, null);
-        m_basicsPanel.setTargetColumns(target, specs[0]);
-        // set missing replacement value
-        int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
-        m_basicsPanel.setMissing(missing);
+        // update settings of basic tab
+        m_basicsPanel.loadSettingsFrom(settings, specs);
         // set shrink choice
         int shrink = settings.getInt(Shrink.SHRINK_KEY, 0);
         if (shrink >= 0 && shrink < m_shrink.getItemCount()) {
@@ -104,13 +97,6 @@ public class FuzzyBasisFunctionLearnerNodeDialog extends NodeDialogPane {
         if (norm >= 0 && norm < m_norm.getItemCount()) {
             m_norm.setSelectedIndex(norm);
         }
-        // update choice of distance function
-        m_basicsPanel.setDistance(settings.getInt(
-                BasisFunctionLearnerNodeModel.DISTANCE, 0));
-        // shrink after commit
-        boolean shrinkAfterCommit = settings.getBoolean(
-                BasisFunctionLearnerNodeModel.SHRINK_AFTER_COMMIT, false);
-        m_basicsPanel.setShrinkAfterCommit(shrinkAfterCommit);
     }
 
     /**
@@ -124,21 +110,11 @@ public class FuzzyBasisFunctionLearnerNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        // selected target column
-        settings.addString(BasisFunctionLearnerNodeModel.TARGET_COLUMN,
-                m_basicsPanel.getSelectedTargetColumn().getName());
-        // missing value replacement function
-        settings.addInt(BasisFunctionLearnerTable.MISSING, m_basicsPanel
-                .getMissing());
         // shrink procedure
         settings.addInt(Shrink.SHRINK_KEY, m_shrink.getSelectedIndex());
         // fuzzy norm
         settings.addInt(Norm.NORM_KEY, m_norm.getSelectedIndex());
-        // distance function
-        settings.addInt(BasisFunctionLearnerNodeModel.DISTANCE, m_basicsPanel
-                .getDistance());
-        // shrink after commit
-        settings.addBoolean(BasisFunctionLearnerNodeModel.SHRINK_AFTER_COMMIT,
-                m_basicsPanel.isShrinkAfterCommit());
+        // save settings from basic tab
+        m_basicsPanel.saveSettingsTo(settings);
     }
 }

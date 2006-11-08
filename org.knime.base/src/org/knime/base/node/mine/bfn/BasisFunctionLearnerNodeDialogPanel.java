@@ -22,38 +22,51 @@
 package org.knime.base.node.mine.bfn;
 
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.ParseException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
-
 /**
  * Panel is used inside the basisfunction dialogs for general settings, such as
- * distance function, shrink after commit, ...
+ * distance function, shrink after commit, distance measure, missing value
+ * handling, and maximum number of epochs.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
     
-    /*
-     * TODO add maximum number of epochs
-     */
+    /** If maximum number of epochs set. */
+    private final JCheckBox m_isMaxEpochs;
+    
+    /** Value of maximum number of epochs. */
+    private final JSpinner m_maxEpochs;
     
     /** Select target column with class-label. */
     private final JComboBox m_targetColumn;
 
-    /** Combobo holds all possible distance functions. */
+    /** Holds all possible distance functions. */
     private final JComboBox m_distance;
 
-    /** Check box for shrink after commit. */
+    /** Shrink after commit. */
     private final JCheckBox m_shrinkAfterCommit;
 
     /** Missing replacement function. */
@@ -66,6 +79,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
     public BasisFunctionLearnerNodeDialogPanel() {
         super.setName(" Basics ");
         super.setLayout(new GridLayout(0, 1));
+        
         // target column
         m_targetColumn = new JComboBox();
         m_targetColumn.setRenderer(new DataColumnSpecListCellRenderer());
@@ -75,6 +89,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
                 .createTitledBorder(" Target Column "));
         targetPanel.add(m_targetColumn);
         super.add(targetPanel);
+        
         // missing function
         m_missings = new JComboBox(BasisFunctionLearnerTable.MISSINGS);
         // m_missings.addActionListener(new ActionListener() {
@@ -94,6 +109,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
                 .createTitledBorder(" Missing Values "));
         missingPanel.add(m_missings);
         super.add(missingPanel);
+        
         // distance function
         m_distance = new JComboBox(BasisFunctionLearnerNodeModel.DISTANCES);
         m_distance.setPreferredSize(new Dimension(150, 25));
@@ -101,7 +117,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         distancePanel.setBorder(BorderFactory
                 .createTitledBorder(" Distance Function "));
         distancePanel.add(m_distance);
-        // super.add(distancePanel);
+
         // shrink after commit
         m_shrinkAfterCommit = new JCheckBox(" Shrink After Commit ");
         m_shrinkAfterCommit.setPreferredSize(new Dimension(150, 25));
@@ -109,14 +125,129 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         shrinkPanel.setBorder(BorderFactory.createTitledBorder(" Properties "));
         shrinkPanel.add(m_shrinkAfterCommit);
         super.add(shrinkPanel);
+        
+        // maximum number of epochs
+        m_isMaxEpochs = new JCheckBox(" Use ", false);
+        m_isMaxEpochs.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                m_maxEpochs.setEnabled(m_isMaxEpochs.isSelected());
+            } 
+        });
+        m_isMaxEpochs.setPreferredSize(new Dimension(50, 25));
+        m_maxEpochs = new JSpinner(new SpinnerNumberModel(
+                42, 1, Integer.MAX_VALUE, 1));
+        m_maxEpochs.setPreferredSize(new Dimension(100, 25));
+        m_maxEpochs.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                try {
+                    m_maxEpochs.commitEdit();
+                } catch (ParseException pe) {
+                    // ignore
+                }
+            }
+        });
+        m_maxEpochs.setEnabled(false);
+        JPanel epochPanel = new JPanel(new FlowLayout());
+        epochPanel.setBorder(BorderFactory.createTitledBorder(
+                " Maximum #Epochs "));
+        epochPanel.add(m_isMaxEpochs);
+        epochPanel.add(m_maxEpochs);
+        super.add(epochPanel);
     }
+    
+    /**
+     * Loads given settings.
+     * @param settings read settings from
+     * @param specs data table spec from the input
+     * @throws NotConfigurableException if no column to select available
+     */
+    public void loadSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        // update target columns
+        setTargetColumns(settings.getString(
+                BasisFunctionLearnerNodeModel.TARGET_COLUMN, null), specs[0]);
+        // update choice of distance function
+        setDistance(settings.getInt(
+                BasisFunctionLearnerNodeModel.DISTANCE, 0));
+        // set missing replacement value
+        int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
+        setMissing(missing);
+        // shrink after commit
+        boolean shrinkAfterCommit = settings.getBoolean(
+                BasisFunctionLearnerNodeModel.SHRINK_AFTER_COMMIT, false);
+        setShrinkAfterCommit(shrinkAfterCommit);
+        // maximum number of epochs
+        int maxEpochs = settings.getInt(
+                BasisFunctionLearnerNodeModel.MAX_EPOCHS, -1);
+        if (maxEpochs <= 0) {
+            m_isMaxEpochs.setSelected(false);
+            m_maxEpochs.setEnabled(false);
+        } else {
+            m_isMaxEpochs.setSelected(true);
+            m_maxEpochs.setEnabled(true);
+            m_maxEpochs.setValue(maxEpochs);
+        }
+    }
+
+    /**
+     * Saves the settings.
+     * @param settings used to write this settings into
+     * @throws InvalidSettingsException if settings could not be read
+     */
+    public void saveSettingsTo(final NodeSettingsWO settings)
+            throws InvalidSettingsException {
+        assert (settings != null);
+
+        // contains the error message
+        StringBuilder errMsg = new StringBuilder();
+
+        // distance
+        int distance = getDistance();
+        if (distance < 0
+                || distance > BasisFunctionLearnerNodeModel.DISTANCES.length) {
+            errMsg.append("Select a distance measure: " + distance);
+        }
+
+        // if error message's length greater zero throw exception
+        if (errMsg.length() > 0) {
+            throw new InvalidSettingsException(errMsg.toString());
+        }
+
+        //
+        // everything fine, set values in the model
+        // 
+
+        // set target column
+        settings.addString(BasisFunctionLearnerNodeModel.TARGET_COLUMN,
+                getSelectedTargetColumn().getName());
+
+        // distance
+        settings.addInt(BasisFunctionLearnerNodeModel.DISTANCE, distance);
+
+        // missing
+        settings.addInt(BasisFunctionLearnerTable.MISSING, getMissing());
+
+        // shrink after commit
+        settings.addBoolean(BasisFunctionLearnerNodeModel.SHRINK_AFTER_COMMIT,
+                isShrinkAfterCommit());
+        
+        // maximum number of epochs
+        if (m_isMaxEpochs.isSelected()) {
+            int maxEpochs = (Integer) m_maxEpochs.getValue();
+            settings.addInt(BasisFunctionLearnerNodeModel.MAX_EPOCHS, 
+                    maxEpochs);
+        } else {
+            settings.addInt(BasisFunctionLearnerNodeModel.MAX_EPOCHS, -1);
+        }
+    }
+  
 
     /**
      * Returns the selected target column name.
      * 
      * @return the target column name
      */
-    public DataColumnSpec getSelectedTargetColumn() {
+    private DataColumnSpec getSelectedTargetColumn() {
         return (DataColumnSpec)m_targetColumn.getSelectedItem();
     }
 
@@ -125,7 +256,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * 
      * @param target the column to select
      */
-    public void setSelectedTargetColumn(final DataColumnSpec target) {
+    private void setSelectedTargetColumn(final DataColumnSpec target) {
         if (target != null) {
             m_targetColumn.setSelectedItem(target);
         }
@@ -134,28 +265,16 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
     /**
      * Sets a new list of target column name using the input spec.
      * 
+     * @param target the target column to select
      * @param spec the spec to retrieve column names from
      * @throws NotConfigurableException if the spec is <code>null</code> or
      *             contains no columns
      */
-    public void setTargetColumns(final DataTableSpec spec)
-            throws NotConfigurableException {
-        this.setTargetColumns(null, spec);
-    }
-
-    /**
-     * Sets a new list of target column name using the input spec.
-     * 
-     * @param target the target column to select
-     * @param spec the spec to retrieve column names from
-     * @throws NotConfigurableException if the spec is <code>null</code> or
-     *             conatins no columns
-     */
-    public void setTargetColumns(final String target, final DataTableSpec spec)
+    private void setTargetColumns(final String target, final DataTableSpec spec)
             throws NotConfigurableException {
         m_targetColumn.removeAllItems();
         if (spec == null || spec.getNumColumns() == 0) {
-            throw new NotConfigurableException("Data spec is empty.");
+            throw new NotConfigurableException("No data spec found");
         }
         for (int i = 0; i < spec.getNumColumns(); i++) {
             m_targetColumn.addItem(spec.getColumnSpec(i));
@@ -178,7 +297,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
     /**
      * @return the selected index for the distance function
      */
-    public int getDistance() {
+    private int getDistance() {
         return m_distance.getSelectedIndex();
     }
 
@@ -187,7 +306,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * 
      * @param index the index to select
      */
-    public void setDistance(final int index) {
+    private void setDistance(final int index) {
         if (index >= 0
                 && index < BasisFunctionLearnerNodeModel.DISTANCES.length) {
             m_distance.setSelectedIndex(index);
@@ -198,7 +317,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * @return <code>true</code> if the <i>shrink_after_commit</i> check box
      *         has been selected
      */
-    public boolean isShrinkAfterCommit() {
+    private boolean isShrinkAfterCommit() {
         return m_shrinkAfterCommit.isSelected();
     }
 
@@ -207,7 +326,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * 
      * @param flag the flag
      */
-    public void setShrinkAfterCommit(final boolean flag) {
+    private void setShrinkAfterCommit(final boolean flag) {
         m_shrinkAfterCommit.setSelected(flag);
     }
 
@@ -216,7 +335,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * 
      * @return the replacement as string
      */
-    public int getMissing() {
+    private int getMissing() {
         return m_missings.getSelectedIndex();
     }
 
@@ -226,7 +345,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * 
      * @param value the item to set
      */
-    public void setMissing(final int value) {
+    private void setMissing(final int value) {
         if (value >= 0 && value < m_missings.getItemCount()) {
             m_missings.setSelectedIndex(value);
         }

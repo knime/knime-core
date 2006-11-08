@@ -33,7 +33,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.node.NodeLogger;
 
 /**
  * This predictor cell factory predicts the passed rows using the underlying
@@ -52,9 +51,6 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
     private final double m_dontKnowClass;
     
     private final int[] m_filteredRows;
-    
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            BasisFunctionPredictorCellFactory.class);
     
     /**
      * Create new predictor cell factory. Only used to create the 
@@ -112,25 +108,22 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
      */
     public static final Map<DataCell, double[]> predict(final DataRow row,
             final List<BasisFunctionPredictorRow> model) {
-        // number of predicted classes: classLabel->activation,#hits
+        // maps classes to [#covered,activation]
         final LinkedHashMap<DataCell, double[]> map = 
             new LinkedHashMap<DataCell, double[]>();
         // overall basisfunctions in the model
         for (Iterator<BasisFunctionPredictorRow> it = model.iterator(); 
                 it.hasNext();) {
             final BasisFunctionPredictorRow bf = it.next();
-            final int covered = bf.getNumCorrectCoveredPattern();
-            final double activation = bf.computeActivation(row);
             // get its class label
             DataCell classInfo = bf.getClassLabel();
             // check if class label is already used
             if (map.containsKey(classInfo)) {
                 double[] value = map.get(classInfo);
-                value[1] = bf.compose(value[1], activation /* * covered */);
-                value[0] += covered;
+                value[0] = bf.compose(row, value[0]);
             } else {
-                map.put(classInfo, new double[]{covered, activation 
-                        /* * covered */});
+                double act = bf.compose(row, 0.0);
+                map.put(classInfo, new double[]{act, bf.getNumPattern()});
             }
         }
         return map;
@@ -141,27 +134,15 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
         // find best class label, not yet set
         DataCell best = DataType.getMissingCell();
         // set default highest activation, not yet set
-        double hact = dontKnowClass;
-        // nothing covered yet
-        double bcls = 0;
+        double hact = -1.0;
         // overall class labels
         for (DataCell cell : map.keySet()) {
             double[] value = map.get(cell);
-            double act = value[1];
+            double act = value[0];
             assert (act >= 0.0) : "activation=" + act;
-            double cov = value[0];
-            assert (cov > 0.0) : "covered=" + cov;
-            if (act > hact) {
+            if (act > hact && act > dontKnowClass) {
                 hact = act;
-                bcls = cov;
                 best = cell;
-            } else if (act == hact) {
-                LOGGER.debug("activations are equal: " + act);
-                if (cov > bcls) {
-                    hact = act;
-                    bcls = cov;
-                    best = cell;
-                }
             }
         }
         return best;

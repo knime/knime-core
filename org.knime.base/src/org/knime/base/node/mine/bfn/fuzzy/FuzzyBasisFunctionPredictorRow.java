@@ -120,19 +120,19 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * Composes the degree of membership by using the disjunction of the
      * tco-norm operator.
      * 
-     * @param act1 activation 1
-     * @param act2 activation 2
+     * @param row row
+     * @param act activation
      * @return the new activation array
      * 
      * @see #computeActivation(DataRow)
      * @see Norm#computeTCoNorm(double,double)
      */
     @Override
-    public double compose(final double act1, final double act2) {
-        assert (act1 >= 0.0 && act1 <= 1.0) : "act1=" + act1;
-        assert (act2 >= 0.0 && act2 <= 1.0) : "act2=" + act2;
-        // compute current activation (minimum) of input row
-        return Norm.NORMS[m_norm].computeTCoNorm(act1, act2);
+    public double compose(final DataRow row, final double act) {
+        assert (act >= 0.0 && act <= 1.0) : "act=" + act;
+        // compute current activation (maximum) of input row
+        return Norm.NORMS[m_norm].computeTCoNorm(
+                computeActivation(row), act);
     }
 
     /**

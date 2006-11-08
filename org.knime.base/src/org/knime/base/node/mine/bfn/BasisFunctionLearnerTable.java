@@ -90,8 +90,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
     /** Count number of loops overall input pattern. */
     private int m_cycles = 0;
 
-    /** Counts number of pattern used for training. */
-    private final int m_numPattern;
+    /** Counts number of pattern per class. */
+    private final Map<DataCell, int[]> m_numPatPerClass;
 
     /**
      * Creates a new basis function learner and starts the training algorithm.
@@ -108,6 +108,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      *            {@link BasisFunctionLearnerRow}s
      * @param missing the missing values replacement function
      * @param shrinkAfterCommit if <code>true</code> do it
+     * @param maxEpochs maximum number of epochs to train
      * @param exec the execution monitor
      * @throws CanceledExecutionException always tested when a new run over data
      *             is started.
@@ -115,9 +116,12 @@ public final class BasisFunctionLearnerTable implements DataTable {
     public BasisFunctionLearnerTable(final BufferedDataTable data,
             final BasisFunctionFactory factory,
             final MissingValueReplacementFunction missing,
-            final boolean shrinkAfterCommit, final ExecutionMonitor exec)
+            final boolean shrinkAfterCommit, 
+            final int maxEpochs, 
+            final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        this(data, factory, missing, shrinkAfterCommit, new int[]{1}, exec);
+        this(data, factory, missing, shrinkAfterCommit, maxEpochs, 
+                new int[]{1}, exec);
     }
 
     /**
@@ -135,6 +139,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      *            {@link BasisFunctionLearnerRow}s
      * @param missing the missing values replacement function
      * @param shrinkAfterCommit if <code>true</code> do it
+     * @param maxEpochs maximum number of epochs to train 
      * @param startRuleCount at this point
      * @param exec the execution monitor
      * @throws CanceledExecutionException always tested when a new run over data
@@ -143,7 +148,9 @@ public final class BasisFunctionLearnerTable implements DataTable {
     public BasisFunctionLearnerTable(final BufferedDataTable data,
             final BasisFunctionFactory factory,
             final MissingValueReplacementFunction missing,
-            final boolean shrinkAfterCommit, final int[] startRuleCount,
+            final boolean shrinkAfterCommit, 
+            final int maxEpochs,
+            final int[] startRuleCount,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         // keep bfs by class label
         m_bfs = new LinkedHashMap<DataCell, List<BasisFunctionLearnerRow>>();
@@ -151,11 +158,22 @@ public final class BasisFunctionLearnerTable implements DataTable {
         m_factory = factory;
         // keeps missing replacement function
         m_missing = missing;
-        // number of training pattern
-        m_numPattern = data.getRowCount();
-
+        // correct max epochs
+        final int maxNrEpochs = (maxEpochs > 0 ? maxEpochs : Integer.MAX_VALUE);
         // index of the class info column which is the last one here
         int classColumn = data.getDataTableSpec().getNumColumns() - 1;
+        // number of training pattern per class, count from table
+        m_numPatPerClass = new LinkedHashMap<DataCell, int[]>();
+        for (DataRow row : data) {
+            DataCell classLabel = row.getCell(classColumn);
+            if (m_numPatPerClass.containsKey(classLabel)) {
+                int[] value = m_numPatPerClass.get(classLabel);
+                value[0] += 1;
+            } else {
+                m_numPatPerClass.put(classLabel, new int[]{1});
+            }
+        }
+
         // init array if column indices without last class column
         int[] columns = new int[classColumn];
         for (int i = 0; i < columns.length; i++) {
@@ -235,7 +253,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
                     // new bf with initial vector and data key
                     BasisFunctionLearnerRow newBF = factory.commit(
                             new RowKey(bfRowPrefix), classInfo, row, 
-                            m_numPattern);
+                            m_numPatPerClass.get(classInfo)[0]);
                     // add new prototype to the collection
                     addBasisFunction(newBF);
 
@@ -288,9 +306,9 @@ public final class BasisFunctionLearnerTable implements DataTable {
             // increase loop counter
             m_cycles++;
             LOGGER.debug(getNumBasisFunctions() + " [" + m_cycles + "]");
-        } while (goon); // true, if commit or shrink was performed
+        } while (goon && m_cycles < maxNrEpochs);
         /* --- P R U N E --- */
-        this.prune(0, m_cycles, m_numPattern); // prune bfs with zero coverage
+        this.prune(0, m_cycles); // prune bfs with zero coverage
         /* -- E X P L A I N S --- */
         this.explain(data);
     }
@@ -399,10 +417,9 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * 
      * @param t the threshold below all basisfunction are removed from this
      *            model.
-     * @param cycles Print info of m_cycles
-     * @param numPattern print info of number pattern
+     * @param cycles number of epochs trained
      */
-    private void prune(final int t, final int cycles, final int numPattern) {
+    private void prune(final int t, final int cycles) {
         // keeps number of Basisfunctions to determine number of pruned ones
         int oldNumBFs = getNumBasisFunctions();
         // list of Basisfunctions to remove from the model
@@ -429,7 +446,12 @@ public final class BasisFunctionLearnerTable implements DataTable {
         LOGGER.debug("#rules  =" + getNumBasisFunctions());
         LOGGER.debug("#pruned =" + (oldNumBFs - getNumBasisFunctions()));
         LOGGER.debug("#cycles =" + cycles);
-        LOGGER.debug("#pattern=" + numPattern);
+        StringBuilder patBuf = new StringBuilder("#pattern=");
+        for (DataCell classLabel : m_numPatPerClass.keySet()) {
+            int value = m_numPatPerClass.get(classLabel)[0];
+            patBuf.append(classLabel + "->" + value + " ");
+        }
+        LOGGER.debug(patBuf.toString());
     }
 
     /**
@@ -614,11 +636,18 @@ public final class BasisFunctionLearnerTable implements DataTable {
         statisticsContent.addString("Number of rules learned: ", ""
                 + getNumBasisFunctions());
         statisticsContent.addString("Number of epochs: ", "" + m_cycles);
-        statisticsContent.addString("Number of training instances: ", ""
-                + m_numPattern);
         // basisfunctions per class
         statisticsContent.addString("Number of classes: ", ""
                 + m_bfs.keySet().size());
+
+        int cnt = 0;
+        for (DataCell classLabel : m_numPatPerClass.keySet()) {
+            int value = m_numPatPerClass.get(classLabel)[0];
+            statisticsContent.addString("\t" + classLabel + "->", "" + value);
+            cnt += value;
+        }
+        statisticsContent.addString("Number of training instances per class: ", 
+            cnt + "");
 
         ModelContentWO classContent = pp.addModelContent("class_info");
         for (DataCell classInfo : m_bfs.keySet()) {
@@ -649,7 +678,12 @@ public final class BasisFunctionLearnerTable implements DataTable {
         buf.append(getNumBasisFunctions() + " rules learned\n");
         buf.append("  cycles =" + m_cycles + "\n");
         buf.append("  classes=" + m_bfs.keySet().size() + "\n");
-        buf.append("  pattern=" + m_numPattern + "\n");
+        StringBuilder patBuf = new StringBuilder();
+        for (DataCell classLabel : m_numPatPerClass.keySet()) {
+            int value = m_numPatPerClass.get(classLabel)[0];
+            patBuf.append(classLabel + "->" + value + " ");
+        }
+        buf.append("  pattern=" + patBuf.toString() + "\n");
         buf.append("###\n");
         // basisfunctions per class
         for (DataCell classInfo : m_bfs.keySet()) {

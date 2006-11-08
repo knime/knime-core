@@ -142,17 +142,15 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * Sum of the given activation plus the newly calculated one for the given
      * row.
      * 
-     * @param act1 activation 1
-     * @param act2 activation 2
+     * @param row row to get activation
+     * @param act activation
      * @return the sum of both activations; greater or equal to zero
      * 
      * @see #computeActivation(DataRow)
      */
     @Override
-    public final double compose(final double act1, final double act2) {
-        assert (act1 >= 0.0) : "act1=" + act1;
-        assert (act2 >= 0.0) : "act2=" + act2;
-        return act1 + act2;
+    public final double compose(final DataRow row, final double act) {
+        return act + (getNumCorrectCoveredPattern() *  computeActivation(row));
     }
 
     /**

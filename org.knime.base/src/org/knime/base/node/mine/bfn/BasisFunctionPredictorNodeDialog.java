@@ -100,12 +100,9 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         ButtonGroup bg = new ButtonGroup();
         bg.add(m_dftButton);
         bg.add(m_setButton);
-        m_dontKnow = new JSpinner();
-        JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_dontKnow
-                .getEditor();
-        editor.getTextField().setColumns(8);
-        m_dontKnow.setModel(new SpinnerNumberModel(0.0, 0.0,
-                Double.POSITIVE_INFINITY, 0.1));
+        m_dontKnow = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.1));
+        m_dontKnow.setEditor(new JSpinner.NumberEditor(
+                m_dontKnow, "#.##########"));
         m_dontKnow.setPreferredSize(new Dimension(75, 25));
         JPanel dontKnowPanel = new JPanel(new BorderLayout());
         dontKnowPanel.setBorder(BorderFactory

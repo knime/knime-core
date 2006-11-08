@@ -96,7 +96,13 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     private int m_missing = -1;
 
     /** The <i>shrink_after_commit</i> flag. */
-    private boolean m_shrinkAfterCommit = false;
+    private boolean m_shrinkAfterCommit = true;
+    
+    /** Config key for maximum number of epochs. */
+    public static final String MAX_EPOCHS = "max_epochs";
+    
+    /** Maximum number of epochs to train. */
+    private int m_maxEpochs;
 
     /** Contains model info after training. */
     private ModelContent m_modelInfo;
@@ -233,6 +239,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         LOGGER.debug("missing      : " + getMissingFct());
         LOGGER.debug("target       : " + m_target);
         LOGGER.debug("shrink_commit: " + isShrinkAfterCommit());
+        LOGGER.debug("max #epochs  : " + m_maxEpochs);
 
         // create factory
         BasisFunctionFactory factory = getFactory(trainData.getDataTableSpec());
@@ -240,7 +247,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         BasisFunctionLearnerTable table = new BasisFunctionLearnerTable(
                 trainData, factory,
                 BasisFunctionLearnerTable.MISSINGS[m_missing],
-                m_shrinkAfterCommit, exec);
+                m_shrinkAfterCommit, m_maxEpochs, exec);
         m_modelSpec = table.getDataTableSpec();
 
         // set translator mapping
@@ -266,7 +273,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     protected abstract BasisFunctionFactory getFactory(DataTableSpec spec);
 
     /**
-     * @return get model info after traing or <code>null</code>
+     * @return get model info after training or <code>null</code>
      */
     protected ModelContentRO getModelInfo() {
         return m_modelInfo;
@@ -290,7 +297,6 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         if (distance < 0 || distance > DISTANCES.length) {
             msg.append("Distance function index out of range: " + distance);
         }
-        // missing
         // missing replacement method
         int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, -1);
         if (missing < 0 
@@ -319,6 +325,8 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         m_distance = settings.getInt(DISTANCE);
         // shrink after commit
         m_shrinkAfterCommit = settings.getBoolean(SHRINK_AFTER_COMMIT);
+        // maximum epochs
+        m_maxEpochs = settings.getInt(MAX_EPOCHS);
     }
 
     /**
@@ -334,6 +342,8 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         settings.addInt(DISTANCE, m_distance);
         // shrink after commit
         settings.addBoolean(SHRINK_AFTER_COMMIT, m_shrinkAfterCommit);
+        // maximum number of epochs
+        settings.addInt(MAX_EPOCHS, m_maxEpochs);
     }
 
     /** 

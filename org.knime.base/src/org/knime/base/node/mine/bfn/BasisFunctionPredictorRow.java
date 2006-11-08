@@ -67,7 +67,7 @@ public abstract class BasisFunctionPredictorRow {
      * @param key the key of this row
      * @param classLabel class label of the target attribute
      * @param dontKnowDegree don't know probability
-     * @param numPat The overall number of pattern used for training. 
+     * @param numPat number of pattern for this class 
      */
     protected BasisFunctionPredictorRow(final DataCell key,
             final DataCell classLabel, final int numPat, 
@@ -116,11 +116,11 @@ public abstract class BasisFunctionPredictorRow {
      * based on the given row. All values itself have to be between
      * <code>0</code> and <code>1</code>.
      * 
-     * @param act1 activation 1
-     * @param act2 activation 2
+     * @param row combine activation with this pattern
+     * @param act activation to combine with
      * @return the new activation compromising the given activation
      */
-    public abstract double compose(double act1, double act2);
+    public abstract double compose(DataRow row, double act);
 
     /**
      * @return <i>don't know</i> class probability
@@ -137,7 +137,7 @@ public abstract class BasisFunctionPredictorRow {
     }
     
     /**
-     * @return Number of pattern used for training.
+     * @return Number of pattern of this class used for training.
      */
     public int getNumPattern() {
         return m_numPat;
