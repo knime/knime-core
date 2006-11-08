@@ -36,6 +36,12 @@
 			not the majority class. The output contains the same number
 			of rows for each of the possible classes. 
 		</option>
+		<option name="Enable static seed">
+			Check this option if you want to use a seed for the random number 
+			generator. This will cause consecutive runs of the node to produce
+			the same output data. If unchecked, each run of the node generates
+			a new seed.
+		</option>
 	</fullDescription>
     <ports>
         <dataIn index="0" name="Input data">Table containing labeled data for oversampling</dataIn>
