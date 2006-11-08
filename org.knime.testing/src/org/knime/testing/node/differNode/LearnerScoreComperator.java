@@ -25,16 +25,15 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 
-
 /**
  * 
  * @author ritmeier, University of Konstanz
  */
 public class LearnerScoreComperator implements TestEvaluator {
 
-    private int m_lowerTollerance;
+    private int m_lowerTolerance;
 
-    private int m_upperTollerance;
+    private int m_upperTolerance;
 
     /**
      * default Constructor.
@@ -50,35 +49,39 @@ public class LearnerScoreComperator implements TestEvaluator {
      * @param lastScoreTable - the score to compare with
      * @param newScoreTable - the score of the actual run
      * @see org.knime.testing.node.differNode.TestEvaluator#compare(
-     *      org.knime.core.data.DataTable,
-     *      org.knime.core.data.DataTable)
+     *      org.knime.core.data.DataTable, org.knime.core.data.DataTable)
      */
     public void compare(final DataTable newScoreTable,
             final DataTable lastScoreTable) throws TestEvaluationException {
         double lastError = getError(lastScoreTable);
         double actualError = getError(newScoreTable);
-        if (lastError < actualError - m_upperTollerance) {
+        if (lastError + m_upperTolerance < actualError) {
             throw new TestEvaluationException("\nScore is more than "
-                    + m_upperTollerance + "% worse than before." + "\nWas "
-                    + lastError + " is now " + actualError);
+                    + m_upperTolerance + "% worse than before." + "\n(Was "
+                    + lastError + " is now " + actualError + ")");
         }
-        if (lastError > actualError + 5) {
+        if (lastError - m_lowerTolerance > actualError) {
             throw new TestEvaluationException("\nScore is more than "
-                    + m_lowerTollerance
-                    + "% better than last time. \nPlease update the test.\n" +
-                    "Was " + lastError +" is now " + actualError);
+                    + m_lowerTolerance
+                    + "% better than last time. \nPlease update the test.\n"
+                    + "(Was " + lastError + " is now " + actualError + ")");
         }
     }
 
     /**
-     * Set the tollerance for the evaluation
+     * Set the tolerance for the evaluation. Specified numbers will be
+     * interpreted as absolute percent numbers, i.e. if the golden score is
+     * X% classification error and the upper and lower tolerance is set to 5,
+     * this comparator will accept all actual error from X-5 to X+5.
      * 
-     * @param lower - the lower tollerance
-     * @param upper - the upper tollerance
+     * @param lower - the lower bound of tolerated score differences. Specify
+     *            the percentage number.
+     * @param upper - the upper bound of the tolerated score differences in
+     *            percent.
      */
-    public void setTollerance(int lower, int upper) {
-        m_lowerTollerance = lower;
-        m_upperTollerance = upper;
+    public void setTolerance(int lower, int upper) {
+        m_lowerTolerance = lower;
+        m_upperTolerance = upper;
     }
 
     /**
@@ -105,12 +108,9 @@ public class LearnerScoreComperator implements TestEvaluator {
             colIndex = 0;
             rowIndex++;
         }
-        System.out.println("ErrorCount: " + errorCount);
-        System.out.println("ErrorMatch: " + matchCount);
         double error = 0.0d;
         long allCount = matchCount + errorCount;
         error = (100.0d / allCount) * errorCount;
-        System.out.println("score: " + error);
         return error;
     }
 

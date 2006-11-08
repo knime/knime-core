@@ -54,9 +54,9 @@ public class DiffNodeModel extends NodeModel {
 
     private Evaluators m_evaluator = Evaluators.TableDiffer;
 
-    private int m_lowerTollerance;
+    private int m_lowerTolerance;
 
-    private int m_upperTollerance;
+    private int m_upperTolerance;
 
     /**
      * Creates a model with two data inports. The first port for the new table,
@@ -78,9 +78,9 @@ public class DiffNodeModel extends NodeModel {
         if (m_evaluator != null
                 && m_evaluator.equals(Evaluators.LearnerScoreComperator)) {
             settings.addInt(DiffNodeModel.CFGKEY_LOWERTOLLERANCEKEY,
-                    m_lowerTollerance);
+                    m_lowerTolerance);
             settings.addInt(DiffNodeModel.CFGKEY_UPPERERTOLLERANCEKEY,
-                    m_upperTollerance);
+                    m_upperTolerance);
         }
 
     }
@@ -121,8 +121,8 @@ public class DiffNodeModel extends NodeModel {
         m_evaluator = DiffNodeDialog.Evaluators.valueOf(evaluatorString);
         if (m_evaluator
                 .equals(DiffNodeDialog.Evaluators.LearnerScoreComperator)) {
-            m_lowerTollerance = settings.getInt(CFGKEY_LOWERTOLLERANCEKEY);
-            m_upperTollerance = settings.getInt(CFGKEY_UPPERERTOLLERANCEKEY);
+            m_lowerTolerance = settings.getInt(CFGKEY_LOWERTOLLERANCEKEY);
+            m_upperTolerance = settings.getInt(CFGKEY_UPPERERTOLLERANCEKEY);
         }
 
     }
@@ -139,8 +139,8 @@ public class DiffNodeModel extends NodeModel {
 
         TestEvaluator eval = m_evaluator.getInstance();
         if (eval instanceof LearnerScoreComperator) {
-            ((LearnerScoreComperator)eval).setTollerance(m_lowerTollerance,
-                    m_upperTollerance);
+            ((LearnerScoreComperator)eval).setTolerance(m_lowerTolerance,
+                    m_upperTolerance);
         }
         eval.compare(inData[0], inData[1]);
 
