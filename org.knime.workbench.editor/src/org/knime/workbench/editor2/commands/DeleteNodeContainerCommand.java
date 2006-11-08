@@ -41,8 +41,8 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Florian Georg, University of Konstanz
  */
 public class DeleteNodeContainerCommand extends Command {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DeleteConnectionCommand.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DeleteConnectionCommand.class);
 
     private NodeContainerEditPart m_part;
 
@@ -76,7 +76,8 @@ public class DeleteNodeContainerCommand extends Command {
 
         // does the workflow status allow deletion of the selected node
         // only if the workflow is not executing
-        boolean workflowAllowsDeletion = !m_manager.executionInProgress();
+        boolean workflowAllowsDeletion =
+                m_manager.canBeDeleted(m_part.getNodeContainer());
         return isNotLocked && isDeletable && workflowAllowsDeletion;
     }
 
@@ -93,8 +94,9 @@ public class DeleteNodeContainerCommand extends Command {
         try {
             m_manager.removeNode(m_part.getNodeContainer());
         } catch (WorkflowInExecutionException ex) {
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Operation not allowed");
             mb.setMessage("You cannot remove a node while the workflow"
                     + " is in execution.");
