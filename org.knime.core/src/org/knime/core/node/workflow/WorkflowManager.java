@@ -436,7 +436,8 @@ public class WorkflowManager implements WorkflowListener {
          */
         public void waitUntilFinished(final WorkflowManager wfm) {
             synchronized (m_finishLock) {
-                while (m_runningNodes.size() > 0) {
+                while ((m_runningNodes.size() > 0)
+                        || (m_waitingNodes.size() > 0)) {
                     // check if any of the nodes in the lists are from the
                     // passed WFM
                     boolean interesting = false;
@@ -458,7 +459,9 @@ public class WorkflowManager implements WorkflowListener {
 
                     if (interesting) {
                         try {
-                            m_finishLock.wait();
+                            // in order to prevent deadlocks due to possible
+                            // programming errors, re-check every 5 secons
+                            m_finishLock.wait(5000);
                         } catch (InterruptedException ex) {
                             break;
                         }
@@ -483,6 +486,30 @@ public class WorkflowManager implements WorkflowListener {
                 return false;
             }
             for (NodeContainer succ : nc.getAllSuccessors()) {
+                if (m_runningNodes.containsKey(succ)
+                        || m_waitingNodes.containsKey(succ)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * Checks if the given node can be deleted safely from the workflow. A
+         * node can only be deleted if it is not queued or running and none of
+         * its successor are queued or running.
+         * 
+         * @param cont the node that should be deleted
+         * @return <code>true</code> if the node can be deleted
+         *         <code>false</code> otherwise
+         */
+        public boolean canBeDeleted(final NodeContainer cont) {
+            if (m_runningNodes.containsKey(cont)
+                    || m_waitingNodes.containsKey(cont)) {
+                return false;
+            }
+
+            for (NodeContainer succ : cont.getAllSuccessors()) {
                 if (m_runningNodes.containsKey(succ)
                         || m_waitingNodes.containsKey(succ)) {
                     return false;
@@ -802,6 +829,31 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /**
+     * Checks if the given node can be deleted safely from the workflow. A node
+     * can only be deleted if it is not queued or running and none of its
+     * successor are queued or running.
+     * 
+     * @param cont the node that should be deleted
+     * @return <code>true</code> if the node can be deleted <code>false</code>
+     *         otherwise
+     */
+    public boolean canBeDeleted(final NodeContainer cont) {
+        return m_executor.canBeDeleted(cont);
+    }
+
+    /**
+     * Checks if the given node can be reset safely. A node can only be reset if
+     * it is not running and none of its successor are queued or running.
+     * 
+     * @param cont the node that should be deleted
+     * @return <code>true</code> if the node can be deleted <code>false</code>
+     *         otherwise
+     */
+    public boolean canBeReset(final NodeContainer cont) {
+        return m_executor.canBeReset(cont);
+    }
+
+    /**
      * Checks if a connection can be added between the given nodes. If not, an
      * exception is thrown to deliver detailed information about the reason:
      * <ul>
@@ -918,17 +970,6 @@ public class WorkflowManager implements WorkflowListener {
     private void checkForRunningNodes(final String msg)
             throws WorkflowInExecutionException {
         if (m_executor.executionInProgress(this)) {
-            throw new WorkflowInExecutionException(msg
-                    + " while execution is in progress");
-        }
-    }
-
-    /*
-     * check sif the given node can be reset
-     */
-    private void checkForRunningNodes(final String msg, final NodeContainer nc)
-            throws WorkflowInExecutionException {
-        if (!m_executor.canBeReset(nc)) {
             throw new WorkflowInExecutionException(msg
                     + " while execution is in progress");
         }
@@ -1729,8 +1770,10 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized void removeConnection(
             final ConnectionContainer connection)
             throws WorkflowInExecutionException {
-        checkForRunningNodes("Connection cannot be removed", connection
-                .getTarget());
+        if (!canBeDeleted(connection.getTarget())) {
+            throw new WorkflowInExecutionException("Connection cannot be "
+                    + "removed, because it is part of a running workflow.");
+        }
 
         // if connection does not exist simply return
         if (!(m_connectionsByID.containsKey(connection.getID()))) {
@@ -1789,7 +1832,10 @@ public class WorkflowManager implements WorkflowListener {
      */
     public synchronized void removeNode(final NodeContainer container)
             throws WorkflowInExecutionException {
-        checkForRunningNodes("Node cannot be removed");
+        if (!canBeDeleted(container)) {
+            throw new WorkflowInExecutionException("Node cannot be removed, "
+                    + "because it is part of a running workflow.");
+        }
 
         Integer id = m_idsByNode.get(container);
         if (id != null) {
@@ -1827,7 +1873,10 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized void resetAndConfigureAfterNode(final int nodeID)
             throws WorkflowInExecutionException {
         NodeContainer nodeCont = m_nodesByID.get(nodeID);
-        checkForRunningNodes("Node cannot be reset", nodeCont);
+        if (!canBeReset(nodeCont)) {
+            throw new WorkflowInExecutionException("Node cannot be reset, "
+                    + "because it is part of a running workflow.");
+        }
 
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
             nc.resetAndConfigure();
@@ -1859,7 +1908,10 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized void resetAndConfigureNode(final int nodeID)
             throws WorkflowInExecutionException {
         NodeContainer nodeCont = m_nodesByID.get(nodeID);
-        checkForRunningNodes("Node cannot be reset", nodeCont);
+        if (!canBeReset(nodeCont)) {
+            throw new WorkflowInExecutionException("Node cannot be reset, "
+                    + "because it is part of a running workflow.");
+        }
 
         nodeCont.resetAndConfigure();
         for (NodeContainer nc : nodeCont.getAllSuccessors()) {
@@ -2032,7 +2084,11 @@ public class WorkflowManager implements WorkflowListener {
      */
     synchronized void applyDialogSettings(final NodeContainer nodeCont)
             throws WorkflowInExecutionException, InvalidSettingsException {
-        checkForRunningNodes("Dialog settings cannot be applied", nodeCont);
+        if (!canBeReset(nodeCont)) {
+            throw new WorkflowInExecutionException(
+                    "Dialog settings cannot be applied, because the node is "
+                    + "part of a running workflow.");
+        }
 
         nodeCont.loadModelSettingsFromDialog();
         nodeCont.resetAndConfigure();
