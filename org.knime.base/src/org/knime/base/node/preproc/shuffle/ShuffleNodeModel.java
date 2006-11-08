@@ -27,6 +27,7 @@ package org.knime.base.node.preproc.shuffle;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.Vector;
 
 import org.knime.base.data.append.row.AppendedRowsTable;
@@ -42,8 +43,10 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NoSettingsNodeModel;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Implementation of the Fisher Yates shuffle, that guarantees that all n!
@@ -53,7 +56,10 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Nicolas Cebron, University of Konstanz
  */
-public class ShuffleNodeModel extends NoSettingsNodeModel {
+public class ShuffleNodeModel extends NodeModel {
+    
+    /** Config identifier for seed field. */
+    static final String CFG_SEED = "random_seed";
     /*
      * Default constant number of rows for each container
      */
@@ -68,12 +74,17 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
      * Array of RowKeys to be shuffled.
      */
     private RowKey[] m_shuffleArr;
+    
+    /**
+     * The seed to use or null to use always a different one.
+     */
+    private Long m_seed;
 
     /*
      * Logger of this NodeModel
      */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(ShuffleNodeModel.class);
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(ShuffleNodeModel.class);
 
     /**
      * 
@@ -83,7 +94,7 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#configure(DataTableSpec[])
+     * @see NodeModel#configure(DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -96,13 +107,18 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
      * are formed and each one is filled with the according rows of the input
      * datatable. All chunks are merged to form the output datatable.
      * 
-     * @see org.knime.core.node.NodeModel#execute(BufferedDataTable[],
-     *      ExecutionContext)
+     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
+        Random random;
+        if (m_seed != null) {
+            random = new Random(m_seed.longValue());
+        } else {
+            random = new Random();
+        }
         int nrRows = 0;
         
         ExecutionMonitor subExec1 = exec.createSubProgress(0.7);
@@ -124,7 +140,7 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
         }
 
         for (int i = 0; i < m_shuffleArr.length; i++) {
-            int r = (int)(Math.random() * (i + 1)); // int between 0 and i
+            int r = random.nextInt(i + 1);
             RowKey swap = m_shuffleArr[r];
             m_shuffleArr[r] = m_shuffleArr[i];
             m_shuffleArr[i] = swap;
@@ -204,8 +220,7 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals( java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * @see NodeModel#loadInternals(File, ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -215,13 +230,65 @@ public class ShuffleNodeModel extends NoSettingsNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals( java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * @see NodeModel#saveInternals(File, ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // nothing to do here
+    }
+
+    /**
+     * @see NodeModel#reset()
+     */
+    @Override
+    protected void reset() {
+        
+    }
+
+    /**
+     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        String seedText = m_seed != null ? Long.toString(m_seed) : null;
+        settings.addString(CFG_SEED, seedText);
+    }
+
+    /**
+     * @see NodeModel#validateSettings(NodeSettingsRO)
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) 
+        throws InvalidSettingsException {
+        String seedText = settings.getString(CFG_SEED);
+        if (seedText != null) {
+            try {
+                Long.parseLong(seedText);
+            } catch (NumberFormatException nfe) {
+                throw new InvalidSettingsException("Unable to parse seed \""
+                        + seedText + "\" as number.");
+            }
+        }
+    }
+    
+    /**
+     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        String seedText = settings.getString(CFG_SEED);
+        if (seedText != null) {
+            try {
+                m_seed = Long.parseLong(seedText);
+            } catch (NumberFormatException nfe) {
+                throw new InvalidSettingsException("Unable to parse seed \""
+                        + seedText + "\" as number.");
+            }
+        } else {
+            m_seed = null;
+        }
     }
 }

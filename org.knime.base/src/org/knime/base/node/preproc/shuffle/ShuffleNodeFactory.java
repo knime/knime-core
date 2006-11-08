@@ -42,7 +42,7 @@ public class ShuffleNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new ShuffleNodeDialogPane();
     }
 
     /**
@@ -75,6 +75,6 @@ public class ShuffleNodeFactory extends NodeFactory {
      */
     @Override
     public boolean hasDialog() {
-        return false;
+        return true;
     }
 }

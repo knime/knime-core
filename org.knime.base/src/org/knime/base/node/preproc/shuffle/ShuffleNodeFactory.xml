@@ -5,9 +5,14 @@
     <shortDescription>Shuffles the rows of the input tables.</shortDescription>
     <fullDescription>
         <intro>
-        	This node needs no configuration in the dialog.
-			It shuffles the rows of the input tables such that they are in random order.
+        	It shuffles the rows of the input tables such that they are in random order.
 		</intro>
+		<option name="Seed">
+			Enter a seed for the random number generator. Entering a seed 
+			will cause the node to shuffle the same input data always the 
+			same way (e.g. if you reset and execute the node). Disable
+			this option to have always a different seed, i.e. real randomness.
+		</option>
 	</fullDescription>
     <ports>
         <dataIn index="0" name="To be shuffled">
