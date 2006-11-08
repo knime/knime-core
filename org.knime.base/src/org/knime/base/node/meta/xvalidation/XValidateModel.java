@@ -90,8 +90,14 @@ public class XValidateModel extends MetaNodeModel {
             throws InvalidSettingsException {
         super.configure(inSpecs);
         DataTableSpec in = inSpecs[0];
-        ColumnRearranger r = m_aggregateModel.createColumnRearrangerPort0(in);
-        DataTableSpec outSpec0 = r.createSpec();
+        DataTableSpec outSpec0 = null;
+        try {
+            ColumnRearranger r = 
+                m_aggregateModel.createColumnRearrangerPort0(in);
+            outSpec0 = r.createSpec();
+        } catch (InvalidSettingsException ise) {
+            // ignore here (happens when inner flow is not properly connected
+        }
         DataTableSpec outSpec1 = m_aggregateModel.createSpecPort1();
         return new DataTableSpec[]{outSpec0, outSpec1};
     }
