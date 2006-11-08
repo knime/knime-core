@@ -99,10 +99,10 @@ public class ColValRowFilter extends RowFilter {
      *            matching value
      * @param caseSensitive if true the match will be done case sensitive, or if
      *            false case insensitive
-     * @param startsWith determines wether the value must match entirely the
+     * @param startsWith determines whether the value must match entirely the
      *            regular expression or can only start with it.
      * @throws IllegalArgumentException if the pattern passed as regular
-     *             epression is not a valid regExpr
+     *             expression is not a valid regExpr
      */
     public ColValRowFilter(final String regExpr, final String colName,
             final boolean include, final boolean caseSensitive,
@@ -307,10 +307,11 @@ public class ColValRowFilter extends RowFilter {
             throws EndOfTableException, IncludeFromNowOn {
 
         /*
-         * if this goes off you propably didn't set a comparator after loading a
+         * if this goes off you probably didn't set a comparator after loading a
          * range from a config object. Which is not good.
          */
-        assert (((m_lowerBound == null) && (m_upperBound == null)) || m_dcComp != null);
+        assert (((m_lowerBound == null) && (m_upperBound == null)) 
+                || m_dcComp != null);
 
         DataCell theCell = row.getCell(m_colIndex);
         boolean match = false;

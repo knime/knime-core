@@ -204,6 +204,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         this.add(panel);
     }
 
+    @SuppressWarnings("unchecked")
     private void instantiateComponents(final DataTableSpec tSpec)
             throws NotConfigurableException {
 
@@ -214,7 +215,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         for (int c = 0; c < tSpec.getNumColumns(); c++) {
             colNames.add(tSpec.getColumnSpec(c).getName());
         }
-        m_colCombo = new ColumnSelectionComboxBox((Border)null, DataValue.class);
+        m_colCombo = new ColumnSelectionComboxBox(
+                (Border)null, DataValue.class);
         m_colCombo.update(tSpec, null);
         m_colCombo.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -388,7 +390,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * Called when the user changes the regular expresion.
+     * Called when the user changes the regular expression.
      */
     protected void regExprChanged() {
         setErrMsg("");
@@ -506,7 +508,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * DoubleCell, or finally StringCell)
      * 
      * @return a DataCell of the entered value in the upper bound field or null
-     * if a problem occured.
+     * if a problem occurred.
      */
     private DataCell getUpperBoundCell() throws InvalidSettingsException {
         return getBoundCell(m_upperBound, "upper");
