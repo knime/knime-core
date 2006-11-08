@@ -1244,7 +1244,11 @@ public class WorkflowManager implements WorkflowListener {
      */
     public synchronized void disconnectNodeContainer(
             final NodeContainer nodeCont) throws WorkflowInExecutionException {
-        checkForRunningNodes("Node cannot be disconnected");
+        if (!canBeDeleted(nodeCont)) {
+            throw new WorkflowInExecutionException("Node cannot be disconnected"
+                    + ", because it is part of a running workflow.");
+        }
+
 
         int numIn = nodeCont.getNrInPorts();
         int numOut = nodeCont.getNrOutPorts();
