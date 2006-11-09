@@ -45,22 +45,25 @@ import org.knime.core.util.ThreadPool;
 import org.knime.base.data.append.row.AppendedRowsTable;
 
 /**
- * This class is an extension of a normal
- * {@link org.knime.core.node.NodeModel} that offers parallel processing of
- * {@link DataTable}s. Therefore the {@link #executeByChunk( BufferedDataTable,
- * BufferedDataTable[], RowAppender[], ExecutionMonitor)} method must be
- * overriden. This method is called with a {@link DataTable} containing only a
- * part of the input rows as often as necessary. A default value for the maximal
- * chunk size (i.e. the number of rows in the chunked data table) is given in
- * the constructor.<br />
+ * This class is an extension of a normal {@link org.knime.core.node.NodeModel}
+ * that offers parallel processing of {@link DataTable}s. Therefore the
+ * {@link #executeByChunk( BufferedDataTable, BufferedDataTable[],
+ * RowAppender[], ExecutionMonitor)} method must be overriden. This method is
+ * called with a {@link DataTable} containing only a part of the input rows as
+ * often as necessary. A default value for the maximal chunk size (i.e. the
+ * number of rows in the chunked data table) is given in the constructor.<br />
  * 
  * If the node has more than one input table only the first input table is
  * chunked, the remaining ones are passed to {@link #executeByChunk(
  * BufferedDataTable, BufferedDataTable[], RowAppender[], ExecutionMonitor)}
  * completely.
  * 
+ * @deprecated Use the new {@link ParallelNodeModel} because this class
+ *             duplicates the whole input data.
+ * 
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public abstract class AbstractParallelNodeModel extends NodeModel {
     private int m_chunkSize;
 
@@ -74,11 +77,11 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
      * @param nrDataOuts the number of {@link DataTable}s expected at the
      *            output
      * @param nrPredParamsIns the number of
-     *            {@link org.knime.core.node.ModelContent} elements
-     *            available as inputs
+     *            {@link org.knime.core.node.ModelContent} elements available as
+     *            inputs
      * @param nrPredParamsOuts the number of
-     *            {@link org.knime.core.node.ModelContent} objects
-     *            available at the output
+     *            {@link org.knime.core.node.ModelContent} objects available at
+     *            the output
      * @param chunkSize the default number of rows in the DataTables that are
      *            passed to {@link #executeByChunk( BufferedDataTable,
      *            BufferedDataTable[], RowAppender[], ExecutionMonitor)}
@@ -137,9 +140,10 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         final DataTableSpec[] outSpecs = prepareExecute(data);
 
-        final List<Future<DataContainer[]>> futures = new ArrayList<Future<DataContainer[]>>();
-        final BufferedDataTable[] additionalTables = new BufferedDataTable[Math
-                .max(0, data.length - 1)];
+        final List<Future<DataContainer[]>> futures =
+                new ArrayList<Future<DataContainer[]>>();
+        final BufferedDataTable[] additionalTables =
+                new BufferedDataTable[Math.max(0, data.length - 1)];
         System.arraycopy(data, 1, additionalTables, 0, additionalTables.length);
 
         // do some consistency checks to bail out as early as possible
@@ -180,30 +184,43 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
                             try {
                                 chunks++;
                                 final int temp2 = chunks;
-                                futures.add(m_workers.submit(new Callable<DataContainer[]>() {
-                                    public DataContainer[] call()
-                                            throws Exception {
-                                        ExecutionMonitor subProg = exec
-                                                .createSilentSubProgress((m_chunkSize > max) ? 1
-                                                        : m_chunkSize / max);
-                                        exec.setMessage("Processing chunk " + temp2);
-                                        DataContainer[] result = new DataContainer[outSpecs.length];
-                                        for (int i = 0; i < outSpecs.length; i++) {
-                                            result[i] = new DataContainer(outSpecs[i], true);
-                                        }
-    
-                                        executeByChunk(temp.getTable(), additionalTables, result, subProg);
-    
-                                        for (DataContainer c : result) {
-                                            c.close();
-                                        }
-    
-                                        exec.setProgress(temp2
-                                                * m_chunkSize
-                                                / max);
-                                        return result;
-                                    }
-                                }));
+                                futures
+                                        .add(m_workers
+                                                .submit(new Callable<DataContainer[]>() {
+                                                    public DataContainer[] call()
+                                                            throws Exception {
+                                                        ExecutionMonitor subProg =
+                                                                exec
+                                                                        .createSilentSubProgress((m_chunkSize > max) ? 1
+                                                                                : m_chunkSize
+                                                                                        / max);
+                                                        exec
+                                                                .setMessage("Processing chunk "
+                                                                        + temp2);
+                                                        DataContainer[] result =
+                                                                new DataContainer[outSpecs.length];
+                                                        for (int i = 0; i < outSpecs.length; i++) {
+                                                            result[i] =
+                                                                    new DataContainer(
+                                                                            outSpecs[i],
+                                                                            true);
+                                                        }
+
+                                                        executeByChunk(
+                                                                temp.getTable(),
+                                                                additionalTables,
+                                                                result, subProg);
+
+                                                        for (DataContainer c : result) {
+                                                            c.close();
+                                                        }
+
+                                                        exec.setProgress(temp2
+                                                                * m_chunkSize
+                                                                / max);
+                                                        return result;
+                                                    }
+                                                }));
                             } catch (InterruptedException ex) {
                                 return;
                             }
@@ -212,8 +229,9 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
                             break;
                         }
 
-                        container = exec.createDataContainer(data[0]
-                                .getDataTableSpec());
+                        container =
+                                exec.createDataContainer(data[0]
+                                        .getDataTableSpec());
                     }
                     container.addRowToTable(it.next());
                 }
@@ -228,8 +246,8 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             submitter.run();
         }
 
-        final DataTable[][] tempTables = new DataTable[outSpecs.length][futures
-                .size()];
+        final DataTable[][] tempTables =
+                new DataTable[outSpecs.length][futures.size()];
         int k = 0;
         for (Future<DataContainer[]> results : futures) {
             try {
@@ -255,7 +273,8 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             k++;
         }
 
-        final AppendedRowsTable[] resultTables = new AppendedRowsTable[outSpecs.length];
+        final AppendedRowsTable[] resultTables =
+                new AppendedRowsTable[outSpecs.length];
         for (int i = 0; i < resultTables.length; i++) {
             resultTables[i] = new AppendedRowsTable(tempTables[i]);
         }

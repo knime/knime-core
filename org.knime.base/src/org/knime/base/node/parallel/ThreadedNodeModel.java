@@ -35,27 +35,29 @@ import org.knime.core.node.KNIMEConstants;
  * {@link #setMaxThreads(int)} but the real maximum is still determined by the
  * global thread pool.
  * 
+ * @deprecated Use the new {@link ParallelNodeModel} because this class
+ *             duplicates the whole input data.
+ * 
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public abstract class ThreadedNodeModel extends AbstractParallelNodeModel {
     /** The default maximum number of threads for each threaded node. */
-    public static final int DEFAULT_MAX_THREAD_COUNT = Runtime.getRuntime()
-            .availableProcessors() + 1;
+    public static final int DEFAULT_MAX_THREAD_COUNT =
+            Runtime.getRuntime().availableProcessors() + 1;
 
     /**
      * Creates a new AbstractParallelNodeModel.
      * 
      * @param nrDataIns the number of {@link org.knime.core.data.DataTable}s
      *            expected as inputs
-     * @param nrDataOuts the number of
-     *            {@link org.knime.core.data.DataTable}s expected at the
-     *            output
+     * @param nrDataOuts the number of {@link org.knime.core.data.DataTable}s
+     *            expected at the output
      * @param nrPredParamsIns the number of
-     *            {@link org.knime.core.node.ModelContent}s available as
-     *            inputs
+     *            {@link org.knime.core.node.ModelContent}s available as inputs
      * @param nrPredParamsOuts the number of
-     *            {@link org.knime.core.node.ModelContent}s objects
-     *            available at the output
+     *            {@link org.knime.core.node.ModelContent}s objects available
+     *            at the output
      * @param chunkSize the default number of rows in the chunked
      *            {@link org.knime.core.data.DataTable}s
      */
@@ -72,9 +74,8 @@ public abstract class ThreadedNodeModel extends AbstractParallelNodeModel {
      * 
      * @param nrDataIns The number of {@link org.knime.core.data.DataTable}
      *            elements expected as inputs.
-     * @param nrDataOuts The number of
-     *            {@link org.knime.core.data.DataTable} objects expected at
-     *            the output.
+     * @param nrDataOuts The number of {@link org.knime.core.data.DataTable}
+     *            objects expected at the output.
      * @param chunkSize the default number of rows in the chunked
      *            {@link org.knime.core.data.DataTable}s
      */
