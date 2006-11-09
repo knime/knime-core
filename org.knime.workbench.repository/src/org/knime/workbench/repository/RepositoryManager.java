@@ -55,19 +55,19 @@ import org.knime.workbench.repository.model.Root;
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryManager {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RepositoryManager.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(RepositoryManager.class);
 
     /** The singleton instance. */
     public static final RepositoryManager INSTANCE = new RepositoryManager();
 
     // ID of "node" extension point
-    private static final String ID_NODE = "org.knime.workbench.repository"
-            + ".nodes";
+    private static final String ID_NODE =
+            "org.knime.workbench.repository" + ".nodes";
 
     // ID of "category" extension point
-    private static final String ID_CATEGORY = "org.knime.workbench."
-            + "repository.categories";
+    private static final String ID_CATEGORY =
+            "org.knime.workbench." + "repository.categories";
 
     // set the eclipse class creator into the static global class creator class
     static {
@@ -116,7 +116,8 @@ public final class RepositoryManager {
         //
         // First, process the contributed categories
         //
-        ArrayList<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
+        ArrayList<IConfigurationElement> allElements =
+                new ArrayList<IConfigurationElement>();
 
         for (int i = 0; i < categoryExtensions.length; i++) {
 
@@ -129,8 +130,9 @@ public final class RepositoryManager {
 
         // sort first by path-depth, so that everything is there in the
         // right order
-        IConfigurationElement[] categoryElements = allElements
-                .toArray(new IConfigurationElement[allElements.size()]);
+        IConfigurationElement[] categoryElements =
+                allElements.toArray(new IConfigurationElement[allElements
+                        .size()]);
 
         Arrays.sort(categoryElements, new Comparator<IConfigurationElement>() {
 
@@ -145,11 +147,13 @@ public final class RepositoryManager {
                     return +1;
                 }
 
-                int countSlashes1 = element1 == null ? 0 : element1.length()
-                        - element1.replaceAll("/", "").length();
+                int countSlashes1 =
+                        element1 == null ? 0 : element1.length()
+                                - element1.replaceAll("/", "").length();
 
-                int countSlashes2 = element1 == null ? 0 : element2.length()
-                        - element2.replaceAll("/", "").length();
+                int countSlashes2 =
+                        element1 == null ? 0 : element2.length()
+                                - element2.replaceAll("/", "").length();
 
                 return countSlashes1 - countSlashes2;
             }
@@ -197,14 +201,14 @@ public final class RepositoryManager {
                     LOGGER.debug("Found node extension '" + node.getID()
                             + "': " + node.getName());
                     String nodeName = node.getID();
-                    nodeName = nodeName
-                            .substring(nodeName.lastIndexOf('.') + 1);
+                    nodeName =
+                            nodeName.substring(nodeName.lastIndexOf('.') + 1);
                     // LOGGER.info("Found node: " + node.getName());
 
                     // Ask the root to lookup the category-container located at
                     // the given path
-                    IContainerObject parentContainer = m_root
-                            .findContainer(node.getCategoryPath());
+                    IContainerObject parentContainer =
+                            m_root.findContainer(node.getCategoryPath());
 
                     // If parent category is illegal, log an error and append
                     // the node to the repository root.
@@ -223,8 +227,7 @@ public final class RepositoryManager {
 
                 } catch (Exception ex) {
 
-                    LOGGER.error("Node could not be created:",
-                            ex);
+                    LOGGER.error("Node could not be created:", ex);
                     errorString.append(e.getAttribute("id") + "' from plugin '"
                             + ext.getNamespace() + "'\n");
 
@@ -237,14 +240,18 @@ public final class RepositoryManager {
         // if errors occured show an information box
         if (errorString.length() > 0) {
 
-            Shell activeShell = Display.getDefault().getActiveShell();
-            if (activeShell != null) {
-                MessageBox mb = new MessageBox(activeShell, SWT.ICON_WARNING
-                        | SWT.OK);
-                mb.setText("Node(s) could not be loaded!");
-                mb.setMessage("Some contributed nodes could not be loaded "
-                        + ", skipped: '\n\n" + errorString.toString());
-                mb.open();
+            if (Display.getDefault() != null) {
+                Shell activeShell = Display.getDefault().getActiveShell();
+
+                if (activeShell != null) {
+                    MessageBox mb =
+                            new MessageBox(activeShell, SWT.ICON_WARNING
+                                    | SWT.OK);
+                    mb.setText("Node(s) could not be loaded!");
+                    mb.setMessage("Some contributed nodes could not be loaded "
+                            + ", skipped: '\n\n" + errorString.toString());
+                    mb.open();
+                }
             }
 
             WorkbenchErrorLogger
