@@ -111,6 +111,9 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
         // maps classes to [#covered,activation]
         final LinkedHashMap<DataCell, double[]> map = 
             new LinkedHashMap<DataCell, double[]>();
+        final LinkedHashMap<DataCell, Integer> numPatPerClass = 
+                new LinkedHashMap<DataCell, Integer>();
+        int cntAllClasses = 0;
         // overall basisfunctions in the model
         for (Iterator<BasisFunctionPredictorRow> it = model.iterator(); 
                 it.hasNext();) {
@@ -121,10 +124,19 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
             if (map.containsKey(classInfo)) {
                 double[] value = map.get(classInfo);
                 value[0] = bf.compose(row, value[0]);
+                assert (bf.getNumPattern() == numPatPerClass.get(classInfo));
             } else {
                 double act = bf.compose(row, 0.0);
-                map.put(classInfo, new double[]{act, bf.getNumPattern()});
+                map.put(classInfo, new double[]{act});
+                int numClasses = bf.getNumPattern();
+                numPatPerClass.put(classInfo, numClasses);
+                cntAllClasses += numClasses;
             }
+        }
+        for (DataCell classInfo : map.keySet()) {
+            double value = (double) numPatPerClass.get(classInfo) 
+                * map.get(classInfo)[0] / (double) cntAllClasses;
+            map.put(classInfo, new double[]{value});
         }
         return map;
     }

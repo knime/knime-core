@@ -118,7 +118,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         if (m_predRow.isNotShrunk()) {
             return true;
         }
-        return (computeActivation(row) > m_thetaMinus);
+        double act = computeActivation(row);
+        return (act >= m_thetaPlus);
     }
 
     /**
@@ -192,7 +193,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * if the number of covered pattern is equal otherwise use this
      * identification.
      * 
-     * @param other the basisfunction the compare coverage with
+     * @param best the basisfunction with the highest coverage so far
      * @param row the row on which to coverage need to be compared
      * @return <code>true</code> if the coverage of <code>this</code> object
      *         is better than the of the other
@@ -201,10 +202,10 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      */
     @Override
     protected final boolean compareCoverage(
-            final BasisFunctionLearnerRow other, final DataRow row) {
+            final BasisFunctionLearnerRow best, final DataRow row) {
         RadialBasisFunctionLearnerRow rbf 
-            = (RadialBasisFunctionLearnerRow)other;
-        return computeActivation(row) >= rbf.computeActivation(row);
+            = (RadialBasisFunctionLearnerRow) best;
+        return m_predRow.getStdDev() > rbf.m_predRow.getStdDev();
     }
 
     /**
@@ -249,7 +250,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         double newStdDev = dist / Math.sqrt(-Math.log(m_thetaMinus));
         // if std dev is max or new std dev less that current
         if (m_predRow.isNotShrunk() || (newStdDev < m_predRow.getStdDev())) {
-            // remebers old standard deviation for shrink value
+            // remembers old standard deviation for shrink value
             double oldStdDev = m_predRow.getStdDev();
             if (shrinkIt) {
                 // set current to new std dev for theta minus
