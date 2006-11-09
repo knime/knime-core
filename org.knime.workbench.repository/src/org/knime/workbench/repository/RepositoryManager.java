@@ -225,9 +225,9 @@ public final class RepositoryManager {
                         parentContainer.addChild(node);
                     }
 
-                } catch (Exception ex) {
+                } catch (Throwable t) {
 
-                    LOGGER.error("Node could not be created:", ex);
+                    LOGGER.error("Node could not be created:", t);
                     errorString.append(e.getAttribute("id") + "' from plugin '"
                             + ext.getNamespace() + "'\n");
 
@@ -240,16 +240,29 @@ public final class RepositoryManager {
         // if errors occured show an information box
         if (errorString.length() > 0) {
 
-            if (Display.getDefault() != null) {
-                Shell activeShell = Display.getDefault().getActiveShell();
+            // get an appropriate shell
+            Display defaultDisplay = Display.getDefault();
+            if (defaultDisplay != null) {
 
-                if (activeShell != null) {
+                Shell[] parent = new Shell[1];
+                parent[0] = defaultDisplay.getActiveShell();
+                if (parent[0] == null) {
+                    parent = Display.getDefault().getShells();
+                }
+
+                if (parent[0] != null) {
+                    // create a dummy shell, to force the message box to the top
+                    // otherwise it could be lost in the background of the
+                    // desktop
+                    Shell dummy =
+                            new Shell(parent[0], SWT.DIALOG_TRIM | SWT.ON_TOP);
                     MessageBox mb =
-                            new MessageBox(activeShell, SWT.ICON_WARNING
-                                    | SWT.OK);
-                    mb.setText("Node(s) could not be loaded!");
-                    mb.setMessage("Some contributed nodes could not be loaded "
-                            + ", skipped: '\n\n" + errorString.toString());
+                            new MessageBox(dummy, SWT.ICON_WARNING | SWT.OK
+                                    | SWT.ON_TOP);
+                    mb.setText("KNIME node(s) could not be loaded!");
+                    mb.setMessage("Some contributed nodes could not be "
+                            + "loaded by KNIME, skipped: '\n\n"
+                            + errorString.toString());
                     mb.open();
                 }
             }
