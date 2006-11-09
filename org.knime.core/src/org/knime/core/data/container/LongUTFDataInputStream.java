@@ -202,6 +202,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
      * @see java.io.DataInput#readLine()
      * @deprecated As in {@link DataInputStream#readLine()}.
      */
+    @Deprecated
     public String readLine() throws IOException {
         return m_input.readLine();
     }
@@ -312,7 +313,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
 
         while (utflen > 0) {
             int avail = m_end - m_pos;
-            if (avail >= 3 || (long)avail == utflen) {
+            if (avail >= 3 || avail == utflen) {
                 long processed = readUTFSpan(sbuf, utflen);
                 if (processed == 0) {
                     throw new UTFDataFormatException(

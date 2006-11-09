@@ -88,7 +88,8 @@ final class DCObjectInputStream extends ObjectInputStream {
      * @see DataCellSerializer#deserialize(java.io.DataInput)
      */
     public DataCell readDataCell(
-            final DataCellSerializer serializer) throws IOException {
+            final DataCellSerializer<? extends DataCell> serializer)
+    throws IOException {
         try {
             return serializer.deserialize(m_dataInStream);
         } finally {

@@ -262,7 +262,7 @@ public class LongUTFDataOutputStream
     private void writeShortUTF(
             final String s, final long utflen) throws IOException {
         writeShort((int)utflen);
-        if (utflen == (long)s.length()) {
+        if (utflen == s.length()) {
             writeBytes(s);
         } else {
             writeUTFBody(s);
@@ -277,7 +277,7 @@ public class LongUTFDataOutputStream
             final String s, final long utflen) throws IOException {
         writeShort(USE_LONG_UTF);
         writeLong(utflen);
-        if (utflen == (long)s.length()) {
+        if (utflen == s.length()) {
             writeBytes(s);
         } else {
             writeUTFBody(s);
