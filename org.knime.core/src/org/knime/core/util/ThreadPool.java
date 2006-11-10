@@ -511,10 +511,10 @@ public class ThreadPool {
             synchronized (m_runningWorkers) {
                 m_runningWorkers.remove(w);
                 m_availableWorkers.add(w);
-                if (checkQueue()) {
-                    return;
-                }
-            }
+            }    
+            if (checkQueue()) {
+                return;
+            }            
         }
 
         synchronized (m_runningWorkers) {
