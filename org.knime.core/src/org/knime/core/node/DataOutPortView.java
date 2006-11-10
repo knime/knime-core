@@ -39,14 +39,13 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.tableview.TableView;
-
 
 /**
  * Implements a view to inspect the data, tablespec and other stuff currently
@@ -58,7 +57,7 @@ final class DataOutPortView extends NodeOutPortView {
     private static final long serialVersionUID = 2253483422757100346L;
 
     private final JTabbedPane m_tabs;
-    
+
     private final TableView m_specView;
 
     private final TableView m_dataView;
@@ -68,6 +67,10 @@ final class DataOutPortView extends NodeOutPortView {
     private String m_nodeName;
 
     private String m_portName;
+
+    private static final DataRow EMPTY_ROW =
+        new DefaultRow(new StringCell(""), new DataCell[]{new StringCell(
+        "<null>")});
 
     /**
      * A view showing the data stored in the specified ouput port.
@@ -82,7 +85,7 @@ final class DataOutPortView extends NodeOutPortView {
 
         m_nodeName = nodeName;
         m_portName = portName;
-        
+
         Container cont = getContentPane();
         cont.setLayout(new BorderLayout());
         cont.setBackground(NodeView.COLOR_BACKGROUND);
@@ -92,11 +95,15 @@ final class DataOutPortView extends NodeOutPortView {
         m_dataView = new TableView();
         m_propsView = new TableView();
         m_dataView.getHeaderTable().setShowColorInfo(false);
+        // in the data view our columns are all of type string. Don't show that.
+        // Users confuse it with the type of their table.
+//        m_dataView.getHeaderTable().setShowTypeInfo(false);
         m_specView.getHeaderTable().setShowColorInfo(false);
         m_propsView.getHeaderTable().setShowColorInfo(false);
-        m_tabs.addTab("Data", m_dataView);
+
+        m_tabs.addTab("DataTable", m_dataView);
         m_tabs.addTab("DataTableSpec", m_specView);
-        m_tabs.addTab("Annotated Props", m_propsView);
+        m_tabs.addTab("DataColumnProperties", m_propsView);
 
         m_tabs.setBackground(NodeView.COLOR_BACKGROUND);
         cont.add(m_tabs, BorderLayout.CENTER);
@@ -116,9 +123,10 @@ final class DataOutPortView extends NodeOutPortView {
             BufferedDataTable bTable = (BufferedDataTable)newDataTable;
             int colCount = bTable.getDataTableSpec().getNumColumns();
             int rowCount = bTable.getRowCount();
-            
-            String header = "" + rowCount + " Row" + (rowCount != 1 ? "s" : "")
-                    + ", " + colCount + " Col" + (colCount != 1 ? "s" : "");
+
+            String header =
+                    "" + rowCount + " Row" + (rowCount != 1 ? "s" : "") + ", "
+                            + colCount + " Col" + (colCount != 1 ? "s" : "");
             m_dataView.getHeaderTable().setColumnName(header);
         } else {
             m_dataView.getHeaderTable().setColumnName("");
@@ -140,20 +148,19 @@ final class DataOutPortView extends NodeOutPortView {
             m_specView.getHeaderTable().setColumnName(
                     "" + numOfCols + " Column" + (numOfCols > 1 ? "s" : ""));
             m_propsView.getHeaderTable().setColumnName("Property Key");
-            setTitle(createWindowTitle(m_nodeName, m_portName, 
-                    newTableSpec.getName()));
+            setTitle(createWindowTitle(m_nodeName, m_portName, newTableSpec
+                    .getName()));
         } else {
             m_specView.getHeaderTable().setColumnName("");
             m_propsView.getHeaderTable().setColumnName("");
-            setTitle(createWindowTitle(m_nodeName, m_portName, null)); 
+            setTitle(createWindowTitle(m_nodeName, m_portName, null));
         }
     }
-    
 
     private DataTable createPropsTable(final DataTableSpec tSpec) {
         if (tSpec != null) {
             int numOfCols = tSpec.getNumColumns(); // output has as many cols
-            String[]   colNames = new String[numOfCols];
+            String[] colNames = new String[numOfCols];
             DataType[] colTypes = new DataType[numOfCols];
             // colnames are the same as incoming, types are all StringTypes
             for (int c = 0; c < numOfCols; c++) {
@@ -163,16 +170,17 @@ final class DataOutPortView extends NodeOutPortView {
             // get keys for ALL props in the table. Each will show in one row.
             HashSet<String> allKeys = new HashSet<String>();
             for (int c = 0; c < numOfCols; c++) {
-                Enumeration<String> props = tSpec.getColumnSpec(c)
-                        .getProperties().properties();
+                Enumeration<String> props =
+                        tSpec.getColumnSpec(c).getProperties().properties();
                 while (props.hasMoreElements()) {
                     allKeys.add(props.nextElement());
                 }
             }
 
+            DataContainer result =
+                    new DataContainer(new DataTableSpec(colNames, colTypes));
+
             // now construct the rows we wanna display
-            DataRow[] rows = new DefaultRow[allKeys.size()];
-            int rowIdx = 0;
             for (String key : allKeys) {
                 DataCell rowID = new StringCell(key);
                 DataCell[] cells = new DataCell[numOfCols];
@@ -180,20 +188,26 @@ final class DataOutPortView extends NodeOutPortView {
                     String cellValue = "";
                     if (tSpec.getColumnSpec(c).getProperties()
                             .containsProperty(key)) {
-                        cellValue = tSpec.getColumnSpec(c).getProperties()
-                                .getProperty(key);
+                        cellValue =
+                                tSpec.getColumnSpec(c).getProperties()
+                                        .getProperty(key);
                     }
                     cells[c] = new StringCell(cellValue);
                 }
-                rows[rowIdx++] = new DefaultRow(rowID, cells);
+                result.addRowToTable(new DefaultRow(rowID, cells));
             }
-
-            return new DefaultTable(rows, colNames, colTypes);
+            result.close();
+            return result.getTable();
 
         } else {
-            return new DefaultTable(EMPTY_ROW,
-                    new String[]{"No incoming table spec"},
-                    new DataType[]{StringCell.TYPE});
+            DataContainer result =
+                    new DataContainer(new DataTableSpec(
+                            new String[]{"No incoming table spec"},
+                            new DataType[]{StringCell.TYPE}));
+            result.addRowToTable(EMPTY_ROW);
+            result.close();
+            return result.getTable();
+
         }
 
     }
@@ -212,157 +226,182 @@ final class DataOutPortView extends NodeOutPortView {
                 types[c] = StringCell.TYPE;
             }
         } else {
-            names = new String[]{"nothing"};
+            names = new String[]{"No incoming table spec"};
             types = new DataType[]{StringCell.TYPE};
         }
 
+        DataContainer result =
+                new DataContainer(new DataTableSpec(names, types));
+
         // now put the data we want to show in rows: name + type + each value
-        DataRow[] rows = null;
         if (spec != null) {
-            // find out how many rows we need to create - enough for the column
-            // with the most possible values
-            int maxNumValues = 0;
-            int numCols = spec.getNumColumns();
-            for (int c = 0; c < numCols; c++) {
-                Set<DataCell> v = spec.getColumnSpec(c).getDomain()
-                        .getValues();
-                if ((v != null) && (v.size() > maxNumValues)) {
-                    maxNumValues = v.size();
-                }
-            }
-            // + 7 for 'Name', 'Type', lower bound, and upper bound, colorHdl,
-            // sizeHdl and shapeHdl
-            final int extraRows = 7;
-            int numRows = maxNumValues + extraRows;
-            rows = new DataRow[numRows];
 
-            // now, generate those rows:
-
-            // Row[0]: first row displays the name of each column
-            DataCell[] cols = new DataCell[numCols];
-            for (int c = 0; c < numCols; c++) {
-                cols[c] = new StringCell(spec.getColumnSpec(c).getName());
-            }
-            rows[0] = new DefaultRow(new StringCell("<html><b>Name"),
-                    cols);
-
-            // Row[1]: second row displays type of column
-            cols = new DataCell[numCols];
-            for (int c = 0; c < numCols; c++) {
-                String typename = spec.getColumnSpec(c).getType().toString();
-                cols[c] = new StringCell(typename);
-            }
-            rows[1] = new DefaultRow(new StringCell("<html><b>Type"),
-                    cols);
-            // Row[2]: shows who has a color handler set
-            cols = new DataCell[numCols];
-            for (int c = 0; c < numCols; c++) {
-                if (spec.getColumnSpec(c).getColorHandler() == null) {
-                    cols[c] = new StringCell("");
-                } else {
-                    // Display the String repr. of the ColorHdl
-                    ColorHandler cHdl = spec.getColumnSpec(c).getColorHandler();
-                    String colHdlStr = cHdl.toString();
-                    // add an instance unique ID
-                    colHdlStr += " (id=" + System.identityHashCode(cHdl) + ")";
-                    cols[c] = new StringCell(colHdlStr);
-                }
-            }
-            rows[2] = new DefaultRow(new StringCell("ColorHandler"), cols);
-            // Row[3]: shows who has a SizeHandler set
-            cols = new DataCell[numCols];
-            for (int c = 0; c < numCols; c++) {
-                if (spec.getColumnSpec(c).getSizeHandler() == null) {
-                    cols[c] = new StringCell("");
-                } else {
-                    SizeHandler sHdl = spec.getColumnSpec(c).getSizeHandler();
-                    String sHdlrStr = sHdl.toString();
-                    sHdlrStr += " (id=" + System.identityHashCode(sHdl) + ")";
-                    cols[c] = new StringCell(sHdlrStr);
-                }
-            }
-            rows[3] = new DefaultRow(new StringCell("SizeHandler"), cols);
-            
-            // Row[4]: shows where the shape handler is attached to.
-            cols = new DataCell[numCols];
-            for (int c = 0; c < numCols; c++) {
-                if (spec.getColumnSpec(c).getShapeHandler() == null) {
-                    cols[c] = new StringCell("");
-                } else {
-                    ShapeHandler hdl = spec.getColumnSpec(c).getShapeHandler();
-                    String hdlrStr = hdl.toString();
-                    hdlrStr += " (id=" + System.identityHashCode(hdl) + ")";
-                    cols[c] = new StringCell(hdlrStr);
-                }
-            }
-            rows[4] = new DefaultRow(new StringCell("ShapeHandler"), cols);
-            
-            // Row[5]: displays the lower bound of the domain
-            cols = new DataCell[numCols];
-            for (int c = 0; c < numCols; c++) {
-                String boundText = "<null>";
-                if (spec.getColumnSpec(c).getDomain().getLowerBound() != null) {
-                    boundText = spec.getColumnSpec(c).getDomain()
-                            .getLowerBound().toString();
-                }
-                cols[c] = new StringCell(boundText);
-            }
-            
-            rows[5] = new DefaultRow(new StringCell("lower bound"), cols);
-
-            // Row[6]: shows the upper bound value of the domain
-            cols = new DataCell[numCols];
-            for (int c = 0; c < numCols; c++) {
-                String boundText = "<null>";
-                if (spec.getColumnSpec(c).getDomain().getUpperBound() != null) {
-                    boundText = spec.getColumnSpec(c).getDomain()
-                            .getUpperBound().toString();
-                }
-                cols[c] = new StringCell(boundText);
-            }
-            rows[6] = new DefaultRow(new StringCell("upper bound"), cols);
-
-            
-            // from row 7: show the nominal values of that column. If any.
-            Iterator<DataCell> emptyIter = new ArrayList<DataCell>().iterator();
-            Iterator<?>[] valueIter = new Iterator<?>[numCols];
-            // store an iterator for _each_ column
-            for (int c = 0; c < numCols; c++) {
-                Set<DataCell> values = spec.getColumnSpec(c).getDomain()
-                        .getValues();
-                if (values != null) {
-                    valueIter[c] = values.iterator();
-                } else {
-                    valueIter[c] = emptyIter;
-                }
-            }
-            DataCell emptyStringCell = new StringCell("");
-
-            for (int r = extraRows; r < numRows; r++) {
-                cols = new DataCell[numCols];
-                for (int c = 0; c < numCols; c++) {
-                    if (!valueIter[c].hasNext()) {
-                        cols[c] = emptyStringCell;
-                    } else {
-                        // transform it into a string cell
-                        cols[c] = new StringCell(valueIter[c].next()
-                                .toString());
-                    }
-                }
-                rows[r] = new DefaultRow(
-                        new StringCell("Val_" + (r - extraRows)), cols);
-            }
+            addInfoRowsToDataContainer(result, spec);
+            addPossValuesRowsToDataContainer(result, spec);
 
         } else {
-            rows = EMPTY_ROW;
+            
+            result.addRowToTable(EMPTY_ROW);
         }
 
         // create the new table
-        return new DefaultTable(rows, names, types);
+        result.close();
+        return result.getTable();
 
     }
 
-    private static String createWindowTitle(final String nodeName, 
+    private void addInfoRowsToDataContainer(final DataContainer result, 
+            final DataTableSpec spec) {
+        assert spec != null;
+        assert result != null;
+        
+        int numCols = spec.getNumColumns();
+
+        // 1st row: displays the name of each column
+        DataCell[] cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            cols[c] = new StringCell(spec.getColumnSpec(c).getName());
+        }
+        result.addRowToTable(new DefaultRow(
+                new StringCell("<html><b>Name"), cols));
+
+        // 2nd row: displays type of column
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            String typename = spec.getColumnSpec(c).getType().toString();
+            cols[c] = new StringCell(typename);
+        }
+        result.addRowToTable(new DefaultRow(
+                new StringCell("<html><b>Type"), cols));
+
+        // 3rd row: shows who has a color handler set
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            if (spec.getColumnSpec(c).getColorHandler() == null) {
+                cols[c] = new StringCell("");
+            } else {
+                // Display the String repr. of the ColorHdl
+                ColorHandler cHdl = spec.getColumnSpec(c).getColorHandler();
+                String colHdlStr = cHdl.toString();
+                // add an instance unique ID
+                colHdlStr += " (id=" + System.identityHashCode(cHdl) + ")";
+                cols[c] = new StringCell(colHdlStr);
+            }
+        }
+        result.addRowToTable(new DefaultRow(new StringCell("ColorHandler"),
+                cols));
+
+        // 4th row: shows who has a SizeHandler set
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            if (spec.getColumnSpec(c).getSizeHandler() == null) {
+                cols[c] = new StringCell("");
+            } else {
+                SizeHandler sHdl = spec.getColumnSpec(c).getSizeHandler();
+                String sHdlrStr = sHdl.toString();
+                sHdlrStr += " (id=" + System.identityHashCode(sHdl) + ")";
+                cols[c] = new StringCell(sHdlrStr);
+            }
+        }
+        result.addRowToTable(new DefaultRow(new StringCell("SizeHandler"),
+                cols));
+
+        // 5th row: shows where the shape handler is attached to.
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            if (spec.getColumnSpec(c).getShapeHandler() == null) {
+                cols[c] = new StringCell("");
+            } else {
+                ShapeHandler hdl = spec.getColumnSpec(c).getShapeHandler();
+                String hdlrStr = hdl.toString();
+                hdlrStr += " (id=" + System.identityHashCode(hdl) + ")";
+                cols[c] = new StringCell(hdlrStr);
+            }
+        }
+        result.addRowToTable(new DefaultRow(new StringCell("ShapeHandler"),
+                cols));
+
+        // 6th row: displays the lower bound of the domain
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            String boundText = "<null>";
+            if (spec.getColumnSpec(c).getDomain().getLowerBound() != null) {
+                boundText =
+                        spec.getColumnSpec(c).getDomain().getLowerBound()
+                                .toString();
+            }
+            cols[c] = new StringCell(boundText);
+        }
+        result.addRowToTable(new DefaultRow(new StringCell("lower bound"),
+                cols));
+
+        // 7th row: shows the upper bound value of the domain
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            String boundText = "<null>";
+            if (spec.getColumnSpec(c).getDomain().getUpperBound() != null) {
+                boundText =
+                        spec.getColumnSpec(c).getDomain().getUpperBound()
+                                .toString();
+            }
+            cols[c] = new StringCell(boundText);
+        }
+        result.addRowToTable(new DefaultRow(new StringCell("upper bound"),
+                cols));
+
+    }
+    
+    private void addPossValuesRowsToDataContainer(final DataContainer result,
+            final DataTableSpec spec) {
+        assert result != null;
+        assert spec != null;
+        
+        int numCols = spec.getNumColumns();
+
+
+        // from the 8th row: show the nominal values of that column. If any.
+        // find out how many rows we need to create - enough for the column
+        // with the most possible values
+        int maxNumValues = 0;
+        Iterator<DataCell> emptyIter = new ArrayList<DataCell>().iterator();
+        Iterator<?>[] valueIter = new Iterator<?>[numCols];
+        // store an iterator for _each_ column, remember the maximum value
+        // set size
+        for (int c = 0; c < numCols; c++) {
+            Set<DataCell> values =
+                    spec.getColumnSpec(c).getDomain().getValues();
+            if (values != null) {
+                valueIter[c] = values.iterator();
+                if (values.size() > maxNumValues) {
+                    maxNumValues = values.size();
+                }                                  
+            } else {
+                valueIter[c] = emptyIter;
+            }
+        }
+        DataCell emptyStringCell = new StringCell("");
+
+        for (int r = 0; r < maxNumValues; r++) {
+            DataCell[] cols = new DataCell[numCols];
+            for (int c = 0; c < numCols; c++) {
+                if (!valueIter[c].hasNext()) {
+                    cols[c] = emptyStringCell;
+                } else {
+                    // transform it into a string cell
+                    cols[c] =
+                            new StringCell(valueIter[c].next().toString());
+                }
+            }
+            result.addRowToTable(new DefaultRow(new StringCell("Val_" + r),
+                    cols));
+        }
+
+    }
+    
+    
+    
+    
+    private static String createWindowTitle(final String nodeName,
             final String portName, final String tableName) {
         if (tableName != null) {
             return nodeName + ", " + portName + ", Table: " + tableName;
@@ -371,7 +410,4 @@ final class DataOutPortView extends NodeOutPortView {
         }
     }
 
-    private static final DataRow[] EMPTY_ROW = new DataRow[]{new DefaultRow(
-            new StringCell(""), new DataCell[]{new StringCell(
-                    "<null>")})};
 }
