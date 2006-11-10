@@ -368,7 +368,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return a value greater zero if a conflict has to be solved. The value
      *         indicates relative loss in coverage for this basis function.
      */
-    protected abstract double getShrinkValue(final DataRow row);
+    protected abstract boolean getShrinkValue(final DataRow row);
 
     /**
      * Called if a new row has to be adjusted, all conflicting rows are

@@ -133,11 +133,11 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
                 cntAllClasses += numClasses;
             }
         }
-        for (DataCell classInfo : map.keySet()) {
-            double value = (double) numPatPerClass.get(classInfo) 
-                * map.get(classInfo)[0] / (double) cntAllClasses;
-            map.put(classInfo, new double[]{value});
-        }
+//        for (DataCell classInfo : map.keySet()) {
+//            double value = (double) numPatPerClass.get(classInfo) 
+//                * map.get(classInfo)[0]; // / (double) cntAllClasses;
+//            map.put(classInfo, new double[]{value});
+//        }
         return map;
     }
     

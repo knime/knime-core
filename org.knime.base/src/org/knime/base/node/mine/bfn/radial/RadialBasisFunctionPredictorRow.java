@@ -173,10 +173,9 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
                 return (dist == 0.0 ? 1.0 : 0.0);
             }
             double d = dist / m_stdDev;
-            double a = Math.exp(-(d * d));
+            double a = Math.exp(-(dist * dist / (m_stdDev * m_stdDev)));
             assert (a >= 0.0 && a <= 1.0) : "d=" + d + ",a=" + a + ",stddev="
                     + m_stdDev;
-            // return activation
             return a;
         }
     }

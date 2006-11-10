@@ -76,6 +76,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * <code>ArrayList</code> which can be referenced by its
      * <code>RowKey</code> info as key values.
      */
+    //private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
     private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
 
     /** The underlying factory used to generate new basisfunctions. */

@@ -45,6 +45,9 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     
     /** The upper bound for conflicting instances. */
     private final double m_thetaMinus;
+    
+    private final double m_thetaMinusSqrtMinusLog;
+    private final double m_thetaPlusSqrtMinusLog;
 
     /** The lower bound for non-conflicting instances. */
     private final double m_thetaPlus;
@@ -74,8 +77,10 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
             final boolean isHierarchical) {
         super(key, center, classInfo, isHierarchical);
         m_thetaMinus = thetaMinus;
+        m_thetaMinusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaMinus));
         assert (m_thetaMinus >= 0.0 && m_thetaMinus <= 1.0);
         m_thetaPlus = thetaPlus;
+        m_thetaPlusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaPlus));
         assert (m_thetaPlus >= 0.0 && m_thetaPlus <= 1.0);
         m_predRow = new RadialBasisFunctionPredictorRow(key.getId(), center,
                 classInfo, m_thetaMinus, distance, numPat);
@@ -118,8 +123,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         if (m_predRow.isNotShrunk()) {
             return true;
         }
-        double act = computeActivation(row);
-        return (act >= m_thetaPlus);
+        return (m_predRow.getStdDev() 
+            >= m_predRow.computeDistance(row) / m_thetaPlusSqrtMinusLog);
     }
 
     /**
@@ -216,7 +221,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *         indicates relative loss in coverage for this basisfunction.
      */
     @Override
-    protected final double getShrinkValue(final DataRow row) {
+    protected final boolean getShrinkValue(final DataRow row) {
         return shrinkIt(row, false);
     }
 
@@ -233,7 +238,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      */
     @Override
     protected final boolean shrink(final DataRow row) {
-        return shrinkIt(row, true) > 0.0;
+        return shrinkIt(row, true);
     }
 
     /**
@@ -243,27 +248,29 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param row the input pattern for shrinking
      * @return 0 if no shrink needed otherwise a value greater zero
      */
-    private double shrinkIt(final DataRow row, final boolean shrinkIt) {
+    private boolean shrinkIt(final DataRow row, final boolean shrinkIt) {
+        // if std dev is max or new std dev less that current
         // compute distance between centroid and given row
         double dist = m_predRow.computeDistance(row);
-        // new std dev for theta minus
-        double newStdDev = dist / Math.sqrt(-Math.log(m_thetaMinus));
-        // if std dev is max or new std dev less that current
-        if (m_predRow.isNotShrunk() || (newStdDev < m_predRow.getStdDev())) {
+        //if (m_predRow.isNotShrunk() || (newStdDev < m_predRow.getStdDev())) {
+        if (m_predRow.isNotShrunk() 
+                || m_predRow.getStdDev() > dist / m_thetaMinusSqrtMinusLog) {
             // remembers old standard deviation for shrink value
             double oldStdDev = m_predRow.getStdDev();
+            // new std dev for theta minus
+            double newStdDev = dist / m_thetaMinusSqrtMinusLog;
             if (shrinkIt) {
                 // set current to new std dev for theta minus
                 // std dev was affected, set
                 m_predRow.shrinkIt(newStdDev);
             }
-            return oldStdDev - newStdDev;
+            return oldStdDev != newStdDev;
         } else {
             // otherwise no shrink performed
-            return 0.0;
+            return false;
         }
     }
-
+    
     /**
      * Method is empty.
      */
@@ -279,7 +286,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      */
     @Override
     protected final void cover(final DataRow row) {
-        // empty
+
     }
 
     /**

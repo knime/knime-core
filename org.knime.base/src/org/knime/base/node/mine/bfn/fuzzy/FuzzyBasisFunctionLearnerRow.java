@@ -179,8 +179,8 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *         indicates relative loss in coverage for this basis function.
      */
     @Override
-    protected final double getShrinkValue(final DataRow row) {
-        return shrinkIt(row, false);
+    protected final boolean getShrinkValue(final DataRow row) {
+        return shrinkIt(row, false) > 0.0;
     }
 
     /**
