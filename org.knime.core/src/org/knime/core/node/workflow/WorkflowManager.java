@@ -280,7 +280,12 @@ public class WorkflowManager implements WorkflowListener {
 
             for (WeakReference<WorkflowManager> wr : wfm.m_children) {
                 if (wr.get() != null) {
-                    assert !executionInProgress(wr.get()) : "No node is running, but a sub-workflow is running?!";
+                    if (executionInProgress(wr.get()))  {
+                        // this may happen if (parts of) a metaworkflow is/are
+                        // excuted by the user without actually executing the
+                        // meta node itself
+                        return true;
+                    }
                 }
             }
             return false;
@@ -364,6 +369,14 @@ public class WorkflowManager implements WorkflowListener {
                     }
                 }
 
+                // If a meta workflow is executed by hand and the meta node
+                // has not a valid data table yet the meta input node of the
+                // meta flow is not executable and a non-existing deadlock is
+                // detected. The following check prevents this.
+                if (executionInProgress(cont.getWorkflowManager())) {
+                    return true;
+                }
+                
                 if (!predStillWaiting) {
                     LOGGER.warn("The node " + cont + " is not executable but "
                             + "waiting for execution and "
