@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.core.data.DataCell;
@@ -64,7 +65,7 @@ public abstract class ParallelNodeModel extends NodeModel {
 
         private final DataTableSpec[] m_specs;
 
-        private volatile int m_processedChunks = 0;
+        final AtomicInteger m_processedRows = new AtomicInteger();
         
         Submitter(final BufferedDataTable[] data,
                 final ExtendedCellFactory[] cellFacs,
@@ -102,10 +103,9 @@ public abstract class ParallelNodeModel extends NodeModel {
                         container.close();
                         try {
                             chunks++;
-                            // 10% of work are reserved for combining
                             m_futures.add(m_workers.submit(getCallable(
                                     container.getTable(), chunkSize,
-                                    0.9 * max)));
+                                    max)));
                         } catch (InterruptedException ex) {
                             return;
                         }
@@ -136,11 +136,17 @@ public abstract class ParallelNodeModel extends NodeModel {
                             DataRow newRow =
                                     new DefaultRow(r.getKey(), newCells);
                             result[i].addRowToTable(newRow);
+
+                            int pr = m_processedRows.incrementAndGet();
+                            if (pr % 10 == 0) {
+                                // 5% of the progress are reserved for combining
+                                // the partial results lateron
+                                m_exec.setProgress(0.95 * pr / max);        
+                            }
                         }
                         result[i].close();
                     }
-
-                    m_exec.setProgress(++m_processedChunks * chunkSize / max);
+                    
                     return result;
                 }
             };
@@ -214,6 +220,7 @@ public abstract class ParallelNodeModel extends NodeModel {
                 + " Number of provided DataTableSpecs doesn't match number of "
                 + "output ports";
 
+        exec.setProgress(0, "Processing chunks");
         m_additionalTables =
                 new BufferedDataTable[Math.max(0, data.length - 1)];
         System.arraycopy(data, 1, m_additionalTables, 0,
