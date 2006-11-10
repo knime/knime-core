@@ -153,9 +153,21 @@ public final class NodeLogger {
         Logger root = Logger.getRootLogger();
         Appender a = root.getAppender("stderr");
         a = root.getAppender("stdout");
-        SOUT_APPENDER = (a != null) ? a : new NullAppender();
-        a = root.getAppender("knimelog");
-        FILE_APPENDER = (a != null) ? a : new NullAppender();
+        if (a != null) {
+            SOUT_APPENDER = a;    
+        } else {
+            root.warn("Could not find 'stdout' appender");
+            SOUT_APPENDER = new NullAppender();
+        }
+        
+        a = root.getAppender("logfile");
+        if (a != null) {
+            FILE_APPENDER = a;    
+        } else {
+            root.warn("Could not find 'logfile' appender");
+            FILE_APPENDER = new NullAppender();
+        }
+        
 
         startMessage();
     }
