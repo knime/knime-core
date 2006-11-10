@@ -105,7 +105,7 @@ public class WorkflowManager implements WorkflowListener {
      * 
      * @author Thorsten Meinl, University of Konstanz
      */
-    private class WorkflowExecutor implements NodeStateListener {
+    private static class WorkflowExecutor implements NodeStateListener {
         private class MyNodePM extends DefaultNodeProgressMonitor {
             private final NodeContainer m_node;
 
@@ -125,8 +125,9 @@ public class WorkflowManager implements WorkflowListener {
                 if (m_runningNodes.containsKey(m_node)) {
                     for (NodeContainer succ : m_node.getAllSuccessors()) {
                         if (m_waitingNodes.remove(succ) != null) {
-                            fireWorkflowEvent(new WorkflowEvent.NodeFinished(
-                                    succ.getID(), null, null));
+                            succ.getWorkflowManager().fireWorkflowEvent(
+                                    new WorkflowEvent.NodeFinished(
+                                            succ.getID(), null, null));
                         }
                     }
                 }
@@ -174,8 +175,8 @@ public class WorkflowManager implements WorkflowListener {
 
                     // inform the node that it is queued now
                     nc.queuedForExecution();
-                    fireWorkflowEvent(new WorkflowEvent.NodeWaiting(nc.getID(),
-                            nc, pm));
+                    nc.getWorkflowManager().fireWorkflowEvent(
+                            new WorkflowEvent.NodeWaiting(nc.getID(), nc, pm));
 
                     change = true;
                 }
@@ -196,8 +197,9 @@ public class WorkflowManager implements WorkflowListener {
             // we will miss the finish event for this node otherwise
             synchronized (m_addLock) {
                 for (NodeContainer nc : m_waitingNodes.keySet()) {
-                    fireWorkflowEvent(new WorkflowEvent.NodeFinished(
-                            nc.getID(), null, null));
+                    nc.getWorkflowManager().fireWorkflowEvent(
+                            new WorkflowEvent.NodeFinished(nc.getID(), null,
+                                    null));
                 }
 
                 m_waitingNodes.clear();
@@ -239,11 +241,11 @@ public class WorkflowManager implements WorkflowListener {
 
             for (NodeContainer nc : cancelNodes) {
 
-                nc.stateChanged(
-                        new NodeStatus.Configured("Removed from queue"), nc
-                                .getID());
-                fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc.getID(),
-                        null, null));
+                nc.stateChanged(new NodeStatus.Configured(
+                        "Removed from queue"), nc.getID());
+                nc.getWorkflowManager().fireWorkflowEvent(
+                        new WorkflowEvent.NodeFinished(nc.getID(), null,
+                                null));
             }
         }
 
@@ -305,8 +307,9 @@ public class WorkflowManager implements WorkflowListener {
                         }
 
                         try {
-                            fireWorkflowEvent(new WorkflowEvent.NodeStarted(nc
-                                    .getID(), nc, pm));
+                            nc.getWorkflowManager().fireWorkflowEvent(
+                                    new WorkflowEvent.NodeStarted(nc.getID(),
+                                            nc, pm));
                             nc.addListener(this);
                             nc.startExecution(pm);
                         } catch (Exception ex) {
@@ -339,8 +342,9 @@ public class WorkflowManager implements WorkflowListener {
                     }
 
                     for (NodeContainer nc : m_waitingNodes.keySet()) {
-                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
-                                .getID(), null, null));
+                        nc.getWorkflowManager().fireWorkflowEvent(
+                                new WorkflowEvent.NodeFinished(nc.getID(),
+                                        null, null));
                     }
                     m_waitingNodes.clear();
 
@@ -391,8 +395,9 @@ public class WorkflowManager implements WorkflowListener {
                     if (nc.getID() == id) {
                         nc.removeListener(this);
 
-                        fireWorkflowEvent(new WorkflowEvent.NodeFinished(nc
-                                .getID(), null, null));
+                        nc.getWorkflowManager().fireWorkflowEvent(
+                                new WorkflowEvent.NodeFinished(nc.getID(),
+                                        null, null));
 
                         synchronized (m_finishLock) {
                             it.remove();

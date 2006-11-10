@@ -204,7 +204,7 @@ public class NodeContainer implements NodeStateListener {
     /**
      * Create new container using a node factory and a predefined ID.
      * 
-     * @param f a node factroy
+     * @param f a node factory
      * @param wfm the workflow manager for this node container
      * @param id identifier of the node
      */
@@ -1227,5 +1227,9 @@ public class NodeContainer implements NodeStateListener {
      */
     public void setProgressListener(final NodeProgressListener progressListener) {
         m_progressListener = progressListener;
+    }
+    
+    WorkflowManager getWorkflowManager() {
+        return m_wfm;
     }
 }
