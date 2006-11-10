@@ -261,7 +261,7 @@ public final class RepositoryManager {
                                     | SWT.ON_TOP);
                     mb.setText("KNIME node(s) could not be loaded!");
                     mb.setMessage("Some contributed nodes could not be "
-                            + "loaded by KNIME, skipped: '\n\n"
+                            + "loaded by KNIME, skipped: \n\n'"
                             + errorString.toString());
                     mb.open();
                 }
