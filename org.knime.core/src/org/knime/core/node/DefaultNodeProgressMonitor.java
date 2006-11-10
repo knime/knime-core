@@ -142,7 +142,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     /**
      * @return <code>true</code> if the execution of the
-     *         <code>NodeModel</code> has been cancled.
+     *         <code>NodeModel</code> has been cancelled.
      */
     synchronized boolean isCanceled() {
         return m_cancelExecute;
