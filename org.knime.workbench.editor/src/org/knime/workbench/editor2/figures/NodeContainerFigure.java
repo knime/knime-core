@@ -137,7 +137,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private static final Font FONT_USER_NAME;
 
-    private static final Font FONT_EXECUTING;
+    //private static final Font FONT_EXECUTING;
 
     private static final Font FONT_EXECUTED;
 
@@ -153,10 +153,12 @@ public class NodeContainerFigure extends RectangleFigure {
             name = systemFontData[0].getName();
             height = systemFontData[0].getHeight();
         }
-        FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
-        FONT_USER_NAME = new Font(current, name, height, SWT.ITALIC);
-        FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
+        
+        //FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
+        FONT_USER_NAME = new Font(current, name, height, SWT.NORMAL);
+        //FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
         FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
+        FONT_NORMAL = FONT_EXECUTED; 
     }
 
     /** tooltip for displaying the full heading. * */
@@ -465,40 +467,40 @@ public class NodeContainerFigure extends RectangleFigure {
         // m_statusFigure.setEnabled(false);
         // break;
         case STATE_EXECUTING:
-            m_heading.setFont(FONT_EXECUTING);
+            //m_heading.setFont(FONT_EXECUTING);
             m_heading.setEnabled(true);
 
             setProgressBar(true);
-            m_heading.setFont(FONT_EXECUTING);
+            //m_heading.setFont(FONT_EXECUTING);
             // m_contentFigure.removeWarningSign();
             break;
         case STATE_QUEUED:
-            m_heading.setFont(FONT_NORMAL);
+            //m_heading.setFont(FONT_NORMAL);
             m_heading.setEnabled(true);
 
             setProgressBar(false);
             break;
         case STATE_EXECUTED:
-            m_heading.setFont(FONT_EXECUTED);
+            //m_heading.setFont(FONT_EXECUTED);
             m_heading.setEnabled(true);
 
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
             break;
         case STATE_WARNING:
-            m_heading.setFont(FONT_NORMAL);
+            //m_heading.setFont(FONT_NORMAL);
             m_heading.setEnabled(true);
             m_infoWarnErrorPanel.setWarning(message);
             // m_contentFigure.setWarning(message, WarnErrorToolTip.WARNING);
             break;
         case STATE_ERROR:
-            m_heading.setFont(FONT_NORMAL);
+            //m_heading.setFont(FONT_NORMAL);
             m_heading.setEnabled(true);
             m_infoWarnErrorPanel.setError(message);
             // m_contentFigure.setWarning(message, WarnErrorToolTip.ERROR);
             break;
         default:
-            m_heading.setFont(FONT_NORMAL);
+            //m_heading.setFont(FONT_NORMAL);
             m_heading.setEnabled(false);
 
             setStatusAmple();

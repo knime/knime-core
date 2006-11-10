@@ -52,6 +52,9 @@ import org.knime.core.node.NodeProgressListener;
 public class ProgressFigure extends RectangleFigure implements
         NodeProgressListener, MouseMotionListener {
 
+//    private static final NodeLogger LOGGER =
+//            NodeLogger.getLogger(ProgressFigure.class);
+
     /** absolute width of this figure. * */
     public static final int WIDTH = 32;
 
@@ -378,8 +381,6 @@ public class ProgressFigure extends RectangleFigure implements
             return;
         }
 
-        String message = pe.getMessage();
-
         int newWorked = m_currentWorked;
         if (pe.hasProgress()) {
             double progress = pe.getProgress().doubleValue();
@@ -408,14 +409,23 @@ public class ProgressFigure extends RectangleFigure implements
             changed = true;
         }
 
+        String message = pe.getMessage();
+        // LOGGER.debug("Event message: " + message);
+        // LOGGER.debug("current progress message: " +
+        // m_currentProgressMessage);
         if (!m_currentProgressMessage.equals(message)) {
 
             String meString = m_currentProgressMessage;
             m_currentProgressMessage =
                     message == null ? "" : m_stateMessage + " - " + message;
 
+            // LOGGER.debug("current progress message after if: " +
+            // m_currentProgressMessage);
+
             if (!m_currentProgressMessage.equals(meString)
                     && m_mouseEvent != null) {
+
+                // LOGGER.debug("Show message: " + m_currentProgressMessage);
 
                 if (m_currentDisplay != null) {
                     m_currentDisplay.syncExec(new Runnable() {
