@@ -275,16 +275,16 @@ public class ThreadPool {
     public Future<?> enqueue(final Runnable r) {
         MyFuture<?> ftask = new MyFuture<Object>(r, null);
 
-        Worker w;
-        synchronized (m_runningWorkers) {
-            if ((w = freeWorker()) != null) {
-                w.wakeup(ftask, this);
-            } else {
-                synchronized (m_queuedFutures) {
-                    m_queuedFutures.add(ftask);
-                }
+        // synchronized (m_runningWorkers) {
+        Worker w = freeWorker();
+        if (w != null) {
+            w.wakeup(ftask, this);
+        } else {
+            synchronized (m_queuedFutures) {
+                m_queuedFutures.add(ftask);
             }
         }
+        // }
 
         return ftask;
     }
