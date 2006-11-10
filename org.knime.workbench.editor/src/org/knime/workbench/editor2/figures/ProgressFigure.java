@@ -308,7 +308,7 @@ public class ProgressFigure extends RectangleFigure implements
         }
 
         // check if there is still a progress to render
-        if (m_currentWorked > 0) {
+        if (m_currentWorked >= 0) {
             m_unknownProgress = false;
             repaint();
             return;
@@ -317,7 +317,7 @@ public class ProgressFigure extends RectangleFigure implements
         m_unknownProgress = true;
 
         // reset the worked value
-        m_currentWorked = 0;
+        m_currentWorked = -1;
 
         if (m_currentDisplay == null) {
             return;
@@ -464,7 +464,7 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public void reset() {
         m_currentProgressMessage = "";
-        m_currentWorked = 0;
+        m_currentWorked = -1;
         m_unknownProgress = true;
         unknownProgressTimer.removeFigure(this);
         m_mouseEvent = null;

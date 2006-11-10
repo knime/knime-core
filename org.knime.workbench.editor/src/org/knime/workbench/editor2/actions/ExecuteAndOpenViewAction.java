@@ -41,8 +41,8 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ExecuteAndOpenViewAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(ExecuteAndOpenViewAction.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(ExecuteAndOpenViewAction.class);
 
     /**
      * unique ID for this action.
@@ -79,16 +79,14 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/executeAndView.GIF");
     }
-    
-    
 
     /**
      * @see org.eclipse.jface.action.Action#getDisabledImageDescriptor()
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/executeAndView_diabled.PNG");
+        return ImageRepository
+                .getImageDescriptor("icons/executeAndView_diabled.PNG");
     }
 
     /**
@@ -117,8 +115,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         // check if there is at least one view
         boolean enabled = parts[0].getNodeContainer().getNumViews() > 0;
 
-        // the node must not be an interruptible node
-        enabled &= !parts[0].getNodeContainer().isInterruptible();
+//        // the node must not be an interruptible node
+//        enabled &= !parts[0].getNodeContainer().isInterruptible();
 
         // check if the node is executable
         enabled &= parts[0].getNodeContainer().isExecutableUpToHere();
@@ -145,19 +143,30 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         }
 
         LOGGER.debug("Executing and opening view for one node");
-        
+
         final NodeContainer cont = nodeParts[0].getNodeContainer();
-        cont.addListener(new NodeStateListener() {
-            public void stateChanged(final NodeStatus state, final int id) {
-                if (state instanceof NodeStatus.EndExecute) {
-                    cont.removeListener(this);
-                    if (cont.isExecuted()) { cont.showView(0); }
-                } else if (state instanceof NodeStatus.ExecutionCanceled) {
-                    cont.removeListener(this);
+
+        // for interruptible nodes the view is opened immediatly
+        // for all other nodes the view should first opened if the execution is
+        // over
+        if (cont.isInterruptible()) {
+            getManager().executeUpToNode(cont.getID(), false);
+            cont.showView(0);
+        } else {
+            cont.addListener(new NodeStateListener() {
+                public void stateChanged(final NodeStatus state, final int id) {
+                    if (state instanceof NodeStatus.EndExecute) {
+                        cont.removeListener(this);
+                        if (cont.isExecuted()) {
+                            cont.showView(0);
+                        }
+                    } else if (state instanceof NodeStatus.ExecutionCanceled) {
+                        cont.removeListener(this);
+                    }
                 }
-            }
-        });
-        getManager().executeUpToNode(cont.getID(), false);
+            });
+            getManager().executeUpToNode(cont.getID(), false);
+        }
 
         try {
             Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
