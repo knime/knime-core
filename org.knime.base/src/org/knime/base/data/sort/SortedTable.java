@@ -153,15 +153,15 @@ public class SortedTable implements DataTable {
         }
         
         if (sortInMemory) {
-            sortInMemory(dataTable, inclList, sortAscending, exec);
+            sortInMemory(dataTable, inclList, exec);
         } else {
-            sortOnDisk(dataTable, inclList, sortAscending, exec);
+            sortOnDisk(dataTable, inclList, exec);
         }
     }
     
     
     private void sortInMemory(final BufferedDataTable dataTable,
-            final List<String> inclList, final boolean[] sortAscending,
+            final List<String> inclList,
             final ExecutionContext exec) throws CanceledExecutionException {
         DataRow[] rows = new DataRow[dataTable.getRowCount()];
         
@@ -200,7 +200,7 @@ public class SortedTable implements DataTable {
 
 
     private void sortOnDisk(final BufferedDataTable dataTable,
-            final List<String> inclList, final boolean[] sortAscending,
+            final List<String> inclList,
             final ExecutionContext exec) throws CanceledExecutionException {
         Vector<DataContainer> containerVector = new Vector<DataContainer>();
         // Initialize RowIterator
