@@ -130,13 +130,7 @@ public class KDTreeTest extends TestCase {
         }
     }
 
-    public void testSpeed() {
-        int[] times = singleSpeedTest(2000, 120, 10, 10000);
-        System.out.println("k-d time = " + times[0] + "ms, brute force time = "
-                + times[1] + "ms");
-    }
-
-    private int[] singleSpeedTest(final int size, final int dimensions,
+    private static void singleSpeedTest(final int size, final int dimensions,
             final int neighbours, final int queries) {
         long bruteForceTime = 0, kdTime = 0;
         KDTreeBuilder<Integer> builder = new KDTreeBuilder<Integer>(dimensions);
@@ -157,6 +151,7 @@ public class KDTreeTest extends TestCase {
         KDTree<Integer> tree = builder.buildTree();
         kdTime += System.currentTimeMillis() - t;
 
+        double averagePruning = 0;
         for (int m = 0; m < queries; m++) {
             final double[] query = new double[dimensions];
 
@@ -181,11 +176,19 @@ public class KDTreeTest extends TestCase {
             t = System.currentTimeMillis();
             tree.getKNearestNeighbours(query, neighbours);
             kdTime += System.currentTimeMillis() - t;
-//            System.out.println("Pruning = "
-//                    + (100.0 * (tree.size() - tree.getVisitedNodes()) / tree
-//                            .size()) + "%");
+            averagePruning += (tree.size() - tree.getTestedPatterns())
+                / (double) tree.size();
         }
 
-        return new int[]{(int)kdTime, (int)bruteForceTime};
+        System.out.println("Pruning = " + (100 * averagePruning / queries)
+                + "%");
+        System.out.println("k-d time = " + kdTime + "ms, brute force time = "
+                + bruteForceTime + "ms");
+    }
+
+    public static void main(final String[] args) {
+        for (int i = 0; i < 10; i++) {
+            singleSpeedTest(1000, 50, 10, 10000);
+        }
     }
 }
