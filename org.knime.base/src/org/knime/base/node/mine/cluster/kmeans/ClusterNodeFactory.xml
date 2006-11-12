@@ -25,7 +25,7 @@
         numerical values and only these are considered for clustering.</dataIn>
         <dataOut index="0" name="Labeled input">The input data labeled with the 
         cluster they are contained in.</dataOut>
-        <predParamOut index="0" name="Prototypes">The prototypes of the clustering.</predParamOut>
+        <modelOut index="0" name="Prototypes">The prototypes of the clustering.</modelOut>
 	</ports>
 	
 	<views>

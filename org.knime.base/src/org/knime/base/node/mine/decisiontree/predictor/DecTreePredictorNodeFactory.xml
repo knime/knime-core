@@ -23,7 +23,7 @@
 	<ports>
 		<dataIn index="0" name="Data to classify">Input data to classify</dataIn>
 		<dataOut index="0" name="Classified Data">The input table with one column added containing the classification</dataOut>
-		<predParamIn index="0" name="Decision Tree Model">A previously learned decision tree model</predParamIn>
+		<modelIn index="0" name="Decision Tree Model">A previously learned decision tree model</modelIn>
 	</ports>
 	
 	<views>

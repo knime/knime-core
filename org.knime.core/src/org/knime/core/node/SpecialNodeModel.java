@@ -216,7 +216,7 @@ public abstract class SpecialNodeModel extends NodeModel {
      * Validates the specified settings in the model and then loads them into
      * it.
      * 
-     * @param nodeFile the node file
+     * @param nodeFile the node file, may be <code>null</code>
      * @param settings The settings to read.
      * @param exec an execution monitor
      * @throws InvalidSettingsException If the load iof the validated settings
@@ -225,9 +225,11 @@ public abstract class SpecialNodeModel extends NodeModel {
     final void loadSettingsFrom(final File nodeFile,
             final NodeSettingsRO settings, final ExecutionMonitor exec)
             throws InvalidSettingsException {
-        validateSettings(nodeFile, settings);
+        File nodeDir = (nodeFile != null) ? nodeFile.getParentFile() : null;
+        
+        validateSettings(nodeDir, settings);
         try {
-            loadValidatedSettingsFrom(nodeFile.getParentFile(), settings, exec);
+            loadValidatedSettingsFrom(nodeDir, settings, exec);
         } catch (IOException ex) {
             throw new InvalidSettingsException(ex);
         }

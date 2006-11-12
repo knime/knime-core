@@ -20,7 +20,7 @@
 	<ports>
 		<dataIn index="0" name="Table">Table to which colors are appended</dataIn>
 		<dataOut index="0" name="Table with Colors">Table with colors for the selected column</dataOut>
-		<predParamIn index="0" name="Color Settings" type="ColorModel">Color settings applied to the input table</predParamIn>
+		<modelIn index="0" name="Color Settings" type="ColorModel">Color settings applied to the input table</modelIn>
 	</ports>	
 	
 </knimeNode>

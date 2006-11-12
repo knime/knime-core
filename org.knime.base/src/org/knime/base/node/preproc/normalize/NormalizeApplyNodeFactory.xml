@@ -20,6 +20,6 @@
     <ports>
         <dataIn index="0" name="Table to normalize">Table requiring normalization of some or all columns.</dataIn>
         <dataOut index="0" name="Normalized output">The input data normalized according to the normalization parameters.</dataOut>
-        <predParamIn index="0" name="Model">Normalization parameters</predParamIn>
+        <modelIn index="0" name="Model">Normalization parameters</modelIn>
 	</ports>
 </knimeNode>

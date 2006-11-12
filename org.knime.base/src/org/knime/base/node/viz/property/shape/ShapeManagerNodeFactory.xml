@@ -27,6 +27,6 @@
 	<ports>
 		<dataIn index="0" name="Table">Table to which shape settings should be applied</dataIn>
 		<dataOut index="0" name="Table with Shapes">Same table with shape information appended to one attribute</dataOut>
-		<predParamOut index="0" name="Shape Settings">Shape settings applied to the input table</predParamOut>
+		<modelOut index="0" name="Shape Settings">Shape settings applied to the input table</modelOut>
 	</ports>	
 </knimeNode>

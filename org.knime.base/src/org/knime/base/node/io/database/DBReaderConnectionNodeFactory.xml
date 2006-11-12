@@ -38,6 +38,6 @@
 	</fullDescription>
 	
 	<ports>
-		<predParamOut index="0" name="DB Connection">Database connection settings</predParamOut>
+		<modelOut index="0" name="DB Connection">Database connection settings</modelOut>
 	</ports>	
 </knimeNode>

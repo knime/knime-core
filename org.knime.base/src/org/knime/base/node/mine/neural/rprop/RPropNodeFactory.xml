@@ -38,7 +38,7 @@
     </fullDescription>
     <ports>
 		<dataIn index="0" name = "Training Data">Datatable with training data</dataIn>
-		<predParamOut index="0" name = "Neural Network">RProp trained Neural Network</predParamOut>
+		<modelOut index="0" name = "Neural Network">RProp trained Neural Network</modelOut>
 		</ports>
     <views>
     <view index="0" name="Neural Net View">

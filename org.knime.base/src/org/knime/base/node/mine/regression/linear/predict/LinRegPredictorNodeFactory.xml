@@ -16,6 +16,6 @@
     <ports>
         <dataIn index="0" name="Data for prediction">Table for prediction.</dataIn>
         <dataOut index="0" name="Predicted data">Table from input with an additional prediction column.</dataOut>
-        <predParamIn index="0" name="Model from Learner">Model from the linear regression learner node.</predParamIn>
+        <modelIn index="0" name="Model from Learner">Model from the linear regression learner node.</modelIn>
 	</ports>
 </knimeNode>

@@ -18,6 +18,6 @@
 	</fullDescription>
 	
 	<ports>
-		<predParamOut index="0" name="Model">The model just read.</predParamOut>
+		<modelOut index="0" name="Model">The model just read.</modelOut>
 	</ports>	
 </knimeNode>

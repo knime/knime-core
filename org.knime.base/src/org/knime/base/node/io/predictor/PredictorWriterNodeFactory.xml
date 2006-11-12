@@ -18,6 +18,6 @@
 	</fullDescription>
 	
 	<ports>
-		<predParamIn index="0" name="Model">The model to write out.</predParamIn>
+		<modelIn index="0" name="Model">The model to write out.</modelIn>
 	</ports>	
 </knimeNode>
