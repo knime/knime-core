@@ -47,13 +47,14 @@
 <!ELEMENT br EMPTY >
 <!ATTLIST a href CDATA #REQUIRED>
 
-<!ELEMENT ports (dataIn*, dataOut*, predParamIn*, predParamOut*) >
+<!ELEMENT ports (dataIn*, dataOut*, (predParamIn | modelIn)*, (predParamOut | modelOut)*) >
 <!ELEMENT dataIn (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST dataIn index CDATA #REQUIRED>
 <!ATTLIST dataIn name CDATA #REQUIRED>
 <!ELEMENT dataOut (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST dataOut index CDATA #REQUIRED>
 <!ATTLIST dataOut name CDATA #REQUIRED>
+
 <!ELEMENT predParamIn (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST predParamIn index CDATA #REQUIRED>
 <!ATTLIST predParamIn name CDATA #REQUIRED>
@@ -62,6 +63,16 @@
 <!ATTLIST predParamOut index CDATA #REQUIRED>
 <!ATTLIST predParamOut name CDATA #REQUIRED>
 <!ATTLIST predParamOut type CDATA "default">
+
+<!ELEMENT modelIn (#PCDATA | br | b | i | u | tt | ul | ol)* >
+<!ATTLIST modelIn index CDATA #REQUIRED>
+<!ATTLIST modelIn name CDATA #REQUIRED>
+<!ATTLIST modelIn type CDATA "default">
+<!ELEMENT modelOut (#PCDATA | br | b | i | u | tt | ul | ol)* >
+<!ATTLIST modelOut index CDATA #REQUIRED>
+<!ATTLIST modelOut name CDATA #REQUIRED>
+<!ATTLIST modelOut type CDATA "default">
+
 
 <!ELEMENT views (view+) >
 <!ELEMENT view (#PCDATA | br | b | i | u | a | tt | ul | ol)* >

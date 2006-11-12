@@ -61,13 +61,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Michael Berthold, University of Konstanz
  */
 public abstract class NodeFactory {
-    private static final List<String> LOADED_NODE_FACTORIES = new ArrayList<String>();
+    private static final List<String> LOADED_NODE_FACTORIES =
+            new ArrayList<String>();
 
-    private static final List<String> RO_LIST = Collections
-            .unmodifiableList(LOADED_NODE_FACTORIES);
-    
+    private static final List<String> RO_LIST =
+            Collections.unmodifiableList(LOADED_NODE_FACTORIES);
 
-    
     /**
      * Enum for all node types.
      * 
@@ -93,34 +92,39 @@ public abstract class NodeFactory {
         /** If not specified. */
         Unknown
     }
-    
 
     // The logger for static methods
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeFactory.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(NodeFactory.class);
 
     private final String m_nodeName;
+
     private final String m_shortDescription;
 
     /* port names */
     private List<String> m_inDataPorts;
-    private List<String> m_outDataPorts;
-    private List<String> m_predParamIns;
-    private List<String> m_predParamOuts;
-    
-    /* port descriptions */    
-    private List<String> m_inDataPortsDesc;
-    private List<String> m_outDataPortsDesc;
-    private List<String> m_predParamInsDesc;
-    private List<String> m_predParamOutsDesc;
 
+    private List<String> m_outDataPorts;
+
+    private List<String> m_modelIns;
+
+    private List<String> m_modelOuts;
+
+    /* port descriptions */
+    private List<String> m_inDataPortsDesc;
+
+    private List<String> m_outDataPortsDesc;
+
+    private List<String> m_modelInsDesc;
+
+    private List<String> m_modelOutsDesc;
 
     private List<Element> m_views;
 
     private final URL m_icon;
 
     private NodeType m_type;
-    
+
     private final Element m_knimeNode;
 
     private final String m_fullAsHTML;
@@ -139,13 +143,14 @@ public abstract class NodeFactory {
         try {
             String imagePath = "./default.png";
             if (!imagePath.startsWith("/")) {
-                imagePath = NodeFactory.class.getPackage().getName().replace(
-                        '.', '/')
-                        + "/" + imagePath;
+                imagePath =
+                        NodeFactory.class.getPackage().getName().replace('.',
+                                '/')
+                                + "/" + imagePath;
             }
 
-            URL iconURL = NodeFactory.class.getClassLoader().getResource(
-                    imagePath);
+            URL iconURL =
+                    NodeFactory.class.getClassLoader().getResource(imagePath);
 
             defaultIcon = iconURL;
         } catch (Exception ioe) {
@@ -163,7 +168,7 @@ public abstract class NodeFactory {
         // using the system class loader should make sure, the the platform
         // default XML classes are used
         ClassLoader def = Thread.currentThread().getContextClassLoader();
-        try {            
+        try {
             Thread.currentThread().setContextClassLoader(
                     ClassLoader.getSystemClassLoader());
             DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
@@ -178,11 +183,12 @@ public abstract class NodeFactory {
                 public InputSource resolveEntity(final String pubId,
                         final String sysId) throws IOException, SAXException {
                     if ((pubId != null)
-                          && pubId.equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
+                            && pubId.equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
                         String path = NodeFactory.class.getPackage().getName();
                         path = path.replace('.', '/') + "/Node.dtd";
-                        InputStream in = NodeFactory.class.getClassLoader()
-                                .getResourceAsStream(path);
+                        InputStream in =
+                                NodeFactory.class.getClassLoader()
+                                        .getResourceAsStream(path);
                         return new InputSource(in);
                     } else {
                         return super.resolveEntity(pubId, sysId);
@@ -190,16 +196,18 @@ public abstract class NodeFactory {
                 }
             };
             parser.setEntityResolver(dh);
-            // parser.setErrorHandler(dh);            
+            // parser.setErrorHandler(dh);
 
-            StreamSource stylesheet = new StreamSource(NodeFactory.class
-                    .getClassLoader().getResourceAsStream(
-                            NodeFactory.class.getPackage().getName().replace(
-                                    '.', '/')
-                                    + "/FullNodeDescription.xslt"));
+            StreamSource stylesheet =
+                    new StreamSource(NodeFactory.class.getClassLoader()
+                            .getResourceAsStream(
+                                    NodeFactory.class.getPackage().getName()
+                                            .replace('.', '/')
+                                            + "/FullNodeDescription.xslt"));
 
-            transformer = TransformerFactory.newInstance().newTemplates(
-                    stylesheet).newTransformer();
+            transformer =
+                    TransformerFactory.newInstance().newTemplates(stylesheet)
+                            .newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         } catch (ParserConfigurationException ex) {
             NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
@@ -208,25 +216,23 @@ public abstract class NodeFactory {
         } catch (TransformerFactoryConfigurationError ex) {
             NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
         } finally {
-            Thread.currentThread().setContextClassLoader(def);            
+            Thread.currentThread().setContextClassLoader(def);
         }
     }
 
-    
     /**
-     * Constructor for use in subclasses that can be used to avoid checking
-     * the XML file. Please think twice if you really need to use this
-     * constructor. 
+     * Constructor for use in subclasses that can be used to avoid checking the
+     * XML file. Please think twice if you really need to use this constructor.
      * 
      * @param checkXML <code>true</code> if the XML file should be checked
-     * (this is the default when using the standard constructor),
-     * <code>false</code> otherwise
+     *            (this is the default when using the standard constructor),
+     *            <code>false</code> otherwise
      */
     protected NodeFactory(final boolean checkXML) {
         this();
         m_hasXMLBeenValidated = !checkXML;
     }
-    
+
     /**
      * Creates a new <code>NodeFactory</code> and tries to read to properties
      * file named <code>Node.xml</code> in the same package as the factory.
@@ -235,32 +241,32 @@ public abstract class NodeFactory {
         if (parser == null) {
             instantiateParser();
         }
-        
+
         ClassLoader loader = getClass().getClassLoader();
         InputStream propInStream;
         String path;
         Class<?> clazz = getClass();
-        
+
         do {
             path = clazz.getPackage().getName();
-            path = path.replace('.', '/') + "/" + clazz.getSimpleName()
-                    + ".xml";
-            
+            path =
+                    path.replace('.', '/') + "/" + clazz.getSimpleName()
+                            + ".xml";
+
             propInStream = loader.getResourceAsStream(path);
             clazz = clazz.getSuperclass();
-        } while ((propInStream == null) && (clazz != Object.class));        
-        
-        
+        } while ((propInStream == null) && (clazz != Object.class));
+
         // fall back node name if no xml file available or invalid.
         String defaultNodeName = getClass().getSimpleName();
         if (defaultNodeName.endsWith("NodeFactory")) {
-            defaultNodeName = defaultNodeName.substring(0, defaultNodeName
-                    .length()
-                    - "NodeFactory".length());
+            defaultNodeName =
+                    defaultNodeName.substring(0, defaultNodeName.length()
+                            - "NodeFactory".length());
         } else if (defaultNodeName.endsWith("Factory")) {
-            defaultNodeName = defaultNodeName.substring(0, defaultNodeName
-                    .length()
-                    - "Factory".length());
+            defaultNodeName =
+                    defaultNodeName.substring(0, defaultNodeName.length()
+                            - "Factory".length());
         }
         if (propInStream == null) {
             m_logger.error("Could not find XML description "
@@ -269,8 +275,9 @@ public abstract class NodeFactory {
             m_knimeNode = null;
             m_icon = null;
             m_nodeName = defaultNodeName;
-            m_fullAsHTML = "<html><body><font color=\"red\">NO XML FILE!"
-                    + "</font></body></html>";
+            m_fullAsHTML =
+                    "<html><body><font color=\"red\">NO XML FILE!"
+                            + "</font></body></html>";
         } else {
             Document doc = null;
             Exception exception = null;
@@ -278,7 +285,7 @@ public abstract class NodeFactory {
                 parser.setErrorHandler(new DefaultHandler() {
                     @Override
                     public void error(final SAXParseException ex)
-                    throws SAXException {
+                            throws SAXException {
                         m_logger.coding("XML node file does not conform with"
                                 + " DTD: " + ex.getMessage(), ex);
                     }
@@ -296,15 +303,16 @@ public abstract class NodeFactory {
                 m_knimeNode = null;
                 m_icon = null;
                 m_nodeName = defaultNodeName;
-                m_fullAsHTML = "<html><body><font color=\"red\">"
-                        + "INVALID XML FILE!</font><br/>"
-                        + exception.getClass().getName() + ": "
-                        + exception.getMessage() + "</body></html>";
+                m_fullAsHTML =
+                        "<html><body><font color=\"red\">"
+                                + "INVALID XML FILE!</font><br/>"
+                                + exception.getClass().getName() + ": "
+                                + exception.getMessage() + "</body></html>";
                 return;
             }
             m_knimeNode = doc.getDocumentElement();
             m_icon = readIconFromXML();
-            
+
             try {
                 m_type = NodeType.valueOf(m_knimeNode.getAttribute("type"));
             } catch (IllegalArgumentException ex) {
@@ -312,7 +320,7 @@ public abstract class NodeFactory {
                         + m_knimeNode.getAttribute("type") + "'");
                 m_type = NodeType.Unknown;
             }
-            
+
             String nodeName = readNameFromXML();
             if (nodeName == null || nodeName.length() == 0) {
                 m_logger.coding("Unable to read \"name\" tag from XML");
@@ -338,9 +346,9 @@ public abstract class NodeFactory {
         addLoadedFactory(this.getClass());
     }
 
-    
-    private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");
-    
+    private static final Pattern ICON_PATH_PATTERN =
+            Pattern.compile("[^\\./]+/\\.\\./");
+
     /**
      * Reads the icon tag from the xml and returns the icon. If not available or
      * the icon is not readable, an default icon is returned. This method is
@@ -354,14 +362,15 @@ public abstract class NodeFactory {
     private URL readIconFromXML() {
         String imagePath = m_knimeNode.getAttribute("icon");
         imagePath = imagePath.replaceAll("//", "/");
-        
+
         if (imagePath.startsWith("./")) {
             imagePath = imagePath.substring("./".length());
         }
         if (!imagePath.startsWith("/")) {
-            imagePath = getClass().getPackage().getName().replace('.', '/')
-                    + "/" + imagePath;
-            
+            imagePath =
+                    getClass().getPackage().getName().replace('.', '/') + "/"
+                            + imagePath;
+
             Matcher m = ICON_PATH_PATTERN.matcher(imagePath);
             while (m.find()) {
                 imagePath = imagePath.replaceAll("[^./]+/../", "");
@@ -402,8 +411,8 @@ public abstract class NodeFactory {
      *         fails.
      */
     private String readShortDescriptionFromXML() {
-        Node w3cNode = m_knimeNode.getElementsByTagName("shortDescription")
-                .item(0);
+        Node w3cNode =
+                m_knimeNode.getElementsByTagName("shortDescription").item(0);
         if (w3cNode == null) {
             return null;
         }
@@ -459,22 +468,33 @@ public abstract class NodeFactory {
                     m_outDataPortsDesc = new ArrayList<String>(4);
                 }
                 addToPort(m_outDataPorts, m_outDataPortsDesc, port);
-            } else if (port.getNodeName().equals("predParamIn")) {
-                if (m_predParamIns == null) {
-                    m_predParamIns = new ArrayList<String>(4);
+            } else if (port.getNodeName().equals("predParamIn")
+                    || port.getNodeName().equals("modelIn")) {
+                if (port.getNodeName().equals("predParamIn")) {
+                    m_logger.coding("Do not use <predParamIn> any more, use "
+                            + "<modelIn> instead");
                 }
-                if (m_predParamInsDesc == null) {
-                    m_predParamInsDesc = new ArrayList<String>(4);
+
+                if (m_modelIns == null) {
+                    m_modelIns = new ArrayList<String>(4);
                 }
-                addToPort(m_predParamIns, m_predParamInsDesc, port);
-            } else if (port.getNodeName().equals("predParamOut")) {
-                if (m_predParamOuts == null) {
-                    m_predParamOuts = new ArrayList<String>(4);
+                if (m_modelInsDesc == null) {
+                    m_modelInsDesc = new ArrayList<String>(4);
                 }
-                if (m_predParamOutsDesc == null) {
-                    m_predParamOutsDesc = new ArrayList<String>(4);
+                addToPort(m_modelIns, m_modelInsDesc, port);
+            } else if (port.getNodeName().equals("predParamOut")
+                    || port.getNodeName().equals("modelOut")) {
+                if (port.getNodeName().equals("modelOut")) {
+                    m_logger.coding("Do not use <predParamOut> any more, use "
+                            + "<modelOut> instead");
                 }
-                addToPort(m_predParamOuts, m_predParamOutsDesc, port);
+                if (m_modelOuts == null) {
+                    m_modelOuts = new ArrayList<String>(4);
+                }
+                if (m_modelOutsDesc == null) {
+                    m_modelOutsDesc = new ArrayList<String>(4);
+                }
+                addToPort(m_modelOuts, m_modelOutsDesc, port);
             }
         }
 
@@ -496,16 +516,16 @@ public abstract class NodeFactory {
             }
         }
 
-        if (m_predParamIns != null) {
-            nullIndex = m_predParamIns.indexOf(null);
+        if (m_modelIns != null) {
+            nullIndex = m_modelIns.indexOf(null);
             if (nullIndex >= 0) {
                 m_logger.coding("No description for prediction input port "
                         + nullIndex + ".");
             }
         }
 
-        if (m_predParamOuts != null) {
-            nullIndex = m_predParamOuts.indexOf(null);
+        if (m_modelOuts != null) {
+            nullIndex = m_modelOuts.indexOf(null);
             if (nullIndex >= 0) {
                 m_logger.coding("No description for prediction output port "
                         + nullIndex + ".");
@@ -518,7 +538,7 @@ public abstract class NodeFactory {
      * occurs (no such element in the xml, parsing exception ...), a coding
      * problem is reported to the node logger.
      */
-    private void readViewsFromXML() {        
+    private void readViewsFromXML() {
         Node w3cNode = m_knimeNode.getElementsByTagName("views").item(0);
         if (w3cNode == null) {
             return;
@@ -552,7 +572,7 @@ public abstract class NodeFactory {
         }
     }
 
-    private void addToPort(final List<String> nameList, 
+    private void addToPort(final List<String> nameList,
             final List<String> descList, final Element port) {
         int index = Integer.parseInt(port.getAttribute("index"));
         for (int k = nameList.size(); k <= index; k++) {
@@ -631,10 +651,10 @@ public abstract class NodeFactory {
      * @return an predictor parameter input port description
      */
     public String getInportModelName(final int index) {
-        if (m_predParamIns == null) {
+        if (m_modelIns == null) {
             return "";
         } else {
-            return m_predParamIns.get(index);
+            return m_modelIns.get(index);
         }
     }
 
@@ -645,13 +665,13 @@ public abstract class NodeFactory {
      * @return an predictor parameter output port description
      */
     public String getOutportModelName(final int index) {
-        if (m_predParamOuts == null) {
+        if (m_modelOuts == null) {
             return "";
         } else {
-            return m_predParamOuts.get(index);
+            return m_modelOuts.get(index);
         }
     }
-    
+
     /**
      * Returns a description for an input port.
      * 
@@ -687,10 +707,10 @@ public abstract class NodeFactory {
      * @return an predictor parameter input port description
      */
     public final String getInportModelDescription(final int index) {
-        if (m_predParamInsDesc == null) {
+        if (m_modelInsDesc == null) {
             return "No description available";
         } else {
-            return m_predParamInsDesc.get(index);
+            return m_modelInsDesc.get(index);
         }
     }
 
@@ -701,10 +721,10 @@ public abstract class NodeFactory {
      * @return an predictor parameter output port description
      */
     public final String getOutportModelDescription(final int index) {
-        if (m_predParamOutsDesc == null) {
+        if (m_modelOutsDesc == null) {
             return "No description available";
         } else {
-            return m_predParamOutsDesc.get(index);
+            return m_modelOutsDesc.get(index);
         }
     }
 
@@ -719,8 +739,8 @@ public abstract class NodeFactory {
         if ((m_views == null) || ((e = m_views.get(index)) == null)) {
             return "No description available";
         } else {
-            return e.getFirstChild().getNodeValue().trim()
-                .replaceAll("(?:\\s+|\n", " ");
+            return e.getFirstChild().getNodeValue().trim().replaceAll(
+                    "(?:\\s+|\n", " ");
         }
     }
 
@@ -844,23 +864,23 @@ public abstract class NodeFactory {
      */
     private void checkConsistency(final NodeModel m) {
         if ((m.getNrDataIns() > 0)
-                && ((m_inDataPorts == null) 
-                        || (m.getNrDataIns() != m_inDataPorts.size()))) {
+                && ((m_inDataPorts == null) || (m.getNrDataIns() != m_inDataPorts
+                        .size()))) {
             m_logger.coding("Missing or surplus input port name");
         }
         if ((m.getNrDataOuts() > 0)
-                && ((m_outDataPorts == null) 
-                        || (m.getNrDataOuts() != m_outDataPorts.size()))) {
+                && ((m_outDataPorts == null) || (m.getNrDataOuts() != m_outDataPorts
+                        .size()))) {
             m_logger.coding("Missing or surplus output port name");
         }
         if ((m.getNrModelIns() > 0)
-                && ((m_predParamIns == null)
-                        || (m.getNrModelIns() != m_predParamIns.size()))) {
+                && ((m_modelIns == null) || (m.getNrModelIns() != m_modelIns
+                        .size()))) {
             m_logger.coding("Missing or surplus predictor input port name");
         }
         if ((m.getNrModelOuts() > 0)
-                && ((m_predParamOuts == null)
-                        || m.getNrModelOuts() != m_predParamOuts.size())) {
+                && ((m_modelOuts == null) || m.getNrModelOuts() != m_modelOuts
+                        .size())) {
             m_logger.coding("Missing or surplus predictor output port name");
         }
         if ((getNrNodeViews() > 0)
@@ -884,21 +904,20 @@ public abstract class NodeFactory {
             }
         }
 
-        if (m_predParamIns != null) {
-            for (int i = 0; i < m_predParamIns.size(); i++) {
-                if (m_predParamIns.get(i) == null) {
+        if (m_modelIns != null) {
+            for (int i = 0; i < m_modelIns.size(); i++) {
+                if (m_modelIns.get(i) == null) {
                     m_logger.coding("Missing description for predictor input"
                             + " port " + i);
                 }
             }
         }
 
-        if (m_predParamOuts != null) {
-            for (int i = 0; i < m_predParamOuts.size(); i++) {
-                if (m_predParamOuts.get(i) == null) {
-                    m_logger
-                            .coding("Missing description for predictor output"
-                                    + " port " + i);
+        if (m_modelOuts != null) {
+            for (int i = 0; i < m_modelOuts.size(); i++) {
+                if (m_modelOuts.get(i) == null) {
+                    m_logger.coding("Missing description for predictor output"
+                            + " port " + i);
                 }
             }
         }
@@ -920,11 +939,11 @@ public abstract class NodeFactory {
     public NodeType getType() {
         return m_type;
     }
-    
+
     /**
      * Returns the default icon for nodes that do not define their own.
      * 
-     * @return an URL to the default icon 
+     * @return an URL to the default icon
      */
     public static URL getDefaultIcon() {
         return defaultIcon;
