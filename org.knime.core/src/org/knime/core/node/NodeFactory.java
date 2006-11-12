@@ -484,7 +484,7 @@ public abstract class NodeFactory {
                 addToPort(m_modelIns, m_modelInsDesc, port);
             } else if (port.getNodeName().equals("predParamOut")
                     || port.getNodeName().equals("modelOut")) {
-                if (port.getNodeName().equals("modelOut")) {
+                if (port.getNodeName().equals("predParamOut")) {
                     m_logger.coding("Do not use <predParamOut> any more, use "
                             + "<modelOut> instead");
                 }
