@@ -84,17 +84,21 @@ public class KDTreeTest extends TestCase {
 
     }
 
+    /**
+     * Tests the search in various k-d trees.
+     */
     public void testSearch() {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 300; i++) {
             final int size = (int)(Math.random() * 1000) + 1;
             final int dimensions = (int)(Math.random() * 50) + 1;
             final int neighbours = (int)(Math.random() * size) + 1;
-            singleTest(size, dimensions, neighbours);
+            final int bucketSize = (int)(Math.random() * 16) + 1;
+            singleTest(size, dimensions, neighbours, bucketSize);
         }
     }
 
     private void singleTest(final int size, final int dimensions,
-            final int neighbours) {
+            final int neighbours, final int bucketSize) {
         KDTreeBuilder<Integer> builder = new KDTreeBuilder<Integer>(dimensions);
 
         final double[] query = new double[dimensions];
@@ -117,10 +121,11 @@ public class KDTreeTest extends TestCase {
 
         Collections.sort(points);
 
-        KDTree<Integer> tree = builder.buildTree();
+        KDTree<Integer> tree = builder.buildTree(bucketSize);
         List<NearestNeighbour<Integer>> results =
                 tree.getKNearestNeighbours(query, neighbours);
-
+        assertEquals(results.size(), neighbours);
+        
         for (int i = 0; i < neighbours; i++) {
             // if (points.get(i).getId() != results.get(i).getData()) {
             // tree.getKNearestNeighbours(query, neighbours);
@@ -148,7 +153,7 @@ public class KDTreeTest extends TestCase {
         }
 
         long t = System.currentTimeMillis();
-        KDTree<Integer> tree = builder.buildTree();
+        KDTree<Integer> tree = builder.buildTree(16);
         kdTime += System.currentTimeMillis() - t;
 
         double averagePruning = 0;
@@ -186,9 +191,14 @@ public class KDTreeTest extends TestCase {
                 + bruteForceTime + "ms");
     }
 
+    /**
+     * Well...
+     * 
+     * @param args not used
+     */
     public static void main(final String[] args) {
         for (int i = 0; i < 10; i++) {
-            singleSpeedTest(1000, 50, 10, 10000);
+            singleSpeedTest(1000, 10, 10, 10000);
         }
     }
 }
