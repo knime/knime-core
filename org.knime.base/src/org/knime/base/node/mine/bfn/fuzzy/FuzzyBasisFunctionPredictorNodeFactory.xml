@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Predictor" icon="./fuzzybfpredictor.ico">
+<knimeNode type="Predictor" icon="./fuzzybfpredictor.png">
 	<name>Fuzzy Rule Predictor</name>
 	
 	<shortDescription>

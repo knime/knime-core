@@ -331,8 +331,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
                 // if row is explained
                 if (bf.explains(row)) {
                     // keep key
-                    bf.getPredictorRow().addCovered(row.getKey().getId(), 
-                            row.getClassInfo());
+                    bf.addCovered(row.getKey().getId(), row.getClassInfo());
                 }
             }
         }
@@ -718,8 +717,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
         for (BasisFunctionIterator i = getBasisFunctionIterator(); 
                 i.hasNext();) {
             BasisFunctionLearnerRow bf = i.nextBasisFunction();
-            map.put(bf.getKey().getId(), 
-                    bf.getPredictorRow().getAllCoveredPattern());
+            map.put(bf.getKey().getId(), bf.getAllCoveredPattern());
         }
         return new DefaultHiLiteMapper(map);
     }

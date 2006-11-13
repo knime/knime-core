@@ -24,13 +24,6 @@
 
 package org.knime.base.node.mine.bfn;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.node.InvalidSettingsException;
@@ -39,27 +32,30 @@ import org.knime.core.node.ModelContentWO;
 
 
 /**
- * Class presents a predictor row for basis functions providing method to apply
- * unknown data.
+ * Class presents a predictor row for basisfunctions providing method to apply
+ * unknown data (compose).
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class BasisFunctionPredictorRow {
+    
+    /** The key of this row. */
     private final DataCell m_key;
 
+    /** The class label of this basisfunction. */
     private final DataCell m_classLabel;
 
+    /** The don't know class degree; activation is above this threshold. */
     private final double m_dontKnowDegree;
 
-    /** Keeps the data cell ids of all pattern covered by this basisfunction. */
-    private Map<DataCell, Set<DataCell>> m_coveredPattern = 
-        new LinkedHashMap<DataCell, Set<DataCell>>();
+    /** Number of correctly covered pattern. */
+    private int m_correctCovered;
 
-    private int m_correctCovered = 0;
-
-    private int m_wrongCovered = 0;
+    /** Number of wrong covered pattern. */
+    private int m_wrongCovered;
     
-    private final int m_numPat;
+    /** Number of pattern of this class used for training. */
+    private final int m_numPatOfClass;
 
     /**
      * Creates new predictor row.
@@ -67,15 +63,18 @@ public abstract class BasisFunctionPredictorRow {
      * @param key the key of this row
      * @param classLabel class label of the target attribute
      * @param dontKnowDegree don't know probability
-     * @param numPat number of pattern for this class 
+     * @param numPatOfThisClass number of pattern for this class 
      */
     protected BasisFunctionPredictorRow(final DataCell key,
-            final DataCell classLabel, final int numPat, 
+            final DataCell classLabel, final int numPatOfThisClass, 
             final double dontKnowDegree) {
         m_key = key;
         m_classLabel = classLabel;
         m_dontKnowDegree = dontKnowDegree;
-        m_numPat = numPat;
+        m_numPatOfClass = numPatOfThisClass;
+        m_correctCovered = 0;
+        m_wrongCovered = 0;
+
     }
 
     /**
@@ -91,17 +90,21 @@ public abstract class BasisFunctionPredictorRow {
         m_dontKnowDegree = pp.getDouble("dont_know_class");
         m_correctCovered = pp.getInt("correct_covered");
         m_wrongCovered = pp.getInt("wrong_covered");
-        m_numPat = pp.getInt("number_pattern", 
-                m_correctCovered + m_wrongCovered);
-        ModelContentRO coveredContent = pp.getModelContent("covered_instances");
-        DataCell[] classes = coveredContent.getDataCellArray("classes");
-        for (int i = 0; i < classes.length; i++) {
-            DataCell[] covCells = coveredContent.getDataCellArray(classes[i]
-                    .toString());
-            m_coveredPattern.put(classes[i], new LinkedHashSet<DataCell>(Arrays
-                    .asList(covCells)));
+        m_numPatOfClass = pp.getInt("number_pattern_class", 1); //backward comp.
+    }
+    
+    /**
+     * If the same class as this basisfunction is assigned to, the number of
+     * correctly covered pattern is increased, otherwise the number of wrong
+     * covered ones.
+     * @param classLabel a pattern of the given class has to be covered
+     */
+    final void cover(final DataCell classLabel) {
+        if (m_classLabel.equals(classLabel)) {
+            m_correctCovered++;
+        } else {
+            m_wrongCovered++;
         }
-
     }
     
     /**
@@ -140,7 +143,7 @@ public abstract class BasisFunctionPredictorRow {
      * @return Number of pattern of this class used for training.
      */
     public int getNumPattern() {
-        return m_numPat;
+        return m_numPatOfClass;
     }
 
     /**
@@ -174,61 +177,24 @@ public abstract class BasisFunctionPredictorRow {
      * Resets all covered pattern. Called by the learner only.
      */
     final void resetCoveredPattern() {
-        m_coveredPattern.clear();
         m_correctCovered = 0;
         m_wrongCovered = 0;
     }
     
     /**
      * @return The ratio of the number of all (correctly and wrong) covered 
-     *         pattern to all pattern used for training. 
+     *         pattern to all pattern of this class 
      */
     public final double getSupport() {
-        return getNumAllCoveredPattern() / m_numPat; 
+        return getNumAllCoveredPattern() / m_numPatOfClass; 
     }
     
     /**
      * @return The ratio of the number of all correctly covered pattern to all 
-     *         pattern used for training. 
+     *         pattern of this class 
      */
     public final double getConfidence() {
-        return getNumCorrectCoveredPattern() / m_numPat; 
-    }
-
-    /**
-     * If a new instance of this class is covered.
-     * 
-     * @param key the instance's key
-     * @param classInfo and class.
-     */
-    public final void addCovered(final DataCell key, final DataCell classInfo) {
-        Set<DataCell> covSet;
-        if (m_coveredPattern.containsKey(classInfo)) {
-            covSet = m_coveredPattern.get(classInfo);
-        } else {
-            covSet = new LinkedHashSet<DataCell>();
-            m_coveredPattern.put(classInfo, covSet);
-        }
-        covSet.add(key);
-        if (m_classLabel.equals(classInfo)) {
-            m_correctCovered++;
-        } else {
-            m_wrongCovered++;
-        }
-    }
-
-    /**
-     * Returns a set which contains all input training pattern covered by this
-     * basis function.
-     * 
-     * @return set of covered input pattern
-     */
-    public final Set<DataCell> getAllCoveredPattern() {
-        Set<DataCell> allCov = new LinkedHashSet<DataCell>();
-        for (DataCell key : m_coveredPattern.keySet()) {
-            allCov.addAll(m_coveredPattern.get(key));
-        }
-        return Collections.unmodifiableSet(allCov);
+        return getNumCorrectCoveredPattern() / m_numPatOfClass; 
     }
 
     /**
@@ -249,13 +215,6 @@ public abstract class BasisFunctionPredictorRow {
         pp.addDouble("dont_know_class", m_dontKnowDegree);
         pp.addInt("correct_covered", m_correctCovered);
         pp.addInt("wrong_covered", m_wrongCovered);
-        pp.addInt("number_pattern", m_numPat);
-        ModelContentWO covContent = pp.addModelContent("covered_instances");
-        covContent.addDataCellArray("classes", m_coveredPattern.keySet()
-                .toArray(new DataCell[0]));
-        for (DataCell key : m_coveredPattern.keySet()) {
-            covContent.addDataCellArray(key.toString(), m_coveredPattern.get(
-                    key).toArray(new DataCell[0]));
-        }
+        pp.addInt("number_pattern_class", m_numPatOfClass);
     }
 }

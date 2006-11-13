@@ -83,7 +83,7 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
 
         m_predRow = new FuzzyBasisFunctionPredictorRow(key.getId(), classInfo,
                 mem, norm, numPat);
-        m_predRow.addCovered(centroid.getKey().getId(), classInfo);
+        addCovered(centroid.getKey().getId(), classInfo);
     }
 
     /**

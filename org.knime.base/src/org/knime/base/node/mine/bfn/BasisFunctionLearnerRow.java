@@ -22,7 +22,12 @@
 package org.knime.base.node.mine.bfn;
 
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -58,6 +63,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
 
     /** <code>true</code> if an additional column show the hierarchy level. */
     private final boolean m_hierarchy;
+    
+    /** Keeps the data cell ids of all pattern covered by this basisfunction. */
+    private Map<DataCell, Set<DataCell>> m_coveredPattern;
 
     /**
      * Inits a new basisfunction rule with one covered pattern since this rule
@@ -79,6 +87,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         m_centroid = centroid;
         m_classInfo = classInfo;
         m_hierarchy = hierarchy;
+        m_coveredPattern = new LinkedHashMap<DataCell, Set<DataCell>>();
     }
 
     /**
@@ -195,6 +204,20 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
             final DataRow r);
 
     /**
+     * Returns a set which contains all input training pattern covered by this
+     * basis function.
+     * 
+     * @return set of covered input pattern
+     */
+    public final Set<DataCell> getAllCoveredPattern() {
+        Set<DataCell> allCov = new LinkedHashSet<DataCell>();
+        for (DataCell key : m_coveredPattern.keySet()) {
+            allCov.addAll(m_coveredPattern.get(key));
+        }
+        return Collections.unmodifiableSet(allCov);
+    }
+    
+    /**
      * Returns a value for the coverage of this basis function, e.g. the volume,
      * number of covered pattern.
      * 
@@ -270,12 +293,32 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
             }
         }
     }
+    
+    /**
+     * If a new instance of this class is covered.
+     * 
+     * @param key the instance's key
+     * @param classInfo and class.
+     */
+    public final void addCovered(final DataCell key, final DataCell classInfo) {
+        Set<DataCell> covSet;
+        if (m_coveredPattern.containsKey(classInfo)) {
+            covSet = m_coveredPattern.get(classInfo);
+        } else {
+            covSet = new LinkedHashSet<DataCell>();
+            m_coveredPattern.put(classInfo, covSet);
+        }
+        covSet.add(key);
+        getPredictorRow().cover(classInfo);
+    }
 
     /**
      * Resets the number of covered pattern to zero and calls the abstract
      * {@link #reset()}.
      */
     final void resetIntern() {
+        // reset pattern covered
+        m_coveredPattern.clear();
         // reset number of covered pattern
         getPredictorRow().resetCoveredPattern();
         // called in derived class
@@ -291,7 +334,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     final void coverIntern(final DataRow row) {
         assert (row != null);
         // increase covered pattern
-        getPredictorRow().addCovered(row.getKey().getId(), m_classInfo);
+        addCovered(row.getKey().getId(), m_classInfo);
         // called in derived class
         cover(row);
     }
@@ -317,7 +360,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     /**
      * Returns a string summary of this basis function cell including the
      * assigned class, number of covered, as well as explained pattern. This
-     * method is suposed to be overridden to add additional information for a
+     * method is supposed to be overridden to add additional information for a
      * particular model.
      * 
      * @return string summary for this basisfunction cell
