@@ -13,16 +13,17 @@
     	<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2003/Bert03_mixedFR_ijar.pdf">
     	Mixed Fuzzy Rule Formation</a> as underlying training algorithm based
     	(see <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2004/GaBe04_mixedFRappendix_ijar.pdf">
-    	Influence of fuzzy norms and other heuristics on "Mixed Fuzzy Rule Formation"</a>
-    	for an extension.<br />
+    	Influence of fuzzy norms and other heuristics on 
+    	"Mixed Fuzzy Rule Formation"</a> for an extension.<br />
     	All numeric columns are used as input columns for training. One 
     	(additional) column is used as a classification target.<br />
-    	The input port contains the training data, the data output port, which the 
-    	trained fuzzy rules as table, and the model output of the Fuzzy Rule model,
-    	which can be used for prediction.<br />
-    	The algorithm generates rules based on input data, which can be described
-    	as fuzzy intervals in higher dimensional spaces. These hyper-rectangles 
-    	are defined by trapezoid fuzzy membership functions for each dimension.
+    	The input port contains the training data, the data output port, which 
+    	the trained fuzzy rules as table, and the model output of the Fuzzy Rule
+    	Model, which can be used for prediction.<br />
+    	The algorithm generates rules based on input data, which can be 
+    	described as fuzzy intervals in higher dimensional spaces. These 
+    	hyper-rectangles are defined by trapezoid fuzzy membership functions for
+    	each dimension.
 		</intro>
 	<option name="Target Column">
 		Select the target to be used as a classification attribute.
@@ -35,6 +36,11 @@
 	    has been introduced. Shrink means the new rule is reduced so that the
 	    conflict with all other conflicting rules is avoided.
 	</option>
+    <option name="Maximum #Epochs">
+	    	If checked, set the maximum number of epochs the algorithm has to 
+	    	cycle over the entire data set, otherwise train until the rule
+	    	model is stable, that is, no commit and/or commit has been executed.
+	</option>
 	<option name="Fuzzy Norm">
 	    Choice of fuzzy norm used to compute the rules' fulfillment across all
 	    dimensions and rules. 
@@ -46,9 +52,16 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Training Data">Data used for training. Should contain numeric data, as well as one target attribute for classification.</dataIn>
-		<dataOut index="0" name="Fuzzy Rule Table">Table with generated fuzzy rules, each dimension as fuzzy interval.</dataOut>
-		<modelOut index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">Generated fuzzy rule model can be used for prediction.</modelOut>
+		<dataIn index="0" name="Training Data">
+			Data used for training. Should contain numeric data, as well as one
+			target attribute for classification.
+		</dataIn>
+		<dataOut index="0" name="Fuzzy Rule Table">
+			Table with generated fuzzy rules, each dimension as fuzzy interval.
+		</dataOut>
+		<modelOut index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">
+			Generated fuzzy rule model can be used for prediction.
+		</modelOut>
 	</ports>	
 	<views>
 		<view index="0" name="Fuzzy Rule Model View">

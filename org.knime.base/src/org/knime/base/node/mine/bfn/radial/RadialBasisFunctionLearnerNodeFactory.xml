@@ -35,6 +35,11 @@
 		    has been introduced. Shrink means the new rule is reduced so that a
 		    conflict with all other rules is avoided.
 		</option>
+	    <option name="Maximum #Epochs">
+	    	If checked, set the maximum number of epochs the algorithm has to 
+	    	cycle over the entire data set, otherwise train until the rule
+	    	model is stable, that is, no commit and/or commit has been executed.
+		</option>
 		<option name="Theta Minus">
 		    Default theta minus value is 0.2. This is the upper bound of
 			activation for conflicting rules.
