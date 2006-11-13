@@ -43,9 +43,9 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * Provide a standard component for a dialog that allows to edit number value.
  * Provides label and spinner that checks ranges as well as functionality to
- * load/store into config object. The type of the number entered is detemined by
- * the {@link SettingsModel} passed to the contructor (currenty supported are
- * double and int).
+ * load/store into config object. The type of the number entered is determined 
+ * by the {@link SettingsModel} passed to the constructor (currently supported 
+ * are double and int).
  * 
  * @author M. Berthold, University of Konstanz
  */
