@@ -9,9 +9,9 @@
 	
 	<fullDescription>
 		<intro>		
-    	Generates a Fuzzy Rule Model on labeled data using 
+    	Generates a Fuzzy Rule Model (RecBF-DDA) on labeled data using 
     	<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2003/Bert03_mixedFR_ijar.pdf">
-    	Mixed Fuzzy Rule Formation</a> as underlying trainings algorithm
+    	Mixed Fuzzy Rule Formation</a> as underlying training algorithm based
     	(see <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2004/GaBe04_mixedFRappendix_ijar.pdf">
     	Influence of fuzzy norms and other heuristics on "Mixed Fuzzy Rule Formation"</a>
     	for an extension.<br />

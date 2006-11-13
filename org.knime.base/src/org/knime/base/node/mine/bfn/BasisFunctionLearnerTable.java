@@ -308,10 +308,9 @@ public final class BasisFunctionLearnerTable implements DataTable {
             m_cycles++;
             LOGGER.debug(getNumBasisFunctions() + " [" + m_cycles + "]");
         } while (goon && m_cycles < maxNrEpochs);
+        exec.setMessage("Learning finished, pruning rules with 0 coverage...");
         /* --- P R U N E --- */
-        this.prune(0, m_cycles); // prune bfs with zero coverage
-        /* -- E X P L A I N S --- */
-        this.explain(data);
+        prune(0, m_cycles); // prune all rules with zero coverage
     }
 
     /**

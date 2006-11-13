@@ -55,7 +55,7 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
 
     private final JSpinner m_thetaPlus;
     
-        /**
+    /**
      * Creates a new {@link NodeDialogPane} for radial basis functions in order
      * to set theta minus, theta plus, and a choice of distance function.
      */

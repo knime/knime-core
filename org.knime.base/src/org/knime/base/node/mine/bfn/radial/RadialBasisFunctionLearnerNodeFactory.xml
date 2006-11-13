@@ -9,14 +9,15 @@
 	
 	<fullDescription>
 		<intro>		
-		 		Generates a Probabilistic Neural Network (PNN) on labeled data using
+	 		Generates a Probabilistic Neural Network (PNN) based on DDA 
+	 		(Dynamic Decay Adjustment) algorithm on labeled data using
 			<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers1998/BeDi98_dda_neurocomp.pdf">
-			Constructive Training of Probabilistic Neural Networks</a> as underlying
-			algorithm.<br />
+			Constructive Training of Probabilistic Neural Networks</a> as 
+			underlying algorithm.<br />
 			All numeric columns are used as input columns for training. One 
 		   	additional column is used as a classification target.
-		   	The input port contains the training data, the data output port contains 
-		   	the center vectors of the PNN rules.
+		   	The input port contains the training data, the data output port 
+		   	contains the center vectors of the PNN rules.
 		   	The algorithm uses high-dimensional Gaussian functions to cover 
 		   	instances that are adjusted by two thresholds, theta minus and plus, 
 		   	during the learning process. New prototypes are commited until all
@@ -45,10 +46,16 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Training Data">Data used for training. Should contain numeric data, 
-		as well as one target attribute for classification.</dataIn>
-		<dataOut index="0" name="PNN Rule Table">Table with generated center vectors and a classification attribute.</dataOut>
-		<modelOut index="0" name="PNN Rule Model" type="PNNModel">Generated PNN model can be used for prediction.</modelOut>
+		<dataIn index="0" name="Training Data">
+			Data used for training. Should contain numeric data, as well as one 
+			target attribute for classification.
+		</dataIn>
+		<dataOut index="0" name="PNN Rule Table">
+			Table with generated center vectors and a classification attribute.
+		</dataOut>
+		<modelOut index="0" name="PNN Rule Model" type="PNNModel">
+			Generated PNN model can be used for prediction.
+		</modelOut>
 	</ports>
 	
 	<views>
