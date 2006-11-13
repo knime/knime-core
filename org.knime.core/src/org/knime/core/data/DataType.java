@@ -180,6 +180,15 @@ public final class DataType {
      */
     private static final DataValueComparator FALLBACK_COMP = 
         new DataValueComparator() {
+        /**
+         * Compares two DataValues based on their String representation 
+         * (<code>toString()</code>). 
+         * @throws NullPointerException if one or both of the passed data 
+         * values is <code>null</code>
+         * 
+         * @see org.knime.core.data.DataValueComparator#compareDataValues(
+         * org.knime.core.data.DataValue, org.knime.core.data.DataValue)
+         */
         @Override
         protected int compareDataValues(
                 final DataValue v1, final DataValue v2) {
@@ -489,10 +498,9 @@ public final class DataType {
         return result;
     }
     
-    /* bis hierhin ge-reviewt */
     
     /** 
-     * Determines the <code>UtilityFactory</code> to a given 
+     * Determines the <code>UtilityFactory</code> for a given 
      * <code>DataValue</code> implementation. 
      * This method tries to access a static field in the DataValue class: 
      * <pre>
@@ -500,14 +508,15 @@ public final class DataType {
      * </pre>
      * If no such field exists, this method returns the factory of one of the 
      * super interfaces. If no UTILITY member can be found, finally the 
-     * DataValue class returns a correct implementation. If it exists but has 
-     * the wrong access scope or if it is not static, a warning message is 
-     * logged and the member of one of the super interface is returned.
+     * DataValue class returns a correct implementation, since it is at the top 
+     * of the hierarchy. If it exists but has the wrong access scope or if it 
+     * is not static, a warning message is logged and the member of one of the 
+     * super interfaces is returned.
      * 
-     * @param cl The runtime class of the DataCell.
-     * @return The utility factory given in the cell implementation.
-     * @throws NullPointerException If the argument or the found UTILITY member 
-     *         is <code>null</code>.
+     * @param cl the runtime class of the DataCell
+     * @return the utility factory given in the cell implementation
+     * @throws NullPointerException if the argument or the found UTILITY member 
+     *         is <code>null</code>
      */
     public static UtilityFactory getUtilityFor(
         final Class<? extends DataValue> cl) {
@@ -567,16 +576,17 @@ public final class DataType {
     }
     
     /**
-     * Loads <code>DataType</code> from a given <code>Config</code>.
-     * @param config Load <code>DataType</code> from.
-     * @return A <code>DataType</code> which fits the given <code>Config</code>.
-     * @throws InvalidSettingsException If the <code>DataType</code> could not
-     *         be loaded from the given <code>Config</code>.
+     * Loads a <code>DataType</code> from a given <code>Config</code>.
+     * @param config load <code>DataType</code> from
+     * @return a <code>DataType</code> which fits the given <code>Config</code>
+     * @throws InvalidSettingsException if the <code>DataType</code> could not
+     *         be loaded from the given <code>Config</code>
      */
     @SuppressWarnings("unchecked") // type casts
     public static DataType load(final ConfigRO config) 
             throws InvalidSettingsException {
         String cellClassName = config.getString(CFG_CELL_NAME);
+        // if it has a class name it is a native type
         if (cellClassName != null) {
             try {
                 Class<? extends DataCell> cellClass = 
@@ -616,7 +626,7 @@ public final class DataType {
         }
     }
     
-    /** Cell class, used, e.g. for toString() method. */
+    /** Cell class defines a native type. */
     private final Class<? extends DataCell> m_cellClass;
     
     /** Flag if the first element in m_valueClasses contains the 
@@ -629,10 +639,8 @@ public final class DataType {
     /**
      * Creates a new, non-native <code>DataType</code>. This method is used 
      * from the <code>load(Config)</code> method.
-     * @param hasPreferredValue If preferred value is set.
-     * @param valueClasses All implemented <code>DataValue</code> interfaces.
-     * @throws IllegalArgumentException If the cell class does not implement
-     *         all given value class interfaces.
+     * @param hasPreferredValue if preferred value is set
+     * @param valueClasses all implemented <code>DataValue</code> interfaces
      */
     private DataType(final boolean hasPreferredValue, 
             final List<Class<? extends DataValue>> valueClasses) {
@@ -721,8 +729,8 @@ public final class DataType {
 
     /**
      * Types are equal if the set of compatible value classes matches (ordering
-     * does not matter) and both types have an preferred value class and the 
-     * class is the same or both do not have a preferred value class. 
+     * does not matter) and both types have a preferred value class and the 
+     * class is the same or, both do not have a preferred value class. 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -757,9 +765,10 @@ public final class DataType {
 
     /**
      * A comparator for data cell objects of this type. Will return the native
-     * comparator (if provided). If no comparator is available the
-     * comparator of the string representations will be used.
-     * @return A comparator for cells of this type.
+     * comparator (if provided), or the first found comparator of the value 
+     * classes. If no comparator is available the
+     * comparator of the string representations will be returned.
+     * @return a comparator for cells of this type
      */
     public DataValueComparator getComparator() {
         for (Class<? extends DataValue> cl : m_valueClasses) {
@@ -776,7 +785,7 @@ public final class DataType {
      * Get an icon representing this type. This is used in table headers and
      * lists, for instance.
      * 
-     * @return An icon for this type.
+     * @return an icon for this type
      */
     public Icon getIcon() {
         for (Class<? extends DataValue> cl : m_valueClasses) {
@@ -796,7 +805,8 @@ public final class DataType {
      * <code>null</code> if either the cell implementation lacks the 
      * information or this DataType has been created as an intersection of
      * two types whose preferred value classes do not match.
-     * @return The preferred value class or <code>null</code>.  
+     * 
+     * @return the preferred value class or <code>null</code>  
      */ 
     public Class<? extends DataValue> getPreferredValueClass() {
         if (m_hasPreferredValueClass) {
@@ -813,12 +823,12 @@ public final class DataType {
      * this method will make sure that at least a default renderer (using the 
      * {@link DataCell#toString() DataCell's toString()} method) is returned. 
      * 
-     * @param spec The column spec to the column for which the renderer will be
+     * @param spec the column spec to the column for which the renderer will be
      *            used. Most of the renderer implementations won't need column
      *            domain information but some do. For instance a class that
      *            renders the double value in the column according to the
-     *            min/max values in the column domain.
-     * @return All renderers that are available for this DataType.
+     *            min/max values in the column domain
+     * @return all renderers that are available for this DataType
      */
     public DataValueRendererFamily getRenderer(final DataColumnSpec spec) {
         ArrayList<DataValueRendererFamily> list = 
@@ -842,13 +852,17 @@ public final class DataType {
      * compatible to. The returned List is non-modifiable, subsequent changes to
      * the list will fail with an exception. The list does not contain 
      * duplicates.
-     * @return A non-modifiable list of compatible types.
+     * 
+     * @return a non-modifiable list of compatible types
      */
     public List<Class<? extends DataValue>> getValueClasses() {
         return Collections.unmodifiableList(m_valueClasses);
     }
 
     /**
+     * The hash code is based on the preferred value flag and the hash codes of 
+     * all value classes.
+     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -861,7 +875,7 @@ public final class DataType {
     }
 
     /**
-     * Returns true if this type is a supertype of the passed type. I.e. the
+     * Returns true if this type is a supertype of the passed type, that is, the
      * argument type is compatible to all types of this type (and may be more).
      * In other words, this object is more general than the argument or this
      * object supports less compatible types than the argument.
@@ -873,7 +887,7 @@ public final class DataType {
      * is a supertype of the cells type, it's safe to add the cell to the
      * column.
      * 
-     * @param type the type to test the supertypeness of this for.
+     * @param type the type to test, whether this is a super type of it
      * @return true if this type is a (one of many possible) supertype of the
      *         argument type.
      * @throws NullPointerException If the type argument is <code>null</code>.
@@ -883,27 +897,26 @@ public final class DataType {
             throw new NullPointerException("Type argument must not be null.");
         }
         if (type == this) {
-            // we get out of here easy
             return true;
         }
-        boolean result = true;
         for (Class<? extends DataValue> cl : m_valueClasses) {
             if (!type.isCompatible(cl)) {
-                result = false;
-                break;
+                return false;
             }
         }
-        return result;
+        return true;
     }
 
     /**
      * Checks if the given <code>DataValue.class</code> is compatible to this
      * type. If it returns <code>true</code> the {@link DataCell}s of this 
      * type can be type-casted to the <code>valueClass</code>. This 
-     * method returns <code>false</code> if the argument is <code>null</code>.
+     * method returns <code>false</code> if the argument is <code>null</code> or
+     * if no assignable class was found and <code>true</code> if one assignable
+     * value class was found or if this represents the missing cell.
      * 
-     * @param valueClass Class to check compatibility for.
-     * @return <code>true</code> if compatible.
+     * @param valueClass class to check compatibility for
+     * @return <code>true</code> if compatible
      */
     public boolean isCompatible(
             final Class<? extends DataValue> valueClass) {
@@ -919,10 +932,11 @@ public final class DataType {
     }
     
     /**
-     * Save this <code>DataType</code> to the given <code>Config</code>. Writes
-     * all interval members, cell class, if preferred value, and a list of 
-     * cell classes.
-     * @param config Write to this <code>Config</code>.
+     * Save this <code>DataType</code> to the given <code>Config</code>. 
+     * If it is a native type only the class name of the cell class is stored. 
+     * Otherwise the names of all value classes and whether it has a preferred 
+     * value and a is written to the <code>Config</code>. 
+     * @param config write to this <code>Config</code>
      */
     public void save(final ConfigWO config) {
         if (m_cellClass == null) {
@@ -941,7 +955,7 @@ public final class DataType {
    
     /**
      * Returns the simple name of the cell class (if any) or "Non-native" +
-     * the abbreviations of all compatible values classes.
+     * the <code>toString()</code> results of all compatible values classes.
      * 
      * @see java.lang.Object#toString()
      */
