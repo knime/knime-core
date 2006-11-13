@@ -203,7 +203,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
                                                             result[i] =
                                                                     new DataContainer(
                                                                             outSpecs[i],
-                                                                            true);
+                                                                            true, 0);
                                                         }
 
                                                         executeByChunk(
