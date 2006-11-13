@@ -85,7 +85,7 @@ public abstract class NodeModel {
 
     /**
      * Optional warning message to be set during / after execution. Enables
-     * hiher levels to display the given message.
+     * higher levels to display the given message.
      */
     private String m_warningMessage = null;
 
@@ -187,8 +187,8 @@ public abstract class NodeModel {
             throws IOException, CanceledExecutionException;
     
     /**
-     * Override this methode if <code>ModelContent</code> input(s) have
-     * been set. This methode is then called for each ModelContent input to
+     * Override this method if <code>ModelContent</code> input(s) have
+     * been set. This method is then called for each ModelContent input to
      * load the <code>ModelContent</code> after the previous node has been
      * executed successfully or is reset.
      * 
@@ -210,8 +210,8 @@ public abstract class NodeModel {
     }
 
     /**
-     * Override this methode if <code>ModelContent</code> output(s) have
-     * been set. This methode is then called for each
+     * Override this method if <code>ModelContent</code> output(s) have
+     * been set. This method is then called for each
      * <code>ModelContent</code> output to save the
      * <code>ModelContent</code> after this node has been successfully
      * executed.
@@ -346,7 +346,7 @@ public abstract class NodeModel {
      * it.
      * 
      * @param settings The settings to read.
-     * @throws InvalidSettingsException If the load iof the validated settings
+     * @throws InvalidSettingsException If the load of the validated settings
      *             fails.
      */
     final void loadSettingsFrom(final NodeSettingsRO settings)
@@ -360,7 +360,7 @@ public abstract class NodeModel {
     /**
      * Adds to the given <code>NodeSettings</code> the model specific
      * settings. The settings don't need to be complete or consistent. If, right
-     * after startup, no valid settings are available this mehtod can write
+     * after startup, no valid settings are available this method can write
      * either nothing or invalid settings.
      * <p>
      * Method is called by the <code>Node</code> if the current settings need
@@ -376,7 +376,7 @@ public abstract class NodeModel {
     /**
      * Validates the settings in the passed <code>NodeSettings</code> object.
      * The specified settings should be checked for completeness and
-     * consistencty. It must be possible to load a settings object validated
+     * consistency. It must be possible to load a settings object validated
      * here without any exception in the
      * <code>#loadValidatedSettings(NodeSettings)</code> method. The method
      * must not change the current settings in the model - it is supposed to
@@ -530,7 +530,7 @@ public abstract class NodeModel {
      * @param exec The execution monitor for this execute method. It provides us
      *            with means to create new <code>BufferedDataTable</code>.
      *            Additionally, it should be asked frequently if the execution
-     *            should be interrupted and throws an exeption then. This
+     *            should be interrupted and throws an exception then. This
      *            exception might me caught, and then after closing all data
      *            streams, been thrown again. Also, if you can tell the progress
      *            of your task, just set it in this monitor.
@@ -550,7 +550,7 @@ public abstract class NodeModel {
 
     /**
      * Invokes the abstract <code>#reset()</code> method of the derived model.
-     * In additon, this method resets all hilite handlers, and notifies all
+     * In addition, this method resets all hilite handlers, and notifies all
      * views about the changes.
      */
     final void resetModel() {
@@ -598,7 +598,7 @@ public abstract class NodeModel {
      * views to show the progress, and if they can display models half way
      * through the execution. In the view
      * <code>NodeView#updateModel(Object)</code> is called and needs to be
-     * overriden.
+     * overridden.
      * 
      * @param arg The argument you want to pass.
      */
