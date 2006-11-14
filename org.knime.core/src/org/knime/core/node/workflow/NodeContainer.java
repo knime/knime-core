@@ -873,7 +873,7 @@ public class NodeContainer implements NodeStateListener {
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
      * 
-     * @param loadID Forwared to the node. This id serves as loading id, it
+     * @param loadID Forwarded to the node. This id serves as loading id, it
      *            helps to distinguish between two workflows being loaded at the
      *            same time. This id is passed on to the
      *            {@link org.knime.core.node.BufferedDataTable#getDataTable(
