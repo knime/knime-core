@@ -33,7 +33,7 @@ import sun.misc.BASE64Encoder;
 
 /**
  * This class handles the encryption and decryption with the static stored key.
- * To this class one static key supplyer can be registered that is invoked if no
+ * To this class one static key supplier can be registered that is invoked if no
  * key is available.
  * 
  * @author Christoph Sieb, University of Konstanz
@@ -45,7 +45,7 @@ public final class KnimeEncryption {
 
     private static final String ENCRYPTION_METHOD = "DES/ECB/PKCS5Padding";
 
-    private static Cipher CIPHER;
+    private static Cipher cipher;
 
     private static EncryptionKeySupplier keySupplier;
 
@@ -54,11 +54,11 @@ public final class KnimeEncryption {
     static {
 
         try {
-            CIPHER = Cipher.getInstance(ENCRYPTION_METHOD);
+            cipher = Cipher.getInstance(ENCRYPTION_METHOD);
         } catch (Exception e) {
             LOGGER.error("Cipher <" + ENCRYPTION_METHOD
                     + "> could not be created.", e);
-            CIPHER = null;
+            cipher = null;
         }
     }
 
@@ -77,8 +77,8 @@ public final class KnimeEncryption {
         if (secretKey == null && keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
-        CIPHER.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] ciphertext = CIPHER.doFinal(new String(password).getBytes());
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] ciphertext = cipher.doFinal(new String(password).getBytes());
         return new BASE64Encoder().encode(ciphertext);
     }
 
@@ -93,10 +93,10 @@ public final class KnimeEncryption {
         if (secretKey == null && keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
-        CIPHER.init(Cipher.DECRYPT_MODE, secretKey);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
         // perform the decryption
         byte[] pw = new BASE64Decoder().decodeBuffer(password);
-        byte[] decryptedText = CIPHER.doFinal(pw);
+        byte[] decryptedText = cipher.doFinal(pw);
         return new String(decryptedText);
     }
 
