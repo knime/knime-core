@@ -15,7 +15,7 @@
      <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="Konstanz Information Miner"
+            name="KNIME"
             icon="icons/perspective.png"
             class="org.knime.workbench.ui.perspective.ModellerPerspectiveFactory"
             id="org.knime.workbench.ui.ModellerPerspective">
