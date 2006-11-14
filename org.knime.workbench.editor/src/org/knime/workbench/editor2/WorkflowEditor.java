@@ -465,7 +465,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
 
             // show message
-            showInfoMessage(sb.toString());
+            showInfoMessage("Workflow could not be loaded ...", sb.toString());
         }
     }
 
@@ -680,7 +680,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 "org.knime.workbench.help.flow_editor_context");
 
         loadProperties();
-        ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart().getChildren().get(0))
+        ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
+                .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
     }
 
@@ -1202,7 +1203,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             // inform the user
             if (exceptionMessage.toString().trim().length() > 0) {
-                showInfoMessage(exceptionMessage.toString());
+                showInfoMessage("Workflow could not be saved ...",
+                        exceptionMessage.toString());
             }
 
             throw new OperationCanceledException("Workflow was not saved: "
@@ -1236,13 +1238,13 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @param message the info message to display
      */
-    private void showInfoMessage(final String message) {
+    private void showInfoMessage(final String header, final String message) {
         // inform the user
 
         MessageBox mb =
                 new MessageBox(this.getSite().getShell(), SWT.ICON_INFORMATION
                         | SWT.OK);
-        mb.setText("Workflow could not be saved ...");
+        mb.setText(header);
         mb.setMessage(message);
         mb.open();
     }
@@ -1726,7 +1728,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void removeEditor(final IEditorPart editor) {
         m_childEditors.remove(editor);
     }
-    
+
     /**
      * Transposes a point according to the given zoom manager.
      * 
@@ -1734,17 +1736,14 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param pointToAdapt the point to adapt
      */
     public static void transposeZoom(final ZoomManager zoomManager,
-            final Point pointToAdapt,
-            final boolean adaptViewPortLocation) {
+            final Point pointToAdapt, final boolean adaptViewPortLocation) {
 
-        
-        
         double zoomLevel = zoomManager.getZoom();
 
         // adapt the location accordint to the zoom level
         pointToAdapt.x = (int)(pointToAdapt.x * zoomLevel);
         pointToAdapt.y = (int)(pointToAdapt.y * zoomLevel);
-        
+
         if (adaptViewPortLocation) {
             Point viewPortLocation =
                     zoomManager.getViewport().getViewLocation();
