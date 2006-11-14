@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.knime.base.data.append.column.AppendedCellFactory;
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.core.data.DataCell;
@@ -291,7 +290,8 @@ public class MLPPredictorNodeModel extends NodeModel {
 
         /**
          * 
-         * @see AppendedCellFactory#getAppendedCell(org.knime.core.data.DataRow)
+         * @see org.knime.base.data.append.column.AppendedCellFactory
+         *      #getAppendedCell(org.knime.core.data.DataRow)
          */
         public DataCell[] getCells(final DataRow row) {
             double[] inputs = new double[m_faccolumns.length];

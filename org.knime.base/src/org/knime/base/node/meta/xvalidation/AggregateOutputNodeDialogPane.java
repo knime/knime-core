@@ -86,7 +86,6 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
                 if (predictCol == null) {
                     predictCol = c.getName();
                 } else {
-                    assert targetCol == null;
                     targetCol = c.getName();
                     break; // both columns assigned
                 }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -94,10 +92,10 @@ public final class StatisticUtils {
         return covMatrix;
     }
     
-    public static double[][] covarianceOld(double[][] v) {
+    public static double[][] covarianceOld(final double[][] v) {
         int m = v.length;
         int n = v[0].length;
-        double[][] X = new double[n][n];
+        double[][] x = new double[n][n];
         int degrees = (m - 1);
         double c;
         double s1;
@@ -113,12 +111,13 @@ public final class StatisticUtils {
                 }
                 s1 = s1 / m;
                 s2 = s2 / m;
-                for (int k = 0; k < m; k++)
+                for (int k = 0; k < m; k++) {
                     c += (v[k][i] - s1) * (v[k][j] - s2);
-                X[i][j] = c / degrees;
+                }
+                x[i][j] = c / degrees;
             }
         }
-        return X;
+        return x;
     }
 
     /**
@@ -193,7 +192,7 @@ public final class StatisticUtils {
                 mean[col] += matrix[row][col];
             }
             
-            mean[col] /= (double)numRows;
+            mean[col] /= numRows;
         }
         
         return mean;

@@ -88,7 +88,7 @@ public class LinRegLineScatterPlotter extends ScatterPlotter {
                 && yCoord instanceof NumericCoordinate) {
             NumericCoordinate x = (NumericCoordinate)xCoord;
             NumericCoordinate y = (NumericCoordinate)yCoord;
-            if (x != null && y != null && m_params != null) {
+            if (m_params != null) {
                 double xMin = x.getMinDomainValue();
                 double xMax = x.getMaxDomainValue();
 

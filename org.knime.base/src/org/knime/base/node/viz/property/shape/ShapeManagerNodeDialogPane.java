@@ -208,7 +208,7 @@ final class ShapeManagerNodeDialogPane extends NodeDialogPane implements
                     m_valueNames[row] = cell;
                     row++;
                 }
-            };
+            }
             @Override
             public String getColumnName(final int columnIdx) {
                 if (columnIdx == 1) {

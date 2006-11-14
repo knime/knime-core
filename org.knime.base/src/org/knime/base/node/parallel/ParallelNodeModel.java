@@ -92,13 +92,13 @@ public abstract class ParallelNodeModel extends NodeModel {
             BufferedDataContainer container = null;
             int count = 0, chunks = 0;
             while (true) {
+                try {
+                    m_exec.checkCanceled();
+                } catch (CanceledExecutionException ex) {
+                    return;
+                }
+                
                 if ((count++ % chunkSize == 0) || !it.hasNext()) {
-                    try {
-                        m_exec.checkCanceled();
-                    } catch (CanceledExecutionException ex) {
-                        return;
-                    }
-
                     if (container != null) {
                         container.close();
                         try {

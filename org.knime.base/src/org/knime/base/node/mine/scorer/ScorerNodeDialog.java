@@ -116,24 +116,22 @@ public final class ScorerNodeDialog extends NodeDialogPane {
             throw new NotConfigurableException("Scorer needs an input table "
                     + "with at least two columns");
         }
-        if (spec != null) {
 
-            int numCols = spec.getNumColumns();
-            for (int i = 0; i < numCols; i++) {
-                String c = spec.getColumnSpec(i).getName();
-                m_firstColumns.addItem(c);
-                m_secondColumns.addItem(c);
-            }
-            // if at least two columns available
-            String col2 = (numCols > 0) ? spec.getColumnSpec(numCols - 1)
-                    .getName() : null;
-            String col1 = (numCols > 1) ? spec.getColumnSpec(numCols - 2)
-                    .getName() : col2;
-            col1 = settings.getString(ScorerNodeModel.FIRST_COMP_ID, col1);
-            col2 = settings.getString(ScorerNodeModel.SECOND_COMP_ID, col2);
-            m_firstColumns.setSelectedItem(col1);
-            m_secondColumns.setSelectedItem(col2);
+        int numCols = spec.getNumColumns();
+        for (int i = 0; i < numCols; i++) {
+            String c = spec.getColumnSpec(i).getName();
+            m_firstColumns.addItem(c);
+            m_secondColumns.addItem(c);
         }
+        // if at least two columns available
+        String col2 = (numCols > 0) ? spec.getColumnSpec(numCols - 1)
+                .getName() : null;
+        String col1 = (numCols > 1) ? spec.getColumnSpec(numCols - 2)
+                .getName() : col2;
+        col1 = settings.getString(ScorerNodeModel.FIRST_COMP_ID, col1);
+        col2 = settings.getString(ScorerNodeModel.SECOND_COMP_ID, col2);
+        m_firstColumns.setSelectedItem(col1);
+        m_secondColumns.setSelectedItem(col2);
     }
 
     /**

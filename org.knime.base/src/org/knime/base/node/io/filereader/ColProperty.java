@@ -117,7 +117,7 @@ class ColProperty {
         try {
             posVcfg = cfg.getNodeSettings(CFGKEY_POSVALUES);
         } catch (InvalidSettingsException ice) {
-            posVcfg = null;
+            // do nothing
         }
         if (posVcfg != null) {
             posValues = new HashSet<DataCell>();

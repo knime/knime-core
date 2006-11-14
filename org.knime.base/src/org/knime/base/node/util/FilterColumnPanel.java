@@ -25,6 +25,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * @author Fabian Dill, University of Konstanz
  * @deprecated Replaced by {@link ColumnFilterPanel}
  */
+@Deprecated
 public final class FilterColumnPanel extends ColumnFilterPanel {
 
 }

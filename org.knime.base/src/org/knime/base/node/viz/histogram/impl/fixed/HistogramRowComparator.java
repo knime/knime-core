@@ -23,13 +23,11 @@ package org.knime.base.node.viz.histogram.impl.fixed;
 import java.util.Comparator;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataValueComparator;
 
-
 /**
- * Comparator used to sort {@link DataRow}s by the value of the row with the
- * given index.
+ * Comparator used to sort {@link org.knime.core.data.DataRow}s by the value of
+ * the row with the given index.
  * 
  * @author Tobias Koetter, University of Konstanz
  */

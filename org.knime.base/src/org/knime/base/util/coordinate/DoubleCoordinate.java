@@ -61,7 +61,7 @@ class DoubleCoordinate extends NumericCoordinate {
     /**
      * The default value for <code>m_coordPrefix</code>.
      */
-    private static final double DEFAULT_ABSOLUTE_TICK_DIST = 30;
+    public static final double DEFAULT_ABSOLUTE_TICK_DIST = 30;
 
     /**
      * Default number of rounding digits.

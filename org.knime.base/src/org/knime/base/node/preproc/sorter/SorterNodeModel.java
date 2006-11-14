@@ -30,9 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.base.data.sort.SortedTable;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -107,12 +105,13 @@ public class SorterNodeModel extends NodeModel {
     }
 
     /**
-     * When the model gets executed, the {@link DataTable} is split in several
-     * {@link DataContainer}s. Each one is first removed, then swapped back
-     * into memory, gets sorted and is then removed again. At the end, all
-     * containers are merged together in one Result-Container. The list of
-     * columns that shall be sorted and their corresponding sort order in a
-     * boolean array should be set, before executing the model.
+     * When the model gets executed, the {@link org.knime.core.data.DataTable}
+     * is split in several {@link org.knime.core.data.container.DataContainer}s.
+     * Each one is first removed, then swapped back into memory, gets sorted and
+     * is then removed again. At the end, all containers are merged together in
+     * one Result-Container. The list of columns that shall be sorted and their
+     * corresponding sort order in a boolean array should be set, before
+     * executing the model.
      * 
      * @param inData the data table at the input port
      * @param exec the execution monitor
@@ -139,7 +138,7 @@ public class SorterNodeModel extends NodeModel {
         SortedTable sortedTable =
                 new SortedTable(inData[INPORT], m_inclList, m_sortOrder,
                         m_sortInMemory, exec);
-        
+
         return new BufferedDataTable[]{sortedTable.getBufferedDataTable()};
     }
 

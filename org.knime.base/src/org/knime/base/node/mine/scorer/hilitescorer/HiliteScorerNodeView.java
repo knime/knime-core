@@ -144,11 +144,12 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         }
 
         // now set the values in the components to get them displayed
-        int[][] scoreCount = ((HiliteScorerNodeModel)getNodeModel())
-                .getScorerCount();
-        String[] headerNames = ((HiliteScorerNodeModel)getNodeModel())
-                .getValues();
-        TableModel dataModel = new ConfustionTableModel(scoreCount, headerNames);
+        int[][] scoreCount =
+                ((HiliteScorerNodeModel)getNodeModel()).getScorerCount();
+        String[] headerNames =
+                ((HiliteScorerNodeModel)getNodeModel()).getValues();
+        TableModel dataModel =
+                new ConfustionTableModel(scoreCount, headerNames);
 
         if (m_tableView == null) {
             m_tableView = new JTable();
@@ -329,6 +330,12 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
             setOpaque(true);
         }
 
+        /**
+         * @see javax.swing.table.DefaultTableCellRenderer
+         *      #getTableCellRendererComponent(javax.swing.JTable,
+         *      java.lang.Object, boolean, boolean, int, int)
+         */
+        @Override
         public Component getTableCellRendererComponent(final JTable table,
                 final Object value, final boolean isSelected,
                 final boolean hasFocus, final int row, final int column) {
@@ -371,12 +378,13 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener
-     *  #hiLite(org.knime.core.node.property.hilite.KeyEvent)
+     *      #hiLite(org.knime.core.node.property.hilite.KeyEvent)
      */
     public void hiLite(final KeyEvent event) {
 
-        Point[] completeHilitedCells = ((HiliteScorerNodeModel)getNodeModel())
-                .getCompleteHilitedCells(event.keys());
+        Point[] completeHilitedCells =
+                ((HiliteScorerNodeModel)getNodeModel())
+                        .getCompleteHilitedCells(event.keys());
 
         // hilite all cells given by the points
         for (Point cell : completeHilitedCells) {
@@ -392,7 +400,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * correctness!!)
      * 
      * @see org.knime.core.node.property.hilite.HiLiteListener
-     *  #unHiLite(org.knime.core.node.property.hilite.KeyEvent)
+     *      #unHiLite(org.knime.core.node.property.hilite.KeyEvent)
      */
     public void unHiLite(final KeyEvent event) {
 

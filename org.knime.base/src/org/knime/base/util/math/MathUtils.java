@@ -123,6 +123,41 @@ public final class MathUtils {
         return resultMatrix;
     }
 
+    
+    /**
+     * Multiplies a matrix with its transposed matrix. The transposed matrix
+     * is multiplied to the <em>lefft</em> of the original matrix.
+     * 
+     * @param mat the matrix
+     * @return the result matrix
+     */
+    public static double[][] multiplyLeftWithTranspose(final double[][] mat) {
+        if (mat.length == 0) {
+            return new double[0][0];
+        }
+        // the result matrix X'X is a square matrix with as many rows and
+        // columns as the matrix X has columns
+        double[][] resultMatrix = new double[mat[0].length][mat[0].length];
+
+        // because the transposed matrix X' is on the left we iterate over its
+        // rows which means we iterate over the columns of the matrix X
+        for (int leftRow = 0; leftRow < mat[0].length; leftRow++) {
+            // now we iterated over the columns of the matrix X
+            for (int rightCol = 0; rightCol < mat[0].length; rightCol++) {
+                // and finally we sum up the products between the entries
+                // in the leftRow and the rightCol
+                double sum = 0;
+                for (int k = 0; k < mat.length; k++) {
+                    sum += mat[k][leftRow] * mat[k][rightCol];
+                }
+                resultMatrix[leftRow][rightCol] = sum;
+            }
+        }
+
+        return resultMatrix;
+    }
+
+    
     /**
      * Transposes the given matrix.
      * 

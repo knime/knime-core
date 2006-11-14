@@ -175,20 +175,18 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                 data.getDataTableSpec(), m_properties, getInHiLiteHandler(0), 
                 m_xColName, m_aggrColName);
         m_plotter.setBackground(ColorAttr.getBackground());
-        if (data != null) {
-            exec.setMessage("Adding data rows to histogram...");
-            final int noOfRows = inData[0].getRowCount();
-            final double progressPerRow = 1.0 / noOfRows;
-            double progress = 0.0;
-            for (DataRow row : data) {
-                m_plotter.addDataRow(row);
-                progress += progressPerRow;
-                exec.setProgress(progress, "Adding data rows to histogram...");
-                exec.checkCanceled();
-            }
-            exec.setProgress(1.0, "Histogram finished.");
-            m_plotter.lastDataRowAdded();
+        exec.setMessage("Adding data rows to histogram...");
+        final int noOfRows = inData[0].getRowCount();
+        final double progressPerRow = 1.0 / noOfRows;
+        double progress = 0.0;
+        for (DataRow row : data) {
+            m_plotter.addDataRow(row);
+            progress += progressPerRow;
+            exec.setProgress(progress, "Adding data rows to histogram...");
+            exec.checkCanceled();
         }
+        exec.setProgress(1.0, "Histogram finished.");
+        m_plotter.lastDataRowAdded();
         LOGGER.info("Exiting execute(inData, exec) of class "
                 + "FixedColumnHistogramNodeModel.");
         return new BufferedDataTable[0];

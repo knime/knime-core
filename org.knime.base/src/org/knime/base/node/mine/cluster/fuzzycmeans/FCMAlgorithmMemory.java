@@ -87,6 +87,7 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
      * @param dimension the dimension of the table
      * @param table the table to use.
      */
+    @Override
     public void init(final int nrRows, final int dimension,
             final DataTable table) {
        super.init(nrRows, dimension, table);
@@ -150,6 +151,7 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
      *         whether the algorithm can be stopped.
      * @throws CanceledExecutionException if the operation is canceled
      */
+    @Override
     public double doOneIteration(final ExecutionContext exec)
             throws CanceledExecutionException {
         assert (m_data != null);

@@ -81,8 +81,7 @@ public class TIDApriori implements AprioriAlgorithm {
         m_frequentItems = new ArrayList<TIDItem>();
         int transactionNr = 0;
         for (BitSet transaction : transactions) {
-            double progress = (double)((double)transactionNr 
-                    / (double)m_dbsize); 
+            double progress = transactionNr / (double)m_dbsize; 
             exec.setProgress(progress,
                     "detecting frequent items. Transaction nr: "
                             + transactionNr);
