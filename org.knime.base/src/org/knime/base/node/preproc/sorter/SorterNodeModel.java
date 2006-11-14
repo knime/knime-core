@@ -76,6 +76,11 @@ public class SorterNodeModel extends NodeModel {
      * The key for the Sort Order Array in the NodeSettings.
      */
     static final String SORTORDER_KEY = "sortOrder";
+    
+    /**
+     * The key for the memory-sort flag in the NodeSettings.
+     */
+    static final String SORTINMEMORY_KEY = "sortinmemory";
 
     /*
      * List contains the data cells to include.
@@ -87,6 +92,11 @@ public class SorterNodeModel extends NodeModel {
      * ascending false: descending
      */
     private boolean[] m_sortOrder = null;
+    
+    /*
+     * Flag indicating whether to perform the sorting in memory or not.
+     */
+    private boolean m_sortInMemory = false;
 
     /**
      * Inits a new <code>SorterNodeModel</code> with one in- and one output.
@@ -127,7 +137,8 @@ public class SorterNodeModel extends NodeModel {
 
         // create a sorted table
         SortedTable sortedTable =
-                new SortedTable(inData[INPORT], m_inclList, m_sortOrder, exec);
+                new SortedTable(inData[INPORT], m_inclList, m_sortOrder,
+                        m_sortInMemory, exec);
         
         return new BufferedDataTable[]{sortedTable.getBufferedDataTable()};
     }
@@ -180,6 +191,7 @@ public class SorterNodeModel extends NodeModel {
         if (!(m_sortOrder == null)) {
             settings.addBooleanArray(SORTORDER_KEY, m_sortOrder);
         }
+        settings.addBoolean(SORTINMEMORY_KEY, m_sortInMemory);
     }
 
     /**
@@ -220,6 +232,9 @@ public class SorterNodeModel extends NodeModel {
             m_inclList.add(inclList[i]);
         }
         m_sortOrder = settings.getBooleanArray(SORTORDER_KEY);
+        if (settings.containsKey(SORTINMEMORY_KEY)) {
+            m_sortInMemory = settings.getBoolean(SORTINMEMORY_KEY);
+        }
     }
 
     /**

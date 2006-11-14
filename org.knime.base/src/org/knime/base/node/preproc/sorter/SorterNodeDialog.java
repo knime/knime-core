@@ -91,6 +91,7 @@ public class SorterNodeDialog extends NodeDialogPane {
 
         List<String> list = null;
         boolean[] sortOrder = null;
+        boolean sortinMemory = false;
 
         if (settings.containsKey(SorterNodeModel.INCLUDELIST_KEY)) {
             try {
@@ -116,9 +117,17 @@ public class SorterNodeDialog extends NodeDialogPane {
             }
         }
 
+        if (settings.containsKey(SorterNodeModel.SORTINMEMORY_KEY)) {
+            try {
+                sortinMemory = settings
+                        .getBoolean(SorterNodeModel.SORTINMEMORY_KEY);
+            } catch (InvalidSettingsException ise) {
+                LOGGER.error(ise.getMessage());
+            }
+        }
         // set the values on the panel
         m_panel.update(specs[SorterNodeModel.INPORT], list, sortOrder,
-                NRSORTITEMS);
+                NRSORTITEMS, sortinMemory);
     }
 
     /**
@@ -138,5 +147,7 @@ public class SorterNodeDialog extends NodeDialogPane {
                 .toArray(new String[inclList.size()]));
         settings.addBooleanArray(SorterNodeModel.SORTORDER_KEY, m_panel
                 .getSortOrder());
+        settings.addBoolean(SorterNodeModel.SORTINMEMORY_KEY, m_panel
+                .sortInMemory());
     }
 }

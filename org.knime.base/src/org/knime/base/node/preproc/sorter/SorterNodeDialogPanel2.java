@@ -35,6 +35,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -66,6 +67,16 @@ public class SorterNodeDialogPanel2 extends JPanel {
      * The DataTableSpec
      */
     private DataTableSpec m_spec;
+    
+    /*
+     * Flag for whether to perform the sorting in memory or not.
+     */
+    private boolean m_memory;
+    
+    /*
+     * Corresponding checkbox
+     */
+    private JCheckBox m_memorycheckb;
 
     /**
      * Constructs a new empty JPanel used for displaying the three first
@@ -76,6 +87,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
         BoxLayout bl = new BoxLayout(this, BoxLayout.Y_AXIS);
         super.setLayout(bl);
         m_components = new Vector<SortItem>();
+        m_memory = false;
     }
 
     /**
@@ -86,10 +98,13 @@ public class SorterNodeDialogPanel2 extends JPanel {
      * @param incl the list to include
      * @param sortOrder the sorting order
      * @param nrsortitems the inital number of sortitems to be shown
+     * @param sortInMemory whether to perform the sorting in memory or not
      */
     public void update(final DataTableSpec spec, final List<String> incl,
-            final boolean[] sortOrder, final int nrsortitems) {
+            final boolean[] sortOrder, final int nrsortitems,
+            final boolean sortInMemory) {
         m_spec = spec;
+        m_memory = sortInMemory;
         super.removeAll();
         m_components.removeAllElements();
         int interncounter = 0;
@@ -163,13 +178,27 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     for (int i = oldbool.length; i < newbool.length; i++) {
                         newbool[i] = true;
                     }
-                    update(m_spec, newlist, newbool, (oldsize + newsize));
+                    update(m_spec, newlist, newbool, (oldsize + newsize),
+                            m_memory);
                 }
             });
             buttonbox.add(spinner);
             buttonbox.add(Box.createHorizontalStrut(10));
             buttonbox.add(addSortItemButton);
             super.add(buttonbox);
+            Box memorybox = Box.createHorizontalBox();
+            m_memorycheckb = new JCheckBox("Sort in memory", m_memory);
+            m_memorycheckb.addActionListener(new ActionListener() {
+                public void actionPerformed(final ActionEvent ae) {
+                    if (m_memorycheckb.isSelected()) {
+                        m_memory = true;
+                    } else {
+                        m_memory = false;
+                    }
+                }
+            });
+            memorybox.add(m_memorycheckb);
+            super.add(memorybox);
             super.validate();
             repaint();
         }
@@ -209,5 +238,12 @@ public class SorterNodeDialogPanel2 extends JPanel {
             boolarray[i] = boolvector.get(i);
         }
         return boolarray;
+    }
+    
+    /**
+     * @return whether to perform the sorting in memory or not.
+     */
+    public boolean sortInMemory() {
+        return m_memory;
     }
 }
