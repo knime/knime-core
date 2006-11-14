@@ -46,7 +46,7 @@ import org.knime.core.data.DoubleValue;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-class DoubleCoordinate extends NumericCoordinate {
+public class DoubleCoordinate extends NumericCoordinate {
 
     /**
      * The default value for <code>m_coordPrefix</code>.
@@ -392,7 +392,7 @@ class DoubleCoordinate extends NumericCoordinate {
      * @param number the number to format
      * @return the formated number as string
      */
-    private String formatNumber(final double number) {
+    public String formatNumber(final double number) {
 
         // get the largest absolute domain value
         double lowerBound = m_minDomainValue;
