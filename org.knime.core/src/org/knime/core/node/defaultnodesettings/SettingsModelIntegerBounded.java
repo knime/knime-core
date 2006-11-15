@@ -23,6 +23,9 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+
 /**
  * A settingsmodel for integer default components accepting double between a min
  * and max value.
@@ -45,15 +48,14 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
      * @param maxValue upper bounds of the acceptable values.
      */
     public SettingsModelIntegerBounded(final String configName,
-            final int defaultValue, final int minValue,
-            final int maxValue) {
+            final int defaultValue, final int minValue, final int maxValue) {
         super(configName, defaultValue);
 
         if (minValue > maxValue) {
             throw new IllegalArgumentException("Specified min value must be"
                     + " smaller than the max value.");
         }
-        
+
         m_minValue = minValue;
         m_maxValue = maxValue;
 
@@ -64,6 +66,26 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
             throw new IllegalArgumentException("InitialValue: "
                     + iae.getMessage());
         }
+    }
+
+    /**
+     * Constructor initializing the value from the specified settings object. If
+     * the settings object doesn't contain a valid value for this model, it will
+     * throw an InvalidSettingsException.
+     * 
+     * @param configName the identifier the value is stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param settings the object to read the initial value from
+     * @param minValue lower bounds of the acceptable values.
+     * @param maxValue upper bounds of the acceptable values.
+     * @throws InvalidSettingsException if the settings object doesn't contain a
+     *             (valid) value for this object
+     */
+    public SettingsModelIntegerBounded(final String configName,
+            final NodeSettingsRO settings, final int minValue,
+            final int maxValue) throws InvalidSettingsException {
+        this(configName, minValue, minValue, maxValue);
+        loadSettingsForModel(settings);
     }
 
     /**
@@ -81,7 +103,8 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
     }
 
     /**
-     * @see SettingsModelDouble#setIntValue(double)
+     * @see org.knime.core.node.defaultnodesettings.SettingsModelInteger
+     *      #setIntValue(int)
      */
     @Override
     public void setIntValue(final int newValue) {
@@ -91,9 +114,9 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
 
     private void checkBounds(final double val) {
         if ((val < m_minValue) || (m_maxValue < val)) {
-            throw new IllegalArgumentException("value (=" + val 
-                    + ") must be within the range [" 
-                    + m_minValue + "..." + m_maxValue + "].");
+            throw new IllegalArgumentException("value (=" + val
+                    + ") must be within the range [" + m_minValue + "..."
+                    + m_maxValue + "].");
         }
     }
 }

@@ -23,6 +23,9 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+
 
 /**
  * A settingsmodel for double default components accepting double between a min
@@ -67,6 +70,26 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
 
     }
 
+    /**
+     * Constructor initializing the value from the specified settings object. If
+     * the settings object doesn't contain a valid value for this model, it will
+     * throw an InvalidSettingsException.
+     * 
+     * @param configName the identifier the value is stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param settings the object to read the initial value from
+     * @param minValue lower bounds of the acceptable values.
+     * @param maxValue upper bounds of the acceptable values.
+     * @throws InvalidSettingsException if the settings object doesn't contain a
+     *             (valid) value for this object
+     */
+    public SettingsModelDoubleBounded(final String configName,
+            final NodeSettingsRO settings, final double minValue,
+            final double maxValue) throws InvalidSettingsException {
+        this(configName, minValue, minValue, maxValue);
+        loadSettingsForModel(settings);        
+    }
+    
     /**
      * @return the lower bound of the acceptable values.
      */

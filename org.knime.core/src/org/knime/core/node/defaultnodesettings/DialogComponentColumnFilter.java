@@ -63,7 +63,6 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * 
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered.
-     * @see #update(DataTableSpec, Set, boolean)
      * 
      */
     @SuppressWarnings("unchecked")

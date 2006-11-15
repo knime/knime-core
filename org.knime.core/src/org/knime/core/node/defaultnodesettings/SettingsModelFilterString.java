@@ -60,7 +60,7 @@ public class SettingsModelFilterString extends SettingsModel {
      * list of strings in an include list..
      * 
      * @param configName the identifier the values are stored with in the
-     *            {@link NodeSettings} object
+     *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultInclList the initial value for the include list
      * @param defaultExclList the initial value for the exclude list.
      */
@@ -106,7 +106,7 @@ public class SettingsModelFilterString extends SettingsModel {
      * list of strings in an include list..
      * 
      * @param configName the identifier the values are stored with in the
-     *            {@link NodeSettings} object
+     *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultInclList the initial value for the include list
      * @param defaultExclList the initial value for the exclude list.
      */
@@ -114,6 +114,23 @@ public class SettingsModelFilterString extends SettingsModel {
             final String[] defaultInclList, final String[] defaultExclList) {
         this(configName, Arrays.asList(defaultInclList), Arrays
                 .asList(defaultExclList));
+    }
+
+    /**
+     * Constructor initializing the value from the specified settings object. If
+     * the settings object doesn't contain a valid value for this model, it will
+     * throw an InvalidSettingsException.
+     * 
+     * @param configName the identifier the value is stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param settings the object to read the initial value from
+     * @throws InvalidSettingsException if the settings object doesn't contain a
+     *             (valid) value for this object
+     */
+    public SettingsModelFilterString(final String configName,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        this(configName, (List<String>)null, (List<String>)null);
+        loadSettingsForModel(settings);
     }
 
     /**
@@ -244,8 +261,7 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModelForModel
-     *      #saveSettingsTo(org.knime.core.node.NodeSettingsWO)
+     * @see SettingsModel #saveSettingsForModel(NodeSettingsWO)
      */
     @Override
     public void saveSettingsForModel(final NodeSettingsWO settings) {

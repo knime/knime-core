@@ -44,7 +44,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      * Creates a new object holding a double value.
      * 
      * @param configName the identifier the value is stored with in the
-     *            {@link NodeSettings} object
+     *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
      */
     public SettingsModelDouble(final String configName,
@@ -57,6 +57,24 @@ public class SettingsModelDouble extends SettingsModelNumber {
         m_configName = configName;
     }
 
+    /**
+     * Constructor initializing the value from the specified settings object. If
+     * the settings object doesn't contain a valid value for this model, it will
+     * throw an InvalidSettingsException.
+     * 
+     * @param configName the identifier the value is stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param settings the object to read the initial value from
+     * @throws InvalidSettingsException if the settings object doesn't contain a
+     *             (valid) value for this object
+     */
+    public SettingsModelDouble(final String configName, 
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        this(configName, 0.00);
+        loadSettingsForModel(settings);
+    }
+    
+    
     /**
      * @see SettingsModel#getModelTypeID()
      */

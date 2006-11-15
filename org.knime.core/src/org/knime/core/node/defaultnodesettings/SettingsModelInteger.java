@@ -43,7 +43,7 @@ public class SettingsModelInteger extends SettingsModelNumber {
      * Creates a new object holding an integer value.
      * 
      * @param configName the identifier the value is stored with in the
-     *            {@link NodeSettings} object
+     *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
      */
     public SettingsModelInteger(final String configName, 
@@ -56,6 +56,23 @@ public class SettingsModelInteger extends SettingsModelNumber {
         m_configName = configName;
     }
 
+    /**
+     * Constructor initializing the value from the specified settings object. If
+     * the settings object doesn't contain a valid value for this model, it will
+     * throw an InvalidSettingsException.
+     * 
+     * @param configName the identifier the value is stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param settings the object to read the initial value from
+     * @throws InvalidSettingsException if the settings object doesn't contain a
+     *             (valid) value for this object
+     */
+    public SettingsModelInteger(final String configName, 
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        this(configName, 0);
+        loadSettingsForModel(settings);
+    }
+    
     /**
      * @see SettingsModel#getModelTypeID()
      */

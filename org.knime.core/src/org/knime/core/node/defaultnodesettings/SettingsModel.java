@@ -122,7 +122,8 @@ public abstract class SettingsModel {
      * only from within the components using this model.<br>
      * NOTE: Don't call this method directly, rather use dlgSaveSettingsTo.
      * 
-     * @param settings The {@link NodeSettings} to read from.
+     * @param settings The {@link org.knime.core.node.NodeSettings} to read
+     *            from.
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
     abstract void saveSettingsForDialog(final NodeSettingsWO settings)
@@ -133,7 +134,8 @@ public abstract class SettingsModel {
      * settings into the settings object. It saves the model's ID before it
      * delegates to the derived implementation.
      * 
-     * @param settings The {@link NodeSettings} to read from.
+     * @param settings The {@link org.knime.core.node.NodeSettings} to read
+     *            from.
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
     final void dlgSaveSettingsTo(final NodeSettingsWO settings)
@@ -190,8 +192,8 @@ public abstract class SettingsModel {
             // chekc only if this is not an empty config. Otherwise the loading
             // will fail anyway.
             try {
-                Config idCfg = settings.getConfig(
-                        getConfigName() + CFGKEY_MODELID);
+                Config idCfg =
+                        settings.getConfig(getConfigName() + CFGKEY_MODELID);
                 String settingsID = idCfg.getString(CFGKEY_MODELID);
                 assert getModelTypeID().equals(settingsID) : "Implementation"
                         + "Error: The SettingsModel used to write the values is"
@@ -226,7 +228,8 @@ public abstract class SettingsModel {
      * Read value(s) of this component model from configuration object. If the
      * value is not stored in the config, an exception will be thrown.
      * 
-     * @param settings The {@link NodeSettings} to read from.
+     * @param settings The {@link org.knime.core.node.NodeSettings} to read
+     *            from.
      * @throws InvalidSettingsException if load fails.
      */
     public final void loadSettingsFrom(final NodeSettingsRO settings)
@@ -237,8 +240,8 @@ public abstract class SettingsModel {
             // chekc only if this is not an empty config. Otherwise the loading
             // will fail anyway.
             try {
-                Config idCfg = settings.getConfig(
-                        getConfigName() + CFGKEY_MODELID);
+                Config idCfg =
+                        settings.getConfig(getConfigName() + CFGKEY_MODELID);
                 String settingsID = idCfg.getString(CFGKEY_MODELID);
                 assert getModelTypeID().equals(settingsID) : "Implementation"
                         + "Error: The SettingsModel used to write the values is"
@@ -264,7 +267,8 @@ public abstract class SettingsModel {
      * the value is not stored in the config, an exception will be thrown. <br>
      * NOTE: Don't call this method directly, rather call loadSettingsFrom.
      * 
-     * @param settings The {@link NodeSettings} to read from.
+     * @param settings The {@link org.knime.core.node.NodeSettings} to read
+     *            from.
      * @throws InvalidSettingsException if load fails.
      */
     abstract void loadSettingsForModel(final NodeSettingsRO settings)
@@ -273,7 +277,8 @@ public abstract class SettingsModel {
     /**
      * Write value(s) of this setttings model to configuration object.
      * 
-     * @param settings The {@link NodeSettings} to write into.
+     * @param settings The {@link org.knime.core.node.NodeSettings} to write
+     *            into.
      */
     public final void saveSettingsTo(final NodeSettingsWO settings) {
         // save the id of the writing settings model
@@ -287,7 +292,8 @@ public abstract class SettingsModel {
      * Write value(s) of this settings model to configuration object.<br>
      * NOTE: Don't call this method directly, rather call saveSettingsTo.
      * 
-     * @param settings The {@link NodeSettings} to write into.
+     * @param settings The {@link org.knime.core.node.NodeSettings} to write
+     *            into.
      */
     abstract void saveSettingsForModel(final NodeSettingsWO settings);
 

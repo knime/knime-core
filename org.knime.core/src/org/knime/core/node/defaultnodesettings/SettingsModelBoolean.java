@@ -44,7 +44,7 @@ public class SettingsModelBoolean extends SettingsModel {
      * Creates a new object holding a boolean value.
      * 
      * @param configName the identifier the value is stored with in the
-     *            {@link NodeSettings} object
+     *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
      */
     public SettingsModelBoolean(final String configName,
@@ -55,6 +55,23 @@ public class SettingsModelBoolean extends SettingsModel {
         }
         m_value = defaultValue;
         m_configName = configName;
+    }
+
+    /**
+     * Constructor initializing the value from the specified settings object. If
+     * the settings object doesn't contain a valid value for this model, it will
+     * throw an InvalidSettingsException.
+     * 
+     * @param configName the identifier the value is stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param settings the object to read the initial value from
+     * @throws InvalidSettingsException if the settings object doesn't contain a
+     *             (valid) value for this object
+     */
+    public SettingsModelBoolean(final String configName,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        this(configName, true);
+        loadSettingsForModel(settings);
     }
 
     /**
@@ -72,7 +89,7 @@ public class SettingsModelBoolean extends SettingsModel {
     String getConfigName() {
         return m_configName;
     }
-    
+
     /**
      * set the value stored to the new value.
      * 
@@ -91,7 +108,7 @@ public class SettingsModelBoolean extends SettingsModel {
 
     /**
      * @see SettingsModel
-     *      #LoadSettingsForDialog(org.knime.core.node.NodeSettingsRO,
+     *      #loadSettingsForDialog(org.knime.core.node.NodeSettingsRO,
      *      org.knime.core.data.DataTableSpec[])
      */
     @Override
@@ -108,7 +125,7 @@ public class SettingsModelBoolean extends SettingsModel {
 
     /**
      * @see SettingsModel
-     *      #saveSettingsToForDialog(org.knime.core.node.NodeSettingsWO)
+     *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
      */
     @Override
     void saveSettingsForDialog(final NodeSettingsWO settings)
@@ -127,7 +144,8 @@ public class SettingsModelBoolean extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel#loadSettingsFrom(org.knime.core.node.NodeSettingsRO)
+     * @see org.knime.core.node.defaultnodesettings.SettingsModel
+     *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
     public void loadSettingsForModel(final NodeSettingsRO settings)
@@ -137,7 +155,8 @@ public class SettingsModelBoolean extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel#saveSettingsTo(org.knime.core.node.NodeSettingsWO)
+     * @see org.knime.core.node.defaultnodesettings.SettingsModel
+     *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
      */
     @Override
     public void saveSettingsForModel(final NodeSettingsWO settings) {
