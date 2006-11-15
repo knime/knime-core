@@ -23,9 +23,9 @@ import java.io.File;
 
 /**
  * Container for a field, which holds the home directory of KNIME. This
- * class serves as an abstraction layer to brigde from eclipse to non-GUI KNIME.
- * During startup of eclipse, the home dir is set in this class, which 
- * is polled from the KNIMEConstants class to do the final initialisation.
+ * class serves as an abstraction layer to bridge from eclipse to non-GUI KNIME.
+ * During startup of eclipse, the home directory is set in this class, which 
+ * is polled from the KNIMEConstants class to do the final initialization.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class KNIMEPath {
@@ -49,7 +49,7 @@ public final class KNIMEPath {
      * @return The directory to use.
      */
     public static File getKNIMEHomeDirPath() {
-        String parent = System.getProperty("user.dir");
+        String parent = System.getProperty("user.home");
         String child = "knime";
         if (homeDir == null) {
             homeDir = new File(parent, child);
