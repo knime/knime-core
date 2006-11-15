@@ -162,6 +162,9 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      * @return the number of 1s generated
      */
     public int getTotalNrOf1s() {
+        if (!m_fromString) {
+            return m_totalNrOf1s;
+        }
         return m_factory.getNumberOfSetBits();
     }
 
@@ -170,6 +173,9 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      * @return the number of 0s generated
      */
     public int getTotalNrOf0s() {
+        if (!m_fromString) {
+            return m_totalNrOf0s;
+        }
         return m_factory.getNumberOfNotSetBits();
     }
 
