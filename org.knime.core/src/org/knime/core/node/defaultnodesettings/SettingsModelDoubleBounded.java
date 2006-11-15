@@ -26,7 +26,6 @@ package org.knime.core.node.defaultnodesettings;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 
-
 /**
  * A settingsmodel for double default components accepting double between a min
  * and max value.
@@ -87,9 +86,27 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
             final NodeSettingsRO settings, final double minValue,
             final double maxValue) throws InvalidSettingsException {
         this(configName, minValue, minValue, maxValue);
-        loadSettingsForModel(settings);        
+        loadSettingsForModel(settings);
     }
-    
+
+    /**
+     * Creates a new settings model with identical values for everything except
+     * the stored value. The value stored in the model will be retrieved from
+     * the specified settings object. If the settings object doesn't contain a
+     * (valid) value it will throw an InvalidSettingsException.
+     * 
+     * @param settings the object to read the new model's value(s) from
+     * @return a new settings model with the same constraints and configName but
+     *         a value read from the specified settings object.
+     * @throws InvalidSettingsException if the settings object passed doesn't
+     *             contain a valid value for the newly created settings model.
+     */
+    public SettingsModelDoubleBounded createCloneWithNewValue(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return new SettingsModelDoubleBounded(getConfigName(), settings,
+                m_minValue, m_maxValue);
+    }
+
     /**
      * @return the lower bound of the acceptable values.
      */
@@ -115,8 +132,8 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
 
     private void checkBounds(final double val) {
         if ((val < m_minValue) || (m_maxValue < val)) {
-            throw new IllegalArgumentException("value (=" + val 
-                    + ") must be within the range [" + m_minValue + "..." 
+            throw new IllegalArgumentException("value (=" + val
+                    + ") must be within the range [" + m_minValue + "..."
                     + m_maxValue + "].");
         }
     }

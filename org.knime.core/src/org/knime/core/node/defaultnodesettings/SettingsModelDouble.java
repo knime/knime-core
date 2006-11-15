@@ -74,7 +74,23 @@ public class SettingsModelDouble extends SettingsModelNumber {
         loadSettingsForModel(settings);
     }
     
-    
+    /**
+     * Creates a new settings model with identical values for everything except
+     * the stored value. The value stored in the model will be retrieved from
+     * the specified settings object. If the settings object doesn't contain a
+     * (valid) value it will throw an InvalidSettingsException.
+     * 
+     * @param settings the object to read the new model's value(s) from
+     * @return a new settings model with the same constraints and configName but
+     *         a value read from the specified settings object.
+     * @throws InvalidSettingsException if the settings object passed doesn't
+     *             contain a valid value for the newly created settings model.
+     */
+    public SettingsModelDouble createCloneWithNewValue(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return new SettingsModelDouble(m_configName, settings);
+    }
+   
     /**
      * @see SettingsModel#getModelTypeID()
      */
