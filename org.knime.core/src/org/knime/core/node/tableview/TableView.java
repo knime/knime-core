@@ -408,6 +408,24 @@ public class TableView extends JScrollPane {
         return getHeaderTable().isShowColorInfo();
     }
     
+    /** 
+     * Set whether or not the icon in the column header is to be displayed.
+     * Delegate method to {@link TableView#setShowColorInfo(boolean)}.
+     * @param show Whether or not this icon should be shown.
+     */
+    public void setShowIconInColumnHeader(final boolean show) {
+        getContentTable().setShowIconInColumnHeader(show);
+    }
+    
+    /**
+     * Get the status if the icon in the column header is shown.
+     * Delegate method to {@link TableView#isShowColorInfo()}.
+     * @return true when the icon is shown, false otherwise.
+     */
+    public boolean isShowIconInColumnHeader() {
+        return getContentTable().isShowIconInColumnHeader();
+    }
+    
     /**
      * Tries to find a row key that matches on the given pattern starting
      * at position <code>startRow</code>. If a matching row is found, the view

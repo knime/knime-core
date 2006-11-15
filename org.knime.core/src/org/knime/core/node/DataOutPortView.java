@@ -73,7 +73,7 @@ final class DataOutPortView extends NodeOutPortView {
         "<null>")});
 
     /**
-     * A view showing the data stored in the specified ouput port.
+     * A view showing the data stored in the specified output port.
      * 
      * @param nodeName The name of the node the inspected port belongs to
      * @param portName The name of the port to view data from. Will appear in
@@ -92,6 +92,7 @@ final class DataOutPortView extends NodeOutPortView {
 
         m_tabs = new JTabbedPane();
         m_specView = new TableView();
+        m_specView.setShowIconInColumnHeader(false);
         m_dataView = new TableView();
         m_propsView = new TableView();
         m_dataView.getHeaderTable().setShowColorInfo(false);

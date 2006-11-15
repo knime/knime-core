@@ -45,6 +45,8 @@ import org.knime.core.data.DataType;
  */
 public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     private static final long serialVersionUID = -2356486759304444805L;
+    
+    private boolean m_showIcon = true;
 
     /**
      * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(
@@ -71,9 +73,27 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
             newValue =  ((DataColumnSpec)value).getName();
             icon = columnType.getIcon();
         }
-        setIcon(icon);
+        if (isShowIcon()) {
+            setIcon(icon);
+        } else {
+            setIcon(null);
+        }
         setValue(newValue);
         return this;
+    }
+
+    /**
+     * @return the showIcon
+     */
+    public boolean isShowIcon() {
+        return m_showIcon;
+    }
+
+    /**
+     * @param showIcon the showIcon to set
+     */
+    public void setShowIcon(final boolean showIcon) {
+        m_showIcon = showIcon;
     }
 
 }

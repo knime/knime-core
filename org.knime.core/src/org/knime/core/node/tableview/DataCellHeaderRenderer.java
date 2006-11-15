@@ -57,7 +57,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
     } // newInstance()
 
     
-    // user should use INSTANCE instead 
+    // user should use newInstance instead 
     private DataCellHeaderRenderer() {
         setTableHeaderLaF();
         showIcon(true);

@@ -80,6 +80,11 @@ public class TableContentView extends JTable {
     private static final long serialVersionUID = -3503118869778091484L;
     
     private PropertyChangeListener m_dataListener;
+    
+    /** The property whether or not the icon in the column header is
+     * to be shown.
+     */
+    private boolean m_isShowIconInColumnHeader;
 
     /**
      * Creates empty content view. Consider 
@@ -99,6 +104,9 @@ public class TableContentView extends JTable {
      */
     public TableContentView(final TableContentModel model) {
         super(model);
+        // just initializing the member is not sufficient as the 
+        // <init> of super initialized the header as well.
+        setShowIconInColumnHeader(true);
     } // TableContentView(TableModel)
 
     /**
@@ -132,7 +140,7 @@ public class TableContentView extends JTable {
     @Override
     public void setModel(final TableModel tableModel) {
         TableContentModel tblModel = (TableContentModel)tableModel;
-        if (m_dataListener == null) { // may be null whin in <init>
+        if (m_dataListener == null) { // may be null when in <init>
             m_dataListener = new PropertyChangeListener() {
                 public void propertyChange(final PropertyChangeEvent evt) {
                     String id = evt.getPropertyName();
@@ -311,7 +319,36 @@ public class TableContentView extends JTable {
     public void resetHilite() {
         getContentModel().requestResetHiLite();
     } // hiliteSelected()
-
+    
+    /** Sets the property whether or not the icon in the column header
+     * shall be shown. This typically represents the column's type icon 
+     * (the cell type contained in the column). Sometimes, this is not
+     * desired (for instance in the data outport view).
+     * @param show Whether or not this icon should be shown.
+     */
+    public void setShowIconInColumnHeader(final boolean show) {
+        if (show != m_isShowIconInColumnHeader) {
+            m_isShowIconInColumnHeader = show;
+            JTableHeader header = getTableHeader();
+            if (header == null) {
+                return;
+            }
+            TableCellRenderer r = header.getDefaultRenderer();
+            if (r instanceof ColumnHeaderRenderer) {
+                ColumnHeaderRenderer cr = (ColumnHeaderRenderer)r;
+                cr.setShowIcon(show);
+            }
+        }
+    }
+    
+    /**
+     * Get the status if the icon in the column header is shown.
+     * @return true when the icon is shown, false otherwise.
+     */
+    public boolean isShowIconInColumnHeader() {
+        return m_isShowIconInColumnHeader;
+    }
+    
     /**
      * Overridden so that we can attach a mouse listener to it and set
      * the proper renderer. The mouse listener is used to display a popup menu.
@@ -320,8 +357,9 @@ public class TableContentView extends JTable {
     @Override
     public void setTableHeader(final JTableHeader newTableHeader) {
         if (newTableHeader != null) {
-            TableCellRenderer renderer = getNewColumnHeaderRenderer();
+            ColumnHeaderRenderer renderer = getNewColumnHeaderRenderer();
             newTableHeader.setDefaultRenderer(renderer);
+            renderer.setShowIcon(isShowIconInColumnHeader());
             newTableHeader.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(final MouseEvent e) {
@@ -382,7 +420,7 @@ public class TableContentView extends JTable {
      */
     protected void onMouseClickInHeader(final MouseEvent e) {
         JTableHeader header = getTableHeader();
-        // get column in which event occured
+        // get column in which event occurred
         int column = header.columnAtPoint(e.getPoint());
         Rectangle recOfColumn = header.getHeaderRect(column);
         int horizPos = e.getX() - recOfColumn.x;
@@ -531,7 +569,8 @@ public class TableContentView extends JTable {
         super.initializeLocalVars();
         TableColumnModel colModel = getColumnModel();
         int bestRowHeight = getRowHeight();
-        for (Enumeration<TableColumn> enu = colModel.getColumns(); enu.hasMoreElements();) {
+        for (Enumeration<TableColumn> enu = 
+            colModel.getColumns(); enu.hasMoreElements();) {
             TableColumn col = enu.nextElement();
             TableCellRenderer renderer = col.getCellRenderer();
             if (renderer instanceof DataValueRenderer) {
@@ -550,7 +589,7 @@ public class TableContentView extends JTable {
      * @see ColumnHeaderRenderer
      * @see JTableHeader#setDefaultRenderer(javax.swing.table.TableCellRenderer)
      */
-    protected TableCellRenderer getNewColumnHeaderRenderer() {
+    protected ColumnHeaderRenderer getNewColumnHeaderRenderer() {
         return new ColumnHeaderRenderer();
     }
 }
