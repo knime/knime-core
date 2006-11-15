@@ -31,11 +31,4 @@
 		<nature>com.atlassw.tools.eclipse.checkstyle.CheckstyleNature</nature>
 		<nature>org.eclipse.pde.PluginNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>log4j.properties</name>
-			<type>1</type>
-			<location>/home/thor/workspace/KNIME/log4j.properties</location>
-		</link>
-	</linkedResources>
 </projectDescription>
