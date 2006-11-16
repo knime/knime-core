@@ -87,7 +87,7 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
      *             <code>DataCell</code>
      * @throws NullPointerException If the argument is <code>null</code>.
      */
-    public static final DataValueRendererFamily findRensdererFamily(
+    public static final DataValueRendererFamily findRendererFamily(
             final Class<?> cellClass) {
         if (cellClass == null) {
             throw new NullPointerException("Class argument must not be null");

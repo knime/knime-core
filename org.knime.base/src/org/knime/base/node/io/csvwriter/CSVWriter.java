@@ -226,6 +226,21 @@ public class CSVWriter extends BufferedWriter {
     }
 
     /**
+     * @return The seperator character.
+     */
+    public char getSepChar() {
+        return m_sepChar;
+    }
+    
+    /**
+     * @return True if seperator characters in Strings shell be removed, false
+     * otherwise.
+     */
+    public boolean isRemoveSepCharInStrings() {
+        return m_removeSepCharInStrings;
+    }
+
+    /**
      * @return the missing
      */
     public String getMissing() {
