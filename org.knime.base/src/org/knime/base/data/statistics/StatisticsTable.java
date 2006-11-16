@@ -94,21 +94,13 @@ public class StatisticsTable implements DataTable {
     /*
      * a table spec we've created with ranges added to all numerical columns
      */
-    private final DataTableSpec m_tSpec;
+    private DataTableSpec m_tSpec;
 
-    /**
-     * Create new wrapper table from an existing one. This constructor
-     * calculates all values. It needs to traverse (twice) through the entire
-     * specified table. User can cancel action if an execution monitor is
-     * passed.
-     * 
-     * @param table table to be wrapped
-     * @param exec an object to check with if user canceled operation
-     * @throws CanceledExecutionException if user canceled
-     * @see DataTable#getDataTableSpec()
+    /** To be used in derived classes that do additional calculations. Please
+     * do call calculateAllMoments when done!
+     * @param table To wrap.
      */
-    public StatisticsTable(final DataTable table, final ExecutionMonitor exec)
-            throws CanceledExecutionException {
+    protected StatisticsTable(final DataTable table) {
         m_table = table;
         int nrCols = m_table.getDataTableSpec().getNumColumns();
         // initialize cache arrays
@@ -122,6 +114,22 @@ public class StatisticsTable implements DataTable {
             m_minValues[i] = null;
             m_maxValues[i] = null;
         }
+    }
+
+        /**
+     * Create new wrapper table from an existing one. This constructor
+     * calculates all values. It needs to traverse (twice) through the entire
+     * specified table. User can cancel action if an execution monitor is
+     * passed.
+     * 
+     * @param table table to be wrapped
+     * @param exec an object to check with if user canceled operation
+     * @throws CanceledExecutionException if user canceled
+     * @see DataTable#getDataTableSpec()
+     */
+    public StatisticsTable(final DataTable table, final ExecutionMonitor exec)
+            throws CanceledExecutionException {
+        this (table);
         m_tSpec = calculateAllMoments(exec);
     }
 
@@ -133,6 +141,10 @@ public class StatisticsTable implements DataTable {
      *         underlying table had ranges set nothing will change.
      */
     public DataTableSpec getDataTableSpec() {
+        if (m_tSpec == null) {
+            throw new IllegalStateException(
+                    "Table spec should have been determined in constructor.");
+        }
         return m_tSpec;
 
     }
@@ -165,7 +177,7 @@ public class StatisticsTable implements DataTable {
      * @return the newly calculated spec
      * @throws CanceledExecutionException if user canceled
      */
-    private DataTableSpec calculateAllMoments(final ExecutionMonitor exec)
+    protected DataTableSpec calculateAllMoments(final ExecutionMonitor exec)
             throws CanceledExecutionException {
 
         DataTableSpec origSpec = m_table.getDataTableSpec();
@@ -227,11 +239,12 @@ public class StatisticsTable implements DataTable {
                     }
                 }
             }
+            calculateMomentInSubClass(row);
         }
         m_nrRows = nrRows;
 
         for (int j = 0; j < numOfCols; j++) {
-            // in case we got an emtpy table or columns that contain only
+            // in case we got an empty table or columns that contain only
             // missing values
             if (validCount[j] == 0 || m_minValues[j] == null) {
                 DataCell mc = DataType.getMissingCell();
@@ -263,12 +276,22 @@ public class StatisticsTable implements DataTable {
             cSpec[c] = creator.createSpec();
         }
         return new DataTableSpec(cSpec);
-
+    }
+    
+    /**
+     * Derived classes may do additional calculations here. This method
+     * is called from {@link #calculateAllMoments(ExecutionMonitor)} with
+     * all of the rows.
+     * @param row For processing.
+     */
+    protected void calculateMomentInSubClass(final DataRow row) {
+        // please checkstyle
+        assert (row == row);
     }
 
     /**
      * Returns the mean for the desired column. Throws an exception if the
-     * specified column is not comaptible to DoubleValue. Returns
+     * specified column is not compatible to DoubleValue. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
      * 
@@ -332,10 +355,10 @@ public class StatisticsTable implements DataTable {
      * Calculates the standard deviation for the desired column. Throws an
      * exception if the column type is not compatible to {@link DoubleValue}.
      * Will return zero if the column contains only missing cells or the table
-     * was emtpy.
+     * was empty.
      * 
      * @param colIdx the index of the column for which the standard deviation is
-     *            tobe calculated
+     *            to be calculated
      * @return standard deviation or zero if its a column of missing values of
      *         the table is empty
      */
