@@ -84,6 +84,10 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void runTest() {
+        logger.info("<Start> Test: '"
+                + m_knimeSettings.getParentFile().getName()
+                + " ---------------------------------------------------------");
+
         // Collection<NodeView> views = new ArrayList<NodeView>();
         for (NodeContainer nodeCont : m_manager.getNodes()) {
             for (int i = 0; i < nodeCont.getNumViews(); i++) {
@@ -125,6 +129,9 @@ public class KnimeTestCase extends TestCase {
                 nodecont.closeAllViews();
             }
         }
+        logger.info("<End> Test: '"
+                + m_knimeSettings.getParentFile().getName()
+                + " ---------------------------------------------------------");
     }
 
     /**
