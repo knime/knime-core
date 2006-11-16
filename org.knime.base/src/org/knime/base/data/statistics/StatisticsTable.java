@@ -193,7 +193,8 @@ public class StatisticsTable implements DataTable {
         }
         int nrRows = 0;
         DataRow row;
-        for (RowIterator rowIt = m_table.iterator(); rowIt.hasNext(); nrRows++) {
+        for (RowIterator rowIt = m_table.iterator(); 
+            rowIt.hasNext(); nrRows++) {
             row = rowIt.next();
             if (exec != null) {
                 exec.setProgress(Math.max(0.1, (double)nrRows
@@ -205,12 +206,14 @@ public class StatisticsTable implements DataTable {
             for (int c = 0; c < numOfCols; c++) {
                 if (!(row.getCell(c).isMissing())) {
                     // keep the min and max for each column
-                    if ((m_minValues[c] == null)
-                            || (comp[c].compare(row.getCell(c), m_minValues[c]) < 0)) {
+                    if ((m_minValues[c] == null) 
+                            || (comp[c].compare(
+                                    row.getCell(c), m_minValues[c]) < 0)) {
                         m_minValues[c] = row.getCell(c);
                     }
                     if ((m_maxValues[c] == null)
-                            || (comp[c].compare(m_maxValues[c], row.getCell(c)) < 0)) {
+                            || (comp[c].compare(
+                                    m_maxValues[c], row.getCell(c)) < 0)) {
                         m_maxValues[c] = row.getCell(c);
                     }
                     // for double columns we calc the sum (for the mean calc)
@@ -238,8 +241,8 @@ public class StatisticsTable implements DataTable {
                 m_varianceValues[j] = Double.NaN;
             } else {
                 m_meanValues[j] = sum[j] / validCount[j];
-                m_varianceValues[j] = (sumsquare[j] - ((sum[j] * sum[j]) / validCount[j]))
-                        / (validCount[j] - 1);
+                m_varianceValues[j] = (sumsquare[j] - ((sum[j] * sum[j]) 
+                        / validCount[j])) / (validCount[j] - 1);
             }
         }
 
@@ -340,7 +343,8 @@ public class StatisticsTable implements DataTable {
         if (!m_table.getDataTableSpec().getColumnSpec(colIdx).getType()
                 .isCompatible(DoubleValue.class)) {
             throw new IllegalArgumentException("Can only calculate standard"
-                    + "deviation of double columns (Col " + colIdx + " is not)");
+                    + "deviation of double columns (Col " 
+                    + colIdx + " is not)");
         }
         return Math.sqrt(m_varianceValues[colIdx]);
     }
