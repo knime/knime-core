@@ -30,16 +30,16 @@ import java.util.Comparator;
 /**
  * The comparator used to compare two {@link DataValue} objects. An
  * instance of this class is returned by each
- * {@link DataValue.UtilityFactory} implementation to compare two values.
+ * {@link DataValue.UtilityFactory} implementation.
  * Implementations can safely assume that objects passed to the
- * <code>compareDataValue</code> method are typecastable to that type of that
- * DataValue returning this comparator.
+ * {@link #compareDataValues(DataValue, DataValue)} method support a type cast 
+ * to that type of the <code>DataValue</code> returning this comparator.
  * 
  * <p>
  * Note: this comparator imposes orderings that are inconsistent with equals.
  * (That is, the return value zero is not equivalent to equals returning true,
  * it rather says &quot;don't know&quot;. Meaning, if two data values cannot be
- * compared (because they represent completly different value types) the
+ * compared (because they represent completely different value types) the
  * comparator will return zero - and equals will return false.)
  * 
  * @see org.knime.core.data.DataValue.UtilityFactory#getComparator()
@@ -55,18 +55,21 @@ public abstract class DataValueComparator implements Comparator<DataCell> {
     }
 
     /**
-     * The final implementation checks and handles data cells representing
-     * missing values, before it delegates the actual comparison to the derived
-     * class, by calling <code>compareDataValues()</code>.
+     * This final implementation checks and handles <code>DataCell</code>s 
+     * representing missing values, before it delegates the actual comparison 
+     * to the derived class, by calling <code>compareDataValues()</code>.
+     * Missing cells are considered to be smaller than any other non-missing 
+     * <code>DataCell</code>, and two missing cells are not comparable 
+     * (returns 0).
      * 
-     * @param c1 the first datacell to compare the other with
-     * @param c2 the other datacell to compare the first with
-     * @return a negative number if o1 is smaller than o2, a positive number if
-     *         o1 is larger than o2, otherwise zero. Note: return value zero is
-     *         not equivalent to o1 equals o2.
+     * @param c1 the first <code>DataCell</code> to compare the other with
+     * @param c2 the other <code>DataCell</code> to compare the first with
+     * @return a negative number if c1 is smaller than c2, a positive number if
+     *         c1 is larger than c2, otherwise zero. Note: return value zero is
+     *         not equivalent to c1 equals c2, rather they are not comparable 
+     *         at all
      * 
-     * @throws NullPointerException If one or the other object is
-     *             <code>null</code>.
+     * @throws NullPointerException if any of the objects is <code>null</code>
      * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      * @see #compareDataValues(DataValue, DataValue)
@@ -81,22 +84,24 @@ public abstract class DataValueComparator implements Comparator<DataCell> {
         } else {
             if (c2.isMissing()) {
                 return +1;
+            } else {
+                // both cells are not missing
+                return compareDataValues(c1, c2);
             }
-            // both cells are not missing
-            return compareDataValues(c1, c2);
         }
     }
 
     /**
-     * Do not call this function. Rather call the <code>compare</code> method.
+     * Do not call this function, rather call the <code>compare</code> method, 
+     * which handles missing cells.
      * The derived class should compare the two passed data values. It can be
      * safely assumed that both values are castable to the specific type of the
      * <code>DataValue</code> that returned this comparator. 
      * 
-     * @param v1 the one value to compare the other with.
-     * @param v2 the other value to compare the one with.
+     * @param v1 the first value to compare the other with
+     * @param v2 the other value to compare the first with
      * @return return -1 if v1 is smaller than v2, +1 if v1 is larger than v2,
-     *         0 otherwise.
+     *         0 otherwise
      */
     protected abstract int compareDataValues(
             final DataValue v1, final DataValue v2);

@@ -53,8 +53,14 @@ import org.knime.core.node.config.ConfigWO;
 /**
  * Type description associated with a certain implementation of a
  * {@link DataCell}. It essentially keeps the list of compatible (i.e.
- * castable) {@link DataValue} interfaces, a list of renderers for this type,
- * and (potentially more than one) comparator for data cells of this type.
+ * for which a type cast is possible) {@link DataValue} interfaces, a list of 
+ * renderers for this type, and (potentially more than one) comparator for data 
+ * cells of this type.
+ *  
+ * <p>
+ * There are two types of DataType: the so-called native types, which are 
+ * assigned to a certain DataCell, and the non-native types, which only consist 
+ * of a set of compatible value classes. 
  *  
  * <p>
  * Also, it provides the possibility to get a common super type for two given
@@ -62,14 +68,14 @@ import org.knime.core.node.config.ConfigWO;
  * then the returned <code>DataType</code> is calculated based on the 
  * intersection of both compatible <code>DataValue</code> lists.
  * 
- * - non-native with cell classes
- * - missing cell
+ * <p>
+ * The DataCell representing missing values is defined in this class.
  * 
  * <p>
  * On details of data types in KNIME see the <a
  * href="package-summary.html">package description</a> and the <a
  * href="doc-files/newtypes.html">
- * manual on how to define customized data types</a>.
+ * manual</a> on how to define customized data types.
  * 
  * @see org.knime.core.data.DataCell
  * @see org.knime.core.data.DataValue

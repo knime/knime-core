@@ -28,23 +28,25 @@ package org.knime.core.data;
 import java.io.Serializable;
 
 /**
- * Abstract base class of all data cells defining the common abilities to
- * retrieve the cell type, to find out if this cell is missing, and also a
- * string representation, all cells must provide.
+ * Abstract base class of all data cells, which acts as a container for 
+ * arbitrary values and defines the common abilities all cells must provide, 
+ * that is: retrieve the cell type, a string representation of the value, 
+ * find out if this cell is missing and test whether it is equal to another one.
  * <p>
  * 
- * Derived classes will extend this class and implement (at least one) interface
- * derived from {@link DataValue}. The instantiated derived object must be
- * read-only, no setter methods must be implemented.
+ * Derived classes have to implement at least one interface
+ * derived from {@link DataValue}. The derived class must be
+ * read-only, i.e. setter methods must not be implemented.
  * 
  * <p>
- * This class implements {@link Serializable java.io.Serializable}. However, if
+ * This class implements {@link java.io.Serializable}. However, if
  * you define a custom <code>DataCell</code> implementation, consider to
- * implement a factory that takes care of reading/writing a cell to a
- * {@link java.io.DataInput java.io.DataInput} or
- * {@link java.io.DataOutput java.io.DataOutput} source. Ordinary Java
- * serialization is considerably slower than using such a factory. To register
- * such a factory, define a static method having the following signature:
+ * implement a factory that takes care of reading and writing a cell to a
+ * {@link java.io.DataInput} or
+ * {@link java.io.DataOutput} source. Ordinary Java
+ * serialization is considerably slower than implementing your own 
+ * {@link DataCellSerializer}. To register
+ * such a serializer, define a static method having the following signature:
  * 
  * <pre>
  *   public static final {@link DataCellSerializer}&lt;YourCellClass&gt; 
@@ -53,14 +55,13 @@ import java.io.Serializable;
  *   }
  * </pre>
  * 
- * where <i>YourCellClass</i> is the name of your customized
- * <code>DataCell</code>. This method will be called whenever the cell at
- * hand needs to be written using reflection. This method is only called once,
- * i.e. the first time that it is used.
+ * where <i>YourCellClass</i> is the name of your <code>DataCell</code> 
+ * implementation. This method will be called by reflection, whenever the cell 
+ * at hand needs to be written. 
  * 
  * <p>
  * Since <code>DataCell</code> may implement different {@link DataValue}
- * interfaces but only one is the <i>native</i> value class, consider to
+ * interfaces but only one is the <i>native</i> value class, 
  * implement a static method in your derived class with the following signature:
  * 
  * <pre>
@@ -70,15 +71,15 @@ import java.io.Serializable;
  *    }
  * </pre>
  * 
- * This method is called when the runtime {@link DataType} of the cell is
- * created using reflection. The associated {@link DataType} will set the
- * renderer, icon, and comparator of this native value class as default. If you
- * don't specify such method, the order on the value interfaces is undefined.
+ * This method is called once when the runtime {@link DataType} of the cell is
+ * created using reflection. The associated {@link DataType} provides the
+ * renderer, icon, and comparator of this native value. If this method is 
+ * not implemented, the order on the value interfaces is undefined.
  * 
  * <p>
  * For further details on data types, see also the <a
  * href="package-summary.html">package description</a> and the <a
- * href="doc-files/newtypes.html">manual on defining new KNIME cell types</a>.
+ * href="doc-files/newtypes.html">manual</a> on defining new cell types.
  * 
  * @see DataType
  * @author Bernd Wiswedel, University of Konstanz
@@ -89,9 +90,9 @@ public abstract class DataCell implements DataValue, Serializable {
      * Returns this cell's <code>DataType</code>. This method is provided for 
      * convenience only, it is a shortcut for 
      * <code>DataType.getType(o.getClass())</code>, where <i>o</i> is the 
-     * runtime data cell object (i.e. the object on which this method is 
-     * called).
-     * @return The <code>DataType</code>.
+     * runtime data cell object.
+     * 
+     * @return the <code>DataType</code>
      * @see DataType#getType(Class)
      */
     public final DataType getType() {
@@ -99,16 +100,17 @@ public abstract class DataCell implements DataValue, Serializable {
     }
     
     /**
-     * Does this cell represent a missing cell? The default implementation 
-     * returns <code>false</code>. If you need to represent a missing cell
-     * use the static method DataType.getMissingCell().
-     * @return If the cell represents a missing value.
+     * Returns true if this represents missing cell, false otherwise. The 
+     * default implementation returns <code>false</code>. If you need a missing 
+     * cell use the static method <code>DataType.getMissingCell()</code>.
+     * 
+     * @return true, if the cell represents a missing value, false otherwise
      * @see DataType#getMissingCell()
      */
     public final boolean isMissing() {
         /* 
-         * Instead of testing of this != DataType.getMissing() we use here 
-         * this slightly more complicated approach using the method 
+         * Instead of testing "this != DataType.getMissing()" we use here 
+         * the slightly more complicated approach using the method 
          * isMissingInternal() with package scope in order to avoid class 
          * loading  problems. Especially in eclipse it is known that there are 
          * many different class loaders, each of which can potentially create 
@@ -117,9 +119,12 @@ public abstract class DataCell implements DataValue, Serializable {
         return isMissingInternal();
     }
     
-    /** Internal implementation of getMissing(). It will return 
-     * <code>false</code> and is only overridden in the missing cell 
+    /** 
+     * Internal implementation of <code>getMissing()</code>. It will return 
+     * <code>false</code> and is only overridden in the 
+     * {@link DataType#getMissingCell()}
      * implementation.
+     * 
      * @return <code>false</code>.
      */
     boolean isMissingInternal() {
@@ -127,11 +132,9 @@ public abstract class DataCell implements DataValue, Serializable {
     }
 
     /**
-     * Returns the String representation for this cell. All cells must provide
-     * this as a fall back in case the actual type of the cell is unknown (or
-     * unexpected).
+     * Returns the String representation of the value this cell. 
      * 
-     * @return A string representation of the value of this cell.
+     * @return a string representation of the value of this cell
      */
     @Override
     public abstract String toString();
@@ -140,13 +143,14 @@ public abstract class DataCell implements DataValue, Serializable {
      * Implements the equals method which returns <code>true</code> only if both
      * cells are of the same class and are equal. For that, this final method
      * calls the type specific {@link #equalsDataCell(DataCell)} method,
-     * which all derived data cells must provide. It handles the missing value 
-     * and null cases, in all other cases it delegates to the specific method.
+     * which all derived <code>DataCell</code>s must provide. This method 
+     * handles the missing value and null cases, in all other cases it delegates
+     * to the specific method.
      * 
-     * @param o The other object to check.
+     * @param o the other object to check
      * @return <b>true </b> if this instance and the given object are instances
      *         of the same class and of equal value (or both representing
-     *         missing values).
+     *         missing values)
      */
     @Override
     public final boolean equals(final Object o) {
@@ -172,18 +176,18 @@ public abstract class DataCell implements DataValue, Serializable {
             // now call the datacell class specific equals method
             return equalsDataCell((DataCell)o);
         }
-        // sorry, not equal.
+        // not of the same class
         return false;
     }
 
     /**
      * Derived classes implement their specific equals function here. The
-     * argument is guaranteed to be not <code>null</code>, to be of the same
-     * class than this, and not representing a missing value.
+     * argument is guaranteed to be not <code>null</code> or a missing value, 
+     * to be of the same class like this.
      * 
-     * @param dc the cell to compare this to.
+     * @param dc the cell to compare this to
      * @return <code>true</code> if this is equal to the argument,
-     *         <code>false</code> if not.
+     *         <code>false</code> if not
      */
     protected abstract boolean equalsDataCell(final DataCell dc);
 
@@ -191,7 +195,7 @@ public abstract class DataCell implements DataValue, Serializable {
      * This method must be implemented in order to ensure that two equal
      * <code>DataCell</code> objects return the same hash code.
      * 
-     * @return The hash code of your specific data cell.
+     * @return the hash code of your specific data cell
      * 
      * @see java.lang.Object#hashCode()
      * @see #equals
