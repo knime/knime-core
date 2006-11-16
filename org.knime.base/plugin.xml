@@ -170,11 +170,6 @@
             id="org.knime.base.node.viz.table.TableNodeFactory">
       </node>
       <node
-            category-path="/view"
-            factory-class="org.knime.base.node.viz.scatterplot.ScatterPlotNodeFactory"
-            id="org.knime.base.node.viz.scatterplot.ScatterPlotNodeFactory">
-      </node>
-      <node
             category-path="/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.ScorerNodeFactory"
             id="org.knime.base.node.mine.scorer.ScorerNodeFactory">
@@ -204,10 +199,6 @@
             category-path="/mining/rules/basisfunction"
             factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"
             id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"/>
-      <node
-            category-path="/view"
-            factory-class="org.knime.base.node.viz.parcoord.ParallelCoordinatesNodeFactory"
-            id="org.knime.base.node.viz.parcoord.ParallelCoordinatesNodeFactory"/>
       <node
             category-path="/mining/nn/pnn"
             factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"
@@ -413,6 +404,26 @@
            category-path="/manipulation/column"
            factory-class="org.knime.base.node.preproc.colappender.ColAppenderNodeFactory"
            id="org.knime.base.node.preproc.colappender.ColAppenderNodeFactory"/>
+     <node
+           category-path="/view"
+           factory-class="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"
+           id="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"/>
+     <node
+           category-path="/view"
+           factory-class="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory"
+           id="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory"/>
+     <node
+           category-path="/view"
+           factory-class="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeFactory"
+           id="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeFactory"/>
+     <node
+           category-path="/view"
+           factory-class="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeFactory"
+           id="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeFactory"/>
+     <node
+           category-path="/view"
+           factory-class="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"
+           id="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"/>
    </extension>
    
    

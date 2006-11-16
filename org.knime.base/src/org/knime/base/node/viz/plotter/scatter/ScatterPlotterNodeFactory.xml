@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./scatter.png" type="Visualizer">
-	<name>New Scatterplot</name>
+	<name>Scatter Plot</name>
 	
 	<shortDescription>
 	    Creates a scatterplot of two selectable attributes.
