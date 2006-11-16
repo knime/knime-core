@@ -100,6 +100,26 @@ public final class FileUtil {
         }
     } // copy(File, File, ExecutionMonitor)
     
+
+    /**
+     * Copies the bytes as read from <code>input</code> to the output stream
+     * <code>destination</code>. Neither <code>input</code> nor 
+     * <code>destination</code> get closed at the end!
+     * @param input To read from
+     * @param destination To write to
+     * @throws IOException If that fails for any reason.
+     * @throws NullPointerException If any argument is <code>null</code>.
+     */
+    public static void copy(final InputStream input, 
+            final OutputStream destination) throws IOException {
+        final int bufSize = 8192;
+        byte[] cache = new byte[bufSize];
+        int read; 
+        while ((read = input.read(cache, 0, bufSize)) > 0) {
+            destination.write(cache, 0, read);
+        }
+    }
+    
     /** Copies a file. The implementation uses a temporary buffer of 8kB.
      * @param file The file to copy.
      * @param destination The destination file, fully qualified 
