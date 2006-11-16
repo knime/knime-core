@@ -1,0 +1,56 @@
+/* -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   25.10.2006 (Fabian Dill): created
+ */
+package org.knime.base.node.viz.plotter.basic;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Point;
+
+/**
+ * 
+ * @author Fabian Dill, University of Konstanz
+ */
+public class BasicText extends BasicDrawingElement {
+    
+    private String m_text;
+    
+    /**
+     * 
+     * @param text the text to be displayed.
+     */
+    public BasicText(final String text) {
+        m_text = text;
+    }
+
+    /**
+     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#paint(
+     * java.awt.Graphics2D)
+     */
+    @Override
+    public void paint(final Graphics2D g2) {
+        if (getPoints() != null && getPoints().size() > 0) {
+            Color backup = g2.getColor();
+            g2.setColor(getColor());
+            Point p = getPoints().get(0);
+            g2.drawString(m_text, p.x, p.y);
+            g2.setColor(backup);
+        }
+    }
+
+}
