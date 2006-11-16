@@ -1,0 +1,129 @@
+/* -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   04.10.2006 (Fabian Dill): created
+ */
+package org.knime.exp.node.view.plotter.scattermatrix;
+
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.knime.base.util.coordinate.Coordinate;
+import org.knime.exp.node.view.plotter.scatter.DotInfo;
+
+/**
+ * 
+ * @author Fabian Dill, University of Konstanz
+ */
+public class ScatterMatrixElement {
+    
+    private  Point m_leftUpperCorner;
+    
+    private int m_width;
+    
+    private int m_height;
+    
+    private Coordinate m_xCoordinate;
+    
+    private Coordinate m_yCoordinate;
+    
+    private List<DotInfo> m_dots;
+    
+    /**
+     * 
+     * @param upperLeftCorner the upper left corner.
+     * @param width the width.
+     * @param height the height.
+     * @param xCoordinate the x coordinate
+     * @param yCoordinate the y coordinate
+     */
+    public ScatterMatrixElement(final Point upperLeftCorner,
+            final int width, final int height, final Coordinate xCoordinate,
+            final Coordinate yCoordinate) {
+        m_leftUpperCorner = upperLeftCorner;
+        m_width = width;
+        m_height = height;
+        m_xCoordinate = xCoordinate;
+        m_yCoordinate = yCoordinate;
+        m_dots = new ArrayList<DotInfo>();
+    }
+    
+    
+    /**
+     * 
+     * @param dot adds a dot for this matrix element.
+     */
+    public void addDot(final DotInfo dot) {
+        m_dots.add(dot);
+    }
+    
+    /**
+     * 
+     * @param dots the dots in this matrix element.
+     */
+    public void setDots(final List<DotInfo> dots) {
+        m_dots = dots;
+    }
+    
+    /**
+     * 
+     * @return the dots of this matrix element
+     */
+    public List<DotInfo> getDots() {
+        return m_dots;
+    }
+    /**
+     * 
+     * @return upper left corner
+     */
+    public Point getCorner() {
+        return m_leftUpperCorner;
+    }
+    
+    /**
+     * 
+     * @return height.
+     */
+    public int getHeight() {
+        return m_height;
+    }
+    
+    /**
+     * 
+     * @return width.
+     */
+    public int getWidth() {
+        return m_width;
+    }
+    
+    /**
+     * 
+     * @return the x coordinate.
+     */
+    public Coordinate getXCoordinate() {
+        return m_xCoordinate;
+    }
+    
+    /**
+     * 
+     * @return y coordinate.
+     */
+    public Coordinate getYCoordinate() {
+        return m_yCoordinate;
+    }
+
+}

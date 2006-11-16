@@ -1,0 +1,40 @@
+<body>
+<p>
+This package contains the basic viewing framework for KNIME. Its main elements
+are so-called plotters. A plotter consists of four elements:</p>
+<ul>
+<li>The plotter which does the mapping of points to screen coordinates and is
+the composite element. </li>
+<li>
+The DrawingPane where the actual drawing is done. The drawing pane knows nothing 
+about the domain values but only the screen coordinates.
+</li>
+<li>
+The ScrollPane. The drawing pane is embedded in a scroll pane. The scroll pane
+represents a coordinate system with the x axis from left to right and a y 
+axis from bottom to top! (Different from java built-in coordinate system.)
+</li>
+<li>
+A properties panel, which contains the control elements for the plotter. 
+Should be extended in order to keep the core functionality available.
+</li>
+</ul>
+<p>
+There exists a hierarchy of plotters each adds some functionality. 
+They may be extended at every point in the hierarchy. 
+</p>
+<p>
+The most abstract plotter is the AbstractPlotter which provides functionality of
+selection, zooming, moving and correctly resizing the component. 
+Although it is an abstract plotter X and Y axis may be set.
+</p>
+<p>
+The next plotter in the hierarchy is the basic plotter which provides 
+functionality to plot basic drawing elements such as lines (polygons), ellipses 
+and rectangles. The plotter comes along with these basic elements but also let
+you define your own basic drawing element and add it to the drawing pane.
+</p>
+<p>
+The next sub branch of the basic plotter is the two column plotter which plots 
+two selectable columns.
+</body>

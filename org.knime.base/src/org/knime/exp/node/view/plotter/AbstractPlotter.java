@@ -1,0 +1,1269 @@
+/* -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2006
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   24.08.2006 (Fabian Dill): created
+ */
+package org.knime.exp.node.view.plotter;
+
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
+import java.util.Set;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JColorChooser;
+import javax.swing.JDialog;
+import javax.swing.JMenu;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JViewport;
+
+import org.knime.base.util.coordinate.Coordinate;
+import org.knime.base.util.coordinate.NumericCoordinate;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteListener;
+import org.knime.core.node.property.hilite.KeyEvent;
+
+/**
+ * 
+ * @author Fabian Dill, University of Konstanz
+ */
+public abstract class AbstractPlotter extends JPanel implements HiLiteListener, 
+        ComponentListener {
+    
+    private static final NodeLogger LOGGER = NodeLogger
+        .getLogger(AbstractPlotter.class);
+    
+    /** The default zoom factor. */
+    public static final double DEFAULT_ZOOM_FACTOR = 1.2;
+    
+    /** Constant for "show hilited only" menu entry. */
+    public static final String HIDE_UNHILITED = "Show hilited only";
+    
+    /** Constant for the menu entry "show all". */
+    public static final String SHOW_ALL = "Show all";
+    
+    /** Constant for "Fade unhilited" menu entry. */
+    public static final String FADE_UNHILITED = "Fade unhilited";
+    
+    /** Constant for the show/hide menu title. */
+    public static final String SHOW_HIDE = "Show/Hide";
+
+    private static final int DRAG_TOLERANCE = 5;
+    
+    private AbstractDrawingPane m_drawingPane;
+    
+    private Plotter2DScrollPane m_scroller;
+    
+    private AbstractPlotterProperties m_properties;
+    
+    private boolean m_isDragged;
+    
+    private int m_width;
+    
+    private int m_height;
+    
+    private Axis m_xAxis;
+    
+    private Axis m_yAxis;
+
+    
+    private PlotterMouseListener m_currMouseListener;
+    
+    private DataProvider m_dataProvider;
+    
+    
+//    private Action m_hiliteMenu;
+//    
+//    private Action m_unhiliteMenu;
+//    
+//    private Action m_clearHiliteMenu;
+    
+    private HiLiteHandler m_hiliteHandler;
+
+    private boolean m_preserve = true;
+    
+    
+    /**
+     * 
+     * @param drawingPane the drawing pane
+     * @param properties the properties panel
+     */
+    public AbstractPlotter(final AbstractDrawingPane drawingPane,
+            final AbstractPlotterProperties properties) {
+        m_drawingPane = drawingPane;
+        m_currMouseListener = new SelectionMouseListener();
+        m_drawingPane.addMouseListener(m_currMouseListener);
+        m_drawingPane.addMouseMotionListener(m_currMouseListener);
+        m_drawingPane.setCursor(m_currMouseListener.getCursor());
+        m_scroller = new Plotter2DScrollPane(m_drawingPane);
+        m_scroller.setLayout(new Plotter2DScrollPaneLayout());
+        
+        m_properties = properties;
+        m_properties.setMaximumSize(new Dimension(Integer.MAX_VALUE,
+                m_properties.getPreferredSize().height));
+        m_properties.getMouseSelectionBox().addItem(m_currMouseListener);
+        m_properties.getMouseSelectionBox().addItem(new ZoomMouseListener());
+        m_properties.getMouseSelectionBox().addItem(new MovingMouseListener());
+        m_properties.getMouseSelectionBox().setSelectedItem(
+                m_currMouseListener);
+        m_properties.getMouseSelectionBox().addItemListener(new ItemListener() {
+            /**
+             * @see java.awt.event.ItemListener#itemStateChanged(
+             * java.awt.event.ItemEvent)
+             */
+            public void itemStateChanged(final ItemEvent e) {
+                // clean up
+                m_drawingPane.removeMouseListener(m_currMouseListener);
+                m_drawingPane.removeMouseMotionListener(m_currMouseListener);
+                m_drawingPane.setMouseDown(false);
+                m_isDragged = false;
+                m_currMouseListener = (PlotterMouseListener)m_properties
+                    .getMouseSelectionBox().getSelectedItem();
+                m_drawingPane.setCursor(m_currMouseListener.getCursor());
+                m_drawingPane.addMouseListener(m_currMouseListener);
+                m_drawingPane.addMouseMotionListener(m_currMouseListener);
+            }
+            
+        });
+        m_properties.getFitToScreenButton().addActionListener(
+                new ActionListener() {
+
+                    /**
+                     * @see java.awt.event.ActionListener#actionPerformed(
+                     * java.awt.event.ActionEvent)
+                     */
+                    public void actionPerformed(final ActionEvent e) {
+                        fitToScreen();
+                    }
+            
+        });
+        final ActionListener okListener = new ActionListener() {
+            /**
+             * @see java.awt.event.ActionListener#actionPerformed(
+             * java.awt.event.ActionEvent)
+             */
+            public void actionPerformed(final ActionEvent arg0) {
+                Color newBackground = m_properties.getColorChooser().getColor();
+                if (newBackground != null) {
+                    getDrawingPane().setBackground(newBackground);
+                }
+                
+            }
+        };
+        m_properties.getChooseBackgroundButton().addActionListener(
+                new ActionListener() {
+
+            /**
+             * @see java.awt.event.ActionListener#actionPerformed(
+             * java.awt.event.ActionEvent)
+             */
+            public void actionPerformed(final ActionEvent arg0) {
+                JDialog dialog = JColorChooser.createDialog(
+                        m_properties,
+                        "Select background color", true, 
+                        m_properties.getColorChooser(), 
+                        okListener, null);
+                dialog.setVisible(true);
+            }
+            
+        });
+        m_width = 400;
+        m_height = 400;
+        m_drawingPane.setPreferredSize(new Dimension(m_width, m_height));
+        m_scroller.getViewport().setPreferredSize(new Dimension(
+                m_drawingPane.getPreferredSize().width
+                + m_scroller.getVerticalScrollBar().getPreferredSize().width,
+                m_drawingPane.getPreferredSize().height
+                + m_scroller.getHorizontalScrollBar().getPreferredSize().height
+                ));         
+        
+        m_drawingPane.setBackground(Color.white);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        add(m_scroller);
+        add(m_properties);
+        addComponentListener(this);
+
+        m_hiliteHandler = new DefaultHiLiteHandler();
+        fitToScreen();
+    }
+    
+    /*----------- viewing methods ---------*/
+    
+    /**
+     * 
+     * @return the actual dimension of the drawing pane.
+     */
+    public Dimension getDrawingPaneDimension() {
+        return new Dimension(m_width, m_height);
+    }
+    
+    
+    /**
+     * Zooms the content of the drawing pane to the dragged rectangle.
+     * @param draggedRectangle the dragged rectangle
+     */
+    protected void zoomByWindow(final Rectangle draggedRectangle) {
+        Rectangle dragRect = draggedRectangle;
+        if (dragRect != null && dragRect.width > DRAG_TOLERANCE
+                && dragRect.height > DRAG_TOLERANCE) {
+            int zoomWindowWidth = Math.abs(dragRect.width);
+            int zoomWindowHeight = Math.abs(dragRect.height);
+            JViewport viewPort = m_scroller.getViewport();
+            float widthZoomFactor = ((float)viewPort.getViewRect().width)
+                    / ((float)zoomWindowWidth);
+            float heightZoomFactor = ((float)viewPort.getViewRect().height)
+                    / ((float)zoomWindowHeight);
+            // adjust the draw pane ranges
+            m_width = Math.round(m_width * widthZoomFactor);
+            m_height = Math.round(m_height * heightZoomFactor);
+            m_drawingPane.setPreferredSize(new Dimension(m_width, m_height));
+            m_drawingPane.revalidate();
+            updateAxisLength();
+            updateSize();
+            // calculate the upper left corner corespondence in the adapted draw
+            // pane. this is the original upper left point multiplied by the
+            // zoom factor
+
+            // adapt by zoom factors
+            int upperLeftX = Math.round(dragRect.x * widthZoomFactor);
+            int upperLeftY = Math.round(dragRect.y * heightZoomFactor);
+
+            // set the viewport to this coordinates
+            Rectangle recToVisible = new Rectangle(upperLeftX, upperLeftY, 
+                    viewPort.getVisibleRect().width, 
+                    viewPort.getVisibleRect().height);
+            
+            m_drawingPane.scrollRectToVisible(recToVisible); 
+            m_scroller.revalidate();
+            m_drawingPane.repaint();
+        }
+    }
+    
+    /**
+     * Zooms the content of the drawing pane with the point clicked in center.
+     * @param clicked the point clicked becomes center.
+     */
+    protected void zoomByClick(final Point clicked) {
+        // adjust the draw pane ranges
+        try {
+        m_width = (int)Math.round(m_width * DEFAULT_ZOOM_FACTOR);
+        m_height = (int)Math.round(m_height * DEFAULT_ZOOM_FACTOR);
+        m_drawingPane.setPreferredSize(new Dimension(m_width, m_height));
+        m_drawingPane.invalidate();
+        m_drawingPane.revalidate();
+
+        updateAxisLength();
+        updateSize();
+        
+        Rectangle visibleRect = m_drawingPane.getVisibleRect(); 
+        int vWidth = visibleRect.width;
+        int vHeight = visibleRect.height;
+        int prefX = ((int)(clicked.x * DEFAULT_ZOOM_FACTOR)) - (vWidth / 2);
+        int prefY = ((int)(clicked.y * DEFAULT_ZOOM_FACTOR)) - (vHeight / 2);
+        Rectangle recToVisible = new Rectangle(prefX, prefY, 
+                visibleRect.width, 
+                visibleRect.height);
+        
+        m_drawingPane.scrollRectToVisible(recToVisible); 
+        m_scroller.revalidate();
+        m_drawingPane.repaint();
+        } catch (Exception e) {
+            LOGGER.warn(e.getMessage(), e);
+        }
+    }
+    
+    
+    /**
+     * Fits to screen.
+     *
+     */
+    public final void fitToScreen() {
+        m_width = m_scroller.getViewport().getWidth();
+        m_height = m_scroller.getViewport().getHeight();
+        Dimension newDim = new Dimension(m_width, m_height);
+        m_drawingPane.setPreferredSize(newDim);
+        updatePaintModel();
+        updateAxisLength();
+        updateSize();
+        m_scroller.getViewport().revalidate();
+        m_drawingPane.repaint();
+    }
+    
+    /* ---------- relevant mouse methods ----------- */
+    
+    private void showPopupMenu(final Point at) {
+                m_drawingPane.setMouseDown(false);
+                m_isDragged = false;
+                JPopupMenu menu = new JPopupMenu();
+                fillPopupMenu(menu);
+                menu.show(m_drawingPane, (int)at.getX(), (int)at.getY());
+                return;
+    }
+
+    
+    /* ---------------- relevant component listener methods ------- */
+    /**
+     * @see java.awt.event.ComponentListener#componentResized(
+     * java.awt.event.ComponentEvent)
+     */
+    public final void componentResized(final ComponentEvent e) {
+        if (m_scroller.getViewport().getSize().width > m_width) {
+            m_width = m_scroller.getViewport().getSize().width;
+        }
+        if (m_scroller.getViewport().getSize().height > m_height) {
+            m_height = m_scroller.getViewport().getSize().height;
+        }
+        Dimension newDim = new Dimension(m_width, m_height);
+        m_drawingPane.setPreferredSize(newDim);
+        updateAxisLength();
+        updateSize();
+        m_scroller.getViewport().revalidate();
+        m_drawingPane.repaint();
+    }
+    
+    /**
+     * Sets the height for the plotter.
+     * 
+     * @param height the height to set for the plotter
+     */
+    public void setHeight(final int height) {
+        m_height = height;
+    }
+    
+    /**
+     * Sets the size of the axes to the dimension of the drawin pane.
+     *
+     */
+    public void updateAxisLength() {
+        if (m_xAxis != null) {
+            m_xAxis.setPreferredLength(getDrawingPane()
+                    .getPreferredSize().width);
+            m_xAxis.repaint();
+        }
+        if (m_yAxis != null) {
+            m_yAxis.setPreferredLength(getDrawingPane()
+                    .getPreferredSize().height);
+            m_yAxis.repaint();
+        }
+        m_scroller.revalidate(); 
+        
+                
+    }
+    
+    /*---------- accessors ---------*/
+    
+    /**
+     * @param listener the class of the listener to be removed.
+     */
+    public void removeMouseListener(
+            final Class<? extends PlotterMouseListener> listener) {
+        for (int i = 0; i < m_properties.getMouseSelectionBox().getItemCount(); 
+            i++) {
+            Object item = m_properties.getMouseSelectionBox().getItemAt(i);
+            if (item.getClass().equals(listener)) {
+                m_properties.getMouseSelectionBox().removeItem(item);
+                break;
+            }
+        }
+    }
+    
+    /**
+     * 
+     * @return the currently selected mouse listener.
+     */
+    public PlotterMouseListener getCurrentMouseListener() {
+        return m_currMouseListener;
+    }
+    
+
+    /**
+     * 
+     * @param listener the listener to add.
+     */
+    public void addMouseListener(final PlotterMouseListener listener) {
+        m_properties.getMouseSelectionBox().addItem(listener);
+    }
+    
+    /**
+     * Turns antialiasing on (true) or off (false).
+     * @param doAntialiasing true for antialiasing enabled, false otherwise.
+     */
+    public void setAntialiasing(final boolean doAntialiasing) {
+        getDrawingPane().setAntialiasing(doAntialiasing);
+    }
+    
+    
+    /**
+     * @return the x axis.
+     */
+    public Axis getXAxis() {
+        return m_xAxis;
+    }
+    
+    /**
+     * 
+     * @param xAxis the x axis to set for the drawing pane
+     */
+    public void setXAxis(final Axis xAxis) {
+        m_xAxis = xAxis;
+        m_scroller.setColumnHeaderView(m_xAxis);
+    }
+    
+    /**
+     * 
+     * @return the y axis.
+     */
+    public Axis getYAxis() {
+        return m_yAxis;
+    }
+    
+    /**
+     * 
+     * @param yAxis the y axis to set for the drawing pane
+     */
+    public void setYAxis(final Axis yAxis) {
+        m_yAxis = yAxis;
+        m_scroller.setRowHeaderView(m_yAxis);
+    }
+    
+    /**
+     * 
+     * @param provider the data provider.
+     */
+    public void setDataProvider(final DataProvider provider) {
+        m_dataProvider = provider;
+    }
+    
+    /**
+     * 
+     * @return the data provider.
+     */
+    public DataProvider getDataProvider() {
+        return m_dataProvider;
+    }
+    
+    /**
+     * 
+     * @return the drawing pane
+     */
+    public AbstractDrawingPane getDrawingPane() {
+        return m_drawingPane;
+    }
+    
+    /**
+     * 
+     * @return the properties panel
+     */
+    public AbstractPlotterProperties getProperties() {
+        return m_properties;
+    }
+    
+    /**
+     * 
+     * @return the menu entry for hilite
+     */
+    public Action getHiliteAction() {
+        Action hilite = new AbstractAction(HiLiteHandler.HILITE_SELECTED) {
+            /**
+             * @see java.awt.event.ActionListener#actionPerformed(
+             * java.awt.event.ActionEvent)
+             */
+            public void actionPerformed(final ActionEvent e) {
+                hiLiteSelected();
+            } 
+        };
+        return hilite;
+    }
+    
+    /**
+     * 
+     * @return themenu entry for unhilite
+     */
+    public Action getUnhiliteAction() {
+        Action unhilite = new AbstractAction(HiLiteHandler.UNHILITE_SELECTED) {
+            /**
+             * @see java.awt.event.ActionListener#actionPerformed(
+             * java.awt.event.ActionEvent)
+             */
+            public void actionPerformed(final ActionEvent e) {
+                  unHiLiteSelected();
+            }  
+        };
+        return unhilite;
+    }
+    
+    /**
+     * 
+     * @return the menu entry for clear hilite
+     */
+    public Action getClearHiliteAction() {
+        Action clear = new AbstractAction(HiLiteHandler.CLEAR_HILITE) {
+            /**
+             * @see java.awt.event.ActionListener#actionPerformed(
+             * java.awt.event.ActionEvent)
+             */
+            public void actionPerformed(final ActionEvent e) {
+                delegateUnHiLiteAll();
+            }
+        };
+        return clear;
+    }
+    
+    /**
+     * Fills the popup menu with (additional) elements.
+     * In this class the hilite, unhilite and clear hilite actions are added. 
+     * 
+     * @param popupMenu the popup menu to fill.
+     */
+    public void fillPopupMenu(final JPopupMenu popupMenu) {
+        popupMenu.add(getHiliteAction());
+        popupMenu.add(getUnhiliteAction());
+        popupMenu.add(getClearHiliteAction());
+    }
+    
+    /**
+     * Returns the hilite menu displayed in the NodeView's menu bar.
+     * In this class the hilite, unhilite and clear hilite actions are added.
+     * @return the filled menu for the NodeView's menu bar.
+     */
+    public JMenu getHiLiteMenu() {
+        JMenu menu = new JMenu(HiLiteHandler.HILITE);
+        menu.add(getHiliteAction());
+        menu.add(getUnhiliteAction());
+        menu.add(getClearHiliteAction());
+        return menu;
+    }
+    
+    /* --------------------- hiliting ----------------- */
+    /**
+     * @see org.knime.core.node.property.hilite.HiLiteListener#hiLite(
+     * org.knime.core.node.property.hilite.KeyEvent)
+     */
+    public abstract void hiLite(final KeyEvent event);
+
+    /**
+     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLite(
+     * org.knime.core.node.property.hilite.KeyEvent)
+     */
+    public abstract void unHiLite(final KeyEvent event);
+
+    /**
+     * Is called by the menu entry unhilite selected. Should unhilite selected
+     * elements.
+     *
+     */
+    public abstract void unHiLiteSelected();
+    
+    /**
+     * Is called from the menu entry hilite selected. Should hilite selected 
+     * elements.
+     *
+     */
+    public abstract void hiLiteSelected();
+
+    /**
+     * Delegates the unhilite all command to the hilite handler.
+     *
+     */
+    public void delegateUnHiLiteAll() {
+        m_hiliteHandler.fireClearHiLiteEvent();
+    }
+    
+
+    /**
+     * 
+     * @param handler a new hilite handler
+     */
+    public void setHiLiteHandler(final HiLiteHandler handler) {
+        if (m_hiliteHandler != null && handler != m_hiliteHandler) {
+            m_hiliteHandler.removeHiLiteListener(this);
+        }
+        m_hiliteHandler = handler;
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.addHiLiteListener(this);
+        }
+    }
+  
+    
+    /**
+     * Delegates the listener to the hilite handler.
+     * @param listener the listener
+     */
+    public void delegateAddHiLiteListener(final HiLiteListener listener) {
+        m_hiliteHandler.addHiLiteListener(listener);
+    }
+
+    /**
+     * @return the hilited keys.
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#getHiLitKeys()
+     */
+    public Set<DataCell> delegateGetHiLitKeys() {
+        return m_hiliteHandler.getHiLitKeys();
+    }
+
+    /**
+     * @param ids the keys to be hilited.
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#fireHiLiteEvent(
+     * org.knime.core.data.DataCell[])
+     */
+    public void delegateHiLite(final DataCell... ids) {
+        m_hiliteHandler.fireHiLiteEvent(ids);
+    }
+
+    /**
+     * @param ids the keys to be hilited
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#fireHiLiteEvent(
+     * java.util.Set)
+     */
+    public void delegateHiLite(final Set<DataCell> ids) {
+        m_hiliteHandler.fireHiLiteEvent(ids);
+    }
+
+    /**
+     * @param ids the ids to be checked.
+     * @return true if all passed keys are hilited
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
+     * org.knime.core.data.DataCell[])
+     */
+    public boolean delegateIsHiLit(final DataCell... ids) {
+        return m_hiliteHandler.isHiLit(ids);
+    }
+    
+    /**
+     * @param ids the ids to be checked.
+     * @return true if all passed keys are hilited
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
+     * org.knime.core.data.DataCell[])
+     */
+    public boolean delegateIsHiLit(final Set<DataCell>ids) {
+        DataCell[] cells = new DataCell[ids.size()];
+        int i = 0;
+        for (DataCell cell : ids) {
+            cells[i++] = cell;
+        }
+        return m_hiliteHandler.isHiLit(cells);
+    }
+
+    /**
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#
+     * removeAllHiLiteListeners()
+     */
+    public void delegateRemoveAllHiLiteListeners() {
+        m_hiliteHandler.removeAllHiLiteListeners();
+    }
+
+    /**
+     * @param listener the listener to be removed.
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#
+     * removeHiLiteListener(org.knime.core.node.property.hilite.HiLiteListener)
+     */
+    public void delegateRemoveHiLiteListener(final HiLiteListener listener) {
+        m_hiliteHandler.removeHiLiteListener(listener);
+    }
+
+    /**
+     * @param ids the ids to be unhilited.
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#
+     * fireUnHiLiteEvent(org.knime.core.data.DataCell[])
+     */
+    public void delegateUnHiLite(final DataCell... ids) {
+        m_hiliteHandler.fireUnHiLiteEvent(ids);
+    }
+
+    /**
+     * @param ids the ids to be unhilited.
+     * @see org.knime.core.node.property.hilite.HiLiteHandler#fireUnHiLiteEvent(
+     * java.util.Set)
+     */
+    public void delegateUnHiLite(final Set<DataCell> ids) {
+        m_hiliteHandler.fireUnHiLiteEvent(ids);
+    }
+    
+    /* ------------- abstract methods ------------ */
+
+    /**
+     * Implementing classes may select the elements in the selectino rectangle
+     * obtained from the mouse dragging in selection mode.
+     * @param selectionRectangle the selection rectangle from the dragged mouse 
+     * in selection mode
+     */
+    public abstract void selectElementsIn(final Rectangle selectionRectangle);
+    
+    
+    /**
+     * Implementing classes should take care of the selection. Either clear the 
+     * selection or add the clicked element to the selection.
+     * 
+     * @param clicked the clicked point
+     */
+    public abstract void selectClickedElement(final Point clicked);
+    
+    
+    /**
+     * Clear current selection.
+     *
+     */
+    public abstract void clearSelection();
+    
+    
+    /**
+     * Whenever the size of the drawing pane is changed (zooming, resizing)
+     * this method is called in order to update the painting.
+     *
+     */
+    public abstract void updateSize();
+    
+    
+    
+    /**
+     * Do the mapping from the models data to screen coordinates here and
+     * pass the visualization model to the drawing pane.
+     *
+     */
+    public abstract void updatePaintModel();
+    
+    
+    /**
+     * Reset all local data which depends on the input data provided by 
+     * the data provider.
+     *
+     */
+    public abstract void reset();
+    
+    /* -------------- mouse listeners ------------------*/
+    
+    /**
+     * 
+     */
+    public class SelectionMouseListener extends PlotterMouseListener {
+        
+        private final AbstractDrawingPane m_listenedPane;
+        
+        /**
+         * 
+         *
+         */
+        public SelectionMouseListener() {
+            m_listenedPane = getDrawingPane();
+        }
+        
+        /**
+         * 
+         * @param pane the panel the selection listener listenes to.
+         */
+        public SelectionMouseListener(final AbstractDrawingPane pane) {
+            m_listenedPane = pane;
+        }
+
+        /**
+         * @see java.awt.event.MouseAdapter#mousePressed(
+         * java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mousePressed(final MouseEvent e) {
+            m_listenedPane.setDragStart(e.getPoint());
+//            System.out.println("set mouse down: true");
+//            m_drawingPane.setMouseDown(true);
+        }
+
+        /**
+         * @see java.awt.event.MouseAdapter#mouseReleased(
+         * java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mouseReleased(final MouseEvent e) {
+            if (!e.isControlDown() && !e.isPopupTrigger()) {
+                clearSelection();
+                m_listenedPane.repaint();
+            }
+            if (!m_isDragged) {
+                if (e.isPopupTrigger()) {
+                    showPopupMenu(e.getPoint());
+                    return;
+                } else {
+                    m_listenedPane.setMouseDown(false);
+                    selectClickedElement(e.getPoint());
+                    m_listenedPane.repaint();
+                    return;
+                }
+            }
+            m_listenedPane.setMouseDown(false);
+            m_isDragged = false;
+            m_listenedPane.setDragEnd(e.getPoint());
+            selectElementsIn(m_listenedPane.getSelectionRectangle());
+//            m_properties.revalidate();
+            m_listenedPane.repaint();
+        }
+
+        /**
+         * 
+         * @see org.knime.exp.node.view.plotter.PlotterMouseListener#
+         * mouseDragged(java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mouseDragged(final MouseEvent e) {
+            m_listenedPane.setMouseDown(true);
+            m_isDragged = true;
+            m_listenedPane.setDragEnd(e.getPoint());
+            // simply repaint to update the dragging rectangle
+            m_listenedPane.repaint();
+        }
+        
+        /**
+         * 
+         * @see org.knime.exp.node.view.plotter.PlotterMouseListener#
+         * getCursor()
+         */
+        @Override
+        public Cursor getCursor() {
+            return new Cursor(Cursor.CROSSHAIR_CURSOR);
+        }
+        
+        /**
+         * 
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            return "Selection";
+        }
+        
+        /**
+         * 
+         * @return the drawing pane this listener listens to.
+         */
+        public AbstractDrawingPane getInternalDrawingPane() {
+            return m_listenedPane;
+        }
+    }
+    
+    /**
+     * 
+     * 
+     * @author Fabian Dill, University of Konstanz
+     */
+    public class ZoomMouseListener extends PlotterMouseListener {
+
+        private Cursor m_zoomCursor;
+        
+        /**
+         * @see java.awt.event.MouseAdapter#mousePressed(
+         * java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mousePressed(final MouseEvent e) {
+            m_drawingPane.setDragStart(e.getPoint());
+            m_drawingPane.setMouseDown(true);
+        }
+
+        /**
+         * @see java.awt.event.MouseAdapter#mouseReleased(
+         * java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mouseReleased(final MouseEvent e) {
+            if (!m_isDragged) {
+                if (e.isPopupTrigger()) {
+                    showPopupMenu(e.getPoint());
+                    return;
+                } else {
+                    m_drawingPane.setMouseDown(false);
+                    m_isDragged = false;
+                    zoomByClick(e.getPoint());
+                    return;
+                }
+            }
+            m_drawingPane.setMouseDown(false);
+            m_isDragged = false;
+            m_drawingPane.setDragEnd(e.getPoint());
+            zoomByWindow(m_drawingPane.getSelectionRectangle());
+            m_properties.revalidate();
+            m_drawingPane.repaint();
+        }
+
+
+        /**
+         * 
+         * @see org.knime.exp.node.view.plotter.PlotterMouseListener#
+         * mouseDragged(java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mouseDragged(final MouseEvent e) {
+            m_isDragged = true;
+            m_drawingPane.setDragEnd(e.getPoint());
+            if (m_drawingPane.isMouseDown()) {
+                // simply repaint to update the dragging rectangle
+                m_drawingPane.repaint();
+            }
+        }
+        
+        /**
+         * 
+         * @see org.knime.exp.node.view.plotter.PlotterMouseListener#
+         * getCursor()
+         */
+        @Override
+        public Cursor getCursor() {
+            if (m_zoomCursor == null) {
+
+                ImageIcon zoomCursorImage = getZoomIcon();
+                m_zoomCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                        // sets the hot spot to the cross in the magnifier
+                        zoomCursorImage.getImage(), new Point(15, 15), "Zoom");
+            }
+
+            return m_zoomCursor;
+        }
+        
+        /**
+         * Returns the image icon intended for zoom representation.
+         * 
+         * @return the zoom icon
+         */
+        private ImageIcon getZoomIcon() {
+            return new ImageIcon(AbstractPlotter.class
+                    .getResource("zoomInCursor.gif"));
+        }
+        
+        /**
+         * 
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            return "Zooming";
+        }
+    }
+    
+    /**
+     * 
+     * 
+     * @author Fabian Dill, University of Konstanz
+     */
+    public class MovingMouseListener extends PlotterMouseListener {
+
+        /**
+         * @see java.awt.event.MouseAdapter#mousePressed(
+         * java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mousePressed(final MouseEvent e) {
+            m_drawingPane.setDragStart(e.getPoint());
+            m_drawingPane.setMouseDown(false);
+        }
+
+        /**
+         * @see java.awt.event.MouseAdapter#mouseReleased(
+         * java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mouseReleased(final MouseEvent e) {
+            if (!m_isDragged && e.isPopupTrigger()) {
+                showPopupMenu(e.getPoint());
+            }
+            m_drawingPane.setMouseDown(false);
+            m_isDragged = false;
+        }
+
+
+        /**
+         * 
+         * @see org.knime.exp.node.view.plotter.PlotterMouseListener#
+         * mouseDragged(java.awt.event.MouseEvent)
+         */
+        @Override
+        public void mouseDragged(final MouseEvent e) {
+            m_isDragged = true;
+            int diffWidth = e.getX() - m_drawingPane.getDragStart().x;
+            int diffHeight = e.getY() - m_drawingPane.getDragStart().y;
+            m_drawingPane.setDragStart(e.getPoint());
+            // add or substract the diff and scroll to rectangle
+            Rectangle viewport = m_drawingPane.getVisibleRect();
+//            int newX = viewport.x + diffWidth;
+//            int newY = viewport.y + diffHeight;
+            Rectangle newRect = new Rectangle(viewport.x + diffWidth, 
+                    viewport.y + diffHeight, 
+                    viewport.width, viewport.height);
+            m_drawingPane.scrollRectToVisible(newRect);
+            updateAxisLength();
+            m_drawingPane.repaint();
+        }
+
+        /**
+         * 
+         * @see org.knime.exp.node.view.plotter.PlotterMouseListener#
+         * getCursor()
+         */
+        @Override
+        public Cursor getCursor() {
+            return new Cursor(Cursor.MOVE_CURSOR);
+        }
+        
+        /**
+         * 
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            return "Moving";
+        }
+        
+    }
+
+    
+    /* --------------- ignore methods ------------------*/
+
+    /**
+     * @see java.awt.event.ComponentListener#componentHidden(
+     * java.awt.event.ComponentEvent)
+     */
+    public void componentHidden(final ComponentEvent e) {
+    }
+
+    /**
+     * @see java.awt.event.ComponentListener#componentMoved(
+     * java.awt.event.ComponentEvent)
+     */
+    public void componentMoved(final ComponentEvent e) {
+    }
+
+    /**
+     * @see java.awt.event.ComponentListener#componentShown(
+     * java.awt.event.ComponentEvent)
+     */
+    public void componentShown(final ComponentEvent e) {
+    }
+
+    /**
+     * 
+     * @param preserve true if old min max values of the axes should be 
+     * preserved, false otherwise.
+     */
+    public void setPreserve(final boolean preserve) {
+        m_preserve = preserve;
+    }
+
+    /**
+     * 
+     * @param x domain value
+     * @return mapped value
+     */
+    protected int getMappedXValue(final DataCell x) {
+        return (int) getXAxis().getCoordinate().calculateMappedValue(
+                x, getDrawingPaneDimension().width, true);   
+    }
+
+    /**
+     * 
+     * @param y domain value
+     * @return mapped value
+     */
+    protected int getMappedYValue(final DataCell y) {
+        double mappedValue = getYAxis().getCoordinate()
+        .calculateMappedValue(y, getDrawingPaneDimension().height, true);
+        return (int)getScreenYCoordinate(mappedValue);
+        
+    }
+
+    /**
+     * Recalculates the domain of the y axis. If preserve is set to false
+     * the passed values are taken as min and max no matter was was set before.
+     * If preserve is set to true (default) the possibly already available min 
+     * and max values are preserved. 
+     * @param min the min value
+     * @param max the max value
+     * {@link AbstractPlotter#setPreserve(boolean)} 
+     */
+    public void createYCoordinate(final double min, final double max) {
+        DataColumnDomainCreator yDomainCreator = new DataColumnDomainCreator();
+        double actualMin = min;
+        double actualMax = max;
+        if (getYAxis() != null && getYAxis().getCoordinate() != null
+                && m_preserve) {
+            if (!(getYAxis().getCoordinate() instanceof NumericCoordinate)) {
+                return;
+            }
+            actualMin = Math.min(min, ((NumericCoordinate)getYAxis()
+                    .getCoordinate()).getMinDomainValue());
+            actualMax = Math.max(max, ((NumericCoordinate)getYAxis()
+                    .getCoordinate()).getMaxDomainValue());
+        }
+        yDomainCreator.setLowerBound(new DoubleCell(actualMin));
+        yDomainCreator.setUpperBound(new DoubleCell(actualMax));
+        DataColumnSpecCreator ySpecCreator = new DataColumnSpecCreator("Y", 
+                DoubleCell.TYPE);
+        ySpecCreator.setDomain(yDomainCreator.createDomain());
+        Coordinate yCoordinate = Coordinate.createCoordinate(
+                ySpecCreator.createSpec());
+        if (getYAxis() == null) {
+            Axis yAxis = new Axis(Axis.VERTICAL, getDrawingPaneDimension()
+                    .height);
+            setYAxis(yAxis);
+        }
+        getYAxis().setCoordinate(yCoordinate);    
+    }
+
+    /**
+     * Recalculates the domain of the x axis. If preserve is set to false
+     * the passed values are taken as min and max no matter was was set before.
+     * If preserve is set to true (default) the possibly already available min 
+     * and max values are preserved. 
+     * @param min the min value
+     * @param max the max value
+     * {@link AbstractPlotter#setPreserve(boolean)} 
+     */
+    public void createXCoordinate(final double min, final double max) {
+            DataColumnDomainCreator xDomainCreator 
+                = new DataColumnDomainCreator();
+            double actualMin = min;
+            double actualMax = max;
+            if (getXAxis() != null && getXAxis().getCoordinate() != null 
+                    && m_preserve) {
+                if (!(getXAxis().getCoordinate() 
+                        instanceof NumericCoordinate)) {
+                    return;
+                }
+                actualMin = Math.min(min, ((NumericCoordinate)getXAxis()
+                        .getCoordinate()).getMinDomainValue());
+                actualMax = Math.max(max, ((NumericCoordinate)getXAxis()
+                        .getCoordinate()).getMaxDomainValue());
+            }
+            xDomainCreator.setLowerBound(new IntCell((int)actualMin));
+            xDomainCreator.setUpperBound(new IntCell((int)actualMax));
+            DataColumnSpecCreator xSpecCreator = new DataColumnSpecCreator("X",
+                    DoubleCell.TYPE);
+            xSpecCreator.setDomain(xDomainCreator.createDomain());
+            Coordinate xCoordinate = Coordinate.createCoordinate(
+                    xSpecCreator.createSpec());
+            if (getXAxis() == null) {
+              Axis xAxis = new Axis(Axis.HORIZONTAL, getDrawingPaneDimension()
+              .width);
+              setXAxis(xAxis);          
+            }
+            getXAxis().setCoordinate(xCoordinate);
+        }
+
+    /**
+     * Recalculates the domain of the x axis. If preserve is set to false
+     * the passed values are taken as min and max no matter was was set before.
+     * If preserve is set to true (default) the possibly already available min 
+     * and max values are preserved. 
+     * @param min the min value
+     * @param max the max value
+     * {@link AbstractPlotter#setPreserve(boolean)} 
+     */
+    public void createXCoordinate(final int min, final int max) {
+            DataColumnDomainCreator xDomainCreator 
+                = new DataColumnDomainCreator();
+            int actualMin = min;
+            int actualMax = max;
+            if (getXAxis() != null && getXAxis().getCoordinate() != null 
+                    && m_preserve) {
+                if (!(getXAxis().getCoordinate() 
+                        instanceof NumericCoordinate)) {
+                    return;
+                }
+                actualMin = (int)Math.min(min, ((NumericCoordinate)getXAxis()
+                        .getCoordinate()).getMinDomainValue());
+                actualMax = (int)Math.max(max, ((NumericCoordinate)getXAxis()
+                        .getCoordinate()).getMaxDomainValue());
+            }
+            xDomainCreator.setLowerBound(new IntCell((int)actualMin));
+            xDomainCreator.setUpperBound(new IntCell((int)actualMax));
+            DataColumnSpecCreator xSpecCreator = new DataColumnSpecCreator("X",
+                    IntCell.TYPE);
+            xSpecCreator.setDomain(xDomainCreator.createDomain());
+            Coordinate xCoordinate = Coordinate.createCoordinate(
+                    xSpecCreator.createSpec());
+            if (getXAxis() == null) {
+              Axis xAxis = new Axis(Axis.HORIZONTAL, getDrawingPaneDimension()
+              .width);
+              setXAxis(xAxis);          
+            }
+            getXAxis().setCoordinate(xCoordinate);
+        }
+
+    /**
+     * Creates a nominal x axis.
+     * @param values the possible values.
+     */
+    protected void createNominalXCoordinate(final Set<DataCell>values) {
+        DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
+        domainCreator.setValues(values);
+        DataColumnSpecCreator specCreator = new DataColumnSpecCreator("X",
+                StringCell.TYPE);
+        specCreator.setDomain(domainCreator.createDomain());
+        Coordinate nominalCoordinate = Coordinate.createCoordinate(
+                specCreator.createSpec());
+        if (getXAxis() == null) {
+            Axis xAxis = new Axis(Axis.HORIZONTAL, getDrawingPaneDimension()
+            .width);
+            setXAxis(xAxis);          
+          }
+          getXAxis().setCoordinate(nominalCoordinate);        
+    }
+
+    /**
+     * Creates a nominal y axis.
+     * @param values the possible values.
+     */
+    protected void createNominalYCoordinate(final Set<DataCell>values) {
+        DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
+        domainCreator.setValues(values);
+        DataColumnSpecCreator specCreator = new DataColumnSpecCreator("X",
+                StringCell.TYPE);
+        specCreator.setDomain(domainCreator.createDomain());
+        Coordinate nominalCoordinate = Coordinate.createCoordinate(
+                specCreator.createSpec());
+        if (getYAxis() == null) {
+            Axis yAxis = new Axis(Axis.VERTICAL, getDrawingPaneDimension()
+            .width);
+            setYAxis(yAxis);          
+          }
+          getYAxis().setCoordinate(nominalCoordinate);        
+    }
+
+    /**
+     * 
+     * @param y the mapped y value
+     * @return the y value but counted from bottom.
+     */
+    public final double getScreenYCoordinate(final double y) {
+        return getDrawingPaneDimension().height - y;
+    }
+}

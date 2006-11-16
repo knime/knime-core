@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./scatter.png" type="Visualizer">
+	<name>New Scatterplot</name>
+	
+	<shortDescription>
+	    Creates a scatterplot of two selectable attributes.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    <p>Creates a scatterplot of two selectable attributes. Then each datapoint is
+	    displayed as a dot at it's corresponding place, dependend on it's values
+	    of the selected attributes. The dots are displayed in the color defined by
+	     the color manager and the size defined by the size manager.
+		</p>
+		
+		<h3>HiLiting:</h3>
+		<p> The data points may be selected by either dragging
+		a rectangle with the mouse over the points or 
+		by clicking on points.
+		Hold control pressed for multiple selection. 
+		The selected datapoints may be 
+		hilited by either right-click to get the context menu or via the hilite
+		menu in the menu bar.</p>
+		
+		<h3>Tooltip</h3>
+		<p>
+		Move the mouse over the data points to get detailed information about 
+		the data point (Row ID, and the x and y value).
+		</p>
+		
+		<h3>Properties: </h3>
+		<p>Default Settings:
+			<ul>
+			<li>Mouse Mode: choose "Selection" to select the datapoints or
+			"Zooming" to zoom in. If you have zoomed in you may choose "Moving" 
+			to navigate in the zoomed display.</li>
+			<li>"Fit to screen" fits the display again to the available space.</li>
+			<li>"Background color lets you choose the background color of the display. </li>
+			</ul>
+		</p>
+		<p>Column Selection:
+		Choose the columns you want to have displayed as x and y coordinate.
+		With the "X attribute" and "Y attribute" spinners the range of the axes
+		can be adjusted. The left spinner changes the lower end, the right 
+		spinner the upper end.
+		</p>
+		<p>Appearance:
+			<ul>
+			<li>"Dot Size" lets you define the size of the dots.</li>
+			<li>"Jitter": if a nominal column is selected you may adjust how much
+			the values are jittered (scattered around there original value).</li>
+			</ul>
+		</p>
+		
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
+	</ports>	
+	<views>
+		<view index="0" name="Scatterplot">
+			The scatterplot displaying the data.
+		</view>
+	</views>
+</knimeNode>

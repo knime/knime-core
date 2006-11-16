@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./scattermatrix.png" type="Visualizer">
+	<name>Scatter Matrix</name>
+	
+	<shortDescription>
+	    Plots a scatter matrix.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    	<p>
+	    		Plots a scatter matrix where each column is compared with each column.
+			</p>
+			<p>
+				In a scatter matrix each matrix element Eij is a scatterplot of the columns
+				i and j, where the values of the i-th column are displayed at the x axis 
+				and the values of the j-th column at the y axis. At the sides of the matrix
+				the coordinates are displayed.
+			</p>
+		
+			<h3>HiLiting:</h3>
+			<p> 
+				The data points may be selected by either dragging
+				a rectangle with the mouse over the points or clicking directly on them.
+				Hold control pressed for multiple selection. 
+				The selected datapoints may be 
+				hilited by either right-click to get the context menu or via the hilite
+				menu in the menu bar.
+				The data points are displayed as selected or hilited in all matrix elements.
+			</p>
+		
+			<h3>Tooltip</h3>
+			<p>
+				Move the mouse over the data points to get information about the 
+				row ID and the value.
+			</p>
+		
+			<h3>Properties: </h3>
+			<p>
+				Default Settings:
+				<ul>
+					<li>
+						Mouse Mode: choose "Selection" to select the datapoints or
+						"Zooming" to zoom in. If you have zoomed in you may choose "Moving" 
+						to navigate in the zoomed display. If you want to rearrange the order of the columns
+						choose "Transformation". The matrix columns can then be selected and dragged
+						to another position.
+					</li>
+					<li>
+						"Fit to screen" fits the display again to the available space.
+					</li>
+					<li>
+						"Background color" lets you choose the background color of the display. 
+					</li>
+				</ul>
+			</p>
+			<p>
+				Column Selection:
+				Choose the columns you want to have displayed in the scatter matrix.
+				Initially only the first three are selected.
+			</p>
+			<p>
+				Appearance:
+				<ul>
+					<li>
+						"Dot Size" lets you define the size of the dots.
+					</li>
+					<li>
+						"Jitter": if a nominal column is selected you may adjust how much
+						the values are jittered (scattered around there original value).
+					</li>
+				</ul>
+			</p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
+	</ports>	
+	<views>
+		<view index="0" name="Scatter Matrix">
+			A scatter matrix displays scatter plots for each combination of columns.
+		</view>
+	</views>
+</knimeNode>
