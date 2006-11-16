@@ -373,8 +373,11 @@ public class WorkflowManager implements WorkflowListener {
                 // has not a valid data table yet the meta input node of the
                 // meta flow is not executable and a non-existing deadlock is
                 // detected. The following check prevents this.
-                if (executionInProgress(cont.getWorkflowManager())) {
-                    return true;
+                if (cont.getInPorts().size() == 0) {
+                    WorkflowManager parent = cont.getWorkflowManager().m_parent;
+                    if ((parent != null) && executionInProgress(parent)) {
+                        return true;
+                    }
                 }
                 
                 if (!predStillWaiting) {
