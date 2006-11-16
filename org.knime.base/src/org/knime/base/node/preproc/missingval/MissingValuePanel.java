@@ -23,7 +23,7 @@
 package org.knime.base.node.preproc.missingval;
 
 import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -32,12 +32,14 @@ import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.SwingConstants;
@@ -212,7 +214,6 @@ final class MissingValuePanel extends JPanel {
             buttonGroup.add(m_fixButton);
             panel.add(m_fixButton);
             m_fixText = getFixTextField(setting, spec);
-            m_fixText.setPreferredSize(new Dimension(50, 20));
             JPanel fixPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             fixPanel.add(m_fixText);
             panel.add(fixPanel);
@@ -300,6 +301,7 @@ final class MissingValuePanel extends JPanel {
         switch (setting.getType()) {
         case ColSetting.TYPE_DOUBLE:
             fixText = new JFormattedTextField();
+            ((JFormattedTextField)fixText).setColumns(8);
             Double doubel;
             if (fixCell == null) {
                 doubel = new Double(0.0);
@@ -311,6 +313,7 @@ final class MissingValuePanel extends JPanel {
             break;
         case ColSetting.TYPE_INT:
             fixText = new JFormattedTextField();
+            ((JFormattedTextField)fixText).setColumns(8);
             Integer integer;
             if (fixCell == null) {
                 integer = new Integer(0);
@@ -329,7 +332,26 @@ final class MissingValuePanel extends JPanel {
             }
             DefaultComboBoxModel model = new DefaultComboBoxModel(vals);
             fixText = new JComboBox(model);
+            ((JComboBox)fixText).setPrototypeDisplayValue("#########");
             ((JComboBox)fixText).setEditable(true);
+            ((JComboBox)fixText).setRenderer(new DefaultListCellRenderer() {
+                /**
+                 * Overridden to set tooltip text properly.
+                 * @see DefaultListCellRenderer#getListCellRendererComponent(
+                 * JList, Object, int, boolean, boolean)
+                 */
+               @Override
+               public Component getListCellRendererComponent(final JList list, 
+                    final Object value, final int index, 
+                    final boolean isSelected, final boolean cellHasFocus) {
+                    Component c = super.getListCellRendererComponent(
+                            list, value, index, isSelected, cellHasFocus);
+                    if (c instanceof JComponent) {
+                        ((JComponent)c).setToolTipText(value.toString());
+                    }
+                    return c; 
+               }
+            });
             String string;
             if (fixCell == null) {
                 string = "";

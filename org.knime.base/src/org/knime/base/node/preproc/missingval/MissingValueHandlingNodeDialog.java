@@ -28,6 +28,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -37,6 +39,8 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -58,11 +62,13 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MissingValueHandlingNodeDialog.class);
 
+    private final JList m_colList;
     private final DefaultListModel m_colListModel;
 
     private final JPanel m_defaultsPanel;
-
     private final JPanel m_individualsPanel;
+    
+    private final JButton m_addButton;
 
     /**
      * Constructs new dialog with an appropriate dialog title.
@@ -75,26 +81,45 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
 
         // Individual Handling, second tab
         m_colListModel = new DefaultListModel();
-        final JList colList = new JList(m_colListModel);
-        colList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        colList.setCellRenderer(new DataColumnSpecListCellRenderer());
+        m_colList = new JList(m_colListModel);
+        m_colList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        m_colList.addListSelectionListener(new ListSelectionListener() {
+           public void valueChanged(final ListSelectionEvent e) {
+               checkButtonStatus();
+           } 
+        });
+        m_colList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    DataColumnSpec selected = 
+                        (DataColumnSpec)m_colList.getSelectedValue();
+                    onAdd(selected);
+                }
+            } 
+        });
+        m_colList.setCellRenderer(new DataColumnSpecListCellRenderer());
         JPanel tabPanel = new JPanel(new BorderLayout());
-        tabPanel.add(new JScrollPane(colList), BorderLayout.WEST);
+        tabPanel.add(new JScrollPane(m_colList), BorderLayout.WEST);
         m_individualsPanel = new JPanel(new GridLayout(0, 1));
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
         tabPanel.add(scroller, BorderLayout.CENTER);
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton addButton = new JButton("Add");
-        addButton.addActionListener(new ActionListener() {
+        m_addButton = new JButton("Add");
+        m_addButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                DataColumnSpec colSpec = (DataColumnSpec)colList
-                        .getSelectedValue();
+                DataColumnSpec colSpec = 
+                    (DataColumnSpec)m_colList.getSelectedValue();
                 onAdd(colSpec);
             }
         });
-        buttonPanel.add(addButton);
+        buttonPanel.add(m_addButton);
         tabPanel.add(buttonPanel, BorderLayout.SOUTH);
         addTab("Individual", tabPanel);
+    }
+    
+    /** Enables/disables the button according to list selection. */
+    private void checkButtonStatus() {
+        m_addButton.setEnabled(!m_colList.isSelectionEmpty());
     }
 
     /**
@@ -128,6 +153,8 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
                         colSpec));
             }
         }
+        m_individualsPanel.setPreferredSize(m_defaultsPanel.getPreferredSize());
+        checkButtonStatus();
     }
 
     /**
