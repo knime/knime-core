@@ -36,7 +36,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.meta.MetaNodeModel;
@@ -70,12 +69,8 @@ public class LooperModel extends MetaNodeModel {
             exec.setProgress(i / (double)m_settings.loops(),
                     "Executing loop " + (i + 1));
 
-            internalWFM().resetAndConfigureAll();
-            KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(new Runnable() {
-                public void run() {
-                    internalWFM().executeAll(true);
-                }
-            });
+            resetAndConfigureInternalWF();
+            executeInternalWF();
 
             exec.checkCanceled();
             if (innerExecCanceled()) {
