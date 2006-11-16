@@ -130,7 +130,7 @@ public class StatisticsTable implements DataTable {
     public StatisticsTable(final DataTable table, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         this (table);
-        m_tSpec = calculateAllMoments(exec);
+        calculateAllMoments(exec);
     }
 
     /**
@@ -174,10 +174,9 @@ public class StatisticsTable implements DataTable {
      * from all the other methods.
      * 
      * @param exec object to check with if user canceled the operation
-     * @return the newly calculated spec
      * @throws CanceledExecutionException if user canceled
      */
-    protected DataTableSpec calculateAllMoments(final ExecutionMonitor exec)
+    protected void calculateAllMoments(final ExecutionMonitor exec)
             throws CanceledExecutionException {
 
         DataTableSpec origSpec = m_table.getDataTableSpec();
@@ -275,7 +274,7 @@ public class StatisticsTable implements DataTable {
             creator.setDomain(newDomain);
             cSpec[c] = creator.createSpec();
         }
-        return new DataTableSpec(cSpec);
+        m_tSpec = new DataTableSpec(cSpec);
     }
     
     /**
