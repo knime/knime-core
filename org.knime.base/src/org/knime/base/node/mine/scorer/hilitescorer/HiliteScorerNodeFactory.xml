@@ -2,26 +2,34 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Other" icon="./hilitescorer.png">
     <name>Hilight Scorer</name>
-    <shortDescription>Compares two columns by their attribute value pairs and enables hilighting.</shortDescription>
+    <shortDescription>Compares two columns by their attribute value pairs 
+    					and enables hilighting.</shortDescription>
     <fullDescription>
         <intro>
-            Compares two columns by their attribute value pairs and shows the confusion matrix, i.e. how many rows of
-            which attribute and their classification. Additionally, it is possible to hilight cells of this matrix do
-            determine the data rows that have been predicted wrongly. The dialog allows you to select two columns to
-            compare; the values from the first selected column are represented in the confusion matrix's rows and the
-            values from the second column by the confusion matrix's columns. The output of the node is the confusion
-            matrix.
-        </intro>
-    </fullDescription>
+			Compares two columns by their attribute value pairs and shows the 
+		    confusion matrix, i.e. how many rows of which attribute and their classification. 
+		    Additionally, it is possible to hilight cells of this matrix do
+		    determine the data rows that have been predicted wrongly.
+		    The dialog allows you to select two columns to compare;
+			the values from the first selected column are represented in the 
+			confusion matrix's rows and the values from the second column by the
+			confusion matrix's columns. The output of the node is the confusion 
+			matrix.
+		</intro>
+	</fullDescription>
     <ports>
-        <dataIn index="0" name="Input table with two columns">Table containing at least two columns to compare.</dataIn>
+        <dataIn index="0" name="Input table">Table containing at least two columns to compare.</dataIn>
         <dataOut index="0" name="Confusion matrix">The confusion matrix.</dataOut>
-    </ports>
-    <views>
-        <view index="0" name="Confusion Matrix View enabling highliting">
-            Displays the confusion matrix in a table view. It is possible to hilight a cell of the matrix which
-            propagates highlighting to the corresponding rows. Therefore, it is possible to identify wrongly classified
-            predictions.
+	</ports>
+	<views>
+		<view index="0" name="Confusion Matrix View enabling highliting">
+			Displays the confusion matrix in a table view. It is possible
+			to hilight a cell of the matrix which propagates highlighting
+			to the corresponding rows. Therefore, it is possible to identify
+			wrongly classified predictions.
+		</view>
+        <view index="1" name="ROC curve">
+            Displays a ROC curve for the classified data.
         </view>
-    </views>
+	</views>
 </knimeNode>

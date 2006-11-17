@@ -22,10 +22,18 @@
 package org.knime.base.node.mine.scorer.hilitescorer;
 
 import java.awt.Point;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -33,12 +41,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import org.knime.base.node.util.DataArray;
+import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.IntCell;
@@ -61,7 +72,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @see HiliteScorerNodeFactory
  */
-public class HiliteScorerNodeModel extends NodeModel {
+public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     /** The node logger fot this class. */
 
     protected static final NodeLogger LOGGER = NodeLogger
@@ -92,6 +103,8 @@ public class HiliteScorerNodeModel extends NodeModel {
     /** Counter for misclassification, set in execute. */
     private int m_falseCount;
 
+    private BitSet m_rocCurve;
+    
     /**
      * Stores the row keys for the confusion matrix fields to allow hiliting.
      */
@@ -104,7 +117,7 @@ public class HiliteScorerNodeModel extends NodeModel {
     private int[][] m_scorerCount;
 
     /**
-     * The attribute names of the confution matrix
+     * The attribute names of the confution matrix.
      */
     private String[] m_values;
 
@@ -162,6 +175,8 @@ public class HiliteScorerNodeModel extends NodeModel {
         m_keyStore = new List[m_values.length][m_values.length];
         // the scorerCount counts the confusions
         m_scorerCount = new int[m_values.length][m_values.length];
+        
+        m_rocCurve = new BitSet(in.getRowCount() + 1);
 
         // init the matrix
         for (int i = 0; i < m_keyStore.length; i++) {
@@ -188,6 +203,9 @@ public class HiliteScorerNodeModel extends NodeModel {
                 continue;
             }
             boolean areEqual = cell1.equals(cell2);
+            
+            m_rocCurve.set(rowNr, areEqual);
+            
             // need to cast to string (column keys are strings!)
             int i1 = valuesList.indexOf(cell1.toString());
             int i2 = areEqual ? i1 : valuesList.indexOf(cell2.toString());
@@ -204,6 +222,9 @@ public class HiliteScorerNodeModel extends NodeModel {
                 m_falseCount++;
             }
         }
+        // set the last bit to indicate the end of the set
+        m_rocCurve.set(in.getRowCount());
+        
         m_nrRows = rowNr;
         DataRow[] rows = new DataRow[m_values.length];
         for (int i = 0; i < rows.length; i++) {
@@ -236,6 +257,7 @@ public class HiliteScorerNodeModel extends NodeModel {
         m_falseCount = -1;
         m_lastResult = null;
         m_keyStore = null;
+        m_rocCurve = null;
     }
 
     /**
@@ -586,6 +608,28 @@ public class HiliteScorerNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
         // TODO: load last result and internal variables to restore
         // view content (see reset())
+
+        File f = new File(internDir, "data.ser");
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(
+                new FileInputStream(f)));
+        try {
+            HashMap<String, Object> hm =
+                (HashMap<String, Object>)in.readObject();
+            m_correctCount = (Integer)hm.get("correctCount");
+            m_falseCount = (Integer)hm.get("falseCount");
+            m_keyStore = (List<DataCell>[][])hm.get("keyStore");
+            m_nrRows = (Integer) hm.get("nrRows");
+            m_rocCurve = (BitSet)hm.get("rocCurve");
+            m_scorerCount = (int[][])hm.get("scorerCount");
+            m_values = (String[])hm.get("values");
+        } catch (ClassNotFoundException ex) {         
+            // should not happen at all
+            LOGGER.error("Could not read internals", ex);
+        }
+        in.close();
+        
+        f = new File(internDir, "lastResult.tab.zip");
+        m_lastResult = DataContainer.readFromZip(f);
     }
 
     /**
@@ -597,6 +641,32 @@ public class HiliteScorerNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
         // TODO: load last result and internal variables to restore
         // view content (see reset())
+
+        HashMap<String, Object> hs = new HashMap<String, Object>();
+        hs.put("correctCount", m_correctCount);
+        hs.put("falseCount", m_falseCount);
+        hs.put("keyStore", m_keyStore);
+        hs.put("nrRows", m_nrRows);
+        hs.put("rocCurve", m_rocCurve);
+        hs.put("scorerCount", m_scorerCount);
+        hs.put("values", m_values);
+
+        ObjectOutputStream out = new ObjectOutputStream(
+                new BufferedOutputStream(new FileOutputStream(
+                new File(internDir, "data.ser"))));
+        out.writeObject(hs);
+        out.close();
+
+
+        if (m_lastResult != null) {
+            File f = new File(internDir, "lastResult.tab.zip");
+            try {
+                DataContainer.writeToZip(m_lastResult, f, exec);
+            } catch (CanceledExecutionException ex) {
+                // TODO Auto-generated catch block
+                ex.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -607,9 +677,30 @@ public class HiliteScorerNodeModel extends NodeModel {
     }
 
     /**
+     * Returns a bit set with data for the ROC curve. A set bit means a correct
+     * classified example, an unset bit is a wrong classified example. The
+     * number of interesting bits is {@link BitSet#length()} - 1, i.e. the last
+     * set bit must be ignored, it is just the end marker. 
+     * 
+     * @return a bit set
+     */
+    BitSet getRocCurve() {
+        return m_rocCurve;
+    }
+        
+    /**
      * @return the attribute names of the confusion matrix
      */
     String[] getValues() {
         return m_values;
+    }
+
+    /**
+     * @see org.knime.base.node.viz.plotter.DataProvider
+     *  #getDataArray(int)
+     */
+    public DataArray getDataArray(final int index) {
+        // only to make the Plotter happy
+        return null;
     }
 }

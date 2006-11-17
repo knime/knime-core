@@ -46,7 +46,7 @@ public class HiliteScorerNodeFactory extends NodeFactory {
      */
     @Override
     public int getNrNodeViews() {
-        return 1;
+        return 2;
     }
 
     /**
@@ -54,10 +54,13 @@ public class HiliteScorerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
-        if (i != 0) {
-            throw new IllegalArgumentException();
+        if (i == 0) {
+            return new HiliteScorerNodeView((HiliteScorerNodeModel)nodeModel);
+        } else if (i == 1) {
+            return new ROCView((HiliteScorerNodeModel)nodeModel);
+        } else {
+            throw new IllegalArgumentException("No such view");
         }
-        return new HiliteScorerNodeView((HiliteScorerNodeModel)nodeModel);
     }
 
     /**

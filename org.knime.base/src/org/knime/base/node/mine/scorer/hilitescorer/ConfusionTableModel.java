@@ -28,7 +28,7 @@ import javax.swing.table.AbstractTableModel;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class ConfustionTableModel extends AbstractTableModel {
+public class ConfusionTableModel extends AbstractTableModel {
 
     /**
      * The int 2-D array representing the confution matrix.
@@ -46,7 +46,7 @@ public class ConfustionTableModel extends AbstractTableModel {
      * @param scoreCount a 2-D int array representing the confusion matrix.
      * @param headers the names of the attributes to display in the table
      */
-    public ConfustionTableModel(final int[][] scoreCount, final String[] headers) {
+    public ConfusionTableModel(final int[][] scoreCount, final String[] headers) {
         m_scoreCount = scoreCount;
         m_headers = headers;
     }
