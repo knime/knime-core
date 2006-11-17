@@ -96,7 +96,16 @@ public final class KnimeEncryption {
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         // perform the decryption
         byte[] pw = new BASE64Decoder().decodeBuffer(password);
-        byte[] decryptedText = cipher.doFinal(pw);
+
+        byte[] decryptedText;
+        try {
+            decryptedText = cipher.doFinal(pw);
+        } catch (Exception e) {
+            secretKey = createSecretKey(keySupplier.getEncryptionKey());
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            decryptedText = cipher.doFinal(pw);
+        }
+        
         return new String(decryptedText);
     }
 
