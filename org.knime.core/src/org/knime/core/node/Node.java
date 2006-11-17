@@ -1921,8 +1921,10 @@ public final class Node {
      * @param settings To write to.
      */
     private void saveMiscSettingsTo(final NodeSettingsWO settings) {
-        settings.addString(CFG_MEMORY_POLICY, 
-                m_outDataPortsMemoryPolicy.toString());
+        if (getNrDataOutPorts() > 0) {
+            settings.addString(CFG_MEMORY_POLICY, 
+                    m_outDataPortsMemoryPolicy.toString());
+        }
     } // saveMiscSettingsFrom(NodeSettingsWO)
 
     /** Helper method that analyses the argument settings and read the 
@@ -1990,9 +1992,7 @@ public final class Node {
             NodeSettings modelSettings = new NodeSettings("Compare");
             NodeSettingsWO miscSettings = 
                 modelSettings.addNodeSettings(CFG_MISC_SETTINGS);
-            if (getNrDataOutPorts() > 0) {
-                saveMiscSettingsTo(miscSettings);
-            }
+            saveMiscSettingsTo(miscSettings);
             m_model.saveSettingsTo(modelSettings.addNodeSettings(CFG_MODEL));
             // check for equality
             return dialogSettings.isIdentical(modelSettings);
