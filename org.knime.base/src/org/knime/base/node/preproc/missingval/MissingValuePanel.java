@@ -76,6 +76,8 @@ final class MissingValuePanel extends JPanel {
 
     private final JRadioButton m_meanButton;
 
+    private final JRadioButton m_mostFrequentButton;
+    
     private final JRadioButton m_fixButton;
 
     private final JComponent m_fixText;
@@ -99,7 +101,8 @@ final class MissingValuePanel extends JPanel {
      * @param setting to get settings from
      * @param spec the spec of the column or <code>null</code>
      */
-    public MissingValuePanel(final ColSetting setting, final DataColumnSpec spec) {
+    public MissingValuePanel(
+            final ColSetting setting, final DataColumnSpec spec) {
         super(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JPanel panel = new JPanel(new GridLayout(0, 2));
         Icon icon;
@@ -175,8 +178,7 @@ final class MissingValuePanel extends JPanel {
                 || setting.getType() == ColSetting.TYPE_INT) {
             // MIN Button
             m_minButton = new JRadioButton("Min");
-            m_minButton
-                    .setToolTipText("Replaces missing values by the minimum "
+            m_minButton.setToolTipText("Replaces missing values by the minimum "
                             + "of the values in a column");
             m_minButton.addActionListener(actionListener);
             buttonGroup.add(m_minButton);
@@ -184,9 +186,8 @@ final class MissingValuePanel extends JPanel {
 
             // MAX Button
             m_maxButton = new JRadioButton("Max");
-            m_maxButton
-                    .setToolTipText("Replaces missing values by the maximum "
-                            + "of the values in a column");
+            m_maxButton.setToolTipText("Replaces missing values by the "
+                            + "maximum of the values in a column");
             m_maxButton.addActionListener(actionListener);
             buttonGroup.add(m_maxButton);
             panel.add(m_maxButton);
@@ -198,18 +199,34 @@ final class MissingValuePanel extends JPanel {
             m_meanButton.addActionListener(actionListener);
             buttonGroup.add(m_meanButton);
             panel.add(m_meanButton);
-            panel.add(new JLabel());
+            if (setting.getType() == ColSetting.TYPE_DOUBLE) {
+                panel.add(new JLabel()); // even number of components
+            }
         } else {
             m_meanButton = null;
             m_minButton = null;
             m_maxButton = null;
         }
+        if (setting.getType() == ColSetting.TYPE_INT
+                || setting.getType() == ColSetting.TYPE_STRING) {
+            m_mostFrequentButton = new JRadioButton("Most Frequent");
+            m_mostFrequentButton.setToolTipText("Replaces missing values "
+                    + "by the most frequent value in a column");
+            m_mostFrequentButton.addActionListener(actionListener);
+            buttonGroup.add(m_mostFrequentButton);
+            panel.add(m_mostFrequentButton);
+            if (setting.getType() == ColSetting.TYPE_STRING) {
+                panel.add(new JLabel()); // even number of components
+            }
+        } else {
+            m_mostFrequentButton = null;
+        }
 
         if (setting.getType() != ColSetting.TYPE_UNKNOWN) {
             // FIX Button
             m_fixButton = new JRadioButton("Fix Value: ");
-            m_fixButton
-                    .setToolTipText("Replaces missing values by a fixed value");
+            m_fixButton.setToolTipText(
+                    "Replaces missing values by a fixed value");
             m_fixButton.addActionListener(actionListener);
             buttonGroup.add(m_fixButton);
             panel.add(m_fixButton);
@@ -227,6 +244,9 @@ final class MissingValuePanel extends JPanel {
             break;
         case ColSetting.METHOD_IGNORE_ROWS:
             m_removeButton.doClick();
+            break;
+        case ColSetting.METHOD_MOST_FREQUENT:
+            m_mostFrequentButton.doClick();
             break;
         case ColSetting.METHOD_MAX:
             m_maxButton.doClick();
@@ -255,7 +275,7 @@ final class MissingValuePanel extends JPanel {
             method = ColSetting.METHOD_NO_HANDLING;
         } else if (m_removeButton.isSelected()) {
             method = ColSetting.METHOD_IGNORE_ROWS;
-        } else if (m_fixButton.isSelected()) {
+        } else if (m_fixButton != null && m_fixButton.isSelected()) {
             method = ColSetting.METHOD_FIX_VAL;
             DataCell cell;
             switch (m_setting.getType()) {
@@ -275,12 +295,15 @@ final class MissingValuePanel extends JPanel {
                 throw new RuntimeException("You shouldn't have come here.");
             }
             m_setting.setFixCell(cell);
-        } else if (m_maxButton.isSelected()) {
+        } else if (m_maxButton != null && m_maxButton.isSelected()) {
             method = ColSetting.METHOD_MAX;
-        } else if (m_minButton.isSelected()) {
+        } else if (m_minButton != null && m_minButton.isSelected()) {
             method = ColSetting.METHOD_MIN;
-        } else if (m_meanButton.isSelected()) {
+        } else if (m_meanButton != null && m_meanButton.isSelected()) {
             method = ColSetting.METHOD_MEAN;
+        } else if (m_mostFrequentButton != null 
+                && m_mostFrequentButton.isSelected()) {
+            method = ColSetting.METHOD_MOST_FREQUENT;
         } else {
             assert false : "One button must be selected.";
             method = ColSetting.METHOD_NO_HANDLING;

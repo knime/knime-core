@@ -25,7 +25,6 @@ package org.knime.base.node.preproc.missingval;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -38,12 +37,13 @@ import org.knime.core.node.NodeSettingsWO;
 
 
 /**
- * 
+ * NodeModel for missing value node. 
  * @author wiswedel, University of Konstanz
  */
 public class MissingValueHandlingNodeModel extends NodeModel {
     private ColSetting[] m_colSettings;
 
+    /** One input, one output. */
     public MissingValueHandlingNodeModel() {
         super(1, 1);
         m_colSettings = new ColSetting[0];
@@ -87,9 +87,14 @@ public class MissingValueHandlingNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTable out = MissingValueHandlingTable
-                .createMissingValueHandlingTable(inData[0], m_colSettings, exec);
-        return new BufferedDataTable[]{exec.createBufferedDataTable(out, exec)};
+        StringBuffer warningMessageBuffer = new StringBuffer();
+        BufferedDataTable out = MissingValueHandlingTable.
+            createMissingValueHandlingTable(
+                    inData[0], m_colSettings, exec, warningMessageBuffer);
+        if (warningMessageBuffer.length() > 0) {
+            setWarningMessage(warningMessageBuffer.toString());
+        }
+        return new BufferedDataTable[]{out};
     }
 
     /**

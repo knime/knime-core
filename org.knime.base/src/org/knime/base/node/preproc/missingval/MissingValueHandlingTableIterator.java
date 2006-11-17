@@ -64,7 +64,7 @@ class MissingValueHandlingTableIterator extends RowIterator {
         m_internIt = table.getInternalIterator();
         m_table = table;
         m_count = 0;
-        m_finalCount = -1;
+        m_finalCount = m_table.getNrRowsInReference();
         m_exec = exec;
         push();
     }
@@ -162,6 +162,9 @@ class MissingValueHandlingTableIterator extends RowIterator {
                         newCell = m_table.getColSetting(i).getFixCell();
                         assert (newCell != null);
                         break;
+                    case ColSetting.METHOD_MOST_FREQUENT:
+                        newCell = m_table.getMostFrequent(i);
+                        break;
                     case ColSetting.METHOD_MAX:
                         newCell = m_table.getMax(i);
                         break;
@@ -196,7 +199,8 @@ class MissingValueHandlingTableIterator extends RowIterator {
     
     
     /** Runtime exception that's thrown when the execution monitor's 
-     * <code>checkCanceled</code> method throws an {@link CanceledExecutionException}.
+     * <code>checkCanceled</code> method throws an 
+     * {@link CanceledExecutionException}.
      */ 
     static final class RuntimeCanceledExecutionException 
         extends RuntimeException {

@@ -90,6 +90,10 @@ final class ColSetting {
     /** Method: Replace by max in column, available for Double and Int. */
     public static final int METHOD_MAX = 4;
 
+    /** Method: Replace by most frequent value, 
+     * available for String. */
+    public static final int METHOD_MOST_FREQUENT = 5;
+    
     /** NodeSettings key: write method. */
     protected static final String CFG_METHOD = "miss_method";
 
@@ -102,32 +106,32 @@ final class ColSetting {
     /** NodeSettings key: write fixed value replacement (if any). */
     protected static final String CFG_FIXVAL = "fix_val";
 
-    /** NodeSettings key: NodeSettings branch identfier for meta settings. */
+    /** NodeSettings branch identifier for meta settings. */
     protected static final String CFG_META = "meta_colsetting";
 
     /**
-     * NodeSettings key: NodeSettings branch identfier for individual settings.
+     * NodeSettings branch identifier for individual settings.
      */
     protected static final String CFG_INDIVIDUAL = "individual_colsetting";
 
     /**
-     * NodeSettings key: NodeSettings branch identfier for meta setting, String
+     * NodeSettings branch identifier for meta setting, String
      * (Individual columns have their name as identifier).
      */
     protected static final String CFG_META_STRING = "meta_string";
 
     /**
-     * NodeSettings key: NodeSettings branch identfier for meta setting, Double.
+     * NodeSettings branch identifier for meta setting, Double.
      */
     protected static final String CFG_META_DOUBLE = "meta_double";
 
     /**
-     * NodeSettings key: NodeSettings branch identfier for meta setting, Int.
+     * NodeSettings branch identifier for meta setting, Int.
      */
     protected static final String CFG_META_INT = "meta_int";
 
     /**
-     * NodeSettings key: NodeSettings branch identfier for meta setting, Other.
+     * NodeSettings branch identifier for meta setting, Other.
      */
     protected static final String CFG_META_OTHER = "meta_other";
 
@@ -267,6 +271,7 @@ final class ColSetting {
         case ColSetting.METHOD_MEAN:
         case ColSetting.METHOD_MIN:
         case ColSetting.METHOD_MAX:
+        case ColSetting.METHOD_MOST_FREQUENT:
             break;
         case ColSetting.METHOD_FIX_VAL:
             DataType superType;
@@ -361,7 +366,7 @@ final class ColSetting {
      * Helper that loads meta settings from a config object, used in NodeDialog.
      * 
      * @param settings to load from
-     * @param spec Tt be used for default init
+     * @param spec To be used for default init
      * @return meta settings
      */
     protected static ColSetting[] loadMetaColSettings(
@@ -394,7 +399,7 @@ final class ColSetting {
     }
 
     /**
-     * Helper that load indivdual settings from a config object, used in
+     * Helper that load individual settings from a config object, used in
      * NodeModel.
      * 
      * @param settings to load from
@@ -456,7 +461,7 @@ final class ColSetting {
     }
 
     /**
-     * Saves the indivdual settings to a config object.
+     * Saves the individual settings to a config object.
      * 
      * @param colSettings the settings to write, may include meta settings
      *            (ignored)
@@ -548,6 +553,9 @@ final class ColSetting {
             break;
         case ColSetting.METHOD_MEAN:
             buffer.append("mean");
+            break;
+        case ColSetting.METHOD_MOST_FREQUENT:
+            buffer.append("most frequent");
             break;
         case ColSetting.METHOD_MIN:
             buffer.append("min");

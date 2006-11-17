@@ -33,6 +33,14 @@
 			this column. This option is only available for numeric column types, i.e.
 			Double or Integer. The Mean for integer columns is rounded.
 	    </option>
+		<option name="Most Frequent">
+			This option is available for string and integer columns and replaces
+			any occurrence of a missing value with the most frequent value in
+			a column. If two (or more) different values occur equally often, 
+			the first value being encountered is used. If a column contains 
+			only missing values, the column stays untouched (containing only 
+			missing values in the output table). 
+	    </option>
 		<option name="Fix Value">
 			Replaces the missing values with a static value set by the user. 
 			This option is available for Double, Integer, and String columns.

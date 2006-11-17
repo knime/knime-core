@@ -22,9 +22,14 @@
  */
 package org.knime.base.node.preproc.missingval;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.knime.base.data.statistics.StatisticsTable;
@@ -38,14 +43,17 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.MutableInteger;
 
 /**
  * DataTable that replaces missing values according to ColSetting objects.
@@ -69,19 +77,11 @@ public final class MissingValueHandlingTable implements DataTable {
      * Creates new table.
      * 
      * @param table table with missing values
-     * @param colSetting the settings, may come in arbitrary order and also does
-     *            not need to have settings for all columns. ColSettings for
-     *            meta columns should only be in there once.
+     * @param colSetting the settings, for each column one and in correct order
      */
     private MissingValueHandlingTable(final DataTable table,
             final ColSetting[] colSetting) {
-        ColSetting[] sets = null;
-        try {
-            sets = getColSetting(table.getDataTableSpec(), colSetting, false);
-        } catch (InvalidSettingsException ise) {
-            LOGGER.error("Unable to generate settings", ise);
-        }
-        m_settings = sets;
+        m_settings = colSetting;
         m_table = table;
         m_spec = createTableSpecPrivate(table.getDataTableSpec(), m_settings);
     }
@@ -93,6 +93,23 @@ public final class MissingValueHandlingTable implements DataTable {
      */
     DataTable getUnderlyingTable() {
         return m_table;
+    }
+    
+    /**
+     * Tries to retrieve the number of rows in the underlying table.
+     * @return The number of rows or -1 if not possible.
+     */
+    int getNrRowsInReference() {
+        if (m_table instanceof BufferedDataTable) {
+            return ((BufferedDataTable)m_table).getRowCount();
+        } else if (m_table instanceof MyStatisticsTable) {
+            DataTable underlying = 
+                ((MyStatisticsTable)m_table).getUnderlyingTable();
+            if (underlying instanceof BufferedDataTable) {
+                return ((BufferedDataTable)underlying).getRowCount();
+            }
+        }
+        return -1;
     }
 
     /**
@@ -133,6 +150,17 @@ public final class MissingValueHandlingTable implements DataTable {
     }
 
     /**
+     * Get the most frequent value in a column. 
+     * 
+     * @param column the column of interest
+     * @return Most frequent value in it.
+     * @see StatisticsTable#getMean(int)
+     */
+    protected DataCell getMostFrequent(final int column) {
+        return getStatisticsTable().getMostFrequentCell(column);
+    }
+    
+    /**
      * Delegating method to StatisticsTable.
      * 
      * @param column the column of interest
@@ -150,8 +178,8 @@ public final class MissingValueHandlingTable implements DataTable {
      * 
      * @return cast of m_table.
      */
-    private StatisticsTable getStatisticsTable() {
-        return (StatisticsTable)m_table;
+    private MyStatisticsTable getStatisticsTable() {
+        return (MyStatisticsTable)m_table;
     }
 
     /**
@@ -172,7 +200,7 @@ public final class MissingValueHandlingTable implements DataTable {
     ColSetting getColSetting(final int column) {
         return m_settings[column];
     }
-
+    
     /**
      * Get the DataTableSpec that is created when creating a
      * MissingValueHandling with the settings <code>sets</code>.
@@ -221,7 +249,8 @@ public final class MissingValueHandlingTable implements DataTable {
                 if (changed) {
                     DataColumnDomain newDom = new DataColumnDomainCreator(vals,
                             l, u).createDomain();
-                    DataColumnSpecCreator c = new DataColumnSpecCreator(colSpec);
+                    DataColumnSpecCreator c = 
+                        new DataColumnSpecCreator(colSpec);
                     c.setDomain(newDom);
                     newSpec = c.createSpec();
                 }
@@ -239,7 +268,8 @@ public final class MissingValueHandlingTable implements DataTable {
 
         // fill up the default (i.e. meta-settings for String, Double, Int,
         // and Other columns) - if they are available
-        Hashtable<Integer, ColSetting> hash = new Hashtable<Integer, ColSetting>();
+        Hashtable<Integer, ColSetting> hash = 
+            new Hashtable<Integer, ColSetting>();
         // the default one
         ColSetting untouched = new ColSetting(ColSetting.TYPE_UNKNOWN);
         untouched.setMethod(ColSetting.METHOD_NO_HANDLING);
@@ -339,18 +369,37 @@ public final class MissingValueHandlingTable implements DataTable {
      * in an array and also reports progress.
      * 
      * @param table the table to do missing value handling on
-     * @param colSetting the settings
-     * @param exec for progress/cancel
+     * @param colSettings the settings
+     * @param exec for progress/cancel and to create the buffered data table
+     * @param warningBuffer To which potential warning messages are added.
      * @return a cache table, cleaned up
      * @throws CanceledExecutionException if canceled
      */
-    public static DataTable createMissingValueHandlingTable(
-            final DataTable table, final ColSetting[] colSetting,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+    public static BufferedDataTable createMissingValueHandlingTable(
+            final DataTable table, final ColSetting[] colSettings,
+            final ExecutionContext exec, final StringBuffer warningBuffer) 
+        throws CanceledExecutionException {
+        ColSetting[] colSetting;
+        try {
+            colSetting = getColSetting(
+                    table.getDataTableSpec(), colSettings, false);
+        } catch (InvalidSettingsException ise) {
+            LOGGER.coding("getColSetting method is not supposed to throw " 
+                    + "an exception, ignoring settings", ise);
+            DataTableSpec s = table.getDataTableSpec();
+            colSetting = new ColSetting[s.getNumColumns()];
+            for (int i = 0; i < s.getNumColumns(); i++) {
+                colSetting[i] = new ColSetting(s.getColumnSpec(i));
+                colSetting[i].setMethod(ColSetting.METHOD_NO_HANDLING);
+            }
+        }
         boolean needStatistics = false;
-        for (int i = 0; i < colSetting.length && !needStatistics; i++) {
+        int mostFrequentColCount = 0;
+        for (int i = 0; i < colSetting.length; i++) {
             ColSetting c = colSetting[i];
             switch (c.getMethod()) {
+            case ColSetting.METHOD_MOST_FREQUENT:
+                mostFrequentColCount++;
             case ColSetting.METHOD_MAX:
             case ColSetting.METHOD_MIN:
             case ColSetting.METHOD_MEAN:
@@ -359,26 +408,43 @@ public final class MissingValueHandlingTable implements DataTable {
             default:
             }
         }
+        int[] mostFrequentCols = new int[mostFrequentColCount];
+        if (mostFrequentColCount > 0) {
+            int index = 0;
+            for (int i = 0; i < colSetting.length; i++) {
+                ColSetting c = colSetting[i];
+                switch (c.getMethod()) {
+                case ColSetting.METHOD_MOST_FREQUENT:
+                    mostFrequentCols[index++] = i;
+                    break;
+                default:
+                }
+            }
+        }
         DataTable t;
         ExecutionMonitor e;
         if (needStatistics && !(table instanceof StatisticsTable)) {
             // for creating statistics table
             ExecutionMonitor subExec = exec.createSubProgress(0.5);
-            t = new StatisticsTable(table, subExec);
+            t = new MyStatisticsTable(table, subExec, mostFrequentCols);
+            if (((MyStatisticsTable)t).m_warningMessage != null) {
+                warningBuffer.append(((MyStatisticsTable)t).m_warningMessage);
+            }
             // for the iterator
             e = exec.createSubProgress(0.5);
         } else {
             t = table;
             e = exec;
         }
-        MissingValueHandlingTable mvht = new MissingValueHandlingTable(t,
-                colSetting);
-        DataContainer container = new DataContainer(mvht.getDataTableSpec());
+        MissingValueHandlingTable mvht = 
+            new MissingValueHandlingTable(t, colSetting);
+        BufferedDataContainer container = 
+            exec.createDataContainer(mvht.getDataTableSpec());
         e.setMessage("Adding rows...");
         int count = 0;
         try {
-            MissingValueHandlingTableIterator it = new MissingValueHandlingTableIterator(
-                    mvht, e);
+            MissingValueHandlingTableIterator it = 
+                new MissingValueHandlingTableIterator(mvht, e);
             while (it.hasNext()) {
                 DataRow next;
                 next = it.next();
@@ -387,11 +453,114 @@ public final class MissingValueHandlingTable implements DataTable {
                 container.addRowToTable(next);
                 count++;
             }
-        } catch (MissingValueHandlingTableIterator.RuntimeCanceledExecutionException rcee) {
+        } catch (MissingValueHandlingTableIterator.
+                RuntimeCanceledExecutionException rcee) {
             throw rcee.getCause();
         } finally {
             container.close();
         }
         return container.getTable();
+    }
+    
+    /**
+     * Determines not only min, max, mean but also most frequent values
+     * in a certain column set.
+     */
+    private static final class MyStatisticsTable extends StatisticsTable {
+        private HashMap<DataCell, MutableInteger>[] m_countMaps;
+        private int[] m_cols;
+        private DataCell[] m_mostFrequentCells;
+        private String m_warningMessage;
+        
+        @SuppressWarnings("unchecked")
+        private MyStatisticsTable(final DataTable t, 
+                final ExecutionMonitor exec, final int[] cols)
+            throws CanceledExecutionException {
+            super(t);
+            final int colCount = t.getDataTableSpec().getNumColumns();
+            m_countMaps = new HashMap[colCount];
+            for (int i = 0; i < cols.length; i++) {
+                // use linked hash map to get the first most frequent value
+                // when counts are equal
+                m_countMaps[cols[i]] = 
+                    new LinkedHashMap<DataCell, MutableInteger>();
+            }
+            m_cols = cols;
+            calculateAllMoments(exec);
+            m_mostFrequentCells = new DataCell[colCount];
+            ArrayList<String> errorCols = new ArrayList<String>();
+            for (int i = 0; i < m_cols.length; i++) {
+                HashMap<DataCell, MutableInteger> map = 
+                    m_countMaps[cols[i]];
+                // determine most frequent item
+                int bestCount = 0;
+                DataCell best = null;
+                for (Map.Entry<DataCell, MutableInteger> e : map.entrySet()) {
+                    int count = e.getValue().intValue();
+                    if (count > bestCount) {
+                        bestCount = count;
+                        best = e.getKey();
+                    }
+                }
+                if (best == null) {
+                    String colName = 
+                        t.getDataTableSpec().getColumnSpec(cols[i]).getName();
+                    best = DataType.getMissingCell();
+                    errorCols.add(colName);
+                }
+                m_mostFrequentCells[cols[i]] = best;
+            }
+            if (errorCols.isEmpty()) {
+                m_warningMessage = null;
+            } else {
+                m_warningMessage = "Column(s) " 
+                    + Arrays.toString(errorCols.toArray()) 
+                    + " contain(s) no valid cells.";
+            }
+            m_cols = null;
+            m_countMaps = null;
+        }
+        
+        /**
+         * @see StatisticsTable#calculateMomentInSubClass(DataRow)
+         */
+        @Override
+        protected void calculateMomentInSubClass(final DataRow row) {
+            for (int i = 0; i < m_cols.length; i++) {
+                DataCell c = row.getCell(m_cols[i]);
+                HashMap<DataCell, MutableInteger> map = 
+                    m_countMaps[m_cols[i]];
+                if (!c.isMissing()) {
+                    MutableInteger count = map.get(c);
+                    if (count == null) {
+                        map.put(c, new MutableInteger(1));
+                    } else {
+                        count.inc();
+                    }
+                }
+            }
+        }
+        
+        /**
+         * @param col The column index
+         * @return The most frequent cell.
+         */
+        public DataCell getMostFrequentCell(final int col) {
+            if (m_mostFrequentCells[col] == null) {
+                throw new IndexOutOfBoundsException("Didn't calculate most"
+                        + " frequent value for column " + col);
+            }
+            return m_mostFrequentCells[col];
+        }
+        
+        /**
+         * Changes scope.
+         * @see StatisticsTable#getUnderlyingTable()
+         */
+        @Override
+        protected DataTable getUnderlyingTable() {
+            return super.getUnderlyingTable();
+        }
+
     }
 }
