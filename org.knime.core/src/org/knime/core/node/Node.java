@@ -1988,8 +1988,11 @@ public final class Node {
             NodeSettings dialogSettings = new NodeSettings("Compare");
             m_dialogPane.finishEditingAndSaveSettingsTo(dialogSettings);
             NodeSettings modelSettings = new NodeSettings("Compare");
-            saveMiscSettingsTo(
-                    modelSettings.addNodeSettings(CFG_MISC_SETTINGS));
+            NodeSettingsWO miscSettings = 
+                modelSettings.addNodeSettings(CFG_MISC_SETTINGS);
+            if (getNrDataOutPorts() > 0) {
+                saveMiscSettingsTo(miscSettings);
+            }
             m_model.saveSettingsTo(modelSettings.addNodeSettings(CFG_MODEL));
             // check for equality
             return dialogSettings.isIdentical(modelSettings);
