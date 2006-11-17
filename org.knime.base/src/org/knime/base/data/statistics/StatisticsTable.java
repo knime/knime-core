@@ -167,6 +167,14 @@ public class StatisticsTable implements DataTable {
     public int getNrRows() {
         return m_nrRows;
     }
+    
+    /**
+     * Getter for the underlying table.
+     * @return Table as passed in constructor.
+     */
+    protected DataTable getUnderlyingTable() {
+        return m_table;
+    }
 
     /**
      * Calculates <b>all the statistical moments in one pass </b>. After the
