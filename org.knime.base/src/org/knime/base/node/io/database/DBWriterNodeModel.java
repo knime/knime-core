@@ -122,6 +122,7 @@ class DBWriterNodeModel extends NodeModel {
         settings.addString("driver", m_driver);
         settings.addString("database", m_url);
         settings.addString("user", m_user);
+        settings.addString("password", m_pass);
         settings.addStringArray("loaded_driver", m_driverLoaded
                 .toArray(new String[0]));
         settings.addString("table", m_table);

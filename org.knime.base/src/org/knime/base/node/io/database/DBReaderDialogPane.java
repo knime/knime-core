@@ -46,6 +46,8 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -82,6 +84,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
     private final JFileChooser m_chooser = new JFileChooser();
 
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
+    
+    private boolean m_passwordChanged = false;
 
     /**
      * Creates new dialog.
@@ -137,6 +141,18 @@ public class DBReaderDialogPane extends NodeDialogPane {
         passPanel.setBorder(BorderFactory.createTitledBorder(" Password "));
         m_pass.setPreferredSize(new Dimension(400, 20));
         m_pass.setFont(font);
+        m_pass.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(final DocumentEvent e) {
+                m_passwordChanged = true;
+            }
+            public void insertUpdate(final DocumentEvent e) {
+                m_passwordChanged = true;
+            }
+            public void removeUpdate(final DocumentEvent e) {
+                m_passwordChanged = true;
+            }
+        });
+
         passPanel.add(m_pass);
         parentPanel.add(passPanel);
         JPanel allPanel = new JPanel(new BorderLayout());
@@ -167,15 +183,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
         // user
         m_user.setText(settings.getString("user", ""));
         // password
-        String password = settings.getString("password", "");
-        if (password != null && password.length() > 0) {
-            try {
-                password = KnimeEncryption.decrypt(password);
-            } catch (Exception e) {
-                LOGGER.warn("Could not decrypt password.");
-            }
-        }
-        m_pass.setText(password);
+        m_pass.setText(settings.getString("password", ""));
+        m_passwordChanged = false;
         // save loaded driver
         m_driverLoaded.clear();
         m_driverLoaded.addAll(Arrays.asList(settings.getStringArray(
@@ -209,12 +218,17 @@ public class DBReaderDialogPane extends NodeDialogPane {
         settings.addString("driver", driverName);
         settings.addString("database", m_db.getText().trim());
         settings.addString("user", m_user.getText().trim());
-        try {
-            settings.addString("password", KnimeEncryption.encrypt(m_pass
-                    .getPassword()));
-        } catch (Exception e) {
-            LOGGER.warn("Could not encrypt password.", e);
-            throw new InvalidSettingsException("Could not encrypt password.");
+        if (m_passwordChanged) {
+            try {
+                settings.addString("password", KnimeEncryption.encrypt(
+                        m_pass.getPassword()));
+            } catch (Exception e) {
+                LOGGER.warn("Could not encrypt password.", e);
+                throw new InvalidSettingsException(
+                        "Could not encrypt password.");
+            }
+        } else {
+            settings.addString("password", new String(m_pass.getPassword()));
         }
         settings.addString("statement", m_statmnt.getText().trim());
         // save loaded driver
