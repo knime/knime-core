@@ -424,6 +424,10 @@
            category-path="/view"
            factory-class="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"
            id="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"/>
+     <node
+           category-path="/manipulator/hilite"
+           factory-class="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"
+           id="org.knime.base.node.preproc.hilite"/>
    </extension>
    
    
