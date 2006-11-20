@@ -297,6 +297,10 @@ public final class TableRowHeaderView extends JTable {
                 if (evt.getPropertyName().equals("model")) {
                     TableModel m = table.getModel();
                     myModel.setTableContent(m);
+                } else if (evt.getPropertyName().equals("requestRowHeight")) {
+                    // this event comes in when the table is 
+                    // build up from scratch
+                    headerView.setRowHeight((Integer)evt.getNewValue());
                 }
             }
         };

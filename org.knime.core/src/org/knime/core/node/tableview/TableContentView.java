@@ -560,26 +560,29 @@ public class TableContentView extends JTable {
     }
     
     /**
-     * Calls super, sets proper row height.
-     * 
-     * @see javax.swing.JTable#initializeLocalVars()
+     * Overridden to also set proper row height (depending on 
+     * default renderer in each column).
+     * @see javax.swing.JTable#createDefaultColumnsFromModel()
      */
     @Override
-    protected void initializeLocalVars() {
-        super.initializeLocalVars();
+    public void createDefaultColumnsFromModel() {
+        super.createDefaultColumnsFromModel();
         TableColumnModel colModel = getColumnModel();
-        int bestRowHeight = getRowHeight();
+        int bestRowHeight = Math.max(16, getRowHeight());
         for (Enumeration<TableColumn> enu = 
             colModel.getColumns(); enu.hasMoreElements();) {
             TableColumn col = enu.nextElement();
             TableCellRenderer renderer = col.getCellRenderer();
             if (renderer instanceof DataValueRenderer) {
                 int prefHeight = (int)((DataValueRenderer)renderer).
-                    getPreferredSize().getHeight();
+                getPreferredSize().getHeight();
                 bestRowHeight = Math.max(bestRowHeight, prefHeight);
             }
         }
-        setRowHeight(bestRowHeight);
+        if (bestRowHeight != getRowHeight()) {
+            firePropertyChange("requestRowHeight", 
+                    getRowHeight(), bestRowHeight);
+        }
     }
     
     /**
