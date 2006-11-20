@@ -96,7 +96,7 @@ public class BufferedDataContainer extends DataContainer {
     
     /** Check the node if its outport memory policy says we should keep 
      * everything in memory.
-     * @param The node to check.
+     * @param node The node to check.
      * @return Cells to be kept in memory.
      */
     private static int getMaxCellsInMemory(final Node node) {
