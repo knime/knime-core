@@ -330,8 +330,8 @@ public class ExecutionMonitor {
             SubNodeProgressMonitor {
 
         /**
-         * @see SubNodeProgressMonitor#SubNodeProgressMonitor(
-         *      NodeProgressMonitor,double)
+         * @see SubNodeProgressMonitor #SubNodeProgressMonitor(
+         *      NodeProgressMonitor, double)
          * @param parent
          * @param max
          */
