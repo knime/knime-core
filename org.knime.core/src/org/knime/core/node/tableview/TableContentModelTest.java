@@ -753,14 +753,16 @@ public class TableContentModelTest extends TestCase {
         private final boolean[] m_flags;
         
         /**
-         * Constructs new Iterator based on <code>table</code> and the 
-         * access policy encoded in <code>flags</code>.  
+         * Constructs new Iterator based on <code>table</code> and the access
+         * policy encoded in <code>flags</code>.
+         * 
          * @param table to iterate over.
-         * @param flags two-dimensional array, first flag is set remotely and
-         *        is <code>true</code> when <code>next()</code> may be called.
-         *        Second flag is set to <code>true</code> by the 
-         *        <code>next()</code> method when it is called.
-         * @see DefaultRowIterator#DefaultRowIterator(DefaultTable)
+         * @param flags two-dimensional array, first flag is set remotely and is
+         *            <code>true</code> when <code>next()</code> may be
+         *            called. Second flag is set to <code>true</code> by the
+         *            <code>next()</code> method when it is called.
+         * @see org.knime.core.data.def.DefaultRowIterator
+         *      #DefaultRowIterator(DefaultTable)
          */
         public RestrictedAccessIterator(
                 final Iterable<DataRow> table, final boolean[] flags) {
