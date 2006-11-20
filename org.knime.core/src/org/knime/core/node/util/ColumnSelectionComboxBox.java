@@ -75,6 +75,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * 
      * @param borderTitle The border title.
      */
+    @SuppressWarnings("unchecked")
     public ColumnSelectionComboxBox(final String borderTitle) {
         this(borderTitle, DataValue.class);
     }
