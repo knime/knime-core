@@ -88,6 +88,7 @@ public class ColumnSelectionPanel extends JPanel {
      * column are included in the combox box.
      * @param borderTitle The border title.
      */
+    @SuppressWarnings("unchecked")
     public ColumnSelectionPanel(final String borderTitle) {
         this(borderTitle, DataValue.class);
     }
