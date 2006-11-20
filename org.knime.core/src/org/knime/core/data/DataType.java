@@ -533,8 +533,13 @@ public final class DataType {
         if (result == null) {
             Exception exception = null;
             try {
-                // TODO: use super interface if the current field has
-                // wrong modifiers or has wrong class.
+                // Java will fetch a static field that is public, if you
+                // declare it to be non-static or give it the wrong scope, it 
+                // automatically retrieves the static field from a super
+                // class/interface (from which super interface it gets it,
+                // depends pretty much on the order after the "extends ..."
+                // statement) If this field has the wrong type, a coding
+                // problem is reported.
                 Field typeField = cl.getField("UTILITY");
                 Object typeObject = typeField.get(null);
                 result = (DataValue.UtilityFactory)typeObject;
