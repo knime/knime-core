@@ -132,8 +132,8 @@ public class ColumnFilterPanel extends JPanel {
      * the exclude list. The include list then will contain all values to
      * filter.
      * 
-     * @see #update(DataTableSpec, boolean, Set)
-     * @see #update(DataTableSpec, boolean, String...)
+     * @see #update(DataTableSpec, boolean, Collection)
+     * @see #update(DataTableSpec, boolean, String[])
      */
     @SuppressWarnings("unchecked")
     public ColumnFilterPanel() {
@@ -164,7 +164,7 @@ public class ColumnFilterPanel extends JPanel {
      * @param filterValueClasses an array of type {@link DataValue} classes only
      *            allowed for selection. Will be check during update
      * 
-     * @see #update(DataTableSpec, boolean, Set)
+     * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      */
     public ColumnFilterPanel(
@@ -539,7 +539,7 @@ public class ColumnFilterPanel extends JPanel {
     /**
      * Helper for the get***ColumnList methods.
      * 
-     * @param list The list from which to retrieve the elements
+     * @param model The list from which to retrieve the elements
      */
     private static Set<String> getColumnList(final ListModel model) {
         final Set<String> list = new LinkedHashSet<String>();
