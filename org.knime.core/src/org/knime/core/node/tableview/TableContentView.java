@@ -43,6 +43,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -560,15 +561,15 @@ public class TableContentView extends JTable {
     }
     
     /**
-     * Overridden to also set proper row height (depending on 
-     * default renderer in each column).
-     * @see javax.swing.JTable#createDefaultColumnsFromModel()
+     * Determines the maximum of the preferred row heights according to
+     * each column's renderer.
+     * This method should only be called when the table is built up from 
+     * scratch.
+     * @return the best initial row height
      */
-    @Override
-    public void createDefaultColumnsFromModel() {
-        super.createDefaultColumnsFromModel();
+    int getBestRowHeightFromRenderers() {
         TableColumnModel colModel = getColumnModel();
-        int bestRowHeight = Math.max(16, getRowHeight());
+        int bestRowHeight = 16;
         for (Enumeration<TableColumn> enu = 
             colModel.getColumns(); enu.hasMoreElements();) {
             TableColumn col = enu.nextElement();
@@ -579,9 +580,21 @@ public class TableContentView extends JTable {
                 bestRowHeight = Math.max(bestRowHeight, prefHeight);
             }
         }
-        if (bestRowHeight != getRowHeight()) {
-            firePropertyChange("requestRowHeight", 
-                    getRowHeight(), bestRowHeight);
+        return bestRowHeight;
+    }
+    
+    /**
+     * @see JTable#tableChanged(TableModelEvent)
+     */
+    @Override
+    public void tableChanged(final TableModelEvent e) {
+        super.tableChanged(e);
+        if (e == null || e.getFirstRow() == TableModelEvent.HEADER_ROW) {
+            int bestRowHeight = getBestRowHeightFromRenderers();
+            if (bestRowHeight != getRowHeight()) {
+                firePropertyChange(
+                        "requestRowHeight", getRowHeight(), bestRowHeight);
+            }
         }
     }
     

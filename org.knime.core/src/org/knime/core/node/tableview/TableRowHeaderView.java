@@ -83,7 +83,7 @@ public final class TableRowHeaderView extends JTable {
                     int newWidth = (Integer)evt.getNewValue();
                     // bug fix #293: on execute & open view the row header 
                     // column is collapsed to a minimum (hardcoded to 15 in 
-                    // TableColumn.java). We set a slighthly smaller value here
+                    // TableColumn.java). We set a slightly smaller value here
                     // and catch requests to set it to this minimum. 
                     if (newWidth == aColumn.getMinWidth()) {
                         return;
@@ -323,6 +323,11 @@ public final class TableRowHeaderView extends JTable {
             }
         };
         headerView.addPropertyChangeListener(prop2Listener);
+        if (table instanceof TableContentView) {
+            int bestRowHeight = 
+                ((TableContentView)table).getBestRowHeightFromRenderers();
+            headerView.setRowHeight(bestRowHeight);
+        }
         return headerView;
     }
 }
