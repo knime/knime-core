@@ -411,14 +411,14 @@ public class WorkflowManager implements WorkflowListener {
                     if (nc.getID() == id) {
                         nc.removeListener(this);
 
-                        nc.getWorkflowManager().fireWorkflowEvent(
-                                new WorkflowEvent.NodeFinished(nc.getID(),
-                                        null, null));
-
                         synchronized (m_finishLock) {
                             it.remove();
                         }
 
+                        nc.getWorkflowManager().fireWorkflowEvent(
+                                new WorkflowEvent.NodeFinished(nc.getID(),
+                                        nc, nc));
+                        
                         if (state instanceof NodeStatus.ExecutionCanceled) {
                             cancelExecution(nc.getAllSuccessors());
                         }
@@ -1356,7 +1356,7 @@ public class WorkflowManager implements WorkflowListener {
      *             already executed
      */
     public void executeUpToNode(final int nodeID, final boolean block) {
-        NodeContainer nc;
+        final NodeContainer nc;
         List<NodeContainer> nodes;
         synchronized (this) {
             nc = m_nodesByID.get(nodeID);
@@ -1378,9 +1378,10 @@ public class WorkflowManager implements WorkflowListener {
         Collections.reverse(nodes);
 
         if (block) {
-            NodeStateListener nsl = new NodeStateListener() {
-                public void stateChanged(final NodeStatus state, final int id) {
-                    if (state instanceof NodeStatus.EndExecute) {
+            WorkflowListener wfl = new WorkflowListener() {
+                public void workflowChanged(final WorkflowEvent event) {
+                    if ((event instanceof WorkflowEvent.NodeFinished) 
+                            && (event.getOldValue() == nc)) {
                         synchronized (this) {
                             this.notifyAll();
                         }
@@ -1388,16 +1389,16 @@ public class WorkflowManager implements WorkflowListener {
                 }
             };
 
-            synchronized (nsl) {
-                nc.addListener(nsl);
+            synchronized (wfl) {
+                addListener(wfl);
                 try {
                     m_executor.addWaitingNodes(nodes);
-                    nsl.wait();
+                    wfl.wait();
                 } catch (InterruptedException ex) {
                     LOGGER.warn("Thread was interrupted", ex);
                 }
             }
-            nc.removeListener(nsl);
+            removeListener(wfl);
         } else {
             m_executor.addWaitingNodes(nodes);
         }
