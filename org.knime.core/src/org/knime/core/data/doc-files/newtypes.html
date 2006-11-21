@@ -23,19 +23,18 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<title></title>
-<meta name="generator" content="OpenOffice.org 2.0  (Linux)">
-<meta name="creates" content="20060505;9381300">
-<meta name="changed" content="20060505;18223500">
+<title>Data Representation in KNIME</title>
 <link rel=stylesheet " type="text/css"
   href="../../../../../stylesheet_knime.css" />
 </head>
-<body lang="en-US" dir="LTR">
-<h1>Data representation in KNIME</h1>
-<p>KNIME uses <a href="../DataCell.html">DataCell</a>s to represent data
+<body>
+<h1>Data Representation in KNIME</h1>
+<h2>The DataTable Concept</h2>
+<p>
+KNIME uses <a href="../DataCell.html">DataCell</a>s to represent data
 (each <a href="../DataCell.html">DataCell</a> holds one single entity, for
-instance a floating point value). An array of <a href="../DataCell.html">DataCell</a>a>s
-makes up a <s href="../DataRow.html">DataRow</s>. There are a couple of default
+instance a floating point value). An array of <a href="../DataCell.html">DataCell</a>s
+makes up a <a href="../DataRow.html">DataRow</a>. There are a couple of default
 implementations of <a href="../DataCell.html">DataCell</a> that hold specific
 types of data such as <a href="../def/StringCell.html">StringCell</a>, <a
   href="../def/IntCell.html">IntCell</a>, and <a href="../def/DoubleCell.html">DoubleCell</a>.
@@ -43,27 +42,16 @@ The entire data that is passed along nodes in the workflow is exposed in a <a
   href="../DataTable.html">DataTable</a>, containing an usually unknown number
 of (equal-length) rows. All elements in a column must be compatible to the type
 that is assigned to the column, e.g. they must all be numeric or all must be a
-strings. The following figure sketches a <a href="../DataTable.html">DataTable</a>.</p>
-<p><img src="datatable.png" name="graphics1" align="left" width="561"
-  height="168" border="0" alt=""><br>
-<br>
+strings. The following figure sketches a <a href="../DataTable.html">DataTable</a>.
 </p>
-<p><br>
-<br>
+<p>
+<img src="datatable.png" name="graphics1" alt="" /> <br />
 </p>
-<p><br>
-<br>
-</p>
-<p><br>
-<br>
-</p>
-<p><br>
-<br>
-</p>
+
 <p>The meta information to a <a href="../DataTable.html">DataTable</a>
 (number of columns, column specific information) is available through the <a
-  href="../DataTableSpec.html">DataTableSpec</a> (acessible via <a
-  href="../DataTable.html#getDataTableSpec()">DataTable.getDataTableSpec</a>)
+href="../DataTableSpec.html">DataTableSpec</a> (acessible via <a
+href="../DataTable.html#getDataTableSpec()">DataTable.getDataTableSpec</a>)
 which consists of a set of <a href="../DataColumnSpec.html">DataColumnSpec</a>s
 comprising a specific name (a string), type (a <a href="../DataType.html">DataType</a>,
 see below), and some (optional) properties such as domain information (mininum,
@@ -71,7 +59,7 @@ maximum, possible values), a color handler, and so on for each of the columns.
 For further details on these specific classes see their class description and
 the <a href="faq.html">FAQ</a> on how to use them.</p>
 
-<h1><a name="newtypes">New types in KNIME</a></h1>
+<h2><a name="newtypes">New Types in KNIME</a></h2>
 <p>KNIME allows to define customized types of data, e.g. a <a
   href="../DataCell.html">DataCell</a> that carries a representation of a
 molecule. Specialized data types bring along their own renderer (e.g. to display
@@ -79,21 +67,26 @@ the molecular structure), a customized icon (that is displayed, for instance in
 a column header to recognize the column's type), and a comparator. In order to
 implement a new type in KNIME, generally you have to create two different
 classes/interfaces:</p>
+<p>
 <ol>
   <li>An interface derived from <a href="../DataValue.html">DataValue</a>
   defining access method(s) to the generic objects. This will be the base
   interface to the new type and will also expose the meta information (renderer
   and such). Since Java does not allow to specify static members nor methods in
   interfaces (or any other class definition), KNIME will access a member in that
-  interface with the following signature using reflection: <pre
-    style="margin-bottom: 0.2in;">public static final UtilityFactory UTILITY</pre>
+  interface with the following signature using reflection: 
+  <pre>
+  public static final UtilityFactory UTILITY
+  </pre>
   The class <a href="../DataValue.UtilityFactory.html">UtilityFactory</a> has
-  methods to retrieve specific information to this type implementation. If you
-  do not provide such a member, the reflection mechanism will use the
+  methods to retrieve specific information to this type implementation. If
+  no such a member is provided, the reflection mechanism will use the
   information from the super interface, i.e. DataValue (though, no customized
-  information is available in this case). We advise to define the <a
-    href="../DataValue.UtilityFactory.html">UtilityFactory</a> as an inner class
-  of the interface. The new interface should be similar to: <pre>public interface MyDataValue extends DataValue {
+  information is available in this case). It is highly recommended to define the 
+  <a href="../DataValue.UtilityFactory.html">UtilityFactory</a> as an inner class
+  of the interface. The new interface should be similar to: 
+  <pre>
+  public interface MyDataValue extends DataValue {
     
     /** Derived locally. */
     public static final UtilityFactory UTILITY = new UtilityFactory() {
@@ -101,62 +94,71 @@ classes/interfaces:</p>
     };
     
     /** The interface methods. */
-    SomeObject getMyValue();
-
+    MyValue getMyValue();
  }
- </pre></li>
+ </pre>
+ </li>
+  
   <li>A class derived from <a href="../DataCell.html">DataCell</a> and
   implementing the interface defined in 1. and any <a href="../DataValue.html">DataValue</a>
   interface to which your new type should be compatible to (for instance our new
   molecule type should also be able to return a simple string representation of
-  the molecule – it needs therefore to implement <a
-    href="../def/StringValue.html">StringValue</a>). The first time the new <a
-    href="../DataCell.html">DataCell</a> is instantiated, KNIME will parse the
+  the molecule – it needs therefore to implement 
+  <a href="../def/StringValue.html">StringValue</a>). The first time the new 
+  <a href="../DataCell.html">DataCell</a> is instantiated, KNIME will parse the
   list of implemented <a href="../DataValue.html">DataValue</a> interfaces and
   make the list of compatible <a href="../DataValue.html">DataValue</a>s
-  available through the <a href="../DataType.html">DataType</a> that is
-  associated with the new cell implementation (which is created at runtime the
-  first time the method <a href="../DataType.html#getType(java.lang.Class)">DataType.getType(MyNewCell.class)</a>
-  is invoked – either directly or implicitly through <a
-    href="../DataCell.html#getType()">MyNewCell#getType()</a>). There are a two
-  important issues to respect when defining a new <a href="../DataCell.html">DataCell</a>:
+  available through the DataCell's <a href="../DataType.html">DataType</a>.
+  
+  You associate your DataCell implementation with your newly created DataType by 
+  returning it in the <a href="../DataCell.html#getType()">MyNewCell#getType()</a>.
+  This is determined at runtime, the
+  first time the method <a href="../DataType.html#getType(java.lang.Class)">
+  DataType.getType(MyNewCell.class)</a> is invoked – either directly or implicitly. 
+  There are two important issues when defining a new <a href="../DataCell.html">DataCell</a>:
 
   <ul>
     <li><b>Native value class</b>: A <a href="../DataCell.html">DataCell</a>
-    may potentially implement more than just one single <a
-      href="../DataValue.html">DataValue</a> interface. There is no natural
-    order on the implemented interfaces but one often desires to have a
+    may potentially implement more than just one single 
+    <a href="../DataValue.html">DataValue</a> interface. There is no natural
+    order on the implemented interfaces but one normally desires to have a
     “preferred” value class. (Think of the new molecule type from before, which
-    is compatible to the new MyDataValue interface but also to <a
-      href="../def/StringValue.html">StringValue</a> – both values support a
+    is compatible to the new MyDataValue interface but also to 
+    <a href="../def/StringValue.html">StringValue</a> – both values support a
     customized renderer: Which renderer should KNIME use by default?) To
-    overcome this situation, KNIME will attempt to call a static method in the <a
-      href="../DataCell.html">DataCell</a> implementation with the following
-    signature and use the returned value as “native” value class. <pre>public static final Class&lt;? extends DataValue&gt; getNativeValueClass()</pre>
+    overcome this situation, KNIME will attempt to call a static method in the 
+    <a href="../DataCell.html">DataCell</a> implementation with the following
+    signature and use the returned value as “native” value class. 
+    <pre>
+    public static final Class&lt;? extends DataValue&gt; getNativeValueClass()
+    </pre>
     Implement this method and return a <a href="../DataValue.html">DataValue</a>
     class that your <a href="../DataCell.html">DataCell</a> is implementing. If
     no such method exists, the order on the implemented values is undefined.</li>
+    
     <li><b>DataCellSerializer&lt;MyCell&gt;</b>: Knime frequently buffers
     data to hard disc since <a href="../DataTable.html">DataTable</a>s can get
     arbitrarily big. By default it uses Java-serialization (the base <a
-      href="../DataCell.html">DataCell</a> implements <tt>java.io.Serializable</tt>).
-    Since standard serialization is awfully slow, we support reading/writing
-    through an appropriate factory, called <a href="../DataCellSerializer.html">DataCellSerializer</a>.
-    KNIME will check for (yet another) static method in your <a
-      href="../DataCell.html">DataCell</a> implementation: <tt>public
-    static final DataCellSerializer&lt;MyCell&gt; getCellSerializer()</tt> and if it
-    finds such method, it will use the returned factory instead of
-    serialization. Note, you also need to have the correct return type, i.e. the
+      href="../DataCell.html">DataCell</a> implements <code>java.io.Serializable</code>.
+    Since standard serialization is slow, we support reading and writing
+    through an appropriate factory, called 
+    <a href="../DataCellSerializer.html">DataCellSerializer</a>.
+    KNIME will check for a static method in your 
+    <a href="../DataCell.html">DataCell</a> implementation: 
+    <pre>
+    public static final DataCellSerializer&lt;MyCell&gt; getCellSerializer()
+    </pre> 
+    and if such a method exists, it will use the returned serializer. 
+    Note, you also need to have the correct return type, i.e. the
     generic paramater of the <a href="../DataCellSerializer.html">DataCellSerializer</a>
-    must be your <a href="../DataCell.html">DataCell</a> class. This method is
-    called once (the first time such an serializer is used). Be highly
-    encouraged to implement it – it pays off!</li>
+    must be your <a href="../DataCell.html">DataCell</a> class. </li>
   </ul>
   </li>
 </ol>
-<p style="font-weight: medium">The skeleton for the new <a
-      href="../DataCell.html">DataCell</a> will look
-like:</p>
+</p>
+<p>The skeleton for the new 
+<a href="../DataCell.html">DataCell</a> will look like:
+</p>
 <pre>public class MyCell extends DataCell implements MyValue, StringValue {
 
     public static final Class&lt;? extends DataValue&gt; getNativeValueClass() {
