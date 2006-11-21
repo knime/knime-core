@@ -484,6 +484,8 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
+     * Returns the node dialog's pane.
+     * @return node dialog's pane
      * @see Node#getDialogPane()
      * @throws NotConfigurableException If dialog is not configurable.
      */
@@ -1223,13 +1225,17 @@ public class NodeContainer implements NodeStateListener {
      * Sets the progress listener for the node container. NOTE: this listener is
      * not directly used in the container. The "container" just holds this
      * listener until it is needed to listen.
-     * 
+     * @param progListener new progress listener
      */
-    public void setProgressListener(final NodeProgressListener progressListener) {
-        m_progressListener = progressListener;
+    public void setProgressListener(final NodeProgressListener progListener) {
+        m_progressListener = progListener;
     }
     
+    /**
+     * @return underlying workflow manager
+     */
     WorkflowManager getWorkflowManager() {
         return m_wfm;
     }
+    
 }

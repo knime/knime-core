@@ -83,6 +83,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
     /**
      * @see DialogComponent#validateStettingsBeforeSave()
      */
+    @Override
     void validateStettingsBeforeSave() throws InvalidSettingsException {
 
         try {

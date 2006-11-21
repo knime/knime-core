@@ -100,6 +100,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
      * @throws InvalidSettingsException if the settings object passed doesn't
      *             contain a valid value for the newly created settings model.
      */
+    @Override
     public SettingsModelIntegerBounded createCloneWithNewValue(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return new SettingsModelIntegerBounded(getConfigName(), settings, 

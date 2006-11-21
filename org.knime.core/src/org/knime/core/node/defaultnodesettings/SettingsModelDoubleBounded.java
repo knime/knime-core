@@ -101,6 +101,7 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
      * @throws InvalidSettingsException if the settings object passed doesn't
      *             contain a valid value for the newly created settings model.
      */
+    @Override
     public SettingsModelDoubleBounded createCloneWithNewValue(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return new SettingsModelDoubleBounded(getConfigName(), settings,
