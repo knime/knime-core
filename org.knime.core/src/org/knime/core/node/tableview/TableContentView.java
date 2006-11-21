@@ -25,6 +25,7 @@ package org.knime.core.node.tableview;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -561,13 +562,13 @@ public class TableContentView extends JTable {
     }
     
     /**
-     * Determines the maximum of the preferred row heights according to
-     * each column's renderer.
+     * Sets the preferred column width and returns the maximum of the 
+     * preferred row heights according to each column's renderer.
      * This method should only be called when the table is built up from 
      * scratch.
-     * @return the best initial row height
+     * @return the best initial row height (this must be set elsewhere)
      */
-    int getBestRowHeightFromRenderers() {
+    int fitCellSizeToRenderer() {
         TableColumnModel colModel = getColumnModel();
         int bestRowHeight = 16;
         for (Enumeration<TableColumn> enu = 
@@ -578,8 +579,12 @@ public class TableContentView extends JTable {
                 if (getRowCount() > 0) {
                     prepareRenderer(renderer, 0, col.getModelIndex());
                 }
-                int prefHeight = (int)((DataValueRenderer)renderer).
-                    getPreferredSize().getHeight();
+                Dimension p = ((DataValueRenderer)renderer).getPreferredSize();
+                int prefHeight = p.height;
+                int colWidth = p.width;
+                if (col.getWidth() < colWidth) {
+                    col.setPreferredWidth(colWidth);
+                }
                 bestRowHeight = Math.max(bestRowHeight, prefHeight);
             }
         }
@@ -593,7 +598,7 @@ public class TableContentView extends JTable {
     public void tableChanged(final TableModelEvent e) {
         super.tableChanged(e);
         if (e == null || e.getFirstRow() == TableModelEvent.HEADER_ROW) {
-            int bestRowHeight = getBestRowHeightFromRenderers();
+            int bestRowHeight = fitCellSizeToRenderer();
             if (bestRowHeight != getRowHeight()) {
                 firePropertyChange(
                         "requestRowHeight", getRowHeight(), bestRowHeight);

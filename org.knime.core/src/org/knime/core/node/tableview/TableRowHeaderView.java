@@ -325,7 +325,7 @@ public final class TableRowHeaderView extends JTable {
         headerView.addPropertyChangeListener(prop2Listener);
         if (table instanceof TableContentView) {
             int bestRowHeight = 
-                ((TableContentView)table).getBestRowHeightFromRenderers();
+                ((TableContentView)table).fitCellSizeToRenderer();
             headerView.setRowHeight(bestRowHeight);
         }
         return headerView;
