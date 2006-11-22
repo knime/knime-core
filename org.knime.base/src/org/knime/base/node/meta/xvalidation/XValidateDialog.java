@@ -22,7 +22,9 @@
  */
 package org.knime.base.node.meta.xvalidation;
 
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -62,15 +64,29 @@ public class XValidateDialog extends NodeDialogPane {
     public XValidateDialog() {
         super();
         
-        JPanel p = new JPanel(new GridLayout(3, 2));
-        p.add(new JLabel("Number of validations"));
-        p.add(m_validations);
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
         
-        p.add(new JLabel("Random sampling"));
-        p.add(m_randomSampling);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(2, 1, 2, 1);
+        p.add(new JLabel("Number of validations   "), c);
+        c.gridx = 1;
+        p.add(m_validations, c);
         
-        p.add(new JLabel("Column with class labels"));
-        p.add(m_classColumn);
+        c.gridy++;
+        c.gridx = 0;
+        p.add(new JLabel("Random sampling   "), c);
+        c.gridx = 1;
+        p.add(m_randomSampling, c);
+        
+        c.gridy++;
+        c.gridx = 0;
+        p.add(new JLabel("Column with class labels   "), c);
+        c.gridx = 1;
+        p.add(m_classColumn, c);
+        
         p.setSize(400, 90);
         addTab("Standard settings", p);        
     }
@@ -83,7 +99,11 @@ public class XValidateDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_settings.loadSettingsFrom(settings);
+        try {
+            m_settings.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // ignore it and use default values
+        }
 
         m_validations.setValue(m_settings.validations());
         m_randomSampling.setSelected(m_settings.randomSampling());

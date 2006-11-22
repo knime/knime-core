@@ -22,6 +22,7 @@
  */
 package org.knime.base.node.meta.xvalidation;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -32,9 +33,10 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class XValidateSettings {
     private short m_validations = 10;
-    private boolean m_randomSampling;
+
+    private boolean m_randomSampling = true;
+
     private String m_classColumnName;
-    
 
     /**
      * Returns the name of the class column.
@@ -45,7 +47,6 @@ public class XValidateSettings {
         return m_classColumnName;
     }
 
-
     /**
      * Sets the name of the class column.
      * 
@@ -54,7 +55,6 @@ public class XValidateSettings {
     public void classColumnName(final String classColumnName) {
         m_classColumnName = classColumnName;
     }
-
 
     /**
      * Writes the settings into the node settings object.
@@ -67,35 +67,34 @@ public class XValidateSettings {
         settings.addString("classColumnName", m_classColumnName);
     }
 
-    
     /**
      * Loads the settings from the node settings object.
      * 
      * @param settings a node settings object
+     * @throws InvalidSettingsException if some settings are missing
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings) {
-        m_validations = settings.getShort("validations", (short) 10);
-        m_randomSampling = settings.getBoolean("randomSampling", false);
-        m_classColumnName = settings.getString("classColumnName", null);
+    public void loadSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_validations = settings.getShort("validations");
+        m_randomSampling = settings.getBoolean("randomSampling");
+        m_classColumnName = settings.getString("classColumnName");
     }
-
 
     /**
      * Returns if the rows of the input table should be sampled randomly.
      * 
      * @return <code>true</code> if the should be sampled randomly,
-     * <code>false</code> otherwise
+     *         <code>false</code> otherwise
      */
     public boolean randomSampling() {
         return m_randomSampling;
     }
 
-
     /**
      * Sets if the rows of the input table should be sampled randomly.
      * 
      * @param randomSampling <code>true</code> if the should be sampled
-     * randomly, <code>false</code> otherwise
+     *            randomly, <code>false</code> otherwise
      */
     public void randomSampling(final boolean randomSampling) {
         m_randomSampling = randomSampling;
@@ -110,12 +109,11 @@ public class XValidateSettings {
         return m_validations;
     }
 
-
     /**
      * Sets the number of validation runs that should be performed.
      * 
      * @param validations the number of validation runs
-     */    
+     */
     public void validations(final short validations) {
         m_validations = validations;
     }
