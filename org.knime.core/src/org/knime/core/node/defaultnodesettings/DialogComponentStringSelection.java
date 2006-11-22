@@ -149,7 +149,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      * @see DialogComponent #setEnabledComponents(boolean)
      */
     @Override
-    public void setEnabledComponents(final boolean enabled) {
+    protected void setEnabledComponents(final boolean enabled) {
         m_combobox.setEnabled(enabled);
     }
 

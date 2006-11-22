@@ -57,37 +57,11 @@ public class SettingsModelInteger extends SettingsModelNumber {
     }
 
     /**
-     * Constructor initializing the value from the specified settings object. If
-     * the settings object doesn't contain a valid value for this model, it will
-     * throw an InvalidSettingsException.
-     * 
-     * @param configName the identifier the value is stored with in the
-     *            {@link org.knime.core.node.NodeSettings} object
-     * @param settings the object to read the initial value from
-     * @throws InvalidSettingsException if the settings object doesn't contain a
-     *             (valid) value for this object
+     * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */
-    public SettingsModelInteger(final String configName, 
-            final NodeSettingsRO settings) throws InvalidSettingsException {
-        this(configName, 0);
-        loadSettingsForModel(settings);
-    }
-    
-    /**
-     * Creates a new settings model with identical values for everything except
-     * the stored value. The value stored in the model will be retrieved from
-     * the specified settings object. If the settings object doesn't contain a
-     * (valid) value it will throw an InvalidSettingsException.
-     * 
-     * @param settings the object to read the new model's value(s) from
-     * @return a new settings model with the same constraints and configName but
-     *         a value read from the specified settings object.
-     * @throws InvalidSettingsException if the settings object passed doesn't
-     *             contain a valid value for the newly created settings model.
-     */
-    public SettingsModelInteger createCloneWithNewValue(
-            final NodeSettingsRO settings) throws InvalidSettingsException {
-        return new SettingsModelInteger(m_configName, settings);
+    @SuppressWarnings("unchecked")
+    SettingsModelInteger createClone() {
+        return new SettingsModelInteger(m_configName, m_value);
     }
     
     /**
@@ -175,7 +149,7 @@ public class SettingsModelInteger extends SettingsModelNumber {
     @Override
     void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        saveSettingsTo(settings);
+        saveSettingsForModel(settings);
     }
 
     /**
@@ -183,7 +157,7 @@ public class SettingsModelInteger extends SettingsModelNumber {
      *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    public void validateSettingsForModel(final NodeSettingsRO settings)
+    void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
         int oldVal = m_value;
@@ -205,7 +179,7 @@ public class SettingsModelInteger extends SettingsModelNumber {
      *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    public void loadSettingsForModel(final NodeSettingsRO settings)
+    void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
@@ -220,7 +194,7 @@ public class SettingsModelInteger extends SettingsModelNumber {
      *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    public void saveSettingsForModel(final NodeSettingsWO settings) {
+    void saveSettingsForModel(final NodeSettingsWO settings) {
         settings.addInt(m_configName, m_value);
     }
 

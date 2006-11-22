@@ -144,7 +144,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-        recSetEnabledContainer(this, enabled);
+        recSetEnabledContainer(m_columnFilter, enabled);
     }
 
     private void recSetEnabledContainer(final Container cont, final boolean b) {

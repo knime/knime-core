@@ -48,22 +48,79 @@ import org.knime.core.node.config.Config;
  */
 public abstract class SettingsModel {
 
+    // private static final NodeLogger LOGGER =
+    // NodeLogger.getLogger(SettingsModel.class);
+
     /**
-     * Models write an ID into the settings object to ensure that the model
-     * reading the value from the object is the same than the one that wrote it.
-     * Compatible models should use the same id. I.e. for example integer and
-     * bounded integer models should share the same id.
+     * Models write some internal settings into the settings object.
      */
-    static final String CFGKEY_MODELID = "SettingsModel_ID";
+    static final String CFGKEY_INTERNAL = "_Internals";
+
+    /**
+     * for example to ensure that the model reading the value from the object is
+     * the same than the one that wrote it. Compatible models should use the
+     * same id. I.e. for example integer and bounded integer models should share
+     * the same id. Also the enable status is preserved.
+     */
+    static final String CFGKEY_MODELID = "SettingsModelID";
+
+    /**
+     * The enable status of the settings model is stored in the nodesettings.
+     */
+    static final String CFGKEY_ENABLESTAT = "EnabledStatus";
 
     private final CopyOnWriteArrayList<ChangeListener> m_listeners;
+
+    private boolean m_enabled;
 
     /**
      * Default constructor.
      */
     public SettingsModel() {
         m_listeners = new CopyOnWriteArrayList<ChangeListener>();
+        m_enabled = true;
     }
+
+    /**
+     * Creates a new settings model with identical values for everything except
+     * the stored value (also excluded is the list of listeners). The value
+     * stored in the model will be retrieved from the specified settings object.
+     * If the settings object doesn't contain a (valid) value it will throw an
+     * InvalidSettingsException.
+     * 
+     * @param <T> the actual type returned is determined by the implementation
+     *            of the {@link #createClone()} method.
+     * @param settings the object to read the new model's value(s) from
+     * @return a new settings model with the same constraints and configName but
+     *         a value read from the specified settings object.
+     * @throws InvalidSettingsException if the settings object passed doesn't
+     *             contain a valid value for the newly created settings model.
+     */
+    public final <T extends SettingsModel> T createCloneWithValidatedValue(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+
+        T result = createClone();
+        result.m_enabled = m_enabled;
+        
+        result.readEnableStatusAndCheckModelID(settings);
+
+        // call the derived implementation to actually read the values, only if
+        // the model enable status is true now
+        if (result.m_enabled) {
+            result.loadSettingsForModel(settings);
+        }
+
+        return result;
+
+    }
+
+    /**
+     * @param <T> determined by the implementation class. Must be the same than
+     *            the class implementing this method.
+     * @return a new instance of the same object with identical state and
+     *         value(s).
+     */
+    abstract <T extends SettingsModel> T createClone();
 
     /**
      * Each settings model provides an ID which will be stored with its values.
@@ -101,8 +158,8 @@ public abstract class SettingsModel {
     /**
      * This is the method called from the default dialog to load the model
      * specific settings from the settings object. It calls the model specific
-     * implementations. (This method doesn't really do anything, we just keep it
-     * to have equal names for the load and save methods.)
+     * implementations if the settingsmodel is enabled, otherwise it skips the
+     * loading process.
      * 
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
@@ -110,11 +167,21 @@ public abstract class SettingsModel {
      */
     final void dlgLoadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        // the load method for the dialog is not checking the id - we must
-        // be able to load anything.
 
-        // just call the implementation of the derivative.
-        loadSettingsForDialog(settings, specs);
+        try {
+
+            readEnableStatusAndCheckModelID(settings);
+
+        } catch (InvalidSettingsException ise) {
+            // we need to be able to load anything (especially empty settings)
+            // Also, don't change the enable state, in case it got intentionally
+            // disabled before.
+        }
+
+        if (m_enabled) {
+            // call the implementation of the derivative.
+            loadSettingsForDialog(settings, specs);
+        }
     }
 
     /**
@@ -140,11 +207,14 @@ public abstract class SettingsModel {
      */
     final void dlgSaveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        // save the id of the writing settings model
-        Config idCfg = settings.addConfig(getConfigName() + CFGKEY_MODELID);
-        idCfg.addString(CFGKEY_MODELID, getModelTypeID());
-        // now add the settings from the derived implementation
-        saveSettingsForDialog(settings);
+
+        saveEnableStatusAndModelID(settings);
+
+        // now add the settings from the derived implementation, if the model
+        // is enabled
+        if (m_enabled) {
+            saveSettingsForDialog(settings);
+        }
     }
 
     /**
@@ -179,6 +249,28 @@ public abstract class SettingsModel {
     }
 
     /**
+     * Sets the enabled status of the model. If a model is disabled it doesn't
+     * validate new values or save it's current value into a settings object.
+     * Also loading will be skipped. (The model does store its enable status in
+     * the settings object though.)
+     * 
+     * @param enabled the new enable status. If true the model
+     *            saves/validates/loads its value, if false, all these
+     *            operations are skipped.
+     */
+    public void setEnabled(final boolean enabled) {
+        m_enabled = enabled;
+    }
+
+    /**
+     * @return the current enable status of the model.
+     * @see #setEnabled(boolean)
+     */
+    boolean isEnabled() {
+        return m_enabled;
+    }
+
+    /**
      * Read the expected values from the settings object, without assigning them
      * to the internal variables!
      * 
@@ -188,34 +280,25 @@ public abstract class SettingsModel {
      */
     public final void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        if (settings.keySet().size() > 0) {
-            // chekc only if this is not an empty config. Otherwise the loading
-            // will fail anyway.
-            try {
-                Config idCfg =
-                        settings.getConfig(getConfigName() + CFGKEY_MODELID);
-                String settingsID = idCfg.getString(CFGKEY_MODELID);
-                assert getModelTypeID().equals(settingsID) : "Implementation"
-                        + "Error: The SettingsModel used to write the values is"
-                        + " different from the one that reads them. (WriteID = "
-                        + settingsID + ", ReadID = " + getModelTypeID()
-                        + ", Reading settings model: " + this.toString() + ")";
-            } catch (InvalidSettingsException ise) {
-                assert false : "Implementation Error: You are trying to read a "
-                        + "value with a SettingsModel but didn't use a "
-                        + "SettingsModel to write it. (WriteID = <missing>, "
-                        + "ReadID = "
-                        + getModelTypeID()
-                        + ", Reading settings model: " + this.toString() + ")";
 
-            }
+        boolean oldEnableStatus = m_enabled;
+
+        // it actually changes the enabled field
+        readEnableStatusAndCheckModelID(settings);
+        boolean settingsEnableStatus = m_enabled;
+
+        m_enabled = oldEnableStatus;
+
+        if (settingsEnableStatus) {
+            validateSettingsForModel(settings);
         }
-        validateSettingsForModel(settings);
+
     }
 
     /**
      * Read the expected values from the settings object, without assigning them
-     * to the internal variables!
+     * to the internal variables! (Is not called when the model was disabled at
+     * the time the settings were saved.)
      * 
      * @param settings the object to read the value(s) from
      * @throws InvalidSettingsException if the value(s) in the settings object
@@ -236,36 +319,21 @@ public abstract class SettingsModel {
             throws InvalidSettingsException {
         // make sure, the settings model that saved the values is the same
         // model than this (or compatible to us).
-        if (settings.keySet().size() > 0) {
-            // chekc only if this is not an empty config. Otherwise the loading
-            // will fail anyway.
-            try {
-                Config idCfg =
-                        settings.getConfig(getConfigName() + CFGKEY_MODELID);
-                String settingsID = idCfg.getString(CFGKEY_MODELID);
-                assert getModelTypeID().equals(settingsID) : "Implementation"
-                        + "Error: The SettingsModel used to write the values is"
-                        + " different from the one that reads them. (WriteID = "
-                        + settingsID + ", ReadID = " + getModelTypeID()
-                        + ", Reading settings model: " + this.toString() + ")";
-            } catch (InvalidSettingsException ise) {
-                assert false : "Implementation Error: You are trying to read a "
-                        + "value with a SettingsModel but didn't use a "
-                        + "SettingsModel to write it. (WriteID = <missing>, "
-                        + "ReadID = "
-                        + getModelTypeID()
-                        + ", Reading settings model: " + this.toString() + ")";
+        readEnableStatusAndCheckModelID(settings);
 
-            }
+        // call the derived implementation to actually read the values, only if
+        // the model enable status is true now
+        if (m_enabled) {
+            loadSettingsForModel(settings);
         }
-        // call the derived implementation to actually read the values
-        loadSettingsForModel(settings);
     }
 
     /**
      * Read value(s) of this settings model from the configuration object. If
      * the value is not stored in the config, an exception will be thrown. <br>
-     * NOTE: Don't call this method directly, rather call loadSettingsFrom.
+     * NOTE: Don't call this method directly, rather call loadSettingsFrom.<br>
+     * NOTE: This method is not called when the settingsmodel was disabled at
+     * the time settings were saved.
      * 
      * @param settings The {@link org.knime.core.node.NodeSettings} to read
      *            from.
@@ -281,11 +349,14 @@ public abstract class SettingsModel {
      *            into.
      */
     public final void saveSettingsTo(final NodeSettingsWO settings) {
-        // save the id of the writing settings model
-        Config idCfg = settings.addConfig(getConfigName() + CFGKEY_MODELID);
-        idCfg.addString(CFGKEY_MODELID, getModelTypeID());
-        // now add the settings from the derived implementation
-        saveSettingsForModel(settings);
+
+        saveEnableStatusAndModelID(settings);
+
+        if (m_enabled) {
+            // now add the settings from the derived implementation, only if
+            // the model is enabled
+            saveSettingsForModel(settings);
+        }
     }
 
     /**
@@ -296,6 +367,44 @@ public abstract class SettingsModel {
      *            into.
      */
     abstract void saveSettingsForModel(final NodeSettingsWO settings);
+
+    /**
+     * Checks the modelID stored in the settings object and throws an assertion
+     * if it doesn't match the ID of this model. It also reads the enabled
+     * status back in - and throws an exeption if any of these settings is
+     * missing (the enabled status will remain unchanged then).
+     * 
+     * @param settings the config object to read the enable state and model ID
+     *            from
+     */
+    private void readEnableStatusAndCheckModelID(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        Config idCfg = settings.getConfig(getConfigName() + CFGKEY_INTERNAL);
+        String settingsID = idCfg.getString(CFGKEY_MODELID);
+
+        m_enabled = idCfg.getBoolean(CFGKEY_ENABLESTAT);
+
+        assert getModelTypeID().equals(settingsID) : "Implementation"
+                + "Error: The SettingsModel used to write the values is"
+                + " different from the one that reads them. (WriteID = "
+                + settingsID + ", ReadID = " + getModelTypeID()
+                + ", Reading settings model: " + this.toString() + ")";
+
+    }
+
+    /**
+     * Saves this' model id and the current enable status into the specified
+     * settings object. It creates a new sub config for that.
+     * 
+     * @param settings the settings object to add the settings to.
+     */
+    private void saveEnableStatusAndModelID(final NodeSettingsWO settings) {
+
+        Config intCfg = settings.addConfig(getConfigName() + CFGKEY_INTERNAL);
+        intCfg.addString(CFGKEY_MODELID, getModelTypeID());
+        intCfg.addBoolean(CFGKEY_ENABLESTAT, m_enabled);
+
+    }
 
     /**
      * Derived classes should print their class name plus the config name for

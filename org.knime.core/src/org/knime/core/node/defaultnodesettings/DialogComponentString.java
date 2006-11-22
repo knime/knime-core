@@ -129,7 +129,7 @@ public final class DialogComponentString extends DialogComponent {
      * @see DialogComponent #setEnabledComponents(boolean)
      */
     @Override
-    public void setEnabledComponents(final boolean enabled) {
+    protected void setEnabledComponents(final boolean enabled) {
         m_valueField.setEnabled(enabled);
     }
 

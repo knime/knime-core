@@ -57,39 +57,13 @@ public class SettingsModelStringArray extends SettingsModel {
     }
 
     /**
-     * Constructor initializing the value from the specified settings object. If
-     * the settings object doesn't contain a valid value for this model, it will
-     * throw an InvalidSettingsException.
-     * 
-     * @param configName the identifier the value is stored with in the
-     *            {@link org.knime.core.node.NodeSettings} object
-     * @param settings the object to read the initial value from
-     * @throws InvalidSettingsException if the settings object doesn't contain a
-     *             (valid) value for this object
+     * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */
-    public SettingsModelStringArray(final String configName,
-            final NodeSettingsRO settings) throws InvalidSettingsException {
-        this(configName, (String[])null);
-        loadSettingsForModel(settings);
+    @SuppressWarnings("unchecked")
+    SettingsModelStringArray createClone() {
+        return new SettingsModelStringArray(m_configName, m_value);
     }
-    
-    /**
-     * Creates a new settings model with identical values for everything except
-     * the stored value. The value stored in the model will be retrieved from
-     * the specified settings object. If the settings object doesn't contain a
-     * (valid) value it will throw an InvalidSettingsException.
-     * 
-     * @param settings the object to read the new model's value(s) from
-     * @return a new settings model with the same constraints and configName but
-     *         a value read from the specified settings object.
-     * @throws InvalidSettingsException if the settings object passed doesn't
-     *             contain a valid value for the newly created settings model.
-     */
-    public SettingsModelStringArray createCloneWithNewValue(
-            final NodeSettingsRO settings) throws InvalidSettingsException {
-        return new SettingsModelStringArray(m_configName, settings);
-    }
-    
+
     /**
      * @see SettingsModel#getModelTypeID()
      */
@@ -134,7 +108,7 @@ public class SettingsModelStringArray extends SettingsModel {
     @Override
     void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        saveSettingsTo(settings);
+        saveSettingsForModel(settings);
     }
 
     /**
@@ -168,7 +142,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    public void validateSettingsForModel(final NodeSettingsRO settings)
+    void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         settings.getStringArray(m_configName);
     }
@@ -178,7 +152,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    public void loadSettingsForModel(final NodeSettingsRO settings)
+    void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
@@ -193,7 +167,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    public void saveSettingsForModel(final NodeSettingsWO settings) {
+    void saveSettingsForModel(final NodeSettingsWO settings) {
         settings.addStringArray(m_configName, getStringArrayValue());
     }
 

@@ -160,7 +160,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @see DialogComponent #setEnabledComponents(boolean)
      */
     @Override
-    public void setEnabledComponents(final boolean enabled) {
+    protected void setEnabledComponents(final boolean enabled) {
         m_pwField.setEnabled(enabled);
     }
 

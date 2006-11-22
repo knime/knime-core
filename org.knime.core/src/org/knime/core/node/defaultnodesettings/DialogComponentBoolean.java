@@ -100,7 +100,7 @@ public final class DialogComponentBoolean extends DialogComponent {
      * @see DialogComponent#setEnabledComponents(boolean)
      */
     @Override
-    public void setEnabledComponents(final boolean enabled) {
+    protected void setEnabledComponents(final boolean enabled) {
         m_checkbox.setEnabled(enabled);
     }
 
@@ -130,12 +130,4 @@ public final class DialogComponentBoolean extends DialogComponent {
         return m_checkbox.isSelected();
     }
 
-    /**
-     * Set the selection state of the checkbox.
-     * 
-     * @param select <code>true</code> or <code>false</code>
-     */
-    public void setSelected(final boolean select) {
-        m_checkbox.setSelected(select);
-    }
 }

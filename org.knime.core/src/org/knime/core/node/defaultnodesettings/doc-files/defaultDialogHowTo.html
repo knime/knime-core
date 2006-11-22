@@ -2,70 +2,53 @@
 <html>
 <head>
 
-
-  
   <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
-
-  
   <title>DefaultDialog HowTo</title>
+
+
 </head>
 
 
 <body>
 
-
 <div style="text-align: center;"><big style="font-weight: bold;">How to create a default dialog.</big><br>
-
 
 </div>
 
-
 <br>
 
-
 <span style="font-weight: bold; text-decoration: underline;">Content:<br>
-
 
 </span>
 <ol>
 
-
   <li><a href="#intro">Introduction</a></li>
-
 
   <li><a href="#dlgCode">NodeDialog code example</a></li>
 
-
   <li><a href="#modelCode">NodeModel code example</a></li>
-
 
   <li><a href="#table">Table of all default dialog
 components</a></li>
 
+  <li><a href="#disable">Disabling components</a></li>
 
   <li><a href="#faq">FAQs</a></li>
 
-
 </ol>
 
-
 <br>
-
 
 <a name="intro"></a><span style="font-weight: bold;">Introduction </span><br>
 
-
 <br>
-
 
 "Default dialog components" provide a convenient way to get user input
 for a few basic settings through a dialog that can be easily created,
 without going through the pain of creating swing components and
 layouts. <br>
 
-
 <br>
-
 
 We provide a couple of components that can be added to a default
 settings
@@ -79,9 +62,7 @@ look nicer, but that's all. There is also no support for dependencies
 between components (like disabling components depending on the value of
 a checkbox, for example), or Action/ChangeListeners.<br>
 
-
 <br>
-
 
 Each default component uses a swing component (like a JTextField or
 JSpinner) as input field, and allows for adding a label to that field,
@@ -94,163 +75,118 @@ entered value in your NodeModel, you use an instance of that same
 SettingsModel. To identify the value handled by the settings model, you
 must provide a unique configName (i.e. a string ID) for it.<br>
 
-
 <br>
-
 
 Here is an example of a default dialog with a few components grouped
 into two groups:<br>
 
-
 <div style="text-align: center; margin-left: 156px; width: 459px;"><img style="width: 415px; height: 451px;" alt="an example default dialog" src="dlg1.png"><br>
-
 
 An example of a default dialog. It shows a selection of available
 components, grouped into two groups, each surrounded by titled border.<br>
 
-
 </div>
 
-
 <br>
-
 
 For a complete list of available components (and settings models they
 require), please refer to the <a href="#table">table below</a>.<br>
 
-
 <br>
-
 
 <a name="dlgCode"></a><span style="font-weight: bold;">Code example NodeDialog</span><br>
 
-
 <br>
-
 
 &nbsp;Here is the code that creates the above dialog:<br>
 
-
 <br>
-
 
 <tt>
 /**<br>
 
-
 &nbsp;* The new default dialog class must be derived from
 DefaultNodeDialogPane.<br>
 
-
 &nbsp;*/<br>
-
 
 public class DemoNodeDialogPane extends DefaultNodeSettingsPane {<br>
 
-
 <br>
 
-
 &nbsp;&nbsp;&nbsp; /**<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp; * Instantiate and add all
 needed components here in the constructor.<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; * (The suppress warnings is
 used to avoid compiler warnings from the<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp; * constructor with generic
 varargs.)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; */<br>
-
 
 &nbsp;&nbsp;&nbsp; @SuppressWarnings("unchecked")<br>
 
-
 &nbsp;&nbsp;&nbsp; DemoNodeDialogPane() {<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 createNewGroup("Group 1:"); // following components are bordered<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 addDialogComponent(new DialogComponentString(new SettingsModelString(<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 DemoNodeModel.STR, null), "Enter a string value:"));<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 addDialogComponent(new DialogComponentNumber(new SettingsModelInteger(<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 DemoNodeModel.INT, 3), "Enter an integer (1-17):", 1));<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 addDialogComponent(new DialogComponentNumber(new SettingsModelDouble(<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 DemoNodeModel.DBL, 3.0),<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 "Enter a floating point number:", 0.1));<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 createNewGroup("Group 2:"); // closes the prev group, opens a new one<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 DemoNodeModel.BOOL, false), "Checkit or leave it:"));<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 addDialogComponent(new DialogComponentStringSelection(<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelString(DemoNodeModel.STRSEL, null),<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 "Your choice:", "First", "Second", "Third"));<br>
 
-
 &nbsp; &nbsp; &nbsp; &nbsp; closeCurrentGroup();<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 addDialogComponent(new DialogComponentColumnNameSelection(<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelString(DemoNodeModel.COLSEL, ""), <br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 "Select a column", 0, true, IntValue.class, DoubleValue.class));<br>
 
-
 &nbsp;&nbsp;&nbsp; }<br>
 
-
 }<br>
-
 
 </tt>The code adds 6 components grouped by two borders. All
 components following the <code>createNewGroup(&lt;Title&gt;)</code>
@@ -262,9 +198,7 @@ the last border, you can use <code>closeCurrentGroup</code>.
 Components added after
 this command will be placed outside any border.<br>
 
-
 <br>
-
 
 Each component's constructor requires a new instance of a <code>SettingsModel</code>.
 The settings model expects a string identifier that it uses to store
@@ -274,435 +208,313 @@ depending on the type of component, most require a string, that will be
 displayed in front of the component as label. For more details, please
 refer to the documentation of the specific component.<br>
 
-
 <br>
-
 
 <span style="font-weight: bold;"><a name="modelCode"></a>Code
 example NodeModel</span><br>
 
-
 <br>
-
 
 The following code reads the user input through <code>SettingsModels</code>
 into the
 <code>NodeModel</code>:<br>
 
-
 <tt>
 /**<br>
 
-
 &nbsp;* The node model to the demo default dialog. <br>
-
 
 &nbsp;*/<br>
 
-
 public class DemoNodeModel extends NodeModel {<br>
-
 
 <br>
 
-
 &nbsp;&nbsp;&nbsp; /** <br>
-
 
 &nbsp; &nbsp; &nbsp;* The following strings are used by the
 dialog and the model<br>
 
-
 &nbsp; &nbsp; &nbsp;* as key to store settings in the
 settings object. <br>
 
-
 &nbsp; &nbsp; &nbsp;*/<br>
-
 
 &nbsp;&nbsp;&nbsp; static final String STR = "str";<br>
 
-
 &nbsp;&nbsp;&nbsp; static final String INT = "int";<br>
-
 
 &nbsp;&nbsp;&nbsp; static final String DBL = "dbl";<br>
 
-
 &nbsp;&nbsp;&nbsp; static final String BOOL = "bool";<br>
-
 
 &nbsp;&nbsp;&nbsp; static final String STRSEL = "selStr";<br>
 
-
 &nbsp;&nbsp;&nbsp; static final String COLSEL = "selCol";<br>
-
 
 <br>
 
-
 &nbsp;&nbsp;&nbsp; /**<br>
-
 
 &nbsp; &nbsp; &nbsp;* these are the members storing user
 settings.<br>
 
-
 &nbsp; &nbsp; &nbsp;* Use the same settings model (but a
 new instance) as in<br>
 
-
 &nbsp; &nbsp; &nbsp;* the node dialog for that value.<br>
-
 
 &nbsp; &nbsp; &nbsp;*/<br>
 
-
 &nbsp;&nbsp;&nbsp; private final SettingsModelString m_str =<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelString(STR, null);<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; private final
 SettingsModelIntegerBounded m_intBounded =<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelIntegerBounded(INT, 4, 1, 17);<br>
 
-
 <br>
 
-
 &nbsp;&nbsp;&nbsp; private final SettingsModelDouble m_dbl =<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelDouble(DBL, .4);<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; private final SettingsModelBoolean
 m_bool =<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelBoolean(BOOL, true);<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; private final SettingsModelString
 m_selStr =<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelString(STRSEL, null);<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; private final SettingsModelString
 m_colSel =<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 new SettingsModelString(COLSEL, "none");<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; /** The constructor */<br>
 
-
 &nbsp;&nbsp;&nbsp; DemoNodeModel() {<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 super(1, 0);<br>
 
-
 &nbsp;&nbsp;&nbsp; }<br>
 
-
 <br>
-
 
 &nbsp; &nbsp; [....]<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; /**<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; * @see
 org.knime.core.node.NodeModel<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;
 *&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 #loadValidatedSettingsFrom(org.knime.core.node.NodeSettingsRO)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; */<br>
 
-
 &nbsp;&nbsp;&nbsp; @Override<br>
-
 
 &nbsp;&nbsp;&nbsp; protected void
 loadValidatedSettingsFrom(final NodeSettingsRO settings)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 throws InvalidSettingsException {<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_bool.loadSettingsFrom(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_dbl.loadSettingsFrom(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_intBounded.loadSettingsFrom(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_selStr.loadSettingsFrom(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_str.loadSettingsFrom(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_colSel.loadSettingsFrom(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp; }<br>
 
-
 <br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; /**<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; * @see
 org.knime.core.node.NodeModel<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;
 *&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 #saveSettingsTo(org.knime.core.node.NodeSettingsWO)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; */<br>
 
-
 &nbsp;&nbsp;&nbsp; @Override<br>
-
 
 &nbsp;&nbsp;&nbsp; protected void saveSettingsTo(final
 NodeSettingsWO settings) {<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_bool.saveSettingsTo(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_dbl.saveSettingsTo(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_intBounded.saveSettingsTo(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_selStr.saveSettingsTo(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_str.saveSettingsTo(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_colSel.saveSettingsTo(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-
 
 &nbsp;&nbsp;&nbsp; }<br>
 
-
 <br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; /**<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; * @see
 org.knime.core.node.NodeModel<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;
 *&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 #validateSettings(org.knime.core.node.NodeSettingsRO)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; */<br>
 
-
 &nbsp;&nbsp;&nbsp; @Override<br>
-
 
 &nbsp;&nbsp;&nbsp; protected void validateSettings(final
 NodeSettingsRO settings)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 throws InvalidSettingsException {<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_bool.validateSettings(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_dbl.validateSettings(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_intBounded.validateSettings(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_selStr.validateSettings(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_str.validateSettings(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_colSel.validateSettings(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp; }<br>
 
-
 <br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; /**<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; * @see
 org.knime.core.node.NodeModel<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;
 *&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 #execute(org.knime.core.node.BufferedDataTable[],<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;
 *&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 org.knime.core.node.ExecutionContext)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; */<br>
 
-
 &nbsp;&nbsp;&nbsp; @Override<br>
-
 
 &nbsp;&nbsp;&nbsp; protected BufferedDataTable[]
 execute(final BufferedDataTable[] inData,<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 final ExecutionContext exec) throws Exception {<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if
 (m_bool.getBooleanValue()) {<br>
 
-
 &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
 &nbsp; double d = m_dbl.getDoubleValue() * 2.5;<br>
 
-
 &nbsp; &nbsp; &nbsp; &nbsp; }<br>
-
 
 &nbsp; &nbsp; &nbsp; &nbsp; int i =
 m_intBounded.getIntValue(); <br>
 
-
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // i is
 larger than 0 and smaller than 18 (because the model used<br>
-
 
 &nbsp; &nbsp; &nbsp; &nbsp; // is a
 SettingsModelIntBounded with these limits).<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if
 (m_selStr.getStringValue() != null) {<br>
 
-
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 m_str.setStringValue(m_colSel.getStringValue());<br>
 
-
 &nbsp; &nbsp; &nbsp; &nbsp; }<br>
 
-
 <br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 return new BufferedDataTable[0];<br>
 
-
 &nbsp;&nbsp;&nbsp; }<br>
 
-
 </tt><br>
-
 
 For each component/setting value add a member holding the corresponding
 SettingsModel. Use exactly the same type of SettingsModel as the
@@ -714,9 +526,7 @@ back from the dialog. To access the current value in the SettingsModel,
 call the coresponding getter-method. SettingModels also provide a
 public setter-method to change their value.<br>
 
-
 <br>
-
 
 If &nbsp;there are dependencies to check between two settings
 values, the validateSettings method becomes a bit more complicated: If
@@ -728,346 +538,246 @@ need to create new temporary settings models, load the new values in,
 read and verify them, and release the settings models at the end. Here
 is a code example:<br>
 
-
 <tt>&nbsp;&nbsp;&nbsp; /**<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp; * @see
 org.knime.core.node.NodeModel<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;
 *&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 #validateSettings(org.knime.core.node.NodeSettingsRO)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp; */<br>
 
-
 &nbsp;&nbsp;&nbsp; @Override<br>
-
 
 &nbsp;&nbsp;&nbsp; protected void validateSettings(final
 NodeSettingsRO settings)<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 throws InvalidSettingsException {<br>
 
-
 <br>
 
+&nbsp; &nbsp; &nbsp; &nbsp; // create&nbsp;new
+(temp)
+settings models <br>
 
-&nbsp; &nbsp; &nbsp; &nbsp; // create a new (temp)
-settings model<br>
+&nbsp; &nbsp; &nbsp; &nbsp; // (if m_min and m_max are
+fields of the&nbsp;NodeModel)<br>
 
+&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>SettingsModelInteger
+min</tt><tt> = <br>
 
-&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>SettingsModelBoolean </tt><tt>bool = new
-SettingsModelBoolean(BOOL, settings);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;
+&nbsp;m_min.createCloneWithValidatedValue(MIN,
+settings);<br>
 
+</tt><tt>
+&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>SettingsModelInteger
+max</tt><tt> = <br>
 
-<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;
+&nbsp;m_max.createCloneWithValidatedValue(MAX,
+settings);<br>
 
+</tt><br>
 
-&nbsp; &nbsp; &nbsp; &nbsp; if (bool.getBooleanValue())
+<tt>&nbsp; &nbsp; &nbsp; &nbsp; if
+(min.getIntValue() &gt;= max.getIntValue())
 {<br>
 
-
-<br>
-
-
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;//
-another way to create a temp settings model<br>
-
-
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</tt><tt>SettingsModelString </tt><tt>str =
-m_str.createCloneWithNewValue(settings);<br>
-
-
-<br>
-
-
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;if
-(str.getStringValue() == null) {<br>
-
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; throw new InvalidSettingsException("The
+specified minimum "<br>
 
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-&nbsp; &nbsp;throw new InvalidSettingsException("If bool is
-true, you must specify"<br>
-
-
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; + " a string
-value.");<br>
-
-
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;}<br>
-
-
-&nbsp; &nbsp; &nbsp; &nbsp; } else {<br>
-
-
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-&nbsp;m_str.validateSettings(settings);<br>
-
+&nbsp; &nbsp; &nbsp; &nbsp;+ "must be smaller than the
+maximum value.");<br>
 
 &nbsp; &nbsp; &nbsp; &nbsp; }<br>
 
-
-<br>
-
+</tt><tt><br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_dbl.validateSettings(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_intBounded.validateSettings(settings);<br>
-
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_selStr.validateSettings(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_colSel.validateSettings(settings);<br>
 
-
 &nbsp;&nbsp;&nbsp; }<br>
 
+<br>
+
+</tt>With the <code>createCloneWithValidatedValue</code>
+method,
+create a temporary settings model with the new value from
+a NodeSettings object. Use this temporary object to access the new
+value, but make sure not to change any permanent variables in the
+NodeModel. Release the clone models after <code>validateSettings</code>
+finishes.<br>
 
 <br>
 
-
-</tt>To create a temporary settings model and store a value from
-a NodeSettings object in there, you can either use the constructor (and
-specify the same config name), or use the <code>createCloneWithNewValue method,</code> which will make sure the new object has the same config name, bounds, etc. but stores the new value from the settings object.
-From these temporary settings models you can get the value stored in the NodeSettings object and verify it.&nbsp;<br>
-
-
 <br>
-
-
-<br>
-
 
 <span style="font-weight: bold;"><a name="table"></a>Table
 of all default dialog components</span><br>
 
-
 <br>
-
 
 Here is a list of all currently available default components.<br>
 
-
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
-
 
   <tbody>
 
-
     <tr>
 
-
       <td style="font-weight: bold;">Looks</td>
-
 
       <td style="font-weight: bold;">Default Component
 Class</td>
 
-
       <td style="font-weight: bold;">Accepted
 SettingsModels</td>
 
-
       <td style="font-weight: bold;">Getter Methods</td>
-
 
       <td style="font-weight: bold;">Notes</td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 73px; height: 21px;" alt="ScreenShot DlgCompBoolean" src="bool.png"></td>
-
 
       <td>DialogComponentBoolean</td>
 
-
       <td>SettingsModelBoolean</td>
-
 
       <td style="white-space: nowrap;">boolean
 getBooleanValue()</td>
 
-
       <td>Stores a boolean value according to the state of the
 checkbox.</td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 624px; height: 256px;" alt="ScreenShot ColFilter" src="colFilter.png"></td>
-
 
       <td>DialogComponentColumnFilter</td>
 
-
       <td>SettingsModelFilterString</td>
-
 
       <td style="white-space: nowrap;">List&lt;String&gt;
 getIncludeList()<br>
 
-
 List&lt;String&gt; getExcludeList()</td>
-
 
       <td>Implements support for an include and exclude list.
 Mainly used for column filtering.</td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 166px; height: 31px;" alt="ScreenShot DlgComp ColSelect" src="colSelect.png"></td>
-
 
       <td>DialogComponentColumnNameSelection</td>
 
-
       <td>SettingsModelString</td>
-
 
       <td style="white-space: nowrap;">String
 getStringValue()</td>
 
-
       <td>Stores the name of the selected column name. Uses the
 renderer of the type of the corresponding column.</td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 412px; height: 60px;" alt="ScreenShot DlgComp FileChooser" src="fileSelect.png"></td>
-
 
       <td>DialogComponentFileChooser</td>
 
-
       <td>SettingsModelString</td>
 
-
       <td>String getStringValue()</td>
-
 
       <td>The stored string is the (absolut) filename of the
 selected file.</td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 138px; height: 29px;" alt="ScreenShot DlgComp number" src="number.png"></td>
-
 
       <td>DialogComponentNumber</td>
 
-
       <td>SettingsModelDouble<br>
-
 
 SettingsModelInteger<br>
 
-
 SettingsModelDoubleBounded<br>
-
 
 SettingsModelIntegerBounded</td>
 
-
       <td>double getDoubleValue()<br>
 
-
 int getIntValue()</td>
-
 
       <td>Accepts a number (double or integer) in an editable
 spinner.
 The bounded models will not accept values outside the specified range. </td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 107px; height: 26px;" alt="ScreenShot DlgComp NumberEdit" src="numberEdit.png"></td>
-
 
       <td>DialogComponentNumberEdit</td>
 
-
       <td>SettingsModelDouble<br>
-
 
 SettingsModelInteger<br>
 
-
 SettingsModelDoubleBounded<br>
-
 
 SettingsModelIntegerBounded</td>
 
-
       <td>double getDoubleValue()<br>
 
-
 int getIntValue()</td>
-
 
       <td>Accepts a number (double or integer) in an EditField.
 The
 bounded models will not accept values outside the specified range.</td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 304px; height: 38px;" alt="ScreenShot DlgComp Password" src="passwd.png"></td>
-
 
       <td>DialogComponentPasswordField</td>
 
-
       <td>SettingsModelString</td>
 
-
       <td>String getStringValue()</td>
-
 
       <td>Accepts any string in a textfield. The entered string
 will
@@ -1075,73 +785,76 @@ not be echoed - a dot appears for each character. The string stored in
 the settings model is the encrypted password. The component provides
 static encryption and decryption methods.</td>
 
-
     </tr>
 
-
     <tr>
-
 
       <td><img style="width: 299px; height: 29px;" alt="ScreenShot DlgComp String" src="string.png"></td>
 
-
       <td>DialogComponentString</td>
-
 
       <td>SettingsModelString</td>
 
-
       <td>String getStringValue()</td>
-
 
       <td>Stores any string entered in the field.</td>
 
-
     </tr>
-
 
     <tr>
 
-
       <td><img style="width: 116px; height: 31px;" alt="ScreenShot DlgComp stringSelect" src="stringSelect.png"></td>
-
 
       <td>DialogComponentStringSelection</td>
 
-
       <td>SettingsModelString</td>
 
-
       <td>String getStringValue()</td>
-
 
       <td>The user can select a string from the list. The
 combobox is not editable.</td>
 
-
     </tr>
 
-
-  
   </tbody>
 </table>
 
+<br>
 
 <br>
 
+<span style="font-weight: bold;"><a name="disable"></a>Disabling
+components</span><br>
 
 <br>
 
+All components can be disabled (grayed-out) by calling
+<code>setEnabled(false)</code>. Disabled components don't
+accept user input anymore, and their <code>SettingsModels</code>
+don't save their
+values in a
+<code>NodeSettings</code> object nor will
+they&nbsp;update their internal value
+from it. You can register an ItemListener with a checkbox component (<code>DialogComponentBoolean</code>),
+and change the enable status of any other component in the listener
+method. In the <code>NodeModel</code>, when loading new
+values, you need to make
+sure that you only load values for enabled components. You probably
+want to read the boolean values first, to decide not to load values
+that depend on this boolean values. (Loading values into disabled
+settings models will not result in an error or exception, they will
+just not update their internal value.)<br>
+
+If you think you need to change the value of a settings model in your
+<code>NodeModel</code> (for example to set default values), you need to set the
+enable status of dependend <code>SettingsModels</code> accordingly.<br>
 
 <br>
-
 
 <span style="font-weight: bold;"><a name="faq"></a>
 FAQs</span><br>
 
-
 <br>
-
 
 <span style="text-decoration: underline;">
 Q</span>: <span style="text-decoration: underline;">There
@@ -1149,20 +862,17 @@ are two places to specify a default value (with the settings
 model, when adding a component, and in the one used
 in the NodeModel). Which one is used?</span><br>
 
-
 <span style="text-decoration: underline;">
 A</span>: The one specified in the settings model &nbsp;used
 by the
 NodeModel. Before the dialog opens, the NodeModel's settings are
-transfered into the dialog. <br>
-
+transfered into the dialog. (Only when a component is disabled it keeps
+its default value from the dialog constructor.)<br>
 
 <br>
 
-
 <span style="text-decoration: underline;">Q</span>: <span style="text-decoration: underline;">When the user enters an
 invalid value some components are colored red, others aren't. Why?</span><br>
-
 
 <span style="text-decoration: underline;">A</span>:
 If you use the same
@@ -1174,16 +884,13 @@ restricted settings model than the dialog component, if it is the
 NodeModel
 that rejects the value.<br>
 
-
 <br>
-
 
 <span style="text-decoration: underline;">
 Q</span>: <span style="text-decoration: underline;">Why
 do I need to instantiate two SettingsModels for each component,
 why can't I just transfer the object from the NodeModel to the
 NodeDialog and get the user input stored in there?</span><br>
-
 
 <span style="text-decoration: underline;">
 A</span>: That's how the Nodes in KNIME are designed. The
@@ -1193,9 +900,7 @@ settings objects. You need to implement a mechanism to store and load
 your current settings anyway - we re-use it to transfer the current
 values into the dialog. <br>
 
-
 <br>
-
 
 </body>
 </html>

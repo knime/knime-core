@@ -48,7 +48,7 @@ import org.knime.core.node.NotConfigurableException;
  * easy to add such Component to quickly assemble a dialog dealing with typical
  * parameters. <br>
  * Each component has a {@link SettingsModel} associated with it, which stores
- * the current value in the component and handles all value related operations,
+ * the current value of the component and handles all value related operations,
  * like loading, saving, etc.
  * 
  * @see DefaultNodeSettingsPane
@@ -116,7 +116,8 @@ public abstract class DialogComponent extends JPanel {
 
     /**
      * Read value(s) of this dialog component from the configuration object.
-     * This method will be called by the dialog pane only.
+     * This method will be called by the dialog pane only. (Is not called if the
+     * component is disabled.)
      * 
      * @param settings the <code>NodeSettings</code> to read from
      * @param specs the input specs
@@ -126,28 +127,34 @@ public abstract class DialogComponent extends JPanel {
      */
     final void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        checkConfigurabilityBeforeLoad(specs);
+
         m_lastSpecs = specs;
+
+        checkConfigurabilityBeforeLoad(specs);
         m_model.dlgLoadSettingsFrom(settings, specs);
     }
 
     /**
-     * Write value(s) of this dialog component to the configuration object.
-     * This method will be called by the dialog pane only.
+     * Write value(s) of this dialog component to the configuration object. This
+     * method will be called by the dialog pane only. (Is not called if the
+     * component is disabled.)
      * 
      * @param settings the <code>NodeSettings</code> to read from
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
     final void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        validateStettingsBeforeSave();
+        if (m_model.isEnabled()) {
+            validateStettingsBeforeSave();
+        }
         m_model.dlgSaveSettingsTo(settings);
     }
 
     /**
      * Will be called before the value of the component is saved into the
      * settings object. Can be used to commit values, to update the model and
-     * must be used to validate the entered value.
+     * must be used to validate the entered value. (Is not called if the
+     * component is disabled.)
      * 
      * @throws InvalidSettingsException if the entered values are invalid
      */
@@ -156,7 +163,9 @@ public abstract class DialogComponent extends JPanel {
     /**
      * Will be called before the values are loaded from the settings object. Can
      * be used to avoid loading due to missing, invalid, or inappropriate
-     * incoming table specs.
+     * incoming table specs. <br>
+     * Note: This is called even if the component is disabled. Don't reject
+     * specs that might be handled by other components
      * 
      * @param specs the specs from the input ports.
      * @throws NotConfigurableException if the component can't be used due to
@@ -167,9 +176,10 @@ public abstract class DialogComponent extends JPanel {
             throws NotConfigurableException;
 
     /**
-     * We need to override the JPanel's method because we need to enable all
-     * components contained in this dialog component. It's final because it
-     * calls the abstract method {@link #setEnabledComponents(boolean)}.
+     * Sets the enabled status of the component. Disabled components don't take
+     * user input and don't store any value in NodeSettings objects! Trying to
+     * retrieve the value of a disabled component from the settings object will
+     * fail.
      * 
      * @param enabled if <code>true</code> the contained components will be
      *            enabled
@@ -178,6 +188,7 @@ public abstract class DialogComponent extends JPanel {
      */
     @Override
     public final void setEnabled(final boolean enabled) {
+        m_model.setEnabled(enabled);
         setEnabledComponents(enabled);
         super.setEnabled(enabled);
     }
