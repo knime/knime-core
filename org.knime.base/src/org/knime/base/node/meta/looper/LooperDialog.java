@@ -22,7 +22,8 @@
  */
 package org.knime.base.node.meta.looper;
 
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -51,11 +52,16 @@ public class LooperDialog extends NodeDialogPane {
      * Creates a new dialog for the looper node.
      */
     public LooperDialog() {
-        JPanel p = new JPanel(new GridLayout(3, 2));
-        p.add(new JLabel("Number of loops"));
-        p.add(m_loops);
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTHEAST;
+        p.add(new JLabel("Number of loops   "), c);
+        c.gridx = 1;
+        p.add(m_loops, c);
 
-        p.setSize(400, 60);
         addTab("Standard settings", p);
     }
 
