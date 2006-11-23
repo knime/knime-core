@@ -22,13 +22,14 @@
  */
 package org.knime.core.data.renderer;
 
+import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.ListCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 /**
- * General interface for classes that are able to render special derivates of
+ * General interface for classes that are able to render special derivatives of
  * <code>DataValue</code>. 
  * 
  * <p>This interface extends <code>TableCellRenderer</code> and
@@ -50,12 +51,23 @@ public interface DataValueRenderer extends TableCellRenderer, ListCellRenderer {
      * that it can be shown as label in menus, for instance.
      * @return A description for this renderer.
      */
-    public String getDescription();
+    String getDescription();
     
     /**
-     * Get the dimension which the renderer component will preferrably occupy.
-     * @return Size of the component being rendererd.
+     * Get the dimension which the renderer component will preferably occupy.
+     * @return Size of the component being rendered.
      */
     Dimension getPreferredSize();
+    
+    /**
+     * Get a component that visualizes a given object. This object, generally,
+     * is a {@link DataCell} implementing the underlying 
+     * <code>DataValue</code> interface. The implementation, however, needs to 
+     * handle other cases as well, such as <code>null</code> arguments,
+     * missing <code>DataCell</code> or generic objects.
+     * @param val The value to render
+     * @return A component displaying the content of <code>val</code>.
+     */
+    Component getComponent(final Object val);
 
 }

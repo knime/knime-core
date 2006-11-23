@@ -51,7 +51,7 @@ public class DefaultDataValueRenderer
     
     /**
      * Creates new renderer and memorizes the column spec. The argument may
-     * be, however null.
+     * be, however, null.
      * @param spec The column spec of the column for which this renderer is 
      * used. 
      */
@@ -67,8 +67,8 @@ public class DefaultDataValueRenderer
     }
     
     /**
-     * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
-     * javax.swing.JList, java.lang.Object, int, boolean, boolean)
+     * @see ListCellRenderer#getListCellRendererComponent(
+     * JList, Object, int, boolean, boolean)
      */
     public Component getListCellRendererComponent(
             final JList list, final Object value, final int index, 
@@ -89,6 +89,14 @@ public class DefaultDataValueRenderer
         setBorder((cellHasFocus) 
                 ? UIManager.getBorder("List.focusCellHighlightBorder") 
                 : noFocusBorder);
+        return this;
+    }
+    
+    /**
+     * @see DataValueRenderer#getComponent(Object)
+     */
+    public Component getComponent(final Object val) {
+        setValue(val);
         return this;
     }
     

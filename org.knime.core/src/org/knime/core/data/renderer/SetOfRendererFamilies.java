@@ -125,5 +125,12 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
         return m_active.getListCellRendererComponent(
                 list, value, index, isSelected, cellHasFocus);
     }
+    
+    /**
+     * @see DataValueRenderer#getComponent(Object)
+     */
+    public Component getComponent(final Object val) {
+        return m_active.getComponent(val);
+    }
 
 }

@@ -230,4 +230,11 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
     public String getDescription() {
         return m_active.getDescription();
     }
+    
+    /**
+     * @see DataValueRenderer#getComponent(Object)
+     */
+    public Component getComponent(final Object val) {
+        return m_active.getComponent(val);
+    }
 }
