@@ -23,10 +23,15 @@ package org.knime.core.node.workflow;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -38,8 +43,45 @@ import org.knime.core.util.FileUtil;
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class BatchExecutor {
-    private BatchExecutor() { /**/ }
-    
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(BatchExecutor.class);
+
+    private static class Option {
+        public final int nodeID;
+
+        public final String name;
+
+        public final String value;
+
+        public final String type;
+
+        Option(final int nodeID, final String name, final String value,
+                final String type) {
+            this.nodeID = nodeID;
+            this.name = name;
+            this.value = value;
+            this.type = type;
+        }
+    }
+
+    private BatchExecutor() { /**/
+    }
+
+    private static void usage() {
+        System.err.println("Usage: "
+            + BatchExecutor.class.getName()
+            + " OPTIONS\n"
+            + "where OPTIONS can be:\n"
+            + " -nosave => do not save the workflow after execution has finished\n"
+            + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root of the ZIP\n"
+            + " -workflowDir=... => directory with a ready-to-execute workflow\n"
+            + " -destFile=... => ZIP file where the executed workflow should be written to\n"
+            + "                  if omitted the workflow is only saved in place\n"
+            + " -option=nodeID,name,value,type => set the option with name 'name' of the node with\n"
+            + "                                   ID 'nodeID' to the given value which has type 'type'\n"
+            + "                                   type can be any of the primitive Java types or String");
+    }
+
     /**
      * Main method.
      * 
@@ -55,31 +97,107 @@ public final class BatchExecutor {
             WorkflowInExecutionException, WorkflowException {
         long t = System.currentTimeMillis();
         if (args.length < 1) {
-            System.err.println("Usage: " + BatchExecutor.class
-                    + " (workflowDir|(workflowZip resultZip))");
-            System.exit(1);
-        }
-        File f = new File(args[0]);
-        if (!f.exists()) {
-            System.err.println("File '" + f.getPath() + "' does not exist.");
+            usage();
             System.exit(1);
         }
 
-        if (f.isFile()) {
+        File input = null, output = null;
+        boolean noSave = false;
+        List<Option> options = new ArrayList<Option>();
+
+        for (String s : args) {
+            String[] parts = s.split("=");
+            if ("-nosave".equals(parts[0])) {
+                noSave = true;
+            } else if ("-workflowFile".equals(parts[0])) {
+                input = new File(parts[1]);
+                if (!input.isFile()) {
+                    System.err.println("Workflow file '" + parts[1]
+                            + "' is not a file.");
+                    System.exit(1);
+                }
+            } else if ("-workflowDir".equals(parts[0])) {
+                input = new File(parts[1]);
+                if (!input.isDirectory()) {
+                    System.err.println("Workflow directory '" + parts[1]
+                            + "' is not a directory.");
+                    System.exit(1);
+                }
+            } else if ("-destFile".equals(parts[0])) {
+                output = new File(parts[1]);
+            } else if ("-option".equals(parts[0])) {
+                String[] parts2 = parts[1].split("\\,");
+                int nodeID = Integer.parseInt(parts2[0]);
+                String optionName = parts2[1];
+                String value = parts2[2];
+                String type = parts2[3];
+
+                options.add(new Option(nodeID, optionName, value, type));
+            } else {
+                System.err.println("Unknown option '" + parts[0] + "'");
+                usage();
+                System.exit(1);
+            }
+        }
+
+        final File workflowDir;
+        if (input == null) {
+            System.err.println("No input file or directory given.");
+            System.exit(1);
+            workflowDir = null;
+        } else if (input.isFile()) {
             File dir = FileUtil.createTempDir("BatchExecutor");
-            FileUtil.unzip(f, dir);
-            f = dir;
+            FileUtil.unzip(input, dir);
+            workflowDir = dir;
+        } else {
+            workflowDir = input;
         }
 
         final WorkflowManager wfm = new WorkflowManager();
-        File workflowFile = new File(f, WorkflowManager.WORKFLOW_FILE);
+        File workflowFile = new File(input, WorkflowManager.WORKFLOW_FILE);
         wfm.load(workflowFile, new DefaultNodeProgressMonitor());
-        wfm.executeAll(true);
-        wfm.save(workflowFile, new DefaultNodeProgressMonitor());
 
-        if (args.length == 2) {
-            File dest = new File(args[1]);
-            FileUtil.zipDir(dest, f, 9);
+        for (Option o : options) {
+            NodeContainer cont = wfm.getNodeContainerById(o.nodeID);
+            if (cont == null) {
+                LOGGER.warn("No node with id " + o.nodeID + " found.");
+            } else {
+                NodeSettings settings = new NodeSettings("something");
+                cont.saveSettings(settings);
+
+                if ("int".equals(o.type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addInt(o.name,
+                            Integer.parseInt(o.value));
+                } else if ("short".equals(o.type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addShort(o.name,
+                            Short.parseShort(o.value));
+                } else if ("byte".equals(o.type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addByte(o.name,
+                            Byte.parseByte(o.value));
+                } else if ("boolean".equals(o.type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addBoolean(o.name,
+                            Boolean.parseBoolean(o.value));
+                } else if ("char".equals(o.type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addChar(o.name,
+                            o.value.charAt(0));
+                } else if ("float".equals(o.type) || ("double".equals(o.type))) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addDouble(o.name,
+                            Double.parseDouble(o.value));
+                } else if ("String".equals(o.type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addString(o.name,
+                            o.value);
+                }
+                cont.loadSettings(settings);
+            }
+        }
+
+        wfm.executeAll(true);
+        if (!noSave) {
+            wfm.save(workflowFile, new DefaultNodeProgressMonitor());
+
+            if (output != null) {
+                FileUtil.zipDir(output, workflowDir, 9);
+            }
         }
         System.out.println("Finished in " + (System.currentTimeMillis() - t)
                 + "ms");
