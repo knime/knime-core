@@ -330,8 +330,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     *      selectClickedElement(java.awt.Point)
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     *      #selectClickedElement(java.awt.Point)
      */
     @Override
     public void selectClickedElement(final Point clicked) {
@@ -348,8 +348,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     * selectElementsIn(java.awt.Rectangle)
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #selectElementsIn(java.awt.Rectangle)
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
@@ -383,8 +383,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     * unHiLite(org.knime.core.node.property.hilite.KeyEvent)
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #unHiLite(org.knime.core.node.property.hilite.KeyEvent)
      */
     @Override
     public void unHiLite(final KeyEvent event) {
@@ -594,8 +594,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         private int m_oldX;
 
         /**
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * mouseDragged(java.awt.event.MouseEvent)
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
+         * #mouseDragged(java.awt.event.MouseEvent)
          */
         @Override
         public void mouseDragged(final MouseEvent e) {

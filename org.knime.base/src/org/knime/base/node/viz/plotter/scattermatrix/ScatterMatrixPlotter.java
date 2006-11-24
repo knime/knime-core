@@ -358,8 +358,8 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         }
 
         /**
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * mouseDragged(java.awt.event.MouseEvent)
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
+         * #mouseDragged(java.awt.event.MouseEvent)
          */
         @Override
         public void mouseDragged(final MouseEvent e) {

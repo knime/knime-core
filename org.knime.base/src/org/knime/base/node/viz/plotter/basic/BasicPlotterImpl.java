@@ -76,8 +76,8 @@ public class BasicPlotterImpl extends BasicPlotter {
     
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     * getClearHiliteAction()
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #getClearHiliteAction()
      */
     @Override
     public Action getClearHiliteAction() {
@@ -143,8 +143,8 @@ public class BasicPlotterImpl extends BasicPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     * selectClickedElement(java.awt.Point)
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #selectClickedElement(java.awt.Point)
      */
     @Override
     public void selectClickedElement(final Point clicked) {

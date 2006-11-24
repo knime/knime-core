@@ -363,8 +363,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
     /**
      * 
-     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider#
-     * getStatistics()
+     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider
+     * #getStatistics()
      */
     public Map<DataColumnSpec, double[]>getStatistics() {
         return m_statistics;
@@ -372,8 +372,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
     /**
      * 
-     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider#
-     * getMildOutliers()
+     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider
+     * #getMildOutliers()
      */
     public Map<String, Map<Double, RowKey>> getMildOutliers() {
         return m_mildOutliers;
@@ -381,8 +381,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
     /**
      * 
-     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider#
-     * getExtremeOutliers()
+     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider
+     * #getExtremeOutliers()
      */
     public Map<String, Map<Double, RowKey>> getExtremeOutliers() {
         return m_extremeOutliers;
@@ -390,8 +390,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider#
-     * getDataArray(int)
+     * @see org.knime.base.node.viz.plotter.DataProvider#getDataArray(int)
      */
     public DataArray getDataArray(final int index) {
         return m_array;

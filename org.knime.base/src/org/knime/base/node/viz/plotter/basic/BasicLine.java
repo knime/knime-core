@@ -39,8 +39,8 @@ public class BasicLine extends BasicDrawingElement {
 
     /**
      * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#
-     * paint(java.awt.Graphics2D)
+     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement
+     * #paint(java.awt.Graphics2D)
      */
     @Override
     public void paint(final Graphics2D g) {
@@ -62,8 +62,8 @@ public class BasicLine extends BasicDrawingElement {
     
     
    /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#
-     * setPoints(java.util.List)
+     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement
+     * #setPoints(java.util.List)
      */
     @Override
     public void setPoints(final List<Point> points) {
@@ -73,8 +73,8 @@ public class BasicLine extends BasicDrawingElement {
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#
-     * setPoints(java.awt.Point[])
+     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement
+     * #setPoints(java.awt.Point[])
      */
     @Override
     public void setPoints(final Point... points) {
@@ -84,8 +84,8 @@ public class BasicLine extends BasicDrawingElement {
 
     
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#
-     * setStroke(java.awt.Stroke)
+     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement
+     * #setStroke(java.awt.Stroke)
      */
     @Override
     public void setStroke(final Stroke stroke) {

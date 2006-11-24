@@ -680,8 +680,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteHandler#
-     * removeAllHiLiteListeners()
+     * @see org.knime.core.node.property.hilite.HiLiteHandler
+     * #removeAllHiLiteListeners()
      */
     public void delegateRemoveAllHiLiteListeners() {
         m_hiliteHandler.removeAllHiLiteListeners();
@@ -689,8 +689,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
     /**
      * @param listener the listener to be removed.
-     * @see org.knime.core.node.property.hilite.HiLiteHandler#
-     * removeHiLiteListener(org.knime.core.node.property.hilite.HiLiteListener)
+     * @see org.knime.core.node.property.hilite.HiLiteHandler
+     * #removeHiLiteListener(org.knime.core.node.property.hilite.HiLiteListener)
      */
     public void delegateRemoveHiLiteListener(final HiLiteListener listener) {
         m_hiliteHandler.removeHiLiteListener(listener);
@@ -698,8 +698,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
     /**
      * @param ids the ids to be unhilited.
-     * @see org.knime.core.node.property.hilite.HiLiteHandler#
-     * fireUnHiLiteEvent(org.knime.core.data.DataCell[])
+     * @see org.knime.core.node.property.hilite.HiLiteHandler
+     * #fireUnHiLiteEvent(org.knime.core.data.DataCell[])
      */
     public void delegateUnHiLite(final DataCell... ids) {
         m_hiliteHandler.fireUnHiLiteEvent(ids);
@@ -832,8 +832,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
         /**
          * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * mouseDragged(java.awt.event.MouseEvent)
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
+         * #mouseDragged(java.awt.event.MouseEvent)
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -846,8 +846,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         
         /**
          * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * getCursor()
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
          */
         @Override
         public Cursor getCursor() {
@@ -919,8 +918,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
         /**
          * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * mouseDragged(java.awt.event.MouseEvent)
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
+         * #mouseDragged(java.awt.event.MouseEvent)
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -934,8 +933,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         
         /**
          * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * getCursor()
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
          */
         @Override
         public Cursor getCursor() {
@@ -1003,8 +1001,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
         /**
          * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * mouseDragged(java.awt.event.MouseEvent)
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
+         * #mouseDragged(java.awt.event.MouseEvent)
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -1026,8 +1024,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
         /**
          * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         * getCursor()
+         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
          */
         @Override
         public Cursor getCursor() {

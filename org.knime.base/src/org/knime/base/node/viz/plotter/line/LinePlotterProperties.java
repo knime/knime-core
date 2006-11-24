@@ -67,7 +67,8 @@ public class LinePlotterProperties extends AbstractPlotterProperties {
     }
     
     /**
-     * Updates the column filtering with a new {@link DataColumnSpec}.
+     * Updates the column filtering with a new 
+     * {@link org.knime.core.data.DataColumnSpec}.
      * @param spec the data table spec.
      * @param selected the former selected columns.
      */

@@ -154,8 +154,8 @@ public class DendrogramPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     * selectClickedElement(java.awt.Point)
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #selectClickedElement(java.awt.Point)
      */
     @Override
     public void selectClickedElement(final Point clicked) {

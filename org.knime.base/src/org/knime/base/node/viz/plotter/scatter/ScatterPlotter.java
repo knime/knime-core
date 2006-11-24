@@ -274,8 +274,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
     
     /**
      * 
-     * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter#
-     * updatePaintModel()
+     * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter
+     * #updatePaintModel()
      */
     @Override
     public void updatePaintModel() {
@@ -598,8 +598,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter#
-     * sizeChanged()
+     * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter
+     * #sizeChanged()
      */
     @Override
     public void sizeChanged() {
@@ -614,8 +614,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#
-     * selectElementsIn(java.awt.Rectangle)
+     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter
+     * #selectElementsIn(java.awt.Rectangle)
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
@@ -630,8 +630,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
     
     /**
      * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#
-     * selectClickedElement(java.awt.Point)
+     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter
+     * #selectClickedElement(java.awt.Point)
      */
     @Override
     public void selectClickedElement(final Point p) {
@@ -705,8 +705,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
 
     
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#
-     * unHiLiteAll()
+     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
      */
     public void unHiLiteAll() {
         if (isScatterPlotterDrawingPane()) {

@@ -361,8 +361,8 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     * selectClickedElement(java.awt.Point)
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #selectClickedElement(java.awt.Point)
      */
     @Override
     public void selectClickedElement(final Point clicked) {
@@ -370,8 +370,8 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
-     * selectElementsIn(java.awt.Rectangle)
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #selectElementsIn(java.awt.Rectangle)
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {

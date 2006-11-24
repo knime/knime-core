@@ -68,8 +68,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider#
-     * getDataArray(int)
+     * @see org.knime.base.node.viz.plotter.DataProvider
+     * #getDataArray(int)
      */
     public DataArray getDataArray(final int index) {
         return m_input;

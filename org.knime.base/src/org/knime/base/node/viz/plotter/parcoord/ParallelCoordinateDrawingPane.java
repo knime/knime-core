@@ -185,8 +185,8 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
 
     
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingPane#
-     * paintContent(java.awt.Graphics)
+     * @see org.knime.base.node.viz.plotter.basic.BasicDrawingPane
+     * #paintContent(java.awt.Graphics)
      */
     @Override
     public void paintContent(final Graphics g) {

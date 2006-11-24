@@ -128,8 +128,8 @@ public class ScatterPlotterNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider#
-     * getDataArray(int)
+     * @see org.knime.base.node.viz.plotter.DataProvider
+     * #getDataArray(int)
      */
     public DataArray getDataArray(final int index) {
         assert index == index;
