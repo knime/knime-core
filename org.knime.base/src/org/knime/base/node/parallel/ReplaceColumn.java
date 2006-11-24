@@ -33,7 +33,7 @@ public final class ReplaceColumn extends ColumnDestination {
      * 
      * @param index the index of the column to replace
      */
-    ReplaceColumn(final int index) {
+    public ReplaceColumn(final int index) {
         m_index = index; 
     }
     
