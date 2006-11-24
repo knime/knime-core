@@ -26,24 +26,23 @@
 package org.knime.core.data;
 
 /**
- * Container interface for a vector of {@link DataCell}s and a row key
- * for unique identification.
+ * Container interface for a vector of {@link DataCell}s and a row key for
+ * unique identification.
  * 
  * <p>
- * Each <code>DataRow</code> represents one row of a {@link DataTable}
- * and contains a fixed number of {@link DataCell} elements which are
- * directly accessible and read-only. In addition, each <code>DataRow</code>
- * contains a unique identifier key (which is not part of the data
- * vector).
+ * Each <code>DataRow</code> represents one row of a {@link DataTable} and
+ * contains a fixed number of {@link DataCell} elements which are directly
+ * accessible and read-only. In addition, each <code>DataRow</code> contains a
+ * unique identifier key (which is not part of the data vector).
  * <p>
  * A <code>DataRow</code> must not contain a <code>null</code> element or a
  * <code>null</code> key.
  * 
  * <p>
- * This <code>DataRow</code> interface extends the
- * {@link Iterable} interface but does not allow the removal of
- * {@link DataCell}s. Implementors must therefore throw an
- * {@link UnsupportedOperationException} in the Iterators remove method.
+ * This <code>DataRow</code> interface extends the {@link Iterable} interface
+ * but does not allow the removal of {@link DataCell}s. Implementors must
+ * therefore throw an {@link UnsupportedOperationException} in the Iterators
+ * remove method.
  * 
  * @author Thomas Gabriel, University of Konstanz
  * 
@@ -55,7 +54,7 @@ package org.knime.core.data;
 public interface DataRow extends Iterable<DataCell> {
 
     /**
-     * Returns the length of this row, i.e. the number of columns of the
+     * Returns the length of this row, that is the number of columns of the
      * DataTable (not including the row key).
      * 
      * @return length of this row
@@ -70,8 +69,7 @@ public interface DataRow extends Iterable<DataCell> {
     RowKey getKey();
 
     /**
-     * Returns the {@link DataCell} at the provided index within this
-     * row.
+     * Returns the {@link DataCell} at the provided index within this row.
      * 
      * @param index the index of the cell to retrieve (indices start from 0)
      * @return the {@link DataCell} at the given index

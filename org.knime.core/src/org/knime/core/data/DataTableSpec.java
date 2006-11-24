@@ -43,30 +43,33 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * <code>DataTableSpecs</code> specify the structure of a {@link DataTable}.
+ * <code>DataTableSpec</code>s specify the structure of a {@link DataTable}.
  * 
  * <p>
  * The spec specifies the characteristics i.e. column numbers, as well as column
  * types, names, and other column oriented information through a collection of
  * {@link DataColumnSpec} objects. The names of the {@link DataColumnSpec}s
- * must be unique identifiers within a <code>DataTableSpec</code>
+ * must be unique identifiers within a <code>DataTableSpec</code>.
  * 
  * <p>
- * Once a <code>DataTableSpec</code> is initialized, it must be immutable.
- * That is, if you want to add further information to a column (for instance,
- * the possible values in a column), you have to create a new instance of a
+ * Once a <code>DataTableSpec</code> is initialized, it is immutable. That is,
+ * if you want to add further information to a column (for instance, the
+ * possible values in a column), you have to create a new instance of a
  * <code>DataTableSpec</code> carrying the new information. A spec can be
  * propagated from node to node via the ports so that succeeding nodes know
  * about the table structure even if no data table is currently available.
  * 
  * <p>
- * In addtion, the table spec provides a single {@link SizeHandler},
+ * In addition, the table spec provides a single {@link SizeHandler},
  * {@link org.knime.core.data.property.ColorHandler} and/or
- * {@link org.knime.core.data.property.ShapeHandler} if available. These
- * property handlers can be used to assign size, color, and shape to a row. The
- * handlers are associated with a column. If there is more than one column that
- * provides a handler of a certain type (color, shape, size) the first handler
- * is used.
+ * {@link org.knime.core.data.property.ShapeHandler} if available. The handlers
+ * are associated with a column. These property handlers can be used to assign
+ * size, color, and shape to a row based on the {@link DataCell}s value in the
+ * corresponding column. If there is more than one column that provides a
+ * handler of a certain type (color, shape, size) the first handler is used.
+ * <br />
+ * A <code>DataTableSpec</code> can also have a name which does not need to be
+ * unique.
  * 
  * @see DataTable
  * @see DataColumnSpec
