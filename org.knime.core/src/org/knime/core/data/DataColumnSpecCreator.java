@@ -29,6 +29,7 @@ package org.knime.core.data;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.node.NodeLogger;
 
 /**
  * A factory class to create a {@link DataColumnSpec} (as the only way from
@@ -49,6 +50,9 @@ import org.knime.core.data.property.SizeHandler;
  * @author Michael Berthold, University of Konstanz
  */
 public class DataColumnSpecCreator {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(DataColumnSpec.class);
 
     /** Keeps the column name. */
     private String m_name;
@@ -113,7 +117,8 @@ public class DataColumnSpecCreator {
     }
 
     /**
-     * Set (new) column name.
+     * Set (new) column name. If the column name is empty or consists only
+     * of whitespaces, a warning is logged and an artificial name is created.
      * 
      * @param name the (new) column name
      * @throws NullPointerException if the column name is <code>null</code>
@@ -123,7 +128,13 @@ public class DataColumnSpecCreator {
             throw new NullPointerException("Name of DataColumnSpec must not"
                     + " be null!");
         }
-        m_name = name;
+        String validName = name.trim();
+        if (validName.length() == 0) {
+            validName = "<empty_" + hashCode() + ">";
+            LOGGER.warn("Column name \"" + name + "\" is invalid, " 
+                    + "replacing by \"" + validName + "\"");
+        }
+        m_name = validName;
     }
 
     /**
