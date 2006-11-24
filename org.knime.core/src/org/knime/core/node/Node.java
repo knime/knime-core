@@ -1658,7 +1658,7 @@ public final class Node {
     private static final String CFG_ISEXECUTED = "isExecuted";
 
     /** The sub settings entry where the model can save its setup. */
-    static final String CFG_MODEL = "model";
+    public static final String CFG_MODEL = "model";
 
     private static final String CFG_SPEC_FILES = "spec_files";
 
