@@ -31,8 +31,8 @@ import org.knime.core.data.RowKey;
 
 
 /**
- * Default row for <code>DataCell</code>s which keeps a row identifier
- * and an array of <code>DataCell</code> objects.
+ * Default row for {@link DataCell}s which keeps a row identifier
+ * and an array of {@link DataCell} objects.
  * 
  * @author ohl, University of Konstanz
  */
@@ -50,9 +50,9 @@ public class DefaultRow implements DataRow {
 
     /**
      * Inits a new <code>DefaultRow</code> object by row key and an array of
-     * <code>DataCell</code>s. The content of the argument array is copied.
+     * {@link DataCell}s. The content of the argument array is copied.
      * 
-     * @param rowKey A <code>RowKey</code> containing a row Id.
+     * @param rowKey A {@link RowKey} containing a row Id.
      * @param row An array containing the actual data of this row.
      * @throws IllegalArgumentException if the <code>rowKey</code> or
      *             <code>row</code> or one of its cell is <code>null</code>.
@@ -86,10 +86,10 @@ public class DefaultRow implements DataRow {
      * Inits a new <code>DefaultRow</code> object by row id and an array of
      * <code>DataCell</code>s. The content of the argument array is copied.
      * 
-     * @param rowId A <code>DataCell</code> containing a row Id.
+     * @param rowId A {@link DataCell} containing a row Id.
      * @param row An array containing the actual data of this row.
      * @throws NullPointerException if the specified rowID is <code>null</code>
-     * @throws IllegalArgumentException if the <code>row</code> or one of its
+     * @throws NullPointerException if <code>row</code> or one of its
      *             cells is <code>null</code>.
      */
     public DefaultRow(final DataCell rowId, final DataCell... row) {
@@ -98,10 +98,10 @@ public class DefaultRow implements DataRow {
 
     /**
      * Inits a new <code>DefaultRow</code> object by row key and an array of
-     * <code>double</code>s.
-     * @param rowKey A <code>RowKey</code> containing a unique row Id.
+     * <code>double</code> values.
+     * @param rowKey A {@link RowKey} containing a unique row Id.
      * @param row An array containing the actual data of this row.
-     * @throws IllegalArgumentException if the <code>rowKey</code> or
+     * @throws NullPointerException if the <code>rowKey</code> or
      *             <code>row</code> is <code>null</code>.
      */
     public DefaultRow(final RowKey rowKey, final double... row) {
@@ -112,7 +112,7 @@ public class DefaultRow implements DataRow {
         }
         // check row array
         if (row == null) {
-            throw new NullPointerException("Row array must not be null!");
+            throw new NullPointerException("Value array must not be null!");
         }
         m_rowKey = rowKey;
         // init row with cells
@@ -125,11 +125,11 @@ public class DefaultRow implements DataRow {
 
     /**
      * Inits a new <code>DefaultRow</code> object by row ID and an array of
-     * <code>double</code>s.
+     * <code>double</code> values.
      * 
-     * @param rowId To be wrapped in a RowKey object
-     * @param row The values in the row
-     * @throws IllegalArgumentException As soon as the other constructor does.
+     * @param rowId to be wrapped in a {@link RowKey} object
+     * @param row the values in the row
+     * @throws NullPointerException As soon as the other constructor does.
      * @see #DefaultRow(RowKey, double[])
      */
     public DefaultRow(final DataCell rowId, final double... row) {
@@ -138,13 +138,13 @@ public class DefaultRow implements DataRow {
 
     /**
      * Inits a new <code>DefaultRow</code> object by row key and an array of
-     * <code>int</code>s.
+     * <code>int</code> values.
      * 
      * Checks if none of the arguments is <code>null</code>.
      * 
-     * @param rowId A <code>DataCell</code> containing a unique row Id.
-     * @param row An array containing the actual data of this row.
-     * @throws IllegalArgumentException if the <code>rowKey</code> or
+     * @param rowId a {@link DataCell} containing a unique row Id.
+     * @param row an array containing the actual data of this row.
+     * @throws NullPointerException if the <code>rowKey</code> or
      *             <code>row</code> is <code>null</code>.
      */
     public DefaultRow(final DataCell rowId, final int... row) {
@@ -168,11 +168,11 @@ public class DefaultRow implements DataRow {
 
     /**
      * Inits a new <code>DefaultRow</code> object by row id and an array of
-     * <code>String</code> values.
+     * {@link String} values.
      * 
-     * @param rowId A <code>DataCell</code> containing a unique row Id.
+     * @param rowId A {@link DataCell} containing a unique row Id.
      * @param row An array containing the actual data of this row.
-     * @throws IllegalArgumentException if the <code>rowId</code> or
+     * @throws NullPointerException if the <code>rowId</code> or
      *             <code>row</code> or one of its strings is <code>null</code>.
      */
     public DefaultRow(final DataCell rowId, final String... row) {
@@ -203,8 +203,8 @@ public class DefaultRow implements DataRow {
      * 
      * @param key The new row's key.
      * @param row The row to copy.
-     * @throws IllegalArgumentException If the key or one of the row's elements
-     *             are <code>null</code>.
+     * @throws IllegalArgumentException If the key or one of the row's cells
+     *             is <code>null</code>.
      * @throws NullPointerException If the row is <code>null</code>.
      */
     public DefaultRow(final RowKey key, final DataRow row) {
@@ -268,7 +268,7 @@ public class DefaultRow implements DataRow {
         }
         buffer.append(")");
         return buffer.toString();
-    } // toString()
+    }
 
     /**
      * A row is equal to another one if the key and all cells are equal.

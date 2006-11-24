@@ -36,36 +36,40 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 
-
 /**
- * A data cell implementation holding a complex number value by storing this 
- * value in two double member variables. It provides a complex number value.
+ * A data cell implementation holding a complex number value by storing this
+ * value in two double member variables. It provides access to the complex
+ * number value.
  * 
  * @author ciobaca, University of Konstanz
  */
-public final class ComplexNumberCell extends DataCell 
-                        implements ComplexNumberValue, DoubleValue {
-    
-    /** Convenience access method for DataType.getType(ComplexNumberCell.class).
+public final class ComplexNumberCell extends DataCell implements
+        ComplexNumberValue, DoubleValue {
+
+    /**
+     * Convenience access method for DataType.getType(ComplexNumberCell.class).
      */
-    public static final DataType TYPE = 
-        DataType.getType(ComplexNumberCell.class);
+    public static final DataType TYPE =
+            DataType.getType(ComplexNumberCell.class);
 
-
-    /** Returns the preferred value class of this cell implementation. 
-     * This method is called per reflection to determine which is the 
-     * preferred renderer, comparator, etc.
+    /**
+     * Returns the preferred value class of this cell implementation. This
+     * method is called per reflection to determine which is the preferred
+     * renderer, comparator, etc.
+     * 
      * @return ComplexNumberValue.class
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
         return ComplexNumberValue.class;
     }
-    
-    private static final ComplexNumberSerializer SERIALIZER = 
-        new ComplexNumberSerializer();
-    
-    /** Returns the factory to read/write DataCells of this class from/to
-     * a DataInput/DataOutput. This method is called via reflection.
+
+    private static final ComplexNumberSerializer SERIALIZER =
+            new ComplexNumberSerializer();
+
+    /**
+     * Returns the factory to read/write DataCells of this class from/to a
+     * DataInput/DataOutput. This method is called via reflection.
+     * 
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
@@ -110,8 +114,8 @@ public final class ComplexNumberCell extends DataCell
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((ComplexNumberCell)dc).m_real == m_real 
-               && ((ComplexNumberCell)dc).m_imag == m_imag;
+        return ((ComplexNumberCell)dc).m_real == m_real
+                && ((ComplexNumberCell)dc).m_imag == m_imag;
     }
 
     /**
@@ -134,11 +138,12 @@ public final class ComplexNumberCell extends DataCell
         if (m_imag < 0) {
             return result + " - i*" + Math.abs(m_imag);
         } else {
-            return result + " + i*" + m_imag; 
+            return result + " + i*" + m_imag;
         }
     }
 
     /**
+     * Implements the getter method of the {@link DoubleValue} interface.
      * 
      * @return The magnitude of the complex number.
      */
@@ -146,24 +151,26 @@ public final class ComplexNumberCell extends DataCell
         return Math.sqrt(m_real * m_real + m_imag * m_imag);
     }
 
-    /** Factory for (de-)serializing a StringCell. */
-    private static class ComplexNumberSerializer 
-        implements DataCellSerializer<ComplexNumberCell> {
+    /** 
+     * Factory for (de-)serializing a {@link ComplexNumberCell}. 
+     * */
+    private static class ComplexNumberSerializer implements
+            DataCellSerializer<ComplexNumberCell> {
 
         /**
          * @see DataCellSerializer#serialize(DataCell, DataOutput)
          */
-        public void serialize(final ComplexNumberCell cell, 
+        public void serialize(final ComplexNumberCell cell,
                 final DataOutput output) throws IOException {
             output.writeDouble(cell.getRealValue());
             output.writeDouble(cell.getImaginaryValue());
         }
-        
+
         /**
          * @see DataCellSerializer#deserialize(DataInput)
          */
-        public ComplexNumberCell deserialize(
-                final DataInput input) throws IOException {
+        public ComplexNumberCell deserialize(final DataInput input)
+                throws IOException {
             double real = input.readDouble();
             double imag = input.readDouble();
             return new ComplexNumberCell(real, imag);

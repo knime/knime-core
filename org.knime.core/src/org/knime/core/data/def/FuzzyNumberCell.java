@@ -36,31 +36,34 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
 
-
 /**
- * A data cell implementation holding a Fuzzy number by storing this value in 
- * three private <code>double</code> members, that is one for the core and
- * two for the min/max of the support. It also provides a fuzzy interval value.
+ * A data cell implementation holding a Fuzzy number by storing this value in
+ * three private <code>double</code> members, that is one for the core and two
+ * for the min/max of the support. It also provides a fuzzy interval value.
  * 
- * <p>The height of the membership value at the core value is assumed to be 1.
+ * <p>
+ * The height of the membership value at the core value is assumed to be 1.
  * 
  * @author Michael Berthold, University of Konstanz
  */
 public final class FuzzyNumberCell extends DataCell implements
         FuzzyNumberValue, FuzzyIntervalValue {
 
-    /** Convenience access member for 
-     * <code>DataType.getType(FuzzyNumberCell.class)</code>. 
+    /**
+     * Convenience access member for
+     * <code>DataType.getType(FuzzyNumberCell.class)</code>.
+     * 
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = 
-        DataType.getType(FuzzyNumberCell.class);
-    
-    private static final FuzzyNumberSerializer SERIALIZER = 
-        new FuzzyNumberSerializer();
-    
-    /** Returns the factory to read/write DataCells of this class from/to
-     * a DataInput/DataOutput. This method is called via reflection.
+    public static final DataType TYPE = DataType.getType(FuzzyNumberCell.class);
+
+    private static final FuzzyNumberSerializer SERIALIZER =
+            new FuzzyNumberSerializer();
+
+    /**
+     * Returns the factory to read/write DataCells of this class from/to a
+     * DataInput/DataOutput. This method is called via reflection.
+     * 
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
@@ -68,9 +71,11 @@ public final class FuzzyNumberCell extends DataCell implements
         return SERIALIZER;
     }
 
-    /** Returns the preferred value class of this cell implementation. 
-     * This method is called per reflection to determine which is the 
-     * preferred renderer, comparator, etc.
+    /**
+     * Returns the preferred value class of this cell implementation. This
+     * method is called per reflection to determine which is the preferred
+     * renderer, comparator, etc.
+     * 
      * @return FuzzyNumberValue.class;
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
@@ -92,14 +97,14 @@ public final class FuzzyNumberCell extends DataCell implements
      * @param minSupp Minimum support value.
      * @param core Core value.
      * @param maxSupp Maximum support value.
-     * @throws IllegalArgumentException If not 
-     * <code>minSupp <= core <= maxSupp</code>.
+     * @throws IllegalArgumentException If not
+     *             <code>minSupp <= core <= maxSupp</code>.
      */
-    public FuzzyNumberCell(final double minSupp, final double core, 
+    public FuzzyNumberCell(final double minSupp, final double core,
             final double maxSupp) {
         if (!(minSupp <= core && core <= maxSupp)) {
-            throw new IllegalArgumentException("Illegal FuzzyInterval: <" 
-                    + minSupp + "," + core + "," + maxSupp + "> these numbers"
+            throw new IllegalArgumentException("Illegal FuzzyNumber: <"
+                    + minSupp + "," + core + "," + maxSupp + "> these values"
                     + " must be ascending from left to right!");
         }
         m_minSupp = minSupp;
@@ -149,8 +154,8 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @return The center of gravity of this trapezoid membership function which
      *         are the weighted (by the area) gravities of each of the two areas
-     *         (left triangle, right triangle). This value is divided
-     *         by the overall membership function volume.
+     *         (left triangle, right triangle). This value is divided by the
+     *         overall membership function volume.
      */
     public double getCenterOfGravity() {
         // left support
@@ -174,8 +179,8 @@ public final class FuzzyNumberCell extends DataCell implements
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FuzzyNumberCell fc = (FuzzyNumberCell)dc;
-        return (fc.m_minSupp == m_minSupp) && (fc.m_core == m_core) 
-            && (fc.m_maxSupp == m_maxSupp);
+        return (fc.m_minSupp == m_minSupp) && (fc.m_core == m_core)
+                && (fc.m_maxSupp == m_maxSupp);
     }
 
     /**
@@ -197,25 +202,25 @@ public final class FuzzyNumberCell extends DataCell implements
     public String toString() {
         return "<" + m_minSupp + "," + m_core + "," + m_maxSupp + ">";
     }
-    
+
     /** Factory for (de-)serializing a FuzzyNumberCell. */
-    private static class FuzzyNumberSerializer 
-        implements DataCellSerializer<FuzzyNumberCell> {
+    private static class FuzzyNumberSerializer implements
+            DataCellSerializer<FuzzyNumberCell> {
         /**
          * @see DataCellSerializer#serialize(DataCell, DataOutput)
          */
-        public void serialize(final FuzzyNumberCell cell, 
+        public void serialize(final FuzzyNumberCell cell,
                 final DataOutput output) throws IOException {
             output.writeDouble(cell.getMinSupport());
             output.writeDouble(cell.getCore());
             output.writeDouble(cell.getMaxSupport());
         }
-        
+
         /**
          * @see DataCellSerializer#deserialize(DataInput)
          */
-        public FuzzyNumberCell deserialize(
-                final DataInput input) throws IOException {
+        public FuzzyNumberCell deserialize(final DataInput input)
+                throws IOException {
             double minSupp = input.readDouble();
             double core = input.readDouble();
             double maxSupp = input.readDouble();

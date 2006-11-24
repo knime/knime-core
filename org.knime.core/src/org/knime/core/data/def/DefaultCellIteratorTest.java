@@ -34,11 +34,13 @@ import org.knime.core.data.DoubleValue;
 
 import junit.framework.TestCase;
 
-/** Test the default cell iterator class.
+/**
+ * Test the default cell iterator class.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DefaultCellIteratorTest extends TestCase {
-    
+
     /** Test all methods in iterator. */
     public void testIterator() {
         double[] d = new double[]{1.0, 2.0, 3.0};
@@ -53,7 +55,7 @@ public class DefaultCellIteratorTest extends TestCase {
                 it.remove();
                 fail();
             } catch (UnsupportedOperationException uoe) {
-                System.out.println("Caught UnsupportedOperationException: " 
+                System.out.println("Caught UnsupportedOperationException: "
                         + uoe.getMessage());
             }
             i++;
@@ -64,7 +66,7 @@ public class DefaultCellIteratorTest extends TestCase {
             it.next();
             fail();
         } catch (NoSuchElementException nse) {
-            System.out.println("Caught NoSuchElementException: " 
+            System.out.println("Caught NoSuchElementException: "
                     + nse.getMessage());
         }
     }

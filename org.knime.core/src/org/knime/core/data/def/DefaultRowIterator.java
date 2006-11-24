@@ -30,36 +30,40 @@ import java.util.Iterator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowIterator;
 
-
-/** 
- * Specific implementation for a <code>RowIterator</code> that iterates over a
- * generic <code>DataTable</code>. It delegates to a given 
- * <code>Iterator&lt;DataRow&gt</code>; but disallows the invocation of 
- * the <code>remove</code> method. 
+/**
+ * Specific implementation for a {@link RowIterator} that iterates over a
+ * generic {@link org.knime.core.data.DataTable DataTable}. It delegates to a
+ * given <code>Iterator&lt;DataRow&gt</code>; but disallows the invocation of
+ * the <code>remove</code> method.
+ * 
  * @author Bernd Wiswedel, University Konstanz
  */
 public class DefaultRowIterator extends RowIterator {
-    
-    /** To get next rows from. */
+
+    /** The wrapped iterator to get next rows from. */
     private final Iterator<DataRow> m_iterator;
 
-    /** Constructs a new iterator based on a <code>Iterable</code>. 
-     * @param iterable The underlying iterable container.
-     * @throws NullPointerException If argument is null.
+    /**
+     * Constructs a new iterator based on an {@link Iterable}.
+     * 
+     * @param iterable the underlying iterable row container.
+     * @throws NullPointerException if the argument is null.
      */
     public DefaultRowIterator(final Iterable<DataRow> iterable) {
         m_iterator = iterable.iterator();
     }
-    
-    /** Constructs a new iterator that traverses an array of DataRow. 
-     * @param rows The array to iterate over.
-     * @throws NullPointerException If argument is null.
+
+    /**
+     * Constructs a new iterator that traverses an array of {@link DataRow}.
+     * 
+     * @param rows the array to iterate over.
+     * @throws NullPointerException if the argument is null.
      */
     public DefaultRowIterator(final DataRow... rows) {
-        // prevent the caller from changing the array underneath.
+        // prevents the caller from changing the array underneath.
         this(new ArrayList<DataRow>(Arrays.asList(rows)));
     }
-    
+
     /**
      * @see org.knime.core.data.RowIterator#hasNext()
      */

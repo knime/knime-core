@@ -31,16 +31,15 @@ import java.util.NoSuchElementException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 
-
 /**
- * Default implementation of an iterator over <code>DataCell</code>s of a
+ * Default implementation of an iterator over the <code>DataCell</code>s of a
  * DataRow. It uses the <code>getNumCells()</code> and
  * <code>getCell(int)</code> methods of the underlying row to return the
- * cells. Hence, it starts at the first cell in the row and then sequentially
- * returns the cell up to the last cell in the row.
- * 
+ * cells. Hence, it starts at the cell of the column with index 0 and then
+ * sequentially returns the cells up to the last cell (of the column with the
+ * highest index) in the row.
  * <p>
- * The iterator doesn't support removal of datacells, an invocation of the 
+ * The iterator doesn't support removal of datacells, an invocation of the
  * method <code>remove()</code> will end up with an exception.
  * 
  * @author wiswedel, University of Konstanz
@@ -57,7 +56,7 @@ public class DefaultCellIterator implements Iterator<DataCell> {
      * Creates a new iterator over a given <code>DataRow</code>.
      * 
      * @param row The row to traverse.
-     * @throws NullPointerException If argument is null.
+     * @throws NullPointerException If the argument is null.
      */
     public DefaultCellIterator(final DataRow row) {
         if (row == null) {
@@ -87,7 +86,8 @@ public class DefaultCellIterator implements Iterator<DataCell> {
     }
 
     /**
-     * Throws UnsupportedOperationException as this operation is not supported.
+     * Throws {@link UnsupportedOperationException} as removal of datacells from
+     * a row is not permitted.
      * 
      * @see java.util.Iterator#remove()
      */

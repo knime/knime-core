@@ -38,7 +38,6 @@ import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.IntValue;
 
-
 /**
  * A data cell implementation holding an integer value by storing this value in
  * a private <code>int</code> member. It provides an int value, a double
@@ -46,29 +45,35 @@ import org.knime.core.data.IntValue;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class IntCell extends DataCell implements IntValue,
-        DoubleValue, FuzzyNumberValue, FuzzyIntervalValue {
+public class IntCell extends DataCell implements IntValue, DoubleValue,
+        FuzzyNumberValue, FuzzyIntervalValue {
 
-    /** Convenience access member for 
-     * <code>DataType.getType(IntCell.class)</code>. 
+    /**
+     * Convenience access member for
+     * <code>DataType.getType(IntCell.class)</code>.
+     * 
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(IntCell.class);
-    
-    /** Returns the preferred value class of this cell implementation. 
-     * This method is called per reflection to determine which is the 
-     * preferred renderer, comparator, etc.
+
+    /**
+     * Returns the preferred value class of this cell implementation. This
+     * method is called per reflection to determine which is the preferred
+     * renderer, comparator, etc.
+     * 
      * @return IntValue.class;
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
         return IntValue.class;
     }
-    
-    private static final DataCellSerializer<IntCell> SERIALIZER = 
-        new IntSerializer();
-    
-    /** Returns the factory to read/write DataCells of this class from/to
-     * a DataInput/DataOutput. This method is called via reflection.
+
+    private static final DataCellSerializer<IntCell> SERIALIZER =
+            new IntSerializer();
+
+    /**
+     * Returns the factory to read/write DataCells of this class from/to a
+     * DataInput/DataOutput. This method is called via reflection.
+     * 
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
@@ -169,22 +174,20 @@ public class IntCell extends DataCell implements IntValue,
     }
 
     /** Factory for (de-)serializing a IntCell. */
-    private static class IntSerializer implements 
-        DataCellSerializer<IntCell> {
+    private static class IntSerializer implements DataCellSerializer<IntCell> {
 
         /**
          * @see DataCellSerializer#serialize(DataCell, DataOutput)
          */
-        public void serialize(final IntCell cell, 
-                final DataOutput output) throws IOException {
+        public void serialize(final IntCell cell, final DataOutput output)
+                throws IOException {
             output.writeInt(cell.m_int);
         }
-        
+
         /**
          * @see DataCellSerializer#deserialize(DataInput)
          */
-        public IntCell deserialize(
-                final DataInput input) throws IOException {
+        public IntCell deserialize(final DataInput input) throws IOException {
             int i = input.readInt();
             return new IntCell(i);
         }

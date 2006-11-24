@@ -37,27 +37,17 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.util.ObjectToDataCellConverter;
 
 /**
- * Default implementation of a <code>DataTable</code> object. This
- * implementation keeps the data in memory all the time. It's really meant only
- * for use with very small data tables. All others should rather use the
- * {@link org.knime.core.data.container.DataContainer}.
- * 
- * There are basically two ways to initialize an instance of this class. Either
- * by passing directly <code>DataRow</code> objects along with the column
- * names and types or by providing arbitrary java objects (or generic classes
- * like <code>int</code> and <code>double</code>) in a 2-D array. If one
- * wishes to get objects being wrapped in <code>DataCell</code>s other than
- * the default {@link org.knime.core.data.util.ObjectToDataCellConverter
- * #createDataCell(Object) implementations} he should consider to override
- * <code>ObjectToDataCellConverter</code> and use the appropriate constructor
- * here.
+ * Deprecated(!) default implementation of a {@link DataTable} object. This
+ * implementation keeps the data in memory all the time. Don't use it. We have
+ * better containers: rather use the
+ * {@link org.knime.core.data.container.DataContainer DataContainer}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  * @deprecated DefaultTable will hold the entire data in main memory and should
  *             therefore not be used anymore. Instead, you should consider to
  *             use a {@link org.knime.core.data.container.DataContainer} (or in
  *             a Node's {@link org.knime.core.node.NodeModel#execute(
- *             org.knime.core.node.BufferedDataTable[], 
+ *             org.knime.core.node.BufferedDataTable[],
  *             org.knime.core.node.ExecutionContext) execute method} a
  *             {@link org.knime.core.node.BufferedDataTable} to create
  *             DataTables).
@@ -83,9 +73,8 @@ public class DefaultTable implements DataTable {
      * 
      * @param rows The list of <code>DataRow</code> objects.
      * @param spec The Spec of this table.
-     * @throws NullPointerException If one of the arguments is 
-     *             <code>null</code>, or if the array contains <code>null</code>
-     *             values.
+     * @throws NullPointerException If one of the arguments is <code>null</code>,
+     *             or if the array contains <code>null</code> values.
      * @throws IllegalArgumentException If any runtime class in the row's cells
      *             does not comply with the settings in the spec.
      */
@@ -130,9 +119,8 @@ public class DefaultTable implements DataTable {
      * @param rows The list of <code>DataRow</code> objects.
      * @param columnNames The names of the columns.
      * @param columnTypes The column types.
-     * @throws NullPointerException If one of the arguments is 
-     *             <code>null</code>, or if any array contains <code>null</code>
-     *             values.
+     * @throws NullPointerException If one of the arguments is <code>null</code>,
+     *             or if any array contains <code>null</code> values.
      * @throws IllegalStateException If redundant column names are found.
      * @throws IllegalArgumentException If any element in
      *             <code>columnTypes</code> is not a (sub-)class of
@@ -155,8 +143,7 @@ public class DefaultTable implements DataTable {
      * @param converter Used to get DataCell objects from the ObjectSupplier.
      */
     private DefaultTable(final ObjectSupplier data, final String[] rowHeader,
-            final String[] colHeader, 
-            final ObjectToDataCellConverter converter) {
+            final String[] colHeader, final ObjectToDataCellConverter converter) {
         if (data == null) {
             throw new IllegalArgumentException("Data must not be null.");
         }
@@ -184,8 +171,7 @@ public class DefaultTable implements DataTable {
         }
 
         // sanity check if column count is consistent
-        if (colCount >= 0 && colHeader != null 
-                && colHeader.length != colCount) {
+        if (colCount >= 0 && colHeader != null && colHeader.length != colCount) {
             throw new IllegalArgumentException("Column count inconsistent: "
                     + colHeader.length + " vs. " + colCount + ".");
         }
@@ -221,8 +207,8 @@ public class DefaultTable implements DataTable {
                 if (r == 0) { // for first row simply assign class
                     myTypes[c] = cellType;
                 } else { // for any other row get base class
-                    myTypes[c] = DataType.getCommonSuperType(myTypes[c],
-                            cellType);
+                    myTypes[c] =
+                            DataType.getCommonSuperType(myTypes[c], cellType);
                 }
             } // for all columns in row
             DataRow row = new DefaultRow(rowHeaderCell, rowContent);
@@ -270,8 +256,7 @@ public class DefaultTable implements DataTable {
      * @see DataType#getCommonSuperType(DataType, DataType)
      */
     public DefaultTable(final Object[][] data, final String[] rowHeader,
-            final String[] colHeader, 
-            final ObjectToDataCellConverter converter) {
+            final String[] colHeader, final ObjectToDataCellConverter converter) {
         this(new ObjectSupplier(data), rowHeader, colHeader, converter);
     }
 
@@ -433,7 +418,7 @@ public class DefaultTable implements DataTable {
     /**
      * Get a reference to underlying data container. The returned
      * <code>ArrayList</code> contains objects of type <code>DataRow</code>.
-     * This method never returns <code>null</code>, even though the returned 
+     * This method never returns <code>null</code>, even though the returned
      * list can be empty if there are no rows in the table.
      * 
      * @return reference to internal data container.
@@ -441,9 +426,10 @@ public class DefaultTable implements DataTable {
     protected final List<DataRow> getRowsInList() {
         return Collections.unmodifiableList(m_rowList);
     }
-    
+
     /**
      * Get the number of rows in this table.
+     * 
      * @return The number of rows.
      */
     public int getRowCount() {
