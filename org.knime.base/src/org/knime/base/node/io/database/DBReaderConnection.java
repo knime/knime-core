@@ -109,7 +109,7 @@ public final class DBReaderConnection implements DataTable {
             return new DBRowIterator(m_spec, result);
         } catch (SQLException e) {
             LOGGER.error(e);
-            return null;
+            return new DBRowIterator(m_spec, null);
         }
     }
 
@@ -170,13 +170,11 @@ final class DBRowIterator extends RowIterator {
      * 
      * @param spec With the given spec.
      * @param result Underlying ResultSet.
-     * @throws SQLException If result next() failed.
      */
-    DBRowIterator(final DataTableSpec spec, final ResultSet result)
-            throws SQLException {
+    DBRowIterator(final DataTableSpec spec, final ResultSet result) {
         m_spec = spec;
         m_result = result;
-        m_end = !m_result.next();
+        m_end = end();
     }
 
     /**
@@ -192,41 +190,72 @@ final class DBRowIterator extends RowIterator {
      */
     @Override
     public DataRow next() {
-        try {
-
-            DataCell[] cells = new DataCell[m_spec.getNumColumns()];
-            for (int i = 0; i < cells.length; i++) {
-                DataType type = m_spec.getColumnSpec(i).getType();
-                if (type.isCompatible(IntValue.class)) {
-                    int integer = m_result.getInt(i + 1);
-                    if (m_result.wasNull()) {
-                        cells[i] = DataType.getMissingCell();
-                    } else {
-                        cells[i] = new IntCell(integer);
-                    }
-                } else if (type.isCompatible(DoubleValue.class)) {
-                    double dbl = m_result.getDouble(i + 1);
-                    if (m_result.wasNull()) {
-                        cells[i] = DataType.getMissingCell();
-                    } else {
-                        cells[i] = new DoubleCell(dbl);
-                    }
+        DataCell[] cells = new DataCell[m_spec.getNumColumns()];
+        for (int i = 0; i < cells.length; i++) {
+            DataType type = m_spec.getColumnSpec(i).getType();
+            if (type.isCompatible(IntValue.class)) {
+                int integer = -1;
+                try {
+                    integer = m_result.getInt(i + 1);
+                } catch (SQLException sqle) {
+                    LOGGER.error("SQL Exception reading Int:", sqle);
+                }
+                if (wasNull()) {
+                    cells[i] = DataType.getMissingCell();
                 } else {
-                    String s = m_result.getString(i + 1);
-                    if (s == null || m_result.wasNull()) {
-                        cells[i] = DataType.getMissingCell();
-                    } else {
-                        cells[i] = new StringCell(s);
-                    }
+                    cells[i] = new IntCell(integer);
+                }
+            } else if (type.isCompatible(DoubleValue.class)) {
+                double dbl = Double.NaN;
+                try {
+                    dbl = m_result.getDouble(i + 1);
+                } catch (SQLException sqle) {
+                    LOGGER.error("SQL Exception reading Double:", sqle);
+                }
+                if (wasNull()) {
+                    cells[i] = DataType.getMissingCell();
+                } else {
+                    cells[i] = new DoubleCell(dbl);
+                }
+            } else {
+                String s = "<invalid>";
+                try {
+                    s = m_result.getString(i + 1);
+                } catch (SQLException sqle) {
+                    LOGGER.error("SQL Exception reading String:", sqle);
+                }
+                if (s == null || wasNull()) {
+                    cells[i] = DataType.getMissingCell();
+                } else {
+                    cells[i] = new StringCell(s);
                 }
             }
-            StringCell id = new StringCell("Row_" + m_result.getRow());
-            m_end = !m_result.next();
-            return new DefaultRow(id, cells);
-        } catch (SQLException e) {
-            m_end = true;
-            LOGGER.error("SQL Exception: ", e);
-            return null;
+        }
+        int rowId = cells.hashCode();
+        try {
+            rowId = m_result.getRow();
+        } catch (SQLException sqle) {
+            LOGGER.error("SQL Exception:", sqle);        
+        }
+        m_end = end();
+        return new DefaultRow(new StringCell("Row_" + rowId), cells);
+    }
+    
+    private boolean end() {
+        try {
+            return !m_result.next();
+        } catch (SQLException sqle) {
+            LOGGER.error("SQL Exception:", sqle);
+            return true;
+        }
+    }
+    
+    private boolean wasNull() {
+        try {
+            return m_result.wasNull();
+        } catch (SQLException sqle) {
+            LOGGER.error("SQL Exception:", sqle);
+            return true;
         }
     }
 
