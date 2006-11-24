@@ -74,6 +74,13 @@ public class DataColumnSpecCreator {
 
     /** Holds the ColorHandler if one was set or null. */
     private ColorHandler m_colorHandler = null;
+    
+    /**
+     * Counter that is used when the setName() method is called with an
+     * empty string. It will create an artificial name with a guaranteed 
+     * unique index.
+     */
+    private static int emptyColumnCount = 0;
 
     /**
      * Initializes the creator with the given column name and type. The
@@ -130,7 +137,7 @@ public class DataColumnSpecCreator {
         }
         String validName = name.trim();
         if (validName.length() == 0) {
-            validName = "<empty_" + hashCode() + ">";
+            validName = "<empty_" + (++emptyColumnCount) + ">";
             LOGGER.warn("Column name \"" + name + "\" is invalid, " 
                     + "replacing by \"" + validName + "\"");
         }
