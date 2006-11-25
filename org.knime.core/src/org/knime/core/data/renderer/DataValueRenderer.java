@@ -68,6 +68,6 @@ public interface DataValueRenderer extends TableCellRenderer, ListCellRenderer {
      * @param val The value to render
      * @return A component displaying the content of <code>val</code>.
      */
-    Component getComponent(final Object val);
+    Component getRendererComponent(final Object val);
 
 }

@@ -232,9 +232,9 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
     }
     
     /**
-     * @see DataValueRenderer#getComponent(Object)
+     * @see DataValueRenderer#getRendererComponent(Object)
      */
-    public Component getComponent(final Object val) {
-        return m_active.getComponent(val);
+    public Component getRendererComponent(final Object val) {
+        return m_active.getRendererComponent(val);
     }
 }

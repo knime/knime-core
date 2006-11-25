@@ -93,9 +93,9 @@ public class DefaultDataValueRenderer
     }
     
     /**
-     * @see DataValueRenderer#getComponent(Object)
+     * @see DataValueRenderer#getRendererComponent(Object)
      */
-    public Component getComponent(final Object val) {
+    public Component getRendererComponent(final Object val) {
         setValue(val);
         return this;
     }
