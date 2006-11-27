@@ -25,9 +25,13 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,6 +45,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigWO;
@@ -186,17 +191,37 @@ class DBReaderConnectionNodeModel extends NodeModel {
 
         // create a view on the database according to the given select
         // statement
-        DBDriverLoader.registerDriver(getDriver());
-        String password = KnimeEncryption.decrypt(m_pass);
-        Connection conn = DriverManager.getConnection(m_name, m_user, password);
-
         // create a unique view name
         m_viewName = "VIEW_" + Long.toString(System.currentTimeMillis());
-        String viewCreateSQL = "CREATE VIEW " + m_viewName + " AS " + m_query;
-        Statement stmt = conn.createStatement();
-        stmt.executeQuery(viewCreateSQL);
-
+        String viewCreateSQL = "CREATE VIEW " + m_viewName 
+            + " AS " + m_query;
+        try {
+            execute(viewCreateSQL);
+        } catch (Exception e) {
+            throw e;
+        }
         return new BufferedDataTable[0];
+    }
+    
+    private Exception execute(final String statement) {
+        Connection conn = null;
+        try {
+            DBDriverLoader.registerDriver(getDriver());
+            String password = KnimeEncryption.decrypt(m_pass);
+            conn = DriverManager.getConnection(m_name, m_user, password);
+            Statement stmt = conn.createStatement();
+            stmt.execute(statement);
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException sqle) {
+                    return sqle;
+                }
+            }
+            return e;
+        }
+        return null;
     }
 
     /**
@@ -204,7 +229,13 @@ class DBReaderConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
+        if (m_viewName != null) {
+            Exception e = execute("DROP VIEW " + m_viewName);
+            if (e != null) {
+                LOGGER.warn("Unable to delete view: " + m_viewName, e);
+            }
+            m_viewName = null;
+        }
     }
 
     /**
@@ -213,8 +244,10 @@ class DBReaderConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) {
-
+            final ExecutionMonitor exec) throws IOException {
+        NodeSettingsRO sett = NodeSettings.loadFromXML(new FileInputStream(
+                new File(nodeInternDir, "internals.xml")));
+        m_viewName = sett.getString("view", null);
     }
 
     /**
@@ -223,8 +256,11 @@ class DBReaderConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) {
-
+            final ExecutionMonitor exec) throws IOException {
+        NodeSettings sett = new NodeSettings("internals");
+        sett.addString("view", m_viewName);
+        sett.saveToXML(new FileOutputStream(new File(
+                nodeInternDir, "internals.xml")));
     }
 
     /**
