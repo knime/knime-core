@@ -94,6 +94,7 @@ Provide-Package: org.knime.base.data.append.column,
  org.knime.base.node.viz.table,
  org.knime.base.util.coordinate
 Export-Package: org.knime.base.data.sort,
+ org.knime.base.node.viz.parcoord,
  org.knime.base.node.viz.plotter,
  org.knime.base.node.viz.plotter.basic,
  org.knime.base.node.viz.plotter.box,
@@ -106,4 +107,5 @@ Export-Package: org.knime.base.data.sort,
  org.knime.base.node.viz.plotter.scatter,
  org.knime.base.node.viz.plotter.scattermatrix,
  org.knime.base.node.viz.plotter.test,
+ org.knime.base.node.viz.scatterplot,
  org.knime.base.util.math
