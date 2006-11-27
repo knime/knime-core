@@ -28,6 +28,7 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -81,6 +83,23 @@ final class DBDriverLoader {
 
     private DBDriverLoader() {
 
+    }
+    
+    /**
+     * Registers given <code>Driver</code> at the <code>DriverManager</code>.
+     * @param driver to register
+     * @throws InvalidSettingsException if the database drivers could not
+     *             registered
+     */
+    static void registerDriver(final String driver) 
+        throws InvalidSettingsException {
+        try {
+            DriverManager.registerDriver(DBDriverLoader
+                    .getWrappedDriver(driver));
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Could not register database"
+                    + " driver: " + driver);
+        }
     }
 
     /**

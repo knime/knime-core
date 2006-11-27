@@ -186,14 +186,13 @@ class DBReaderConnectionNodeModel extends NodeModel {
 
         // create a view on the database according to the given select
         // statement
-        Connection conn =
-                DriverManager.getConnection(m_name, m_user, KnimeEncryption
-                        .decrypt(m_pass));
+        DBDriverLoader.registerDriver(getDriver());
+        String password = KnimeEncryption.decrypt(m_pass);
+        Connection conn = DriverManager.getConnection(m_name, m_user, password);
 
         // create a unique view name
         m_viewName = "VIEW_" + Long.toString(System.currentTimeMillis());
         String viewCreateSQL = "CREATE VIEW " + m_viewName + " AS " + m_query;
-
         Statement stmt = conn.createStatement();
         stmt.executeQuery(viewCreateSQL);
 
@@ -234,25 +233,8 @@ class DBReaderConnectionNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-
-        registerDriver();
+        DBDriverLoader.registerDriver(getDriver());
         return new DataTableSpec[0];
-    }
-
-    /**
-     * Registers the available JDBC drivers.
-     * 
-     * @throws InvalidSettingsException if the database drivers could not
-     *             registered
-     */
-    void registerDriver() throws InvalidSettingsException {
-        try {
-            DriverManager.registerDriver(DBDriverLoader
-                    .getWrappedDriver(getDriver()));
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + getDriver());
-        }
     }
 
     /**

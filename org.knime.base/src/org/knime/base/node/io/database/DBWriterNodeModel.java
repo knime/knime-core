@@ -201,6 +201,7 @@ class DBWriterNodeModel extends NodeModel {
         exec.setProgress("Opening database connection...");
         Connection conn = null;
         try {
+            DBDriverLoader.registerDriver(m_driver);
             // decryt password
             String password = KnimeEncryption.decrypt(m_pass);
             // create database connection

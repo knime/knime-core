@@ -60,6 +60,7 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
             Exception {
         exec.setProgress(-1, "Opening database connection...");
         try {
+            DBDriverLoader.registerDriver(getDriver());
             String password = KnimeEncryption.decrypt(getPassword());
             m_load = new DBReaderConnection(
                     getDatabaseName(), getUser(), password, getQuery());
@@ -109,8 +110,7 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        registerDriver();
-        
+        DBDriverLoader.registerDriver(getDriver());
         DataTableSpec spec = null;
         try { 
             String password = KnimeEncryption.decrypt(getPassword());
