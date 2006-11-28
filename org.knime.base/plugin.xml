@@ -296,10 +296,6 @@
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
             id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
       <node
-            category-path="/io/read"
-            factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
-            id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"/>
-      <node
             category-path="/manipulation/matrix"
             factory-class="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"
             id="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
