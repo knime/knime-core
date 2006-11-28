@@ -33,7 +33,7 @@ public final class InsertColumn extends ColumnDestination {
      * 
      * @param index the index of the new column
      */
-    InsertColumn(final int index) {
+    public InsertColumn(final int index) {
         m_index = index;
     }
     
