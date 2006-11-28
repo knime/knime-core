@@ -68,6 +68,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
     /**
      * Create new dialog for linear regression model.
      */
+    @SuppressWarnings("unchecked")
     public LinRegLearnerNodeDialogPane() {
         super();
         m_filterPanel = new ColumnFilterPanel(DoubleValue.class);
@@ -113,6 +114,8 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
             public void itemStateChanged(final ItemEvent e) {
                 Object selected = e.getItem();
                 if (selected instanceof DataColumnSpec) {
+                    // TODO use update mechanism on the filter panel instead of
+                    // hiding columns
                     m_filterPanel.resetHiding();
                     m_filterPanel.hideColumns((DataColumnSpec)selected);
                 }
