@@ -169,6 +169,8 @@ public class NodeContainer implements NodeStateListener {
     // information of the execution thread...
     private boolean m_executionRunning;
 
+    private boolean m_isQueued;
+    
     // Also hold an object storing information about this node's
     // position on the visual representation of this workflow (or
     // other supplemental info) - if available. The NodeContainer
@@ -1070,17 +1072,19 @@ public class NodeContainer implements NodeStateListener {
             throw new IllegalStateException("Node is not in executable state");
         }
         // make sure node is not already executing (should not happen)
-        if (m_executionRunning) {
+        if (m_executionRunning || m_isQueued) {
             m_logger.error("Node is already/still running, new execute"
                     + " is not allowed. (" + this.getID() + ")");
             return null;
         }
-        m_executionRunning = true;
+        m_isQueued = true;
         // ok, let's start execution:
 
         Runnable r = new Runnable() {
             public void run() {
                 try {
+                    m_executionRunning = true;
+                    m_isQueued = false;
                     pm.setMessage("Preparing...");
                     // executeNode() should return as soon as possible if
                     // canceled - or after it has been finished of course
