@@ -63,7 +63,7 @@ public class HiliteFilterNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         assert inSpecs.length == 1;
-        return inSpecs;
+        return new DataTableSpec[]{inSpecs[0], inSpecs[0]};
     }
 
     /**
@@ -75,13 +75,14 @@ public class HiliteFilterNodeModel extends NodeModel {
         DataTable[] filteredTables = new DataTable[2];
         
         HiLiteHandler hdl = this.getInHiLiteHandler(0);
+               
         synchronized (hdl) {
             filteredTables[0] = new RowFilterTable(inData[0], 
                     new HilightOnlyRowFilter(hdl));
             filteredTables[1] = new RowFilterTable(inData[0], 
                     new NotHilightedRowFilter(hdl));
-            return exec.createBufferedDataTables(filteredTables, exec);
         }
+        return exec.createBufferedDataTables(filteredTables, exec);
     }
     
     /**
