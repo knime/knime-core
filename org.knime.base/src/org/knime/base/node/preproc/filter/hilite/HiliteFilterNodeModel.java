@@ -53,7 +53,7 @@ public class HiliteFilterNodeModel extends NodeModel {
      * Creates an instance of HiliteFilterNodeModel.
      */
     public HiliteFilterNodeModel() {
-        super(1, 1);
+        super(1, 2);
     }
     
     /**
@@ -72,13 +72,15 @@ public class HiliteFilterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTable[] filteredTable = new DataTable[1];
+        DataTable[] filteredTables = new DataTable[2];
         
         HiLiteHandler hdl = this.getInHiLiteHandler(0);
         synchronized (hdl) {
-            filteredTable[0] = new RowFilterTable(inData[0], 
+            filteredTables[0] = new RowFilterTable(inData[0], 
                     new HilightOnlyRowFilter(hdl));
-            return exec.createBufferedDataTables(filteredTable, exec);
+            filteredTables[1] = new RowFilterTable(inData[0], 
+                    new NotHilightedRowFilter(hdl));
+            return exec.createBufferedDataTables(filteredTables, exec);
         }
     }
     
@@ -172,6 +174,49 @@ public class HiliteFilterNodeModel extends NodeModel {
         public boolean matches(final DataRow row, final int rowIndex)
                 throws EndOfTableException, IncludeFromNowOn {
             return m_handler.isHiLit(row.getKey().getId());
+        }
+    }
+    
+    /**
+     * Row filter that filters hilited rows - it's the most convenient way
+     * to write only the not hilited rows.
+     * 
+     * @author Kilian Thiel, University of Konstanz
+     */
+    private static final class NotHilightedRowFilter extends RowFilter {
+
+        private final HiLiteHandler m_handler;
+
+        /**
+         * Creates new instance given a hilight handler.
+         * 
+         * @param handler the handler to get the hilite info from
+         */
+        public NotHilightedRowFilter(final HiLiteHandler handler) {
+            m_handler = handler;
+        }
+
+        @Override
+        public DataTableSpec configure(final DataTableSpec inSpec)
+                throws InvalidSettingsException {
+            throw new IllegalStateException("Not intended for permanent usage");
+        }
+
+        @Override
+        public void loadSettingsFrom(final NodeSettingsRO cfg)
+                throws InvalidSettingsException {
+            throw new IllegalStateException("Not intended for permanent usage");
+        }
+
+        @Override
+        protected void saveSettings(final NodeSettingsWO cfg) {
+            throw new IllegalStateException("Not intended for permanent usage");
+        }
+
+        @Override
+        public boolean matches(final DataRow row, final int rowIndex)
+                throws EndOfTableException, IncludeFromNowOn {
+            return !m_handler.isHiLit(row.getKey().getId());
         }
     }
 }

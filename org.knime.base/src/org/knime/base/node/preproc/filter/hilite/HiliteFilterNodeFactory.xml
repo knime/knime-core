@@ -2,17 +2,21 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./hiliterowfilter.gif" type="Manipulator">
     <name>Hilite Filter</name>
-    <shortDescription>Filters out unhilited rows.</shortDescription>
+    <shortDescription>Seperates hilited and not hilited rows.</shortDescription>
     <fullDescription>
         <intro>
-			This node allows you to filter out all unhilited rows and to keep just
-			the hilited ones. At the time of execution data points have to be hilited.
+			This node allows you to seperate hilited and not hilited rows of
+			the given DataTable. The hilited rows are stored in a seperate 
+			DataTable, as well as the not hilited rows. Both DataTables are
+			returned. At the time of execution data points have to be hilited.
 		</intro>	
 	</fullDescription>
 		
 	<ports>
         <dataIn name="Any input table" index="0">Input table.</dataIn>
-        <dataOut name="Filtered output table" index="0">A filtered output table
-        containing hilited rows only.</dataOut>
+        <dataOut name="Output table containing hilited rows" index="0">
+        A filtered output table containing hilited rows only.</dataOut>
+        <dataOut name="Output table containing not hilited rows" index="1">A 
+        filtered output table containing not hilited rows only.</dataOut>
 	</ports>
 </knimeNode>
