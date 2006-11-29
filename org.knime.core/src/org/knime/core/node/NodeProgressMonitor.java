@@ -53,20 +53,21 @@ public interface NodeProgressMonitor {
      * Sets a new progress value. If the value is not in range, the old value
      * is kept. The message is displayed.
      * @param progress The value between 0 and 1.
-     * @param message A convience message shown in the progress monitor or null.
+     * @param message A convenience message shown in the progress monitor or 
+     *        <code>null</code>.
      */
     void setProgress(final double progress, final String message);
     
     /**
      * Displays the message as given by the argument.
-     * @param message A convience message shown in the progress monitor.
+     * @param message A convenience message shown in the progress monitor.
      * @see #setProgress(String)
      */
     void setMessage(final String message);
     
     /**
      * Displays the message as given by the argument.
-     * @param message A convience message shown in the progress monitor.
+     * @param message A convenience message shown in the progress monitor.
      */
     void setProgress(final String message);
     

@@ -54,7 +54,10 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     /** The progress message. */
     private String m_message;
-
+    
+    /** The message to append; used by SubNodeProgressMonitor. */
+    private String m_append;
+    
     /** A set of progress listeners. */
     private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
     
@@ -137,12 +140,11 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public DefaultNodeProgressMonitor(final NodeProgressListener l) {
         this();
         addProgressListener(l);
-
     }
-
+    
     /**
      * @return <code>true</code> if the execution of the
-     *         <code>NodeModel</code> has been cancelled.
+     *         <code>NodeModel</code> has been canceled.
      */
     synchronized boolean isCanceled() {
         return m_cancelExecute;
@@ -178,7 +180,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     public synchronized void setProgress(final double progress,
             final String message) {
-        if (setProgressIntern(progress) | setMessageIntern(message)) {
+        if (setProgressIntern(progress) | setMessageIntern(message, null)) {
             m_changed = true;
         }
     }
@@ -207,7 +209,13 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @param message The text message shown in the progress monitor.
      */
     public void setProgress(final String message) {
-        if (setMessageIntern(message)) {
+        if (setMessageIntern(message, null)) {
+            m_changed = true;
+        }
+    }
+    
+    private void appendMessage(final String append) {
+        if (setMessageIntern(m_message, append)) {
             m_changed = true;
         }
     }
@@ -229,13 +237,24 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * Sets message internally, returns if old value has changed.
      */
-    private boolean setMessageIntern(final String message) {
-        if (message == m_message) {
+    private boolean setMessageIntern(final String message, 
+            final String append) {
+        if (message == m_message && append == m_append) {
             return false;
         }
-        boolean changed = (message != null 
-                ? !message.equals(m_message) : !m_message.equals(message));
+        boolean changed = false;
+        if (message == null || m_message == null) {
+            changed = true;
+        } else {
+            changed = !message.equals(m_message);
+        }
         m_message = message;
+        if (append == null || m_append == null) {
+            changed = true;
+        } else {
+            changed |= !append.equals(m_append);
+        }
+        m_append = append;
         return changed;
     }
     
@@ -280,13 +299,196 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     private void fireProgressChanged() {
         m_changed = false;
-        NodeProgressEvent pe = new NodeProgressEvent(m_progress, m_message);
+        String message = "";
+        if (m_message != null) {
+            message = m_message;
+            if (m_append != null) {
+                message += " - " + m_append;
+            }
+        } else if (m_append != null) {
+            m_message = m_append;
+        }
+        NodeProgressEvent pe = new NodeProgressEvent(getProgress(), message);
         for (NodeProgressListener l : m_listeners) {
             try {
                 l.progressChanged(pe);
             } catch (Throwable t) {
                 LOGGER.error("Exception while notifying listeners", t);
             }                
+        }
+    }
+    
+    /** Progress monitor that is used by "sub-progresses", it doesn't have
+     * the range [0, 1] but only [0, b] where b is user-defined. 
+     */
+    static class SubNodeProgressMonitor implements NodeProgressMonitor {
+        
+        private final NodeProgressMonitor m_parent;
+        private final double m_maxProg;
+        private double m_lastProg;
+        private String m_lastMessage;
+        
+        /**
+         * Creates new sub progress monitor.
+         * @param parent The parent of this monitor, i.e. where to report
+         * progress to and get the canceled status from.
+         * @param max The maximum progress (w.r.t parent) that this monitor
+         * should report.
+         */
+        SubNodeProgressMonitor(
+                final NodeProgressMonitor parent, final double max) {
+            m_maxProg = max;
+            m_parent = parent;
+            m_lastMessage = null;
+        }
+
+        /**
+         * Must not be called. Throws IllegalStateException.
+         * @see NodeProgressMonitor#addProgressListener(NodeProgressListener)
+         */
+        public void addProgressListener(final NodeProgressListener l) {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        /**
+         * Delegates to parent.
+         * @see NodeProgressMonitor#checkCanceled()
+         */
+        public void checkCanceled() throws CanceledExecutionException {
+            m_parent.checkCanceled();
+        }
+
+        /**
+         * @see NodeProgressMonitor#getMessage()
+         */
+        public String getMessage() {
+            return m_lastMessage;
+        }
+
+        /**
+         * Get the subprogress, the value scaled to [0, 1].
+         * @see NodeProgressMonitor#getProgress()
+         */
+        public Double getProgress() {
+            return m_lastProg;
+        }
+
+        /**
+         * Must not be called. Throws IllegalStateException.
+         * @see NodeProgressMonitor#removeAllProgressListener()
+         */
+        public void removeAllProgressListener() {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        /**
+         * Must not be called. Throws IllegalStateException.
+         * @see NodeProgressMonitor#removeProgressListener(NodeProgressListener)
+         */
+        public void removeProgressListener(final NodeProgressListener l) {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        /**
+         * Must not be called. Throws IllegalStateException.
+         * @see NodeProgressMonitor#setExecuteCanceled()
+         */
+        public void setExecuteCanceled() {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        /**
+         * @see #setProgress(String)
+         */
+        public void setMessage(final String message) {
+            setProgress(message);
+        }
+        
+        /**
+         * Delegates to parent.
+         * @see NodeProgressMonitor#setProgress(String)
+         */
+        public void setProgress(final String message) {
+            synchronized (m_parent) {
+                m_lastMessage = message;
+                if (m_parent instanceof DefaultNodeProgressMonitor) {
+                    ((DefaultNodeProgressMonitor) m_parent).appendMessage(
+                            message);
+                } else {
+                    m_parent.setMessage(m_parent.getMessage() + " - " 
+                            + message);
+                }
+            }
+        }
+
+        /**
+         * @see NodeProgressMonitor#setProgress(double, String)
+         */
+        public void setProgress(
+                final double progress, final String message) {
+            synchronized (m_parent) {
+                this.setProgress(progress);
+                this.setMessage(message);
+            }
+        }
+
+        /**
+         * @see NodeProgressMonitor#setProgress(double)
+         */
+        public void setProgress(final double progress) {
+            synchronized (m_parent) {
+                double subProgress = calcSubProgress(progress);
+                m_parent.setProgress(subProgress);
+            }
+        }
+        
+        
+        private double calcSubProgress(final double progress) {
+            Double progressOfParent = m_parent.getProgress();
+            // diff to the last progress update
+            double diff = progress - m_lastProg;
+            m_lastProg = progress;
+            if (progressOfParent == null) {
+                return diff * m_maxProg;
+            } else {
+                // scaled to our sub range
+                return progressOfParent + diff * m_maxProg;
+            }
+        }
+    }
+    
+    /**
+     * Silent progress monitor which does only forward changed of the progress
+     * value rather than progress message.
+     */
+    static final class SilentSubNodeProgressMonitor extends
+            SubNodeProgressMonitor {
+
+        /**
+         * @see SubNodeProgressMonitor #SubNodeProgressMonitor(
+         *      NodeProgressMonitor, double)
+         * @param parent
+         * @param max
+         */
+        SilentSubNodeProgressMonitor(final NodeProgressMonitor parent,
+                final double max) {
+            super(parent, max);
+        }
+        
+        /**
+         * @see NodeProgressMonitor#setProgress(double, java.lang.String)
+         */
+        @Override
+        public void setProgress(final double prog, final String message) {
+            super.setProgress(prog);
+        }
+        
+        /**
+         * @see NodeProgressMonitor#setMessage(java.lang.String)
+         */
+        @Override
+        public void setMessage(final String arg0) {
+            // do nothing here
         }
     }
     
