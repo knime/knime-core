@@ -73,8 +73,9 @@ public class DefaultTable implements DataTable {
      * 
      * @param rows The list of <code>DataRow</code> objects.
      * @param spec The Spec of this table.
-     * @throws NullPointerException If one of the arguments is <code>null</code>,
-     *             or if the array contains <code>null</code> values.
+     * @throws NullPointerException If one of the arguments is 
+     *              <code>null</code>, or if the array contains 
+     *              <code>null</code> values.
      * @throws IllegalArgumentException If any runtime class in the row's cells
      *             does not comply with the settings in the spec.
      */
@@ -119,8 +120,9 @@ public class DefaultTable implements DataTable {
      * @param rows The list of <code>DataRow</code> objects.
      * @param columnNames The names of the columns.
      * @param columnTypes The column types.
-     * @throws NullPointerException If one of the arguments is <code>null</code>,
-     *             or if any array contains <code>null</code> values.
+     * @throws NullPointerException If one of the arguments is 
+     *              <code>null</code>, or if any array contains 
+     *              <code>null</code> values.
      * @throws IllegalStateException If redundant column names are found.
      * @throws IllegalArgumentException If any element in
      *             <code>columnTypes</code> is not a (sub-)class of
@@ -140,10 +142,10 @@ public class DefaultTable implements DataTable {
      * @param data Get the data from, in whatever way.
      * @param rowHeader Containing row header information.
      * @param colHeader Containing column header information.
-     * @param converter Used to get DataCell objects from the ObjectSupplier.
+     * @param conv Used to get DataCell objects from the ObjectSupplier.
      */
     private DefaultTable(final ObjectSupplier data, final String[] rowHeader,
-            final String[] colHeader, final ObjectToDataCellConverter converter) {
+            final String[] colHeader, final ObjectToDataCellConverter conv) {
         if (data == null) {
             throw new IllegalArgumentException("Data must not be null.");
         }
@@ -171,7 +173,8 @@ public class DefaultTable implements DataTable {
         }
 
         // sanity check if column count is consistent
-        if (colCount >= 0 && colHeader != null && colHeader.length != colCount) {
+        if (colCount >= 0 && colHeader != null 
+                && colHeader.length != colCount) {
             throw new IllegalArgumentException("Column count inconsistent: "
                     + colHeader.length + " vs. " + colCount + ".");
         }
@@ -202,7 +205,7 @@ public class DefaultTable implements DataTable {
             for (int c = 0; c < colCount; c++) {
                 // some overhead, hope this is ok.
                 Object o = data.getObject(r, c);
-                rowContent[c] = converter.createDataCell(o);
+                rowContent[c] = conv.createDataCell(o);
                 DataType cellType = rowContent[c].getType();
                 if (r == 0) { // for first row simply assign class
                     myTypes[c] = cellType;
@@ -239,7 +242,7 @@ public class DefaultTable implements DataTable {
      *            <code>null</code>. The length of the array (if given) must
      *            match <code>data[r].length</code> for any given
      *            <code>r</code>.
-     * @param converter Used to transform any object in <code>data</code> to a
+     * @param conv Used to transform any object in <code>data</code> to a
      *            <code>DataCell</code>
      * @throws IllegalArgumentException In the following cases:
      *             <ul>
@@ -256,8 +259,8 @@ public class DefaultTable implements DataTable {
      * @see DataType#getCommonSuperType(DataType, DataType)
      */
     public DefaultTable(final Object[][] data, final String[] rowHeader,
-            final String[] colHeader, final ObjectToDataCellConverter converter) {
-        this(new ObjectSupplier(data), rowHeader, colHeader, converter);
+            final String[] colHeader, final ObjectToDataCellConverter conv) {
+        this(new ObjectSupplier(data), rowHeader, colHeader, conv);
     }
 
     /**
