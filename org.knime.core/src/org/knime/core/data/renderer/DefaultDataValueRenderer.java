@@ -67,7 +67,7 @@ public class DefaultDataValueRenderer
     }
     
     /**
-     * @see ListCellRenderer#getListCellRendererComponent(
+     * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
      * JList, Object, int, boolean, boolean)
      */
     public Component getListCellRendererComponent(

@@ -61,7 +61,7 @@ public interface DataValueRenderer extends TableCellRenderer, ListCellRenderer {
     
     /**
      * Get a component that visualizes a given object. This object, generally,
-     * is a {@link DataCell} implementing the underlying 
+     * is a {@link org.knime.core.data.DataCell} implementing the underlying 
      * <code>DataValue</code> interface. The implementation, however, needs to 
      * handle other cases as well, such as <code>null</code> arguments,
      * missing <code>DataCell</code> or generic objects.

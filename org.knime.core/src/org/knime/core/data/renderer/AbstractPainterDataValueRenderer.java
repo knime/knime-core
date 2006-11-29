@@ -37,10 +37,10 @@ import javax.swing.border.EmptyBorder;
  * <code>getListCellRenderer</code> methods. Subclasses usually override
  * <ul>
  * <li>{@link #setValue(Object)}: Keep the object to render as field</li>
- * <li>{@link JComponent#paintComponent(Graphics)}: Render the object to a 
- * graphics object, if the rendering is implemented in an external panel
+ * <li>{@link JComponent#paintComponent(java.awt.Graphics)}: Render the object 
+ * to a graphics object, if the rendering is implemented in an external panel
  * implementation, use {@link javax.swing.SwingUtilities#paintComponent(
- * Graphics, Component, java.awt.Container, int, int, int, int)}
+ * java.awt.Graphics, Component, java.awt.Container, int, int, int, int)}
  * <li>{@link #getDescription()}: Return a more meaningful description than
  * just &quot;Default&quot;
  * </ul>
@@ -226,6 +226,7 @@ public abstract class AbstractPainterDataValueRenderer
      *
      * @see JComponent#updateUI
      */
+    @Override
     public void updateUI() {
         super.updateUI(); 
         setForeground(null);
@@ -250,6 +251,7 @@ public abstract class AbstractPainterDataValueRenderer
      * for more information.
      * @see JComponent#isOpaque()
      */
+    @Override
     public boolean isOpaque() { 
     Color back = getBackground();
     Component p = getParent(); 
@@ -268,6 +270,7 @@ public abstract class AbstractPainterDataValueRenderer
      * for more information.
      * @see JComponent#invalidate()
      */
+    @Override
     public void invalidate() {
     }
 
@@ -277,6 +280,7 @@ public abstract class AbstractPainterDataValueRenderer
      * for more information.
      * @see JComponent#validate()
      */
+    @Override
     public void validate() {
     }
 
@@ -286,6 +290,7 @@ public abstract class AbstractPainterDataValueRenderer
      * for more information.
      * @see JComponent#revalidate()
      */
+    @Override
     public void revalidate() {
     }
 
@@ -295,6 +300,7 @@ public abstract class AbstractPainterDataValueRenderer
      * for more information.
      * @see JComponent#repaint(long, int, int, int, int)
      */
+    @Override
     public void repaint(final long tm, final int x, final int y, 
             final int width, final int height) {
     }
@@ -305,6 +311,7 @@ public abstract class AbstractPainterDataValueRenderer
      * for more information.
      * @see JComponent#repaint(Rectangle)
      */
+    @Override
     public void repaint(final Rectangle r) {
     }
 
@@ -314,6 +321,7 @@ public abstract class AbstractPainterDataValueRenderer
      * for more information.
      * @see JComponent#repaint()
      */
+    @Override
     public void repaint() {
     }
 
