@@ -266,7 +266,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                             hilite, data
                                     .getDataTableSpec().getRowColor(row), data
                                     .getDataTableSpec().getRowSize(row),
-                            rowNr++);
+                            rowNr);
                     dot.setShape(data.getDataTableSpec().getRowShape(row));
                     dot.setXDomainValue(xValue);
                     dot.setYDomainValue(yValue);
@@ -274,6 +274,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
 //                    dotList.add(dot);
                 } // j
             } // i
+            rowNr++;
         } // rows
         // jitter
         jitter(matrixElements);
