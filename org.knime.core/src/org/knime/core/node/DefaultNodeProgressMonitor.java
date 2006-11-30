@@ -269,7 +269,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return The current progress message.
      */
     public String getMessage() {
-        return m_message;
+        return m_message; 
     }
     
     /**
@@ -299,16 +299,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     private void fireProgressChanged() {
         m_changed = false;
-        String message = "";
-        if (m_message != null) {
-            message = m_message;
-            if (m_append != null) {
-                message += " - " + m_append;
-            }
-        } else if (m_append != null) {
-            m_message = m_append;
-        }
-        NodeProgressEvent pe = new NodeProgressEvent(getProgress(), message);
+        NodeProgressEvent pe = new NodeProgressEvent(getProgress(), 
+                createMessage(m_message, m_append));
         for (NodeProgressListener l : m_listeners) {
             try {
                 l.progressChanged(pe);
@@ -316,6 +308,20 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 LOGGER.error("Exception while notifying listeners", t);
             }                
         }
+    }
+    
+    private static String createMessage(
+            final String message, final String append) {
+        String result = "";
+        if (message != null) {
+            result = message;
+            if (append != null) {
+                result += " - " + append;
+            }
+        } else if (append != null) {
+            result = append;
+        }
+        return result;
     }
     
     /** Progress monitor that is used by "sub-progresses", it doesn't have
@@ -326,7 +332,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         private final NodeProgressMonitor m_parent;
         private final double m_maxProg;
         private double m_lastProg;
-        private String m_lastMessage;
+        private String m_message;
+        private String m_append;
         
         /**
          * Creates new sub progress monitor.
@@ -339,7 +346,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 final NodeProgressMonitor parent, final double max) {
             m_maxProg = max;
             m_parent = parent;
-            m_lastMessage = null;
+            m_message = null;
         }
 
         /**
@@ -362,7 +369,11 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          * @see NodeProgressMonitor#getMessage()
          */
         public String getMessage() {
-            return m_lastMessage;
+            if (m_message == null) {
+                return "";
+            } else {
+                return m_message;
+            }
         }
 
         /**
@@ -409,16 +420,31 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          * @see NodeProgressMonitor#setProgress(String)
          */
         public void setProgress(final String message) {
+            setProgress(message, true);
+        }
+        
+        private void setProgress(final String message, final boolean append) {
             synchronized (m_parent) {
-                m_lastMessage = message;
+                m_message = message;
+                if (append) {
+                    m_append = null;
+                }
+                String create = createMessage(m_message, m_append);
                 if (m_parent instanceof DefaultNodeProgressMonitor) {
                     ((DefaultNodeProgressMonitor) m_parent).appendMessage(
-                            message);
+                            create);
+                } else if (m_parent instanceof SubNodeProgressMonitor) {
+                    ((SubNodeProgressMonitor) m_parent).appendMessage(
+                            create);
                 } else {
-                    m_parent.setMessage(m_parent.getMessage() + " - " 
-                            + message);
-                }
+                    m_parent.setMessage(create);
+                }            
             }
+        }
+        
+        private void appendMessage(final String append) {
+            m_append = append;
+            setProgress(m_message, false);
         }
 
         /**
