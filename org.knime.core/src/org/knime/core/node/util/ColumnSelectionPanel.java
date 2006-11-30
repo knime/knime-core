@@ -328,8 +328,10 @@ public class ColumnSelectionPanel extends JPanel {
      * @param columnName - the name of the column to select.
      */
     public final void setSelectedColumn(final String columnName) {
-        DataColumnSpec colSpec = m_spec.getColumnSpec(columnName);
-        m_chooser.setSelectedItem(colSpec);
+        if (m_spec != null) {
+            DataColumnSpec colSpec = m_spec.getColumnSpec(columnName);
+            m_chooser.setSelectedItem(colSpec);
+        }
     }
     
     /**

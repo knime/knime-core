@@ -338,7 +338,9 @@ public class ColumnFilterPanel extends JPanel {
      *
      */
     public void removeAllColumnFilterChangeListener() {
-        m_listeners.clear();
+        if (m_listeners != null) {
+            m_listeners.clear();
+        }
     }
     
     private void fireFilteringChangedEvent() {
