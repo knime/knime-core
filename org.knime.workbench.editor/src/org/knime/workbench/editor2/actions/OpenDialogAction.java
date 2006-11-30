@@ -132,6 +132,11 @@ public class OpenDialogAction extends AbstractNodeAction {
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
             mb.open();            
+        } catch (Throwable t) {
+            LOGGER.error("The dialog pane for node '" 
+                    + container.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an implementation error.", t);
         }
     }
 }
