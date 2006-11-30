@@ -47,20 +47,20 @@ public final class BatchExecutor {
             NodeLogger.getLogger(BatchExecutor.class);
 
     private static class Option {
-        public final int nodeID;
+        private final int m_nodeID;
 
-        public final String name;
+        private final String m_name;
 
-        public final String value;
+        private final String m_value;
 
-        public final String type;
+        private final String m_type;
 
         Option(final int nodeID, final String name, final String value,
                 final String type) {
-            this.nodeID = nodeID;
-            this.name = name;
-            this.value = value;
-            this.type = type;
+            m_nodeID = nodeID;
+            m_name = name;
+            m_value = value;
+            m_type = type;
         }
     }
 
@@ -68,18 +68,19 @@ public final class BatchExecutor {
     }
 
     private static void usage() {
-        System.err.println("Usage: "
-            + BatchExecutor.class.getName()
-            + " OPTIONS\n"
-            + "where OPTIONS can be:\n"
-            + " -nosave => do not save the workflow after execution has finished\n"
-            + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root of the ZIP\n"
-            + " -workflowDir=... => directory with a ready-to-execute workflow\n"
-            + " -destFile=... => ZIP file where the executed workflow should be written to\n"
-            + "                  if omitted the workflow is only saved in place\n"
-            + " -option=nodeID,name,value,type => set the option with name 'name' of the node with\n"
-            + "                                   ID 'nodeID' to the given value which has type 'type'\n"
-            + "                                   type can be any of the primitive Java types or String");
+        System.err
+                .println("Usage: "
+                        + BatchExecutor.class.getName()
+                        + " OPTIONS\n"
+                        + "where OPTIONS can be:\n"
+                        + " -nosave => do not save the workflow after execution has finished\n"
+                        + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root of the ZIP\n"
+                        + " -workflowDir=... => directory with a ready-to-execute workflow\n"
+                        + " -destFile=... => ZIP file where the executed workflow should be written to\n"
+                        + "                  if omitted the workflow is only saved in place\n"
+                        + " -option=nodeID,name,value,type => set the option with name 'name' of the node with\n"
+                        + "                                   ID 'nodeID' to the given value which has type 'type'\n"
+                        + "                                   type can be any of the primitive Java types or String");
     }
 
     /**
@@ -158,34 +159,35 @@ public final class BatchExecutor {
         wfm.load(workflowFile, new DefaultNodeProgressMonitor());
 
         for (Option o : options) {
-            NodeContainer cont = wfm.getNodeContainerById(o.nodeID);
+            NodeContainer cont = wfm.getNodeContainerById(o.m_nodeID);
             if (cont == null) {
-                LOGGER.warn("No node with id " + o.nodeID + " found.");
+                LOGGER.warn("No node with id " + o.m_nodeID + " found.");
             } else {
                 NodeSettings settings = new NodeSettings("something");
                 cont.saveSettings(settings);
 
-                if ("int".equals(o.type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addInt(o.name,
-                            Integer.parseInt(o.value));
-                } else if ("short".equals(o.type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addShort(o.name,
-                            Short.parseShort(o.value));
-                } else if ("byte".equals(o.type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addByte(o.name,
-                            Byte.parseByte(o.value));
-                } else if ("boolean".equals(o.type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addBoolean(o.name,
-                            Boolean.parseBoolean(o.value));
-                } else if ("char".equals(o.type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addChar(o.name,
-                            o.value.charAt(0));
-                } else if ("float".equals(o.type) || ("double".equals(o.type))) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addDouble(o.name,
-                            Double.parseDouble(o.value));
-                } else if ("String".equals(o.type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addString(o.name,
-                            o.value);
+                if ("int".equals(o.m_type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addInt(o.m_name,
+                            Integer.parseInt(o.m_value));
+                } else if ("short".equals(o.m_type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addShort(o.m_name,
+                            Short.parseShort(o.m_value));
+                } else if ("byte".equals(o.m_type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addByte(o.m_name,
+                            Byte.parseByte(o.m_value));
+                } else if ("boolean".equals(o.m_type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addBoolean(
+                            o.m_name, Boolean.parseBoolean(o.m_value));
+                } else if ("char".equals(o.m_type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addChar(o.m_name,
+                            o.m_value.charAt(0));
+                } else if ("float".equals(o.m_type)
+                        || ("double".equals(o.m_type))) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addDouble(
+                            o.m_name, Double.parseDouble(o.m_value));
+                } else if ("String".equals(o.m_type)) {
+                    settings.getNodeSettings(Node.CFG_MODEL).addString(
+                            o.m_name, o.m_value);
                 }
                 cont.loadSettings(settings);
             }
