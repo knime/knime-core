@@ -1082,15 +1082,20 @@ public class NodeContainer implements NodeStateListener {
 
         Runnable r = new Runnable() {
             public void run() {
-                try {
+                try {                    
                     m_executionRunning = true;
                     m_isQueued = false;
+                    pm.checkCanceled();
                     pm.setMessage("Preparing...");
                     // executeNode() should return as soon as possible if
                     // canceled - or after it has been finished of course
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
                     m_node.execute(new ExecutionContext(pm, m_node));
+                } catch (CanceledExecutionException ex) {
+                    // This can happen if the node is queued in the thread pool
+                    // and the whole workflow is canceled. Then a worker
+                    // becomes available and starts this node.
                 } catch (Exception ex) {
                     LOGGER.error("Execution of node " + m_node + " failed: "
                             + ex.getMessage(), ex);
@@ -1100,6 +1105,7 @@ public class NodeContainer implements NodeStateListener {
                 } finally {
                     // and always clean up, no matter how we got out of here
                     m_executionRunning = false;
+                    m_isQueued = false;
 
                     // Do not forgot to notify all listeners. Note that this
                     // replaces the simple forwarding of the event arriving

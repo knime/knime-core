@@ -192,20 +192,21 @@ public class WorkflowManager implements WorkflowListener {
          * monitor) that they should terminate.
          */
         public void cancelExecution() {
+            for (NodeProgressMonitor pm : m_runningNodes.values()) {
+                pm.setExecuteCanceled();
+            }
             // avoid that a node is added to m_waitingNodes after the finish
             // events have been sent and before the map is cleared;
             // we will miss the finish event for this node otherwise
             synchronized (m_addLock) {
-                for (NodeContainer nc : m_waitingNodes.keySet()) {
+                Set<NodeContainer> temp =
+                        new HashSet<NodeContainer>(m_waitingNodes.keySet());
+                m_waitingNodes.clear();
+                for (NodeContainer nc : temp) {
                     nc.getWorkflowManager().fireWorkflowEvent(
                             new WorkflowEvent.NodeFinished(nc.getID(), null,
                                     null));
                 }
-
-                m_waitingNodes.clear();
-            }
-            for (NodeProgressMonitor pm : m_runningNodes.values()) {
-                pm.setExecuteCanceled();
             }
         }
 
@@ -241,11 +242,11 @@ public class WorkflowManager implements WorkflowListener {
 
             for (NodeContainer nc : cancelNodes) {
 
-                nc.stateChanged(new NodeStatus.Configured(
-                        "Removed from queue"), nc.getID());
+                nc.stateChanged(
+                        new NodeStatus.Configured("Removed from queue"), nc
+                                .getID());
                 nc.getWorkflowManager().fireWorkflowEvent(
-                        new WorkflowEvent.NodeFinished(nc.getID(), null,
-                                null));
+                        new WorkflowEvent.NodeFinished(nc.getID(), null, null));
             }
         }
 
@@ -280,7 +281,7 @@ public class WorkflowManager implements WorkflowListener {
 
             for (WeakReference<WorkflowManager> wr : wfm.m_children) {
                 if (wr.get() != null) {
-                    if (executionInProgress(wr.get()))  {
+                    if (executionInProgress(wr.get())) {
                         // this may happen if (parts of) a metaworkflow is/are
                         // excuted by the user without actually executing the
                         // meta node itself
@@ -379,7 +380,7 @@ public class WorkflowManager implements WorkflowListener {
                         return true;
                     }
                 }
-                
+
                 if (!predStillWaiting) {
                     LOGGER.warn("The node " + cont + " is not executable but "
                             + "waiting for execution and "
@@ -416,9 +417,9 @@ public class WorkflowManager implements WorkflowListener {
                         }
 
                         nc.getWorkflowManager().fireWorkflowEvent(
-                                new WorkflowEvent.NodeFinished(nc.getID(),
-                                        nc, nc));
-                        
+                                new WorkflowEvent.NodeFinished(nc.getID(), nc,
+                                        nc));
+
                         if (state instanceof NodeStatus.ExecutionCanceled) {
                             cancelExecution(nc.getAllSuccessors());
                         }
@@ -1266,10 +1267,10 @@ public class WorkflowManager implements WorkflowListener {
     public synchronized void disconnectNodeContainer(
             final NodeContainer nodeCont) throws WorkflowInExecutionException {
         if (!canBeDeleted(nodeCont)) {
-            throw new WorkflowInExecutionException("Node cannot be disconnected"
-                    + ", because it is part of a running workflow.");
+            throw new WorkflowInExecutionException(
+                    "Node cannot be disconnected"
+                            + ", because it is part of a running workflow.");
         }
-
 
         int numIn = nodeCont.getNrInPorts();
         int numOut = nodeCont.getNrOutPorts();
@@ -1380,7 +1381,7 @@ public class WorkflowManager implements WorkflowListener {
         if (block) {
             WorkflowListener wfl = new WorkflowListener() {
                 public void workflowChanged(final WorkflowEvent event) {
-                    if ((event instanceof WorkflowEvent.NodeFinished) 
+                    if ((event instanceof WorkflowEvent.NodeFinished)
                             && (event.getOldValue() == nc)) {
                         synchronized (this) {
                             this.notifyAll();
@@ -2113,7 +2114,7 @@ public class WorkflowManager implements WorkflowListener {
         if (!canBeReset(nodeCont)) {
             throw new WorkflowInExecutionException(
                     "Dialog settings cannot be applied, because the node is "
-                    + "part of a running workflow.");
+                            + "part of a running workflow.");
         }
 
         nodeCont.loadModelSettingsFromDialog();
