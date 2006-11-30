@@ -28,7 +28,11 @@ import java.awt.RenderingHints;
 import javax.swing.JPanel;
 
 /**
- * Handles the selection of elements.
+ * Supports the selection of elements (also paints the selection rectangle) and 
+ * anti-aliasing, override {@link #paintContent(Graphics)}. For deriving classes
+ * it is enough to override the {@link #paintContent(Graphics)} and to somehow
+ * store the mapped values locally.
+ * 
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractDrawingPane extends JPanel {

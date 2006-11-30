@@ -59,6 +59,27 @@ import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
+ * Provides functionality for zooming, moving and selection and is designed to 
+ * be extended. For this purpose it provides means to support hiliting, creating
+ * the x and y {@link org.knime.base.node.viz.plotter.Axis} and get the mapped 
+ * values for a given {@link org.knime.core.data.DataCell}, whose values lies 
+ * within the domain used to create the axes. 
+ * <p>
+ * The plotter consists of a drawing pane and a properties panel which can be 
+ * accessed. The size of each is adapted automatically. The plotter relies on an
+ * object implementing the {@link org.knime.base.node.viz.plotter.DataProvider}
+ * to access the data to visualize.
+ * <p>
+ * The two most important methods are 
+ * {@link org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()} 
+ * and {@link org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()}. 
+ * The former is called whenever the data to visualize might have changed, 
+ * the latter is called when the size of the plotter has changed. In some cases 
+ * this means no difference since the mapping of the data to the screen 
+ * coordinates has to be done anyway, but if there are other things specific to
+ * the data to be visualized the 
+ * {@link org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()} is
+ * the correct place to access and display it. 
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -85,40 +106,46 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
     private static final int DRAG_TOLERANCE = 5;
     
+    /** The drawing pane. */
     private AbstractDrawingPane m_drawingPane;
     
+    /** The scroll pane the drawing pane is embedded in. */
     private Plotter2DScrollPane m_scroller;
     
+    /** Thew properties panel. */
     private AbstractPlotterProperties m_properties;
     
     private boolean m_isDragged;
     
+    /** The width of the drawing pane! Not of this component. */
     private int m_width;
     
+    /** The height of the drawing pane! Not of this component. */
     private int m_height;
     
+    /** The x axis, might be null. */
     private Axis m_xAxis;
-    
+    /** The y axis, might be null. */
     private Axis m_yAxis;
-
     
+    /** The mouse listener depending on the current mode. */
     private PlotterMouseListener m_currMouseListener;
-    
+    /** The provider for the data to visualize. */
     private DataProvider m_dataProvider;
-    
-    
-//    private Action m_hiliteMenu;
-//    
-//    private Action m_unhiliteMenu;
-//    
-//    private Action m_clearHiliteMenu;
-    
+    /** The hilite handler. */
     private HiLiteHandler m_hiliteHandler;
-
+    
+    /** 
+     * Flag, whether the axis range should be preserved(true) or adapted to 
+     * newly added values (false). 
+     */
     private boolean m_preserve = true;
     
     
     /**
+     * Creates a new plotter with a drawing pane and a properties panel.
+     * The listener to the default properties (selection, zooming, moving, 
+     * fit to screen) are registered.
      * 
      * @param drawingPane the drawing pane
      * @param properties the properties panel
@@ -143,6 +170,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 m_currMouseListener);
         m_properties.getMouseSelectionBox().addItemListener(new ItemListener() {
             /**
+             * Mouse mode sets the referring mouse listener.
              * @see java.awt.event.ItemListener#itemStateChanged(
              * java.awt.event.ItemEvent)
              */
@@ -164,6 +192,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 new ActionListener() {
 
                     /**
+                     * Fit to screen.
                      * @see java.awt.event.ActionListener#actionPerformed(
                      * java.awt.event.ActionEvent)
                      */
@@ -174,6 +203,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         });
         final ActionListener okListener = new ActionListener() {
             /**
+             * Background color chooser.
              * @see java.awt.event.ActionListener#actionPerformed(
              * java.awt.event.ActionEvent)
              */
@@ -211,7 +241,6 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 m_drawingPane.getPreferredSize().height
                 + m_scroller.getHorizontalScrollBar().getPreferredSize().height
                 ));         
-        
         m_drawingPane.setBackground(Color.white);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(m_scroller);
@@ -219,7 +248,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         addComponentListener(this);
 
         m_hiliteHandler = new DefaultHiLiteHandler();
-        fitToScreen();
+//        fitToScreen();
     }
     
     /*----------- viewing methods ---------*/
@@ -309,7 +338,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
     
     /**
-     * Fits to screen.
+     * Fits to screen, that is it resizes the drawing pane to fit into the 
+     * plotters dimension.
      *
      */
     public final void fitToScreen() {
@@ -317,7 +347,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         m_height = m_scroller.getViewport().getHeight();
         Dimension newDim = new Dimension(m_width, m_height);
         m_drawingPane.setPreferredSize(newDim);
-        updatePaintModel();
+//        updatePaintModel();
         updateAxisLength();
         updateSize();
         m_scroller.getViewport().revalidate();
@@ -326,6 +356,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
     /* ---------- relevant mouse methods ----------- */
     
+    /**
+     * Calls the {@link #fillPopupMenu(JPopupMenu)} and then shows the popup
+     * menu at the position of the mouse click.
+     */
     private void showPopupMenu(final Point at) {
                 m_drawingPane.setMouseDown(false);
                 m_isDragged = false;
@@ -337,7 +371,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
     
     /* ---------------- relevant component listener methods ------- */
+    
     /**
+     * Resizes the axes and calls {@link #updateSize()}, the drawing pane is 
+     * adapted to the new space only if the size is increased. 
      * @see java.awt.event.ComponentListener#componentResized(
      * java.awt.event.ComponentEvent)
      */
@@ -357,7 +394,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
-     * Sets the height for the plotter.
+     * Sets the height for the drawing pane.
      * 
      * @param height the height to set for the plotter
      */
@@ -388,6 +425,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /*---------- accessors ---------*/
     
     /**
+     * If one of the default mouse modes (selection, zooming, moving) should not
+     * be available, use this method to remove it. It will then not appear in 
+     * the mouse mode selection box.
+     * 
      * @param listener the class of the listener to be removed.
      */
     public void removeMouseListener(
@@ -412,6 +453,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
 
     /**
+     * If an additional mouse mode shouzld be supported, extend the 
+     * {@link org.knime.base.node.viz.plotter.PlotterMouseListener} and add it.
+     * It will then appear in the mouse mode selection box displayed with the 
+     * value of the <code>toString()</code> method.
      * 
      * @param listener the listener to add.
      */
@@ -421,6 +466,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
     /**
      * Turns antialiasing on (true) or off (false).
+     * 
      * @param doAntialiasing true for antialiasing enabled, false otherwise.
      */
     public void setAntialiasing(final boolean doAntialiasing) {
@@ -512,7 +558,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
     /**
      * 
-     * @return themenu entry for unhilite
+     * @return the menu entry for unhilite
      */
     public Action getUnhiliteAction() {
         Action unhilite = new AbstractAction(HiLiteHandler.UNHILITE_SELECTED) {
@@ -557,9 +603,12 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
-     * Returns the hilite menu displayed in the NodeView's menu bar.
+     * Returns the hilite menu displayed in the 
+     * {@link org.knime.core.node.NodeView}'s menu bar.
      * In this class the hilite, unhilite and clear hilite actions are added.
-     * @return the filled menu for the NodeView's menu bar.
+     * 
+     * @return the filled menu for the {@link org.knime.core.node.NodeView}'s 
+     * menu bar.
      */
     public JMenu getHiLiteMenu() {
         JMenu menu = new JMenu(HiLiteHandler.HILITE);
@@ -629,6 +678,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
+     * Delegates to the hilite handler.
+     * 
      * @return the hilited keys.
      * @see org.knime.core.node.property.hilite.HiLiteHandler#getHiLitKeys()
      */
@@ -637,6 +688,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
+     * Delegates to the hilite handler.
+     * 
      * @param ids the keys to be hilited.
      * @see org.knime.core.node.property.hilite.HiLiteHandler#fireHiLiteEvent(
      * org.knime.core.data.DataCell[])
@@ -646,6 +699,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
+     * Delegates to the hilite handler.
+     * 
      * @param ids the keys to be hilited
      * @see org.knime.core.node.property.hilite.HiLiteHandler#fireHiLiteEvent(
      * java.util.Set)
@@ -655,6 +710,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
+     * delegates to the hilite handler.
+     * 
      * @param ids the ids to be checked.
      * @return true if all passed keys are hilited
      * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
@@ -665,6 +722,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
+     * Delegates to the hilite handler. 
+     * 
      * @param ids the ids to be checked.
      * @return true if all passed keys are hilited
      * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
@@ -680,6 +739,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
+     * Delegates to the hilite handler.
+     * 
      * @see org.knime.core.node.property.hilite.HiLiteHandler
      * #removeAllHiLiteListeners()
      */
@@ -697,6 +758,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
+     * Delegates to the hilite handler.
+     * 
      * @param ids the ids to be unhilited.
      * @see org.knime.core.node.property.hilite.HiLiteHandler
      * #fireUnHiLiteEvent(org.knime.core.data.DataCell[])
@@ -706,6 +769,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
+     * Delegates to the hilite handler.
+     * 
      * @param ids the ids to be unhilited.
      * @see org.knime.core.node.property.hilite.HiLiteHandler#fireUnHiLiteEvent(
      * java.util.Set)
@@ -717,8 +782,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /* ------------- abstract methods ------------ */
 
     /**
-     * Implementing classes may select the elements in the selectino rectangle
+     * Implementing classes may select the elements in the selection rectangle
      * obtained from the mouse dragging in selection mode.
+     * 
      * @param selectionRectangle the selection rectangle from the dragged mouse 
      * in selection mode
      */
@@ -726,8 +792,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
     
     /**
-     * Implementing classes should take care of the selection. Either clear the 
-     * selection or add the clicked element to the selection.
+     * Implementing classes mayxselect the elements depending on the clicked 
+     * position. This method is called only when the element should be selected,
+     * that is, it is already determined whether the CTRL key is pressed or not.
      * 
      * @param clicked the clicked point
      */
@@ -735,7 +802,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
     
     /**
-     * Clear current selection.
+     * Clears current selection.
      *
      */
     public abstract void clearSelection();
@@ -768,6 +835,11 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /* -------------- mouse listeners ------------------*/
     
     /**
+     * The selection mouse listener checks the selection status, that is, 
+     * if the mouse was dragged, the CTRL key is pressed and so on and 
+     * calls the appropriate methods in the {@link AbstractPlotter}. 
+     * A drawing pane may be passed in order to let it listen to another 
+     * drawing pane.
      * 
      */
     public class SelectionMouseListener extends PlotterMouseListener {
@@ -775,8 +847,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         private final AbstractDrawingPane m_listenedPane;
         
         /**
-         * 
-         *
+         * Listens to the drawing pane of this plotter.
          */
         public SelectionMouseListener() {
             m_listenedPane = getDrawingPane();
@@ -826,7 +897,6 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
             m_isDragged = false;
             m_listenedPane.setDragEnd(e.getPoint());
             selectElementsIn(m_listenedPane.getSelectionRectangle());
-//            m_properties.revalidate();
             m_listenedPane.repaint();
         }
 
@@ -872,7 +942,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
-     * 
+     * Realizes the zooming behaviour, when the mouse is clicked it calls the 
+     * {@link AbstractPlotter#zoomByClick(Point)}, when the mouse is dragged the
+     * {@link AbstractPlotter#zoomByWindow(Rectangle)} is called.
      * 
      * @author Fabian Dill, University of Konstanz
      */
@@ -969,7 +1041,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
-     * 
+     * When the drawing pane is larger then the viewport for it, this mouse 
+     * listener realizes the possibility to drag the drawing pane inside the 
+     * viewport.
      * 
      * @author Fabian Dill, University of Konstanz
      */
@@ -1041,31 +1115,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
         
     }
-
     
-    /* --------------- ignore methods ------------------*/
-
-    /**
-     * @see java.awt.event.ComponentListener#componentHidden(
-     * java.awt.event.ComponentEvent)
-     */
-    public void componentHidden(final ComponentEvent e) {
-    }
-
-    /**
-     * @see java.awt.event.ComponentListener#componentMoved(
-     * java.awt.event.ComponentEvent)
-     */
-    public void componentMoved(final ComponentEvent e) {
-    }
-
-    /**
-     * @see java.awt.event.ComponentListener#componentShown(
-     * java.awt.event.ComponentEvent)
-     */
-    public void componentShown(final ComponentEvent e) {
-    }
-
+    /* ----------- mapping, coordinates -------------- */
+    
     /**
      * 
      * @param preserve true if old min max values of the axes should be 
@@ -1262,5 +1314,29 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      */
     public final double getScreenYCoordinate(final double y) {
         return getDrawingPaneDimension().height - y;
+    }
+    
+    
+    /* --------------- ignore methods ------------------*/
+
+    /**
+     * @see java.awt.event.ComponentListener#componentHidden(
+     * java.awt.event.ComponentEvent)
+     */
+    public void componentHidden(final ComponentEvent e) {
+    }
+
+    /**
+     * @see java.awt.event.ComponentListener#componentMoved(
+     * java.awt.event.ComponentEvent)
+     */
+    public void componentMoved(final ComponentEvent e) {
+    }
+
+    /**
+     * @see java.awt.event.ComponentListener#componentShown(
+     * java.awt.event.ComponentEvent)
+     */
+    public void componentShown(final ComponentEvent e) {
     }
 }

@@ -59,6 +59,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     
     private static final String FILE_NAME = "internals";
     
+    
     /**
      * 
      */
@@ -106,6 +107,9 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         m_input = new DefaultDataArray(inData[0], m_start, m_last, exec);
+        if ((m_last - m_start) < inData[0].getRowCount()) {
+            setWarningMessage("Some rows are ignored");
+        }
         return new BufferedDataTable[0];
     }
 

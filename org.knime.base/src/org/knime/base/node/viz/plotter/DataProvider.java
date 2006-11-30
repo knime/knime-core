@@ -30,7 +30,7 @@ public interface DataProvider {
     public static final int START = 1;
     
     /** Default end row for DataArray creation. */
-    public static final int END = 10000;
+    public static final int END = 2500;
     
     /**
      * Provides the data that should be visualized.

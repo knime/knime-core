@@ -20,25 +20,21 @@ package org.knime.base.node.viz.plotter.line;
 
 import java.awt.Color;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.JCheckBox;
 import javax.swing.JSpinner;
 
-import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
+import org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties;
 import org.knime.base.node.viz.plotter.props.ColorLegendTab;
-import org.knime.base.node.viz.plotter.props.ColumnFilterTab;
 import org.knime.base.node.viz.plotter.props.InterpolationTab;
 import org.knime.base.node.viz.plotter.props.LinePlotterAppearanceTab;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class LinePlotterProperties extends AbstractPlotterProperties {
+public class LinePlotterProperties extends MultiColumnPlotterProperties {
 
     private final ColorLegendTab m_colorLegend;
     
@@ -46,7 +42,7 @@ public class LinePlotterProperties extends AbstractPlotterProperties {
     
     private final LinePlotterAppearanceTab m_appearance;
     
-    private final ColumnFilterTab m_columnFilter;
+//    private final ColumnFilterTab m_columnFilter;
     
 
     
@@ -55,9 +51,7 @@ public class LinePlotterProperties extends AbstractPlotterProperties {
      *
      */
     public LinePlotterProperties() {
-        super();
-        m_columnFilter = new ColumnFilterTab(new Class[]{DoubleValue.class});
-        addTab(m_columnFilter.getDefaultName(), m_columnFilter);
+        super(new Class[]{DoubleValue.class});
         m_colorLegend = new ColorLegendTab();
         addTab(m_colorLegend.getDefaultName(), m_colorLegend);
         m_missingValues = new InterpolationTab();
@@ -66,12 +60,13 @@ public class LinePlotterProperties extends AbstractPlotterProperties {
         addTab(m_appearance.getDefaultName(), m_appearance);
     }
     
+ /*
     /**
      * Updates the column filtering with a new 
      * {@link org.knime.core.data.DataColumnSpec}.
      * @param spec the data table spec.
      * @param selected the former selected columns.
-     */
+     *
     public void updateColumnSelection(final DataTableSpec spec, 
             final Set<String> selected) {
         m_columnFilter.updateColumnSelection(spec, selected);
@@ -80,10 +75,11 @@ public class LinePlotterProperties extends AbstractPlotterProperties {
     /**
      * 
      * @return the column filter.
-     */
+     *
     public ColumnFilterPanel getColumnFilter() {
         return m_columnFilter.getColumnFilter();
     }
+    */
     
     /**
      * 

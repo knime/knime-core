@@ -61,7 +61,7 @@ public class DefaultVisualizationNodeView extends NodeView {
         m_plotters.add(plotter);
         plotter.setDataProvider((DataProvider)model);
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
-        plotter.updatePaintModel();
+//        plotter.updatePaintModel();
         getJMenuBar().add(plotter.getHiLiteMenu());
         setComponent(plotter);
     }
@@ -151,11 +151,11 @@ public class DefaultVisualizationNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        if (m_plotters != null) {
-            for (AbstractPlotter plotter : m_plotters) {
-                plotter.fitToScreen();
-            }
-        }
+//        if (m_plotters != null) {
+//            for (AbstractPlotter plotter : m_plotters) {
+//                plotter.fitToScreen();
+//            }
+//        }
     }
 
 }

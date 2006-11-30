@@ -467,7 +467,6 @@ public abstract class BasicPlotter extends AbstractPlotter {
                     element.setPoints(newPoints);
                 }
             }
-            getDrawingPane().repaint();
         }
     }    
     

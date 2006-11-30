@@ -84,6 +84,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     /** Constant for a missing value. */
     public static final int MISSING = -1;
     
+    private static final int DEFAULT_NR_COLS = 5;
+    
     
     /**
      * Default constructor.
@@ -454,14 +456,14 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             Set<DataCell>columns = new LinkedHashSet<DataCell>();
             m_axes = new LinkedList<ParallelAxis>();
             if (m_columnNames == null) {
-                updateColumnNames(array);
+                initColumnNames(array);
             }
             // create the x axis
             for (String columnName : m_columnNames) {
                 DataColumnSpec colSpec = array.getDataTableSpec().getColumnSpec(
                         columnName);
                 if (colSpec == null) {
-                    updateColumnNames(array);
+                    initColumnNames(array);
                     updatePaintModel();
                     break;
                 }
@@ -489,10 +491,17 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         getDrawingPane().repaint();
     }
     
-    private void updateColumnNames(final DataArray array) {
+    private void initColumnNames(final DataArray array) {
         m_columnNames = new ArrayList<String>();
+        int colNr = 0;
         for (DataColumnSpec colSpec : array.getDataTableSpec()) {
             m_columnNames.add(colSpec.getName());
+            if (colNr == DEFAULT_NR_COLS - 1) {
+                getProperties().setSelectedIndex(MultiColumnPlotterProperties
+                        .COLUMN_FILTER_IDX);
+                break;
+            }
+            colNr++;
         } 
     }
 

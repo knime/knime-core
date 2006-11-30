@@ -34,6 +34,9 @@ public class MultiColumnPlotterProperties extends AbstractPlotterProperties {
     
     private final ColumnFilterPanel m_columnSelection;
     
+    /** The index for the column filter tab. */
+    public static final int COLUMN_FILTER_IDX = 1;
+    
     public MultiColumnPlotterProperties() {
         this(DataValue.class);
     }

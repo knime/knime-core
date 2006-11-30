@@ -37,6 +37,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
+import org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties;
 import org.knime.base.node.viz.plotter.props.ColorLegendTab;
 import org.knime.base.node.viz.plotter.scatter.DotInfo;
 import org.knime.base.node.viz.plotter.scatter.DotInfoArray;
@@ -62,6 +63,8 @@ public class LinePlotter extends ScatterPlotter {
     
     /** Initial dot size. */
     public static final int SIZE = 4;
+
+    private static final int DEFAULT_NR_COLS = 5;
     
     private Map<String, Color>m_colorMapping;
     
@@ -214,20 +217,22 @@ public class LinePlotter extends ScatterPlotter {
                 && getDataProvider().getDataArray(0) != null) {
             // draw the points and add the lines
             DataArray array = getDataProvider().getDataArray(0);
-            // TODO: if the column names dont fit the arrays data table spec
-            // refill the column names
             if (m_columnNames == null) {
-                updateColumnNames(array);
+                initColumnNames(array);
             }
             // create the color mapping if necessary
             if (m_colorMapping == null) {
                 m_colorMapping = new LinkedHashMap<String, Color>();
                 float segment = 360f / (float)m_columns2Draw.size();
                 int colNr = 0;
-                for (String col : m_columnNames) {
-                    float h = (colNr * segment) / 360f;
-                   m_colorMapping.put(col, Color.getHSBColor(h, 1, 1));
-                   colNr++;
+                for (DataColumnSpec colSpec : getDataProvider().getDataArray(0)
+                        .getDataTableSpec()) {
+                    if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                        float h = (colNr * segment) / 360f;
+                        m_colorMapping.put(colSpec.getName(), 
+                                Color.getHSBColor(h, 1, 1));
+                        colNr++;
+                    }
                 }
             }
             calculateCoordinates(array);
@@ -243,13 +248,18 @@ public class LinePlotter extends ScatterPlotter {
         }
     }
     
-    private void updateColumnNames(final DataArray array) {
+    private void initColumnNames(final DataArray array) {
         m_columnNames = new LinkedHashSet<String>();
         int colIdx = 0;
         for (DataColumnSpec colSpec : array.getDataTableSpec()) {
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
                 m_columnNames.add(colSpec.getName());
                 m_columns2Draw.add(colIdx++);
+                if (colIdx >= DEFAULT_NR_COLS) {
+                    getProperties().setSelectedIndex(
+                            MultiColumnPlotterProperties.COLUMN_FILTER_IDX);
+                    break;
+                }
             }
         } 
     }
@@ -355,7 +365,7 @@ public class LinePlotter extends ScatterPlotter {
             for (String column : m_columnNames) {
                 int colIdx = array.getDataTableSpec().findColumnIndex(column);
                 if (colIdx == -1) {
-                    updateColumnNames(array);
+                    initColumnNames(array);
                     calculateCoordinates(array);
                     break;
                 }
