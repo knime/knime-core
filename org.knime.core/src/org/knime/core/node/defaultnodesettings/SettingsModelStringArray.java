@@ -23,6 +23,9 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -93,12 +96,7 @@ public class SettingsModelStringArray extends SettingsModel {
             setStringArrayValue(settings.getStringArray(m_configName, m_value));
         } catch (IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
-        } finally {
-            // always notify the listeners. That is, because there could be an
-            // invalid value displayed in the listener.
-            notifyChangeListeners();
-        }
-
+        } 
     }
 
     /**
@@ -117,11 +115,33 @@ public class SettingsModelStringArray extends SettingsModel {
      * @param newValue the new value to store.
      */
     public void setStringArrayValue(final String[] newValue) {
+        boolean same;
+        if (newValue == null) {
+            same = (m_value == null);
+        } else {
+            if ((m_value == null) || (m_value.length != newValue.length)) {
+                same = false;
+            } else {
+                List<String> current = Arrays.asList(m_value);
+                same = true;
+                for (String s : newValue) {
+                    if (!current.contains(s)) {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+        }
+        
         if (newValue == null) {
             m_value = null;
         } else {
             m_value = new String[m_value.length];
             System.arraycopy(newValue, 0, m_value, 0, newValue.length);
+        }
+        
+        if (!same) {
+            notifyChangeListeners();
         }
     }
 

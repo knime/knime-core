@@ -43,8 +43,8 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * Provide a standard component for a dialog that allows to edit number value.
  * Provides label and spinner that checks ranges as well as functionality to
- * load/store into config object. The type of the number entered is determined 
- * by the {@link SettingsModel} passed to the constructor (currently supported 
+ * load/store into config object. The type of the number entered is determined
+ * by the {@link SettingsModel} passed to the constructor (currently supported
  * are double and int).
  * 
  * @author M. Berthold, University of Konstanz
@@ -101,27 +101,23 @@ public class DialogComponentNumber extends DialogComponent {
         editor.getTextField().setColumns(6);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
 
+        m_spinner.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // ignore it here.
+                }
+            }
+        });
+
         // We are not updating the model immediately when the user changes
         // the value. We update the model right before save.
 
         // update the spinner, whenever the model changed
-        getModel().addChangeListener(new ChangeListener() {
+        getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                SettingsModelNumber model = (SettingsModelNumber)getModel();
-                if (model instanceof SettingsModelDouble) {
-                    m_spinner.setValue(new Double(((SettingsModelDouble)model)
-                            .getDoubleValue()));
-                } else {
-                    m_spinner.setValue(new Integer(
-                            ((SettingsModelInteger)model).getIntValue()));
-                }
-                // show the new value in the component
-                JComponent ed = m_spinner.getEditor();
-                if (ed instanceof DefaultEditor) {
-                    ((DefaultEditor)ed).getTextField().setValue(
-                            m_spinner.getValue());
-                }
-
+                updateComponent();
             }
         });
 
@@ -129,10 +125,51 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    void updateComponent() {
+        // update the component only if it contains a different value than the
+        // model
+        try {
+            m_spinner.commitEdit();
+            if (getModel() instanceof SettingsModelDouble) {
+                SettingsModelDouble model = (SettingsModelDouble)getModel();
+                double val = ((Double)m_spinner.getValue()).doubleValue();
+                if (val != model.getDoubleValue()) {
+                    m_spinner.setValue(new Double(model.getDoubleValue()));
+                }
+            } else {
+                SettingsModelInteger model = (SettingsModelInteger)getModel();
+                int val = ((Integer)m_spinner.getValue()).intValue();
+                if (val != model.getIntValue()) {
+                    m_spinner.setValue(new Integer(model.getIntValue()));
+                }
+            }
+        } catch (ParseException e) {
+            // spinner contains invalid value - update component!
+            if (getModel() instanceof SettingsModelDouble) {
+                SettingsModelDouble model = (SettingsModelDouble)getModel();
+                m_spinner.setValue(new Double(model.getDoubleValue()));
+            } else {
+                SettingsModelInteger model = (SettingsModelInteger)getModel();
+                m_spinner.setValue(new Integer(model.getIntValue()));
+            }
+        }
+    }
+
+    /**
+     * Transfers the value from the spinner into the model. Colors the spinner
+     * red, if the number is not accepted by the settingsmodel. And throws an
+     * exception then.
+     * 
+     * @throws InvalidSettingsException if the number was not accepted by the
+     *             model (reason could be an out of range, or just an invalid
+     *             input).
+     * 
+     */
+    private void updateModel() throws InvalidSettingsException {
         try {
             m_spinner.commitEdit();
             if (getModel() instanceof SettingsModelDouble) {
@@ -157,6 +194,14 @@ public class DialogComponentNumber extends DialogComponent {
             }
             throw new InvalidSettingsException(errMsg);
         }
+    }
+
+    /**
+     * @see DialogComponent#validateStettingsBeforeSave()
+     */
+    @Override
+    void validateStettingsBeforeSave() throws InvalidSettingsException {
+        updateModel();
     }
 
     /**

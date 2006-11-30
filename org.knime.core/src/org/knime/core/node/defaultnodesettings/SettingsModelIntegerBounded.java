@@ -23,6 +23,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * A settingsmodel for integer default components accepting double between a min
@@ -88,6 +89,21 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
      */
     public int getUpperBound() {
         return m_maxValue;
+    }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.SettingsModelInteger
+     *      #validateValue(int)
+     */
+    @Override
+    protected void validateValue(final int value)
+            throws InvalidSettingsException {
+        super.validateValue(value);
+        try {
+            checkBounds(value);
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException(iae.getMessage());
+        }
     }
 
     /**

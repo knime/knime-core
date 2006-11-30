@@ -23,6 +23,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * A settingsmodel for double default components accepting double between a min
@@ -89,6 +90,21 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
      */
     public double getUpperBound() {
         return m_maxValue;
+    }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.SettingsModelDouble
+     *      #validateValue(double)
+     */
+    @Override
+    protected void validateValue(final double value)
+            throws InvalidSettingsException {
+        super.validateValue(value);
+        try {
+            checkBounds(value);
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException(iae.getMessage());
+        }
     }
 
     /**

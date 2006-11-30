@@ -63,7 +63,7 @@ public class SettingsModelInteger extends SettingsModelNumber {
     SettingsModelInteger createClone() {
         return new SettingsModelInteger(m_configName, m_value);
     }
-    
+
     /**
      * @see SettingsModel#getModelTypeID()
      */
@@ -86,7 +86,13 @@ public class SettingsModelInteger extends SettingsModelNumber {
      * @param newValue the new value to store.
      */
     public void setIntValue(final int newValue) {
+        boolean notify = (m_value != newValue);
+
         m_value = newValue;
+
+        if (notify) {
+            notifyChangeListeners();
+        }
     }
 
     /**
@@ -160,17 +166,22 @@ public class SettingsModelInteger extends SettingsModelNumber {
     void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
-        int oldVal = m_value;
+        // no default value, throw an exception instead
+        validateValue(settings.getInt(m_configName));
+    }
 
-        try {
-            // no default value, throw an exception instead
-            setIntValue(settings.getInt(m_configName));
-        } catch (IllegalArgumentException iae) {
-            throw new InvalidSettingsException(iae.getMessage());
-        } finally {
-
-            m_value = oldVal;
-
+    /**
+     * Called during {@link #validateSettingsForModel}, can be overriden by
+     * derived classes.
+     * 
+     * @param value the value to validate
+     * @throws InvalidSettingsException if the value is not valid and should be
+     *             rejected
+     */
+    protected void validateValue(final int value)
+            throws InvalidSettingsException {
+        if (value != value) {
+            throw new InvalidSettingsException("Value is not equal to itself");
         }
     }
 

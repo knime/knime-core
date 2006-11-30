@@ -82,12 +82,19 @@ public class SettingsModelBoolean extends SettingsModel {
     }
 
     /**
-     * set the value stored to the new value.
+     * set the value stored to the new value. Notifies all registered listeners
+     * if the new value is different from the old value.
      * 
      * @param newValue the new value to store.
      */
     public void setBooleanValue(final boolean newValue) {
+        boolean changed = (newValue != m_value);
+        
         m_value = newValue;
+        
+        if (changed) {
+            notifyChangeListeners();
+        }
     }
 
     /**
@@ -106,9 +113,7 @@ public class SettingsModelBoolean extends SettingsModel {
     void loadSettingsForDialog(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         // use the current value, if no value is stored in the settings
-        m_value = settings.getBoolean(m_configName, m_value);
-        // let the associated component know that the value changed.
-        notifyChangeListeners();
+        setBooleanValue(settings.getBoolean(m_configName, m_value));
     }
 
     /**
@@ -139,7 +144,7 @@ public class SettingsModelBoolean extends SettingsModel {
     void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // no default value, throw an exception instead
-        m_value = settings.getBoolean(m_configName);
+        setBooleanValue(settings.getBoolean(m_configName));
     }
 
     /**

@@ -132,7 +132,17 @@ public abstract class DialogComponent extends JPanel {
 
         checkConfigurabilityBeforeLoad(specs);
         m_model.dlgLoadSettingsFrom(settings, specs);
+        // make sure the component displays the new value (listeners are not
+        // notified if the model's value didn't change (is not different)).
+        updateComponent();
     }
+
+    /**
+     * Read the value from the {@link SettingsModel} and set/display it in the
+     * component. (Called after loading new values in the model to ensure they
+     * are transfered into the component.)
+     */
+    abstract void updateComponent();
 
     /**
      * Write value(s) of this dialog component to the configuration object. This

@@ -32,6 +32,8 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -57,8 +59,8 @@ public class DialogComponentNumberEdit extends DialogComponent {
      * @param numberModel the model handling the value
      * @param label text to be displayed in front of the edit box
      */
-    public DialogComponentNumberEdit(
-            final SettingsModelNumber numberModel, final String label) {
+    public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
+            final String label) {
         super(numberModel);
 
         this.add(new JLabel(label));
@@ -67,25 +69,62 @@ public class DialogComponentNumberEdit extends DialogComponent {
         m_valueField.setColumns(6);
         this.add(m_valueField);
 
-        // We are not updating the model immediately when the user changes
-        // the value. We update the model right before save only.
+        m_valueField.getDocument().addDocumentListener(new DocumentListener() {
+            public void removeUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // ignore it here.
+                }
+            }
+
+            public void insertUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // ignore it here.
+                }
+            }
+
+            public void changedUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // ignore it here.
+                }
+            }
+        });
 
         // update the editField, whenever the model changed
-        getModel().addChangeListener(new ChangeListener() {
+        getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                SettingsModelNumber model = (SettingsModelNumber)getModel();
-                m_valueField.setText(model.getNumberValueStr());
+                updateComponent();
             }
         });
 
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    void updateComponent() {
+        // update component only if its out of sync with model
+        SettingsModelNumber model = (SettingsModelNumber)getModel();
+        String compString = m_valueField.getText();
+        if (!model.getNumberValueStr().equals(compString)) {
+            m_valueField.setText(model.getNumberValueStr());
+        }
+    }
 
+    /**
+     * Transfers the new value from the component into the model. Colors the
+     * textfield red if the entered value is invalid and throws an exception.
+     * 
+     * @throws InvalidSettingsException if the entered value is not acceptable.
+     */
+    private void updateModel() throws InvalidSettingsException {
         try {
             // update the model
             ((SettingsModelNumber)getModel()).setNumberValueStr(m_valueField
@@ -102,7 +141,15 @@ public class DialogComponentNumberEdit extends DialogComponent {
             showError(m_valueField);
             throw new InvalidSettingsException("Please enter a value.");
         }
+    }
 
+    /**
+     * @see DialogComponent#validateStettingsBeforeSave()
+     */
+    @Override
+    void validateStettingsBeforeSave() throws InvalidSettingsException {
+        // make sure the component contains a valid value
+        updateModel();
     }
 
     /**

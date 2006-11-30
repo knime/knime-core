@@ -29,9 +29,10 @@ import java.awt.Dimension;
 
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -48,7 +49,7 @@ public final class DialogComponentString extends DialogComponent {
     private final JTextField m_valueField;
 
     private final boolean m_disallowEmtpy;
-    
+
     /**
      * Constructor put label and JTextField into panel. It will accept empty
      * strings as legal input.
@@ -79,19 +80,36 @@ public final class DialogComponentString extends DialogComponent {
         m_valueField = new JTextField();
         m_valueField.setColumns(30);
 
-        // we are not updating the settings model when the field content
-        // changes, we set the model value right before save.
+        m_valueField.getDocument().addDocumentListener(new DocumentListener() {
+            public void removeUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // Ignore it here.
+                }
+            }
+
+            public void insertUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // Ignore it here.
+                }
+            }
+
+            public void changedUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // Ignore it here.
+                }
+            }
+        });
 
         // update the text field, whenever the model changes
-        getModel().addChangeListener(new ChangeListener() {
+        getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                final String str =
-                        ((SettingsModelString)getModel()).getStringValue();
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        m_valueField.setText(str);
-                    }
-                });
+                updateComponent();
             }
         });
 
@@ -99,10 +117,24 @@ public final class DialogComponentString extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    void updateComponent() {
+        // update copmonent only if values are out of sync
+        final String str = ((SettingsModelString)getModel()).getStringValue();
+        if (!m_valueField.getText().equals(str)) {
+            m_valueField.setText(str);
+        }
+    }
+
+    /**
+     * Transfers the current value from the component into the model.
+     * 
+     * @throws InvalidSettingsException if the string was not accepted.
+     */
+    private void updateModel() throws InvalidSettingsException {
         if (m_disallowEmtpy
                 && ((m_valueField.getText() == null) || (m_valueField.getText()
                         .length() == 0))) {
@@ -113,6 +145,14 @@ public final class DialogComponentString extends DialogComponent {
         // we transfer the value from the field into the model
         ((SettingsModelString)getModel())
                 .setStringValue(m_valueField.getText());
+    }
+
+    /**
+     * @see DialogComponent#validateStettingsBeforeSave()
+     */
+    @Override
+    void validateStettingsBeforeSave() throws InvalidSettingsException {
+        updateModel();
     }
 
     /**

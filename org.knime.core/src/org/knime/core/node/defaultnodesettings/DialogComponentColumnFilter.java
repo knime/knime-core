@@ -27,6 +27,7 @@ package org.knime.core.node.defaultnodesettings;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.event.ChangeEvent;
@@ -49,9 +50,6 @@ public class DialogComponentColumnFilter extends DialogComponent {
 
     /* the index of the port to take the table (spec) from. */
     private final int m_inPortIndex;
-
-    /* the last table spec coming in through a load. Could be null. */
-    private DataTableSpec m_lastSpec;
 
     private ColumnFilterPanel m_columnFilter;
 
@@ -88,34 +86,64 @@ public class DialogComponentColumnFilter extends DialogComponent {
             final Class<? extends DataValue>... allowedTypes) {
         super(model);
 
-        m_lastSpec = null;
         m_inPortIndex = inPortIndex;
 
         m_columnFilter = new ColumnFilterPanel(allowedTypes);
         super.add(m_columnFilter);
 
-        // we are not updating the settingsmodel when the user changes the
-        // lists. We save the values right before save, in the validateSettings
-
-        // update the components, when the value in the model changes
-        getModel().addChangeListener(new ChangeListener() {
+        // when the user input changes we need to update the model.
+        m_columnFilter.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                SettingsModelFilterString filterModel =
-                        (SettingsModelFilterString)getModel();
-                m_columnFilter.update(m_lastSpec, true, filterModel
-                        .getExcludeList());
+                updateModel();
+            }
+        });
+        // update the components, when the value in the model changes
+        getModel().prependChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                updateComponent();
             }
         });
 
     }
 
     /**
-     * We store the values from the panel in the model now.
-     * 
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    void updateComponent() {
+        // update component only if content is out of sync
+        boolean update = false;
+        SettingsModelFilterString filterModel =
+                (SettingsModelFilterString)getModel();
+        Set<String> compIncl = m_columnFilter.getIncludedColumnSet();
+        Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
+        List<String> modelIncl = filterModel.getIncludeList();
+        List<String> modelExcl = filterModel.getExcludeList();
+        for (String s : compIncl) {
+            if (!modelIncl.contains(s)) {
+                update = true;
+                break;
+            }
+        }
+        if (!update) {
+            for (String s : compExcl) {
+                if (!modelExcl.contains(s)) {
+                    update = true;
+                    break;
+                }
+            }
+        }
+        if (update) {
+            m_columnFilter.update(getLastTableSpec(m_inPortIndex), true,
+                    filterModel.getExcludeList());
+        }
+    }
+
+    /**
+     * transfers the settings from the component into the settings model.
+     */
+    private void updateModel() {
         Set<String> inclList = m_columnFilter.getIncludedColumnSet();
         Set<String> exclList = m_columnFilter.getExcludedColumnSet();
 
@@ -126,17 +154,25 @@ public class DialogComponentColumnFilter extends DialogComponent {
     }
 
     /**
+     * We store the values from the panel in the model now.
+     * 
+     * @see DialogComponent#validateStettingsBeforeSave()
+     */
+    @Override
+    void validateStettingsBeforeSave() throws InvalidSettingsException {
+        // just in case we didn't get notified about the last change...
+        updateModel();
+    }
+
+    /**
      * @see DialogComponent
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
     void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
-        // we save the last incoming spec (for the update method)
-        if ((specs == null) || (specs.length < m_inPortIndex)) {
-            m_lastSpec = null;
-        }
-        m_lastSpec = specs[m_inPortIndex];
+        // currently we open the dialog even with spec - causing the panel
+        // to be empty.
     }
 
     /**

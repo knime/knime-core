@@ -160,11 +160,7 @@ public class SettingsModelFilterString extends SettingsModel {
             // if the argument is not accepted: keep the old value.
         } catch (InvalidSettingsException ise) {
             // no settings - keep the old value.
-        } finally {
-            // always notify the listeners. That is, because there could be an
-            // invalid value displayed in the listener.
-            notifyChangeListeners();
-        }
+        } 
 
     }
 
@@ -193,10 +189,30 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param newValue the new value to store as include list.
      */
     public void setIncludeList(final Collection<String> newValue) {
+        // figure out if we need to notify listeners
+        boolean notify = (newValue.size() != m_inclList.size());
+        if (!notify) {
+            // if the size is the same we need to compare each list item (the
+            // order of the lists doesn't matter)!
+            for (String s : m_inclList) {
+                if (!newValue.contains(s)) {
+                    notify = true;
+                    break;
+                }
+            }
+        }
+
+        // now take over the new list
         m_inclList.clear();
         if (newValue != null) {
             m_inclList.addAll(newValue);
         }
+        
+        // if we got a different list we need to let all listeners know.
+        if (notify) {
+            notifyChangeListeners();
+        }
+        
     }
 
     /**
@@ -221,9 +237,28 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param newValue the new value to store as exclude list.
      */
     public void setExcludeList(final Collection<String> newValue) {
+        // figure out if we need to notify listeners
+        boolean notify = (newValue.size() != m_exclList.size());
+        if (!notify) {
+            // if the size is the same we need to compare each list item (the
+            // order of the lists doesn't matter)!
+            for (String s : m_exclList) {
+                if (!newValue.contains(s)) {
+                    notify = true;
+                    break;
+                }
+            }
+        }
+        
+        // now take over the new list
         m_exclList.clear();
         if (newValue != null) {
             m_exclList.addAll(newValue);
+        }
+        
+        // if we got a different list we need to let all listeners know.
+        if (notify) {
+            notifyChangeListeners();
         }
     }
 

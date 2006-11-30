@@ -36,7 +36,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -86,7 +85,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
         this.add(new JLabel(label));
         m_pwField = new JPasswordField();
         m_pwField.setColumns(30);
-        
+
         m_pwField.addFocusListener(new FocusListener() {
             public void focusLost(final FocusEvent e) {
                 // not doing anything
@@ -103,35 +102,42 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
         });
 
-        // we are not updating the settings model when the field content
-        // changes, we set the model value right before save.
-
+        // password fields will not notify model listeners when the password
+        // gets changed.
+        
         // update the pw field, whenever the model changes
-        getModel().addChangeListener(new ChangeListener() {
+        getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                final String str = ((SettingsModelString)getModel())
-                        .getStringValue();
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        m_pwField.setText(str);
-                        m_containsDefaultValue = true;
-                    }
-                });
+                updateComponent();
             }
         });
+
         this.add(m_pwField);
         m_containsDefaultValue = true;
 
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
-        // we transfer the value from the field into the model
+    void updateComponent() {
+        final String str = ((SettingsModelString)getModel()).getStringValue();
+        m_pwField.setText(str);
+        m_containsDefaultValue = true;
+    }
+
+    /**
+     * Transfers the value from the component into the settingsmodel.
+     * 
+     * @throws InvalidSettingsException if there was a problem encrypting the
+     *             password
+     */
+    private void updateModel() throws InvalidSettingsException {
+        // we transfer the value from the field into the model...
         if (!m_containsDefaultValue) {
-            // only if user changed it
+            // ...only if user changed it
             char[] pw = m_pwField.getPassword();
             try {
                 ((SettingsModelString)getModel()).setStringValue(encrypt(pw));
@@ -143,7 +149,14 @@ public final class DialogComponentPasswordField extends DialogComponent {
                 Arrays.fill(pw, '\0');
             }
         }
+    }
 
+    /**
+     * @see DialogComponent#validateStettingsBeforeSave()
+     */
+    @Override
+    void validateStettingsBeforeSave() throws InvalidSettingsException {
+        updateModel();
     }
 
     /**

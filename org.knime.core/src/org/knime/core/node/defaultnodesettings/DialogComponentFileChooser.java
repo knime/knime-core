@@ -30,8 +30,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -40,6 +38,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -47,8 +47,6 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
-
-
 
 /**
  * A standard component allowing to choose a location (directory) and file name.
@@ -58,11 +56,11 @@ import org.knime.core.util.SimpleFileFilter;
 public class DialogComponentFileChooser extends DialogComponent {
 
     private final JComboBox m_fileComboBox;
-    
+
     private StringHistory m_fileHistory;
 
     private final JButton m_browseButton;
-    
+
     /**
      * Constructor that creates a file chooser with an
      * {@link JFileChooser#OPEN_DIALOG} that filters files according to the
@@ -72,41 +70,42 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @param historyID to identify the file history
      * @param validExtensions only show files with those extensions
      */
-    public DialogComponentFileChooser(final SettingsModelString stringModel, 
-            final String historyID, 
-            final String... validExtensions) {
-       this(stringModel, historyID, JFileChooser.OPEN_DIALOG, validExtensions); 
+    public DialogComponentFileChooser(final SettingsModelString stringModel,
+            final String historyID, final String... validExtensions) {
+        this(stringModel, historyID, JFileChooser.OPEN_DIALOG, validExtensions);
     }
-    
+
     /**
      * Constructor that creates a file chooser of the given type without a file
      * filter.
      * 
      * @param stringModel the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
-     *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
-     *  @param historyID to identify the file history
+     *            {@link JFileChooser#SAVE_DIALOG} or
+     *            {@link JFileChooser#CUSTOM_DIALOG}
+     * @param historyID to identify the file history
      * @param directoryOnly <code>true</code> if only directories should be
-     * selectable, otherwise only files can be selected
+     *            selectable, otherwise only files can be selected
      */
-    public DialogComponentFileChooser(final SettingsModelString stringModel, 
-            final String historyID,
-            final int dialogType, final boolean directoryOnly) {
+    public DialogComponentFileChooser(final SettingsModelString stringModel,
+            final String historyID, final int dialogType,
+            final boolean directoryOnly) {
         this(stringModel, historyID, dialogType, directoryOnly, new String[0]);
     }
-    
+
     /**
      * Constructor that creates a file chooser of the given type that filters
      * the files according to the given extensions.
      * 
      * @param stringModel the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
-     *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
+     *            {@link JFileChooser#SAVE_DIALOG} or
+     *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param validExtensions only show files with those extensions
      * @param historyID id for the file history
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
-            final String historyID, final int dialogType, 
+            final String historyID, final int dialogType,
             final String... validExtensions) {
         this(stringModel, historyID, dialogType, false, validExtensions);
     }
@@ -117,27 +116,26 @@ public class DialogComponentFileChooser extends DialogComponent {
      * 
      * @param stringModel the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
-     *  {@link JFileChooser#SAVE_DIALOG} or {@link JFileChooser#CUSTOM_DIALOG}
+     *            {@link JFileChooser#SAVE_DIALOG} or
+     *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param directoryOnly <code>true</code> if only directories should be
-     *  selectable, otherwise only files can be selected
+     *            selectable, otherwise only files can be selected
      * @param validExtensions only show files with those extensions
      * @param historyID to identify the file histroy
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
-            final String historyID,
-            final int dialogType,
-            final boolean directoryOnly,
-            final String... validExtensions) {
+            final String historyID, final int dialogType,
+            final boolean directoryOnly, final String... validExtensions) {
         super(stringModel);
-        
+
         setLayout(new FlowLayout());
 
         JPanel p = new JPanel();
-        
+
         m_fileHistory = StringHistory.getInstance(historyID);
         m_fileComboBox = new JComboBox();
-        m_fileComboBox.setPreferredSize(new Dimension(300, 
-                m_fileComboBox.getPreferredSize().height));
+        m_fileComboBox.setPreferredSize(new Dimension(300, m_fileComboBox
+                .getPreferredSize().height));
         m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
         for (String fileName : m_fileHistory.getHistory()) {
             m_fileComboBox.addItem(fileName);
@@ -146,7 +144,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         Border b = BorderFactory.createTitledBorder(" Selected File ");
         p.setBorder(b);
         p.add(m_fileComboBox);
-        
+
         m_browseButton = new JButton("Browse...");
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
@@ -167,16 +165,16 @@ public class DialogComponentFileChooser extends DialogComponent {
                     }
                     // set file filter for given extensions
                     for (String extension : validExtensions) {
-                        chooser.setFileFilter(
-                                new SimpleFileFilter(extension));
+                        chooser.setFileFilter(new SimpleFileFilter(extension));
                     }
                 }
                 int returnVal = chooser.showDialog(getParent(), null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String newFile;
                     try {
-                        newFile = chooser.getSelectedFile().getAbsoluteFile()
-                                .toString();
+                        newFile =
+                                chooser.getSelectedFile().getAbsoluteFile()
+                                        .toString();
                         // if ile selection and only on extension available
                         if (!directoryOnly && validExtensions.length == 1) {
                             // and the file names has no this extension
@@ -188,14 +186,29 @@ public class DialogComponentFileChooser extends DialogComponent {
                     } catch (SecurityException se) {
                         newFile = "<Error: " + se.getMessage() + ">";
                     }
-                    List<String> files = Arrays.asList(
-                            m_fileHistory.getHistory());
-                    if (!files.contains(newFile)) {
-                        m_fileComboBox.addItem(newFile);
-                    }
+                    // avoid adding the same string twice...
+                    m_fileComboBox.removeItem(newFile);
+                    m_fileComboBox.addItem(newFile);
                     m_fileComboBox.setSelectedItem(newFile);
                     revalidate();
                 }
+            }
+        });
+
+        m_fileComboBox.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                // transfer the new filename into the settings model
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException ise) {
+                    // ignore it here.
+                }
+            }
+        });
+
+        getModel().prependChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                updateComponent();
             }
         });
 
@@ -204,29 +217,30 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * Transfers the value from the component into the settings model.
+     * 
+     * @throws InvalidSettingsException if the entered filename is null or
+     *             emtpy.
      */
-    @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    private void updateModel() throws InvalidSettingsException {
         // we set the selected value in the settings model. And store it in
         // the file history.
 
         String file = (String)m_fileComboBox.getSelectedItem();
         if ((file != null) && (file.length() > 0)) {
-            
+
             try {
                 ((SettingsModelString)getModel()).setStringValue(file);
             } catch (RuntimeException e) {
                 // if value was not accepted by setter method
-                Component comp = 
-                    m_fileComboBox.getEditor().getEditorComponent();
+                Component comp =
+                        m_fileComboBox.getEditor().getEditorComponent();
                 if (comp instanceof JTextField) {
                     showError((JTextField)comp);
-                }                
+                }
                 throw new InvalidSettingsException(e);
             }
-            m_fileHistory.add(file);
-        
+
         } else {
             Component comp = m_fileComboBox.getEditor().getEditorComponent();
             if (comp instanceof JTextField) {
@@ -234,9 +248,42 @@ public class DialogComponentFileChooser extends DialogComponent {
             }
             throw new InvalidSettingsException("Please specify a filename.");
         }
-        
     }
-    
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
+     */
+    @Override
+    void updateComponent() {
+        // update the component only if model and component are out of sync
+        SettingsModelString model = (SettingsModelString)getModel();
+        String newValue = model.getStringValue();
+        boolean update;
+        if (newValue == null) {
+            update = (m_fileComboBox.getSelectedItem() != null);
+        } else {
+            update = !newValue.equals(m_fileComboBox.getSelectedItem());
+        }
+        if (update) {
+            // to avoid multiply added items...
+            m_fileComboBox.removeItem(newValue);
+            m_fileComboBox.addItem(newValue);
+            m_fileComboBox.setSelectedItem(newValue);
+        }
+    }
+
+    /**
+     * @see DialogComponent#validateStettingsBeforeSave()
+     */
+    @Override
+    void validateStettingsBeforeSave() throws InvalidSettingsException {
+        // just in case we didn't get notified about the last change...
+        updateModel();
+        // store the saved filename in the history
+        m_fileHistory.add(((SettingsModelString)getModel()).getStringValue());
+    }
+
     /**
      * @see DialogComponent
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
@@ -255,5 +302,5 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_browseButton.setEnabled(enabled);
         m_fileComboBox.setEnabled(enabled);
     }
-    
+
 }

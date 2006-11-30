@@ -88,7 +88,13 @@ public class SettingsModelDouble extends SettingsModelNumber {
      * @param newValue the new value to store.
      */
     public void setDoubleValue(final double newValue) {
+        boolean notify = (newValue != m_value);
+
         m_value = newValue;
+
+        if (notify) {
+            notifyChangeListeners();
+        }
     }
 
     /**
@@ -136,10 +142,6 @@ public class SettingsModelDouble extends SettingsModelNumber {
             setDoubleValue(settings.getDouble(m_configName, m_value));
         } catch (IllegalArgumentException e) {
             // if the value is not accepted, keep the old value.
-        } finally {
-            // always notify the listeners. That is, because there could be an
-            // invalid value displayed in the listener.
-            notifyChangeListeners();
         }
     }
 
@@ -161,17 +163,21 @@ public class SettingsModelDouble extends SettingsModelNumber {
     void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
-        double oldVal = m_value;
+        validateValue(settings.getDouble(m_configName));
+    }
 
-        try {
-            // no default value, throw an exception instead
-            setDoubleValue(settings.getDouble(m_configName));
-
-        } catch (IllegalArgumentException iae) {
-            // value not accepted
-            throw new InvalidSettingsException(iae.getMessage());
-        } finally {
-            m_value = oldVal;
+    /**
+     * Called during {@link #validateSettingsForModel}, can be overriden by
+     * derived classes.
+     * 
+     * @param value the value to validate
+     * @throws InvalidSettingsException if the value is not valid and should be
+     *             rejected
+     */
+    protected void validateValue(final double value)
+            throws InvalidSettingsException {
+        if (value != value) {
+            throw new InvalidSettingsException("Value is not equal to itself");
         }
     }
 

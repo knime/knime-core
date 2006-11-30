@@ -29,12 +29,13 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -54,11 +55,17 @@ public final class DialogComponentStringSelection extends DialogComponent {
     private JComboBox m_combobox;
 
     /**
-     * Constructor that puts label and combobox into panel.
+     * Constructor that puts label and combobox into panel. It expects the user
+     * to make a selection, thus, at least one item in the list of selectable
+     * items is required. When the settings are applied, the model stores one of
+     * the strings of the provided list.
      * 
      * @param stringModel the model that stores the value for this component.
      * @param label label for dialog in front of combobox
-     * @param list list of items for the combobox
+     * @param list list (not empty) of strings (not null) for the combobox
+     * 
+     * @throws NullPointerException if one of the strings in the list is null
+     * @throws IllegalArgumentException if the list is empty or null.
      */
     public DialogComponentStringSelection(
             final SettingsModelString stringModel, final String label,
@@ -73,36 +80,82 @@ public final class DialogComponentStringSelection extends DialogComponent {
         this.add(new JLabel(label));
         m_combobox = new JComboBox();
 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                for (String s : list) {
-                    m_combobox.addItem(s);
+        for (String s : list) {
+            if (s == null) {
+                throw new NullPointerException("Strings in the selection"
+                        + " list can't be null");
+            }
+            m_combobox.addItem(s);
+        }
+        this.add(m_combobox);
+
+        m_combobox.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    // if a new item is selected update the model
+                    try {
+                        updateModel();
+                    } catch (InvalidSettingsException ise) {
+                        // ignore it here
+                    }
                 }
             }
         });
-        this.add(m_combobox);
-
-        // we do not change the model when the selection changes. We update
-        // the settings model right before save.
 
         // we need to update the selection, when the model changes.
-        getModel().addChangeListener(new ChangeListener() {
+        getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        String val =
-                                ((SettingsModelString)getModel())
-                                        .getStringValue();
-                        m_combobox.setSelectedItem(val);
-                    }
-                });
+                updateComponent();
             }
         });
 
     }
 
     /**
-     * Constructor that puts label and combobox into panel.
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
+     */
+    @Override
+    void updateComponent() {
+        String val = ((SettingsModelString)getModel()).getStringValue();
+        boolean update;
+        if (val == null) {
+            update = (m_combobox.getSelectedItem() == null);
+        } else {
+            update = val.equals(m_combobox.getSelectedItem());
+        }
+        if (update) {
+            m_combobox.setSelectedItem(val);
+        }
+    }
+
+    /**
+     * Transfers the current value from the component into the model.
+     */
+    private void updateModel() throws InvalidSettingsException {
+
+        if (m_combobox.getSelectedItem() == null) {
+            m_combobox.setBackground(Color.RED);
+            // put the color back to normal with the next selection.
+            m_combobox.addActionListener(new ActionListener() {
+                public void actionPerformed(final ActionEvent e) {
+                    m_combobox.setBackground(DialogComponent.DEFAULT_BG);
+                }
+            });
+            throw new InvalidSettingsException(
+                    "Please select an item from the list.");
+        }
+        // we transfer the value from the field into the model
+        ((SettingsModelString)getModel()).setStringValue((String)m_combobox
+                .getSelectedItem());
+
+    }
+
+    /**
+     * Constructor that puts label and combobox into panel. It expects the user
+     * to make a selection, thus, at least one item in the list of selectable
+     * items is required. When the settings are applied, the model stores one of
+     * the strings of the provided list.
      * 
      * @param stringModel the model that stores the value for this component.
      * @param label label for dialog in front of combobox
@@ -119,20 +172,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      */
     @Override
     void validateStettingsBeforeSave() throws InvalidSettingsException {
-        if (m_combobox.getSelectedItem() == null) {
-            m_combobox.setBackground(Color.RED);
-            // put the color back to normal with the next selection.
-            m_combobox.addActionListener(new ActionListener() {
-                public void actionPerformed(final ActionEvent e) {
-                    m_combobox.setBackground(DialogComponent.DEFAULT_BG);
-                }
-            });
-            throw new InvalidSettingsException(
-                    "Please select an item from the list.");
-        }
-        // we transfer the value from the field into the model
-        ((SettingsModelString)getModel()).setStringValue((String)m_combobox
-                .getSelectedItem());
+        updateModel();
     }
 
     /**

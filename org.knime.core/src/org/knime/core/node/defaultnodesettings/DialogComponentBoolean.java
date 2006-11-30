@@ -26,6 +26,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.JCheckBox;
@@ -39,7 +40,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  * Provides a standard component for a dialog that allows to edit a boolean
- * value. Provides a label with a checkbox as well as functionality to 
+ * value. Provides a label with a checkbox as well as functionality to
  * load/store the value into a config object.
  * 
  * @author M. Berthold, University of Konstanz
@@ -60,22 +61,37 @@ public final class DialogComponentBoolean extends DialogComponent {
         this.add(new JLabel(label));
         m_checkbox = new JCheckBox();
         m_checkbox.setSelected(booleanModel.getBooleanValue());
-        // update the model, if the user clicked the checkbox
-        m_checkbox.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
+        // update the model, if the user changes the component
+        m_checkbox.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
                 SettingsModelBoolean model = (SettingsModelBoolean)getModel();
                 model.setBooleanValue(m_checkbox.isSelected());
             }
         });
-        // update the checkbox, whenever the model changed
-        getModel().addChangeListener(new ChangeListener() {
+       
+        
+        // update the checkbox, whenever the model changes - make sure we get
+        // notified first.
+        getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                SettingsModelBoolean model = (SettingsModelBoolean)getModel();
-                m_checkbox.setSelected(model.getBooleanValue());
+                updateComponent();
             }
         });
         this.add(m_checkbox);
 
+    }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
+     */
+    @Override
+    void updateComponent() {
+        // only update component if values are off
+        SettingsModelBoolean model = (SettingsModelBoolean)getModel();
+        if (model.getBooleanValue() != m_checkbox.isSelected()) {
+            m_checkbox.setSelected(model.getBooleanValue());
+        }
     }
 
     /**
@@ -102,24 +118,6 @@ public final class DialogComponentBoolean extends DialogComponent {
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_checkbox.setEnabled(enabled);
-    }
-
-    /**
-     * Adds the listener to the underlying checkbox component.
-     * 
-     * @param l the listener to add
-     */
-    public void addItemListener(final ItemListener l) {
-        m_checkbox.addItemListener(l);
-    }
-
-    /**
-     * Removes the listener from the underlying checkbox component.
-     * 
-     * @param l the listener to remove
-     */
-    public void removeItemListener(final ItemListener l) {
-        m_checkbox.removeItemListener(l);
     }
 
     /**

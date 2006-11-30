@@ -83,9 +83,9 @@ public abstract class SettingsModel {
 
     /**
      * Creates a new settings model with identical values for everything except
-     * the stored value (also excluded is the list of listeners). The value
-     * stored in the model will be retrieved from the specified settings object.
-     * If the settings object doesn't contain a (valid) value it will throw an
+     * the stored value (also except the list of listeners). The value stored in
+     * the model will be retrieved from the specified settings object. If the
+     * settings object doesn't contain a (valid) value it will throw an
      * InvalidSettingsException.
      * 
      * @param <T> the actual type returned is determined by the implementation
@@ -101,7 +101,7 @@ public abstract class SettingsModel {
 
         T result = createClone();
         result.m_enabled = m_enabled;
-        
+
         result.readEnableStatusAndCheckModelID(settings);
 
         // call the derived implementation to actually read the values, only if
@@ -218,31 +218,45 @@ public abstract class SettingsModel {
     }
 
     /**
-     * Add a listener which is notified, when ever the dialog loads new values
-     * into the model.
+     * Adds a listener (to the end of the listener list) which is notified,
+     * whenever a new values is set in the model. Does nothing if the listener
+     * is already registered.
      * 
-     * @param l ChangeListener to add.
+     * @param l listener to add.
      */
-    void addChangeListener(final ChangeListener l) {
+    public void addChangeListener(final ChangeListener l) {
         if (!m_listeners.contains(l)) {
             m_listeners.add(l);
         }
     }
 
     /**
+     * Adds a listener (to the beginning of the listener list) which is
+     * notified, whenever a new values is set in the model. Does nothing if the
+     * listener is already registered.
+     * 
+     * @param l listener to add.
+     */
+    void prependChangeListener(final ChangeListener l) {
+        if (!m_listeners.contains(l)) {
+            m_listeners.add(0, l);
+        }
+    }
+
+    /**
      * Remove a specific listener.
      * 
-     * @param l ChangeListener
+     * @param l listener to remove.
      */
-    void removeChangeListener(final ChangeListener l) {
+    public void removeChangeListener(final ChangeListener l) {
         m_listeners.remove(l);
     }
 
     /**
      * Notifies all registered listeners about a new model content. Call this,
-     * when the model is used by a component and the model content changed.
+     * whenever the value in the model changes!
      */
-    void notifyChangeListeners() {
+    protected void notifyChangeListeners() {
         for (ChangeListener l : m_listeners) {
             l.stateChanged(new ChangeEvent(this));
         }

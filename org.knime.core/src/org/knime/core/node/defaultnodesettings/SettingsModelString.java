@@ -64,7 +64,6 @@ public class SettingsModelString extends SettingsModel {
         return new SettingsModelString(m_configName, m_value);
     }
 
-    
     /**
      * @see SettingsModel#getModelTypeID()
      */
@@ -94,10 +93,6 @@ public class SettingsModelString extends SettingsModel {
             setStringValue(settings.getString(m_configName, m_value));
         } catch (IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
-        } finally {
-            // always notify the listeners. That is, because there could be an
-            // invalid value displayed in the listener.
-            notifyChangeListeners();
         }
     }
 
@@ -117,7 +112,20 @@ public class SettingsModelString extends SettingsModel {
      * @param newValue the new value to store.
      */
     public void setStringValue(final String newValue) {
+        boolean sameValue;
+        
+        if (newValue == null) {
+            sameValue = (m_value == null);
+        } else {
+            sameValue = newValue.equals(m_value);
+        }
+        String tmp = m_value;
+        assert tmp == tmp;
         m_value = newValue;
+
+        if (!sameValue) {
+            notifyChangeListeners();
+        }
     }
 
     /**

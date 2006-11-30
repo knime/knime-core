@@ -25,6 +25,8 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,7 +51,7 @@ import org.knime.core.node.util.ColumnSelectionPanel;
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentColumnNameSelection extends DialogComponent {
-    
+
     /** Contains all column names matching the given given filter class. */
     private final ColumnSelectionPanel m_chooser;
 
@@ -99,23 +101,51 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         // model on a selection change. We set the value in the model right
         // before save
 
-        // update the selection panel, when the model was changed
-        getModel().addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                String classCol = ((SettingsModelString)getModel())
-                        .getStringValue();
-                if ((classCol == null) || (classCol.length() == 0)) {
-                    classCol = "** Unknown column **";
-                }
-                try {
-                    m_chooser.update(getLastTableSpec(m_specIndex), classCol);
-                } catch (NotConfigurableException e1) {
-                    // we check the correctness of the table spec before, so
-                    // this exception shouldn't fly.
-                    assert false;
+        m_chooser.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    // a new item got selected, update the model
+                    updateModel();
                 }
             }
         });
+
+        // update the selection panel, when the model was changed
+        getModel().prependChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                // if only the value in the model changes we only set the
+                // selected column in the component.
+                m_chooser.setSelectedColumn(((SettingsModelString)getModel())
+                        .getStringValue());
+            }
+        });
+    }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #updateComponent()
+     */
+    @Override
+    void updateComponent() {
+        String classCol = ((SettingsModelString)getModel()).getStringValue();
+        if ((classCol == null) || (classCol.length() == 0)) {
+            classCol = "** Unknown column **";
+        }
+        try {
+            m_chooser.update(getLastTableSpec(m_specIndex), classCol);
+        } catch (NotConfigurableException e1) {
+            // we check the correctness of the table spec before, so
+            // this exception shouldn't fly.
+            assert false;
+        }
+    }
+
+    /**
+     * Transfers the selected value from the component into the settings model.
+     */
+    private void updateModel() {
+        ((SettingsModelString)getModel()).setStringValue(m_chooser
+                .getSelectedColumn());
     }
 
     /**
@@ -153,7 +183,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
                 }
             }
         }
-        
+
         String typeList = "";
         int count = 0;
         for (Class<? extends DataValue> t : m_typeList) {
@@ -167,8 +197,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             typeList += t.getSimpleName();
             count++;
         }
-        
-        
+
         // here none of the columns are compatible to the acceptable types.
         throw new NotConfigurableException("The input table doesn't contain"
                 + " a column with the expected type(s): " + typeList + ".");
@@ -179,9 +208,8 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      */
     @Override
     void validateStettingsBeforeSave() throws InvalidSettingsException {
-        // we transfer the selected value in the model here
-        ((SettingsModelString)getModel()).setStringValue(m_chooser
-                .getSelectedColumn());
+        // just in case we didn't get notified about the last selection ...
+        updateModel();
     }
 
     /**
