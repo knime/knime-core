@@ -40,8 +40,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -141,6 +143,9 @@ public class WorkflowManager implements WorkflowListener {
         private final Map<NodeContainer, NodeProgressMonitor> m_waitingNodes =
                 new ConcurrentHashMap<NodeContainer, NodeProgressMonitor>();
 
+        private final Map<NodeContainer, CountDownLatch> m_waitLocks =
+                new WeakHashMap<NodeContainer, CountDownLatch>();
+
         private final Object m_addLock = new Object(),
                 m_transferLock = new Object(), m_finishLock = new Object();
 
@@ -170,7 +175,11 @@ public class WorkflowManager implements WorkflowListener {
                     MyNodePM pm = new MyNodePM(nc);
                     synchronized (m_addLock) {
                         m_waitingNodes.put(nc, pm);
-
+                        CountDownLatch old =
+                                m_waitLocks.put(nc, new CountDownLatch(1));
+                        if (old != null) {
+                            old.countDown();
+                        }
                     }
 
                     // inform the node that it is queued now
@@ -207,6 +216,10 @@ public class WorkflowManager implements WorkflowListener {
                             new WorkflowEvent.NodeFinished(nc.getID(), null,
                                     null));
                 }
+                for (CountDownLatch cdl : m_waitLocks.values()) {
+                    cdl.countDown();
+                }
+                m_waitLocks.clear();
             }
         }
 
@@ -233,15 +246,20 @@ public class WorkflowManager implements WorkflowListener {
                     }
                 }
 
-                for (Iterator<?> it = cancelNodes.iterator(); it.hasNext();) {
-                    if (m_waitingNodes.remove(it.next()) == null) {
+                for (Iterator<NodeContainer> it = cancelNodes.iterator(); it
+                        .hasNext();) {
+                    NodeContainer cont = it.next();
+                    if (m_waitingNodes.remove(cont) == null) {
                         it.remove();
+                    }
+                    CountDownLatch cdl = m_waitLocks.get(cont);
+                    if (cdl != null) {
+                        cdl.countDown();
                     }
                 }
             }
 
             for (NodeContainer nc : cancelNodes) {
-
                 nc.stateChanged(
                         new NodeStatus.Configured("Removed from queue"), nc
                                 .getID());
@@ -416,6 +434,11 @@ public class WorkflowManager implements WorkflowListener {
                             it.remove();
                         }
 
+                        CountDownLatch cdl = m_waitLocks.get(nc);
+                        if (cdl != null) {
+                            cdl.countDown();
+                        }
+
                         nc.getWorkflowManager().fireWorkflowEvent(
                                 new WorkflowEvent.NodeFinished(nc.getID(), nc,
                                         nc));
@@ -446,6 +469,22 @@ public class WorkflowManager implements WorkflowListener {
                 startNewNodes(false);
                 synchronized (m_finishLock) {
                     m_finishLock.notifyAll();
+                }
+            }
+        }
+
+        /**
+         * Blocks until the passed node has finished execution.
+         * 
+         * @param cont the NodeContainer that should be waited for
+         */
+        public void waitUntilFinished(final NodeContainer cont) {
+            CountDownLatch cdl = m_waitLocks.get(cont);
+            if (cdl != null) {
+                try {
+                    cdl.await();
+                } catch (InterruptedException ex) {
+                    LOGGER.info(ex.getMessage(), ex);
                 }
             }
         }
@@ -1378,30 +1417,9 @@ public class WorkflowManager implements WorkflowListener {
         // gets queued first, so that its progress bar comes first
         Collections.reverse(nodes);
 
+        m_executor.addWaitingNodes(nodes);
         if (block) {
-            WorkflowListener wfl = new WorkflowListener() {
-                public void workflowChanged(final WorkflowEvent event) {
-                    if ((event instanceof WorkflowEvent.NodeFinished)
-                            && (event.getOldValue() == nc)) {
-                        synchronized (this) {
-                            this.notifyAll();
-                        }
-                    }
-                }
-            };
-
-            synchronized (wfl) {
-                addListener(wfl);
-                try {
-                    m_executor.addWaitingNodes(nodes);
-                    wfl.wait();
-                } catch (InterruptedException ex) {
-                    LOGGER.warn("Thread was interrupted", ex);
-                }
-            }
-            removeListener(wfl);
-        } else {
-            m_executor.addWaitingNodes(nodes);
+            m_executor.waitUntilFinished(nc);
         }
     }
 
@@ -1418,8 +1436,9 @@ public class WorkflowManager implements WorkflowListener {
      *             already executed
      */
     public void executeOneNode(final int nodeID, final boolean block) {
+        NodeContainer nc;
         synchronized (this) {
-            NodeContainer nc = m_nodesByID.get(nodeID);
+            nc = m_nodesByID.get(nodeID);
             if (!nc.isExecutable()) {
                 throw new IllegalArgumentException("The given node is not"
                         + " executable, thus can't be executed");
@@ -1434,7 +1453,7 @@ public class WorkflowManager implements WorkflowListener {
             m_executor.addWaitingNodes(nodes);
         }
         if (block) {
-            m_executor.waitUntilFinished(this);
+            m_executor.waitUntilFinished(nc);
         }
     }
 
@@ -1966,7 +1985,7 @@ public class WorkflowManager implements WorkflowListener {
             CanceledExecutionException, WorkflowInExecutionException {
         checkForRunningNodes("Workflow cannot be saved");
 
-        if (!workflowFile.isFile()
+        if (workflowFile.isDirectory()
                 || !workflowFile.getName().equals(WORKFLOW_FILE)) {
             throw new IOException("File must be named: \"" + WORKFLOW_FILE
                     + "\": " + workflowFile);
