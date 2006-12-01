@@ -203,6 +203,7 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
      * @deprecated As in {@link DataInputStream#readLine()}.
      */
     @Deprecated
+    @SuppressWarnings("deprecation")
     public String readLine() throws IOException {
         return m_input.readLine();
     }
