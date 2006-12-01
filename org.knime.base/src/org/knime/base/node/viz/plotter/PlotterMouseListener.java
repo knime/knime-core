@@ -24,6 +24,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 
 /**
+ * A mouse listener for the plotter mouse mode selection box. In addition 
+ * to the mouse listener and mouse motion listener methods an 
+ * appropriate cursor should be returned.
  * 
  * @author Fabian Dill, University of Konstanz
  */

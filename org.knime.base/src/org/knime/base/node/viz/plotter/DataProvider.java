@@ -21,6 +21,13 @@ package org.knime.base.node.viz.plotter;
 import org.knime.base.node.util.DataArray;
 
 /**
+ * The plotters rely on a <code>DataProvider</code> to get the data to 
+ * visualize. It provides the data as a 
+ * {@link org.knime.base.node.util.DataArray} with the 
+ * {@link #getDataArray(int)}, where the index can be used, if a NodeModel has 
+ * two inports and both data should be visualized. Then the index provides 
+ * means to determine which {@link org.knime.base.node.util.DataArray} should 
+ * be returned. 
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -33,10 +40,14 @@ public interface DataProvider {
     public static final int END = 2500;
     
     /**
-     * Provides the data that should be visualized.
+     * Provides the data that should be visualized. The index can be used, if a 
+     * NodeModel has two inports and both data should be visualized. Then the 
+     * index provides means to determine which 
+     * {@link org.knime.base.node.util.DataArray} should be returned.
+     * 
      * @param index if the data of more than one data table should be 
      *  visualized.
-     * @return the data as a data table.
+     * @return the data as a data array.
      */
     public DataArray getDataArray(final int index);
 

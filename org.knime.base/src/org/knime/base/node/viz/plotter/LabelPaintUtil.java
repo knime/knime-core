@@ -26,6 +26,15 @@ import java.awt.geom.AffineTransform;
 import org.knime.base.util.coordinate.CoordinateMapping;
 
 /**
+ * Util class providing methods for drawing labels, which can be rotated if the 
+ * available space is to small. Since the rotation depends on the position, 
+ * where the labels is drawn, a value of the 
+ * {@link org.knime.base.node.viz.plotter.LabelPaintUtil.Position} must be 
+ * passed to the 
+ * {@link #drawLabel(String, Graphics2D, Rectangle, 
+ * org.knime.base.node.viz.plotter.LabelPaintUtil.Position, boolean)} method.
+ * If the labels must be rotated due to the lack of space can also be determined
+ * with the {@link #rotateLabels(CoordinateMapping[], int, FontMetrics)} method.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -56,10 +65,11 @@ public final class LabelPaintUtil {
     /**
      * Rounds the passed double value by the rounding factor and returns a 
      * string representation of it. Typical usage for tooltips.
+     * 
      * @param value the value to be rounded
      * @param roundingFactor the rounding factor use 100 for two numbers after
      * the comma, 1000 for three numbers after the comma and so on.
-     * @return the string representation of the ronded double.
+     * @return the string representation of the ronded double
      */
     public static String getDoubleAsString(final double value, 
             final double roundingFactor) {
@@ -68,12 +78,20 @@ public final class LabelPaintUtil {
     }
     
     /**
+     * Draws the label, and if the available space is to small it rotates the 
+     * label depending on the 
+     * {@link org.knime.base.node.viz.plotter.LabelPaintUtil.Position} where to 
+     * draw it. If it is still too  large it cuts the label with the 
+     * {@link #cutLabel(String, int, FontMetrics)} method. 
+     * The Rectangle available space gives information about the available 
+     * space, depending on the position the labels is placed inside this 
+     * rectangle.
      * 
-     * @param label the label to display.
+     * @param label the label to display
      * @param g the graphics object
      * @param availableSpace the available space
      * @param position the position
-     * @param rotate whether labels are rotated or not.
+     * @param rotate whether labels are rotated or not
      */
     public static void drawLabel(final String label, final Graphics2D g, 
             final Rectangle availableSpace, final Position position, 
@@ -101,10 +119,11 @@ public final class LabelPaintUtil {
      * out the middle of the label. The first three and the most possible part
      * of the length are retained. If some charaters are removed "..." is 
      * inserted.
+     * 
      * @param label the label to cut
-     * @param desiredLength the desired length.
+     * @param desiredLength the desired length
      * @param fm the font metrics
-     * @return a cutted label which fits into the desired length,
+     * @return a cutted label which fits into the desired length
      */
     public static String cutLabel(final String label, final int desiredLength,
             final FontMetrics fm) {
@@ -152,10 +171,11 @@ public final class LabelPaintUtil {
     /**
      * Returns true if any label is too long to be displayed in the available
      * space.
+     * 
      * @param mappings the set of labels to be displayed.
      * @param availableSize the available width
      * @param fm the font metrics
-     * @return true if labels should be rotated, false otherwise.
+     * @return true if labels should be rotated, false otherwise
      */
     public static boolean rotateLabels(
             final CoordinateMapping[] mappings, 
@@ -169,6 +189,15 @@ public final class LabelPaintUtil {
         return false;
     }
     
+    /**
+     * Draws a label left, that is it tries to put the end of the label 
+     * rightmost in the rectangle and rotate it it with the end at the bottom.
+     * 
+     * @param label the label to draw
+     * @param g the graphics object
+     * @param availableSpace the available space to draw in
+     * @param rotate flag whether to rotate the label or not
+     */
     private static void drawLeftLabel(final String label, final Graphics2D g, 
             final Rectangle availableSpace, final boolean rotate) {
         // TODO: paint as left as possible if the string is short!

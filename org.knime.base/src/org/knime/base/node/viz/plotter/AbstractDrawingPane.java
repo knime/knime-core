@@ -37,15 +37,18 @@ import javax.swing.JPanel;
  */
 public abstract class AbstractDrawingPane extends JPanel {
     
+    /** The start point of the dragging gesture. */
     private Point m_dragStart;
-    
+    /** The end point of the dragging gesture. */
     private Point m_dragEnd; 
-    
+    /** Flag whether the mouse is currently pressed. */
     private boolean m_isMouseDown;
-    
+    /** Flag for anti-aliasing. */
     private boolean m_antialiasing = true;
 
     /**
+     * Turns anti-aliasing on(true) or off(false). 
+     * Use carefully: anti-aliasing slows down performance.
      * 
      * @param doAntialiasing true if antialiasing should be turned on, 
      * false otherwise.
@@ -55,6 +58,8 @@ public abstract class AbstractDrawingPane extends JPanel {
     }
     
     /**
+     * For normal behavior, this method should is by the 
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} only.
      * 
      * @param start the start point of the dragging rectangle.
      */
@@ -63,14 +68,18 @@ public abstract class AbstractDrawingPane extends JPanel {
     }
     
     /**
-     * 
-     * @return the start poin of the dragging
+     * For normal behavior, this method should is by the 
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} only.
+     *  
+     * @return the start point of the dragging
      */
     public Point getDragStart() {
         return m_dragStart;
     }
     
     /**
+     * For normal behavior, this method should is by the 
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} only.
      * 
      * @param end the end point of the dragging rectangle. 
      */
@@ -79,6 +88,8 @@ public abstract class AbstractDrawingPane extends JPanel {
     }
     
     /**
+     * For normal behavior, this method should is by the 
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} only.
      * 
      * @param isMouseDown true if the mouse is down, false otherwise.
      */
@@ -97,6 +108,9 @@ public abstract class AbstractDrawingPane extends JPanel {
 
     
     /**
+     * Calls the {@link #paintContent(Graphics)} method and then draws the 
+     * selection rectangle. Also the flag for anti-aliasing is evaluated here.
+     * 
      * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
      */
     @Override
@@ -119,6 +133,7 @@ public abstract class AbstractDrawingPane extends JPanel {
     
     /**
      * Paints the dragged selection rectangle.
+     * 
      * @param g graphics object.
      */
     protected void paintSelectionRectangle(final Graphics g) {
@@ -131,6 +146,8 @@ public abstract class AbstractDrawingPane extends JPanel {
     }
     
     /**
+     * For normal behavior, this method should is by the 
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} only.
      * 
      * @return the current dragged rectangle.
      */
@@ -149,7 +166,8 @@ public abstract class AbstractDrawingPane extends JPanel {
     }
     
     /**
-     * Paint the actual content of the drawing pane.
+     * Paints the actual content of the drawing pane.
+     * 
      * @param g the graphics object
      */
     public abstract void paintContent(final Graphics g);

@@ -26,12 +26,19 @@ import javax.swing.JTabbedPane;
 import org.knime.base.node.viz.plotter.props.DefaultTab;
 
 /**
+ * The properties contains elements to interact with the view. 
+ * It is organized in tabs, i.e. the properties can be grouped into different 
+ * tabs and added using the {@link #addTab(String, java.awt.Component)} method.
+ * This class adds the {@link org.knime.base.node.viz.plotter.props.DefaultTab} 
+ * which contains the elements for selecting the mouse mode, fit the view to 
+ * the viewport and change the background color of the drawing pane.
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class AbstractPlotterProperties extends JTabbedPane {
     
     private final DefaultTab m_defaultTab;
+    
     /**
      * 
      *

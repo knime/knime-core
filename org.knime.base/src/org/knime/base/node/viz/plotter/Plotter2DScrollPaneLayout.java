@@ -36,7 +36,7 @@ import javax.swing.Scrollable;
 import javax.swing.border.Border;
 
 /**
- * <code>ScrollPaneLyout</code> for the scatter plotter. In contrast to the
+ * <code>ScrollPaneLyout</code> for the plotter. In contrast to the
  * default manager for scroll panes, this manager creates the column header at
  * the bottom of the view (as expected of a function graph). For this reason the
  * layout container method is overwritten.
