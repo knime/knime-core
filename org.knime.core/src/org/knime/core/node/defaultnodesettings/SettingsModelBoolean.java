@@ -61,6 +61,7 @@ public class SettingsModelBoolean extends SettingsModel {
      * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */
     @SuppressWarnings("unchecked")
+    @Override
     SettingsModelBoolean createClone() {
         return new SettingsModelBoolean(m_configName, m_value);
     }

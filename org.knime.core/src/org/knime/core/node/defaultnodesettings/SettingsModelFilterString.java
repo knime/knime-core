@@ -120,6 +120,7 @@ public class SettingsModelFilterString extends SettingsModel {
      * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */
     @SuppressWarnings("unchecked")
+    @Override
     SettingsModelFilterString createClone() {
         return new SettingsModelFilterString(m_configName,
                 new LinkedList<String>(m_inclList), new LinkedList<String>(

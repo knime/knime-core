@@ -62,6 +62,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */
     @SuppressWarnings("unchecked")
+    @Override
     SettingsModelDouble createClone() {
         return new SettingsModelDouble(m_configName, m_value);
     }

@@ -63,6 +63,7 @@ public class SettingsModelStringArray extends SettingsModel {
      * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */
     @SuppressWarnings("unchecked")
+    @Override    
     SettingsModelStringArray createClone() {
         return new SettingsModelStringArray(m_configName, m_value);
     }

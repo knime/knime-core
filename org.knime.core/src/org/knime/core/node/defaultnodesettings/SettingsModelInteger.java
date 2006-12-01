@@ -60,6 +60,7 @@ public class SettingsModelInteger extends SettingsModelNumber {
      * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */
     @SuppressWarnings("unchecked")
+    @Override
     SettingsModelInteger createClone() {
         return new SettingsModelInteger(m_configName, m_value);
     }
