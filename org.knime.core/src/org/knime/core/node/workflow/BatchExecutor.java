@@ -55,6 +55,13 @@ public final class BatchExecutor {
 
         private final String m_type;
 
+        /**
+         * TODO Thorsten?
+         * @param nodeID
+         * @param name
+         * @param value
+         * @param type
+         */
         Option(final int nodeID, final String name, final String value,
                 final String type) {
             m_nodeID = nodeID;
