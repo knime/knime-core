@@ -30,13 +30,15 @@ import javax.swing.ImageIcon;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 
 /**
- * The interface all value interfaces of data cells are derived from.
- * <code>{@link DataCell}</code>s implement different <code>DataValue</code>
- * interfaces to allow access to generic (or complex) fields from the cell.
- * Typically a <code>DataValue</code> brings along its own (set of) renderers,
- * an icon (which is displayed in table column headers, for instance) and a
- * comparator, which are all defined through the definition of a static member
- * <code>UTITLITY</code>.
+ * The interface all value interfaces of {@link org.knime.core.data.DataCell}s 
+ * are derived from.
+ * {@link org.knime.core.data.DataCell}s implement different 
+ * <code>DataValue</code> interfaces to allow access to generic 
+ * (or complex) fields from the cell.
+ * Typically a <code>DataValue</code> brings along its own 
+ * (set of) renderers, an icon (which is displayed in table column headers, 
+ * for instance) and a comparator, which are all defined through the definition 
+ * of a static member <code>UTITLITY</code>.
  *  
  * <p>
  * For more information regarding definition of new data 
@@ -51,17 +53,18 @@ public interface DataValue {
 
     /**
      * Static singleton for meta description. This field is accessed via
-     * reflection in the {@link DataType} class. It is used to determine
-     * renderer, comparator, and icon. Sub-Interfaces will &quot;override&quot;
-     * this static member if they desire to define own renderers, comparator,
-     * and/or icon.
+     * reflection in the {@link org.knime.core.data.DataType} class. It is 
+     * used to determine renderer, comparator, and icon. Sub-Interfaces 
+     * will &quot;override&quot; this static member if they desire to define 
+     * own renderers, comparator, and/or icon.
      */
     public static final UtilityFactory UTILITY = new UtilityFactory();
 
     /**
      * Implementation of the meta information to a <code>DataValue</code>.
-     * DataValue implementations with customized meta information must provide a
-     * static final member called <code>UTILTIY</code> of this class.
+     * <code>DataValue</code> implementations with customized meta information 
+     * must provide a static final member called <code>UTILTIY</code> of this 
+     * class.
      */
     public static class UtilityFactory {
 
@@ -119,11 +122,13 @@ public interface DataValue {
          * <p>
          * Views that rely on renderer implementations will get a list of all
          * available renderers by invoking
-         * {@link DataType#getRenderer(DataColumnSpec)} on the column's DataType
+         * {@link DataType#getRenderer(DataColumnSpec)} on the column's 
+         * {@link org.knime.core.data.DataType}
          * which makes sure that all renderer implementations of compatible
          * values are returned.
          * 
-         * @param spec the column spec of the column for which the renderers are
+         * @param spec the {@link org.knime.core.data.DataColumnSpec} of the 
+         *            column for which the renderers are
          *            used. Most of the renderer implementations won't need
          *            column domain information but some do. For instance a
          *            class that renders the double value in the column
@@ -138,7 +143,8 @@ public interface DataValue {
         }
 
         /**
-         * Derived classes should override this and provide a comparator that
+         * Derived classes should override this and provide a 
+         * {@link org.knime.core.data.DataValueComparator} that
          * compares the respective <code>DataValue</code>. If <code>null</code> 
          * is returned the cell implementing the <code>DataValue</code> 
          * interface is said to be not comparable with respect to this 

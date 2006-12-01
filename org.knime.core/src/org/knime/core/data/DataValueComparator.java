@@ -28,12 +28,13 @@ package org.knime.core.data;
 import java.util.Comparator;
 
 /**
- * The comparator used to compare two {@link DataValue} objects. An
- * instance of this class is returned by each
- * {@link DataValue.UtilityFactory} implementation.
+ * The comparator used to compare two {@link org.knime.core.data.DataValue} 
+ * objects. An instance of this class is returned by each
+ * {@link org.knime.core.data.DataValue.UtilityFactory} implementation.
  * Implementations can safely assume that objects passed to the
  * {@link #compareDataValues(DataValue, DataValue)} method support a type cast 
- * to that type of the <code>DataValue</code> returning this comparator.
+ * to that type of the {@link org.knime.core.data.DataValue} returning this 
+ * comparator.
  * 
  * <p>
  * Note: this comparator imposes orderings that are inconsistent with equals.
@@ -48,22 +49,26 @@ import java.util.Comparator;
 public abstract class DataValueComparator implements Comparator<DataCell> {
 
     /**
-     * Create a new general <code>DataValue</code> comparator.
+     * Create a new general {@link org.knime.core.data.DataValue} comparator.
      */
     protected DataValueComparator() {
 
     }
 
     /**
-     * This final implementation checks and handles <code>DataCell</code>s 
-     * representing missing values, before it delegates the actual comparison 
-     * to the derived class, by calling <code>compareDataValues()</code>.
+     * This final implementation checks and handles 
+     * {@link org.knime.core.data.DataCell}s representing missing values, 
+     * before it delegates the actual comparison 
+     * to the derived class, by calling 
+     * {@link #compareDataValues(DataValue, DataValue)}.
      * Missing cells are considered to be smaller than any other non-missing 
-     * <code>DataCell</code>, and two missing cells are not comparable 
-     * (returns 0).
+     * {@link org.knime.core.data.DataCell}, and two missing cells are not 
+     * comparable (returns 0).
      * 
-     * @param c1 the first <code>DataCell</code> to compare the other with
-     * @param c2 the other <code>DataCell</code> to compare the first with
+     * @param c1 the first {@link org.knime.core.data.DataCell} to compare the 
+     * other with
+     * @param c2 the other {@link org.knime.core.data.DataCell} to compare the 
+     * first with
      * @return a negative number if c1 is smaller than c2, a positive number if
      *         c1 is larger than c2, otherwise zero. Note: return value zero is
      *         not equivalent to c1 equals c2, rather they are not comparable 
@@ -96,10 +101,12 @@ public abstract class DataValueComparator implements Comparator<DataCell> {
      * which handles missing cells.
      * The derived class should compare the two passed data values. It can be
      * safely assumed that both values are castable to the specific type of the
-     * <code>DataValue</code> that returned this comparator. 
+     * {@link org.knime.core.data.DataValue} that returned this comparator. 
      * 
-     * @param v1 the first value to compare the other with
-     * @param v2 the other value to compare the first with
+     * @param v1 the first {@link org.knime.core.data.DataValue} to compare the 
+     * other with
+     * @param v2 the other {@link org.knime.core.data.DataValue} to compare the 
+     * first with
      * @return return -1 if v1 is smaller than v2, +1 if v1 is larger than v2,
      *         0 otherwise
      */

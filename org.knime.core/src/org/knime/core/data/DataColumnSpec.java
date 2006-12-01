@@ -33,10 +33,11 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * A <code>DataColumnSpec</code> describes one column in a {@link DataTable}.
+ * A <code>DataColumnSpec</code> describes one column in a 
+ * {@link org.knime.core.data.DataTable}.
  * It contains information about type, name, domain, data properties, and
  * optionally color/size/shape handling. This class can only be created using
- * the {@link DataColumnSpecCreator} within this package.
+ * the {@link org.knime.core.data.DataColumnSpecCreator} within this package.
  * 
  * @see DataColumnSpecCreator
  * @see DataTableSpec
