@@ -30,7 +30,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.JCheckBox;
-import javax.swing.JLabel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -40,8 +39,8 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  * Provides a standard component for a dialog that allows to edit a boolean
- * value. Provides a label with a checkbox as well as functionality to
- * load/store the value into a config object.
+ * value. Provides a checkbox as well as functionality to load/store the value 
+ * into a config object.
  * 
  * @author M. Berthold, University of Konstanz
  */
@@ -58,8 +57,7 @@ public final class DialogComponentBoolean extends DialogComponent {
             final String label) {
         super(booleanModel);
 
-        this.add(new JLabel(label));
-        m_checkbox = new JCheckBox();
+        m_checkbox = new JCheckBox(label);
         m_checkbox.setSelected(booleanModel.getBooleanValue());
         // update the model, if the user changes the component
         m_checkbox.addItemListener(new ItemListener() {
