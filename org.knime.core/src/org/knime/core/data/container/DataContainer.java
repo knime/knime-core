@@ -21,14 +21,23 @@
  */
 package org.knime.core.data.container;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -44,6 +53,11 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.FileUtil;
 
 
 /**
@@ -71,10 +85,6 @@ import org.knime.core.node.ExecutionMonitor;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DataContainer implements RowAppender {
-    
-    /*
-     * TODO: We need to find a way to figure out how much memory a row occupies
-     */
     
     /** 
      * Number of cells that are cached without being written to the 
@@ -200,7 +210,7 @@ public class DataContainer implements RowAppender {
             DataType colType = colSpec.getType();
             // bug fix #591: We must init the domain no matter what data
             // type is in the column (we had the problem where one passed
-            // a FuzzyIntervalCell which is not compatible to doublevalue.
+            // a FuzzyIntervalCell which is not compatible to doublevalue).
             
             // do first for possible values
             if (initDomain) {
@@ -260,10 +270,12 @@ public class DataContainer implements RowAppender {
     }
     
     /** Creates a new buffer to be used when writing to a file. 
-     * This method is called from the open method.
-     * @param rowsInMemory Argument for the buffer.
+     * @param rowsInMemory Argument for the buffer. This method is called 
+     * from the open method. 
      * @return A new buffer for writing into.
      */
+    // overridden in an inner class in RearrangeColumnsTable 
+    // to return aNoKeyBuffer 
     protected Buffer newBuffer(final int rowsInMemory) {
         return new Buffer(rowsInMemory);
     }
@@ -534,23 +546,12 @@ public class DataContainer implements RowAppender {
         throws CanceledExecutionException {
         DataContainer buf = new DataContainer(
                 table.getDataTableSpec(), true, maxCellsInMemory);
-        double finalCount = -1.0; // floating point operation later on
-//        try {
-//            finalCount = table.getRowCount();
-//        } catch (UnsupportedOperationException uoe) {
-//            // no row count available, ignore.
-//        }
         int row = 0;
         try {
             for (RowIterator it = table.iterator(); it.hasNext(); row++) {
                 DataRow next = it.next();
-                String message = "Caching row #" + (row + 1) + " (\"" 
-                + next.getKey() + "\")";
-                if (finalCount > 0.0) {
-                    exec.setProgress(row / finalCount, message);
-                } else {
-                    exec.setMessage(message);
-                }
+                exec.setMessage("Caching row #" + (row + 1) + " (\"" 
+                        + next.getKey() + "\")");
                 exec.checkCanceled();
                 buf.addRowToTable(next);
             }
@@ -575,46 +576,186 @@ public class DataContainer implements RowAppender {
         return cache(table, exec, MAX_CELLS_IN_MEMORY);
     }
     
-    /** Writes a given DataTable permanently to a zip file. 
+    /** Used in write/readFromZip: Name of the zip entry containing the spec. */
+    private static final String ZIP_ENTRY_SPEC = "spec.xml";
+    /** Used in write/readFromZip: Config entry: The spec of the table. */
+    private static final String CFG_TABLESPEC = "table.spec";
+    
+    /** Writes a given DataTable permanently to a zip file. This includes
+     * also all table spec information, such as color, size, and shape 
+     * properties. 
      * @param table The table to write.
-     * @param outFile The file to write to. Will be created or overwritten.
+     * @param zipFile The file to write to. Will be created or overwritten.
      * @param exec For progress info.
      * @throws IOException If writing fails.
      * @throws CanceledExecutionException If canceled.
+     * @see #readFromZip(File)
      */
-    public static void writeToZip(final DataTable table, final File outFile,
+    public static void writeToZip(final DataTable table, final File zipFile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        Buffer buf;
+        ExecutionMonitor e = exec;
         if (table instanceof ContainerTable) {
-            Buffer buf = ((ContainerTable)table).getBuffer();
-            buf.saveToFile(outFile, exec);
-        }
-        Buffer buf = new Buffer(outFile);
-        int rowCount = 0;
-        try {
+            buf = ((ContainerTable)table).getBuffer();
+        } else {
+            exec.setMessage("Archiving table");
+            e = exec.createSubProgress(0.8);
+            buf = new Buffer(/*maxRowsInMemory*/0);
+            int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
-                exec.setMessage("Writing row #" + rowCount + " (\"" 
+                e.setMessage("Writing row #" + rowCount + " (\"" 
                         + row.getKey() + "\")");
-                exec.checkCanceled();
+                e.checkCanceled();
                 buf.addRow(row);
             }
-        } finally {
             buf.close(table.getDataTableSpec());
+            exec.setMessage("Closing zip file");
+            e = exec.createSubProgress(0.2);
         }
+        ZipOutputStream zipOut = new ZipOutputStream(
+                new BufferedOutputStream(new FileOutputStream(zipFile)));
+        buf.addToZipFile(zipOut, e);
+        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
+        NodeSettings settings = new NodeSettings("Table Spec");
+        NodeSettingsWO specSettings = settings.addNodeSettings(CFG_TABLESPEC);
+        buf.getTableSpec().save(specSettings);
+        settings.saveToXML(new NonClosableZipOutputStream(zipOut));
+        zipOut.close();
     }
     
     /** 
      * Reads a table from a zip file that has been written using the 
-     * <code>writeToZip</code> method.
+     * {@link #writeToZip(DataTable, File, ExecutionMonitor)} method.
      * @param zipFile To read from.
      * @return The table contained in the zip file.
      * @throws IOException If that fails.
+     * @see #writeToZip(DataTable, File, ExecutionMonitor)
      */
     public static ContainerTable readFromZip(final File zipFile) 
         throws IOException {
-        Buffer buffer = new Buffer(zipFile, /*ignoreMe*/false);
+        return readFromZip(zipFile, new BufferCreator());
+    }
+    
+    /**
+     * Factory method used to restore table from zip file.  
+     * @param zipFile To read from.
+     * @param creator Factory object to create a buffer instance.
+     * @return The table contained in the zip file.
+     * @throws IOException If that fails.
+     * @see #readFromZip(File)
+     */
+    // This method is used from #readFromZip(File) or from a 
+    // RearrangeColumnsTable when it reads a table that has been written
+    // with KNIME 1.1.x or before.
+    static ContainerTable readFromZip(final File zipFile, 
+            final BufferCreator creator) throws IOException {
+        /*
+         * Ideally, the entire functionality of reading the zip file should take
+         * place in the Buffer class (as that is also the place where save is
+         * implemented). However, that is not that obvious to implement since
+         * the buffer needs to be created using the DataTableSpec
+         * (DataContainer.writeToZip stores the DTS in the zip file), which we
+         * need to extract beforehand. Using a ZipFile here and extracting only
+         * the DTS is not possible, as that may crash (OutOfMemoryError), see
+         * bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4705373
+         */
+        ZipInputStream inStream = new ZipInputStream(
+                new BufferedInputStream(new FileInputStream(zipFile)));
+        ZipEntry entry;
+        File binFile = createTempFile();
+        // we only need to read from this file while being in this method
+        // deleted later on.
+        File metaTempFile = File.createTempFile("meta", ".xml");
+        metaTempFile.deleteOnExit();
+        boolean isDataFound = false;
+        boolean isMetaFound = false;
+        boolean isSpecFound = false;
+        DataTableSpec spec = null;
+        while ((entry = inStream.getNextEntry()) != null) {
+            String name = entry.getName(); 
+            if (name.equals(Buffer.ZIP_ENTRY_DATA)) {
+                OutputStream output = new BufferedOutputStream(
+                        new FileOutputStream(binFile));
+                FileUtil.copy(inStream, output);
+                inStream.closeEntry();
+                output.close();
+                isDataFound = true;
+            } else if (name.equals(Buffer.ZIP_ENTRY_META)) {
+                OutputStream output = new BufferedOutputStream(
+                        new FileOutputStream(metaTempFile));
+                FileUtil.copy(inStream, output);
+                inStream.closeEntry();
+                output.close();
+                isMetaFound = true;
+            } else if (name.equals(ZIP_ENTRY_SPEC)) {
+                InputStream nonClosableStream = 
+                    new NonClosableZipInputStream(inStream);
+                @SuppressWarnings("unchecked") // cast with generics
+                NodeSettingsRO settings = 
+                    NodeSettings.loadFromXML(nonClosableStream);
+                try {
+                    NodeSettingsRO specSettings = 
+                        settings.getNodeSettings(CFG_TABLESPEC);
+                    spec = DataTableSpec.load(specSettings);
+                    isSpecFound = true;
+                } catch (InvalidSettingsException ise) {
+                    IOException ioe = new IOException(
+                            "Unable to read spec from file " + zipFile);
+                    ioe.initCause(ise);
+                    throw ioe;
+                }
+            }
+            if (isSpecFound && isMetaFound && isDataFound) {
+                break;
+            }
+        }
+        inStream.close();
+        if (!isDataFound) {
+            throw new IOException("No entry " + Buffer.ZIP_ENTRY_DATA 
+                    + " in file: " + zipFile.getAbsolutePath());
+        } 
+        if (!isMetaFound) {
+            throw new IOException("No entry " + Buffer.ZIP_ENTRY_META
+                    + " in file: " + zipFile.getAbsolutePath());
+        } 
+        if (!isSpecFound) {
+            throw new IOException("No entry " + ZIP_ENTRY_SPEC
+                    + " in file: " + zipFile.getAbsolutePath());
+        } 
+        InputStream metaIn = new BufferedInputStream(
+                new FileInputStream(metaTempFile));
+        Buffer buffer = creator.createBuffer(binFile, spec, metaIn);
+        metaIn.close();
+        metaTempFile.delete();
         return new ContainerTable(buffer);
+    }
+    
+    /**
+     * Used in BufferedDataContainer to read the tables from the workspace
+     * location. 
+     * @param zipFile To read from (is going to be copied to temp on access)
+     * @param spec The DTS for the table.
+     * @return Table contained in <code>zipFile</code>.
+     */
+    protected static ContainerTable readFromZipDelayed(final File zipFile, 
+            final DataTableSpec spec) {
+        CopyOnAccessTask t = new CopyOnAccessTask(zipFile, spec);
+        return readFromZipDelayed(t, spec);
+    }
+    
+    /**
+     * Used in BufferedDataContainer to read the tables from the workspace
+     * location.
+     * @param c The factory that create the Buffer instance that the 
+     * returned table reads from. 
+     * @param spec The DTS for the table.
+     * @return Table contained in <code>zipFile</code>.
+     */
+    static ContainerTable readFromZipDelayed(final CopyOnAccessTask c,
+            final DataTableSpec spec) {
+        return new ContainerTable(c, spec);
     }
     
     /** the temp file will have a time stamp in its name. */
@@ -631,9 +772,7 @@ public class DataContainer implements RowAppender {
     public static final File createTempFile() throws IOException {
         String date = DATE_FORMAT.format(new Date());
         String fileName = "knime_container_" + date + "_";
-        String suffix = ".zip";
-        // TODO: Do we need to set our own tempory directory 
-        // as knime preferences?
+        String suffix = ".bin.gz";
         File f = File.createTempFile(fileName, suffix);
         f.deleteOnExit();
         return f;
@@ -648,4 +787,24 @@ public class DataContainer implements RowAppender {
     public static final boolean isContainerTable(final DataTable table) {
         return table instanceof ContainerTable;
     }
+    
+    /**
+     * Helper class to create a Buffer instance given a binary file and the
+     * data table spec.
+     */
+    static class BufferCreator {
+        
+        /** Creates buffer.
+         * @param binFile the binary temp file.
+         * @param spec The spec.
+         * @param metaIn Input stream containing meta information.
+         * @return A buffer instance.
+         * @throws IOException If parsing fails.
+         */
+        Buffer createBuffer(final File binFile, final DataTableSpec spec,
+                final InputStream metaIn) throws IOException {
+            return new Buffer(binFile, spec, metaIn);
+        }
+    }
+    
 }

@@ -113,9 +113,6 @@ public final class Node {
     /** Node settings XML file name. */
     public static final String SETTINGS_FILE_NAME = "settings.xml";
 
-    /** Data config files, it contains the paths to the data files. */
-    public static final String DATA_FILE_NAME = "data.xml";
-
     /** Directory name to save and load node internals. */
     private static final String INTERN_FILE_DIR = "internal";
 
@@ -341,16 +338,10 @@ public final class Node {
                     + nodeFile);
         }
 
-        // load node settings
-        NodeSettingsRO settings = NodeSettings.loadFromXML(new FileInputStream(
-                nodeFile));
-
-        // read node name
+        NodeSettingsRO settings = 
+            NodeSettings.loadFromXML(new FileInputStream(nodeFile));
         m_name = settings.getString(CFG_NAME);
-
-        // read model and load settings
         try {
-            
             // MISC settings may not be available in workflow written in 
             // KNIME 1.1.0 or before.
             if (settings.containsKey(CFG_MISC_SETTINGS)) {
@@ -389,7 +380,8 @@ public final class Node {
         }
 
         m_nodeDir = nodeFile.getParentFile();
-        // load data if node was executed
+        
+        // load internals
         if (isExecuted()) {
             File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
             try {
@@ -399,6 +391,7 @@ public final class Node {
             } catch (IOException ioe) {
                 m_status = new NodeStatus.Error("Unable to load internals: "
                         + ioe.getMessage());
+                m_logger.debug("loadInternals() failed with IOException", ioe);
                 notifyStateListeners(m_status);
             } catch (Exception e) {
                 m_logger.coding("loadInternals() "
@@ -407,13 +400,62 @@ public final class Node {
                         + e.getMessage());
                 notifyStateListeners(m_status);
             }
-            // load data
-            if (getNrDataOutPorts() > 0) {
-                String dataConfigFileName = settings.getString(CFG_DATA_FILE);
-                File dataConfigFile = new File(m_nodeDir, dataConfigFileName);
-                ExecutionMonitor execSub = execMon.createSubProgress(0.9);
-                loadData(loadID, dataConfigFile, execSub);
+        }
+
+        // in 1.1.x and before the settings.xml contained the location
+        // of the data table specs file (spec_0.xml, e.g.). From 1.2.0 on,
+        // the spec is saved in data/data_0/spec.xml
+        boolean isVersion11x = settings.containsKey(CFG_SPEC_FILES);
+        ExecutionMonitor execSubData = execMon.createSubProgress(0.25);
+        if (isVersion11x) {
+            NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                String specName = spec.getString(CFG_OUTPUT_PREFIX + i);
+                File targetFile = new File(m_nodeDir, specName);
+                DataTableSpec outSpec = null;
+                if (targetFile.exists()) {
+                    NodeSettingsRO settingsSpec = NodeSettings
+                            .loadFromXML(new BufferedInputStream(
+                                    new FileInputStream(targetFile)));
+                    outSpec = DataTableSpec.load(settingsSpec);
+                }
+                m_outDataPorts[i].setDataTableSpec(outSpec);
             }
+            if (isExecuted() && getNrDataOutPorts() > 0) {
+                loadDataVersion11x(loadID, settings, execSubData);
+            }
+        } else {
+            if (isConfigured() || isExecuted()) {
+                NodeSettingsRO dataSettings = 
+                    settings.getNodeSettings(CFG_DATA_FILE);
+                String dataDirStr = dataSettings.getString(CFG_DATA_FILE_DIR);
+                File dataDir = new File(m_nodeDir, dataDirStr);
+                for (int i = 0; i < m_outDataPorts.length; i++) {
+                    ExecutionMonitor execFilePort = 
+                        execSubData.createSubProgress(
+                                1 / (double)m_outDataPorts.length);
+                    NodeSettingsRO portSettings = dataSettings
+                        .getNodeSettings(CFG_OUTPUT_PREFIX + i);
+                    String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
+                    File dir = new File(dataDir, dataName);
+                    if (!(dir.isDirectory() && dir.canRead())) {
+                        throw new IOException("Can not read directory "
+                                + dir.getAbsolutePath());
+                    }
+                    DataTableSpec outSpec = BufferedDataTable.loadSpec(dir);
+                    m_outDataPorts[i].setDataTableSpec(outSpec);
+                    if (isExecuted()) {
+                        BufferedDataTable t = BufferedDataTable.loadFromFile(
+                                dir, /* ignored in 1.2.0+ */null, 
+                                execFilePort, loadID);
+                        t.setOwnerRecursively(this);
+                        m_outDataPorts[i].setDataTable(t);
+                    }
+                }
+            }
+        }
+        execSubData.setProgress(1.0); // finished loading data
+        if (isExecuted()) {
             // load models
             NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
             for (int i = 0; i < m_outModelPorts.length; i++) {
@@ -428,39 +470,60 @@ public final class Node {
                 try {
                     in = new GZIPInputStream(new BufferedInputStream(
                             new FileInputStream(targetFile)));
-
                 } catch (IOException ioe) {
                     // if a gz input stream could not be created
                     // we use read directly from the file via the
                     // previously created buffered input stream
                     in = new BufferedInputStream(
                             new FileInputStream(targetFile));
-                    
                 }
-
                 ModelContentRO pred = ModelContent.loadFromXML(in);
                 m_outModelPorts[i].setModelContent(pred);
             }
             m_isCurrentlySaved = true;
-        } else if (isConfigured()) {
-            NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                String specName = spec.getString(CFG_OUTPUT_PREFIX + i);
-                File targetFile = new File(m_nodeDir, specName);
-                DataTableSpec outSpec = null;
-                if (targetFile.exists()) {
-                    NodeSettingsRO settingsSpec = NodeSettings
-                            .loadFromXML(new BufferedInputStream(
-                                    new FileInputStream(targetFile)));
-                    outSpec = DataTableSpec.load(settingsSpec);
-                }
-                m_outDataPorts[i].setDataTableSpec(outSpec);
-            }
-        }
+        } 
 
         if (wasExecuted && m_model.isAutoExecutable()) {
             execute(execMon);
         }
+    }
+    
+    /**
+     * In version 1.1.x the data was stored in a different way. The data.xml
+     * that is now contained in the data/data_x/ directory was aggregated in 
+     * a data.xml file directly in the m_nodeDir. Also the spec was located
+     * at a different location.
+     */
+    private void loadDataVersion11x(final int loadID,
+            final NodeSettingsRO nodeSettings, final ExecutionMonitor exec)
+            throws IOException, InvalidSettingsException,
+            CanceledExecutionException {
+        String dataConfigFileName = nodeSettings.getString(CFG_DATA_FILE);
+        // dataConfigFile = data.xml in node dir
+        File dataConfigFile = new File(m_nodeDir, dataConfigFileName);
+        NodeSettingsRO dataSettings = 
+            NodeSettings.loadFromXML(new BufferedInputStream(
+                    new FileInputStream(dataConfigFile)));
+        String dataPath = dataSettings.getString(CFG_DATA_FILE_DIR);
+        // dataDir = /data
+        File dataDir = new File(m_nodeDir, dataPath);
+        // note: we do not check for existence here - in some cases
+        // this directory may not exist (when exported and empty
+        // directories are pruned)
+        for (int i = 0; i < m_outDataPorts.length; i++) {
+            ExecutionMonitor execSub = exec
+                    .createSubProgress(1 / (double)m_outDataPorts.length);
+            NodeSettingsRO portSettings = dataSettings
+                    .getNodeSettings(CFG_OUTPUT_PREFIX + i);
+            String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
+            // dir = /data/data_i
+            File dir = new File(dataDir, dataName);
+            BufferedDataTable t = BufferedDataTable.loadFromFile(dir,
+                    portSettings, execSub, loadID);
+            t.setOwnerRecursively(this);
+            m_outDataPorts[i].setDataTable(t);
+        }
+
     }
 
     /**
@@ -1662,8 +1725,6 @@ public final class Node {
 
     private static final String CFG_SPEC_FILES = "spec_files";
 
-    private static final String SPEC_FILE_PREFIX = "spec_";
-
     private static final String CFG_DATA_FILE = "data_meta_file";
 
     private static final String CFG_DATA_FILE_DIR = "data_files_directory";
@@ -1675,10 +1736,6 @@ public final class Node {
     private static final String MODEL_FILE_PREFIX = "model_";
 
     private static final String CFG_OUTPUT_PREFIX = "output_";
-
-    private static String createSpecFileName(final int index) {
-        return SPEC_FILE_PREFIX + index + ".xml";
-    }
 
     private static String createDataFileDirName(final int index) {
         return DATA_FILE_PREFIX + index;
@@ -1725,6 +1782,9 @@ public final class Node {
      */
     public void save(final File nodeFile, final ExecutionMonitor execMon)
             throws IOException, CanceledExecutionException {
+        if (m_isCurrentlySaved) {
+            return;
+        }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveSettings(settings);
         m_nodeDir = nodeFile.getParentFile();
@@ -1742,164 +1802,99 @@ public final class Node {
             }
         }
 
-        if (isConfigured()) {
-            NodeSettingsWO specs = settings.addNodeSettings(CFG_SPEC_FILES);
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                String specName = createSpecFileName(i);
-                specs.addString(CFG_OUTPUT_PREFIX + i, specName);
-                if (!(m_isCurrentlySaved && isExecuted())) {
-                    DataTableSpec outSpec = m_outDataPorts[i]
-                            .getDataTableSpec();
-                    if (outSpec != null) {
-                        NodeSettings specSettings = new NodeSettings(specName);
-                        outSpec.save(specSettings);
-                        File targetFile = new File(m_nodeDir, specName);
-                        specSettings.saveToXML(new BufferedOutputStream(
-                                new FileOutputStream(targetFile)));
-                    }
-                }
-            }
-        } else {
-            for (int i = 0; i < m_outDataPorts.length; i++) {
-                File specFile = new File(m_nodeDir, createSpecFileName(i));
-                specFile.delete();
-            }
-        }
-        if (!m_isCurrentlySaved) {
-            if (isExecuted()) {
-                if (!isAutoExecutable()) {
-                    File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
-                    // may exist from previous savings, clean up
-                    if (internDir.exists()) {
-                        FileUtil.deleteRecursively(internDir);
-                    }
-                    internDir.mkdir();
-                    if (internDir.canWrite()) {
-                        try {
-                            ExecutionMonitor execSub = execMon
-                                    .createSilentSubProgress(0.50);
-                            m_model.saveInternals(internDir, execSub);
-                            processModelWarnings();
-                        } catch (IOException ioe) {
-                            m_status = new NodeStatus.Error("Unable to save "
-                                    + "internals: " + ioe.getMessage());
-                            notifyStateListeners(m_status);
-                        } catch (Exception e) {
-                            m_logger.coding("saveInternals() "
-                                    + "should only cause IOException.", e);
-                            m_status = new NodeStatus.Error("Unable to save "
-                                    + "internals: " + e.getMessage());
-                            notifyStateListeners(m_status);
-                        }
-                    }
-                }
-                if (getNrDataOutPorts() > 0) {
-                    settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
-                    File dataSettingsFile = new File(m_nodeDir, DATA_FILE_NAME);
-                    ExecutionMonitor execSub = execMon.createSubProgress(1.0);
-                    saveData(dataSettingsFile, execSub);
-                }
-                NodeSettingsWO models = settings
-                        .addNodeSettings(CFG_MODEL_FILES);
-                for (int i = 0; i < m_outModelPorts.length; i++) {
-                    String specName = createModelFileName(i);
-                    models.addString(CFG_OUTPUT_PREFIX + i, specName);
-                    ModelContentRO pred = m_outModelPorts[i].getModelContent();
-                    File targetFile = new File(m_nodeDir, specName);
-                    BufferedOutputStream out = new BufferedOutputStream(
-                            new GZIPOutputStream(new FileOutputStream(
-                                    targetFile)));
-                    pred.saveToXML(out);
-                }
-                m_isCurrentlySaved = true;
-            } else {
-                File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
-                FileUtil.deleteRecursively(internDir);
-                File dataDir = new File(m_nodeDir, DATA_FILE_DIR);
+        File dataDir = new File(m_nodeDir, DATA_FILE_DIR);
+        if (isConfigured() || isExecuted()) {
+            // dataSettings = subtree in settings.xml
+            NodeSettingsWO dataSettings = 
+                settings.addNodeSettings(CFG_DATA_FILE);
+            if (dataDir.exists()) {
                 FileUtil.deleteRecursively(dataDir);
-                new File(m_nodeDir, DATA_FILE_NAME).delete();
-                for (int i = 0; i < m_outModelPorts.length; i++) {
-                    String modelFile = createModelFileName(i);
-                    File targetFile = new File(m_nodeDir, modelFile);
-                    targetFile.delete();
+            }
+            dataDir.mkdir();
+            if (!dataDir.isDirectory() || !dataDir.canWrite()) {
+                throw new IOException("Can not write directory "
+                        + dataDir.getAbsolutePath());
+            }
+            dataSettings.addString(CFG_DATA_FILE_DIR, DATA_FILE_DIR);
+            ExecutionMonitor execSaveFile = execMon.createSubProgress(0.25);
+            for (int i = 0; i < m_outDataPorts.length; i++) {
+                ExecutionMonitor execSaveFilePort = execSaveFile.
+                    createSubProgress(1 / (double)m_outDataPorts.length);
+                NodeSettingsWO portSettings = dataSettings
+                        .addNodeSettings(CFG_OUTPUT_PREFIX + i);
+                String dataName = createDataFileDirName(i);
+                File dir = new File(dataDir, dataName);
+                dir.mkdir();
+                if (!(dir.isDirectory() && dir.canWrite())) {
+                    throw new IOException("Can not write directory "
+                            + dir.getAbsolutePath());
+                }
+                portSettings.addString(CFG_DATA_FILE_DIR, dataName);
+                if (isExecuted()) {
+                    BufferedDataTable outTable = 
+                        m_outDataPorts[i].getBufferedDataTable();
+                    outTable.save(dir, execSaveFilePort);
+                } else {
+                    DataTableSpec spec = m_outDataPorts[i].getDataTableSpec();
+                    BufferedDataTable.saveSpec(spec, dir);
                 }
             }
         } else {
-            if (isExecuted()) {
-                if (getNrDataOutPorts() > 0) {
-                    settings.addString(CFG_DATA_FILE, DATA_FILE_NAME);
-                }
-                NodeSettingsWO models = settings
-                        .addNodeSettings(CFG_MODEL_FILES);
-                for (int i = 0; i < m_outModelPorts.length; i++) {
-                    String specName = createModelFileName(i);
-                    models.addString(CFG_OUTPUT_PREFIX + i, specName);
-                }
-            } else {
-                m_logger.assertLog(false,
-                        "Saved flag is set but node is not executed.");
+            if (dataDir.exists()) {
+                FileUtil.deleteRecursively(dataDir);
             }
         }
+        if (!isAutoExecutable()) {
+            File internDir = new File(m_nodeDir, INTERN_FILE_DIR);
+            // may exist from previous savings, clean up
+            if (internDir.exists()) {
+                FileUtil.deleteRecursively(internDir);
+            }
+            if (isExecuted()) {
+                internDir.mkdir();
+                if (internDir.canWrite()) {
+                    try {
+                        ExecutionMonitor execSub = execMon
+                                .createSilentSubProgress(0.50);
+                        m_model.saveInternals(internDir, execSub);
+                        processModelWarnings();
+                    } catch (IOException ioe) {
+                        m_status = new NodeStatus.Error("Unable to save "
+                                + "internals: " + ioe.getMessage());
+                        m_logger.debug("saveInternals() failed with " 
+                                + "IOException", ioe);
+                        notifyStateListeners(m_status);
+                    } catch (Exception e) {
+                        m_logger.coding("saveInternals() "
+                                + "should only cause IOException.", e);
+                        m_status = new NodeStatus.Error("Unable to save "
+                                + "internals: " + e.getMessage());
+                        notifyStateListeners(m_status);
+                    }
+                }
+            }
+        }
+        NodeSettingsWO models = 
+            settings.addNodeSettings(CFG_MODEL_FILES);
+        for (int i = 0; i < m_outModelPorts.length; i++) {
+            String specName = createModelFileName(i);
+            models.addString(CFG_OUTPUT_PREFIX + i, specName);
+            File targetFile = new File(m_nodeDir, specName);
+            // reset from previous saving 
+            targetFile.delete();
+            if (isExecuted()) {
+                ModelContentRO pred = m_outModelPorts[i].getModelContent();
+                BufferedOutputStream out = new BufferedOutputStream(
+                        new GZIPOutputStream(new FileOutputStream(
+                                targetFile)));
+                pred.saveToXML(out);
+            }
+        }
+        m_isCurrentlySaved = true;
         settings.saveToXML(new BufferedOutputStream(new FileOutputStream(
                 nodeFile)));
     } // save(File, ExecutionMonitor)
-
-    private void saveData(final File configFile, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        NodeSettings settings = new NodeSettings("data_files_information");
-        File dataDir = new File(configFile.getParentFile(), DATA_FILE_DIR);
-        if (dataDir.exists()) {
-            FileUtil.deleteRecursively(dataDir);
-        }
-        dataDir.mkdir();
-        if (!dataDir.isDirectory() || !dataDir.canWrite()) {
-            throw new IOException("Can not write directory "
-                    + dataDir.getAbsolutePath());
-        }
-        settings.addString(CFG_DATA_FILE_DIR, DATA_FILE_DIR);
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            NodeSettingsWO portSettings = settings
-                    .addNodeSettings(CFG_OUTPUT_PREFIX + i);
-            String dataName = createDataFileDirName(i);
-            File dir = new File(dataDir, dataName);
-            dir.mkdir();
-            if (!(dir.isDirectory() && dir.canWrite())) {
-                throw new IOException("Can not write directory "
-                        + dir.getAbsolutePath());
-            }
-            portSettings.addString(CFG_DATA_FILE_DIR, dataName);
-            BufferedDataTable outTable = m_outDataPorts[i]
-                    .getBufferedDataTable();
-            outTable.save(dir, portSettings, exec);
-        }
-        settings.saveToXML(new BufferedOutputStream(new FileOutputStream(
-                configFile)));
-    }
-
-    private void loadData(final int loadID, final File configfile,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException, InvalidSettingsException {
-        NodeSettingsRO settings = NodeSettings.loadFromXML(
-                new BufferedInputStream(new FileInputStream(configfile)));
-        String dataPath = settings.getString(CFG_DATA_FILE_DIR);
-        File dataDir = new File(m_nodeDir, dataPath);
-        // note: we do not check for existence here - in some cases this
-        // directory may not exist (when exported and empty directories are 
-        // pruned)
-        for (int i = 0; i < m_outDataPorts.length; i++) {
-            NodeSettingsRO portSettings = settings.getNodeSettings(
-                    CFG_OUTPUT_PREFIX + i);
-            String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
-            File dir = new File(dataDir, dataName);
-            BufferedDataTable t = BufferedDataTable.loadFromFile(dir,
-                    portSettings, exec, loadID);
-            // take ownership for any newly created files (successor nodes
-            // don't store this table, they just reference on us.)
-            t.setOwnerRecursively(this);
-            m_outDataPorts[i].setDataTable(t);
-        }
-    }
-
+    
     /**
      * Validates the settings inside the model.
      * 

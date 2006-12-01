@@ -40,9 +40,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.zip.Deflater;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataCell;
@@ -66,8 +67,8 @@ import org.knime.core.util.FileUtil;
 /**
  * A buffer writes the rows from a {@link DataContainer} to a file. 
  * This class serves as connector between the {@link DataContainer} and 
- * the {@link DataContainer} that is returned by the container. It 
- * "centralizes" the IO operations.
+ * the {@link org.knime.core.data.DataTable} that is returned by the container.
+ * It "centralizes" the IO operations.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -90,24 +91,16 @@ class Buffer {
     private static final byte BYTE_TYPE_START = BYTE_TYPE_MISSING + 2;
 
     /** Name of the zip entry containing the data. */
-    private static final String ZIP_ENTRY_DATA = "data.bin";
+    static final String ZIP_ENTRY_DATA = "data.bin";
     
-    /** Name of the zip entry containing the spec. */
-    private static final String ZIP_ENTRY_SPEC = "spec.xml";
-
     /** Name of the zip entry containing the meta information (e.g. #rows). */
-    private static final String ZIP_ENTRY_META = "meta.xml";
+    static final String ZIP_ENTRY_META = "meta.xml";
     
     /** Config entries when writing the meta information to the file,
      * this is a subconfig in meta.xml.
      */
     private static final String CFG_INTERNAL_META = "table.meta.internal";
 
-    /** Config entries when writing the meta information to the file,
-     * this is a subconfig in meta.xml for overridden classes.
-     */
-    private static final String CFG_ADDITIONAL_META = "table.meta.additional";
-    
     /** Config entries when writing the meta info to the file (uses NodeSettings
      * object, which uses key-value pairs. Here: the version of the writing 
      * method.
@@ -123,12 +116,9 @@ class Buffer {
      * names as strings, see m_shortCutsLookup. */
     private static final String CFG_CELL_CLASSES = "table.datacell.classes";
     
-    /** Config entry: The spec of the table. */
-    private static final String CFG_TABLESPEC = "table.spec";
-    
     /** The version this container is able to read, may be an array in the 
      * future. */
-    private static final String VERSION = "container_1.1.0";
+    private static final String VERSION = "container_1.2.0";
 
     /**
      * Contains weak references to file iterators that have ever been created
@@ -142,17 +132,14 @@ class Buffer {
         OPENBUFFERS = new HashSet<WeakReference<Buffer>>();
 
     /** the file to write to. */
-    private File m_outFile;
+    private File m_binFile;
     
-    /** true when we created a temp file, false when either no IO has
-     * happened or the file was explicitely given.
-     */
-    private boolean m_hasCreatedTempFile;
-    
-    /** Number of open file input streams on m_outFile. */
+    /** Number of open file input streams on m_binFile. */
     private int m_nrOpenInputStreams;
     
-    /** the stream that writes to the file, used for plain cells. */
+    /** the stream that writes to the file, it's a special object output
+     * stream, in which we can mark the end of an entry (to figure out
+     * when a cell implementation reads too many or too few bytes). */
     private DCObjectOutputStream m_outStream;
     
     /** maximum number of rows that are in memory. */
@@ -168,13 +155,13 @@ class Buffer {
     private DataTableSpec m_spec;
 
     /** Map for all DataCells' type, which have been added to this buffer,
-     * they will be separately written to the zip file (if any).
+     * they will be separately written to to the meta.xml in a zip file.
      */
     private HashMap<Class<? extends DataCell>, Byte> m_typeShortCuts;
     
     /** Inverse map of m_typeShortCuts - it stores to each shortcut 
      * (like 'A', 'B', ...) the corresponding DataType.
-     * This object is null unles close() has been called.  
+     * This object is null unless close() has been called.  
      */
     private Class<? extends DataCell>[] m_shortCutsLookup;
     
@@ -190,7 +177,7 @@ class Buffer {
      * which has been written with another version of the Buffer, i.e. to
      * provide backward compatibility.
      */
-    private int m_version = 110;
+    private int m_version = 120;
 
     /** Adds a shutdown hook to the runtime that closes all open input streams
      * @see #OPENBUFFERS
@@ -215,8 +202,8 @@ class Buffer {
     }
 
     /**
-     * Creates new buffer with a given spec, and a max row count that may 
-     * resize in memory.
+     * Creates new buffer for <strong>writing</strong>. It has assigned a 
+     * given spec, and a max row count that may resize in memory. 
      * 
      * @param maxRowsInMemory Maximum numbers of rows that are kept in memory 
      *        until they will be subsequent written to the temp file. (0 to 
@@ -230,72 +217,49 @@ class Buffer {
         m_size = 0;
     }
     
-    /** Creates new buffer that will immediately write to the given file.
+    /** Creates new buffer for <strong>reading</strong>. The 
+     * <code>binFile</code> is the binary file as written by this class, which
+     * will be deleted when this buffer is cleared or finalized. 
      * 
-     * <p>This constructor is used when data will be added using the addRow
-     * method.
-     * @param outFile The file to write to, will be created (or overwritten).
-     * @throws IOException If opening file fails.
-     * @throws NullPointerException If the argument is <code>null</code>.
-     */
-    Buffer(final File outFile) throws IOException {
-        this(0);
-        if (outFile == null) {
-            throw new NullPointerException("Can't set null file!");
-        }
-        m_outStream = initOutFile(outFile);
-        m_outFile = outFile;
-        m_hasCreatedTempFile = false;
-    }
-    
-    /** Creates new buffer for <strong>reading</strong>. The file is
-     * assumed to be a zip file as written by this class.
-     * 
-     * <p>This constructor is used when data will be read from a zip file.
-     * @param inFile The file to read from.
-     * @param ignored This argument is ignored. It serves to distinguish
-     * from the other constructor.
+     * @param binFile The binary file to read from (will be deleted on exit).
+     * @param spec The data table spec to which the this buffer complies to.
+     * @param metaIn An input stream from which this constructor reads the 
+     * meta information (e.g. which byte encodes which DataCell).
      * @throws IOException If the header (the spec information) can't be read.
      */
-    Buffer(final File inFile, final boolean ignored) throws IOException {
-        assert ignored == ignored;
-        // copy the file to temp first, we will delete it when done
-        LOGGER.debug("Copying \"" + inFile.getAbsolutePath() 
-                + "\" to temp directory.");
-        m_outFile = DataContainer.createTempFile();
-        m_hasCreatedTempFile = true;
-        FileUtil.copy(inFile, m_outFile);
+    Buffer(final File binFile, final DataTableSpec spec, 
+            final InputStream metaIn) throws IOException {
+        m_spec = spec;
+        m_binFile = binFile;
+        if (metaIn == null) {
+            throw new IOException("No meta information given (null)");
+        }
         m_maxRowsInMem = 0;
-        ZipFile zipFile = new ZipFile(m_outFile);
-        String errorFile = "";
         try {
-            errorFile = "spec";
-            m_spec = readSpecFromFile(zipFile);
-            errorFile = "meta";
-            readMetaFromFile(zipFile);
+            readMetaFromFile(metaIn);
         } catch (ClassNotFoundException cnfe) {
             IOException ioe = new IOException(
-                    "Unable to read " + errorFile + "from zip file \""
-                    + inFile.getAbsolutePath() + "\"");
+                    "Unable to read meta information from file \"" 
+                    + metaIn + "\"");
             ioe.initCause(cnfe);
             throw ioe;
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException(
-                    "Unable to read " + errorFile + "from zip file \""
-                    + inFile.getAbsolutePath() + "\"");
+                    "Unable to read meta information from file \"" 
+                    + metaIn + "\"");
             ioe.initCause(ise);
             throw ioe;
         }
         // just check if data is present!
-        InputStream dataInput = zipFile.getInputStream(
-                new ZipEntry(ZIP_ENTRY_DATA));
-        if (dataInput == null) {
-            throw new IOException("Invalid file: No data entry");
+        if (binFile == null || !binFile.canRead() || !binFile.isFile()) {
+            throw new IOException("Unable to reade from file: " + binFile);
         }
         m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
     }
     
-    /** Get the version string to write to the meta file, may be overridden.
+    /** Get the version string to write to the meta file.
+     * This method is overridden in the {@link NoKeyBuffer} to distinguish
+     * streams written by the different implementations.
      * @return The version string.
      */
     public String getVersion() {
@@ -312,11 +276,16 @@ class Buffer {
     public int validateVersion(final String version) throws IOException {
         if ("container_1.0.0".equals(version)) {
             LOGGER.debug("Table has been written with a previous version " 
-                    + "of KNIME (1.0.0), reading anyway.");
+                    + "of KNIME (1.0.0), using compatibility mode.");
             return 100;
         }
-        if (VERSION.equals(version)) {
+        if ("container_1.1.0".equals(version)) {
+            LOGGER.debug("Table has been written with a previous version " 
+                    + "of KNIME (1.1.0), using compatibility mode.");
             return 110;
+        }
+        if (VERSION.equals(version)) {
+            return 120;
         }
         throw new IOException("Unsupported version: \"" + version 
                 + "\" (expected \"" + VERSION + "\")");
@@ -334,11 +303,11 @@ class Buffer {
         // if size is violated
         if (m_list.size() > m_maxRowsInMem) {
             try {
-                if (m_outFile == null) {
-                    m_outFile = DataContainer.createTempFile();
-                    m_hasCreatedTempFile = true;
+                if (m_binFile == null) {
+                    m_binFile = DataContainer.createTempFile();
                     OPENBUFFERS.add(new WeakReference<Buffer>(this));
-                    m_outStream = initOutFile(m_outFile);
+                    m_outStream = initOutFile(new BufferedOutputStream(
+                            new FileOutputStream(m_binFile)));
                 }
                 while (!m_list.isEmpty()) {
                     DataRow firstRow = m_list.remove(0);
@@ -347,8 +316,8 @@ class Buffer {
                 // write next rows directly to file  
                 m_maxRowsInMem = 0;
             } catch (IOException ioe) {
-                String fileName = (m_outFile != null 
-                        ? "\"" + m_outFile.getName() + "\"" : "");
+                String fileName = (m_binFile != null 
+                        ? "\"" + m_binFile.getName() + "\"" : "");
                 throw new RuntimeException(
                         "Unable to write to file " + fileName , ioe);
             }
@@ -367,7 +336,7 @@ class Buffer {
      * it will stay in memory (no file created).
      * @param spec The spec the rows have to follow. No sanity check is done.
      */
-    public void close(final DataTableSpec spec) {
+    void close(final DataTableSpec spec) {
         assert (spec != null);
         m_spec = spec;
         // everything is in the list, i.e. in memory
@@ -381,13 +350,13 @@ class Buffer {
                 m_shortCutsLookup = closeFile(m_outStream);
                 m_typeShortCuts = null; // garbage
                 m_list = null;
-                double sizeInMB = m_outFile.length() / (double)(1 << 20);
+                double sizeInMB = m_binFile.length() / (double)(1 << 20);
                 String size = NumberFormat.getInstance().format(sizeInMB);
-                LOGGER.info("Buffer file (" + m_outFile.getAbsolutePath() 
+                LOGGER.info("Buffer file (" + m_binFile.getAbsolutePath() 
                         + ") is " + size + "MB in size");
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" 
-                        + m_outFile.getName() + "\"", ioe); 
+                        + m_binFile.getName() + "\"", ioe); 
             }
         }
     } // close()
@@ -396,56 +365,28 @@ class Buffer {
      * Called when the buffer is closed or when the in-memory content (i.e.
      * using m_list) is written to a file.
      * @param outStream The output stream to close (to add meta-data, e.g.).
-     * @return The lookup table similar to m_shortCutsLookup
+     * @return The lookup table, will be assigned to m_shortCutsLookup when
+     * called from {@link #close(DataTableSpec)}.
      * @throws IOException If that fails.
      */
     private Class<? extends DataCell>[] closeFile(
             final DCObjectOutputStream outStream) throws IOException {
         Class<? extends DataCell>[] shortCutsLookup = createShortCutArray();
-        // Write spec.
-        // we push the underlying stream forward; need to make
-        // sure that m_outStream is done with everything.
-        outStream.flush();
-        ZipOutputStream zipOut = 
-            (ZipOutputStream)outStream.getUnderylingStream();
-        zipOut.closeEntry();
-        // both method will create their own zip entry and close 
-        // it afterwards
-        writeSpecToFile(zipOut);
-        writeMetaToFile(zipOut, shortCutsLookup);
-        zipOut.close();
+        outStream.close();
         return shortCutsLookup;
     }
     
-    /** Called when buffer is closed and we are writing to a customized
-     * file. This method will add a zip entry containing the spec.
-     * @param outStream The stream to write to.
-     * @throws IOException If that fails.
-     */
-    void writeSpecToFile(final ZipOutputStream outStream) throws IOException {
-        outStream.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
-        NodeSettings settings = new NodeSettings("Table Spec");
-        NodeSettingsWO specSettings = settings.addNodeSettings(CFG_TABLESPEC);
-        m_spec.save(specSettings);
-        // will only close the zip entry, not the entire stream.
-        NonClosableZipOutputStream nonClosable = 
-            new NonClosableZipOutputStream(outStream);
-        // calls close (and hence closeEntry)
-        settings.saveToXML(nonClosable);
-    }
-    
-    /** Writes internals to the zip output stream by adding a zip entry and 
-     * writing to it.
-     * @param zipOut To write to.
+    /** Writes internals to the an output stream (using the xml scheme from
+     * NodeSettings).
+     * @param out To write to.
      * @param shortCutsLookup The lookup table of this buffer, generally it's
      * m_shortCutsLookup but it may be different when this buffer operates
      * in-memory (i.e. uses m_list) but is written to a destination file.
      * @throws IOException If that fails.
      */
-    void writeMetaToFile(final ZipOutputStream zipOut, 
+    private void writeMetaToFile(final OutputStream out, 
             final Class<? extends DataCell>[] shortCutsLookup) 
             throws IOException {
-        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
         NodeSettings settings = new NodeSettings("Table Meta Information");
         NodeSettingsWO subSettings = 
             settings.addNodeSettings(CFG_INTERNAL_META);
@@ -457,66 +398,20 @@ class Buffer {
             cellClasses[i] = shortCutsLookup[i].getName();
         }
         subSettings.addStringArray(CFG_CELL_CLASSES, cellClasses);
-        NodeSettingsWO addSubSettings = 
-            settings.addNodeSettings(CFG_ADDITIONAL_META); 
-        // allow subclasses to do private savings.
-        addMetaForSaving(addSubSettings);
-        // will only close the zip entry, not the entire stream.
-        NonClosableZipOutputStream nonClosable = 
-            new NonClosableZipOutputStream(zipOut);
         // calls close (and hence closeEntry)
-        settings.saveToXML(nonClosable);
-    }
-    
-    /** Intended for subclass NoKeyBuffer to add its private information.
-     * @param settings Where to add meta information.
-     */
-    void addMetaForSaving(final NodeSettingsWO settings) {
-        // checkstyle complains otherwise.
-        assert settings == settings;
+        settings.saveToXML(out);
     }
     
     /**
-     * Reads the zip entry containing the spec.
-     * @param zipFile To read from.
-     * @return The spec as read from file.
-     * @throws IOException If reading fails.
-     * @throws InvalidSettingsException If the internal structure is broken. 
-     */
-    @SuppressWarnings("unchecked") // cast with generics
-    DataTableSpec readSpecFromFile(final ZipFile zipFile) 
-            throws IOException, InvalidSettingsException {
-        InputStream specInput = zipFile.getInputStream(
-                new ZipEntry(ZIP_ENTRY_SPEC));
-        if (specInput == null) {
-            throw new IOException("Invalid file: No spec information");
-        }
-        InputStream inStream = new BufferedInputStream(specInput);
-        try {
-            NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
-            NodeSettingsRO specSettings = 
-                settings.getNodeSettings(CFG_TABLESPEC);
-            return DataTableSpec.load(specSettings);
-        } finally {
-            inStream.close();
-        }
-    }
-    
-    /**
-     * Reads the zip entry containing the meta information.
-     * @param zipFile To read from.
+     * Reads meta information, that is row count, version, byte assignments.
+     * @param metaIn To read from.
      * @throws IOException If reading fails.
      * @throws ClassNotFoundException If any of the classes can't be loaded.
      * @throws InvalidSettingsException If the internal structure is broken. 
      */
     @SuppressWarnings("unchecked") // cast with generics
-    void readMetaFromFile(final ZipFile zipFile) 
+    private void readMetaFromFile(final InputStream metaIn) 
     throws IOException, ClassNotFoundException, InvalidSettingsException {
-        InputStream metaIn = zipFile.getInputStream(
-                new ZipEntry(ZIP_ENTRY_META));
-        if (metaIn == null) {
-            throw new IOException("Invalid file: No meta information");
-        }
         InputStream inStream = new BufferedInputStream(metaIn);
         try {
             NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
@@ -538,29 +433,13 @@ class Buffer {
                 }
                 m_shortCutsLookup[i] = cl;
             }
-            readMetaFromSaving(settings.getNodeSettings(CFG_ADDITIONAL_META));
         } finally {
             inStream.close();
         }
     }
     
-    /** Subclasses will override this and read the internals. This method
-     * is called in the constructor (not advisable in general, but hard to 
-     * avoid here.)
-     * @param settings To read from.
-     * @throws InvalidSettingsException If that fails.
-     */
-    void readMetaFromSaving(final NodeSettingsRO settings) 
-        throws InvalidSettingsException {
-        // Checksyle is really rigid with regard to unused variables. This
-        // is dirty, yes.
-        assert settings == settings;
-        if (false) {
-            throw new InvalidSettingsException("");
-        }
-    }
-    
-    /** Create the shortcut table. */
+    /** Create the shortcut table, it translates m_typeShortCuts to 
+     * m_shortCutsLookup. */
     @SuppressWarnings("unchecked") // no generics in array definiton
     private Class<? extends DataCell>[] createShortCutArray() {
         m_shortCutsLookup = new Class[m_typeShortCuts.size()];
@@ -577,7 +456,7 @@ class Buffer {
      * @return true If it does.
      */
     boolean usesOutFile() {
-        return m_outFile != null;
+        return m_binFile != null;
     }
     
     /** Get the table spec that was set in the constructor.
@@ -612,7 +491,7 @@ class Buffer {
     }
     
     /** Writes the row key to the out stream. This method is overridden in
-     * NoKeyBuffer in order to skip the row key. 
+     * {@link NoKeyBuffer} in order to skip the row key. 
      * @param key The key to write.
      * @param outStream To write to.
      * @throws IOException If that fails.
@@ -623,8 +502,8 @@ class Buffer {
         writeDataCell(id, outStream);
     }
     
-    /** Reads a row key from a string. Is overridden in NoKeyBuffer to return
-     * always the same key.
+    /** Reads a row key from a string. Is overridden in {@link NoKeyBuffer} 
+     * to return always the same key.
      * @param inStream To read from
      * @return The row key as read right from the stream.
      * @throws IOException If that fails.
@@ -756,20 +635,14 @@ class Buffer {
         return m_shortCutsLookup[shortCutIndex];
     }
     
-    /** Creates the out file and the stream that writes to it.
-     * @param outFile The file to write to. If <code>null</code>, a 
-     * temp file is created and deleted on exit.
-     * @return A new output stream writing to the argument file.
-     * @throws IOException If the stream cannot be instantiated.
+    /**
+     * Creates short cut array and wraps the argument stream in a
+     * DCObjectOutputStream.
      */
     private DCObjectOutputStream initOutFile(
-            final File outFile) throws IOException {
-        assert (outFile != null);
-        ZipOutputStream zipOut = new ZipOutputStream(
-                new BufferedOutputStream(new FileOutputStream(outFile)));
-        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
+            final OutputStream outStream) throws IOException {
         m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
-        return new DCObjectOutputStream(zipOut);
+        return new DCObjectOutputStream(new GZIPOutputStream(outStream));
     }
     
     /**
@@ -779,48 +652,59 @@ class Buffer {
      * only).
      * @return a new Iterator over all rows.
      */
-    public RowIterator iterator() {
+    RowIterator iterator() {
         if (usesOutFile()) {
             return new FromFileIterator();
         } else {
             return new FromListIterator();
         }
     }
+    
     /**
-     * Delegate method that's been called from the container table to save
-     * the internals.
-     * @param f To write to.
+     * Method that's been called from the {@link ContainerTable} 
+     * to save the content. It will add zip entries to the <code>zipOut</code>
+     * argument and not close the output stream when done, allowing 
+     * to add additional content elsewhere (for instance the 
+     * <code>DataTableSpec</code>).
+     * @param zipOut To write to.
      * @param exec For progress/cancel
      * @throws IOException If it fails to write to a file.
      * @throws CanceledExecutionException If canceled.
      * @see org.knime.core.node.BufferedDataTable.KnowsRowCountTable
      * #saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
-    void saveToFile(final File f, final ExecutionMonitor exec) 
+    void addToZipFile(final ZipOutputStream zipOut, 
+            final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
         if (m_spec == null) {
             throw new IOException("Can't save an open Buffer.");
         }
+        // binary data is already deflated
+        zipOut.setLevel(Deflater.NO_COMPRESSION);
+        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
+        Class<? extends DataCell>[] shortCutsLookup;
         if (!usesOutFile()) {
-            DCObjectOutputStream outStream = initOutFile(f);
+            DCObjectOutputStream outStream = 
+                initOutFile(new NonClosableZipOutputStream(zipOut));
             int count = 1;
-            try {
-                for (DataRow row : m_list) {
-                    exec.setProgress(count / (double)size(), "Writing row " 
-                            + count + " (\"" + row.getKey() + "\")");
-                    exec.checkCanceled();
-                    writeRow(row, outStream);
-                    count++;
-                }
-                closeFile(outStream);
-            } catch (CanceledExecutionException cee) {
-                outStream.close();
-                f.delete();
-                throw cee;
+            for (DataRow row : m_list) {
+                exec.setProgress(count / (double)size(), "Writing row " 
+                        + count + " (\"" + row.getKey() + "\")");
+                exec.checkCanceled();
+                writeRow(row, outStream);
+                count++;
             }
+            shortCutsLookup = closeFile(outStream);
         } else {
-            FileUtil.copy(m_outFile, f, exec);
+            // no need for BufferedInputStream here as the copy method
+            // does the buffering itself
+            FileUtil.copy(new FileInputStream(m_binFile), zipOut);
+            shortCutsLookup = m_shortCutsLookup;
         }
+        zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
+        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
+        writeMetaToFile(
+                new NonClosableZipOutputStream(zipOut), shortCutsLookup);
     }
     
     /** Deletes the file underlying this buffer.
@@ -828,9 +712,7 @@ class Buffer {
      */
     @Override
     protected void finalize() {
-        if (m_hasCreatedTempFile) {
-            clear();
-        }
+        clear();
     }
     
     /**
@@ -838,14 +720,14 @@ class Buffer {
      */
     void clear() {
         m_list = null;
-        if (m_outFile != null) {
+        if (m_binFile != null) {
             for (WeakReference<FromFileIterator> w : m_openIteratorSet) {
                 FromFileIterator f = w.get();
                 if (f != null) {
-                    f.clear();
+                    f.clearIteratorInstance();
                 }
             }
-            boolean deleted = m_outFile.delete();
+            boolean deleted = m_binFile.delete();
             if (!deleted) {
                 // note: although all input streams are closed, the file
                 // can't be deleted. If we call the gc, it works. No clue.
@@ -853,15 +735,15 @@ class Buffer {
  // http://forum.java.sun.com/thread.jspa?forumID=31&threadID=609458
                 System.gc();
             }
-            if (deleted || m_outFile.delete()) {
+            if (deleted || m_binFile.delete()) {
                 LOGGER.debug("Deleted temp file \"" 
-                        + m_outFile.getAbsolutePath() + "\"");
+                        + m_binFile.getAbsolutePath() + "\"");
             } else {
                 LOGGER.debug("Failed to delete temp file \"" 
-                        + m_outFile.getAbsolutePath() + "\"");
+                        + m_binFile.getAbsolutePath() + "\"");
             }
         }
-        m_outFile = null;
+        m_binFile = null;
     }
     
     /**
@@ -879,31 +761,22 @@ class Buffer {
         FromFileIterator() {
             m_pointer = 0;
             try {
-                // this fixes bug #775: ZipFile has a bug if the file to read
-                // is too large
-                ZipInputStream zipIn = new ZipInputStream(
-                       new BufferedInputStream(new FileInputStream(m_outFile)));
-                ZipEntry zipEntry = null;
-                do {
-                    zipEntry = zipIn.getNextEntry();
-                    if (zipEntry == null) {
-                        throw new RuntimeException("Expected ZIP file entry '"
-                                + ZIP_ENTRY_DATA + "' not found.");
-                    }
-                } while (!zipEntry.getName().equals(ZIP_ENTRY_DATA));
-                
-//                ZipFile zipFile = new ZipFile(m_outFile, ZipFile.OPEN_READ);
-//                BufferedInputStream zipIn = new BufferedInputStream(
-//                        zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_DATA)));
-                
-                m_inStream = new DCObjectInputStream(zipIn);
+                BufferedInputStream bufferedStream =
+                    new BufferedInputStream(new FileInputStream(m_binFile));
+                InputStream in;
+                if (m_version < 120) { // stream was not zipped in KNIME 1.1.x 
+                    in = bufferedStream;
+                } else {
+                    in = new GZIPInputStream(bufferedStream);
+                }
+                m_inStream = new DCObjectInputStream(in);
                 m_nrOpenInputStreams++;
                 LOGGER.debug("Opening input stream on file \"" 
-                        + m_outFile.getAbsolutePath() + "\", " 
+                        + m_binFile.getAbsolutePath() + "\", " 
                         + m_nrOpenInputStreams + " open streams");
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot read file \"" 
-                        + m_outFile.getName() + "\"", ioe);
+                        + m_binFile.getName() + "\"", ioe);
             }
             m_openIteratorSet.add(new WeakReference<FromFileIterator>(this));
         }
@@ -912,7 +785,7 @@ class Buffer {
          * @return The name of the out file
          */
         public String getOutFileName() {
-            return m_outFile.getAbsolutePath();
+            return m_binFile.getAbsolutePath();
         }
 
         /**
@@ -960,21 +833,21 @@ class Buffer {
             } catch (Exception ioe) {
                 throw new RuntimeException("Cannot read line "  
                     + (m_pointer + 1) + " from file \"" 
-                        + m_outFile.getName() + "\"", ioe);
+                        + m_binFile.getName() + "\"", ioe);
             } finally {
                 m_pointer++;
             }
         }
         
-        private synchronized void clear() {
+        private synchronized void clearIteratorInstance() {
             m_pointer = Buffer.this.m_size; // mark it as end of file
             // already closed (clear has been called before)
             if (m_inStream == null) {
                 return;
             }
             
-            String closeMes = (m_outFile != null) ? "Closing input stream on \""
-                + m_outFile.getAbsolutePath() + "\", " : ""; 
+            String closeMes = (m_binFile != null) ? "Closing input stream on \""
+                + m_binFile.getAbsolutePath() + "\", " : ""; 
             try {
                 m_inStream.close();
                 m_nrOpenInputStreams--;
@@ -994,7 +867,7 @@ class Buffer {
              * deleted under windows. It seems that there are open streams
              * when the VM closes.
              */
-            clear();
+            clearIteratorInstance();
         }
     }
     
@@ -1023,55 +896,4 @@ class Buffer {
         }
         
     }
-    
-    /** Class that overrides the close method and just calls closeEntry on the
-     * reference zip output. All other methods delegate directly.
-     */
-    private static class NonClosableZipOutputStream extends OutputStream {
-        private final ZipOutputStream m_zipOut;
-        
-        /** Inits object, references argument.
-         * @param zipOut The reference.
-         */
-        public NonClosableZipOutputStream(final ZipOutputStream zipOut) {
-            m_zipOut = zipOut;
-        }
-        /**
-         * @see java.io.OutputStream#close()
-         */
-        @Override
-        public void close() throws IOException {
-            m_zipOut.closeEntry();
-        }
-        /**
-         * @see java.io.OutputStream#flush()
-         */
-        @Override
-        public void flush() throws IOException {
-            m_zipOut.flush();
-        }
-        /**
-         * @see java.io.OutputStream#write(byte[], int, int)
-         */
-        @Override
-        public void write(final byte[] b, final int off, final int len) 
-            throws IOException {
-            m_zipOut.write(b, off, len);
-        }
-        /**
-         * @see java.io.OutputStream#write(byte[])
-         */
-        @Override
-        public void write(final byte[] b) throws IOException {
-            m_zipOut.write(b);
-        }
-        /**
-         * @see java.io.OutputStream#write(int)
-         */
-        @Override
-        public void write(final int b) throws IOException {
-            m_zipOut.write(b);
-        }
-    }
-
 }

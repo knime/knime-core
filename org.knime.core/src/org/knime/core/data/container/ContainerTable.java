@@ -22,12 +22,16 @@
  */
 package org.knime.core.data.container;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsWO;
@@ -47,7 +51,11 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 public class ContainerTable implements DataTable, KnowsRowCountTable {
     
     /** To read the data from. */
-    private final Buffer m_buffer;
+    private Buffer m_buffer;
+    /** Contains functionality to copy the binary data to the temp file on
+     * demand (e.g. iterator is opened). */
+    private CopyOnAccessTask m_readTask;
+    private DataTableSpec m_spec;
     
     /**
      * Create new Table based on a Buffer. This constructor is called from
@@ -59,18 +67,34 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         assert (buffer != null);
         m_buffer = buffer;
     }
+    
+    /**
+     * Constructor when table is read from file. 
+     * @param readTask Carries out the copy process when iterator is requested
+     *        (just once).
+     * @param spec The spec of this table.
+     */
+    ContainerTable(final CopyOnAccessTask readTask, 
+            final DataTableSpec spec) {
+        m_readTask = readTask;
+        m_spec = spec;
+    }
 
     /**
      * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
     public DataTableSpec getDataTableSpec() {
-        return m_buffer.getTableSpec();
+        if (m_buffer != null) {
+            return m_buffer.getTableSpec();
+        }
+        return m_spec;
     }
 
     /**
      * @see org.knime.core.data.DataTable#iterator()
      */
     public RowIterator iterator() {
+        ensureBufferOpen();
         return m_buffer.iterator();
     }
     
@@ -78,6 +102,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
      * @see KnowsRowCountTable#getRowCount()
      */
     public int getRowCount() {
+        ensureBufferOpen();
         return m_buffer.size();
     }
 
@@ -85,6 +110,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
      * @return The buffer backing this object.
      */
     Buffer getBuffer() {
+        ensureBufferOpen();
         return m_buffer;
     }
 
@@ -96,7 +122,11 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     public void saveToFile(final File f, final NodeSettingsWO settings, 
             final ExecutionMonitor exec) throws IOException, 
             CanceledExecutionException {
-        m_buffer.saveToFile(f, exec);
+        ensureBufferOpen();
+        ZipOutputStream zipOut = new ZipOutputStream(
+                new BufferedOutputStream(new FileOutputStream(f)));
+        m_buffer.addToZipFile(zipOut, exec);
+        zipOut.close();
     }
     
     /**
@@ -105,7 +135,38 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
      * @see KnowsRowCountTable#clear()
      */
     public void clear() {
-        m_buffer.clear();
+        if (m_buffer != null) {
+            m_buffer.clear();
+        }
     }
-
+    
+    /**
+     * Returns <code>null</code>. This method is used internally.
+     * @see KnowsRowCountTable#getReferenceTable()
+     */
+    public BufferedDataTable getReferenceTable() {
+        return null;
+    }
+    
+    /** Executes the copy process when the content of this table is demanded 
+     * for the first time. */
+    private void ensureBufferOpen() {
+        // do not synchronize this check here as this method most of the
+        // the times returns immediately
+        if (m_buffer != null) {
+            return;
+        }
+        synchronized (m_readTask) {
+            // synchronized may have blocked when another thread was
+            // executing the copy task. If so, there is nothing else to 
+            // do here
+            if (m_buffer != null) {
+                return;
+            }
+            m_buffer = m_readTask.createBuffer();
+            m_spec = null;
+            m_readTask = null;
+        }
+    }
+    
 }

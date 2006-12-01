@@ -24,6 +24,8 @@
  */
 package org.knime.core.node;
 
+import java.io.File;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
@@ -38,11 +40,11 @@ import org.knime.core.node.Node.MemoryPolicy;
  * NodeModel's {@link NodeModel#execute(BufferedDataTable[], ExecutionContext) 
  * execute} method.
  * 
- * <p>Use a BufferedDataContainer when new data is aquired during the execution 
- * or if it does not pay off to reference a node's input data (it does pay
- * off when you only append a column to the input data, for instance).
- * Please see the {@link ExecutionContext} for more details on how to create
- * <code>BufferedDataTable</code>'s.  
+ * <p>Use a <code>BufferedDataContainer</code> when new data is aquired during
+ * the execution or if it does not pay off to reference a node's input data 
+ * (it does pay off when you only append a column to the input data, for 
+ * instance). Please see the {@link ExecutionContext} for more details on how 
+ * to create <code>BufferedDataTable</code>'s.  
  * 
  * <p>To get a quick start how to use a <code>BufferedDataTable</code>, see
  * the following code:
@@ -123,5 +125,19 @@ public class BufferedDataContainer extends DataContainer {
             m_resultTable.setOwnerRecursively(m_node);
         }
         return m_resultTable;
+    }
+    
+    /**
+     * Just delegates to 
+     * {@link DataContainer#readFromZipDelayed(File, DataTableSpec)}. 
+     * This method is available in this class to enable other classes in this
+     * package to use it.
+     * @param zipFile Delegated.
+     * @param spec Delegated.
+     * @return {@link DataContainer#readFromZipDelayed(File, DataTableSpec)}
+     */
+    protected static ContainerTable readFromZipDelayed(
+            final File zipFile, final DataTableSpec spec) {
+        return DataContainer.readFromZipDelayed(zipFile, spec);
     }
 }

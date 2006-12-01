@@ -26,7 +26,9 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 
 
@@ -34,13 +36,15 @@ import org.knime.core.data.RowKey;
  * Buffer implementation that does not write the row keys. Used to write
  * data if only few columns have changed. This buffer writes the changed 
  * columns.
- * @author wiswedel, University of Konstanz
+ * <p>This class is used to save the data of the new columns in a 
+ * {@link RearrangeColumnsTable}.
+ * @author Bernd Wiswedel, University of Konstanz
  */
 class NoKeyBuffer extends Buffer {
     
     private static final RowKey DUMMY_KEY = new RowKey("non-existing");
     
-    private static final String VERSION = "noRowKeyContainer_1.1.0";
+    private static final String VERSION = "noRowKeyContainer_1.2.0";
     
     /**
      * For writing.
@@ -51,13 +55,11 @@ class NoKeyBuffer extends Buffer {
     }
     
     /**
-     * For reading.
-     * @param inFile To read from.
-     * @throws IOException If that fails.
-     * @see Buffer#Buffer(File, boolean)
+     * @see Buffer#Buffer(File, DataTableSpec, InputStream)
      */
-    NoKeyBuffer(final File inFile) throws IOException {
-        super(inFile, false);
+    NoKeyBuffer(final File binFile, final DataTableSpec spec, 
+            final InputStream metaIn) throws IOException {
+        super(binFile, spec, metaIn);
     }
     
     /**
@@ -76,8 +78,11 @@ class NoKeyBuffer extends Buffer {
         if ("noRowKeyContainer_1.0.0".equals(version)) {
             return 100;
         } 
-        if (VERSION.equals(version)) {
+        if ("noRowKeyContainer_1.1.0".equals(version)) {
             return 110;
+        }
+        if (VERSION.equals(version)) {
+            return 120;
         }
         throw new IOException("Unsupported version: \"" + version 
                 + "\" (expected \"" + VERSION + "\")");

@@ -49,11 +49,11 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 /**
  * Table that only replaces the data table spec of an underlying table. This
  * class is not intended for subclassing or to be used in a node model 
- * implementation. Instead, use the method provided through the execution
+ * implementation. Instead, use the methods provided through the execution
  * context.
  * @see org.knime.core.node.ExecutionContext#createSpecReplacerTable(
  *       BufferedDataTable, DataTableSpec)
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableSpecReplacerTable implements KnowsRowCountTable {
     
@@ -80,27 +80,6 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
         m_newSpec = newSpec;
     }
 
-    /**
-     * Restores table from a file. Not intended to be used by node 
-     * implementations.
-     * @param f The file to read from.
-     * @param s The settings to get meta information from.
-     * @param loadID The internal node id (to get the reference table from).
-     * @throws IOException If reading the file fails.
-     * @throws InvalidSettingsException If reading the settings fails.
-     */
-    public TableSpecReplacerTable(final File f, final NodeSettingsRO s, 
-            final int loadID) throws IOException, InvalidSettingsException {
-        NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
-        int refID = subSettings.getInt(CFG_REFERENCE_ID);
-        m_reference = BufferedDataTable.getDataTable(loadID, refID);
-        ZipFile zipFile = new ZipFile(f);
-        InputStream in = new BufferedInputStream(
-                zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_SPEC)));
-        NodeSettingsRO specSettings = NodeSettings.loadFromXML(in);
-        m_newSpec = DataTableSpec.load(specSettings);
-    }
-
     private static final String CFG_INTERNAL_META = "meta_internal";
     private static final String CFG_REFERENCE_ID = "table_reference_ID";
     private static final String CFG_SPEC = "table_changed_spec";
@@ -122,6 +101,46 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
         m_newSpec.save(specWriteSettings);
         // will also close the stream.
         specWriteSettings.saveToXML(zipOut);
+    }
+    
+    /**
+     * Restores table from a file that has been written using KNIME 1.1.x 
+     * or before. Not intended to be used by node implementations.
+     * @param f The file to read from.
+     * @param s The settings to get meta information from.
+     * @param loadID The internal node id (to get the reference table from).
+     * @return The resulting table.
+     * @throws IOException If reading the file fails.
+     * @throws InvalidSettingsException If reading the settings fails.
+     */
+    public static TableSpecReplacerTable load11x(
+            final File f, final NodeSettingsRO s, 
+            final int loadID) throws IOException, InvalidSettingsException {
+        ZipFile zipFile = new ZipFile(f);
+        InputStream in = new BufferedInputStream(
+                zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_SPEC)));
+        NodeSettingsRO specSettings = NodeSettings.loadFromXML(in);
+        DataTableSpec newSpec = DataTableSpec.load(specSettings);
+        return load(s, newSpec, loadID);
+    }
+
+    /**
+     * Restores table from a file that has been written using KNIME 1.2.0 
+     * or later. Not intended to be used by node implementations.
+     * @param s The settings to get meta information from.
+     * @param newSpec The new table spec.
+     * @param loadID The internal node id (to get the reference table from).
+     * @return The resulting table.
+     * @throws InvalidSettingsException If reading the settings fails.
+     */
+    public static TableSpecReplacerTable load(final NodeSettingsRO s, 
+            final DataTableSpec newSpec, final int loadID) 
+        throws InvalidSettingsException {
+        NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
+        int refID = subSettings.getInt(CFG_REFERENCE_ID);
+        BufferedDataTable reference = 
+            BufferedDataTable.getDataTable(loadID, refID);
+        return new TableSpecReplacerTable(reference, newSpec);
     }
     
     /**

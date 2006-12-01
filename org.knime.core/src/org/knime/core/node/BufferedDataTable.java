@@ -24,7 +24,11 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,25 +37,24 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
 
 
 /**
  * DataTable implementation that is passed along the KNIME workflow. This 
  * implementation is provided in a NodeModel's 
  * {@link org.knime.core.node.NodeModel#execute(
- * BufferedDataTable[], ExecutionContext) execute} method as input data and
+ * BufferedDataTable[], ExecutionContext)} method as input data and
  * must also be returned as output data. 
  * 
  * <p><code>BufferedDataTable</code> are not created directly (via a 
  * constructor, for instance) but they are rather instantiated using the 
- * <code>ExecutionContext</code> that is provided in the execute method. See
- * its {@link org.knime.core.node.ExecutionContext class description} for
- * more details on how to create <code>BufferedDataTable</code>. 
+ * {@link ExecutionContext} that is provided in the execute method. 
  * 
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BufferedDataTable implements DataTable {
     
@@ -172,39 +175,6 @@ public final class BufferedDataTable implements DataTable {
         m_delegate = table;
         m_tableID = lastID++;
     }
-
-    /** Factory method. Obsolete, not used anymore.
-     * @param table The table to cache
-     * @param exec For cancellation/progress
-     * @return A new buffered datatable
-     * @throws CanceledExecutionException If canceled.
-     */
-    static BufferedDataTable createBufferedDataTable(
-            final DataTable table, final ExecutionMonitor exec)
-            throws CanceledExecutionException {
-        boolean isKnown = false;
-        if (table instanceof ContainerTable) {
-            isKnown = true;
-        } else if (table instanceof RearrangeColumnsTable) {
-            isKnown = true;
-        } else if (table instanceof TableSpecReplacerTable) {
-            isKnown = true;
-        } else if (table instanceof BufferedDataTable) {
-            LOGGER.coding("No need to create a BufferedDataTable based " 
-                    + "on a BufferedDataTable; you can use the object at hand "
-                    + "directly.");
-            return (BufferedDataTable)table;
-        }
-        if (isKnown) {
-            LOGGER.coding("Attempted to create a BufferedDataTable "
-                    + "with a known table implemenation (" 
-                    + table.getClass().getSimpleName() + "), keeping only " 
-                    + "reference. Use one of the constructors in the future!");
-            return new BufferedDataTable((KnowsRowCountTable)table);
-        } 
-        ContainerTable t = (ContainerTable)DataContainer.cache(table, exec);
-        return new BufferedDataTable(t);
-    }
     
     /** Get reference to reference table, if any. This returns a non-null
      * value if this table represents for instance a changed column table.
@@ -243,7 +213,7 @@ public final class BufferedDataTable implements DataTable {
     }
     
     /** Method being used internally, not interesting for the implementor of
-     * a new node model. It will return some unique ID to identify the table
+     * a new node model. It will return a unique ID to identify the table
      * while loading.
      * @return The unique ID.
      */
@@ -262,24 +232,23 @@ public final class BufferedDataTable implements DataTable {
     private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
     private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
+    private static final String TABLE_DESCRIPTION_FILE = "data.xml";
+    private static final String TABLE_SPEC_FILE = "spec.xml";
+    
     
     /** Saves the table to a directory and writes some settings to the argument
      * NodeSettingsWO object. It will also write the reference table in case
      * this node is responsible for it (i.e. this node created the reference
      * table).
      * @param dir The directory to write to.
-     * @param settings The settings to store few meta information.
      * @param exec The progress monitor for cancellation.
      * @throws IOException If writing fails.
      * @throws CanceledExecutionException If canceled.
      */
-    void save(final File dir, final NodeSettingsWO settings, 
-            final ExecutionMonitor exec) 
+    void save(final File dir, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
-        NodeSettingsWO s = settings.addNodeSettings(CFG_TABLE_META);
+        NodeSettings s = new NodeSettings(CFG_TABLE_META);
         s.addInt(CFG_TABLE_ID, getBufferedTableId());
-        File outFile = new File(dir, TABLE_FILE);
-        m_delegate.saveToFile(outFile, s, exec);
         if (m_delegate instanceof ContainerTable) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
         } else { 
@@ -299,17 +268,54 @@ public final class BufferedDataTable implements DataTable {
                             + subDir.getAbsolutePath());
                 }
                 s.addString(CFG_TABLE_REFERENCE, TABLE_SUB_DIR);
-                reference.save(subDir, s, exec);
+                reference.save(subDir, exec);
             } else {
                 s.addString(CFG_TABLE_REFERENCE, null);
             }
         }
+        File outFile = new File(dir, TABLE_FILE);
+        m_delegate.saveToFile(outFile, s, exec);
         // only write the data file to the spec if it has been created
         if (outFile.exists()) {
             s.addString(CFG_TABLE_FILE_NAME, TABLE_FILE);
         } else {
             s.addString(CFG_TABLE_FILE_NAME, null);
         }
+        saveSpec(getDataTableSpec(), dir);
+        File dataXML = new File(dir, TABLE_DESCRIPTION_FILE);
+        s.saveToXML(new BufferedOutputStream(new FileOutputStream(dataXML)));
+    }
+    
+    /**
+     * Utility method that is used when the node saves its state. It saves
+     * it to a file spec.xml.
+     * @param spec To save
+     * @param dataPortDir Destianation directory.
+     * @throws IOException If that fails for any reason.
+     */
+    static void saveSpec(final DataTableSpec spec, final File dataPortDir) 
+        throws IOException {
+        File specFile = new File(dataPortDir, TABLE_SPEC_FILE);
+        Config c = new NodeSettings(TABLE_SPEC_FILE);
+        spec.save(c);
+        c.saveToXML(new BufferedOutputStream(new FileOutputStream(specFile)));
+    }
+    
+    /**
+     * Utility method used in the node's load method. It reads the spec from
+     * a file spec.xml in <code>dataPortDir</code>.
+     * @param dataPortDir To load from.
+     * @return The spec contained in this directory.
+     * @throws IOException If that fails.
+     * @throws InvalidSettingsException If the settings in the sepc.xml can't
+     * be parsed.
+     */
+    static DataTableSpec loadSpec(final File dataPortDir) 
+        throws IOException, InvalidSettingsException {
+        File specFile = new File(dataPortDir, TABLE_SPEC_FILE);
+        ConfigRO c = NodeSettings.loadFromXML(new BufferedInputStream(
+                new FileInputStream(specFile)));
+        return DataTableSpec.load(c);
     }
     
     /** Factory method to restore a table that has been written using
@@ -325,7 +331,8 @@ public final class BufferedDataTable implements DataTable {
      */
     static BufferedDataTable loadFromFile(final File dir,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
-            final int loadID) throws IOException, CanceledExecutionException,
+            final int loadID) 
+            throws IOException, CanceledExecutionException,
             InvalidSettingsException {
         HashMap<Integer, BufferedDataTable> hash =
             LOADER_HASH.get(loadID);
@@ -336,7 +343,22 @@ public final class BufferedDataTable implements DataTable {
                     + Arrays.toString(LOADER_HASH.keySet().toArray())
                     + ")");
         }
-        NodeSettingsRO s = settings.getNodeSettings(CFG_TABLE_META);
+        NodeSettingsRO s;
+        // in version 1.1.x and before, the information was stored in 
+        // an external data.xml (directly in the node dir)
+        boolean isVersion11x; 
+        File dataXML = new File(dir, TABLE_DESCRIPTION_FILE);
+        DataTableSpec spec;
+        if (dataXML.exists()) { // version 1.2.0 and later
+            s = NodeSettings.loadFromXML(
+                    new BufferedInputStream(new FileInputStream(dataXML)));
+            spec = loadSpec(dir); 
+            isVersion11x = false;
+        } else { // version 1.1.x
+            s = settings.getNodeSettings(CFG_TABLE_META);
+            spec = null; // needs to be read from zip file!
+            isVersion11x = true;
+        }
         int id = s.getInt(CFG_TABLE_ID);
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         File file;
@@ -353,7 +375,13 @@ public final class BufferedDataTable implements DataTable {
         String tableType = s.getString(CFG_TABLE_TYPE);
         BufferedDataTable t;
         if (tableType.equals(TABLE_TYPE_CONTAINER)) {
-            ContainerTable fromContainer = DataContainer.readFromZip(file); 
+            ContainerTable fromContainer;
+            if (isVersion11x) {
+                fromContainer = BufferedDataContainer.readFromZip(file); 
+            } else {
+                fromContainer = 
+                    BufferedDataContainer.readFromZipDelayed(file, spec);
+            }
             t = new BufferedDataTable(fromContainer);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
                 || (tableType.equals(TABLE_TYPE_NEW_SPEC))) {
@@ -364,10 +392,15 @@ public final class BufferedDataTable implements DataTable {
             }
             if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
                 t = new BufferedDataTable(
-                        new RearrangeColumnsTable(file, s, loadID));
+                        new RearrangeColumnsTable(file, s, loadID, spec));
             } else {
-                t = new BufferedDataTable(
-                        new TableSpecReplacerTable(file, s, loadID));
+                TableSpecReplacerTable replTable;
+                if (isVersion11x) {
+                    replTable = TableSpecReplacerTable.load11x(file, s, loadID);
+                } else {
+                    replTable = TableSpecReplacerTable.load(s, spec, loadID);
+                }
+                t = new BufferedDataTable(replTable);
             }
         } else {
             throw new InvalidSettingsException("Unknown table identifier: "
@@ -439,8 +472,14 @@ public final class BufferedDataTable implements DataTable {
          * anymore.
          */
         void clear();
+        
+        /** Reference to the underlying table, if any. A reference
+         * table exists if this object is just a wrapper, such as a 
+         * RearrangeColumnsTable. 
+         * @return The reference table or <code>null</code>.
+         */
+        BufferedDataTable getReferenceTable();
     }
+
 }
-
-
 
