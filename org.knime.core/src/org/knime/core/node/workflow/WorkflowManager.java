@@ -1218,7 +1218,12 @@ public class WorkflowManager implements WorkflowListener {
                 nodeSetting.addInt(NodeContainer.KEY_ID, newId);
                 final NodeContainer newNode =
                         new NodeContainer(nodeSetting, this);
-                newNode.loadSettings(nodeSetting);
+                try {
+                    newNode.loadSettings(nodeSetting);
+                } catch (InvalidSettingsException ex) {
+                    LOGGER.debug("Could not load settings for node " + nodeKey
+                            + ": " + ex.getMessage());
+                }
 
                 // adapt custom name in case it has still the node id string
                 String customName = newNode.getCustomName();
