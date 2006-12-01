@@ -22,6 +22,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.geom.GeneralPath;
 
 import org.knime.base.node.viz.plotter.scatter.DotInfo;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
@@ -80,9 +81,9 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
                 ShapeFactory.RECTANGLE);
         int dotSize = getDotSize();
         DotInfo[] dotInfo = getDotInfoArray().getDots();
-        for (int i = 0; i < dotInfo.length - 1; i++) {
+        GeneralPath path = new GeneralPath();
+        for (int i = 0; i < dotInfo.length; i++) {
             DotInfo dot1 = dotInfo[i];
-            DotInfo dot2 = dotInfo[i + 1];
             if (!dot1.paintDot()) {                
                 continue;
             }
@@ -95,30 +96,24 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
                 int y = dotInfo[i].getYCoord();
                 shape.paint(g, x, y, dotSize, c, isHilite, isSelected, false);
             }
-            if (i > 0 && (i + 1) % m_nrOfLines == 0) {
-                // we are at the end of the line
-                // so dont paint the line
+            if (i % m_nrOfLines == 0) {
+                // start of one line
+                path.reset();
+                // move to start point
+                path.moveTo(dot1.getXCoord(), dot1.getYCoord());
                 continue;
             }
-            if (dot1.paintDot() && dot2.paintDot()) {
-                // paint line
-                paintLine(g, dot1, dot2);
+            if (i % (m_nrOfLines - 1) == 0) {
+                // end of one line -> paint it
+                g.setColor(dot1.getColor().getColor());
+                ((Graphics2D)g).setStroke(new BasicStroke(m_thickness));
+                ((Graphics2D)g).draw(path);
+            }
+            if (dot1.paintDot()) {
+                // add line segment to path
+                path.lineTo(dot1.getXCoord(), dot1.getYCoord());
             }
         }
-    }
-    
-    /**
-     * Draws the line between two dots.
-     * @param g graphics
-     * @param dot1 left dot
-     * @param dot2 right dot
-     */
-    protected void paintLine(final Graphics g, final DotInfo dot1, 
-            final DotInfo dot2) {
-        g.setColor(dot1.getColor().getColor());
-        ((Graphics2D)g).setStroke(new BasicStroke(m_thickness));
-        g.drawLine(dot1.getXCoord(), dot1.getYCoord(),
-                dot2.getXCoord(), dot2.getYCoord());        
     }
    
 
