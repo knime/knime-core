@@ -295,6 +295,11 @@ public final class BufferedDataTable implements DataTable {
      */
     static void saveSpec(final DataTableSpec spec, final File dataPortDir) 
         throws IOException {
+        // do not write file, if spec is null (may be the case when node
+        // is configured but can't calculate output, e.g. transpose node)
+        if (spec == null) { 
+            return;
+        }
         File specFile = new File(dataPortDir, TABLE_SPEC_FILE);
         Config c = new NodeSettings(TABLE_SPEC_FILE);
         spec.save(c);
@@ -313,9 +318,12 @@ public final class BufferedDataTable implements DataTable {
     static DataTableSpec loadSpec(final File dataPortDir) 
         throws IOException, InvalidSettingsException {
         File specFile = new File(dataPortDir, TABLE_SPEC_FILE);
-        ConfigRO c = NodeSettings.loadFromXML(new BufferedInputStream(
-                new FileInputStream(specFile)));
-        return DataTableSpec.load(c);
+        if (specFile.exists()) {
+            ConfigRO c = NodeSettings.loadFromXML(new BufferedInputStream(
+                    new FileInputStream(specFile)));
+            return DataTableSpec.load(c);
+        }
+        return null;
     }
     
     /** Factory method to restore a table that has been written using
