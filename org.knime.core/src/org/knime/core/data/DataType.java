@@ -52,8 +52,9 @@ import org.knime.core.node.config.ConfigWO;
 
 /**
  * Type description associated with a certain implementation of a
- * {@link DataCell}. It essentially keeps the list of compatible (i.e.
- * for which a type cast is possible) {@link DataValue} interfaces, a list of 
+ * {@link DataCell}. It essentially keeps the list of compatible 
+ * {@link DataValue} interfaces (i.e.
+ * for which a type cast is possible), a list of 
  * renderers for this type, and (potentially more than one) comparator for data 
  * cells of this type.
  *  
