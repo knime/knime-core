@@ -133,6 +133,12 @@
             level-id="meta"
             name="Meta"
             path="/"/>
+      <category
+            description="Keep obsolete nodes which have been part of previous releases "
+            icon="icons/missing.gif"
+            level-id="oldnodes"
+            name="Old Nodes"
+            path="/"/>
             
    </extension>
 
@@ -424,6 +430,14 @@
            category-path="/manipulation/row"
            factory-class="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"
            id="org.knime.base.node.preproc.hilite"/>
+     <node
+           category-path="/old"
+           factory-class="org.knime.base.node.preproc.nominal.NominalValueFactory"
+           id="org.knime.base.node.preproc.nominal.NominalValueFactory"/>
+     <node
+           category-path="/old"
+           factory-class="org.knime.base.node.mine.scorer.ScorerNodeFactory"
+           id="org.knime.base.node.mine.scorer.ScorerNodeFactory"/>
    </extension>
    
    
