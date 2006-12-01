@@ -115,15 +115,10 @@ public class XValidateModel extends MetaNodeModel {
                     "Validating in iteration " + (i + 1));
 
             m_partitionModel.setPartitionNumber((short)i);
-            if (i > 0) {
-                m_partitionModel.setIgnoreNextReset(true);
-                m_aggregateModel.setIgnoreReset(true);
-            }
+            m_partitionModel.setIgnoreNextReset(i > 0);
+            m_aggregateModel.setIgnoreReset(i > 0);
             resetAndConfigureInternalWF();
             executeInternalWF();
-
-            m_aggregateModel.setIgnoreReset(false);
-            m_partitionModel.setIgnoreNextReset(false);
 
             exec.checkCanceled();
             if (innerExecCanceled()) {
@@ -133,6 +128,10 @@ public class XValidateModel extends MetaNodeModel {
                 throw new Exception("Cross validation failed in inner node");
             }
         }
+        
+        m_aggregateModel.setIgnoreReset(false);
+        m_partitionModel.setIgnoreNextReset(false);        
+        
         ColumnRearranger colRePort0 =
                 m_aggregateModel.createColumnRearrangerPort0(inData[0]
                         .getDataTableSpec());
@@ -295,4 +294,13 @@ public class XValidateModel extends MetaNodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_settings.saveSettingsTo(settings);
     }
+
+    @Override
+    protected void reset() {
+        super.reset();
+        m_aggregateModel.setIgnoreReset(false);
+        m_partitionModel.setIgnoreNextReset(false);        
+    }
+    
+    
 }
