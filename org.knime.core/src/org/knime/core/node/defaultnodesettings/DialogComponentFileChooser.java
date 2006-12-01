@@ -141,11 +141,19 @@ public class DialogComponentFileChooser extends DialogComponent {
             m_fileComboBox.addItem(fileName);
         }
 
-        Border b = BorderFactory.createTitledBorder(" Selected File ");
+        String title = directoryOnly ? "Selected Directory:" : "Selected File:";
+        Border b = BorderFactory.createTitledBorder(title);
         p.setBorder(b);
         p.add(m_fileComboBox);
 
         m_browseButton = new JButton("Browse...");
+
+        p.add(m_browseButton);
+        super.add(p);
+        
+//        super.add(m_browseButton);
+
+       
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
@@ -211,9 +219,6 @@ public class DialogComponentFileChooser extends DialogComponent {
                 updateComponent();
             }
         });
-
-        super.add(p);
-        super.add(m_browseButton);
     }
 
     /**
