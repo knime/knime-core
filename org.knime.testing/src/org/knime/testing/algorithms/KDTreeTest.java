@@ -21,6 +21,9 @@
  */
 package org.knime.testing.algorithms;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,6 +87,27 @@ public class KDTreeTest extends TestCase {
 
     }
 
+    private static class Helper2 {
+        public final double[] data;
+
+        public final Integer value;
+
+        public Helper2(final double[] data, final Integer value) {
+            this.data = data;
+            this.value = value;
+        }
+
+        public double dist(final double[] query) {
+            double sum = 0;
+            for (int i = 0; i < data.length; i++) {
+                double diff = data[i] - query[i];
+                sum += diff * diff;
+            }
+
+            return Math.sqrt(sum);
+        }
+    }
+
     /**
      * Tests the search in various k-d trees.
      */
@@ -125,7 +149,7 @@ public class KDTreeTest extends TestCase {
         List<NearestNeighbour<Integer>> results =
                 tree.getKNearestNeighbours(query, neighbours);
         assertEquals(results.size(), neighbours);
-        
+
         for (int i = 0; i < neighbours; i++) {
             // if (points.get(i).getId() != results.get(i).getData()) {
             // tree.getKNearestNeighbours(query, neighbours);
@@ -135,7 +159,7 @@ public class KDTreeTest extends TestCase {
         }
     }
 
-    private static void singleSpeedTest(final int size, final int dimensions,
+    public static void singleSpeedTest(final int size, final int dimensions,
             final int neighbours, final int queries) {
         long bruteForceTime = 0, kdTime = 0;
         KDTreeBuilder<Integer> builder = new KDTreeBuilder<Integer>(dimensions);
@@ -181,8 +205,9 @@ public class KDTreeTest extends TestCase {
             t = System.currentTimeMillis();
             tree.getKNearestNeighbours(query, neighbours);
             kdTime += System.currentTimeMillis() - t;
-            averagePruning += (tree.size() - tree.getTestedPatterns())
-                / (double) tree.size();
+            averagePruning +=
+                    (tree.size() - tree.getTestedPatterns())
+                            / (double)tree.size();
         }
 
         System.out.println("Pruning = " + (100 * averagePruning / queries)
@@ -191,14 +216,65 @@ public class KDTreeTest extends TestCase {
                 + bruteForceTime + "ms");
     }
 
+    public void testFromFile() throws IOException {
+        BufferedReader in =
+                new BufferedReader(new InputStreamReader(getClass()
+                        .getClassLoader().getResourceAsStream(
+                                KDTreeTest.class.getPackage().getName()
+                                        .replace('.', '/')
+                                        + "/KDTreeTest.csv")));
+
+        KDTreeBuilder<Integer> builder = new KDTreeBuilder<Integer>(20);
+        ArrayList<Helper2> list = new ArrayList<Helper2>();
+        ArrayList<double[]> queries = new ArrayList<double[]>();
+
+        String line;
+        while ((line = in.readLine()) != null) {
+            String[] parts = line.split(",");
+            double[] data = new double[parts.length - 2];
+            for (int i = 1; i < parts.length - 1; i++) {
+                data[i - 1] = Double.parseDouble(parts[i]);
+            }
+
+            Integer v = new Integer(parts[0].replaceAll("\"", ""));
+
+            builder.addPattern(data, v);
+            list.add(new Helper2(data, v));
+            queries.add(data);
+        }
+
+        KDTree<Integer> tree = builder.buildTree();
+
+        for (final double[] q : queries) {
+            Collections.sort(list, new Comparator<Helper2>() {
+                public int compare(Helper2 o1, Helper2 o2) {
+                    return (int)Math.signum(o1.dist(q) - o2.dist(q));
+                }
+            });
+
+            List<NearestNeighbour<Integer>> neighbours =
+                    tree.getKNearestNeighbours(q, 3);
+            for (int i = 0; i < 3; i++) {
+                Integer v1 = neighbours.get(i).getData();
+                Integer v2 = list.get(i).value;
+                
+                assertEquals(v2, v1);
+            }
+        }
+
+    }
+
     /**
      * Well...
      * 
      * @param args not used
+     * @throws IOException bum
      */
-    public static void main(final String[] args) {
-        for (int i = 0; i < 10; i++) {
-            singleSpeedTest(1000, 10, 10, 10000);
-        }
+    public static void main(final String[] args) throws IOException {
+//        for (int i = 0; i < 10; i++) {
+//            singleSpeedTest(1000, 10, 10, 10000);
+//        }
+        KDTreeTest t = new KDTreeTest();
+        t.testFromFile();
     }
 }
