@@ -132,6 +132,7 @@ public abstract class ParallelNodeModel extends NodeModel {
                         result[i] = new DataContainer(m_specs[i]);
 
                         for (DataRow r : data) {
+                            m_exec.checkCanceled();
                             DataCell[] newCells = m_cellFacs[i].getCells(r);
                             DataRow newRow =
                                     new DefaultRow(r.getKey(), newCells);
