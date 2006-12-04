@@ -1777,6 +1777,7 @@ public class WorkflowManager implements WorkflowListener {
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (Throwable t) {
+                LOGGER.error(t.getMessage(), t);
                 lastEx =
                         new WorkflowException("Error while loading node",
                                 lastEx, t);
