@@ -290,8 +290,8 @@ public final class BufferedDataTable implements DataTable {
      * Utility method that is used when the node saves its state. It saves
      * it to a file spec.xml.
      * @param spec To save
-     * @param dataPortDir Destianation directory.
-     * @throws IOException If that fails for any reason.
+     * @param dataPortDir destination directory
+     * @throws IOException if that fails for any reason
      */
     static void saveSpec(final DataTableSpec spec, final File dataPortDir) 
         throws IOException {
@@ -312,7 +312,7 @@ public final class BufferedDataTable implements DataTable {
      * @param dataPortDir To load from.
      * @return The spec contained in this directory.
      * @throws IOException If that fails.
-     * @throws InvalidSettingsException If the settings in the sepc.xml can't
+     * @throws InvalidSettingsException If the settings in the spec.xml can't
      * be parsed.
      */
     static DataTableSpec loadSpec(final File dataPortDir) 
