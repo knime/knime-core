@@ -27,8 +27,8 @@ package org.knime.core.data.container;
 import org.knime.core.data.DataRow;
 
 /**
- * This is a very simple interface that allows adding DataRows to a table, 
- * container or anything else.
+ * This is a very simple interface that allows adding <code>DataRow</code>s to 
+ * a <code>DataTable</code>, <code>DataContainer</code>, or anything else.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -36,11 +36,11 @@ public interface RowAppender {
     /**
      * Appends a row to the end of a container. The row must comply with 
      * the settings in the <code>DataTableSpec</code> that has been set when 
-     * the container or table has been construtced. 
-     * @param row DataRow ro be added.
-     * @throws NullPointerException If the argument is <code>null</code>.
-     * @throws IllegalStateException If the structure of the row forbids to
-     *         add it to the table or the row's key is already in the container.
+     * the container or table has been constructed. 
+     * @param row <code>DataRow</code> to be added
+     * @throws NullPointerException if the argument is <code>null</code>
+     * @throws IllegalStateException if the structure of the row forbids to
+     *         add it to the table or the row's key is already in the container
      */
     public void addRowToTable(final DataRow row);
 }
