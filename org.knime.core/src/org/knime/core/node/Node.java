@@ -442,7 +442,15 @@ public final class Node {
                         throw new IOException("Can not read directory "
                                 + dir.getAbsolutePath());
                     }
-                    DataTableSpec outSpec = BufferedDataTable.loadSpec(dir);
+                    DataTableSpec outSpec = null;
+                    if (portSettings.getBoolean(CFG_HAS_SPEC_FILE, true)) {
+                        outSpec = BufferedDataTable.loadSpec(dir);
+                        if (portSettings.containsKey(CFG_HAS_SPEC_FILE) 
+                                && outSpec == null) {
+                            throw new IOException("No spec file available for"
+                                    + " outport " + i + ".");
+                        }
+                    }
                     m_outDataPorts[i].setDataTableSpec(outSpec);
                     if (isExecuted()) {
                         BufferedDataTable t = BufferedDataTable.loadFromFile(
@@ -1724,6 +1732,8 @@ public final class Node {
     public static final String CFG_MODEL = "model";
 
     private static final String CFG_SPEC_FILES = "spec_files";
+    
+    private static final String CFG_HAS_SPEC_FILE = "has_output_spec";
 
     private static final String CFG_DATA_FILE = "data_meta_file";
 
@@ -1836,7 +1846,12 @@ public final class Node {
                     outTable.save(dir, execSaveFilePort);
                 } else {
                     DataTableSpec spec = m_outDataPorts[i].getDataTableSpec();
-                    BufferedDataTable.saveSpec(spec, dir);
+                    if (spec == null) {
+                        portSettings.addBoolean(CFG_HAS_SPEC_FILE, false);
+                    } else {
+                        portSettings.addBoolean(CFG_HAS_SPEC_FILE, true);
+                        BufferedDataTable.saveSpec(spec, dir);
+                    }
                 }
             }
         } else {
@@ -2003,7 +2018,7 @@ public final class Node {
      * pane.
      * 
      * @throws NotConfigurableException if the dialog cannot be opened because
-     *             of real invalid settings or if any predconditions are not
+     *             of real invalid settings or if any preconditions are not
      *             fulfilled, e.g. no predecessor node, no nominal column in
      *             input table, etc.
      */
