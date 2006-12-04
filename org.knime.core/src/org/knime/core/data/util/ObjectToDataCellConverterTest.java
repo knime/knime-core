@@ -30,11 +30,12 @@ import junit.framework.TestCase;
 
 /**
  * Unit test for <code>ObjectToDataCellConverter</code>.
- * @author bernd, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class ObjectToDataCellConverterTest extends TestCase {
     
     /** Instance to test on. */
+    @SuppressWarnings("deprecation")
     private final ObjectToDataCellConverter m_converter = 
         new ObjectToDataCellConverter();
     
@@ -48,6 +49,7 @@ public class ObjectToDataCellConverterTest extends TestCase {
     /**
      * Class under test for DataCell createDataCell(Object).
      */
+    @SuppressWarnings("deprecation")
     public final void testCreateDataCellObject() {
         int i = 5;
         DataCell c = m_converter.createDataCell(new Integer(i));
@@ -75,6 +77,7 @@ public class ObjectToDataCellConverterTest extends TestCase {
     /**
      * Class under test for DataCell createDataCell(double).
      */
+    @SuppressWarnings("deprecation")
     public final void testCreateDataCelldouble() {
         double d = 8.0;
         DataCell c = m_converter.createDataCell(d);
@@ -84,6 +87,7 @@ public class ObjectToDataCellConverterTest extends TestCase {
     /**
      * Class under test for DataCell createDataCell(float).
      */
+    @SuppressWarnings("deprecation")
     public final void testCreateDataCellfloat() {
         float f = 8.0f;
         DataCell c = m_converter.createDataCell(f);
@@ -93,6 +97,7 @@ public class ObjectToDataCellConverterTest extends TestCase {
     /**
      * Class under test for DataCell createDataCell(int).
      */
+    @SuppressWarnings("deprecation")
     public final void testCreateDataCellint() {
         int i = 12;
         DataCell c = m_converter.createDataCell(i);
@@ -102,6 +107,7 @@ public class ObjectToDataCellConverterTest extends TestCase {
     /**
      * Class under test for DataCell createDataCell(byte).
      */
+    @SuppressWarnings("deprecation")
     public final void testCreateDataCellbyte() {
         byte b = 13;
         DataCell c = m_converter.createDataCell(b);
@@ -111,6 +117,7 @@ public class ObjectToDataCellConverterTest extends TestCase {
     /**
      * Class under test for DataCell createDataCell(boolean).
      */
+    @SuppressWarnings("deprecation")
     public final void testCreateDataCellboolean() {
         boolean b = true;
         DataCell c = m_converter.createDataCell(b);

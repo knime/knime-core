@@ -61,6 +61,10 @@ import org.knime.core.data.def.StringCell;
  * @see org.knime.core.data.def.DefaultTable#DefaultTable(
  * Object[][], String[], String[], ObjectToDataCellConverter)
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated This class is obsolete as the class 
+ * {@link org.knime.core.data.def.DefaultTable} is deprecated.  DataCell 
+ * objects should be created using their respective constructor rather than 
+ * using an ObjectToDataCellConverter.
  */
 public class ObjectToDataCellConverter {
     
