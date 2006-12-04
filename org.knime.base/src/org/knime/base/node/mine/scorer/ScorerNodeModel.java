@@ -40,9 +40,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -65,8 +65,8 @@ import org.knime.core.node.NodeSettingsWO;
  * @see ScorerNodeFactory
  */
 public class ScorerNodeModel extends NodeModel {
-    /** The node logger fot this class. */
-
+    
+    /** The node logger for this class. */
     protected static final NodeLogger LOGGER = NodeLogger
             .getLogger(ScorerNodeModel.class);
 
@@ -185,15 +185,18 @@ public class ScorerNodeModel extends NodeModel {
                 m_falseCount++;
             }
         }
-        m_nrRows = rowNr;
-        DataRow[] rows = new DataRow[values.length];
-        for (int i = 0; i < rows.length; i++) {
-            // need to make a datacell for the row key
-            rows[i] = new DefaultRow(new StringCell(values[i]), scorerCount[i]);
-        }
         DataType[] colTypes = new DataType[values.length];
         Arrays.fill(colTypes, IntCell.TYPE);
-        DataTable out = new DefaultTable(rows, values, colTypes);
+        m_nrRows = rowNr;
+        DataRow[] rows = new DataRow[values.length];
+        BufferedDataContainer dc = 
+            exec.createDataContainer(new DataTableSpec(values, colTypes));
+        for (int i = 0; i < rows.length; i++) {
+            // need to make a data cell for the row key
+            dc.addRowToTable(
+                    new DefaultRow(new StringCell(values[i]), scorerCount[i]));
+        }
+        dc.close();
         // print info
         int correct = getCorrectCount();
         int incorrect = getFalseCount();
@@ -203,8 +206,9 @@ public class ScorerNodeModel extends NodeModel {
         LOGGER.info("error=" + error + ", #correct=" + correct + ", #false="
                 + incorrect + ", #rows=" + nrRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
-        m_lastResult = out;
-        return new BufferedDataTable[]{exec.createBufferedDataTable(out, exec)};
+        BufferedDataTable bufTable = dc.getTable();
+        m_lastResult = bufTable;
+        return new BufferedDataTable[]{bufTable};
     } // execute(DataTable[],ExecutionMonitor)
 
     /**
