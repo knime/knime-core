@@ -27,7 +27,9 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.Rectangle;
+import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 import java.util.Collection;
 import java.util.HashSet;
@@ -51,40 +53,30 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
 
     private static final long serialVersionUID = 7881989778083295425L;
 
-    /** Defines the basic stroke which is used for the border of each bar. */
-    private static final BasicStroke BAR_OUTLINE_BASIC_STROKE = 
+    /**This stroke is used to draw the rectangle around each group of 
+     * unhighlighted rows per color.*/
+    private static final BasicStroke BLOCK_UNHILITE_STROKE = 
+        new BasicStroke(1f);
+
+    /**This stroke is used to draw the rectangle around each group of 
+     * highlighted rows per color.*/
+    private static final BasicStroke BLOCK_HILITE_STROKE = 
         new BasicStroke(2f);
-
-    /**Defines the color of the outline rectangle with a positive aggregation
-     * value.
-     */
-    private static final Color BAR_OUTLINE_BASIC_COLOR = Color.GRAY;
     
-    /** Defines the stroke of the line for selected bars. */
-    private static final BasicStroke BAR_OUTLINE_SELECTED_STROKE = 
-        new BasicStroke(4f);
-    
-    /**Defines the color of the outline rectangle for selected bars.*/
-    private static final Color BAR_OUTLINE_SELECTED_COLOR = Color.BLACK;
-
     /** Defines the stroke of the rectangle which surrounds the bar label. */
-    private static final BasicStroke LABEL_RECT_STROKE = new BasicStroke(1f);
+    private static final BasicStroke VALUE_RECT_STROKE = new BasicStroke(1f);
 
-    /** Defines the color of the rectangle which surrounds the bar label. */
-    private static final Color LABEL_RECT_COLOR = Color.LIGHT_GRAY;
-
+    /** Defines the color of the stroke of the rectangle which surrounds 
+     * the bar label. */
+    private static final Color VALUE_RECT_STROKE_COLOR = Color.LIGHT_GRAY;
+    
+    /**Defines the background color of the rectangle which surrounds 
+     * the bar label. */
+    private static final Color VALUE_RECT_BGR_COLOR = Color.WHITE;
+    
     /** Defines the font of the bar labels. */
-    private static final Font BAR_LABEL_FONT = 
+    private static final Font BAR_VALUE_FONT = 
         new Font("Arial", Font.PLAIN, 12);
-    
-    /**Defines the color of the base line.*/
-    private static final Color BASE_LINE_COLOR = Color.BLACK;
-    
-    /** Defines the stroke of the base line. */
-    private static final BasicStroke BASE_LINE_STROKE = new BasicStroke(2f);
-    
-    /** Defines the font of the information message which is displayed. */
-    private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
     /**
      * Defines the space between the bottom of the plotter and the aggregation
@@ -97,6 +89,15 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * background. Should be smaller than the AGGR_VAL_LABEL_SPACER value.
      */
     private static final int AGGR_VAL_BG_SPACER = 2;
+    
+    /**Defines the color of the base line.*/
+    private static final Color BASE_LINE_COLOR = Color.BLACK;
+    
+    /** Defines the stroke of the base line. */
+    private static final BasicStroke BASE_LINE_STROKE = new BasicStroke(2f);
+    
+    /** Defines the font of the information message which is displayed. */
+    private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
     /**
      * Holds the <code>BarVisModel</code> objects to draw on the screen the
@@ -167,9 +168,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * Indicates if a zero line should be drawn. Set to <code>null</code> if 
+     * Indicates if a base line should be drawn. Set to <code>null</code> if 
      * none base line should be drawn.
-     * @param baseLine the position of the baseline on the screen
+     * @param baseLine the Y coordinate of the baseline on the screen
      */
     public void setBaseLine(final Integer baseLine) {
         m_baseLine = baseLine;
@@ -200,6 +201,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         final Graphics2D g2 = (Graphics2D)g;
         //check if we have to display an information message
         if (m_infoMsg != null) {
+            //save the original settings
+            final Font origFont = g2.getFont();
             g2.setFont(INFO_MSG_FONT);
             final FontMetrics metrics = g2.getFontMetrics();
             final int textWidth = metrics.stringWidth(m_infoMsg);
@@ -214,48 +217,34 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 textY = 0;
             }
             g2.drawString(m_infoMsg, textX, textY);
+            //set the original settings
+            g2.setFont(origFont);
             return;
         }
         //check if we have to draw the base line
         if (m_baseLine != null) {
-            g2.setColor(BASE_LINE_COLOR);
-            g2.setStroke(BASE_LINE_STROKE);
-            final int yOffset = m_baseLine.intValue(); 
-            //+ (int)(BASE_LINE_STROKE.getLineWidth() / 2);
-            final int screenWidth  = (int) getBounds().getWidth();
-            g2.drawLine(0, yOffset, screenWidth, yOffset);
+            paintBaseLine(g2, m_baseLine.intValue(), 
+                    (int) getBounds().getWidth());
         }
-// loop over all bars and draw them
+// loop over all bars and paint them
         for (BarVisModel bar : m_bars.values()) {
-            BasicStroke rectStroke = BAR_OUTLINE_BASIC_STROKE;
-            Color rectColor = BAR_OUTLINE_BASIC_COLOR;
-            if (bar.isSelected()) {
-                rectStroke = BAR_OUTLINE_SELECTED_STROKE;
-                rectColor = BAR_OUTLINE_SELECTED_COLOR;
-            }
-           
             final Rectangle barRect = bar.getRectangle();
             int noOfRows = bar.getNumberOfRows();
             double heightPerRow = 0;
             if (noOfRows > 0) {
-            heightPerRow = barRect.getHeight() / noOfRows;
+                heightPerRow = barRect.getHeight() / noOfRows;
             }
-            // paint the shape of the bar first
-            g2.setStroke(rectStroke);
-            g2.setPaint(rectColor);
-            g2.draw(barRect);
-            
             //set the start point for the y direction of the current bar
             int startY = (int)(barRect.getY());
-            // Loop through all available colors of this bar to display them
-            // inside the drawing rectangle
+            // Loop through all available colors of this bar to calculate
+            //and draw the blocks per color
             for (ColorAttr colorAttr : bar.getSortedColors()) {
                 Collection<RowKey> rowKeys = bar.getRowsByColorAttr(colorAttr);
                 int noOfHiLite = 0;
                 int noOfNotHiLite = 0;
                 // loop through all rows of the current color to count the
                 // highlight and unhighlight rows to calculate the height for
-                // both
+                // both separate blocks
                 for (RowKey rowKey : rowKeys) {
                     if (m_hiLiteHandler != null
                             && m_hiLiteHandler.isHiLit(rowKey.getId())) {
@@ -265,76 +254,152 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     }
                 }
                 if (noOfHiLite > 0) {
-                    final Rectangle colorRect = calculateFillingRect(
-                            heightPerRow, noOfHiLite, barRect, startY);
-                    // draw the highlight rows in a rectangle
-                    g2.setPaint(colorAttr.getColor(bar.isSelected(), true));
-                    g2.fill(colorRect);
-                    startY += colorRect.getHeight();
+                    startY = paintColorBlock(g2, bar, heightPerRow, startY, 
+                            colorAttr, noOfHiLite, BLOCK_HILITE_STROKE,
+                            true);
                 }
                 if (noOfNotHiLite > 0) {
-                    final Rectangle colorRect = calculateFillingRect(
-                            heightPerRow, noOfNotHiLite, barRect, startY);
-                    // draw the unhighlight rows in a rectangle
-                    g2.setPaint(colorAttr.getColor(bar.isSelected(), false));
-                    g2.fill(colorRect);
-                    startY += colorRect.getHeight();
+                    startY = paintColorBlock(g2, bar, heightPerRow, startY, 
+                            colorAttr, noOfNotHiLite, BLOCK_UNHILITE_STROKE,
+                            false);
                 }
+            } // end of the color loop for one bar 
 
-            } // end of the color loop for one bar
-
-            //start of if a bar is selected
             if (bar.isSelected()) {
-                // save the original transformation
-                final AffineTransform origTransform = g2.getTransform();
-                final AffineTransform verticalTrans = new AffineTransform();
-                // if the bar is selected show the aggregation value
-                final String label = bar.getLabel();
-                g2.setFont(BAR_LABEL_FONT);
-                final FontMetrics metrics = g2.getFontMetrics();
-                int textX = (int)(barRect.getX() + (barRect.getWidth() / 2));
-                int textWidth = metrics.stringWidth(label);
-                textX -= textWidth / 2;
-                // avoid drawing the aggregation value outside of the display
-                if (textX < 1) {
-                    textWidth += Math.abs(textX - 1);
-                    textX = 1;
-                }
-                int textY = 0;
-                if (bar.getAggregationValue() > 0) {
-                    textY =  (int)(barRect.getY() + barRect.getHeight() 
-                            - textWidth / 2) - AGGR_VAL_LABEL_SPACER;
-                } else {
-                    textY = (int)(barRect.getY() + textWidth / 2) 
-                    + AGGR_VAL_LABEL_SPACER;
-                }
-                final int textHeight = metrics.getHeight();
-                // calculate the text background rectangle
-                final int bgX = textX - AGGR_VAL_BG_SPACER;
-                final int bgY = textY - textHeight - AGGR_VAL_BG_SPACER;
-                final Rectangle textBackGroundRec = new Rectangle(bgX, bgY, 
-                        textWidth + 2 * AGGR_VAL_BG_SPACER, 
-                        textHeight + 2 * AGGR_VAL_BG_SPACER);
-                // rotate 90 degree around the center of the text rectangle
-                verticalTrans.rotate(Math.toRadians(90), textBackGroundRec
-                        .getCenterX(), textBackGroundRec.getCenterY());
-                g2.transform(verticalTrans);
-                g2.setPaint(Color.WHITE);
-                g2.fill(textBackGroundRec);
-                g2.setPaint(LABEL_RECT_COLOR);
-                g2.setStroke(LABEL_RECT_STROKE);
-                g2.draw(textBackGroundRec);
-                g2.setPaint(rectColor);
-                g2.drawString(label, textX, textY);
-                // set the original transformation
-                g2.setTransform(origTransform);
-            } //end of is a bar is selected
+                paintBarValue(g2, bar);
+            }
+            
         } // end of the bar loop
         return;
     }
 
+    /**
+     * Draws the base line.
+     * @param g2 the graphics object to use
+     * @param yOffset the y offset of the line
+     * @param screenWidth the width of the line
+     */
+    private static void paintBaseLine(final Graphics2D g2, final int yOffset,
+            final int screenWidth) {
+        // save the original settings
+        final Stroke origStroke = g2.getStroke();
+        final Color origColor = g2.getColor();
+        g2.setColor(BASE_LINE_COLOR);
+        g2.setStroke(BASE_LINE_STROKE);
+        g2.drawLine(0, yOffset, screenWidth, yOffset);
+        //set the original settings
+        g2.setStroke(origStroke);
+        g2.setColor(origColor);
+    }
+
+    /**
+     * Calculates the size of a bar block and draws it.
+     * <p>
+     * Each bar consists of one or more blocks. A block is the summary of rows
+     * which have the same color attribute <b>and</b> highlight status.
+     * @param g2 the graphics object to use
+     * @param bar the bar to paint
+     * @param heightPerRow the height per row
+     * @param startY the y coordinate
+     * @param colorAttr the color attribute to use
+     * @param noOfRows number of rows to paint
+     */
+    private static int paintColorBlock(final Graphics2D g2, 
+            final BarVisModel bar, final double heightPerRow, final int startY, 
+            final ColorAttr colorAttr, final int noOfRows, 
+            final BasicStroke stroke, final boolean isHilite) {
+        // save the original settings
+        final Stroke origStroke = g2.getStroke();
+        final Paint origPaint = g2.getPaint();
+        final Rectangle barRect = bar.getRectangle();
+        final Rectangle fillRect = calculateFillingRect(
+                heightPerRow, noOfRows, barRect, startY);
+        //first fill the rectangle...
+        g2.setStroke(stroke);
+        g2.setPaint(colorAttr.getColor(bar.isSelected(), isHilite));
+        g2.fill(fillRect);
+        //... and then draw the border
+        final Rectangle borderRect = 
+            calculateBorderRect(fillRect, stroke);
+        final Color borderColor = 
+            colorAttr.getBorderColor(bar.isSelected(), isHilite);
+        g2.setPaint(borderColor);
+        g2.draw(borderRect);
+        int newStartY = (int)(startY + fillRect.getHeight());
+        //set the old settings
+        g2.setStroke(origStroke);
+        g2.setPaint(origPaint);
+        return newStartY;
+    }
+
+    /**
+     * Paints the actual value (count, average, ...) of the bar.
+     * @param g2 the graphics object to use
+     * @param bar the bar which value should be paint
+     */
+    private static void paintBarValue(final Graphics2D g2, 
+            final BarVisModel bar) {
+        // save the original settings
+        final AffineTransform origTransform = g2.getTransform();
+        final Font origFont = g2.getFont();
+        final Paint origPaint = g2.getPaint();
+        final Stroke origStroke = g2.getStroke();
+        final Rectangle barRect = bar.getRectangle();
+        final AffineTransform verticalTrans = new AffineTransform();
+        // if the bar is selected show the aggregation value
+        final String label = bar.getLabel();
+        g2.setFont(BAR_VALUE_FONT);
+        final FontMetrics metrics = g2.getFontMetrics();
+        int textX = (int)(barRect.getX() + (barRect.getWidth() / 2));
+        int textWidth = metrics.stringWidth(label);
+        textX -= textWidth / 2;
+        // avoid drawing the aggregation value outside of the display
+        if (textX < 1) {
+            textWidth += Math.abs(textX - 1);
+            textX = 1;
+        }
+        int textY = 0;
+        if (bar.getAggregationValue() > 0) {
+            textY =  (int)(barRect.getY() + barRect.getHeight() 
+                    - textWidth / 2) - AGGR_VAL_LABEL_SPACER;
+        } else {
+            textY = (int)(barRect.getY() + textWidth / 2) 
+            + AGGR_VAL_LABEL_SPACER;
+        }
+        final int textHeight = metrics.getHeight();
+        // calculate the text background rectangle
+        final int bgX = textX - AGGR_VAL_BG_SPACER;
+        final int bgY = textY - textHeight - AGGR_VAL_BG_SPACER;
+        final Rectangle textBackGroundRec = new Rectangle(bgX, bgY, 
+                textWidth + 2 * AGGR_VAL_BG_SPACER, 
+                textHeight + 2 * AGGR_VAL_BG_SPACER);
+        // rotate 90 degree around the center of the text rectangle
+        verticalTrans.rotate(Math.toRadians(90), textBackGroundRec
+                .getCenterX(), textBackGroundRec.getCenterY());
+        g2.transform(verticalTrans);
+        g2.setPaint(VALUE_RECT_BGR_COLOR);
+        g2.fill(textBackGroundRec);
+        g2.setPaint(VALUE_RECT_STROKE_COLOR);
+        g2.setStroke(VALUE_RECT_STROKE);
+        g2.draw(textBackGroundRec);
+        //g2.setPaint(rectColor);
+        g2.drawString(label, textX, textY);
+        // set the original settings
+        g2.setTransform(origTransform);
+        g2.setFont(origFont);
+        g2.setPaint(origPaint);
+        g2.setStroke(origStroke);
+    }
     
-    private Rectangle calculateFillingRect(final double heightPerRow, 
+    /**
+     * Calculates the size of the rectangle to fill.
+     * @param heightPerRow the height per row
+     * @param noOfRows the number of rows
+     * @param maxSize the maximum size of the rectangle
+     * @param startY the start coordinate on the Y axis.
+     * @return the {@link Rectangle} to fill
+     */
+    private static Rectangle calculateFillingRect(final double heightPerRow, 
             final int noOfRows, final Rectangle maxSize, final int startY) {
         int height = (int)Math.ceil(heightPerRow * noOfRows);
         // avoid rounding errors
@@ -344,17 +409,34 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     - (int)(maxSize.getY() + maxSize.getHeight());
             height = height - dif;
         }
-        final Rectangle colorRect = new Rectangle((int)maxSize.getX(), startY,
-                (int)maxSize.getWidth(), height);
+        final Rectangle colorRect = new Rectangle(
+                (int)maxSize.getX(), startY, (int)maxSize.getWidth(), 
+                height);
         return colorRect;
     }
-
+    
     /**
-     * @return the width of the maximum stroke used to outline the bars in the
+     * Calculates the size of the rectangle with the given stroke.
+     * @param rect the original size of the rectangle
+     * @param stroke the stroke which will be used to draw the rectangle
+     * @return the {@link Rectangle} to draw
+     */
+    private static Rectangle calculateBorderRect(final Rectangle rect, 
+            final BasicStroke stroke) {
+        final int width = (int)stroke.getLineWidth();
+        final int halfWidth = width / 2;
+        final Rectangle strokeRect = new Rectangle((int) rect.getX() 
+                + halfWidth, (int) rect.getY() + halfWidth, 
+                (int) rect.getWidth() - width, (int) rect.getHeight() - width);
+        return strokeRect;
+    }
+    
+    /**
+     * @return the width of the stroke used to outline the bars in the
      *         visualisation
      */
-    protected static double getMaxStrokeWidth() {
-        return BAR_OUTLINE_BASIC_STROKE.getLineWidth();
+    protected static double getBarStrokeWidth() {
+        return BLOCK_UNHILITE_STROKE.getLineWidth();
         /*return Math.max(BAR_OUTLINE_BASIC_STROKE.getLineWidth(),
                 BAR_OUTLINE_NEGATIVE_STROKE.getLineWidth());*/
     }
