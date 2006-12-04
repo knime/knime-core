@@ -28,26 +28,44 @@ import java.util.List;
 
 /**
  * A drawing element consists of points which are already mapped to the 
- * drawing pane's dimension.
+ * drawing pane's dimension. The <code>BasicDrawingElement</code>s can be added
+ * to the {@link org.knime.base.node.viz.plotter.basic.BasicPlotter
+ * #addBasicDrawingElement(BasicDrawingElement)}. The 
+ * <code>BasicDrawingElement</code>s should be used if only the domain data of 
+ * the shape is available, since they are automatically mapped to the drawing 
+ * pane's dimension. There some ready-to-use implementations of the 
+ * <code>BasicDrawingElement</code>: 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicLine}, 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicEllipse},
+ * {@link org.knime.base.node.viz.plotter.basic.BasicRectangle},
+ * {@link org.knime.base.node.viz.plotter.basic.BasicText}.
+ * Each of these implementations restore rthe original stroke and color of the 
+ * graphics object. New implementations should keep this behavior.
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class BasicDrawingElement {
+   
+    /** The mapped points. */
+    private List<Point> m_points;
     
-   private List<Point> m_points;
-    
+    /** The color of the shape. */
     private Color m_color;
     
+    /** The stroke the shaped is painted with. */
     private Stroke m_stroke;
     
+    /** Default color is black. */
     private static final Color DEFAULT_COLOR = Color.BLACK;
     
+    /** Default storke. */
     private static final Stroke DEFAULT_STROKE = new BasicStroke(1);
     
+    /** Original (domain) values. */
     private List<DataCellPoint> m_domainValues;
     
     /**
-     * Creates an empty line with default color(black) and default stroke.
+     * Creates an empty shape with default color(black) and default stroke.
      *
      */
     public BasicDrawingElement() {
@@ -57,8 +75,11 @@ public abstract class BasicDrawingElement {
     
     
     /**
-     * Adds a point of the path.
-     * @param p one point of the path.
+     * Adds a (mapped) point of the path. This method should be used by the 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()}
+     * only.
+     * 
+     * @param p one point of the path
      */
     public void addPoint(final Point p) {
         if (m_points == null) {
@@ -68,8 +89,10 @@ public abstract class BasicDrawingElement {
     }
     
     /**
+     * Adds a domain value to the set of domain values that are mapped to the 
+     * DrawingPane's dimension.
      * 
-     * @param domainValue the domain value.
+     * @param domainValue the domain value
      */
     public void addDomainValue(final DataCellPoint domainValue) {
         if (m_domainValues == null) {
@@ -79,16 +102,20 @@ public abstract class BasicDrawingElement {
     }
     
     /**
-     * Should be in same order as referring mapped points.
-     * @param domainValues the domain values.
+     * Adds a list of domain values that should be in same order as 
+     * referring mapped points.
+     * 
+     * @param domainValues the domain values
      */
     public void setDomainValues(final List<DataCellPoint>domainValues) {
         m_domainValues = domainValues;
     }
     
     /**
+     * Adds a list of domain values that should be in same order as 
+     * referring mapped points.
      * 
-     * @param points domain points.
+     * @param points domain points
      */
     public void setDomainValues(final DataCellPoint...points) {
         m_domainValues = new LinkedList<DataCellPoint>();
@@ -99,7 +126,7 @@ public abstract class BasicDrawingElement {
     
     /**
      * 
-     * @return the domain values.
+     * @return the domain values
      */
     public List<DataCellPoint> getDomainValues() {
         return m_domainValues;
@@ -107,16 +134,20 @@ public abstract class BasicDrawingElement {
     
 
     /**
+     * Sets the mapped points. Should be used by the 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicPlotter} only.
      * 
-     * @param points the mapped points making up this drawing element.
+     * @param points the mapped points making up this drawing element
      */
     public void setPoints(final List<Point> points) {
         m_points = points;
     }
     
     /**
+     * Sets the mapped points. Should be used by the 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicPlotter} only.
      * 
-     * @param points mapped points.
+     * @param points mapped points
      */
     public void setPoints(final Point... points) {
         m_points = new LinkedList<Point>();
@@ -128,7 +159,7 @@ public abstract class BasicDrawingElement {
 
     /**
      * 
-     * @return the mapped points making up this drawing element.
+     * @return the mapped points making up this drawing element
      */
     public List<Point>getPoints() {
         return m_points;
@@ -136,7 +167,7 @@ public abstract class BasicDrawingElement {
     
     /**
      * 
-     * @return the color of this element.
+     * @return the color of this element
      */
     public Color getColor() {
         return m_color;
@@ -144,7 +175,7 @@ public abstract class BasicDrawingElement {
     
     /**
      * 
-     * @param color the color of this element.
+     * @param color the color of this element
      */
     public void setColor(final Color color) {
         m_color = color;
@@ -152,7 +183,7 @@ public abstract class BasicDrawingElement {
     
     /**
      * 
-     * @param stroke the stroke of this element.
+     * @param stroke the stroke of this element
      */
     public void setStroke(final Stroke stroke) {
         m_stroke = stroke;
@@ -160,7 +191,7 @@ public abstract class BasicDrawingElement {
     
     /**
      * 
-     * @return the stroke of this element.
+     * @return the stroke of this element
      */
     public Stroke getStroke() {
         return m_stroke;
@@ -168,7 +199,8 @@ public abstract class BasicDrawingElement {
     
     /**
      * The method which "knows" how to paint it.
-     * @param g2 the graphics object.
+     * 
+     * @param g2 the graphics object
      */
     public abstract void paint(final Graphics2D g2); 
     

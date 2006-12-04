@@ -4,7 +4,7 @@
  * 
  * Copyright, 2003 - 2006
  * Universitaet Konstanz, Germany.
- * Lehrstuhl fuer Angewandte Informatik
+ * Chair for Bioinformatics and Information Mining
  * Prof. Dr. Michael R. Berthold
  * 
  * You may not modify, publish, transmit, transfer or sell, reproduce,
@@ -21,6 +21,12 @@ package org.knime.base.node.viz.plotter.basic;
 import org.knime.core.data.DataCell;
 
 /**
+ * A <code>DataCellPoint</code> consists of two 
+ * {@link org.knime.core.data.DataCell}s, one for the x and one for the y 
+ * axis. It is used for the 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement} and 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicPlotter} which maps the 
+ * domain values represented by the {@link org.knime.core.data.DataCell}s 
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -32,6 +38,7 @@ public class DataCellPoint {
     
     /**
      * A point represented by two data cells.
+     * 
      * @param x x
      * @param y y
      */

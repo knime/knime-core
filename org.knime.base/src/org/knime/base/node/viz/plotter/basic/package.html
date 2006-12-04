@@ -1,2 +1,64 @@
 <body>
+<p>
+The idea behind the <code>BasicPlotter</code> is to provide a small fraction of the 
+functionality known from "R" or "GnuPlot". If you have some basic elements, 
+such as lines, ellipses, rectangles, you want to add to your view you can use 
+the <code>BasicPlotter</code>.
+<pre> 
+addLine(double[] yValues, Color color, Stroke stroke)
+addLine(double[] xValues, double[] yValues, Color color, Stroke stroke)
+addRectangle(double x, double y, int width, int height, Color color, Stroke stroke, boolean filled)
+addEllipse(double xCenter, double yCenter, double width, double height, Color color, Stroke stroke, boolean filled)
+</pre>
+
+The usage of the <code>BasicPlotter</code> methods only makes sense, if the 
+the domain values of the elements are known but not the mapped values. 
+One example is a scatter plot where you want to add a regression line. 
+Here only the domain values of the line are known and can simply be added as a line 
+to the plotter with the domain values. 
+The <code>BasicPlotter</code> will map the domain values to the drawing pane's size. 
+If you set <code>preserve = true</code> in the <code>AbstractPlotter</code> the 
+existing ranges of the coordinates won't be adapted. If you set preserve to false, 
+the ranges will be adapted if, for example, the added rectangle is larger than 
+the existing range of the coordinates.
+Another possibility is to add a <code>DataArray</code> which will be visualized 
+with a line connecting all values in the columns, where the row number is the 
+x axis and the value of the column is painted at the y axis.
+<pre>
+addLine(DataArray data, int columnIndex, Color color, Stroke stroke)
+</pre>
+
+If you want to add a specific element to the <code>BasicPlotter</code> you can 
+extend the <code>BasicDrawingElement</code> or the <code>Basic2DDrawingElement</code> 
+(described below) with 
+<pre>
+addBasicDrawingElement(BasicDrawingElement element)
+</pre>
+</p>
+
+<p>
+<h3>BasicDrawingElement and Basic2DDrawingElement</h3>
+
+A <code>BasicDrawingElement</code> consists of a number of domain values and the 
+referring mapped points, a color and a stroke. Whenever the size is changed, 
+the <code>BasicPlotter</code> takes the domain values and maps them to the 
+current drawing pane size. How the <code>BasicDrawingElement</code> is actually 
+painted (depending on the given points) is defined in the paint method which is 
+abstract. The <code>Basic2DDrawingElement</code> extends the 
+<code>BasicDrawingElement</code> by holding a flag, whether the form should be 
+filled or not.
+Thus, if you want to add, for example, a triangle you have to extend the 
+<code>Basic2DDrawingElement</code> then assert that the given points are the 
+left corner, the top and the right corner and define the paint method to connect 
+the points or fill the shape.
+
+<h3>BasicDrawingPane</h3>
+
+You can add <code>BasicDrawingElements</code> to the <code>BasicDrawingPane</code>, 
+get them and clear the <code>BasicDrawingElements</code> with the following methods:
+<pre>
+addDrawingElement(BasicDrawingElement element)
+getDrawingElements()
+clearPlot()
+</pre>
 </body>

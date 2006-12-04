@@ -40,6 +40,21 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.node.NodeLogger;
 
 /**
+ * Tha BasicPlotter provides means to add some simple, basic graphical forms to
+ * the drawing pane, which are automatically mapped to the drawing pane's 
+ * dimension. It may be used in the cases, where only the domain values for 
+ * these forms are known. There are some possibilities to add these basic forms
+ * directly:
+ * {@link #addEllipse(double, double, double, double, Color, Stroke, boolean)},
+ * {@link #addLine(double[], Color, Stroke)},
+ * {@link #addRectangle(double, double, double, double,Color, Stroke, boolean)},
+ * {@link #addText(String, DataCell, DataCell, Color)}. If some other forms are
+ * needed, the 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement} may be 
+ * extended and added with the 
+ * {@link #addBasicDrawingElement(BasicDrawingElement)}.
+ * 
+ * 
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -50,9 +65,10 @@ public abstract class BasicPlotter extends AbstractPlotter {
     
     
     /**
-     * Always provide a possibility to construct an customized plotter.
-     * @param panel the drawing pane.
-     * @param properties the properties.
+     * Always provide a possibility to construct a customized plotter.
+     * 
+     * @param panel the drawing pane
+     * @param properties the properties
      */
     public BasicPlotter(final AbstractDrawingPane panel, 
             final AbstractPlotterProperties properties) {
@@ -61,17 +77,9 @@ public abstract class BasicPlotter extends AbstractPlotter {
     
     
     /**
-     * 
-     * @param panel the panel which does the drawing
-     * @param properties the properties
-     */
-    public BasicPlotter(final BasicDrawingPane panel, 
-            final AbstractPlotterProperties properties) {
-        super(panel, properties);
-    }
-    
-    /**
-     * Constructs a plotter with the right components.
+     * Constructs a plotter with a 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingPane} and the
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotterProperties}.
      *
      */
     public BasicPlotter() {
@@ -83,6 +91,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
     /**
      * Plots the column in the table specified by the column index as a 
      * line plot.
+     * 
      * @param table the table containing the data to be plotted.
      * @param colIdx - the column index specifying the data to be plotted.
      * @param color the color of the line (may be null)
@@ -147,6 +156,9 @@ public abstract class BasicPlotter extends AbstractPlotter {
     }
     
     /**
+     * Paints the values in the double array as y-values and the x-values are 
+     * simply the position in the array, which implies, that the y-values are 
+     * equidistant.
      * 
      * @param y the equidistant y values
      * @param color color of the line.
@@ -197,6 +209,9 @@ public abstract class BasicPlotter extends AbstractPlotter {
     
     
     /**
+     * Adds a line based on the points defined by the x and y values in the 
+     * referring double arrays. Mind, that the values are assumed to be domain 
+     * values.
      * 
      * @param x the x coordinates (not mapped)
      * @param y the y coordinates (not mapped)
@@ -252,6 +267,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
     
     
     /**
+     * Adds an ellipse with the center point (!) and the height width.
      * 
      * @param xCenter x
      * @param yCenter y
@@ -303,7 +319,9 @@ public abstract class BasicPlotter extends AbstractPlotter {
     }
     
     /**
-     * 
+     * Adds a rectangle defined by the upper-left corner and the width and 
+     * height.
+     *  
      * @param x x
      * @param y y
      * @param width width
@@ -350,6 +368,8 @@ public abstract class BasicPlotter extends AbstractPlotter {
     }
     
     /**
+     * Adds a text at the position defined by the values of the both
+     * {@link org.knime.core.data.DataCell}s (lower-left corner).
      * 
      * @param text the text to be displayed
      * @param x left position of the text
@@ -422,7 +442,10 @@ public abstract class BasicPlotter extends AbstractPlotter {
     }
     
     /**
-     * 
+     * Updates the size by mapping the domain values of the 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement}s
+     *  to the drawing pane's dimension.
+     *  
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()
      */
     @Override

@@ -24,6 +24,8 @@ import java.awt.Point;
 import java.awt.Stroke;
 
 /**
+ * Represents a rectangle which is defined by two points, the upper-left
+ * and the lower-right corner as known from Java Graphics.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -39,6 +41,9 @@ public class BasicRectangle extends Basic2DDrawingElement {
     }
     
     /**
+     * Paints a rectangle defined by two points, the upper-left and lower-right
+     * corner.
+     * 
      * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#paint(
      * java.awt.Graphics2D)
      */

@@ -26,6 +26,16 @@ import java.util.List;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 
 /**
+ * The <code>BasicDrawingPane</code> stores the 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement}s and 
+ * paints them in the {@link #paintContent(Graphics)} method by calling their 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement
+ * #paint(Graphics2D)} method. The 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement}s can be 
+ * added or all can be removed. The mapping of the domain values to the 
+ * DrawingPane's dimension is done in the 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicPlotter}.  
+ * 
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -52,21 +62,31 @@ public class BasicDrawingPane extends AbstractDrawingPane {
     
     /**
      * 
-     * @param line to draw.
+     * @param shape shape to draw
      */
-    public void addDrawingElement(final BasicDrawingElement line) {
-        m_elements.add(line);
+    public void addDrawingElement(final BasicDrawingElement shape) {
+        m_elements.add(shape);
     }
     
     /**
      * 
-     * @return the current stored drawing elements.
+     * @return the current stored drawing elements
      */
     public List<BasicDrawingElement> getDrawingElements() {
         return m_elements;
     }
 
     /**
+     * Paints all added 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement}s by 
+     * calling their 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement
+     * #paint(Graphics2D)} method.
+     * If the BasicDrawingPane is extended this method have to be called with 
+     * <code>super.paintContent()</code> in order to maintain the 
+     * functionality of painting
+     * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement}s.
+     *  
      * @see org.knime.base.node.viz.plotter.AbstractDrawingPane#paintContent(
      * java.awt.Graphics)
      */

@@ -23,6 +23,9 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 
 /**
+ * Represents a textline, the startpoint has to be set with the 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement
+ * #addDomainValue(DataCellPoint)}.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -39,6 +42,8 @@ public class BasicText extends BasicDrawingElement {
     }
 
     /**
+     * Paints the text starting at the only set point.
+     * 
      * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#paint(
      * java.awt.Graphics2D)
      */

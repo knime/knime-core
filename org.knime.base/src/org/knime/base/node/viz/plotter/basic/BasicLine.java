@@ -26,6 +26,8 @@ import java.awt.Stroke;
 import java.util.List;
 
 /**
+ * Represents a line by a list of points which are connected to one line. Hence,
+ * the ordering of the points in the list is important.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -38,6 +40,7 @@ public class BasicLine extends BasicDrawingElement {
     
 
     /**
+     * Paints the line by connecting all points. 
      * 
      * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement
      * #paint(java.awt.Graphics2D)

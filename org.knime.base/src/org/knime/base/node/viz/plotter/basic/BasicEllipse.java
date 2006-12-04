@@ -24,6 +24,8 @@ import java.awt.Point;
 import java.awt.Stroke;
 
 /**
+ * Represents an ellipse defined by two points, the lower-left and the 
+ * upper-right corner, different from normal Java graphics behavior!
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -41,6 +43,9 @@ public class BasicEllipse extends Basic2DDrawingElement {
 
     
     /**
+     * Paints and ellipse that it fills a rectangle defined by two points: 
+     * the lower-left and the upper -right corner.
+     * 
      * @see org.knime.base.node.viz.plotter.basic.BasicDrawingElement#paint(
      * java.awt.Graphics2D)
      */
