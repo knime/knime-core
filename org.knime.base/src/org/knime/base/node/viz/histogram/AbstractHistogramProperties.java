@@ -328,6 +328,7 @@ public abstract class AbstractHistogramProperties extends
      * @param plotter the <code>AbstractHistogramPlotter</code> object which 
      * contains the data. Could be <code>null</code>.
      */
+    @SuppressWarnings("unchecked")
     public void setUpdateHistogramSettings(
             final AbstractHistogramPlotter plotter) {
         if (plotter == null) {
@@ -339,8 +340,7 @@ public abstract class AbstractHistogramProperties extends
             m_noOfBars.addChangeListener(new ChangeListener() {
                 public void stateChanged(final ChangeEvent e) {
                     final JSlider source = (JSlider)e.getSource();
-                    m_noOfBarsLabel.setText(
-                            Integer.toString(source.getValue()));
+                    updateNoOfBarsText(source.getValue());
                 } 
             });
             m_noOfBars.setEnabled(false);
@@ -376,8 +376,7 @@ public abstract class AbstractHistogramProperties extends
             m_aggrMethButtonGrp.add(sumMethod);
             m_aggrMethButtonGrp.add(avgMethod);
             
-            Border nullBorder = null;
-            m_yCol = new ColumnSelectionComboxBox(nullBorder, 
+            m_yCol = new ColumnSelectionComboxBox((Border) null, 
                     DoubleValue.class);
             m_yCol.setBackground(this.getBackground());
             m_yCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
@@ -433,8 +432,7 @@ public abstract class AbstractHistogramProperties extends
                 m_noOfBars.addChangeListener(new ChangeListener() {
                     public void stateChanged(final ChangeEvent e) {
                         final JSlider source = (JSlider)e.getSource();
-                        m_noOfBarsLabel.setText(
-                                Integer.toString(source.getValue()));
+                        updateNoOfBarsText(source.getValue());
                     } 
                 });
             } else {
@@ -550,7 +548,7 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @return the name of the column the user has selected as x coordinate
      */
-    protected String getSelectedXColumn() {
+    public String getSelectedXColumn() {
         return m_xCol.getSelectedColumn();
     }
 
@@ -602,5 +600,13 @@ public abstract class AbstractHistogramProperties extends
      */
     protected void setAggrColEnabled(final boolean b) {
         m_yCol.setEnabled(b);
+    }
+    
+    /**
+     * Helper method to update the number of bars text field.
+     * @param noOfBars the number of bars 
+     */
+    protected void updateNoOfBarsText(final int noOfBars) {
+        m_noOfBarsLabel.setText(Integer.toString(noOfBars));
     }
 }

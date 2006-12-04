@@ -42,6 +42,7 @@ public class FixedColumnHistogramNodeDialog extends DefaultNodeDialogPane {
     /**
      * New pane for configuring BayesianClassifier node dialog.
      */
+    @SuppressWarnings("unchecked")
     public FixedColumnHistogramNodeDialog() {
         super();
         

@@ -428,7 +428,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter2D {
             new Hashtable<String, BarVisModel>(histoData.getNumberOfBars() + 1);
         // this is the minimum size of a bar with an aggregation value > 0
         final int minHeight = Math.max(
-                (int)HistogramDrawingPane.getMaxStrokeWidth(),
+                (int)HistogramDrawingPane.getBarStrokeWidth(),
                 AbstractHistogramPlotter.MINIMUM_BAR_HEIGHT);
         final double drawingWidth = drawingSpace.getWidth();
         final double drawingHeight = drawingSpace.getHeight();

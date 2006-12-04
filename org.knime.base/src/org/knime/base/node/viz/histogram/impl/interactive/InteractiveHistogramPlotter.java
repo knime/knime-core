@@ -45,6 +45,9 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
+    
+    private static final long serialVersionUID = -893697601218801524L;
+    
     /** <code>DataTable</code> which holds the data rows. */
     private final Collection<DataRow> m_data;
     

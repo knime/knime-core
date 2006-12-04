@@ -37,9 +37,11 @@ public class HistogramNodeDialogPane extends DefaultNodeDialogPane {
      * Constructor for class HistogramNodeDialogPane.
      * 
      */
+    @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
         super();
-        DialogComponentColumnSelection colSel = new DialogComponentColumnSelection(
+        DialogComponentColumnSelection colSel = 
+            new DialogComponentColumnSelection(
                 HistogramNodeModel.CFGKEY_X_COLNAME,
                 "Select the xcolumn:", 0, DataValue.class);
         addDialogComponent(colSel);

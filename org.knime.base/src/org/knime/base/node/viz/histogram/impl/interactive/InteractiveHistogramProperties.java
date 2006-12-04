@@ -45,6 +45,8 @@ import org.knime.base.node.viz.plotter2D.AbstractPlotter2D;
 public class InteractiveHistogramProperties extends 
     AbstractHistogramProperties {
 
+    private static final long serialVersionUID = -5763365762779483362L;
+
     /**
      * Constructor for class FixedColumnHistogramProperties.
      * 

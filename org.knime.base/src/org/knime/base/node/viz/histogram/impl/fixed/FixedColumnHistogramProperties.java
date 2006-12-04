@@ -43,6 +43,7 @@ import org.knime.core.data.DataTableSpec;
 public class FixedColumnHistogramProperties extends 
     AbstractHistogramProperties {
 
+    private static final long serialVersionUID = -6177238900813927896L;
 
     /**
      * Constructor for class FixedColumnHistogramProperties.
