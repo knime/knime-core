@@ -48,6 +48,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#available()
      */
+    @Override
     public int available() throws IOException {
         return m_zipIn.available();
     }
@@ -57,12 +58,13 @@ class NonClosableZipInputStream extends InputStream {
      * closeEntry().
      * @see ZipInputStream#closeEntry()
      */
+    @Override
     public void close() throws IOException {
         m_zipIn.closeEntry();
     }
 
     /**
-     * @see InflaterInputStream#closeEntry()
+     * @see ZipInputStream#closeEntry()
      * @throws IOException Delegates only.
      */
     public void closeEntry() throws IOException {
@@ -81,6 +83,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#mark(int)
      */
+    @Override
     public void mark(final int readlimit) {
         m_zipIn.mark(readlimit);
     }
@@ -88,6 +91,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#markSupported()
      */
+    @Override
     public boolean markSupported() {
         return m_zipIn.markSupported();
     }
@@ -95,6 +99,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#read()
      */
+    @Override
     public int read() throws IOException {
         return m_zipIn.read();
     }
@@ -102,6 +107,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#read(byte[], int, int)
      */
+    @Override
     public int read(final byte[] b, final int off, final int len) 
         throws IOException {
         return m_zipIn.read(b, off, len);
@@ -110,6 +116,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#read(byte[])
      */
+    @Override
     public int read(final byte[] b) throws IOException {
         return m_zipIn.read(b);
     }
@@ -117,6 +124,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#reset()
      */
+    @Override
     public void reset() throws IOException {
         m_zipIn.reset();
     }
@@ -124,6 +132,7 @@ class NonClosableZipInputStream extends InputStream {
     /**
      * @see InputStream#skip(long)
      */
+    @Override
     public long skip(final long n) throws IOException {
         return m_zipIn.skip(n);
     }
@@ -132,6 +141,7 @@ class NonClosableZipInputStream extends InputStream {
      * @return Delegates only.
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return m_zipIn.toString();
     }
