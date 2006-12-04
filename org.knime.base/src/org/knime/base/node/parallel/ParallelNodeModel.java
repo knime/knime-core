@@ -66,7 +66,7 @@ public abstract class ParallelNodeModel extends NodeModel {
         private final DataTableSpec[] m_specs;
 
         final AtomicInteger m_processedRows = new AtomicInteger();
-        
+
         Submitter(final BufferedDataTable[] data,
                 final ExtendedCellFactory[] cellFacs,
                 final List<Future<DataContainer[]>> futures,
@@ -87,7 +87,8 @@ public abstract class ParallelNodeModel extends NodeModel {
          */
         public void run() {
             final double max = m_data[0].getRowCount();
-            final int chunkSize = (int)(max / (4 * m_workers.getMaxThreads()));
+            final int chunkSize =
+                    (int)Math.ceil(max / (4.0 * m_workers.getMaxThreads()));
             final RowIterator it = m_data[0].iterator();
             BufferedDataContainer container = null;
             int count = 0, chunks = 0;
@@ -97,15 +98,14 @@ public abstract class ParallelNodeModel extends NodeModel {
                 } catch (CanceledExecutionException ex) {
                     return;
                 }
-                
+
                 if ((count++ % chunkSize == 0) || !it.hasNext()) {
                     if (container != null) {
                         container.close();
                         try {
                             chunks++;
                             m_futures.add(m_workers.submit(getCallable(
-                                    container.getTable(), chunkSize,
-                                    max)));
+                                    container.getTable(), chunkSize, max)));
                         } catch (InterruptedException ex) {
                             return;
                         }
@@ -142,12 +142,12 @@ public abstract class ParallelNodeModel extends NodeModel {
                             if (pr % 10 == 0) {
                                 // 5% of the progress are reserved for combining
                                 // the partial results lateron
-                                m_exec.setProgress(0.95 * pr / max);        
+                                m_exec.setProgress(0.95 * pr / max);
                             }
                         }
                         result[i].close();
                     }
-                    
+
                     return result;
                 }
             };
@@ -259,22 +259,20 @@ public abstract class ParallelNodeModel extends NodeModel {
 
                 CellFactory cf = new CellFactory() {
                     private final RowIterator m_it =
-                        combinedResults[outTableNr].iterator();
+                            combinedResults[outTableNr].iterator();
+
                     public DataCell[] getCells(final DataRow row) {
                         DataRow r2 = m_it.next();
-                        
-                        assert r2.getKey().equals(row.getKey())
-                            : "row keys do not match: " + r2.getKey() + " <=> "
-                            + row.getKey();
-                        
+
+                        assert r2.getKey().equals(row.getKey()) : "row keys do not match: "
+                                + r2.getKey() + " <=> " + row.getKey();
+
                         return new DataCell[]{r2.getCell(cellIndex)};
                     }
 
                     public DataColumnSpec[] getColumnSpecs() {
-                        return new DataColumnSpec[]{
-                                combinedResults[outTableNr].getDataTableSpec()
-                                .getColumnSpec(cellIndex)
-                        };
+                        return new DataColumnSpec[]{combinedResults[outTableNr]
+                                .getDataTableSpec().getColumnSpec(cellIndex)};
                     }
 
                     public void setProgress(final int curRowNr,
@@ -293,27 +291,27 @@ public abstract class ParallelNodeModel extends NodeModel {
                 }
             }
 
-            resultTables[i] = exec.createColumnRearrangeTable(data[0], rea, exec
-                    .createSubProgress(0.05));
+            resultTables[i] =
+                    exec.createColumnRearrangeTable(data[0], rea, exec
+                            .createSubProgress(0.05));
         }
 
         m_additionalTables = null;
         return resultTables;
     }
 
-    
     /**
      * Returns all additional tables passed into the node, i.e. tables from 1 to
      * n. This result is only non-<code>null</code> during
      * {@link #execute(BufferedDataTable[], ExecutionContext)}.
      * 
      * @return the array of additional input tables, or <code>null</code> if
-     * the node is not currently executing
+     *         the node is not currently executing
      */
     protected final BufferedDataTable[] getAdditionalTables() {
         return m_additionalTables;
     }
-    
+
     private AppendedRowsTable[] getCombinedResults(
             final List<Future<DataContainer[]>> futures,
             final ExecutionContext exec) throws InterruptedException,
