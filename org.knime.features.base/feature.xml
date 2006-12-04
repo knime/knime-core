@@ -323,12 +323,6 @@ terms of this License.
          version="1.1.0"/>
 
    <plugin
-         id="org.knime.workbench.navigator"
-         download-size="0"
-         install-size="0"
-         version="1.1.0"/>
-
-   <plugin
          id="org.knime.workbench.ui"
          download-size="0"
          install-size="0"
