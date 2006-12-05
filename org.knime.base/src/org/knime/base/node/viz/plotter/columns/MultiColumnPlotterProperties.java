@@ -26,6 +26,19 @@ import org.knime.core.data.DataValue;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
+ * This class adds to the default properties 
+ * ({@link org.knime.base.node.viz.plotter.AbstractPlotterProperties}) a column
+ * filter and provides the possibility to update the columns displayed in this
+ * column filter. If the default constructor is used all columns (no matter what
+ * {@link org.knime.core.data.DataValue}s they have are displayed). 
+ * But the displayed columns can be restricted for certain 
+ * {@link org.knime.core.data.DataValue}s. To get informed about changes in the 
+ * selected columns the {@link org.knime.core.node.util.ColumnFilterPanel} can
+ * be retrieved and listeners can be added to it. The 
+ * {@link org.knime.core.node.util.ColumnFilterPanel} gets the information 
+ * about the available columns and their {@link org.knime.core.data.DataValue}s
+ * from a {@link org.knime.core.data.DataTableSpec}.       
+ * 
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -37,13 +50,21 @@ public class MultiColumnPlotterProperties extends AbstractPlotterProperties {
     /** The index for the column filter tab. */
     public static final int COLUMN_FILTER_IDX = 1;
     
+    /**
+     * Creates the default properties and a tab for mutli column selection. 
+     * All {@link org.knime.core.data.DataValue}s are allowed.
+     * 
+     */
     public MultiColumnPlotterProperties() {
         this(DataValue.class);
     }
     
     
     /**
-     * Creates the default properties and a tab for mutli column selection.
+     * Creates the default properties and a tab for mutli column selection. Only
+     * those columns are displayed, which are compatible with the passed
+     * <code>allowedDataTypes</code>.
+     * 
      * @param allowedDataTypes allowed data types
      */
     public MultiColumnPlotterProperties(
@@ -55,7 +76,11 @@ public class MultiColumnPlotterProperties extends AbstractPlotterProperties {
     
     /**
      * Updates the column filtering with a new 
-     * {@link org.knime.core.data.DataColumnSpec}.
+     * {@link org.knime.core.data.DataColumnSpec}. After this only those columns
+     * existent in the {@link org.knime.core.data.DataColumnSpec} and 
+     * compatible with the {@link org.knime.core.data.DataValue}s defined in
+     * the constructor asre displayed.
+     * 
      * @param spec the data table spec.
      * @param selected the former selected columns.
      */
@@ -65,7 +90,7 @@ public class MultiColumnPlotterProperties extends AbstractPlotterProperties {
     }
     
     /**
-     * Returns the column filter panel.
+     * Returns the column filter panel so, for example, listeners can be added.
      * @return the column filter panel.
      */
     public ColumnFilterPanel getColumnFilter() {

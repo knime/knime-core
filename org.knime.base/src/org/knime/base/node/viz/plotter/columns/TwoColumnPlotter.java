@@ -37,6 +37,15 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 
 /**
+ * Wraps the functionality where the data of two columns have to be displayed.
+ * It registeres the appropriate listeners to the column selection and calls the
+ * corresponding methods dependend on whether the model has changed
+ * ({@link #updatePaintModel()}) or the ranges have changed 
+ * ({@link #updateSize()}). If only columns which are compatible to certain 
+ * {@link org.knime.core.data.DataValue}s should be selectable, an instance of 
+ * the {@link org.knime.base.node.viz.plotter.columns.TwoColumnProperties} has 
+ * to be created, where the restricting {@link org.knime.core.data.DataValue}s
+ *  can be passed to the constructor.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -53,6 +62,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     
 
     /**
+     * Constructor for extending classes.
      * 
      * @param panel the drawing pane
      * @param properties the properties
@@ -98,14 +108,20 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     }
     
     /**
-     * Default two column plotter.
+     * Default two column plotter with 
+     * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingPane} and 
+     * {@link TwoColumnProperties}.
      *
      */
     public TwoColumnPlotter() {
         this(new BasicDrawingPane(), new TwoColumnProperties());
     }
     
-    
+    /**
+     * Adds the range listener to the range adjustment component of the 
+     * properties.
+     *
+     */
     private void addRangeListener() {
         if (!(getProperties() instanceof TwoColumnProperties)) {
             return;
@@ -120,7 +136,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
                 double newXMin = props.getXMinValue();
                 ((NumericCoordinate)getXAxis().getCoordinate())
                     .setMinDomainValue(newXMin);
-                sizeChanged();
+                updateSize();
                 getXAxis().repaint();
             }
             
@@ -134,7 +150,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
                 double newXMax = props.getXMaxValue();
                 ((NumericCoordinate)getXAxis().getCoordinate())
                     .setMaxDomainValue(newXMax);
-                sizeChanged();
+                updateSize();
                 getXAxis().repaint();
             }
             
@@ -148,7 +164,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
                 double newYMin = props.getYMinValue();
                 ((NumericCoordinate)getYAxis().getCoordinate())
                     .setMinDomainValue(newYMin);
-                sizeChanged();
+                updateSize();
                 getYAxis().repaint();
             }
             
@@ -162,14 +178,19 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
                 double newYMax = props.getYMaxValue();
                 ((NumericCoordinate)getYAxis().getCoordinate())
                     .setMaxDomainValue(newYMax);
-                sizeChanged();
+                updateSize();
                 getYAxis().repaint();
             }
             
         });
     }
     
-    
+    /**
+     * Updates the coordinates for both columns and calls  
+     * {@link #updatePaintModel()}.
+     * 
+     * @param newXColumn the new {@link org.knime.core.data.DataColumnSpec}. 
+     */
     private void xColumnChanged(final DataColumnSpec newXColumn) {
         if (!newXColumn.equals(m_selectedXColumn)) {
             LOGGER.debug("x column changed: " 
@@ -185,6 +206,12 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
         }
     }
     
+    /**
+     * Updates the coordinates for both columns and calls  
+     * {@link #updatePaintModel()}.
+     * 
+     * @param newYColumn the new {@link org.knime.core.data.DataColumnSpec}. 
+     */
     private void yColumnChanged(final DataColumnSpec newYColumn) {
         if (!newYColumn.equals(m_selectedYColumn)) {
             LOGGER.debug("y column changed: " 
@@ -210,6 +237,11 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     }
     
     /**
+     * Returns the selected column index or 0 by default, that is if no 
+     * {@link org.knime.core.data.DataTableSpec} is set and no column was 
+     * selected before. If the stored {@link org.knime.core.data.DataTableSpec}
+     * doesn't find the selected column name (which should never happen), 
+     * then -1 is returned. 
      * 
      * @return selected x column index or -1
      */
@@ -221,6 +253,11 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     }
     
     /**
+     * Returns the selected column index or 0 by default, that is if no 
+     * {@link org.knime.core.data.DataTableSpec} is set and no column was 
+     * selected before. If the stored {@link org.knime.core.data.DataTableSpec}
+     * doesn't find the selected column name (which should never happen), 
+     * then -1 is returned. 
      * 
      * @return selected y column index or -1
      */
@@ -253,6 +290,10 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     
     
     /**
+     * Updates the column selection with the 
+     * {@link org.knime.core.data.DataTableSpec} of the 
+     * {@link org.knime.base.node.util.DataArray} with index 0.
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#setDataProvider(
      * DataProvider)
      */
@@ -265,24 +306,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
                     .getDataTableSpec());
         }
     }
-    
-    
-    /**
-     * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
-     */
-    @Override
-    public void updateSize() {
-        super.updateSize();
-        sizeChanged();
-    }
-
-    /**
-     * This method is called whenever the size of the plotter has changed and
-     * the domain values have to be updated to fit the new visible dimension.
-     *
-     */
-    public abstract void sizeChanged();
+        
     
     /**
      * This method is called whenever the column selection has changed and

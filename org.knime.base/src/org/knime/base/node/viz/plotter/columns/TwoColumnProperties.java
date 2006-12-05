@@ -41,10 +41,22 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
+ * <p>
  * Provides functionality to select the x and the y column to display.
  * Selects first and second column per default and allows the filtering of 
- * a certain DataType and to fix some column to a certain value.
- * 
+ * a certain DataType and to fix some column to a certain value. The information
+ * about the available columns and if they are compatible with the restricting
+ * {@link org.knime.core.data.DataValue}s is taken from a 
+ * {@link org.knime.core.data.DataTableSpec} which has to be provided in the 
+ * <code>update</code> methods:
+ * {@link #update(DataTableSpec)}, {@link #update(DataTableSpec, int, int)},
+ * and {@link #updateRangeSpinner(DataColumnSpec, DataColumnSpec)}.
+ * </p>
+ * <p> 
+ * In addition the ranges for the x and y axis can be adapted, i.e. the minimum 
+ * and maximum for each column can be adapted. The registration of listeners is 
+ * wrapped by this class, corresponding methods are provided.
+ * </p>
  * @author Fabian Dill, University of Konstanz
  */
 public class TwoColumnProperties extends AbstractPlotterProperties {
@@ -73,7 +85,11 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
     
     
     /**
-     * 
+     * Creates a properties tab with the default properties
+     * ({@link org.knime.base.node.viz.plotter.AbstractPlotterProperties})
+     * and a tab for the selection of two columns and the adjustment of their 
+     * ranges. There is no restriction on the displayed 
+     * {@link org.knime.core.data.DataValue}s.
      *
      */
     public TwoColumnProperties() {
@@ -82,6 +98,12 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
     }
     
     /**
+     * Creates a properties tab with the default properties
+     * ({@link org.knime.base.node.viz.plotter.AbstractPlotterProperties})
+     * and a tab for the selection of two columns and the adjustment of their 
+     * ranges, in addition, each column selection can be restricted to display 
+     * only columns which are compatible with certain 
+     * {@link org.knime.core.data.DataValue}s. 
      * 
      * @param allowedXTypes allowed data types to be selecteable for the x 
      * column.
@@ -107,6 +129,12 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
         addTab("Column Selection", panel);
     }
     
+    /**
+     * Creates the necessary graphical components for adjusting the displayed  
+     * column ranges.
+     * @return the box containing the graphical components for the column ranges
+     * adjustment
+     */
     private Box createRangeBox() {
         m_xMinSpinner = new JSpinner(new SpinnerNumberModel(1.0, 
                 null, null, 0.1));
@@ -154,7 +182,8 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
     
     /**
      * Updates the values of the range spinner acording to the current 
-     * coordinate's values.
+     * columns.
+     * 
      * @param xColumn selected x column 
      * @param yColumn selected y column
      */
@@ -288,9 +317,11 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
     }
     
     /**
-     * Updates the selection boxes with the passed data table spec and sets
+     * Updates the selection boxes with the passed 
+     * {@link org.knime.core.data.DataTableSpec} and sets
      * 0 and 1 as x and y.
-     * @param spec the new data table spec.
+     * 
+     * @param spec the new {@link org.knime.core.data.DataTableSpec}
      */
     public void update(final DataTableSpec spec) {
         int xIdx = -1;
@@ -311,8 +342,10 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
     }
     
     /**
-     * Updates the selection boxes with the new spec and selects the passed 
+     * Updates the selection boxes with the new 
+     * {@link org.knime.core.data.DataTableSpec} and selects the passed 
      * indices. 
+     * 
      * @param spec the new data table spec.
      * @param xPreSelect the x column index (-1 if unknown)
      * @param yPreSelect the y column (-1 if unknown)
