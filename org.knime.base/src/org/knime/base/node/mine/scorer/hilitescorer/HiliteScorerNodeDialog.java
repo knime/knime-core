@@ -29,7 +29,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
-import org.knime.base.node.mine.scorer.ScorerNodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -44,7 +43,7 @@ import org.knime.core.node.NotConfigurableException;
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class ScorerNodeDialog extends NodeDialogPane {
+public final class HiliteScorerNodeDialog extends NodeDialogPane {
     /*
      * The main panel in this view.
      */
@@ -66,7 +65,7 @@ public final class ScorerNodeDialog extends NodeDialogPane {
      * Creates a new {@link NodeDialogPane} for scoring in order to set the two
      * columns to compare.
      */
-    public ScorerNodeDialog() {
+    public HiliteScorerNodeDialog() {
         super();
 
         m_p = new JPanel();
@@ -111,7 +110,7 @@ public final class ScorerNodeDialog extends NodeDialogPane {
         m_firstColumns.removeAllItems();
         m_secondColumns.removeAllItems();
 
-        DataTableSpec spec = specs[ScorerNodeModel.INPORT];
+        DataTableSpec spec = specs[0];
 
         if ((spec == null) || (spec.getNumColumns() < 2)) {
             throw new NotConfigurableException("Scorer needs an input table "
@@ -129,8 +128,8 @@ public final class ScorerNodeDialog extends NodeDialogPane {
                 .getName() : null;
         String col1 = (numCols > 1) ? spec.getColumnSpec(numCols - 2)
                 .getName() : col2;
-        col1 = settings.getString(ScorerNodeModel.FIRST_COMP_ID, col1);
-        col2 = settings.getString(ScorerNodeModel.SECOND_COMP_ID, col2);
+        col1 = settings.getString(HiliteScorerNodeModel.FIRST_COMP_ID, col1);
+        col2 = settings.getString(HiliteScorerNodeModel.SECOND_COMP_ID, col2);
         m_firstColumns.setSelectedItem(col1);
         m_secondColumns.setSelectedItem(col2);
     }
@@ -158,7 +157,7 @@ public final class ScorerNodeDialog extends NodeDialogPane {
             throw new InvalidSettingsException(
                     "First and second column cannot be the same.");
         }
-        settings.addString(ScorerNodeModel.FIRST_COMP_ID, firstColumn);
-        settings.addString(ScorerNodeModel.SECOND_COMP_ID, secondColumn);
+        settings.addString(HiliteScorerNodeModel.FIRST_COMP_ID, firstColumn);
+        settings.addString(HiliteScorerNodeModel.SECOND_COMP_ID, secondColumn);
     }
 }

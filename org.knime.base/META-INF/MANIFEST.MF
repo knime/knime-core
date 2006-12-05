@@ -95,6 +95,7 @@ Provide-Package: org.knime.base.data.append.column,
  org.knime.base.util.coordinate
 Export-Package: org.knime.base.data.sort,
  org.knime.base.node.io.database,
+ org.knime.base.node.mine.scorer.hilitescorer,
  org.knime.base.node.viz.parcoord,
  org.knime.base.node.viz.plotter,
  org.knime.base.node.viz.plotter.basic,

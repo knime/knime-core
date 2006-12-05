@@ -21,7 +21,6 @@
  */
 package org.knime.base.node.mine.scorer.hilitescorer;
 
-import org.knime.base.node.mine.scorer.ScorerNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -76,6 +75,6 @@ public class HiliteScorerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new ScorerNodeDialog();
+        return new HiliteScorerNodeDialog();
     }
 }

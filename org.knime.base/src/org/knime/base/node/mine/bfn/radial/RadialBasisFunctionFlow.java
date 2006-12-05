@@ -27,7 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.knime.base.node.io.filereader.FileReaderNodeFactory;
-import org.knime.base.node.mine.scorer.ScorerNodeFactory;
+import org.knime.base.node.mine.scorer.hilitescorer.HiliteScorerNodeFactory;
 import org.knime.base.node.preproc.binner.BinnerNodeFactory;
 import org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory;
 import org.knime.base.node.util.cache.CacheNodeFactory;
@@ -110,7 +110,7 @@ public final class RadialBasisFunctionFlow {
         // create: table view predicted test data
         int table4 = flow.addNewNode(new TableNodeFactory()).getID();
         // create: scorer node
-        int scorer = flow.addNewNode(new ScorerNodeFactory()).getID();
+        int scorer = flow.addNewNode(new HiliteScorerNodeFactory()).getID();
 
         //
         // connect nodes
