@@ -29,7 +29,8 @@ import java.util.List;
 /**
  * A drawing element consists of points which are already mapped to the 
  * drawing pane's dimension. The <code>BasicDrawingElement</code>s can be added
- * to the {@link org.knime.base.node.viz.plotter.basic.BasicPlotter
+ * to the {@link org.knime.base.node.viz.plotter.basic.BasicPlotter} with 
+ * {@link org.knime.base.node.viz.plotter.basic.BasicPlotter
  * #addBasicDrawingElement(BasicDrawingElement)}. The 
  * <code>BasicDrawingElement</code>s should be used if only the domain data of 
  * the shape is available, since they are automatically mapped to the drawing 
@@ -39,7 +40,7 @@ import java.util.List;
  * {@link org.knime.base.node.viz.plotter.basic.BasicEllipse},
  * {@link org.knime.base.node.viz.plotter.basic.BasicRectangle},
  * {@link org.knime.base.node.viz.plotter.basic.BasicText}.
- * Each of these implementations restore rthe original stroke and color of the 
+ * Each of these implementations restore the original stroke and color of the 
  * graphics object. New implementations should keep this behavior.
  * 
  * @author Fabian Dill, University of Konstanz
