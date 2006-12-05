@@ -119,12 +119,12 @@ public abstract class NodeView {
     /**
      * Remembers the first time the actual component was set. The reason is the
      * resizing, the first time the proper component (not the "no data"
-     * component) is set. This resizing should only occure the firs time.
+     * component) is set. This resizing should only occur the first time.
      */
     private boolean m_componentSet = false;
 
     /**
-     * Determines if this view is always on top. Usefull if special views should
+     * Determines if this view is always on top. Useful if special views should
      * stay on top all the time
      */
     private boolean m_alwaysOnTop = false;
