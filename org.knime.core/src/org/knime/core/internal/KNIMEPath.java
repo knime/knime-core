@@ -36,19 +36,31 @@ public final class KNIMEPath {
     private static File homeDir;
 
     /**
-     * Constructor which package scope.
-     * 
-     * @param file The file to use as home dir (should be a directory).
+     * Disallow instantiation.
      */
     private KNIMEPath() {
     }
 
     /**
      * Set the knime home dir.
-     * 
      * @param file The file to use as home dir (should be a directory).
      */
     static void setKNIMEHomeDir(final File file) {
+        if (file.exists()) {
+            if (!file.isDirectory()) {
+                throw new IllegalArgumentException("KNIME home path is not a " 
+                        + "directory: " + file.getAbsolutePath());
+            }
+            if (!file.canWrite()) {
+                throw new IllegalArgumentException("Unable to write to " 
+                        + "KNIME home: " + file.getAbsolutePath());
+            }
+        } else {
+            if (!file.mkdirs()) {
+                throw new IllegalArgumentException("Unable to create KNIME "
+                        + "home directory " + file.getAbsolutePath());
+            }
+        }
         homeDir = file.getAbsoluteFile();
     }
 
@@ -58,45 +70,46 @@ public final class KNIMEPath {
      * @return The directory to use.
      */
     public static File getKNIMEHomeDirPath() {
-        String parent;
-        String child;
-
         if (homeDir == null) {
-            // see if the home dir got set through a command line argument
-            if (System.getProperty(KNIMEConstants.KNIME_HOME_PROPERTYNAME) 
-                    != null) {
-                homeDir =
-                        new File(System.getProperty(
-                                KNIMEConstants.KNIME_HOME_PROPERTYNAME));
-                parent = homeDir.getParentFile().getAbsolutePath();
-                child = homeDir.getName();
-            } else {
-                // if no home dir is specified use "~user/knime"
-                parent = System.getProperty("user.home");
-                child = "knime";
-                homeDir = new File(parent, child);
-            }
-
-        } else {
-            parent = homeDir.getParentFile().getAbsolutePath();
-            child = homeDir.getName();
-        }
-
-        while (homeDir.exists() && !homeDir.isDirectory()) {
-            child = child.concat("_");
-            homeDir = new File(parent, child);
-        }
-        if (!homeDir.exists()) {
-
-            if (!homeDir.mkdirs()) {
-
-                // if creation of home dir failed, try the ~user/knime
-                homeDir = new File(System.getProperty("user.home"), "knime");
-                if (!homeDir.exists()) {
-                    homeDir.mkdir();
-                }
-            }
+            initDefaultDir();
         }
         return homeDir;
+    }
+    
+    private static void initDefaultDir() {
+        // see if the home dir got set through a command line argument
+        String knimePropertyHome =
+            System.getProperty(KNIMEConstants.KNIME_HOME_PROPERTYNAME);
+        File tempHomeDir = null;
+        if (knimePropertyHome != null) {
+            tempHomeDir = createUniqueDir(new File(knimePropertyHome));
+        }
+        if (tempHomeDir == null) {
+            File userHome = new File(System.getProperty("user.home"));
+            tempHomeDir = createUniqueDir(new File(userHome, "knime"));
+            if (tempHomeDir == null) {
+                tempHomeDir = userHome;
+            }
+        }
+        homeDir = tempHomeDir;
+    }
+    
+    private static File createUniqueDir(final File file) {
+        final String parent = file.getParentFile().getAbsolutePath();
+        String child = file.getName();
+        File temp = new File(parent, child);
+        if (temp.exists() && !temp.isDirectory()) {
+            // Do not use logger here as it is not yet available!
+            System.err.println("Unable to set KNIME home directory to \""
+                    + file.getAbsolutePath() + "\"");
+            while (temp.exists() && !temp.isDirectory()) {
+                child = child.concat("_");
+                temp = new File(parent, child);
+            }
+        }
+        if (!temp.exists() && !temp.mkdirs()) {
+            return null;
+        }
+        return temp;
     }
 }
