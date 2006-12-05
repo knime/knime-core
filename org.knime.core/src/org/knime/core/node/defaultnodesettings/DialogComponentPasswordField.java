@@ -55,6 +55,11 @@ import sun.misc.BASE64Encoder;
  */
 public final class DialogComponentPasswordField extends DialogComponent {
 
+    // the min, max and default width of the edit field, if not set explicitly
+    private static final int FIELD_MINWIDTH = 5;
+    private static final int FIELD_DEFWIDTH = 15;
+    private static final int FIELD_MAXWIDTH = 30;
+    
     private final JPasswordField m_pwField;
 
     private boolean m_containsDefaultValue;
@@ -80,11 +85,24 @@ public final class DialogComponentPasswordField extends DialogComponent {
      */
     public DialogComponentPasswordField(final SettingsModelString stringModel,
             final String label) {
+        this(stringModel, label, 
+                calcDefaultWidth(stringModel.getStringValue()));
+    }
+    
+    /**
+     * Constructor put label and JTextField into panel.
+     * 
+     * @param label label for dialog in front of JTextField
+     * @param stringModel the model that stores the value for this component.
+     * @param compWidth the width of the component (in columns/characters)
+     */
+    public DialogComponentPasswordField(final SettingsModelString stringModel,
+            final String label, final int compWidth) {
         super(stringModel);
 
         this.add(new JLabel(label));
         m_pwField = new JPasswordField();
-        m_pwField.setColumns(30);
+        m_pwField.setColumns(compWidth);
 
         m_pwField.addFocusListener(new FocusListener() {
             public void focusLost(final FocusEvent e) {
@@ -104,7 +122,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
         // password fields will not notify model listeners when the password
         // gets changed.
-        
+
         // update the pw field, whenever the model changes
         getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
@@ -117,6 +135,27 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
     }
 
+    /**
+     * @param defaultValue the default value in the component
+     * @return the width of the spinner, derived from the defaultValue.
+     */
+    private static int calcDefaultWidth(final String defaultValue) {
+        if ((defaultValue == null) || (defaultValue.length() == 0)) {
+            // no default value, return the default width of 15
+            return FIELD_DEFWIDTH;
+        }
+        if (defaultValue.length() < FIELD_MINWIDTH) {
+            // the editfield should be at least 15 columns wide
+            return FIELD_MINWIDTH;
+        }
+        if (defaultValue.length() > FIELD_MAXWIDTH) {
+            return FIELD_MAXWIDTH;
+        }
+        return defaultValue.length();
+        
+    }
+
+    
     /**
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #updateComponent()

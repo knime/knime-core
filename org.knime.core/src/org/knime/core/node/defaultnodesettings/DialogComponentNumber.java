@@ -51,10 +51,15 @@ import org.knime.core.node.NotConfigurableException;
  */
 public class DialogComponentNumber extends DialogComponent {
 
+    // the default width of the spinner if no width and no default value is set
+    private static final int FIELD_DEFWIDTH = 10;
+    
+    private static final int FIELD_MINWIDTH = 2;
+
     private JSpinner m_spinner;
 
     /**
-     * Constructor put label and spinner into panel.
+     * Constructor puts a label and spinner (10 characters wide) into a panel.
      * 
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
@@ -63,8 +68,27 @@ public class DialogComponentNumber extends DialogComponent {
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize) {
+        this(numberModel, label, stepSize, 
+                calcDefaultWidth(numberModel.getNumberValueStr()));
+    }
+
+    /**
+     * Constructor put label and spinner into panel.
+     * 
+     * @param numberModel the SettingsModel determining the number type (double
+     *            or int)
+     * @param label label for dialog in front of the spinner
+     * @param stepSize step size for the spinner
+     * @param compWidth the width (number of columns/characters) of the spinner
+     */
+    public DialogComponentNumber(final SettingsModelNumber numberModel,
+            final String label, final Number stepSize, final int compWidth) {
         super(numberModel);
 
+        if (compWidth < 1) {
+            throw new IllegalArgumentException("Width of component can't be "
+                    + "smaller than 1");
+        }
         this.add(new JLabel(label));
 
         SpinnerNumberModel spinnerModel;
@@ -98,7 +122,7 @@ public class DialogComponentNumber extends DialogComponent {
 
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinner.getEditor();
-        editor.getTextField().setColumns(6);
+        editor.getTextField().setColumns(compWidth);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
 
         m_spinner.addChangeListener(new ChangeListener() {
@@ -124,6 +148,23 @@ public class DialogComponentNumber extends DialogComponent {
         this.add(m_spinner);
     }
 
+    /**
+     * @param defaultValue the default value in the component
+     * @return the width of the spinner, derived from the defaultValue.
+     */
+    private static int calcDefaultWidth(final String defaultValue) {
+        if ((defaultValue == null) || (defaultValue.length() == 0)) {
+            // no default value, return the default width of 10
+            return FIELD_DEFWIDTH;
+        }
+        if (defaultValue.length() < FIELD_MINWIDTH) {
+            // spinner should be at least 2 columns wide.
+            return FIELD_MINWIDTH;
+        }
+        return defaultValue.length();
+        
+    }
+    
     /**
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #updateComponent()

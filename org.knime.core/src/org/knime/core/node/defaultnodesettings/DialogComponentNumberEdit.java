@@ -51,6 +51,13 @@ import org.knime.core.node.NotConfigurableException;
  */
 public class DialogComponentNumberEdit extends DialogComponent {
 
+    /*
+     * the minimum and default width of the text field, if not set otherwise.
+     */
+    private static final int FIELD_MINWIDTH = 2;
+    
+    private static final int FIELD_DEFWIDTH = 10;
+
     private final JTextField m_valueField;
 
     /**
@@ -61,12 +68,27 @@ public class DialogComponentNumberEdit extends DialogComponent {
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
             final String label) {
+        this(numberModel, label, 
+                calcDefaultWidth(numberModel.getNumberValueStr()));
+    }
+    
+    
+    /**
+     * Constructor that puts label and JTextField into panel.
+     * 
+     * @param numberModel the model handling the value
+     * @param label text to be displayed in front of the edit box
+     * @param compWidth the width (in columns/characters) of the edit field.
+     */
+    public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
+            final String label, final int compWidth) {
         super(numberModel);
 
         this.add(new JLabel(label));
         m_valueField = new JTextField();
-        m_valueField.setText(numberModel.getNumberValueStr());
-        m_valueField.setColumns(6);
+        String defValue = numberModel.getNumberValueStr();
+        m_valueField.setText(defValue);
+        m_valueField.setColumns(compWidth);
         this.add(m_valueField);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
@@ -102,6 +124,23 @@ public class DialogComponentNumberEdit extends DialogComponent {
             }
         });
 
+    }
+
+    /**
+     * @param defaultValue the default value in the component
+     * @return the width of the spinner, derived from the defaultValue.
+     */
+    private static int calcDefaultWidth(final String defaultValue) {
+        if ((defaultValue == null) || (defaultValue.length() == 0)) {
+            // no default value, return the default width of 10
+            return FIELD_DEFWIDTH;
+        }
+        if (defaultValue.length() < FIELD_MINWIDTH) {
+            // spinner should be at least 2 columns wide.
+            return FIELD_MINWIDTH;
+        }
+        return defaultValue.length();
+        
     }
 
     /**

@@ -46,6 +46,11 @@ import org.knime.core.node.NotConfigurableException;
  */
 public final class DialogComponentString extends DialogComponent {
 
+    // the min/max and default width of the editfield, if not set explicitly
+    private static final int FIELD_MINWIDTH = 5;
+    private static final int FIELD_DEFWIDTH = 15;
+    private static final int FIELD_MAXWIDTH = 30;
+    
     private final JTextField m_valueField;
 
     private final boolean m_disallowEmtpy;
@@ -59,7 +64,8 @@ public final class DialogComponentString extends DialogComponent {
      */
     public DialogComponentString(final SettingsModelString stringModel,
             final String label) {
-        this(stringModel, label, false);
+        this(stringModel, label, false, 
+                calcDefaultWidth(stringModel.getStringValue()));
     }
 
     /**
@@ -69,16 +75,18 @@ public final class DialogComponentString extends DialogComponent {
      * @param stringModel the model that stores the value for this component.
      * @param disallowEmptyString if set true, the component request a non-empty
      *            string from the user.
+     * @param compWidth the width of the edit field (in columns/characters)
      */
     public DialogComponentString(final SettingsModelString stringModel,
-            final String label, final boolean disallowEmptyString) {
+            final String label, final boolean disallowEmptyString, 
+            final int compWidth) {
         super(stringModel);
 
         m_disallowEmtpy = disallowEmptyString;
 
         this.add(new JLabel(label));
         m_valueField = new JTextField();
-        m_valueField.setColumns(30);
+        m_valueField.setColumns(compWidth);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
             public void removeUpdate(final DocumentEvent e) {
@@ -114,6 +122,26 @@ public final class DialogComponentString extends DialogComponent {
         });
 
         this.add(m_valueField);
+    }
+
+    /**
+     * @param defaultValue the default value in the component
+     * @return the width of the spinner, derived from the defaultValue.
+     */
+    private static int calcDefaultWidth(final String defaultValue) {
+        if ((defaultValue == null) || (defaultValue.length() == 0)) {
+            // no default value, return the default width of 15
+            return FIELD_DEFWIDTH;
+        }
+        if (defaultValue.length() < FIELD_MINWIDTH) {
+            // the editfield should be at least 15 columns wide
+            return FIELD_MINWIDTH;
+        }
+        if (defaultValue.length() > FIELD_MAXWIDTH) {
+            return FIELD_MAXWIDTH;
+        }
+        return defaultValue.length();
+        
     }
 
     /**
