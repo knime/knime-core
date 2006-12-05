@@ -394,6 +394,10 @@ public class Axis extends JComponent {
         m_startTickOffset = dotSizeOffset;
     }
     
+    /**
+     * 
+     * @return the tick offset
+     */
     public int getTickOffset() {
         return m_startTickOffset;
     }
