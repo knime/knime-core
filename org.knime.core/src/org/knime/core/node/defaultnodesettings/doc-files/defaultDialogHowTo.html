@@ -835,19 +835,24 @@ don't save their
 values in a
 <code>NodeSettings</code> object nor will
 they&nbsp;update their internal value
-from it. You can register an ItemListener with a checkbox component (<code>DialogComponentBoolean</code>),
-and change the enable status of any other component in the listener
-method. In the <code>NodeModel</code>, when loading new
+from it. You can register a <code>ChangeListener</code> with a <code>SettingsModel</code> and
+change the enable status of a component depending on the value of
+another one, for example. In the <code>NodeModel</code>
+then, when loading new
 values, you need to make
 sure that you only load values for enabled components. You probably
-want to read the boolean values first, to decide not to load values
-that depend on this boolean values. (Loading values into disabled
+want to first read the values of components that dis/enabled other
+components, and decide then - depending on the loaded value -&nbsp;
+not to load the values of the dependent components. (The attempt to
+load values into disabled
 settings models will not result in an error or exception, they will
 just not update their internal value.)<br>
 
 If you think you need to change the value of a settings model in your
-<code>NodeModel</code> (for example to set default values), you need to set the
-enable status of dependend <code>SettingsModels</code> accordingly.<br>
+<code>NodeModel</code> (for example to set default values),
+you need to set the
+enable status of dependent <code>SettingsModels</code>
+accordingly.<br>
 
 <br>
 
@@ -867,7 +872,9 @@ A</span>: The one specified in the settings model &nbsp;used
 by the
 NodeModel. Before the dialog opens, the NodeModel's settings are
 transfered into the dialog. (Only when a component is disabled it keeps
-its default value from the dialog constructor.)<br>
+its default value from the dialog constructor.) The default value in
+the dialog constructor is used to determine the components width, if it
+is not set explicitly.<br>
 
 <br>
 
@@ -901,6 +908,15 @@ your current settings anyway - we re-use it to transfer the current
 values into the dialog. <br>
 
 <br>
+<span style="text-decoration: underline;">
+Q</span>: <span style="text-decoration: underline;">How can I influence the width of the components?</span><br>
+<span style="text-decoration: underline;">
+A</span>: There are some components that calculate there width automatically
+(like ComboBoxes). Others have a constructor that allow setting the
+width (in columns/characters) explicitly. If you don't use this
+constructor, the value in the <code>SettingsModel<code> passed will be used to
+determine the width.<br>
 
+</code></code>
 </body>
 </html>
