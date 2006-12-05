@@ -44,22 +44,23 @@ import java.io.IOException;
 public interface DataCellSerializer<T extends DataCell> {
 
     /**
-     * Saves <code>cell</code> to the output stream.
+     * Saves the <code>cell</code> to the <code>output</code> stream.
      * 
-     * @param cell the cell to save
-     * @param out the place to write to
+     * @param cell the <code>DataCell</code> to save
+     * @param output the place to write to
      * @throws IOException if writing fails
      */
-    void serialize(final T cell, DataOutput out) throws IOException;
+    void serialize(final T cell, final DataOutput output) throws IOException;
 
     /**
      * Loads a new instance of {@link org.knime.core.data.DataCell} of type 
-     * <code>T</code> from the input stream, which represents a former 
-     * serialized content.
+     * <code>T</code> from the <code>input</code> stream, which represents a 
+     * former serialized <code>DataCell</code> content.
      * 
      * @param input the source to load from, never <code>null</code>
      * @return a new {@link org.knime.core.data.DataValue} instance of type 
-     * <code>T</code> representing a former serialized cell
+     *         <code>T</code> representing a former serialized 
+     *         <code>DataCell</code>
      * @throws IOException if loading fails
      */
     T deserialize(final DataInput input) throws IOException;

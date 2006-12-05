@@ -38,11 +38,11 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
  * Typically a <code>DataValue</code> brings along its own 
  * (set of) renderers, an icon (which is displayed in table column headers, 
  * for instance) and a comparator, which are all defined through the definition 
- * of a static member <code>UTITLITY</code>.
+ * of a static member {@link DataValue#UTILITY}.
  *  
  * <p>
- * For more information regarding definition of new data 
- * cells see the <a href="package-summary.html">package description</a> and the 
+ * For more information regarding the definition of new <code>DataCell</code>s 
+ * see the <a href="package-summary.html">package description</a> and the 
  * <a href="doc-files/newtypes.html">manual</a> on how to define new types, in
  * particular the <a href="doc-files/newtypes.html#newtypes">remarks</a> on
  * <code>DataValue</code>.
@@ -55,7 +55,7 @@ public interface DataValue {
      * Static singleton for meta description. This field is accessed via
      * reflection in the {@link org.knime.core.data.DataType} class. It is 
      * used to determine renderer, comparator, and icon. Sub-Interfaces 
-     * will &quot;override&quot; this static member if they desire to define 
+     * will &quot;override&quot; this static member, if they desire to define 
      * own renderers, comparator, and/or icon.
      */
     public static final UtilityFactory UTILITY = new UtilityFactory();

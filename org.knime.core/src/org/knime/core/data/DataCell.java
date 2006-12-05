@@ -28,12 +28,13 @@ package org.knime.core.data;
 import java.io.Serializable;
 
 /**
- * Abstract base class of all data cells, which acts as a container for 
- * arbitrary values and defines the common abilities all cells must provide, 
+ * Abstract base class of all <code>DataCell</code>s, which acts as a container 
+ * for arbitrary values and defines the common abilities all cells must provide,
  * that is: retrieve the cell type, a string representation of the value, 
- * find out if this cell is missing and test whether it is equal to another one.
- * <p>
+ * find out if this cell is missing, and test whether it is equal to another 
+ * one.
  * 
+ * <p>
  * Derived classes have to implement at least one interface
  * derived from {@link DataValue}. The derived class must be
  * read-only, i.e. setter methods must not be implemented.
@@ -57,7 +58,7 @@ import java.io.Serializable;
  * 
  * where <i>YourCellClass</i> is the name of your <code>DataCell</code> 
  * implementation. This method will be called by reflection, whenever the cell 
- * at hand needs to be written. 
+ * at hand needs to be written or read. 
  * 
  * <p>
  * Since <code>DataCell</code> may implement different {@link DataValue}
@@ -90,7 +91,7 @@ public abstract class DataCell implements DataValue, Serializable {
      * Returns this cell's <code>DataType</code>. This method is provided for 
      * convenience only, it is a shortcut for 
      * <code>DataType.getType(o.getClass())</code>, where <i>o</i> is the 
-     * runtime data cell object.
+     * runtime <code>DataCell</code> object.
      * 
      * @return the <code>DataType</code>
      * @see DataType#getType(Class)
@@ -100,11 +101,13 @@ public abstract class DataCell implements DataValue, Serializable {
     }
     
     /**
-     * Returns true if this represents missing cell, false otherwise. The 
-     * default implementation returns <code>false</code>. If you need a missing 
-     * cell use the static method <code>DataType.getMissingCell()</code>.
+     * Returns <code>true</code> if this represents missing cell, 
+     * <code>false</code> otherwise. The default implementation returns 
+     * <code>false</code>. If you need a missing cell use the static method 
+     * {@link DataType#getMissingCell()}.
      * 
-     * @return true, if the cell represents a missing value, false otherwise
+     * @return <code>true</code> if the cell represents a missing value, 
+     *         <code>false</code> otherwise
      * @see DataType#getMissingCell()
      */
     public final boolean isMissing() {
@@ -120,37 +123,37 @@ public abstract class DataCell implements DataValue, Serializable {
     }
     
     /** 
-     * Internal implementation of <code>getMissing()</code>. It will return 
+     * Internal implementation of {@link DataCell#isMissing()}. It will return 
      * <code>false</code> and is only overridden in the 
-     * {@link DataType#getMissingCell()}
-     * implementation.
+     * {@link DataType#getMissingCell()} implementation.
      * 
-     * @return <code>false</code>.
+     * @return <code>false</code>
      */
     boolean isMissingInternal() {
         return false;
     }
 
     /**
-     * Returns the String representation of the value this cell. 
+     * Returns the String representation of this cell's value. 
      * 
-     * @return a string representation of the value of this cell
+     * @return a String representation of this cell's value
      */
     @Override
     public abstract String toString();
 
     /**
      * Implements the equals method which returns <code>true</code> only if both
-     * cells are of the same class and are equal. For that, this final method
-     * calls the type specific {@link #equalsDataCell(DataCell)} method,
-     * which all derived <code>DataCell</code>s must provide. This method 
-     * handles the missing value and null cases, in all other cases it delegates
+     * cells are of the same class and {@link #equalsDataCell(DataCell)} returns
+     * <code>true</code>. For that, this final method calls the type specific 
+     * {@link #equalsDataCell(DataCell)} method, which all derived 
+     * <code>DataCell</code>s must provide. This method handles the missing 
+     * value and <code>null</code> cases, in all other cases it delegates
      * to the specific method.
      * 
      * @param o the other object to check
-     * @return <b>true </b> if this instance and the given object are instances
-     *         of the same class and of equal value (or both representing
-     *         missing values)
+     * @return <code>true</code> if this instance and the given object are 
+     *         instances of the same class and of equal value (or both 
+     *         representing missing values)
      */
     @Override
     public final boolean equals(final Object o) {
@@ -195,7 +198,7 @@ public abstract class DataCell implements DataValue, Serializable {
      * This method must be implemented in order to ensure that two equal
      * <code>DataCell</code> objects return the same hash code.
      * 
-     * @return the hash code of your specific data cell
+     * @return the hash code of your specific <code>DataCell</code>
      * 
      * @see java.lang.Object#hashCode()
      * @see #equals

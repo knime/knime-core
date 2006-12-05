@@ -38,10 +38,11 @@ import java.util.Comparator;
  * 
  * <p>
  * Note: this comparator imposes orderings that are inconsistent with equals.
- * (That is, the return value zero is not equivalent to equals returning true,
- * it rather says &quot;don't know&quot;. Meaning, if two data values cannot be
- * compared (because they represent completely different value types) the
- * comparator will return zero - and equals will return false.)
+ * That is, the return value zero is not equivalent to equals returning 
+ * <code>true</code>, it rather says &quot;don't know&quot;. Meaning, if two 
+ * <code>DataValue</code>s cannot be compared (because they represent completely
+ * different value types) the comparator will return zero - and equals will 
+ * return <code>false</code>.)
  * 
  * @see org.knime.core.data.DataValue.UtilityFactory#getComparator()
  * @author Michael Berthold, University of Konstanz
@@ -49,7 +50,8 @@ import java.util.Comparator;
 public abstract class DataValueComparator implements Comparator<DataCell> {
 
     /**
-     * Create a new general {@link org.knime.core.data.DataValue} comparator.
+     * Create a new {@link org.knime.core.data.DataValue} comparator. This 
+     * constructor does nothing.
      */
     protected DataValueComparator() {
 
@@ -63,16 +65,17 @@ public abstract class DataValueComparator implements Comparator<DataCell> {
      * {@link #compareDataValues(DataValue, DataValue)}.
      * Missing cells are considered to be smaller than any other non-missing 
      * {@link org.knime.core.data.DataCell}, and two missing cells are not 
-     * comparable (returns 0).
+     * comparable (returns 0). Note: return value 0 is not equivalent to 
+     * <code>c1</code> equals <code>c2</code>, rather they are not comparable at
+     * all.
      * 
      * @param c1 the first {@link org.knime.core.data.DataCell} to compare the 
-     * other with
+     *           other with
      * @param c2 the other {@link org.knime.core.data.DataCell} to compare the 
-     * first with
-     * @return a negative number if c1 is smaller than c2, a positive number if
-     *         c1 is larger than c2, otherwise zero. Note: return value zero is
-     *         not equivalent to c1 equals c2, rather they are not comparable 
-     *         at all
+     *           first with
+     * @return a negative number if <code>c1</code> is smaller than 
+     *         <code>c2</code>, a positive number if <code>c1</code> is larger 
+     *         than <code>c2</code>, otherwise zero
      * 
      * @throws NullPointerException if any of the objects is <code>null</code>
      * 
@@ -97,18 +100,19 @@ public abstract class DataValueComparator implements Comparator<DataCell> {
     }
 
     /**
-     * Do not call this function, rather call the <code>compare</code> method, 
-     * which handles missing cells.
-     * The derived class should compare the two passed data values. It can be
-     * safely assumed that both values are castable to the specific type of the
-     * {@link org.knime.core.data.DataValue} that returned this comparator. 
+     * Do not call this function, rather call the 
+     * {@link #compare(DataCell, DataCell)} method, which handles missing cells.
+     * The derived class should compare the two passed <code>DataValue</code>s. 
+     * It can be safely assumed that both values are castable to the specific 
+     * type of the {@link org.knime.core.data.DataValue} that returned this 
+     * comparator. 
      * 
      * @param v1 the first {@link org.knime.core.data.DataValue} to compare the 
-     * other with
+     *           other with
      * @param v2 the other {@link org.knime.core.data.DataValue} to compare the 
-     * first with
-     * @return return -1 if v1 is smaller than v2, +1 if v1 is larger than v2,
-     *         0 otherwise
+     *           first with
+     * @return return -1 if <code>v1</code> is smaller than <code>v2</code>, +1 
+     *         if <code>v1</code> is larger than <code>v2</code>, 0 otherwise
      */
     protected abstract int compareDataValues(
             final DataValue v1, final DataValue v2);

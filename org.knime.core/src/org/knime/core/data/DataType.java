@@ -55,13 +55,14 @@ import org.knime.core.node.config.ConfigWO;
  * {@link DataCell}. It essentially keeps the list of compatible 
  * {@link DataValue} interfaces (i.e.
  * for which a type cast is possible), a list of 
- * renderers for this type, and (potentially more than one) comparator for data 
- * cells of this type.
+ * {@link org.knime.core.data.renderer.DataValueRenderer} for this type, and 
+ * (potentially more than one) {@link DataValueComparator} for {@link DataCell} 
+ * of this type.
  *  
  * <p>
  * There are two forms of <code>DataType</code>s: the so-called native type, 
- * which are assigned to a certain {@link org.knime.core.data.DataCell}, 
- * and the non-native type, which only consist of a list of compatible 
+ * which is assigned to a certain {@link org.knime.core.data.DataCell}, 
+ * and the non-native type, which only consists of a list of compatible 
  * {@link org.knime.core.data.DataValue} classes. 
  *  
  * <p>
@@ -119,7 +120,7 @@ public final class DataType {
          */
         @Override
         public boolean equalsDataCell(final DataCell dc) {
-            // guaranteed not to be called on and with a missing cell.....
+            // guaranteed not to be called on and with a missing cell
             return false;
         }
 
@@ -253,15 +254,14 @@ public final class DataType {
 
     /** 
      * Clones the given <code>DataType</code> but changes its preferred value 
-     * class to the passed preferred value. The returned non-native 
+     * class to the passed <code>preferred</code> value. The returned non-native
      * <code>DataType</code> may or may not be equal to the <code>from</code> 
-     * <code>DataType</code> depending on 
-     * the preferred value class of <code>from</code> and will be created newly.
+     * <code>DataType</code> depending on the preferred value class of 
+     * <code>from</code> <code>DataType</code> and will be created newly.
      * 
      * @param from the <code>DataType</code> to clone
      * @param preferred the new preferred value class
-     * @return a cloned new <code>DataType</code> with the given preferred 
-     * value class
+     * @return a new <code>DataType</code> with the given preferred value class
      * @throws IllegalArgumentException 
      *  if <code>from.isCompatible(preferred)</code> returns <code>false</code>
      * @throws NullPointerException if any argument is <code>null</code>
@@ -274,7 +274,7 @@ public final class DataType {
     /**
      * Returns a {@link org.knime.core.data.DataCellSerializer} for the runtime 
      * class of a {@link org.knime.core.data.DataCell} or <code>null</code> if 
-     * the passed class of type {@link org.knime.core.data.DataCell}does not 
+     * the passed class of type {@link org.knime.core.data.DataCell} does not 
      * implement
      * <pre>
      *   public static &lt;T extends DataCell&gt; 
@@ -282,15 +282,15 @@ public final class DataType {
      *       final Class&lt;T&gt; cl) {
      * </pre>
      * The {@link org.knime.core.data.DataCellSerializer} is defined
-     * through a static access method in DataCell. If no such method exists or
-     * the method can't be invoked (using reflection), this method returns 
-     * <code>null</code> and ordinary java serialization is used for
-     * storing/loading the cell. See also the class documentation of 
+     * through a static access method in {@link DataCell}. If no such method 
+     * exists or the method can't be invoked (using reflection), this method 
+     * returns <code>null</code> and ordinary Java serialization is used for
+     * saving and loading the cell. See also the class documentation of 
      * {@link org.knime.core.data.DataCell} for more information on the static 
      * access method.
      *  
      * @param <T> the runtime class of the {@link org.knime.core.data.DataCell}
-     * @param cl the datacell's class
+     * @param cl the <code>DataCell</code>'s class
      * @return the {@link org.knime.core.data.DataCellSerializer} defined in 
      * the {@link org.knime.core.data.DataCell} implementation
      * or <code>null</code> if no such serializer is available
@@ -498,10 +498,11 @@ public final class DataType {
      * <code>DataType</code> will claim to be compatible to all 
      * {@link org.knime.core.data.DataValue} classes the cell is implementing 
      * (i.e. what {@link org.knime.core.data.DataValue} interfaces are 
-     * implemented by <code>cl</code>) and will bundle meta information of the 
+     * implemented by <code>cell</code>) and will bundle meta information of the
      * cell such as renderer, icon, and comparators.
      *  
-     * <p>This method is the only way to determine the <code>DataType</code>
+     * <p>
+     * This method is the only way to determine the <code>DataType</code>
      * of a {@link org.knime.core.data.DataCell}. However, most standard cell 
      * implementations have a static member for convenience access, e.g. 
      * {@link org.knime.core.data.def.DoubleCell#TYPE DoubleCell.TYPE}.
@@ -510,20 +511,20 @@ public final class DataType {
      * @see org.knime.core.data.DataValue
      * @see org.knime.core.data.DataCell#getType()
      * 
-     * @param cl the runtime class of {@link org.knime.core.data.DataCell} for 
+     * @param cell the runtime class of {@link org.knime.core.data.DataCell} for
      * which the <code>DataType</code> is requested
-     * @return the corresponding <code>DataType</code> <code>cl</code>, 
+     * @return the corresponding <code>DataType</code> <code>cell</code>, 
      * never <code>null</code>
      * @throws NullPointerException if the argument is <code>null</code>
      */
-    public static DataType getType(final Class<? extends DataCell> cl) {
-        if (cl == null) {
+    public static DataType getType(final Class<? extends DataCell> cell) {
+        if (cell == null) {
             throw new NullPointerException("Class must not be null.");
         }
-        DataType result = CLASS_TO_TYPE_MAP.get(cl);
+        DataType result = CLASS_TO_TYPE_MAP.get(cell);
         if (result == null) {
-            result = new DataType(cl);
-            CLASS_TO_TYPE_MAP.put(cl, result);
+            result = new DataType(cell);
+            CLASS_TO_TYPE_MAP.put(cell, result);
         }
         return result;
     }
@@ -538,24 +539,24 @@ public final class DataType {
      *   public static final UtilityFactory UTILITY;
      * </pre>
      * If no such field exists, this method returns the factory of one of the 
-     * super interfaces. If no <code>UTILITY</code> member can be found, 
-     * finally the {@link org.knime.core.data.DataValue} class returns a 
-     * correct implementation, since it is at the top 
-     * of the hierarchy. If it exists but has the wrong access scope or if it 
+     * super interfaces. If it exists but has the wrong access scope or if it 
      * is not static, a warning message is logged and the member of one of the 
-     * super interfaces is returned.
+     * super interfaces is returned. If no <code>UTILITY</code> member can be 
+     * found, finally the {@link org.knime.core.data.DataValue} class returns a
+     * correct implementation, since it is at the top of the hierarchy. 
      * 
-     * @param cl the runtime class of the {@link org.knime.core.data.DataCell}
+     * @param value the runtime class of the 
+     *        {@link org.knime.core.data.DataCell}
      * @return the <code>UtilityFactory</code> given in the cell implementation
      * @throws NullPointerException if the argument or the found 
      * <code>UTILITY</code> member is <code>null</code>
      */
     public static UtilityFactory getUtilityFor(
-        final Class<? extends DataValue> cl) {
-        if (cl == null) {
+        final Class<? extends DataValue> value) {
+        if (value == null) {
             throw new NullPointerException("Class argument must not be null.");
         }
-        UtilityFactory result = VALUE_CLASS_TO_UTILITY.get(cl);
+        UtilityFactory result = VALUE_CLASS_TO_UTILITY.get(value);
         if (result == null) {
             Exception exception = null;
             try {
@@ -566,7 +567,7 @@ public final class DataType {
                 // depends pretty much on the order after the "extends ..."
                 // statement) If this field has the wrong type, a coding
                 // problem is reported.
-                Field typeField = cl.getField("UTILITY");
+                Field typeField = value.getField("UTILITY");
                 Object typeObject = typeField.get(null);
                 result = (DataValue.UtilityFactory)typeObject;
                 if (result == null) {
@@ -582,13 +583,13 @@ public final class DataType {
                 exception = cce;
             }
             if (exception != null) {
-                LOGGER.coding("DataValue interface \"" + cl.getSimpleName() 
+                LOGGER.coding("DataValue interface \"" + value.getSimpleName() 
                         + "\" seems to have a problem with the static field " 
                         + "\"UTILITY\"", exception);
                 // fall back - no meta information available
                 result = DataValue.UTILITY;
             }
-            VALUE_CLASS_TO_UTILITY.put(cl, result);
+            VALUE_CLASS_TO_UTILITY.put(value, result);
         }
         return result;
     }
@@ -616,14 +617,14 @@ public final class DataType {
     
     /**
      * Loads a <code>DataType</code> from a given 
-     * {@link org.knime.core.node.config.Config}.
+     * {@link org.knime.core.node.config.ConfigRO}.
      * 
      * @param config load <code>DataType</code> from
      * @return a <code>DataType</code> which fits the given 
-     * {@link org.knime.core.node.config.Config}
+     * {@link org.knime.core.node.config.ConfigRO}
      * @throws InvalidSettingsException if the <code>DataType</code> could not
      *         be loaded from the given 
-     *         {@link org.knime.core.node.config.Config}
+     *         {@link org.knime.core.node.config.ConfigRO}
      */
     @SuppressWarnings("unchecked") // type casts
     public static DataType load(final ConfigRO config) 
@@ -775,10 +776,14 @@ public final class DataType {
     }
 
     /**
-     * Types are equal if the set of compatible 
+     * Types are equal if the list of compatible 
      * {@link org.knime.core.data.DataValue} classes matches (ordering
-     * does not matter) and both types have a preferred value class and the 
-     * class is the same or, both do not have a preferred value class. 
+     * does not matter), both types have the same preferred value class or both 
+     * do not have a preferred value class.
+     * @param other the object to check with
+     * @return <code>true</code> if the both types have the same preferred value
+     *         class and the list of compatible types matches, otherwise
+     *         <code>false</code>
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -814,8 +819,8 @@ public final class DataType {
     /**
      * A comparator for {@link org.knime.core.data.DataCell} objects of this 
      * type. Will return the native comparator (if provided), or the first 
-     * found comparator of the value classes. If no comparator is available the
-     * comparator of the <code>String</code> representations will be returned.
+     * comparator of the value classes found. If no comparator is available the
+     * comparator of the <code>String</code> representation will be returned.
      * @return a comparator for cells of this type
      */
     public DataValueComparator getComparator() {
@@ -830,8 +835,8 @@ public final class DataType {
     }
     
     /**
-     * Get an icon representing this type. This is used in table headers and
-     * lists, for instance.
+     * Gets and returns an icon from the {@link UtilityFactory} representing 
+     * this type. This is used in table headers and lists, for instance.
      * 
      * @return an icon for this type
      */
@@ -847,8 +852,9 @@ public final class DataType {
         return DataValue.UTILITY.getIcon(); 
     }
 
-    /** Get the preferred value class of the current <code>DataType</code> or 
-     * <code>null</code> if not available. The preferred value class is
+    /** 
+     * Returns the preferred value class of the current <code>DataType</code> 
+     * or <code>null</code> if not available. The preferred value class is
      * defined through the {@link org.knime.core.data.DataCell} 
      * implementation. This method returns <code>null</code> if either the cell 
      * implementation lacks the information or this <code>DataType</code> has 
@@ -865,21 +871,26 @@ public final class DataType {
     }
 
     /**
-     * Returns the set of all renderers that are available for this 
+     * Returns a family of all renderers that are available for this 
      * <code>DataType</code>. The returned 
      * {@link org.knime.core.data.renderer.DataValueRendererFamily} will contain
      * all renderers that are supported or available through the compatible 
      * {@link org.knime.core.data.DataValue} interfaces. If no renderer was 
      * declared by the {@link org.knime.core.data.DataValue} interfaces, 
      * this method will make sure that at least a default renderer (using the 
-     * {@link DataCell#toString()} method) is returned. 
+     * {@link DataCell#toString()} method) is returned.
+     * 
+     * <p> 
+     * The {@link DataColumnSpec} is passed to all renderer families retrieved
+     * from the underlying {@link UtilityFactory}. Most of the renderer 
+     * implementations won't need column domain information but some do. For 
+     * instance a class that renders the double value in the column according to
+     * the minimum/maximum values in the {@link DataColumnDomain}.
      * 
      * @param spec the column spec to the column for which the renderer will be
-     *            used. Most of the renderer implementations won't need column
-     *            domain information but some do. For instance a class that
-     *            renders the double value in the column according to the
-     *            min/max values in the column domain
-     * @return all renderers that are available for this <code>DataType</code>
+     *            used
+     * @return a family of all renderers that are available for this 
+     *         <code>DataType</code>
      */
     public DataValueRendererFamily getRenderer(final DataColumnSpec spec) {
         ArrayList<DataValueRendererFamily> list = 
@@ -899,12 +910,12 @@ public final class DataType {
     }
 
     /**
-     * Get a copy of all {@link org.knime.core.data.DataValue}s to which this 
-     * type is compatible to. The returned List is non-modifiable, subsequent 
-     * changes to the list will fail with an exception. The list does not 
-     * contain duplicates.
+     * Returns a copy of all {@link org.knime.core.data.DataValue}s to which 
+     * this <code>DataType</code> is compatible to. The returned 
+     * <code>List</code> is non-modifiable, subsequent changes to the list will
+     * fail with an exception. The list does not contain duplicates.
      * 
-     * @return a non-modifiable list of compatible types
+     * @return a non-modifiable list of compatible <code>DataType</code>s
      */
     public List<Class<? extends DataValue>> getValueClasses() {
         return Collections.unmodifiableList(m_valueClasses);
@@ -912,7 +923,7 @@ public final class DataType {
 
     /**
      * The hash code is based on the preferred value flag and the hash codes of 
-     * all value classes.
+     * all {@link DataValue} classes.
      * 
      * @see java.lang.Object#hashCode()
      */
@@ -926,22 +937,24 @@ public final class DataType {
     }
 
     /**
-     * Returns true if this type is a supertype of the passed type, that is, the
-     * argument type is compatible to all types of this type (and may be more).
+     * Returns <code>true</code> if this <code>type</code> is a supertype of the
+     * passed type, that is, the argument is compatible to all {@link DataValue}
+     * classes of this type (and may be more).
      * In other words, this object is more general than the argument or this
-     * object supports less compatible types than the argument.
+     * object supports less compatible values than the argument.
      * 
      * <p>
-     * This is mostly used to test if a given data cell can be added to a given
-     * data column. The data cell's type must be compatible to (at least) all
-     * value interfaces the column's type is compatible to. If the column's type
-     * is a supertype of the cells type, it's safe to add the cell to the
-     * column.
+     * This is mostly used to test if a given {@link DataCell} can be added to
+     * a given {@link DataColumnSpec}. The {@link DataCell}'s type must be 
+     * compatible to (at least) all {@link DataValue} interfaces the column's 
+     * type is compatible to. If the column's type is a supertype of the cell's 
+     * type, it's safe to add the cell to the column.
      * 
-     * @param type the type to test, whether this is a super type of it
-     * @return true if this type is a (one of many possible) supertype of the
-     *         argument type
+     * @param type the type to test, whether this is a supertype of it
+     * @return <code>true</code> if this type is a (one of many possible) 
+     *         supertype of the argument type, otherwise <code>false</code>
      * @throws NullPointerException if the type argument is <code>null</code>
+     * @see #isCompatible(Class)
      */
     public boolean isASuperTypeOf(final DataType type) {
         if (type == null) {
@@ -960,13 +973,13 @@ public final class DataType {
 
     /**
      * Checks if the given <code>DataValue.class</code> is compatible to this
-     * type. If it returns <code>true</code> the 
+     * type. It returns <code>true</code>, if  
      * {@link org.knime.core.data.DataCell}s of this type can be type-casted to 
-     * the <code>valueClass</code>. This method returns <code>false</code> if 
-     * the argument is <code>null</code> or if no assignable class was found 
-     * and <code>true</code> if one assignable value class was found or if this 
-     * represents the missing cell.
-     * 
+     * the <code>valueClass</code> or if one assignable value class was found or
+     * if this type represents the missing cell. This method returns 
+     * <code>false</code>, if the argument is <code>null</code> or if no 
+     * assignable class was found.  
+
      * @param valueClass class to check compatibility for
      * @return <code>true</code> if compatible
      */
@@ -984,13 +997,13 @@ public final class DataType {
     }
     
     /**
-     * Save this <code>DataType</code> to the given 
-     * {@link org.knime.core.node.config.Config}. 
+     * Saves this <code>DataType</code> to the given 
+     * {@link org.knime.core.node.config.ConfigWO}. 
      * If it is a native type only the class name of the cell class is stored. 
      * Otherwise the names of all value classes and whether it has a preferred 
-     * value and a is written to the {@link org.knime.core.node.config.Config}.
+     * value is written to the {@link org.knime.core.node.config.ConfigWO}.
      *  
-     * @param config write to this {@link org.knime.core.node.config.Config}
+     * @param config write to this {@link org.knime.core.node.config.ConfigWO}
      */
     public void save(final ConfigWO config) {
         if (m_cellClass == null) {
@@ -1008,8 +1021,9 @@ public final class DataType {
     }
    
     /**
-     * Returns the simple name of the cell class (if any) or "Non-native" +
-     * the <code>toString()</code> results of all compatible values classes.
+     * Returns the simple name of the {@link DataCell} class (if any) or 
+     * <i>Non-Native</i> the <code>toString()</code> results of all compatible 
+     * values classes.
      * 
      * @see java.lang.Object#toString()
      */
