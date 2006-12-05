@@ -34,6 +34,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.PlotterMouseListener;
+import org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties;
 import org.knime.base.node.viz.plotter.scatter.DotInfo;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
@@ -98,6 +99,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                 public void stateChanged(final ChangeEvent e) {
                     m_selectedColumns = colFilter.getIncludedColumnSet();
                     updatePaintModel();
+                    getDrawingPane().repaint();
                 }
             });
             // dot size
@@ -174,6 +176,10 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                 String colName = data.getDataTableSpec().getColumnSpec(i)
                 .getName();
                 m_selectedColumns.add(colName);
+            }
+            if (data.getDataTableSpec().getNumColumns() > DEFAULT_NR_COLS) {
+                getProperties().setSelectedIndex(MultiColumnPlotterProperties
+                        .COLUMN_FILTER_IDX);
             }
             ((ScatterMatrixProperties)getProperties()).updateColumnSelection(
                     data.getDataTableSpec(), m_selectedColumns);
@@ -309,20 +315,14 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
     }
 
 
+
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
+     * 
+     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#updateSize()
      */
     @Override
     public void updateSize() {
-        super.sizeChanged();
-        updatePaintModel();
-    }
-    
-    /**
-     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#sizeChanged()
-     */
-    @Override
-    public void sizeChanged() {
+        super.updateSize();
         updatePaintModel();
     }
     

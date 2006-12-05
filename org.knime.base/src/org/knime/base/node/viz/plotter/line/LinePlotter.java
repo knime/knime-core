@@ -385,10 +385,10 @@ public class LinePlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#sizeChanged()
+     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#updateSize()
      */
     @Override
-    public void sizeChanged() {
+    public void updateSize() {
         calculateDots();
     }
     

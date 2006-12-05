@@ -32,6 +32,7 @@ public class ScatterMatrixProperties extends MultiColumnPlotterProperties {
     
     private final ScatterPlotterAppearanceTab m_appearance;
     
+    
     /**
      * Default tab, column filter and scatter plotter appearance.
      *

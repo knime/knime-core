@@ -86,7 +86,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
                         public void stateChanged(final ChangeEvent e) {
                             setDotSize(getScatterPlotterProperties()
                                     .getDotSize());
-                            sizeChanged();
+                            updateSize();
                         }
 
                     });
@@ -104,7 +104,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
                             int jitter = getScatterPlotterProperties()
                                     .getJitterSlider().getValue();
                             m_jitterRate = jitter / 10;
-                            sizeChanged();
+                            updateSize();
                             getDrawingPane().repaint();
                         }
 
@@ -279,7 +279,6 @@ public class ScatterPlotter extends TwoColumnPlotter {
      */
     @Override
     public void updatePaintModel() {
-        LOGGER.debug("column space changed");
         if (getDataProvider() == null 
                 || getDataProvider().getDataArray(0) == null) {
             return;
@@ -288,6 +287,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         // get the rowInfo from the model
         DataArray rowsCont = getDataProvider().getDataArray(0);
         if (rowsCont != null) {
+            LOGGER.debug("row container != null");
             // and create a new DotInfo array with the rowKeys in the DotInfos.
             List<DotInfo> dotList = new ArrayList<DotInfo>();
             int rowNr = 0;
@@ -318,8 +318,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
             }
             // and get the coordinates calculated.
             calculateCoordinates(newDotArray);
-            repaint();
         }
+        getDrawingPane().repaint();
     }
     
     /**
@@ -597,17 +597,18 @@ public class ScatterPlotter extends TwoColumnPlotter {
         return getProperties() instanceof ScatterPlotterProperties;
     }
 
+
     /**
-     * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter
-     * #sizeChanged()
+     * 
+     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
      */
     @Override
-    public void sizeChanged() {
+    public void updateSize() {
+        super.updateSize();
         if (isScatterPlotterDrawingPane()) {
             calculateCoordinates(getScatterPlotterDrawingPane()
                     .getDotInfoArray());
         }
-        getDrawingPane().repaint();
     }
     
     

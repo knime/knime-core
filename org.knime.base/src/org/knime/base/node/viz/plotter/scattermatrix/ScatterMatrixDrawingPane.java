@@ -94,7 +94,7 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
         DotInfo[] dots = new DotInfo[dotList.size()];
         dotList.toArray(dots);
         setDotInfoArray(new DotInfoArray(dots));
-        repaint();
+//        repaint();
         }
     }
     
@@ -125,7 +125,6 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
         if (getDotInfoArray() == null) {
             return;
         }
-        super.paintContent(g);
         if (m_matrixElements == null) {
             return;
         }
