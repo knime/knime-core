@@ -48,6 +48,14 @@ public final class KNIMEConstants {
     public static final String VERSION = "1.1.0";
 
     /**
+     * The name of the system property whose value is - if set - used as knime
+     * home directory. If no (or an invalid) value is set, ~user/knime will be
+     * used instead. To set the knime home dir from the command line, use
+     * -Dknime.home=&lt;absolutePathToNewHomeDir&gt;.
+     */
+    public static final String KNIME_HOME_PROPERTYNAME = "knime.home";
+
+    /**
      * KNIME home directory.
      */
     private static File knimeHomeDir;
