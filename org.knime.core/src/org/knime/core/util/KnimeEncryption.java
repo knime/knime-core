@@ -66,6 +66,12 @@ public final class KnimeEncryption {
         // empty private default constructor as this is a static utility class
     }
 
+    private static void checkKey() {
+        if (secretKey == null) {
+            throw new RuntimeException("No proper key was provided!");
+        }
+    }
+
     /**
      * Enrypts password.
      * 
@@ -77,6 +83,7 @@ public final class KnimeEncryption {
         if (secretKey == null && keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
+        checkKey();
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] ciphertext = cipher.doFinal(new String(password).getBytes());
         return new BASE64Encoder().encode(ciphertext);
@@ -93,6 +100,7 @@ public final class KnimeEncryption {
         if (secretKey == null && keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
+        checkKey();
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         // perform the decryption
         byte[] pw = new BASE64Decoder().decodeBuffer(password);
@@ -105,7 +113,7 @@ public final class KnimeEncryption {
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             decryptedText = cipher.doFinal(pw);
         }
-        
+
         return new String(decryptedText);
     }
 
