@@ -45,6 +45,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -1638,6 +1640,14 @@ public class WorkflowManager implements WorkflowListener {
                     + "\": " + workflowFile);
         }
 
+        // ==================================================================
+        // FIXME The following two lines and the one in the finally-block
+        // are just hacks to omit warnings messages during loading the flow.
+        // When the WFM is redesigned we need a proper way to do this.
+        final Level lastLogLevel = Logger.getRootLogger().getLevel();
+        Logger.getRootLogger().setLevel(Level.ERROR);
+        // ==================================================================
+        try {
         // load workflow topology
         NodeSettingsRO settings =
                 NodeSettings.loadFromXML(new FileInputStream(workflowFile));
@@ -1718,6 +1728,14 @@ public class WorkflowManager implements WorkflowListener {
         }
         for (NodeContainer newNode : failedNodes) {
             resetAndConfigureNode(newNode.getID());
+        }
+        } finally {
+            // ===============================================================
+            // FIXME The following linesand the two lines above are just hacks
+            // to omit warnings messages during loading the flow.
+            // When the WFM is redesigned we need a proper way to do this.
+            Logger.getRootLogger().setLevel(lastLogLevel);
+            // ===============================================================
         }
     }
 
