@@ -50,15 +50,12 @@ import javax.swing.WindowConstants;
 
 import org.knime.core.util.FileReaderFileFilter;
 
-
 /**
  * Node view base class which implements the basic and common window properties.
  * The part specific to the special purpose node view must be implemented in the
  * derived class and must take place in a <code>Panel</code>. This panel is
  * registered in this base class (method <code>#setComponent(Component)</code>)
  * and will be displayed in the JFrame provided and handled by this class.
- * 
- * @see JFrame
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -138,13 +135,15 @@ public abstract class NodeView {
     private static String exportDir;
 
     /**
-     * This class sends property events when the status changes. So far, the
-     * very only possible listenere is the EmbeddedNodeView that is informed
-     * when the view finally closes (e.g. because the node was deleted). Once
-     * the member m_frame is deleted from this class, the frame will also be a
-     * potential listener.
-     */
+     * This class sends property events when the status changes. 
+     */ 
     public static final String PROP_CHANGE_CLOSE = "nodeview_close";
+    /* TODO
+     * So far, the very only possible listener is the EmbeddedNodeView that is 
+     * informed when the view finally closes (e.g. because the node was 
+     * deleted). Once the member m_frame is deleted from this class, the frame 
+     * will also be a potential listener.
+     */
 
     /**
      * Creates a new view with the given title (<code>#getViewName()</code>),
@@ -315,7 +314,7 @@ public abstract class NodeView {
 
     /**
      * Get reference to underlying <code>NodeModel</code>. Access this if
-     * access to your model is needes and cast it if necessary. Alternatively,
+     * access to your model is needs and cast it if necessary. Alternatively,
      * you can also override this method in your derived node view and do the
      * cast implicitly, for instance:
      * 
