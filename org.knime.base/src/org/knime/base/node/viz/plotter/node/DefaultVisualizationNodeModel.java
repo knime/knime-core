@@ -39,6 +39,15 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
+ * Implementation of a {@link org.knime.core.node.NodeModel} which provides all
+ * functionality that is needed for a default plotter implementation. That is:
+ * converting the incoming data of inport 0 into a 
+ * {@link org.knime.base.node.util.DataArray} with the maximum number of rows 
+ * specified in the {@link DefaultVisualizationNodeDialog}, loading and saving 
+ * this {@link org.knime.base.node.util.DataArray} in the <code>load</code>- and
+ * <code>saveInternals</code> and providing it via the
+ * {@link #getDataArray(int)} method of the 
+ * {@link org.knime.base.node.viz.plotter.DataProvider} interface.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -47,12 +56,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     
     private DataArray m_input;
     
-    private int m_start = START;
-    
     private int m_last = END;
-    
-    /** Config key for the first row. */
-    public static final String CFG_START = "start";
     
     /** Config key for the last displayed row. */
     public static final String CFG_END = "end";
@@ -61,7 +65,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     
     
     /**
-     * 
+     * Creates a {@link org.knime.core.node.NodeModel} with one data inport and 
+     * no outport.
      */
     public DefaultVisualizationNodeModel() {
         super(1, 0);
@@ -79,6 +84,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
 
     /**
+     * Checks if the nominal values have possible values.
+     * 
      * @see org.knime.core.node.NodeModel#configure(
      * org.knime.core.data.DataTableSpec[])
      */
@@ -99,6 +106,9 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     }
 
     /**
+     * Converts the input data at inport 0 into a 
+     * {@link org.knime.base.node.util.DataArray} with maximum number of rows as
+     * defined in the {@link DefaultVisualizationNodeDialog}.
      * @see org.knime.core.node.NodeModel#execute(
      * org.knime.core.node.BufferedDataTable[], 
      * org.knime.core.node.ExecutionContext)
@@ -106,14 +116,17 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        m_input = new DefaultDataArray(inData[0], m_start, m_last, exec);
-        if ((m_last - m_start) < inData[0].getRowCount()) {
-            setWarningMessage("Some rows are ignored");
+        m_input = new DefaultDataArray(inData[0], 1, m_last, exec);
+        if ((m_last) < inData[0].getRowCount()) {
+            setWarningMessage("Only the rows from 0 to " + m_last 
+                    + "are displayed.");
         }
         return new BufferedDataTable[0];
     }
 
     /**
+     * Loads the converted {@link org.knime.base.node.util.DataArray}.
+     * 
      * @see org.knime.core.node.NodeModel#loadInternals(java.io.File, 
      * org.knime.core.node.ExecutionMonitor)
      */
@@ -123,21 +136,24 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             throws IOException, CanceledExecutionException {
         File f = new File(nodeInternDir, FILE_NAME);
         ContainerTable table = DataContainer.readFromZip(f);
-        m_input = new DefaultDataArray(table, m_start, m_last, exec);
+        m_input = new DefaultDataArray(table, 1, m_last, exec);
     }
 
     /**
+     * Loads the maximum number of rows.
+     * 
      * @see org.knime.core.node.NodeModel#loadValidatedSettingsFrom(
      * org.knime.core.node.NodeSettingsRO)
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_start = settings.getInt(CFG_START);
         m_last = settings.getInt(CFG_END);
     }
 
     /**
+     * Sets the input data <code>null</code>.
+     * 
      * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
@@ -146,6 +162,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     }
 
     /**
+     * Saves the converted {@link org.knime.base.node.util.DataArray}.
+     * 
      * @see org.knime.core.node.NodeModel#saveInternals(java.io.File, 
      * org.knime.core.node.ExecutionMonitor)
      */
@@ -158,12 +176,13 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     }
 
     /**
+     * Saves the maximum number of rows.
+     * 
      * @see org.knime.core.node.NodeModel#saveSettingsTo(
      * org.knime.core.node.NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt(CFG_START, m_start);
         settings.addInt(CFG_END, m_last);
     }
 
@@ -174,7 +193,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getInt(CFG_START);
+//        settings.getInt(CFG_START);
         settings.getInt(CFG_END);
     }
 

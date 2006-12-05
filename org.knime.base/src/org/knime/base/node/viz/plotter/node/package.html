@@ -1,2 +1,71 @@
 <body>
+<p>
+This package contains a default node implementation which can be used if a 
+simple plotter is implemented, which displays data from one inport and also 
+wants to display only a restricted number of rows.
+The <a href="DefaultVisualizationNodeModel.html">DefaultVisualizationNodeModel</a>
+reads in the data from inport 0, stores it in a <code>DataArray</code> and 
+provides it by the <code>getDataArray()</code> method of the 
+<a href="../DataProvider.html">DataProvider</a> interface. Also the maximum 
+number of rows to display is read from the settings and the data is saved and 
+loaded in the <code>loadInternals</code> and <code>saveInternals</code> methods.
+</p>
+<p>
+The <a href="DefaultVizualizationNodeDialog.html">DefaultVizualizationNodeDialog</a>
+lets the user define the maximum number to display.
+</p>
+<p>
+The <a href="DefaultVisualizationNodeView.html">DefaultVisualizationNodeView</a>
+holds one or more plotter instances and calls the appropriate methods.
+Either a <code>DefaultVisualizationNodeView</code> can be created with one 
+plotter as the argument or the <code>addVisualization</code> method can be used, 
+which adds another tab with the passed plotter.
+</p>
+<p> 
+If these default components are used only a NodeFactory has to be defined like in 
+the example shown below:
+<pre>
+    /**
+     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new DefaultVisualizationNodeDialog();
+    }
+
+    /**
+     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     */
+    @Override
+    public NodeModel createNodeModel() {
+        return new DefaultVisualizationNodeModel();
+    }
+
+    /**
+     * @see org.knime.core.node.NodeFactory#createNodeView(int, 
+     * org.knime.core.node.NodeModel)
+     */
+    @Override
+    public NodeView createNodeView(final int viewIndex, 
+            final NodeModel nodeModel) {
+        return new DefaultVisualizationNodeView(nodeModel, new YourPlotter());
+    }
+
+    /**
+     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 1;
+    }
+
+    /**
+     * @see org.knime.core.node.NodeFactory#hasDialog()
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+</pre>
+</p>
 </body>

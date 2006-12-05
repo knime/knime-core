@@ -30,6 +30,12 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
+ * Convenient implementation of a {@link org.knime.core.node.NodeView} that 
+ * can display one or more plotter implementations. One plotter 
+ * implementation has to be passed to the constructor and additional plotters
+ * can be added as tabs with 
+ * {@link #addVisualization(AbstractPlotter, String)}. The appropriate 
+ * update methods are called by this class for all added plotters.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -45,8 +51,9 @@ public class DefaultVisualizationNodeView extends NodeView {
      
     
     /**
-     * A generic NodeView which sets the model and calls the right methods
-     * of the abstract plotter.
+     * A generic {@link org.knime.core.node.NodeView} which sets the model and 
+     * calls the right methods of the plotters.
+     * 
      * @param model the node model (must implement DataProvider).
      * @param plotter the plotter
      */
@@ -67,8 +74,10 @@ public class DefaultVisualizationNodeView extends NodeView {
     }
     
     /**
-     * A generic NodeView which sets the model and calls the right methods
-     * of the abstract plotter.
+     * A generic {@link org.knime.core.node.NodeView} which sets the model and 
+     * calls the right methods of the plotters the title is the title of the 
+     * according tab.
+     * 
      * @param model the node model (must implement DataProvider).
      * @param plotter the plotter
      * @param title the title for the first tab
@@ -90,7 +99,7 @@ public class DefaultVisualizationNodeView extends NodeView {
     }    
     
     /**
-     * Adds another tab containing a plotter.
+     * Adds another tab with title <code>title</code> containing a plotter.
      * @param plotter another visualization
      * @param title the title of the tab (if null a standard name is provided)
      */
@@ -151,11 +160,6 @@ public class DefaultVisualizationNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-//        if (m_plotters != null) {
-//            for (AbstractPlotter plotter : m_plotters) {
-//                plotter.fitToScreen();
-//            }
-//        }
     }
 
 }

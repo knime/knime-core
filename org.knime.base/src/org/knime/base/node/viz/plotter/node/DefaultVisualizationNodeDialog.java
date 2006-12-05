@@ -23,32 +23,23 @@ import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
 
 /**
+ * Lets the user define the maximum number of rows to be displayed. 
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class DefaultVisualizationNodeDialog extends DefaultNodeDialogPane {
     
-    private final int m_fromMIN = 1;
-
-    private final int m_fromSTART = DataProvider.START;
-
     private final int m_cntMIN = 1;
 
     private final int m_cntSTART = DataProvider.END;
 
     /**
-     * Creates a new Default visualization dialog with start row and last row
-     * to display.
-     *
+     * Creates a new Default visualization dialog with the maximum number of 
+     * rows to display.
      * 
      */
     public DefaultVisualizationNodeDialog() {
         super();
-
-        addDialogComponent(new DialogComponentNumber(
-                DefaultVisualizationNodeModel.CFG_START, 
-                "First row to display:",
-                m_fromMIN, Integer.MAX_VALUE, m_fromSTART));
         addDialogComponent(new DialogComponentNumber(
                 DefaultVisualizationNodeModel.CFG_END,
                 "No. of rows to display:", m_cntMIN, Integer.MAX_VALUE,
