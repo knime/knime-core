@@ -20,7 +20,7 @@ Should be extended in order to keep the core functionality available.
 </li>
 </ul>
 The following illustration demonstrates how these elements are connected:<br />
-<img src="overviewPic.png" alt="The combination of the above listet plotter elements" />
+<img src="doc-files/overviewPic.png" alt="The combination of the above listet plotter elements" />
 <p>
 There exists a hierarchy of plotters each adds some functionality. 
 They may be extended at every point in the hierarchy. 
@@ -43,7 +43,7 @@ The next sub branch of the basic plotter is the {@link org.knime.base.node.viz.p
 which plots two selectable columns. <br />
 The following diagram roughly sketches the hierachy described so far with their 
 implementing components. <br />
-<img src="overviewClassDiagram.png" alt="Components of the hierarchy described so far" />
+<img src="doc-files/overviewClassDiagram.png" alt="Components of the hierarchy described so far" />
 </p>
 <p>
 All plotters deeper down the hierarchy are special implementations, which can 
@@ -60,7 +60,7 @@ and the {@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixPlotte
 a matrix of 2-dimensional scatter plots for every column combination.
 </p>
 <p> 
-This subframework also porivdes a Node to easily add a plotter to the KNIME framework.
+This subframework also provides a Node to easily add a plotter to the KNIME framework.
 The {@link org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView} is constructed with 
 a <code>NodeModel</code>code> and a plotter. If only the incoming data is needed for the visualization,
 the {@link org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeModel} can be used. 
