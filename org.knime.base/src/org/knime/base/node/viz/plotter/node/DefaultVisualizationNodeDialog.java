@@ -34,7 +34,7 @@ public class DefaultVisualizationNodeDialog extends DefaultNodeDialogPane {
     private final int m_cntSTART = DataProvider.END;
 
     /**
-     * Creates a new Default visualization dialog with the maximum number of 
+     * Creates a new default visualization dialog with the maximum number of 
      * rows to display.
      * 
      */
