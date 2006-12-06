@@ -93,7 +93,6 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
         super.paintContent(g);
         // paint the data points - if any
         if ((m_dots != null) && (m_dots.length() != 0)) {
-            System.out.println("ScatterPlotterDrawingPane#paintContent()");
             DotInfo[] dotInfo = m_dots.getDots();
             List<DotInfo> hilited 
                 = new ArrayList<DotInfo>();
