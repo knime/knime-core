@@ -25,9 +25,13 @@
 package org.knime.base.node.preproc.normalize;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Set;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
@@ -64,11 +68,6 @@ public class NormalizerNodeDialog extends NodeDialogPane {
     private static final String TAB = "Methods";
 
     /*
-     * The tab2's name.
-     */
-    private static final String TAB2 = "Columns";
-
-    /*
      * DataTableSpec to convert DataCells into column positions.
      */
     private DataTableSpec m_spec;
@@ -76,6 +75,8 @@ public class NormalizerNodeDialog extends NodeDialogPane {
     /*
      * GUI elements
      */
+    private JRadioButton m_noNormButton;
+    
     private JRadioButton m_minmaxButton;
 
     private JRadioButton m_zscoreButton;
@@ -96,8 +97,12 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         super();
         JPanel panel = generateContent();
         m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
-        super.addTab(TAB, panel);
-        super.addTab(TAB2, m_filterpanel);
+        JPanel all = new JPanel();
+        BoxLayout yaxis = new BoxLayout(all, BoxLayout.Y_AXIS);
+        all.setLayout(yaxis);
+        all.add(panel);
+        all.add(m_filterpanel);
+        super.addTab(TAB, all);
     }
 
     /*
@@ -105,15 +110,25 @@ public class NormalizerNodeDialog extends NodeDialogPane {
      */
     private JPanel generateContent() {
         JPanel panel = new JPanel();
+        
+        // no normalization
+        JPanel panel0 = new JPanel();
+        panel0.setLayout(new BorderLayout());
+        m_noNormButton = new JRadioButton("No Normalization");
+        panel0.add(m_noNormButton, BorderLayout.WEST);
+        
         // min-max
         JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayout(2, 3));
+        GridLayout gl = new GridLayout(2, 4);
+        panel1.setLayout(gl);
+        
         m_minmaxButton = new JRadioButton("Min-Max Normalization");
         m_minmaxButton.setSelected(true);
         JLabel nmin = new JLabel("Min: ");
         JPanel spanel1 = new JPanel();
         spanel1.setLayout(new BorderLayout());
         spanel1.add(nmin, BorderLayout.EAST);
+        spanel1.setMaximumSize(new Dimension(30, 10));
 
         m_newminTextField = new JTextField(2);
         JPanel nminpanel = new JPanel();
@@ -124,6 +139,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         JPanel spanel2 = new JPanel();
         spanel2.setLayout(new BorderLayout());
         spanel2.add(nmax, BorderLayout.EAST);
+        spanel2.setMaximumSize(new Dimension(30, 10));
 
         m_newmaxTextField = new JTextField(2);
         JPanel nmaxpanel = new JPanel();
@@ -133,10 +149,12 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         panel1.add(m_minmaxButton);
         panel1.add(spanel1);
         panel1.add(nminpanel);
-        panel1.add(new JLabel());
+        panel1.add(Box.createHorizontalGlue());
+        panel1.add(new JPanel());
         panel1.add(spanel2);
         panel1.add(nmaxpanel);
-
+        panel1.add(Box.createHorizontalGlue());
+       
         // z-score
         JPanel panel2 = new JPanel();
         panel2.setLayout(new BorderLayout());
@@ -151,13 +169,43 @@ public class NormalizerNodeDialog extends NodeDialogPane {
 
         // Group the radio buttons.
         ButtonGroup group = new ButtonGroup();
+        group.add(m_noNormButton);
         group.add(m_minmaxButton);
         group.add(m_zscoreButton);
         group.add(m_decButton);
+        
+        m_noNormButton.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (m_noNormButton.isSelected()) {
+                    m_filterpanel.setEnabled(false);
+                }
+            }
+        });
+        m_minmaxButton.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (m_minmaxButton.isSelected()) {
+                    m_filterpanel.setEnabled(true);
+                }
+            }
+        });
+        m_zscoreButton.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (m_zscoreButton.isSelected()) {
+                    m_filterpanel.setEnabled(true);
+                }
+            }
+        });
+        m_decButton.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (m_decButton.isSelected()) {
+                    m_filterpanel.setEnabled(true);
+                }
+            }
+        });
 
-        BoxLayout bl = new BoxLayout(panel, BoxLayout.Y_AXIS);
-        panel.setLayout(bl);
-
+        BoxLayout bly = new BoxLayout(panel, BoxLayout.Y_AXIS);
+        panel.setLayout(bly);
+        panel.add(panel0);
         panel.add(panel1);
         panel.add(panel2);
         panel.add(panel3);
@@ -175,6 +223,10 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             try {
                 int mode = settings.getInt(NormalizerNodeModel.MODE_KEY);
                 switch (mode) {
+                case NormalizerNodeModel.NONORM_MODE:
+                    m_noNormButton.setSelected(true);
+                    m_filterpanel.setEnabled(false);
+                    break;
                 case NormalizerNodeModel.MINMAX_MODE:
                     m_minmaxButton.setSelected(true);
                     break;
@@ -232,6 +284,9 @@ public class NormalizerNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         int mode = -1;
+        if (m_noNormButton.isSelected()) {
+            mode = NormalizerNodeModel.NONORM_MODE;
+        }
         if (m_minmaxButton.isSelected()) {
             mode = NormalizerNodeModel.MINMAX_MODE;
         }
