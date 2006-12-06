@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="Konstanz Information Miner"
-      version="1.1.0"
+      version="1.2.0"
       provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany"
       plugin="org.knime.core"
       image="icons/knime64.gif">
@@ -290,74 +290,60 @@ terms of this License.
          id="org.knime.base"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.core"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.workbench"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.workbench.core"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.workbench.editor"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.workbench.helpview"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.workbench.ui"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.workbench.repository"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.product"
          download-size="0"
          install-size="0"
-         version="1.1.0"/>
-
-   <plugin
-         id="org.eclipse.draw2d"
-         download-size="0"
-         install-size="0"
-         version="1.1.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.gef"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="1.2.0"/>
 
    <plugin
          id="org.knime.ext.sun"
          download-size="0"
          install-size="0"
-         version="0.0.0"/>
+         version="1.2.0"/>
 
 </feature>
