@@ -21,6 +21,8 @@
  */
 package org.knime.base.node.viz.histogram.impl.interactive;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -55,7 +57,6 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      * Creates a new PlotterScrolling pane and associates it with the passed
      * view control panel.
      * 
-     * @param initialWidth the width of the dialog at the creation time
      * @param spec the specification of the input data table
      * @param histogramProps the <code>FixedColumnHistogramProperties</code> 
      * with the view options for the user
@@ -63,16 +64,54 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      * @param xColumn the x axis column which should be selected, if it's
      *            <code>null</code> the first column will be selected
      */
-    public InteractiveHistogramPlotter(final int initialWidth, 
-            final DataTableSpec spec,
+    public InteractiveHistogramPlotter(final DataTableSpec spec,
             final InteractiveHistogramProperties histogramProps,
             final HiLiteHandler handler, final String xColumn) {
-        super(initialWidth, spec, histogramProps, handler, xColumn, null);
-        setHistoData(new InteractiveHistogramDataModel(spec, xColumn, 
+        super(spec, histogramProps, handler, xColumn, null);
+        setHistogramDataModel(
+                new InteractiveHistogramDataModel(spec, xColumn, 
                 null, AggregationMethod.getDefaultMethod()));
+        histogramProps.getXColSelectBox().addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(final ActionEvent e) {
+                        final InteractiveHistogramProperties props = 
+                            (InteractiveHistogramProperties)
+                            getHistogramPropertiesPanel();
+                        onXColChanged(props.getSelectedXColumn());
+                    }
+                });
+        histogramProps.updateHistogramSettings(this);
         m_data = new ArrayList<DataRow>();
     }
-    
+   
+    /**
+    * Called whenever user changes the x column selection.
+    * 
+    * @param xColName the new selected x column
+    */
+   protected void onXColChanged(final String xColName) {
+       final InteractiveHistogramProperties interactiveHistoProps = 
+           (InteractiveHistogramProperties)getHistogramPropertiesPanel();
+       setXColumn(xColName);
+       interactiveHistoProps.getXColSelectBox().setToolTipText(xColName);
+       // repaint the plotter
+       updatePaintModel();
+       // update the slider values and the select boxes
+       interactiveHistoProps.updateHistogramSettings(this);
+   }
+   
+   /**
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#onApply()
+     */
+   @Override
+   protected void onApply() {
+       final InteractiveHistogramProperties interactiveHistoProps = 
+           (InteractiveHistogramProperties)getHistogramPropertiesPanel();
+       setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
+                   interactiveHistoProps.getSelectedAggrMethod());
+       super.onApply();
+       return;
+   }
     /**
      * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
      * #addDataRow(org.knime.core.data.DataRow)
@@ -80,9 +119,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     @Override
     public void addDataRow(final DataRow row) {
         m_data.add(row);
-        AbstractHistogramDataModel histoData = getHistoData();
+        AbstractHistogramDataModel histoData = getHistogramDataModel();
         if (histoData == null) {
-            setHistoData(new InteractiveHistogramDataModel(getDataTableSpec(), 
+            setHistogramDataModel(
+                    new InteractiveHistogramDataModel(getDataTableSpec(), 
                     getXColName(), getAggregationColName(), 
                     getAggregationMethod()));
         }
@@ -115,8 +155,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
             // reset the aggregation column to the possible new boundaries
             setYColName(null); // set the column name to null to force
             // resetting
-            setAggregationColumn(getAggregationColName(), 
-                    getAggregationMethod());
+            final InteractiveHistogramProperties interactiveHistoProps = 
+                (InteractiveHistogramProperties)getHistogramPropertiesPanel();
+            setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
+                    interactiveHistoProps.getSelectedAggrMethod());
         } else {
             throw new IllegalArgumentException("No column specification found"
                     + " for column: " + xColName);
@@ -155,7 +197,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      */
     @Override
     public AbstractHistogramDataModel getHistogramDataModel() {
-        AbstractHistogramDataModel histoData = getHistoData();
+        AbstractHistogramDataModel histoData = super.getHistogramDataModel();
         if (histoData == null) {
             histoData = new InteractiveHistogramDataModel(getDataTableSpec(), 
                     getXColName(), getAggregationColName(), 
@@ -166,7 +208,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     histoData.addDataRow(iter.next());
                 }
             }
-            setHistoData(histoData);
+            super.setHistogramDataModel(histoData);
         }
         return histoData;
     }

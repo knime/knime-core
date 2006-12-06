@@ -76,8 +76,6 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
      */
     private FixedColumnHistogramProperties m_properties;
 
-    private static final int INITIAL_WIDTH = 300;
-
     /**
      * The constructor.
      */
@@ -171,9 +169,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         m_properties = 
             new FixedColumnHistogramProperties(AggregationMethod.COUNT);
         // create the plotter
-        m_plotter = new FixedColumnHistogramPlotter(INITIAL_WIDTH, 
-                data.getDataTableSpec(), m_properties, getInHiLiteHandler(0), 
-                m_xColName, m_aggrColName);
+        m_plotter = new FixedColumnHistogramPlotter(data.getDataTableSpec(), 
+                m_properties, getInHiLiteHandler(0), m_xColName, m_aggrColName);
         m_plotter.setBackground(ColorAttr.getBackground());
         exec.setMessage("Adding data rows to histogram...");
         final int noOfRows = inData[0].getRowCount();

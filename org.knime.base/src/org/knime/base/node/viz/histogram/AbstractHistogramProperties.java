@@ -24,22 +24,20 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.viz.plotter2D.AbstractPlotter2D;
-import org.knime.base.node.viz.plotter2D.PlotterPropertiesPanel;
+import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NotConfigurableException;
@@ -50,8 +48,14 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramProperties extends 
-    PlotterPropertiesPanel {
+    AbstractPlotterProperties {
 
+    private static final String COLUMN_TAB_LABEL = "Column settings";
+    
+    private static final String BAR_TAB_LABEL = "Bar settings";
+    
+    private static final String AGGREGATION_TAB_LABEL = "Aggregation settings";
+    
     private static final String X_COLUMN_LABEL = "X Column:";
     private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP = 
         "Select the column used for aggregation an press 'Apply'.";
@@ -59,6 +63,8 @@ public abstract class AbstractHistogramProperties extends
         "Not available for aggregation method count";
     private static final String AGGREGATION_METHOD_LABEL = 
         "Aggregation method:";
+    private static final String AGGREGATION_COLUMN_LABEL = 
+        "Aggregation column:";
     private static final String BAR_SIZE_LABEL = "Bar size:";
     private static final String BAR_WIDTH_TOOLTIP = "Width of the bars";
     private static final String NUMBER_OF_BARS_LABEL = "Number of bars:";
@@ -70,77 +76,141 @@ public abstract class AbstractHistogramProperties extends
             + "with rows which have a missing value for the selected x column.";
     private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
     private static final String APPLY_BUTTON_LABEL = "Apply";
-    /** The title of the histogram settings region. */
-    private static final String SETTINGS_TITLE = "Histogram settings";
+
     private AggregationMethod m_aggregationMethod;
     private final ColumnSelectionComboxBox m_xCol;
-    private ColumnSelectionComboxBox m_yCol;
-    private JSlider m_barWidth;
-    private JSlider m_noOfBars = null;
-    private JLabel m_noOfBarsLabel = null;
-    private ButtonGroup m_aggrMethButtonGrp = null;
-    private JCheckBox m_showEmptyBars = null;
-    private JCheckBox m_showMissingValBar = null;
+    private final ColumnSelectionComboxBox m_yCol;
+    private final JSlider m_barWidth;
+    private final JSlider m_noOfBars;
+    private final JLabel m_noOfBarsLabel;
+    private final ButtonGroup m_aggrMethButtonGrp;
+    private final JCheckBox m_showEmptyBars;
+    private final JCheckBox m_showMissingValBar;
+    private final JButton m_applyAggrSettingsButton;
+    private final JButton m_applyBarSettingsButton;
 
     
     /**Constructor for class AbstractHistogramProperties.
      * @param aggrMethod the aggregation method to set
      */
+    @SuppressWarnings("unchecked")
     public AbstractHistogramProperties(final AggregationMethod aggrMethod) {
+        //create all swing components first
         m_aggregationMethod = aggrMethod;
         // the column select boxes for the X axis
         m_xCol = new ColumnSelectionComboxBox(
                 AbstractHistogramProperties.X_COLUMN_LABEL);
         m_xCol.setBackground(this.getBackground());
-        //the column select box for the aggregation method which gets added to
-        // the button box later
-        /*m_yCol = new ColumnSelectionComboxBox(
-                AbstractHistogramProperties.AGGREGATION_COLUMN_LABEL,
-                DoubleValue.class);*/
-        Box columnBox = Box.createVerticalBox();
-        /*m_xCol.setMaximumSize(new Dimension(Integer.MAX_VALUE,
-                (int)m_xCol.getPreferredSize().getHeight()));*/
-        columnBox.add(m_xCol);
-        columnBox.add(Box.createVerticalGlue());
-        //columnBox.add(m_yCol);
-
-        addPropertiesComponent(columnBox);
         // create the additional settings components which get added to the
         // histogram settings panel
-        setUpdateHistogramSettings(getHistogramPlotter());
+        m_barWidth = new JSlider(0, 20, 10);
+        m_barWidth.setEnabled(false);
+        m_noOfBars = new JSlider(1, 20, 10);
+        m_noOfBarsLabel = new JLabel();
+        m_noOfBars.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                final JSlider source = (JSlider)e.getSource();
+                updateNoOfBarsText(source.getValue());
+            } 
+        });
+        m_noOfBars.setEnabled(false);
 
-        // create all dialog component boxes
-        // the bar width label box
-        final Box barWidthLabelBox = Box.createHorizontalBox();
-        final JLabel barWidthLabel = new JLabel(
-                AbstractHistogramProperties.BAR_SIZE_LABEL);
-        barWidthLabelBox.add(Box.createHorizontalGlue());
-        barWidthLabelBox.add(barWidthLabel);
-        barWidthLabelBox.add(Box.createHorizontalGlue());
+        // set the aggregation method radio buttons
+        JRadioButton countMethod = new JRadioButton(AggregationMethod.COUNT
+                .name());
+        countMethod.setActionCommand(AggregationMethod.COUNT.name());
+        countMethod.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                onSelectAggrMethod(e.getActionCommand());
+            }
+        });
+        JRadioButton sumMethod = new JRadioButton(AggregationMethod.SUM
+                .name());
+        sumMethod.setActionCommand(AggregationMethod.SUM.name());
+        sumMethod.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                onSelectAggrMethod(e.getActionCommand());
+            }
+        });
+        JRadioButton avgMethod = new JRadioButton(AggregationMethod.AVERAGE
+                .name());
+        avgMethod.setActionCommand(AggregationMethod.AVERAGE.name());
+        avgMethod.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                onSelectAggrMethod(e.getActionCommand());
+            }
+        });
+        // Group the radio buttons.
+        m_aggrMethButtonGrp = new ButtonGroup();
+        m_aggrMethButtonGrp.add(countMethod);
+        m_aggrMethButtonGrp.add(sumMethod);
+        m_aggrMethButtonGrp.add(avgMethod);
+        
+        m_yCol = new ColumnSelectionComboxBox((Border) null, 
+                DoubleValue.class);
+        m_yCol.setBackground(this.getBackground());
+        m_yCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
+        // select the right radio button
+        for (Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
+                .getElements(); buttons.hasMoreElements();) {
+            AbstractButton button = buttons.nextElement();
+            //enable the radio buttons only if we have some aggregation 
+            //columns to choose from
+            button.setEnabled(m_yCol.getModel().getSize() > 0);
+            if (button.getActionCommand()
+                    .equals(m_aggregationMethod.name())) {
+                button.setSelected(true);
+            }
+        }
+        m_showEmptyBars = new JCheckBox(SHOW_EMPTY_BARS_LABEL);
+        m_showMissingValBar = new JCheckBox(SHOW_MISSING_VALUE_BAR_LABEL);
+        m_showMissingValBar.setToolTipText(SHOW_MISSING_VAL_BAR_TOOLTIP);
+        m_applyAggrSettingsButton = new JButton(
+                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
+        m_applyAggrSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
+        
+        m_applyBarSettingsButton = new JButton(
+                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
+        m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
+        
+//the column select tab
+        final JPanel columnPanel = createColumnSettingsPanel();
+        addTab(COLUMN_TAB_LABEL, columnPanel);
+        
+//The bar settings tab
+        final JPanel barPanel = createBarSettingsPanel();
+        addTab(BAR_TAB_LABEL, barPanel);
+//the aggregation settings tab
+        final JPanel aggrPanel = createAggregationSettingsPanel();
+        addTab(AGGREGATION_TAB_LABEL, aggrPanel);
+    }
 
-        // the bar width slider box
-        final Box barWidthSliderBox = Box.createHorizontalBox();
-        barWidthSliderBox.add(Box.createHorizontalGlue());
-        barWidthSliderBox.add(m_barWidth);
-        barWidthSliderBox.add(Box.createHorizontalGlue());
+    /**
+     * The column settings panel which contains only the x column 
+     * selection box.
+     * @return the column selection panel
+     */
+    private JPanel createColumnSettingsPanel() {
+        final JPanel columnPanel = new JPanel();
+        final Box columnBox = Box.createVerticalBox();
+        columnBox.add(m_xCol);
+        columnBox.add(Box.createVerticalGlue());
+        columnPanel.add(columnBox);
+        return columnPanel;
+    }
 
-        // the number of bars label box
-        final Box noOfBarsLabelBox = Box.createHorizontalBox();
-        final JLabel noOfBarsLabel = new JLabel(
-                AbstractHistogramProperties.NUMBER_OF_BARS_LABEL);
-        noOfBarsLabelBox.add(Box.createHorizontalGlue());
-        noOfBarsLabelBox.add(noOfBarsLabel);
-        noOfBarsLabelBox.add(Box.createHorizontalStrut(10));
-        noOfBarsLabelBox.add(m_noOfBarsLabel);
-        noOfBarsLabelBox.add(Box.createHorizontalGlue());
-
-        // the number of bars slider box
-        final Box noOfBarsSliderBox = Box.createHorizontalBox();
-        noOfBarsSliderBox.add(Box.createHorizontalGlue());
-        noOfBarsSliderBox.add(m_noOfBars);
-        noOfBarsSliderBox.add(Box.createHorizontalGlue());
-
+    /**
+     * The bar aggregation settings:
+     * <ol>
+     * <li>aggregation method</li>
+     * <li>aggregation column</li>
+     * </ol>.
+     * @return the aggregation settings panel
+     */
+    private JPanel createAggregationSettingsPanel() {
+        final JPanel aggrPanel = new JPanel();
         // the aggregation method label box
+        final Box aggrLabelButtonBox = Box.createVerticalBox();
         final Box aggrLabelBox = Box.createHorizontalBox();
         final JLabel aggrMethLabel = new JLabel(
                 AbstractHistogramProperties.AGGREGATION_METHOD_LABEL);
@@ -148,7 +218,7 @@ public abstract class AbstractHistogramProperties extends
         aggrLabelBox.add(Box.createHorizontalGlue());
         aggrLabelBox.add(aggrMethLabel);
         aggrLabelBox.add(Box.createHorizontalGlue());
-
+        aggrLabelButtonBox.add(aggrLabelBox);
         // the aggregation method radio button box
         final Box aggrButtonBox = Box.createHorizontalBox();
         aggrButtonBox.add(Box.createHorizontalGlue());
@@ -158,76 +228,97 @@ public abstract class AbstractHistogramProperties extends
             aggrButtonBox.add(button);
             aggrButtonBox.add(Box.createHorizontalGlue());
         }
-
-        // the show empty values box
-        final Box showEmptyBox = Box.createHorizontalBox();
-        // showEmptyBox.add(Box.createGlue());
-        showEmptyBox.add(m_showEmptyBars);
-        showEmptyBox.add(Box.createHorizontalGlue());
-
-        // the show missing value box
-        final Box showMissingBox = Box.createHorizontalBox();
-        // showMissingBox.add(Box.createGlue());
-        showMissingBox.add(m_showMissingValBar);
-        showMissingBox.add(Box.createHorizontalGlue());
-
+        aggrLabelButtonBox.add(aggrButtonBox);
         // the apply button box
-        final JButton applyButton = new JButton(
-                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
-        applyButton.setHorizontalAlignment(SwingConstants.RIGHT);
-        applyButton.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                onApply();
-            }
-        });
-        final Box buttonBox = Box.createHorizontalBox();
-        //buttonBox.add(Box.createHorizontalGlue());
-        buttonBox.add(m_yCol);
-        buttonBox.add(Box.createHorizontalGlue());
-        buttonBox.add(applyButton);
+        //the column selection and button box
+        final Box colLabelBox = Box.createVerticalBox();
+        final JLabel colLabel = new JLabel(
+                AbstractHistogramProperties.AGGREGATION_COLUMN_LABEL);
+        colLabel.setVerticalAlignment(SwingConstants.CENTER);
+        //colLabelBox.add(Box.createVerticalGlue());
+        colLabelBox.add(colLabel);
+        colLabelBox.add(Box.createVerticalGlue());
+        final Box colSelectLabelBox = Box.createVerticalBox();
+        colSelectLabelBox.add(colLabelBox);
+        colSelectLabelBox.add(m_yCol);
+        
+        final Box buttonBox = Box.createVerticalBox();
+        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(m_applyAggrSettingsButton);
+        buttonBox.add(Box.createVerticalGlue());
+//the all surrounding box
+        final Box aggrBox = Box.createHorizontalBox();
+        aggrBox.add(aggrLabelButtonBox);
+        aggrBox.add(Box.createHorizontalGlue());
+        aggrBox.add(colSelectLabelBox);
+        aggrBox.add(Box.createHorizontalGlue());
+        aggrBox.add(buttonBox);
+        aggrPanel.add(aggrBox);
+        return aggrPanel;
+    }
 
-        // the width of the border around some components
-        //final int strutWidth = 5;
-        // Create the three sections of the histogram settings box
-        // the left box
-        final Box leftBox = Box.createVerticalBox();
-        leftBox.add(barWidthLabelBox);
-        leftBox.add(barWidthSliderBox);
-        //leftBox.add(Box.createVerticalStrut(strutWidth));
-        leftBox.add(Box.createVerticalGlue());
-        leftBox.add(showEmptyBox);
-        // the middle box
-        final Box middleBox = Box.createVerticalBox();
-        middleBox.add(noOfBarsLabelBox);
-        middleBox.add(noOfBarsSliderBox);
-//        middleBox.add(Box.createVerticalStrut(strutWidth));
-        middleBox.add(Box.createVerticalGlue());
-        middleBox.add(showMissingBox);
-        // the right box
-        final Box rightBox = Box.createVerticalBox();
-        rightBox.add(aggrLabelBox);
-        rightBox.add(aggrButtonBox);
-//        rightBox.add(Box.createVerticalStrut(strutWidth));
-        rightBox.add(Box.createVerticalGlue());
-        rightBox.add(buttonBox);
-
-        // Create the histogram setting root box
-        final Box histoBox = Box.createHorizontalBox();
-        final TitledBorder histoBorder = BorderFactory.createTitledBorder(
-                AbstractHistogramProperties.SETTINGS_TITLE);
-        histoBox.setBorder(histoBorder);
-
-        // add the sections to the root box
-        histoBox.add(leftBox);
-        //histoBox.add(Box.createHorizontalStrut(strutWidth));
-        histoBox.add(Box.createHorizontalGlue());
-        histoBox.add(middleBox);
-//        histoBox.add(Box.createHorizontalStrut(strutWidth));
-        histoBox.add(Box.createHorizontalGlue());
-        histoBox.add(rightBox);
-
-        // add the Histogram settings panel to the parent properties panel
-        addPropertiesComponent(histoBox);
+    /**
+     * The bar related settings:
+     * <ol>
+     * <li>size</li>
+     * <li>number of bars</li>
+     * <li>show empty bars</li>
+     * <li>show missing value bar</li>
+     * </ol>.
+     * @return the panel with all bar related settings
+     */
+    private JPanel createBarSettingsPanel() {
+        final JPanel barPanel = new JPanel();
+        final Box barWidthBox = Box.createVerticalBox();
+        final Box barWidthLabelBox = Box.createHorizontalBox();
+        final JLabel barWidthLabel = new JLabel(
+                AbstractHistogramProperties.BAR_SIZE_LABEL);
+        barWidthLabelBox.add(Box.createHorizontalGlue());
+        barWidthLabelBox.add(barWidthLabel);
+        barWidthLabelBox.add(Box.createHorizontalGlue());
+        barWidthBox.add(barWidthLabelBox);
+        // the bar width slider box
+        final Box barWidthSliderBox = Box.createHorizontalBox();
+        barWidthSliderBox.add(Box.createHorizontalGlue());
+        barWidthSliderBox.add(m_barWidth);
+        barWidthSliderBox.add(Box.createHorizontalGlue());
+        barWidthBox.add(barWidthSliderBox);
+        final Box barNoBox = Box.createVerticalBox();
+//      the number of bars label box
+        final Box noOfBarsLabelBox = Box.createHorizontalBox();
+        final JLabel noOfBarsLabel = new JLabel(
+                AbstractHistogramProperties.NUMBER_OF_BARS_LABEL);
+        noOfBarsLabelBox.add(Box.createHorizontalGlue());
+        noOfBarsLabelBox.add(noOfBarsLabel);
+        noOfBarsLabelBox.add(Box.createHorizontalStrut(10));
+        noOfBarsLabelBox.add(m_noOfBarsLabel);
+        noOfBarsLabelBox.add(Box.createHorizontalGlue());
+        barNoBox.add(noOfBarsLabelBox);
+//      the number of bars slider box
+        final Box noOfBarsSliderBox = Box.createHorizontalBox();
+        noOfBarsSliderBox.add(Box.createHorizontalGlue());
+        noOfBarsSliderBox.add(m_noOfBars);
+        noOfBarsSliderBox.add(Box.createHorizontalGlue());
+        barNoBox.add(noOfBarsSliderBox);
+        final Box barSelectBox = Box.createVerticalBox();
+        // showEmptyBox.add(Box.createGlue());
+        barSelectBox.add(m_showEmptyBars);
+        barSelectBox.add(Box.createVerticalGlue());
+        barSelectBox.add(m_showMissingValBar);
+        barSelectBox.add(Box.createVerticalGlue());
+        final Box buttonBox = Box.createVerticalBox();
+        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(m_applyBarSettingsButton);
+        buttonBox.add(Box.createVerticalGlue());
+        barSelectBox.add(buttonBox);
+        final Box barBox = Box.createHorizontalBox();
+        barBox.add(barWidthBox);
+        barBox.add(Box.createHorizontalGlue());
+        barBox.add(barNoBox);
+        barBox.add(Box.createHorizontalGlue());
+        barBox.add(barSelectBox);
+        barPanel.add(barBox);
+        return barPanel;
     }
     
     /**
@@ -326,75 +417,13 @@ public abstract class AbstractHistogramProperties extends
      * plotter.
      * 
      * @param plotter the <code>AbstractHistogramPlotter</code> object which 
-     * contains the data. Could be <code>null</code>.
+     * contains the data
      */
     @SuppressWarnings("unchecked")
-    public void setUpdateHistogramSettings(
+    public void updateHistogramSettings(
             final AbstractHistogramPlotter plotter) {
         if (plotter == null) {
-            // set all components with dummy values
-            m_barWidth = new JSlider(0, 20, 10);
-            m_barWidth.setEnabled(false);
-            m_noOfBars = new JSlider(1, 20, 10);
-            m_noOfBarsLabel = new JLabel();
-            m_noOfBars.addChangeListener(new ChangeListener() {
-                public void stateChanged(final ChangeEvent e) {
-                    final JSlider source = (JSlider)e.getSource();
-                    updateNoOfBarsText(source.getValue());
-                } 
-            });
-            m_noOfBars.setEnabled(false);
-    
-            // set the aggregation method radio buttons
-            JRadioButton countMethod = new JRadioButton(AggregationMethod.COUNT
-                    .name());
-            countMethod.setActionCommand(AggregationMethod.COUNT.name());
-            countMethod.addActionListener(new ActionListener() {
-                public void actionPerformed(final ActionEvent e) {
-                    onSelectAggrMethod(e.getActionCommand());
-                }
-            });
-            JRadioButton sumMethod = new JRadioButton(AggregationMethod.SUM
-                    .name());
-            sumMethod.setActionCommand(AggregationMethod.SUM.name());
-            sumMethod.addActionListener(new ActionListener() {
-                public void actionPerformed(final ActionEvent e) {
-                    onSelectAggrMethod(e.getActionCommand());
-                }
-            });
-            JRadioButton avgMethod = new JRadioButton(AggregationMethod.AVERAGE
-                    .name());
-            avgMethod.setActionCommand(AggregationMethod.AVERAGE.name());
-            avgMethod.addActionListener(new ActionListener() {
-                public void actionPerformed(final ActionEvent e) {
-                    onSelectAggrMethod(e.getActionCommand());
-                }
-            });
-            // Group the radio buttons.
-            m_aggrMethButtonGrp = new ButtonGroup();
-            m_aggrMethButtonGrp.add(countMethod);
-            m_aggrMethButtonGrp.add(sumMethod);
-            m_aggrMethButtonGrp.add(avgMethod);
-            
-            m_yCol = new ColumnSelectionComboxBox((Border) null, 
-                    DoubleValue.class);
-            m_yCol.setBackground(this.getBackground());
-            m_yCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
-            // select the right radio button
-            for (Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
-                    .getElements(); buttons.hasMoreElements();) {
-                AbstractButton button = buttons.nextElement();
-                //enable the radio buttons only if we have some aggregation 
-                //columns to choose from
-                button.setEnabled(m_yCol.getModel().getSize() > 0);
-                if (button.getActionCommand()
-                        .equals(m_aggregationMethod.name())) {
-                    button.setSelected(true);
-                }
-            }
-            m_showEmptyBars = new JCheckBox(SHOW_EMPTY_BARS_LABEL);
-            m_showMissingValBar = new JCheckBox(SHOW_MISSING_VALUE_BAR_LABEL);
-            m_showMissingValBar.setToolTipText(SHOW_MISSING_VAL_BAR_TOOLTIP);
+            return;
         } else {
             AbstractHistogramDataModel histoData = 
                 plotter.getHistogramDataModel();
@@ -405,14 +434,10 @@ public abstract class AbstractHistogramProperties extends
             if (minBarWidth > maxBarWidth) {
                 minBarWidth = maxBarWidth;
             }
-            if (m_barWidth == null) {
-                m_barWidth = new JSlider(minBarWidth, maxBarWidth,
-                        currentBarWidth);
-            } else {
-                m_barWidth.setMaximum(maxBarWidth);
-                m_barWidth.setMinimum(minBarWidth);
-                m_barWidth.setValue(currentBarWidth);
-            }
+            //update the bar width values
+            m_barWidth.setMaximum(maxBarWidth);
+            m_barWidth.setMinimum(minBarWidth);
+            m_barWidth.setValue(currentBarWidth);
             m_barWidth.setEnabled(true);
             m_barWidth.setToolTipText(
                     AbstractHistogramProperties.BAR_WIDTH_TOOLTIP);
@@ -425,21 +450,10 @@ public abstract class AbstractHistogramProperties extends
             if (currentNoOfBars > maxNoOfBars) {
                 maxNoOfBars = currentNoOfBars;
             }
-            if (m_noOfBars == null || m_noOfBarsLabel == null) {
-                m_noOfBars = new JSlider(1, maxNoOfBars, currentNoOfBars);
-                m_noOfBarsLabel = 
-                    new JLabel(Integer.toString(currentNoOfBars));
-                m_noOfBars.addChangeListener(new ChangeListener() {
-                    public void stateChanged(final ChangeEvent e) {
-                        final JSlider source = (JSlider)e.getSource();
-                        updateNoOfBarsText(source.getValue());
-                    } 
-                });
-            } else {
-                m_noOfBars.setMaximum(maxNoOfBars);
-                m_noOfBars.setValue(currentNoOfBars);
-                m_noOfBarsLabel.setText(Integer.toString(currentNoOfBars));
-            }
+            //update the number of bar values
+            m_noOfBars.setMaximum(maxNoOfBars);
+            m_noOfBars.setValue(currentNoOfBars);
+            m_noOfBarsLabel.setText(Integer.toString(currentNoOfBars));
             setSliderLabels(m_noOfBars, 2, true);
             // disable this noOfBars slider for nominal values
             if (!plotter.getHistogramDataModel().isNominal()) {
@@ -452,31 +466,11 @@ public abstract class AbstractHistogramProperties extends
                         "Only available for numerical properties");
             }
             // set the values of the select boxes
-            if (m_showEmptyBars == null) {
-                m_showEmptyBars = new JCheckBox(
-                AbstractHistogramProperties.SHOW_EMPTY_BARS_LABEL);
-            }
             m_showEmptyBars.setSelected(plotter.isShowEmptyBars());
-            if (m_showMissingValBar == null) {
-                m_showMissingValBar = new JCheckBox(
-                AbstractHistogramProperties.SHOW_MISSING_VALUE_BAR_LABEL);
-            }
             m_showMissingValBar.setSelected(plotter.isShowMissingValBar());
             m_showMissingValBar.setEnabled(histoData.containsMissingValueBar());
             m_showEmptyBars.setEnabled(histoData.containsEmptyValueBars());
         } // end of else of if plotter == null
-    }
-
-    /**
-     * @return the <code>FixedColumnHistogramPlotter</code> object to whom this
-     *         properties panel belongs
-     */
-    protected AbstractHistogramPlotter getHistogramPlotter() {
-        AbstractPlotter2D plotter = getPlotter();
-        if (plotter instanceof AbstractHistogramPlotter) {
-            return (AbstractHistogramPlotter)plotter;
-        }
-        return null;
     }
 
     /**
@@ -496,7 +490,7 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @return the current selected aggregation method
      */
-    protected AggregationMethod getSelectedAggrMethod() {
+    public AggregationMethod getSelectedAggrMethod() {
         if (m_aggrMethButtonGrp == null) {
             return AggregationMethod.getDefaultMethod();
         } else {
@@ -509,39 +503,11 @@ public abstract class AbstractHistogramProperties extends
             return AggregationMethod.getMethod4String(methodName);
         }
     }
-
-    /**
-     * Applies the settings to the plotter model.
-     */
-    protected void onApply() {
-        final AbstractHistogramPlotter plotter = getHistogramPlotter();
-        if (plotter == null) {
-            return;
-        }
-        AbstractHistogramDataModel histoModel = plotter.getHistogramDataModel();
-        if (histoModel == null) {
-            throw new IllegalStateException("HistogramModel shouldn't be null");
-        }
-        plotter.setPreferredBarWidth(getBarWidth());
-        if (!histoModel.isNominal()) {
-            // this is only available for none nominal x axis properties
-            plotter.setNumberOfBars(getNoOfBars());
-        }
-        m_aggregationMethod = getSelectedAggrMethod();
-        plotter.setAggregationMethod(m_aggregationMethod);
-        plotter.setShowEmptyBars(m_showEmptyBars.isSelected());
-        plotter.setShowMissingvalBar(m_showMissingValBar.isSelected());
-        // force the repainting of the plotter
-        plotter.updatePaintModel();
-        // update the labels of the sliders and the select boxes
-        setUpdateHistogramSettings(plotter);
-        return;
-    }
-
+   
     /**
      * @return the name of the column the user has selected as y coordinate
      */
-    protected String getSelectedAggrColumn() {
+    public String getSelectedAggrColumn() {
         return m_yCol.getSelectedColumn();
     }
     
@@ -574,7 +540,7 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @return the select box for the x column
      */
-    protected ColumnSelectionComboxBox getXColSelectBox() {
+    public ColumnSelectionComboxBox getXColSelectBox() {
         return m_xCol;
     }
 
@@ -608,5 +574,33 @@ public abstract class AbstractHistogramProperties extends
      */
     protected void updateNoOfBarsText(final int noOfBars) {
         m_noOfBarsLabel.setText(Integer.toString(noOfBars));
+    }
+
+    /**
+     * @param listener adds a listener to the apply button
+     */
+    public void addAggregationChangedListener(final ActionListener listener) {
+        m_applyAggrSettingsButton.addActionListener(listener);
+        m_applyBarSettingsButton.addActionListener(listener);
+    }
+
+    /**
+     * @return if the empty bars should be shown
+     */
+    protected boolean getShowEmptyBars() {
+        if (m_showEmptyBars == null) {
+            return false;
+        }
+        return m_showEmptyBars.isSelected();
+    }
+
+    /**
+     * @return if the missing value bar should be shown
+     */
+    public boolean getShowMissingvalBar() {
+        if (m_showMissingValBar == null) {
+            return false;
+        }
+        return m_showMissingValBar.isSelected();
     }
 }

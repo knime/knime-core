@@ -53,7 +53,6 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      * Creates a new PlotterScrolling pane and associates it with the passed
      * view control panel.
      * 
-     * @param initialWidth the width of the dialog at the creation time
      * @param spec the specification of the input data table
      * @param histogramProps the <code>FixedColumnHistogramProperties</code>
      *            with the view options for the user
@@ -62,14 +61,15 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      *            <code>null</code> the first column will be selected
      * @param aggrCol the name of the aggregation column
      */
-    public FixedColumnHistogramPlotter(final int initialWidth,
-            final DataTableSpec spec,
+    public FixedColumnHistogramPlotter(final DataTableSpec spec,
             final FixedColumnHistogramProperties histogramProps,
             final HiLiteHandler handler, final String xCol, 
             final String aggrCol) {
-        super(initialWidth, spec, histogramProps, handler, xCol, aggrCol);
-        setHistoData(new FixedColumnHistogramDataModel(spec, xCol, aggrCol,
+        super(spec, histogramProps, handler, xCol, aggrCol);
+        setHistogramDataModel(
+                new FixedColumnHistogramDataModel(spec, xCol, aggrCol,
                 AggregationMethod.getDefaultMethod()));
+        histogramProps.updateHistogramSettings(this);
     }
 
     /**
@@ -78,8 +78,9 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      */
     @Override
     public void addDataRow(final DataRow row) {
-        if (getHistoData() == null) {
-            setHistoData(new FixedColumnHistogramDataModel(getDataTableSpec(),
+        if (getHistogramDataModel() == null) {
+            setHistogramDataModel(
+                    new FixedColumnHistogramDataModel(getDataTableSpec(),
                     getXColName(), getAggregationColName(),
                     getAggregationMethod()));
         }

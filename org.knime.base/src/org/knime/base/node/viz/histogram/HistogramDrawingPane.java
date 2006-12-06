@@ -36,7 +36,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
-import org.knime.base.node.viz.plotter2D.AbstractDrawingPane;
+import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
@@ -190,11 +190,11 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /*--------- the drawing methods ----------------*/
     // **********************************************
     /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractDrawingPane
-     *      #paintPlotDrawingPane(java.awt.Graphics)
+     * @see org.knime.base.node.viz.plotter.AbstractDrawingPane#
+     * paintContent(java.awt.Graphics)
      */
     @Override
-    protected void paintPlotDrawingPane(final Graphics g) {
+    public void paintContent(final Graphics g) {
         if (m_bars == null) {
             return;
         }
@@ -458,87 +458,5 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             }
         }
         return selectedRows;
-    }
-
-    /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractDrawingPane
-     *      #clearSelection()
-     */
-    @Override
-    protected void clearSelection() {
-        if (m_bars == null) {
-            return;
-        }
-        for (BarVisModel bar : m_bars.values()) {
-            bar.setSelected(false);
-        }
-    }
-
-    /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractDrawingPane
-     *      #selectElementsInDragTangle(int, int, int, int)
-     */
-    @Override
-    protected void selectElementsInDragTangle(final int mouseDownX,
-            final int mouseDownY, final int mouseUpX, final int mouseUpY) {
-        if (m_bars == null) {
-            return;
-        }
-        int x = mouseDownX;
-        int y = mouseDownY;
-        int width = mouseUpX - mouseDownX;
-        int height = mouseUpY - mouseDownY;
-        if (mouseDownX > mouseUpX) {
-            x = mouseUpX;
-            width = mouseDownX - mouseUpX;
-        }
-        if (mouseDownY > mouseUpY) {
-            y = mouseUpY;
-            height = mouseDownY - mouseUpY;
-        }
-        Rectangle rect = new Rectangle(x, y, width, height);
-        for (BarVisModel bar : m_bars.values()) {
-            if (bar.screenRectOverlapping(rect)) {
-                bar.setSelected(!bar.isSelected());
-            } else {
-                bar.setSelected(false);
-            }
-        }
-        return;
-    }
-
-    /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractDrawingPane
-     *      #toggleSelectionAt(int, int)
-     */
-    @Override
-    protected void toggleSelectionAt(final int x, final int y) {
-        if (m_bars == null) {
-            return;
-        }
-        for (BarVisModel bar : m_bars.values()) {
-            if (bar.getRectangle().contains(x, y)) {
-                bar.setSelected(!bar.isSelected());
-                break;
-            }
-        }
-    }
-
-    /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractDrawingPane
-     *      #getNumberSelectedElements()
-     */
-    @Override
-    public int getNumberSelectedElements() {
-        if (m_bars == null) {
-            return 0;
-        }
-        int noOfSelected = 0;
-        for (BarVisModel bar : m_bars.values()) {
-            if (bar.isSelected()) {
-                noOfSelected += bar.getNumberOfRows();
-            }
-        }
-        return noOfSelected;
     }
 }

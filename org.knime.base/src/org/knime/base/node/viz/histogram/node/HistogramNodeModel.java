@@ -72,8 +72,6 @@ public class HistogramNodeModel extends NodeModel {
      */
     private InteractiveHistogramProperties m_properties;
 
-    private static final int INITIAL_WIDTH = 300;
-
     /**
      * Used to store the attribute column name in the settings.
      */
@@ -181,8 +179,8 @@ public class HistogramNodeModel extends NodeModel {
         m_properties = 
             new InteractiveHistogramProperties(AggregationMethod.COUNT);
         // create the plotter
-        m_plotter = new InteractiveHistogramPlotter(INITIAL_WIDTH, 
-                tableSpec, m_properties, getInHiLiteHandler(0), selectedXCol);
+        m_plotter = new InteractiveHistogramPlotter(tableSpec, m_properties, 
+                getInHiLiteHandler(0), selectedXCol);
         m_plotter.setBackground(ColorAttr.getBackground());
         if (m_data != null) {
             exec.setMessage("Adding data rows to histogram...");

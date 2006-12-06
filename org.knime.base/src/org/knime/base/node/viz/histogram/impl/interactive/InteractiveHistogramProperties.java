@@ -21,12 +21,8 @@
  */
 package org.knime.base.node.viz.histogram.impl.interactive;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.plotter2D.AbstractPlotter2D;
 
 /**
  * The properties panel of the Histogram plotter which allows the user to change
@@ -54,57 +50,5 @@ public class InteractiveHistogramProperties extends
      */
     public InteractiveHistogramProperties(final AggregationMethod aggrMethod) {
        super(aggrMethod);
-       getXColSelectBox().addActionListener(new ActionListener() {
-           public void actionPerformed(final ActionEvent e) {
-               onXColChanged(getSelectedXColumn());
-           }
-       });
-    }
-
-    /**
-     * Called whenever user changes the x column selection.
-     * 
-     * @param xColName the new selected x column
-     */
-    protected void onXColChanged(final String xColName) {
-        final InteractiveHistogramPlotter plotter = getHistogramPlotter();
-        if (plotter == null || xColName == null) {
-            return;
-        }
-        plotter.setXColumn(xColName);
-        getXColSelectBox().setToolTipText(xColName);
-        // repaint the plotter
-        plotter.updatePaintModel();
-        // update the slider values and the select boxes
-        setUpdateHistogramSettings(plotter);
-    }
-
-    /**
-     * @return the <code>FixedColumnHistogramPlotter</code> object to whom this
-     *         properties panel belongs
-     */
-    @Override
-    protected InteractiveHistogramPlotter getHistogramPlotter() {
-        AbstractPlotter2D plotter = getPlotter();
-        if (plotter instanceof InteractiveHistogramPlotter) {
-            return (InteractiveHistogramPlotter)plotter;
-        }
-        return null;
-    }
-    
-    /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties
-     * #onApply()
-     */
-    @Override
-    protected void onApply() {
-        final InteractiveHistogramPlotter plotter = getHistogramPlotter();
-        if (plotter == null) {
-            return;
-        }
-        plotter.setAggregationColumn(getSelectedAggrColumn(), 
-                    getSelectedAggrMethod());
-        super.onApply();
-        return;
     }
 }
