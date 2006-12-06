@@ -7,7 +7,11 @@
 		<title>Node description for <xsl:value-of select="name" /></title>
 	</head>
 	<body style="font-family: Tahoma, Arial, Helvetica; font-size: 80%;">
-		<h2 align="center"><xsl:value-of select="name" /></h2><br />
+		<h2 align="center"><xsl:value-of select="name" /></h2>
+        <xsl:if test="@deprecated = 'true'">
+            <h4 align="center" style="color: red; font-style: italic;">Deprecated</h4>
+        </xsl:if>
+        <br />
 		<p style="text-align: justify">
 			<xsl:apply-templates select="fullDescription/intro/node()" />
 		</p>
