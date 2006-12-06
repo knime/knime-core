@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="./nominal.gif">
+	<name>Nominal Values</name>
+	
+	<shortDescription>
+	    Collects and sets all nominal values for the columns selected in the
+	    dialog.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    Collects and sets all nominal values for the columns selected in the
+	    dialog. There is no upper limit defined for the number of values.
+	    The node iterates over the entire table and sets the nominal 
+	    values in the specification of the output table.
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn name="Input table" index="0">Datatable to read all possible values from</dataIn>
+		<dataOut name="Output table" index="0">Datatable with possible values set</dataOut>
+	</ports>	
+</knimeNode>
