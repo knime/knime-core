@@ -73,6 +73,11 @@ public class NormalizerNodeModel extends NodeModel {
     public static final String COLUMNS_KEY = "columns";
 
     /**
+     * No Normalization mode.
+     */
+    public static final int NONORM_MODE = 0;
+   
+    /**
      * MINMAX mode.
      */
     public static final int MINMAX_MODE = 1;
@@ -88,9 +93,9 @@ public class NormalizerNodeModel extends NodeModel {
     public static final int DECIMALSCALING_MODE = 3;
 
     /*
-     * Default mode is MINMAX mode
+     * Default mode is NONORM mode
      */
-    private int m_mode = MINMAX_MODE;
+    private int m_mode = NONORM_MODE;
 
     /*
      * Default minimum zero
@@ -170,7 +175,10 @@ public class NormalizerNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         Normalizer ntable = new Normalizer(inData[0], m_columns);
         AffineTransTable outTable;
+        m_content = new ModelContent(CFG_MODEL_NAME);
         switch (m_mode) {
+        case NONORM_MODE:
+            return inData;
         case MINMAX_MODE:
             outTable = ntable.doMinMaxNorm(m_max, m_min, exec);
             break;
@@ -183,7 +191,7 @@ public class NormalizerNodeModel extends NodeModel {
         default:
             throw new Exception("No mode set");
         }
-        m_content = new ModelContent(CFG_MODEL_NAME);
+        
         outTable.save((ModelContent)m_content);
         BufferedDataTable bft = exec.createBufferedDataTable(outTable, exec);
         return new BufferedDataTable[]{bft};
@@ -262,6 +270,7 @@ public class NormalizerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         int mode = settings.getInt(MODE_KEY);
         switch (mode) {
+        case NONORM_MODE:
         case MINMAX_MODE:
         case ZSCORE_MODE:
         case DECIMALSCALING_MODE:
