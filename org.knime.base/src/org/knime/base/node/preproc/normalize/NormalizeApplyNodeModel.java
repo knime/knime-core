@@ -86,7 +86,7 @@ public class NormalizeApplyNodeModel extends NodeModel {
             m_content = null;
         } else {
             m_content = predParams.getModelContent(
-                    NormalizeNodeModel.CFG_MODEL_NAME);
+                    NormalizerNodeModel.CFG_MODEL_NAME);
         }
     }
 

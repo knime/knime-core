@@ -34,13 +34,13 @@ import org.knime.core.node.NodeView;
  * 
  * @author Nicolas Cebron, University of Konstanz
  */
-public class NormalizeNodeFactory extends NodeFactory {
+public class NormalizerNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeDialogPane()
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new NormalizeNodeDialog();
+        return new NormalizerNodeDialog();
     }
 
     /**
@@ -48,7 +48,7 @@ public class NormalizeNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new NormalizeNodeModel();
+        return new NormalizerNodeModel();
     }
 
     /**

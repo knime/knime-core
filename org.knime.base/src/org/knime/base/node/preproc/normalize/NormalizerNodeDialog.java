@@ -52,11 +52,11 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * 
  * @author Nicolas Cebron, University of Konstanz
  */
-public class NormalizeNodeDialog extends NodeDialogPane {
+public class NormalizerNodeDialog extends NodeDialogPane {
 
     /** The node logger fot this class. */
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NormalizeNodeDialog.class);
+            .getLogger(NormalizerNodeDialog.class);
 
     /*
      * The tab's name.
@@ -92,7 +92,7 @@ public class NormalizeNodeDialog extends NodeDialogPane {
      * Creates a new dialog for the Normalize Node.
      */
     @SuppressWarnings("unchecked")
-    NormalizeNodeDialog() {
+    NormalizerNodeDialog() {
         super();
         JPanel panel = generateContent();
         m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
@@ -171,17 +171,17 @@ public class NormalizeNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_spec = specs[0];
-        if (settings.containsKey(NormalizeNodeModel.MODE_KEY)) {
+        if (settings.containsKey(NormalizerNodeModel.MODE_KEY)) {
             try {
-                int mode = settings.getInt(NormalizeNodeModel.MODE_KEY);
+                int mode = settings.getInt(NormalizerNodeModel.MODE_KEY);
                 switch (mode) {
-                case NormalizeNodeModel.MINMAX_MODE:
+                case NormalizerNodeModel.MINMAX_MODE:
                     m_minmaxButton.setSelected(true);
                     break;
-                case NormalizeNodeModel.ZSCORE_MODE:
+                case NormalizerNodeModel.ZSCORE_MODE:
                     m_zscoreButton.setSelected(true);
                     break;
-                case NormalizeNodeModel.DECIMALSCALING_MODE:
+                case NormalizerNodeModel.DECIMALSCALING_MODE:
                     m_decButton.setSelected(true);
                     break;
                 default:
@@ -192,18 +192,20 @@ public class NormalizeNodeDialog extends NodeDialogPane {
             }
         }
 
-        if (settings.containsKey(NormalizeNodeModel.NEWMIN_KEY)) {
+        if (settings.containsKey(NormalizerNodeModel.NEWMIN_KEY)) {
             try {
-                double nmin = settings.getDouble(NormalizeNodeModel.NEWMIN_KEY);
+                double nmin = settings.getDouble(
+                        NormalizerNodeModel.NEWMIN_KEY);
                 m_newminTextField.setText("" + nmin);
             } catch (InvalidSettingsException e) {
                 LOGGER.debug("Invalid Settings", e);
             }
         }
 
-        if (settings.containsKey(NormalizeNodeModel.NEWMAX_KEY)) {
+        if (settings.containsKey(NormalizerNodeModel.NEWMAX_KEY)) {
             try {
-                double nmax = settings.getDouble(NormalizeNodeModel.NEWMAX_KEY);
+                double nmax = settings.getDouble(
+                        NormalizerNodeModel.NEWMAX_KEY);
                 m_newmaxTextField.setText("" + nmax);
             } catch (InvalidSettingsException e) {
                 LOGGER.debug("Invalid Settings", e);
@@ -211,9 +213,9 @@ public class NormalizeNodeDialog extends NodeDialogPane {
         }
 
         String[] cols = new String[0];
-        if (settings.containsKey(NormalizeNodeModel.COLUMNS_KEY)) {
+        if (settings.containsKey(NormalizerNodeModel.COLUMNS_KEY)) {
             try {
-                cols = settings.getStringArray(NormalizeNodeModel.COLUMNS_KEY);
+                cols = settings.getStringArray(NormalizerNodeModel.COLUMNS_KEY);
                 m_filterpanel.update(m_spec, false, cols);
             } catch (InvalidSettingsException e) {
                 LOGGER.debug("Invalid Settings", e);
@@ -231,25 +233,25 @@ public class NormalizeNodeDialog extends NodeDialogPane {
             throws InvalidSettingsException {
         int mode = -1;
         if (m_minmaxButton.isSelected()) {
-            mode = NormalizeNodeModel.MINMAX_MODE;
+            mode = NormalizerNodeModel.MINMAX_MODE;
         }
         if (m_zscoreButton.isSelected()) {
-            mode = NormalizeNodeModel.ZSCORE_MODE;
+            mode = NormalizerNodeModel.ZSCORE_MODE;
         }
         if (m_decButton.isSelected()) {
-            mode = NormalizeNodeModel.DECIMALSCALING_MODE;
+            mode = NormalizerNodeModel.DECIMALSCALING_MODE;
         }
-        settings.addInt(NormalizeNodeModel.MODE_KEY, mode);
+        settings.addInt(NormalizerNodeModel.MODE_KEY, mode);
         String newminString = m_newminTextField.getText();
         double newminD = Double.parseDouble(newminString);
-        settings.addDouble(NormalizeNodeModel.NEWMIN_KEY, newminD);
+        settings.addDouble(NormalizerNodeModel.NEWMIN_KEY, newminD);
 
         String newmaxString = m_newmaxTextField.getText();
         double newmaxD = Double.parseDouble(newmaxString);
-        settings.addDouble(NormalizeNodeModel.NEWMAX_KEY, newmaxD);
+        settings.addDouble(NormalizerNodeModel.NEWMAX_KEY, newmaxD);
 
         Set<String> inclset = m_filterpanel.getIncludedColumnSet();
         String[] columns = inclset.toArray(new String[inclset.size()]);
-        settings.addStringArray(NormalizeNodeModel.COLUMNS_KEY, columns);
+        settings.addStringArray(NormalizerNodeModel.COLUMNS_KEY, columns);
     }
 }

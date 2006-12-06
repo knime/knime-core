@@ -50,7 +50,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @see Normalizer
  * @author Nicolas Cebron, University of Konstanz
  */
-public class NormalizeNodeModel extends NodeModel {
+public class NormalizerNodeModel extends NodeModel {
 
     /**
      * Key to store the new minimum value (in minmax mode).
@@ -118,7 +118,7 @@ public class NormalizeNodeModel extends NodeModel {
     /**
      * One input, one output.
      */
-    NormalizeNodeModel() {
+    NormalizerNodeModel() {
         super(1, 1, 0, 1);
     }
 

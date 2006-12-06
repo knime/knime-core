@@ -241,7 +241,7 @@
             id="org.knime.base.node.viz.statistics.StatisticsNodeFactory"/>
       <node
             category-path="/manipulation/column"
-            factory-class="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"
+            factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
             id="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"/>
       <node
             category-path="/manipulation/column"
@@ -424,10 +424,6 @@
            category-path="/manipulation/row"
            factory-class="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"
            id="org.knime.base.node.preproc.hilite"/>
-     <node
-           category-path="/old"
-           factory-class="org.knime.base.node.preproc.nominal.NominalValueFactory"
-           id="org.knime.base.node.preproc.nominal.NominalValueFactory"/>
    </extension>
    
    
