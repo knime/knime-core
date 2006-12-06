@@ -64,7 +64,7 @@ public class DefaultDataArray implements DataArray {
     /* this is where we store the rows. */
     private ArrayList<DataRow> m_rows;
 
-    /* all occuring values for each string column */
+    /* all occurring values for each string column */
     private Vector<LinkedHashSet<DataCell>> m_possVals;
 
     /* the max value for each column */
@@ -107,7 +107,7 @@ public class DefaultDataArray implements DataArray {
     }
 
     /**
-     * Same, but allows for user cancelation from a progress monitor, while the
+     * Same, but allows for user cancellation from a progress monitor, while the
      * container is filled.
      * 
      * @param dTable the data table to read the rows from
