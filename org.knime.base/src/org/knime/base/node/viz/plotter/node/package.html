@@ -28,7 +28,6 @@ the example shown below:
     /**
      * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
      */
-    @Override
     protected NodeDialogPane createNodeDialogPane() {
         return new DefaultVisualizationNodeDialog();
     }
@@ -36,7 +35,6 @@ the example shown below:
     /**
      * @see org.knime.core.node.NodeFactory#createNodeModel()
      */
-    @Override
     public NodeModel createNodeModel() {
         return new DefaultVisualizationNodeModel();
     }
@@ -45,7 +43,6 @@ the example shown below:
      * @see org.knime.core.node.NodeFactory#createNodeView(int, 
      * org.knime.core.node.NodeModel)
      */
-    @Override
     public NodeView createNodeView(final int viewIndex, 
             final NodeModel nodeModel) {
         return new DefaultVisualizationNodeView(nodeModel, new YourPlotter());
@@ -54,7 +51,6 @@ the example shown below:
     /**
      * @see org.knime.core.node.NodeFactory#getNrNodeViews()
      */
-    @Override
     protected int getNrNodeViews() {
         return 1;
     }
@@ -62,7 +58,6 @@ the example shown below:
     /**
      * @see org.knime.core.node.NodeFactory#hasDialog()
      */
-    @Override
     protected boolean hasDialog() {
         return true;
     }
