@@ -23,7 +23,7 @@
 package org.knime.core.node;
 
 /**
- * Output port used to transfere ModelContent objects between nodes.
+ * Output port used to transfer <code>ModelContent</code> objects between nodes.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
