@@ -128,4 +128,13 @@ public final class MutableDouble extends Number {
     public String toString() {
         return Double.toString(m_i);
     }
+    
+    /**
+     * Adds a value to this object.
+     * 
+     * @param d a double value
+     */
+    public void add(final double d) {
+        m_i += d;
+    }
 }
