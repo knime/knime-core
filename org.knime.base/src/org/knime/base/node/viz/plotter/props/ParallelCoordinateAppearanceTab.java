@@ -28,6 +28,8 @@ import javax.swing.border.EtchedBorder;
 
 
 /**
+ * Adds a box with "Show / Hide Dots" check box and a checkbox to draw curves
+ * and a checkbox for the line thickness.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -39,7 +41,7 @@ public class ParallelCoordinateAppearanceTab extends PropertiesTab {
     
     /**
      * Adds a box with "Show / Hide Dots" check box and a checkbox
-     * to draw curves.
+     * to draw curves and a checkbox for the line thickness.
      *
      */
     public ParallelCoordinateAppearanceTab() {

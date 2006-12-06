@@ -23,6 +23,9 @@ import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
 
 /**
+ * Control elements for the handling of missing values, either skip the rows 
+ * containing missing values, or skip only the missing value or explicitly
+ * show the missing values on a horizontal bottom line.
  * 
  * @author Fabian Dill, University of Konstanz
  */

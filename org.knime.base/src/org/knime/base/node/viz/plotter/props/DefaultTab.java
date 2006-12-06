@@ -30,6 +30,14 @@ import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
 /**
+ * This is the default tab added by the 
+ * {@link org.knime.base.node.viz.plotter.AbstractPlotterProperties} that makes 
+ * the current mouse mode selectable, provides a "fit to screen" button
+ * (which fits the drawing pane into the viewport) and a 
+ * "change background color" button. For normal functionality this tab should 
+ * be always present in the plotter. It is thus recommended to always extend the
+ * {@link org.knime.base.node.viz.plotter.AbstractPlotterProperties} and only
+ * add the additional functionality.
  * 
  * @author Fabian Dill, University of Konstanz
  */

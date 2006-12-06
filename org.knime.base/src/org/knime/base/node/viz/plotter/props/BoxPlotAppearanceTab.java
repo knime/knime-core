@@ -23,6 +23,8 @@ import javax.swing.JCheckBox;
 import javax.swing.border.EtchedBorder;
 
 /**
+ * Provides a checkbox if the visualization of the data should be normalized 
+ * or not. DefaultName is "Appearance".
  * 
  * @author Fabian Dill, University of Konstanz
  */

@@ -34,6 +34,7 @@ import org.knime.base.node.viz.plotter.scatter.ScatterPlotterProperties;
 import org.knime.core.node.NodeLogger;
 
 /**
+ * Control elements to adjust the dot size and the jitter rate.
  * 
  * @author Fabian Dill, University of Konstanz
  */

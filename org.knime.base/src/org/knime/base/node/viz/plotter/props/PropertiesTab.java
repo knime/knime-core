@@ -21,6 +21,21 @@ package org.knime.base.node.viz.plotter.props;
 import javax.swing.JPanel;
 
 /**
+ * A convenient <code>JPanel</code> which defines some distances and a default 
+ * name for this and can be added as a tab to the 
+ * {@link org.knime.base.node.viz.plotter.AbstractPlotterProperties}. 
+ * This can then be done with this simple code:
+ * <pre>
+ * public SomePlotterProperties() {
+        m_someTab = new SomeTab();
+        addTab(m_someTab.getDefaultName(), m_someTab);
+    }
+   </pre>
+ * The idea behind the organization of the properties into very small functional
+ * units is that it is reusable. If, for instance, a tab is defined to show or 
+ * hide dots this may be useful for several plotters, whereas the properties as 
+ * a collection of all this tabs may be to special to extend and reuse it as a
+ * whole.
  * 
  * @author Fabian Dill, University of Konstanz
  */

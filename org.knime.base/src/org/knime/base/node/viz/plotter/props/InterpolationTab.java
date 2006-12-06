@@ -24,6 +24,7 @@ import javax.swing.JCheckBox;
 import javax.swing.border.EtchedBorder;
 
 /**
+ * Provides a checkbox if the missing values should be interpolated or not.
  * 
  * @author Fabian Dill, University of Konstanz
  */

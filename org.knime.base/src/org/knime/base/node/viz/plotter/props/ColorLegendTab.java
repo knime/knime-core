@@ -39,6 +39,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 /**
+ * Implements a color legend with a "change" button for each entry which opens 
+ * a color chooser dialog. The color legend can be updated with a 
+ * <code>Map&lt;String, Color&gt;</code>. In contrast to the other properties 
+ * tabs the component has no getter but this class provides methods to register
+ * <code>ChangeListener</code>s.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -74,9 +79,10 @@ public class ColorLegendTab extends PropertiesTab {
     }
     
     /**
-     * Adds a listener which gets informed whenever the color mapping was c
-     * hanged.
-     * @param listener the listener.
+     * Adds a listener which gets informed whenever the color mapping was 
+     * changed.
+     * 
+     * @param listener the listener
      */
     public void addChangeListener(final ChangeListener listener) {
         m_listener.add(listener);
@@ -84,8 +90,9 @@ public class ColorLegendTab extends PropertiesTab {
     
     /**
      * Removes the passed listener if available.
+     * 
      * @param listener the listener
-     * @return true if sucessful, false otherwise.
+     * @return true if sucessful, false otherwise
      */
     public boolean removeChangeListener(final ChangeListener listener) {
         return m_listener.remove(listener);
@@ -101,7 +108,8 @@ public class ColorLegendTab extends PropertiesTab {
   
     /**
      * Updates the color legend with the column names and the referring color.
-     * @param mapping column name -> color.
+     * 
+     * @param mapping column name - color
      */
     public void update(final Map<String, Color> mapping) {
         removeAll();
@@ -117,12 +125,20 @@ public class ColorLegendTab extends PropertiesTab {
     
     /**
      * 
-     * @return the mapping from column to color.
+     * @return the mapping from column to color
      */
     public Map<String, Color> getColorMapping() {
         return m_mapping;
     }
     
+    /**
+     * Creates a box with the column name on the left and the color in the 
+     * middle and a button to change the color on the right.
+     *  
+     * @param columnName name of the column
+     * @param color color so far
+     * @return a box as described above
+     */
     private Box createOneItem(final String columnName, final Color color) {
         Box box = Box.createHorizontalBox();
         box.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
@@ -142,6 +158,14 @@ public class ColorLegendTab extends PropertiesTab {
         return box;
     }
     
+    /**
+     * Creates a button which opens a color chooser with the current color 
+     * preselected, updates the color mapping and informs the listeners.
+     *  
+     * @param colName column name
+     * @param currColor current color
+     * @return a button with the above described functionality
+     */
     private JButton createChangeColorButton(final String colName, 
             final Color currColor) {
         JButton btn = new JButton("Change...");

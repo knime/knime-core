@@ -29,6 +29,8 @@ import javax.swing.border.EtchedBorder;
 import org.knime.base.node.viz.plotter.line.LinePlotter;
 
 /**
+ * Provides three checkboxes, one to show or hide the dots, one for the line
+ * thickness and one for the dot size.
  * 
  * @author Fabian Dill, University of Konstanz
  */
