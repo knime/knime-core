@@ -311,6 +311,19 @@ public class ColumnFilterPanel extends JPanel {
         super.add(excludePanel, BorderLayout.CENTER);
     } // ColumnFilterPanel()
     
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        m_inclList.setEnabled(enabled);
+        m_exclList.setEnabled(enabled);
+        m_markAllHitsIncl.setEnabled(enabled);
+        m_markAllHitsExcl.setEnabled(enabled);
+        m_remAllButton.setEnabled(enabled);
+        m_remButton.setEnabled(enabled);
+        m_addAllButton.setEnabled(enabled);
+        m_addButton.setEnabled(enabled);
+    }
+    
     /**
      * Adds a listener which gets informed whenever the column filtering 
      * changes.
