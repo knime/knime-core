@@ -35,6 +35,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -55,7 +56,7 @@ import org.knime.core.node.ExecutionMonitor;
  */
 public class NominalTable implements DataTable {
     /** The wrapped table. */
-    private final DataTable m_table;
+    private final BufferedDataTable m_table;
 
     /** The input table spec with all poss. values for the selected column. */
     private final DataTableSpec m_spec;
@@ -75,10 +76,11 @@ public class NominalTable implements DataTable {
      * @throws IllegalStateException if the <code>column</code> appears at
      *             least twice in <code>table</code>
      * 
-     * @see #computeValues(DataTable,ExecutionMonitor,String...)
+     * @see #computeValues(BufferedDataTable,ExecutionMonitor,String...)
      */
-    public NominalTable(final DataTable table, final ExecutionMonitor exec,
-            final String... columns) throws CanceledExecutionException {
+    public NominalTable(final BufferedDataTable table, 
+            final ExecutionMonitor exec, final String... columns) 
+            throws CanceledExecutionException {
         m_spec = computeValues(table, exec, columns);
         m_table = table;
     }
@@ -92,8 +94,8 @@ public class NominalTable implements DataTable {
      * @throws CanceledExecutionException if user canceled execution
      * @throws NullPointerException if the table is <code>null</code>
      */
-    public NominalTable(final DataTable table, final ExecutionMonitor exec)
-            throws CanceledExecutionException {
+    public NominalTable(final BufferedDataTable table, 
+            final ExecutionMonitor exec) throws CanceledExecutionException {
         m_spec = computeValues(table, exec);
         m_table = table;
     }
@@ -108,8 +110,9 @@ public class NominalTable implements DataTable {
      * @throws CanceledExecutionException if user canceled execution
      * @throws NullPointerException if the table is <code>null</code>
      */
-    public static final DataTableSpec computeValues(final DataTable table,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+    public static final DataTableSpec computeValues(
+            final BufferedDataTable table, final ExecutionMonitor exec) 
+            throws CanceledExecutionException {
         DataTableSpec spec = table.getDataTableSpec();
         int[] all = new int[spec.getNumColumns()];
         for (int i = 0; i < all.length; i++) {
@@ -132,15 +135,16 @@ public class NominalTable implements DataTable {
      * @throws IllegalArgumentException if the array of column indices is not
      *             sorted
      */
-    public NominalTable(final DataTable table, final ExecutionMonitor exec,
-            final int... columnIndex) throws CanceledExecutionException {
+    public NominalTable(final BufferedDataTable table, 
+            final ExecutionMonitor exec, final int... columnIndex) 
+            throws CanceledExecutionException {
         m_spec = computeValues(table, exec, columnIndex);
         m_table = table;
     }
 
     /**
      * The table spec which contains at least all possible values for one
-     * particluar column.
+     * particular column.
      * 
      * @return the data table spec
      */
@@ -171,11 +175,11 @@ public class NominalTable implements DataTable {
      *             least twice in the table
      * @throws CanceledExecutionException if user canceled execution
      * 
-     * @see #computeValues(DataTable,ExecutionMonitor,int...)
+     * @see #computeValues(BufferedDataTable,ExecutionMonitor,int...)
      */
-    public static final DataTableSpec computeValues(final DataTable table,
-            final ExecutionMonitor exec, final String... columns)
-            throws CanceledExecutionException {
+    public static final DataTableSpec computeValues(
+            final BufferedDataTable table, final ExecutionMonitor exec, 
+            final String... columns) throws CanceledExecutionException {
         int[] colIndices = new int[columns.length];
         DataTableSpec spec = table.getDataTableSpec();
         for (int i = 0; i < columns.length; i++) {
@@ -186,7 +190,7 @@ public class NominalTable implements DataTable {
 
     /**
      * Finds all possible values based on a table and a number of given column
-     * indices by itertating through the table.
+     * indices by iterating through the table.
      * 
      * @param table ihe table to get values from
      * @param columnIndex an array of sorted column indices
@@ -197,11 +201,12 @@ public class NominalTable implements DataTable {
      * @throws IndexOutOfBoundsException if a column index is out of range
      * @throws CanceledExecutionException if user canceled operation
      */
-    public static final DataTableSpec computeValues(final DataTable table,
-            final ExecutionMonitor exec, final int... columnIndex)
-            throws CanceledExecutionException {
+    public static final DataTableSpec computeValues(
+            final BufferedDataTable table, final ExecutionMonitor exec, 
+            final int... columnIndex) throws CanceledExecutionException {
         DataTableSpec oldSpec = table.getDataTableSpec();
         // keep all possible values for each column (index)
+        @SuppressWarnings("unchecked")
         Set<DataCell>[] set = new Set[columnIndex.length];
         HashSet<Integer> hash = new HashSet<Integer>();
         for (int c = 0; c < columnIndex.length; c++) {
@@ -221,6 +226,7 @@ public class NominalTable implements DataTable {
             set[c] = new HashSet<DataCell>();
         }
         // overall rows in the table
+        int rowCount = 0;
         for (DataRow row : table) {
             // get value for column indices
             for (int c = 0; c < columnIndex.length; c++) {
@@ -230,6 +236,8 @@ public class NominalTable implements DataTable {
             }
             if (exec != null) {
                 exec.checkCanceled(); // throws exception if user canceled
+                exec.setProgress((double) ++rowCount / table.getRowCount(), 
+                        "" + row.getKey().getId());
             }
         }
         DataColumnSpec[] newColSpecs = new DataColumnSpec[oldSpec
