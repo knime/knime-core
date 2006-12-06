@@ -6,9 +6,9 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/knime64.gif"/>
       <text>
-         Welcome to KNIME v1.1.0 (Build August 16, 2006)
+         Welcome to KNIME v1.2.0 (Build Januar 16, 2007)
 the Konstanz Information Miner
-Copyright, 2003 - 2006
+Copyright, 2003 - 2007
 email: contact@knime.org
 
 This version of KNIME is licensed under the Aladdin Open Source 
@@ -17,7 +17,7 @@ contact us if you can not locate it. More details can be found at
 http://www.knime.org
 
 Based on Eclipse 3.2, www.eclipse.org 
-Uses: Java5, GEF, Log4J, Weka, JFreeChart
+Uses: Java5, GEF, Log4J
       </text>
    </aboutInfo>
 
@@ -31,7 +31,10 @@ Uses: Java5, GEF, Log4J, Weka, JFreeChart
    <windowImages/>
 
    <splash
-      location="org.knime.product" />
+      location="org.knime.product"
+      startupProgressRect="10,10,200,20"
+      startupMessageRect="0,0,200,20"
+      startupForegroundColor="000000" />
    <launcher name="knime">
       <linux icon="/org.knime.product/icons/knime.xpm"/>
       <solaris/>
@@ -94,7 +97,7 @@ Uses: Java5, GEF, Log4J, Weka, JFreeChart
       <feature id="org.eclipse.gef" version="3.2.0.v20060626"/>
       <feature id="org.eclipse.platform" version="3.2.0.v20060609m-AgOexn6hlEUsvBO"/>
       <feature id="org.eclipse.rcp" version="3.2.0.v20060609m-SVDNgVrNoh-MeGG"/>
-      <feature id="org.knime.features.base" version="1.1.0"/>
+      <feature id="org.knime.features.base" version="1.2.0"/>
    </features>
 
 </product>

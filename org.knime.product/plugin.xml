@@ -22,10 +22,19 @@
                value="icons/knime.png"/>
          <property
                name="aboutText"
-               value="Welcome to KNIME v1.1.0 (Build August 16, 2006)&#x0A;the Konstanz Information Miner&#x0A;Copyright, 2003 - 2006&#x0A;email: contact@knime.org&#x0A;&#x0A;This version of KNIME is licensed under the Aladdin Open Source &#x0A;Licence. Please see the license file in the installation directory and &#x0A;contact us if you can not locate it. More details can be found at&#x0A;http://www.knime.org&#x0A;&#x0A;Based on Eclipse 3.2, www.eclipse.org &#x0A;Uses: Java5, GEF, Log4J, Weka, JFreeChart"/>
+               value="Welcome to KNIME v1.2.0 (Build Januar 16, 2007)&#x0A;the Konstanz Information Miner&#x0A;Copyright, 2003 - 2007&#x0A;email: contact@knime.org&#x0A;&#x0A;This version of KNIME is licensed under the Aladdin Open Source &#x0A;Licence. Please see the license file in the installation directory and &#x0A;contact us if you can not locate it. More details can be found at&#x0A;http://www.knime.org&#x0A;&#x0A;Based on Eclipse 3.2, www.eclipse.org &#x0A;Uses: Java5, GEF, Log4J"/>
          <property
                name="aboutImage"
                value="icons/knime64.gif"/>
+         <property
+               name="startupProgressRect"
+               value="10,10,200,20"/>
+         <property
+               name="startupForegroundColor"
+               value="000000"/>
+         <property
+               name="startupMessageRect"
+               value="0,0,200,20"/>
       </product>
    </extension>
    <extension
