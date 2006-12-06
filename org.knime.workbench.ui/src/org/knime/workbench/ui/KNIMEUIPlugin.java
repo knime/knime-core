@@ -76,6 +76,16 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         getImageRegistry().put("knime",
                 imageDescriptorFromPlugin(PLUGIN_ID, "/icons/knime.png"));
 
+//        Display.getDefault().asyncExec(new Runnable() {
+//            public void run() {
+//                InstallWizardAction iwa = new InstallWizardAction();
+//                iwa.run();
+//            }
+//        });
+
+        // InstallWizardAction iwa = new InstallWizardAction();
+        // iwa.run();
+
     }
 
     /**
