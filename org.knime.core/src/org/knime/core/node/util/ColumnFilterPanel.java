@@ -311,8 +311,12 @@ public class ColumnFilterPanel extends JPanel {
         super.add(excludePanel, BorderLayout.CENTER);
     } // ColumnFilterPanel()
     
+    /**
+     * Enables or disables all components on this panel.
+     * @see javax.swing.JComponent#setEnabled(boolean)
+     */
     @Override
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
         m_inclList.setEnabled(enabled);
         m_exclList.setEnabled(enabled);
