@@ -673,7 +673,25 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_insideDelimChange = true;
 
         m_frSettings.setDelimiterUserSet(true);
-
+        
+        // to avoid unnecessary re-analyzing of the file, find out if the
+        // delimiter actually changed.
+        String newDelim = null;
+        if (m_delimField.getSelectedIndex() > -1) {
+            newDelim = 
+                ((Delimiter)m_delimField.getSelectedItem()).getDelimiter();
+        } else {
+            newDelim = FileTokenizerSettings.unescapeString(
+                    (String)m_delimField.getSelectedItem());
+        }
+        for (Delimiter delim : m_frSettings.getAllDelimiters()) {
+            if (delim.getDelimiter().equals(newDelim)) {
+                // the entered pattern is already a delimiter. Nothing changed.
+                m_insideDelimChange = false;
+                return;
+            }
+        }
+        
         // remove all delimiters except row delimiters
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
             if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
@@ -1032,7 +1050,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             return;
         }
 
-        if (forceAnalyze || !newURL.equals(m_frSettings.getDataFileLocation())) {
+        if (forceAnalyze 
+                || !newURL.equals(m_frSettings.getDataFileLocation())) {
 
             // get new settings from the analyzer
 
@@ -1203,8 +1222,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private void saveSettings() throws InvalidSettingsException {
         try {
-
-            URL dataURL = textToURL(m_urlCombo.getEditor().getItem().toString());
+            URL dataURL 
+                = textToURL(m_urlCombo.getEditor().getItem().toString());
             m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
         } catch (MalformedURLException mfue) {
             throw new InvalidSettingsException("Invalid (malformed) URL for "
