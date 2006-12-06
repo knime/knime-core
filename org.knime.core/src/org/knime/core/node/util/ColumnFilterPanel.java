@@ -105,6 +105,18 @@ public class ColumnFilterPanel extends JPanel {
 
     /** Add button. */
     private final JButton m_addButton;
+    
+    /** Search Field in include list. */
+    private final JTextField m_searchFieldIncl;
+    
+    /** Search Button for include list. */
+    private final JButton m_searchButtonIncl;
+    
+    /** Search Field in exclude list. */
+    private final JTextField m_searchFieldExcl;
+    
+    /** Search Button for exclude list. */
+    private final JButton m_searchButtonExcl;
 
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
     private final LinkedHashSet<DataColumnSpec> m_order = 
@@ -224,27 +236,27 @@ public class ColumnFilterPanel extends JPanel {
         final JScrollPane jspIncl = new JScrollPane(m_inclList);
         jspIncl.setMinimumSize(new Dimension(150, 155));
 
-        final JTextField searchFieldIncl = new JTextField(8);
-        JButton searchButtonIncl = new JButton("Search");
+        m_searchFieldIncl = new JTextField(8);
+        m_searchButtonIncl = new JButton("Search");
         ActionListener actionListenerIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                onSearch(m_inclList, m_inclMdl, searchFieldIncl,
+                onSearch(m_inclList, m_inclMdl, m_searchFieldIncl,
                         m_markAllHitsIncl.isSelected());
             }
         };
-        searchFieldIncl.addActionListener(actionListenerIncl);
-        searchButtonIncl.addActionListener(actionListenerIncl);
+        m_searchFieldIncl.addActionListener(actionListenerIncl);
+        m_searchButtonIncl.addActionListener(actionListenerIncl);
         JPanel inclSearchPanel = new JPanel(new BorderLayout());
         inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
                 15));
-        inclSearchPanel.add(searchFieldIncl, BorderLayout.CENTER);
-        inclSearchPanel.add(searchButtonIncl, BorderLayout.EAST);
+        inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
+        inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
         m_markAllHitsIncl = new JCheckBox("Highlight all search hits");
         ActionListener actionListenerAllIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
-                onSearch(m_inclList, m_inclMdl, searchFieldIncl,
+                onSearch(m_inclList, m_inclMdl, m_searchFieldIncl,
                         m_markAllHitsIncl.isSelected());
             }
         };
@@ -265,27 +277,27 @@ public class ColumnFilterPanel extends JPanel {
         final JScrollPane jspExcl = new JScrollPane(m_exclList);
         jspExcl.setMinimumSize(new Dimension(150, 155));
 
-        final JTextField searchFieldExcl = new JTextField(8);
-        JButton searchButtonExcl = new JButton("Search");
+        m_searchFieldExcl = new JTextField(8);
+        m_searchButtonExcl = new JButton("Search");
         ActionListener actionListenerExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                onSearch(m_exclList, m_exclMdl, searchFieldExcl,
+                onSearch(m_exclList, m_exclMdl, m_searchFieldExcl,
                         m_markAllHitsExcl.isSelected());
             }
         };
-        searchFieldExcl.addActionListener(actionListenerExcl);
-        searchButtonExcl.addActionListener(actionListenerExcl);
+        m_searchFieldExcl.addActionListener(actionListenerExcl);
+        m_searchButtonExcl.addActionListener(actionListenerExcl);
         JPanel exclSearchPanel = new JPanel(new BorderLayout());
         exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
                 15));
         exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
-        exclSearchPanel.add(searchFieldExcl, BorderLayout.CENTER);
-        exclSearchPanel.add(searchButtonExcl, BorderLayout.EAST);
+        exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
+        exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Highlight all search hits");
         ActionListener actionListenerAllExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
-                onSearch(m_exclList, m_exclMdl, searchFieldExcl,
+                onSearch(m_exclList, m_exclMdl, m_searchFieldExcl,
                         m_markAllHitsExcl.isSelected());
             }
         };
@@ -318,6 +330,10 @@ public class ColumnFilterPanel extends JPanel {
     @Override
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
+        m_searchFieldIncl.setEnabled(enabled);
+        m_searchButtonIncl.setEnabled(enabled);
+        m_searchFieldExcl.setEnabled(enabled);
+        m_searchButtonExcl.setEnabled(enabled);
         m_inclList.setEnabled(enabled);
         m_exclList.setEnabled(enabled);
         m_markAllHitsIncl.setEnabled(enabled);
