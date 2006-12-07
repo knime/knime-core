@@ -57,6 +57,7 @@ public final class BatchExecutor {
 
         /**
          * TODO Thorsten?
+         * 
          * @param nodeID
          * @param name
          * @param value
@@ -162,7 +163,14 @@ public final class BatchExecutor {
         }
 
         final WorkflowManager wfm = new WorkflowManager();
-        File workflowFile = new File(input, WorkflowManager.WORKFLOW_FILE);
+        File workflowFile =
+                new File(workflowDir, WorkflowManager.WORKFLOW_FILE);
+        if (!workflowFile.exists()) {
+            workflowFile =
+                    new File(workflowFile.listFiles()[0],
+                            WorkflowManager.WORKFLOW_FILE);
+        }
+
         wfm.load(workflowFile, new DefaultNodeProgressMonitor());
 
         for (Option o : options) {
