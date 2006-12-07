@@ -247,7 +247,8 @@ public class ARFFTable implements DataTable {
         for (int c = 0; c < colSpecs.size(); c++) {
             // compare it with all specs with higher index
             for (int h = c + 1; h < colSpecs.size(); h++) {
-                if (colSpecs.get(c).getName().equals(colSpecs.get(h).getName())) {
+                if (colSpecs.get(c).getName().equals(
+                        colSpecs.get(h).getName())) {
                     throw new InvalidSettingsException("Two attributes with "
                             + "equal names defined in header of file '"
                             + fileLoc + "'.");

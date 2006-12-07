@@ -311,20 +311,21 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_url.setSelectedItem(settings.getString(
-                ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
-        m_rowPrefix.setText(settings.getString(
-                ARFFReaderNodeModel.CFGKEY_ROWPREFIX, ""));
-
+        
         // set the file history for the combo box.
         // disconnect the ItemChangelistener first
         m_url.removeItemListener(this);
         m_url.removeAllItems();
         for (String str : ARFFReaderNodeModel.getFileHistory(
-        /* removeNotExistingFiles */true)) {
+                /* removeNotExistingFiles */true)) {
             m_url.addItem(str);
         }
         m_url.addItemListener(this);
+
+        m_url.setSelectedItem(settings.getString(
+                ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
+        m_rowPrefix.setText(settings.getString(
+                ARFFReaderNodeModel.CFGKEY_ROWPREFIX, ""));
 
         updateFileError();
 

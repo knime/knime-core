@@ -247,7 +247,8 @@ public class ARFFReaderNodeModel extends NodeModel {
      *            removed from the global history though
      * @return the current file history associated with the ARFF reader/writer
      */
-    public static String[] getFileHistory(final boolean removeNotExistingFiles) {
+    public static String[] getFileHistory(
+            final boolean removeNotExistingFiles) {
 
         StringHistory h = StringHistory.getInstance(ARFF_HISTORY_ID);
         Vector<String> allLocs = new Vector<String>();
