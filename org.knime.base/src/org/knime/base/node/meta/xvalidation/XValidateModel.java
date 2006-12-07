@@ -150,7 +150,7 @@ public class XValidateModel extends MetaNodeModel {
     protected void validateSettings(final File nodeFile,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         super.validateSettings(nodeFile, settings);
-        m_settings.loadSettingsFrom(settings);
+        (new XValidateSettings()).loadSettingsFrom(settings);
     }
 
     /**
@@ -295,12 +295,13 @@ public class XValidateModel extends MetaNodeModel {
         m_settings.saveSettingsTo(settings);
     }
 
+    /**
+     * @see org.knime.core.node.meta.MetaNodeModel#reset()
+     */
     @Override
     protected void reset() {
         super.reset();
         m_aggregateModel.setIgnoreReset(false);
         m_partitionModel.setIgnoreNextReset(false);        
     }
-    
-    
 }
