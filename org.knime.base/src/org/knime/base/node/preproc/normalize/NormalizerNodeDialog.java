@@ -93,7 +93,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
      * Creates a new dialog for the Normalize Node.
      */
     @SuppressWarnings("unchecked")
-    NormalizerNodeDialog() {
+    public NormalizerNodeDialog() {
         super();
         JPanel panel = generateContent();
         m_filterpanel = new ColumnFilterPanel(DoubleValue.class);

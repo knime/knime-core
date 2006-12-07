@@ -48,7 +48,7 @@ public class NormalizerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new NormalizerNodeModel();
+        return new NormalizerNodeModel(1, 1, 0, 1);
     }
 
     /**

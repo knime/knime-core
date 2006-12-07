@@ -394,7 +394,7 @@
            id="org.knime.base.node.meta.MetaNodeFactory01"/>
      <node
            category-path="/manipulation/column"
-           factory-class="org.knime.base.node.preproc.normalize.NormalizeApplyNodeFactory"
+           factory-class="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"
            id="org.knime.base.node.preproc.normalize.NormalizeApplyNodeFactory"/>
      <node
            category-path="/manipulation/column"

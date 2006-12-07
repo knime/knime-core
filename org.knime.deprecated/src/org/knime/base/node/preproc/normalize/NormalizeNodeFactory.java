@@ -30,17 +30,18 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * Factory class for the Normalize Node.
+ * This class has been replaced by the {@link NormalizerNodeFactory}.
  * 
  * @author Nicolas Cebron, University of Konstanz
  */
+@Deprecated 
 public class NormalizeNodeFactory extends NodeFactory {
     /**
      * @see NodeFactory#createNodeDialogPane()
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new NormalizeNodeDialog();
+        return new NormalizerNodeDialog();
     }
 
     /**
@@ -48,7 +49,7 @@ public class NormalizeNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new NormalizeNodeModel();
+        return new NormalizerNodeModel(1, 1, 0, 0);
     }
 
     /**

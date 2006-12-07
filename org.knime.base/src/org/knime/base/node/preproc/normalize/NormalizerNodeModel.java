@@ -121,12 +121,18 @@ public class NormalizerNodeModel extends NodeModel {
     static final String CFG_MODEL_NAME = "normalize";
 
     /**
-     * One input, one output.
+     * Creates an new normalizer using the given number of in- and output data
+     * and model ports.
+     * @param dataIns number data input ports
+     * @param dataOuts number data output ports
+     * @param modelIns number model input ports  
+     * @param modelOuts number model output ports
      */
-    NormalizerNodeModel() {
-        super(1, 1, 0, 1);
+    public NormalizerNodeModel(final int dataIns, final int dataOuts, 
+            final int modelIns, final int modelOuts) {
+        super(dataIns, dataOuts, modelIns, modelOuts);
     }
-
+    
     /**
      * All {@link org.knime.core.data.def.IntCell} columns are converted to
      * {@link org.knime.core.data.def.DoubleCell} columns.
