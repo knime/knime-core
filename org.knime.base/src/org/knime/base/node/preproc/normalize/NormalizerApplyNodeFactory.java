@@ -28,7 +28,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class NormalizeApplyNodeFactory extends NodeFactory {
+public class NormalizerApplyNodeFactory extends NodeFactory {
 
     /**
      * @see NodeFactory#createNodeDialogPane()
@@ -43,7 +43,7 @@ public class NormalizeApplyNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new NormalizeApplyNodeModel();
+        return new NormalizerApplyNodeModel();
     }
 
     /**

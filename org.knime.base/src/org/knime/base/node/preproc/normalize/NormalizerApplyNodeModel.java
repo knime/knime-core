@@ -38,14 +38,14 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class NormalizeApplyNodeModel extends NodeModel {
+public class NormalizerApplyNodeModel extends NodeModel {
 
     private ModelContentRO m_content;
     
     /**
      * Constructor.
      */
-    public NormalizeApplyNodeModel() {
+    public NormalizerApplyNodeModel() {
         super(1, 1, 1, 0);
     }
 
