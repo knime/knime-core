@@ -282,15 +282,17 @@ public abstract class NodeFactory {
             Document doc = null;
             Exception exception = null;
             try {
-                parser.setErrorHandler(new DefaultHandler() {
-                    @Override
-                    public void error(final SAXParseException ex)
-                            throws SAXException {
-                        m_logger.coding("XML node file does not conform with"
-                                + " DTD: " + ex.getMessage(), ex);
-                    }
-                });
-                doc = parser.parse(new InputSource(propInStream));
+                synchronized(parser) {
+                    parser.setErrorHandler(new DefaultHandler() {
+                        @Override
+                        public void error(final SAXParseException ex)
+                                throws SAXException {
+                            m_logger.coding("XML node file does not conform "
+                                    + "with DTD: " + ex.getMessage(), ex);
+                        }
+                    });
+                    doc = parser.parse(new InputSource(propInStream));
+                }
             } catch (SAXException ex) {
                 exception = ex;
             } catch (IOException ex) {
