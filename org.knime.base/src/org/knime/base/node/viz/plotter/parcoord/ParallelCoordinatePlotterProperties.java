@@ -43,8 +43,8 @@ public class ParallelCoordinatePlotterProperties extends
 
     /**
      * Default tab, column selection tab, missing value handling and appearance.
-     *
      */
+    @SuppressWarnings("unchecked")
     public ParallelCoordinatePlotterProperties() {
         super(new Class[]{DataValue.class});
         m_missingValues = new ParallelCoordinatesMissingValueTab();

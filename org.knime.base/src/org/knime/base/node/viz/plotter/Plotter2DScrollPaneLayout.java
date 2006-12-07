@@ -289,7 +289,8 @@ public class Plotter2DScrollPaneLayout extends ScrollPaneLayout {
                                 .getSize());
                     }
                 }
-                if (hsb != null && hsbPolicy == HORIZONTAL_SCROLLBAR_AS_NEEDED) {
+                if (hsb != null 
+                        && hsbPolicy == HORIZONTAL_SCROLLBAR_AS_NEEDED) {
                     boolean newHSBbNeeded = !viewTracksViewportWidth
                             && (viewPrefSize.width > extentSize.width);
                     if (newHSBbNeeded != hsbNeeded) {
