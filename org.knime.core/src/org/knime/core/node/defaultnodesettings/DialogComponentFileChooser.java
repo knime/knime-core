@@ -25,19 +25,20 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.awt.Component;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -49,7 +50,8 @@ import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
 
 /**
- * A standard component allowing to choose a location (directory) and file name.
+ * A standard component allowing to choose a location(directory) and/or file
+ * name.
  * 
  * @author M. Berthold, University of Konstanz
  */
@@ -61,10 +63,12 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     private final JButton m_browseButton;
 
+    private final TitledBorder m_border;
+
     /**
      * Constructor that creates a file chooser with an
      * {@link JFileChooser#OPEN_DIALOG} that filters files according to the
-     * given extensions.
+     * given extensions. Also non-existing paths are accepted.
      * 
      * @param stringModel the model holding the value
      * @param historyID to identify the file history
@@ -76,8 +80,8 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * Constructor that creates a file chooser of the given type without a file
-     * filter.
+     * Constructor that creates a file/directory chooser of the given type
+     * without a file filter. Also non-existing paths are accepted.
      * 
      * @param stringModel the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
@@ -95,7 +99,8 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     /**
      * Constructor that creates a file chooser of the given type that filters
-     * the files according to the given extensions.
+     * the files according to the given extensions. Also non-existing paths are
+     * accepted.
      * 
      * @param stringModel the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
@@ -111,8 +116,9 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * Constructor that creates a file chooser of the given type that filters
-     * the files according to the given extensions.
+     * Constructor that creates a file or directory chooser of the given type
+     * that filters the files according to the given extensions. Also
+     * non-existing paths are accepted.
      * 
      * @param stringModel the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
@@ -131,26 +137,25 @@ public class DialogComponentFileChooser extends DialogComponent {
         setLayout(new FlowLayout());
 
         JPanel p = new JPanel();
-
         m_fileHistory = StringHistory.getInstance(historyID);
         m_fileComboBox = new JComboBox();
         m_fileComboBox.setPreferredSize(new Dimension(300, m_fileComboBox
                 .getPreferredSize().height));
         m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
+
         for (String fileName : m_fileHistory.getHistory()) {
             m_fileComboBox.addItem(fileName);
         }
-        
+
         m_browseButton = new JButton("Browse...");
 
         String title = directoryOnly ? "Selected Directory:" : "Selected File:";
-        Border b = BorderFactory.createTitledBorder(title);
-        p.setBorder(b);
+        m_border = BorderFactory.createTitledBorder(title);
+        p.setBorder(m_border);
         p.add(m_fileComboBox);
         p.add(m_browseButton);
         super.add(p);
-        
-       
+
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
@@ -204,7 +209,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             public void actionPerformed(final ActionEvent e) {
                 // transfer the new filename into the settings model
                 try {
-                    updateModel();
+                    updateModel(true); // don't color the combobox red.
                 } catch (InvalidSettingsException ise) {
                     // ignore it here.
                 }
@@ -221,12 +226,13 @@ public class DialogComponentFileChooser extends DialogComponent {
     /**
      * Transfers the value from the component into the settings model.
      * 
+     * @param noColoring if set true, the component will not be marked red, even
+     *            if the entered value was erroneous.
      * @throws InvalidSettingsException if the entered filename is null or
      *             emtpy.
      */
-    private void updateModel() throws InvalidSettingsException {
-        // we set the selected value in the settings model. And store it in
-        // the file history.
+    private void updateModel(final boolean noColoring)
+            throws InvalidSettingsException {
 
         String file = (String)m_fileComboBox.getSelectedItem();
         if ((file != null) && (file.length() > 0)) {
@@ -235,21 +241,45 @@ public class DialogComponentFileChooser extends DialogComponent {
                 ((SettingsModelString)getModel()).setStringValue(file);
             } catch (RuntimeException e) {
                 // if value was not accepted by setter method
-                Component comp =
-                        m_fileComboBox.getEditor().getEditorComponent();
-                if (comp instanceof JTextField) {
-                    showError((JTextField)comp);
+                if (!noColoring) {
+                    showError(m_fileComboBox);
                 }
                 throw new InvalidSettingsException(e);
             }
 
         } else {
-            Component comp = m_fileComboBox.getEditor().getEditorComponent();
-            if (comp instanceof JTextField) {
-                showError((JTextField)comp);
+            if (!noColoring) {
+                showError(m_fileComboBox);
             }
             throw new InvalidSettingsException("Please specify a filename.");
         }
+    }
+
+    /**
+     * Seems the super.showError doesn't work with comboboxes. This is to
+     * replace it with a working version.
+     * 
+     * @param box the box to color red.
+     */
+    private void showError(final JComboBox box) {
+
+        String selection = (String)box.getSelectedItem();
+
+        if (selection.length() == 0) {
+            box.setBackground(Color.RED);
+        } else {
+            box.setForeground(Color.RED);
+        }
+        box.requestFocusInWindow();
+
+        // change the color back as soon as he changes something
+        box.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                box.setForeground(DEFAULT_FG);
+                box.setBackground(DEFAULT_BG);
+                box.removeItemListener(this);
+            }
+        });
     }
 
     /**
@@ -281,7 +311,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     @Override
     void validateStettingsBeforeSave() throws InvalidSettingsException {
         // just in case we didn't get notified about the last change...
-        updateModel();
+        updateModel(false); // mark the erroneous component red.
         // store the saved filename in the history
         m_fileHistory.add(((SettingsModelString)getModel()).getStringValue());
     }
@@ -305,4 +335,20 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_fileComboBox.setEnabled(enabled);
     }
 
+    /**
+     * Replaces the title displayed in the border that surrounds the editfield
+     * and browse button with the specified new title. The default title of the
+     * component is "Selected File:" or "Selected Directory:".
+     * 
+     * @param newTitle the new title to display in the border.
+     * 
+     * @throws NullPointerException if the new title is null.
+     */
+    public void setBorderTitle(final String newTitle) {
+        if (newTitle == null) {
+            throw new NullPointerException("New title to display can't"
+                    + " be null.");
+        }
+        m_border.setTitle(newTitle);
+    }
 }
