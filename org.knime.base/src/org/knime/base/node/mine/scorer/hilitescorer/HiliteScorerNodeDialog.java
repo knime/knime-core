@@ -135,7 +135,7 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * Sets the selected columns inside the {@link ScorerNodeModel}.
+     * Sets the selected columns inside the {@link HiliteScorerNodeModel}.
      * 
      * @param settings the object to write the settings into
      * @throws InvalidSettingsException if the column selection is invalid

@@ -41,12 +41,13 @@ public class ConfusionTableModel extends AbstractTableModel {
     private String[] m_headers;
 
     /**
-     * Constructs confustion table model from the score count and the headers.
+     * Constructs confusion table model from the score count and the headers.
      * 
      * @param scoreCount a 2-D int array representing the confusion matrix.
      * @param headers the names of the attributes to display in the table
      */
-    public ConfusionTableModel(final int[][] scoreCount, final String[] headers) {
+    public ConfusionTableModel(final int[][] scoreCount, 
+            final String[] headers) {
         m_scoreCount = scoreCount;
         m_headers = headers;
     }
