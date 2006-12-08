@@ -40,6 +40,7 @@ import org.knime.core.node.NodeSettingsWO;
  * value. Provides label and checkbox as well as functionality to load/store
  * into config object.
  * 
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * @author M. Berthold, University of Konstanz
  */
 public final class DialogComponentBoolean extends DialogComponent {

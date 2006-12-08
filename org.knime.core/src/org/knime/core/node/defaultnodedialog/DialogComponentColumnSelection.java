@@ -43,6 +43,7 @@ import org.knime.core.node.util.ColumnSelectionPanel;
  * list (possibly filtered by a given {@link org.knime.core.data.DataCell}
  * type) as well as functionality to load/store into config object.
  * 
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentColumnSelection extends DialogComponent {

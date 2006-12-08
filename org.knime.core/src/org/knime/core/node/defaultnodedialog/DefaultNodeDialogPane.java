@@ -50,6 +50,7 @@ import org.knime.core.node.NotConfigurableException;
  * objects.
  * 
  * @author M. Berthold, University of Konstanz
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  */
 public class DefaultNodeDialogPane extends NodeDialogPane {
     private final List<DialogComponent> m_dialogComponents;

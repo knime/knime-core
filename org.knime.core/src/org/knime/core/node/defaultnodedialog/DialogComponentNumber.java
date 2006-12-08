@@ -39,6 +39,7 @@ import org.knime.core.node.NodeSettingsWO;
  * value. Provides label and spinner that checks ranges as well as functionality
  * to load/store into config object.
  * 
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentNumber extends DialogComponent {

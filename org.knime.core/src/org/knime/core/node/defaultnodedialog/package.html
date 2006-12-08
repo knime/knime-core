@@ -24,7 +24,14 @@
 -->
 </head>
 <body>
-Package contains standard components to build up a simple NodeDialog
+The classes in this package are all obsolete. Please use the corresponding
+components from the {@link org.knime.core.node.defaultnodesettings defaultnodesettings}
+package. The advantage of the new classes over the ones of this package is,
+they use "settings models" for storing the value of the components. They provide
+a type safe method of retrieving the value and methods for saving and loading
+the value.
+
+This Package contains standard components to build up a simple NodeDialog
 quickly. DefaultNodeDialog holds a series of Components that can handle
 editing, load, and save of standard types, such as doubles, integers,
 checkboxes etc.

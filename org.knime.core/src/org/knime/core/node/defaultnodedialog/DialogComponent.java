@@ -45,6 +45,7 @@ import org.knime.core.node.NotConfigurableException;
  * 
  * @see DefaultNodeDialogPane
  * 
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * @author M. Berthold, University of Konstanz
  */
 public abstract class DialogComponent extends JPanel {

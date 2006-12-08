@@ -47,6 +47,7 @@ import sun.misc.BASE64Encoder;
  * Provide a standard component for a dialog that allows to edit a text field.
  * 
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * 
  */
 public final class DialogComponentPasswordField extends DialogComponent {

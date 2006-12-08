@@ -44,6 +44,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * Default component for dialogs allowing to select a subset of the available
  * columns.
  * 
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentColumnFilter extends DialogComponent {

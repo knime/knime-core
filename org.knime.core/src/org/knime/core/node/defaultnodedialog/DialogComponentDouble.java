@@ -42,6 +42,7 @@ import org.knime.core.node.NodeSettingsWO;
  * value. Provides label and {@link javax.swing.JFormattedTextField} that checks
  * ranges as well as functionality to load/store into config object.
  * 
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * @author Giuseppe Di Fatta, University of Konstanz
  * 
  */

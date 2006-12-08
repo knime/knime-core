@@ -55,6 +55,7 @@ import org.knime.core.util.SimpleFileFilter;
  * A standard component allowing to choose a location (directory) and file name.
  * 
  * @author M. Berthold, University of Konstanz
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  */
 public class DialogComponentFileChooser extends DialogComponent {
 

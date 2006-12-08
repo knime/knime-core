@@ -42,6 +42,7 @@ import org.knime.core.node.NodeSettingsWO;
  * of options provided as a list of String elements.
  * 
  * @author Giuseppe Di Fatta, University of Konstanz
+ * @deprecated use classes in org.knime.core.node.defaultnodesettings instead
  * 
  */
 public class DialogComponentComboBox extends DialogComponent {
