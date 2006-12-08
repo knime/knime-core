@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Jun 7, 2006 (wiswedel): created
+ *   Jun 7, 2006 (sieb): created
  */
 package org.knime.workbench.ui.navigator;
 
@@ -77,7 +77,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     public KnimeResourceNavigator() {
         super();
 
-        LOGGER.info("Knime resource navigator created");
+        LOGGER.debug("Knime resource navigator created");
         // register listener to check wether prjects have been added
         // or renamed
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
