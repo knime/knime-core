@@ -191,7 +191,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
      * 
      * @param newXColumn the new {@link org.knime.core.data.DataColumnSpec}. 
      */
-    private void xColumnChanged(final DataColumnSpec newXColumn) {
+    private synchronized void xColumnChanged(final DataColumnSpec newXColumn) {
         if (!newXColumn.equals(m_selectedXColumn)) {
             LOGGER.debug("x column changed: " 
                     + newXColumn.getName());
@@ -212,7 +212,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
      * 
      * @param newYColumn the new {@link org.knime.core.data.DataColumnSpec}. 
      */
-    private void yColumnChanged(final DataColumnSpec newYColumn) {
+    private synchronized void yColumnChanged(final DataColumnSpec newYColumn) {
         if (!newYColumn.equals(m_selectedYColumn)) {
             LOGGER.debug("y column changed: " 
                     + newYColumn.getName());

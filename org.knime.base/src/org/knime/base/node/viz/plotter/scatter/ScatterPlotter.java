@@ -87,6 +87,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
                             setDotSize(getScatterPlotterProperties()
                                     .getDotSize());
                             updateSize();
+                            getDrawingPane().repaint();
                         }
 
                     });

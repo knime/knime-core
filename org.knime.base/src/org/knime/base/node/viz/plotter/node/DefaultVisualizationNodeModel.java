@@ -71,6 +71,11 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     public DefaultVisualizationNodeModel() {
         super(1, 0);
     }
+    
+    public DefaultVisualizationNodeModel(final int nrInports, 
+            final int nrOutports) {
+        super(nrInports, nrOutports);
+    }
 
 
     /**
