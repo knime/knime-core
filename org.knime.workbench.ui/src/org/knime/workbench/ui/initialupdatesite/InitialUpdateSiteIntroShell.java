@@ -188,10 +188,10 @@ public class InitialUpdateSiteIntroShell {
             Composite parent = shell.getParent();
             if (parent != null) {
                 shell.setBounds(parent.getBounds().width / 2, parent
-                        .getBounds().height / 2, 530, 245);
+                        .getBounds().height / 2, 550, 255);
             } else {
                 shell.setBounds(display.getBounds().width / 2, display
-                        .getBounds().height / 2, 530, 245);
+                        .getBounds().height / 2, 550, 255);
             }
 
             okButton.setFocus();
