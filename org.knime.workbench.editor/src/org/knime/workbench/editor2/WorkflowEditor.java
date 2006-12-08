@@ -1179,6 +1179,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                         LOGGER.warn("Could not save workflow,"
                                 + " node execution in progress");
                         monitor.setCanceled(true);
+                    } catch (Error e) {
+                        LOGGER.error("Could not save workflow", e);
+
+                        exceptionMessage.append("Could not save workflow: "
+                                + e.getMessage());
+                        monitor.setCanceled(true);
                     } catch (Exception e) {
                         LOGGER.error("Could not save workflow", e);
 
