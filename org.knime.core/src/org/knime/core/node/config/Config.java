@@ -1663,7 +1663,7 @@ public abstract class Config extends AbstractConfigEntry
         // print unsupported Object message
         if (o != null && !UNSUPPORTED.contains(o.getClass())) {
             UNSUPPORTED.add(o.getClass());
-            LOGGER.warn("Class " + o.getClass() 
+            LOGGER.debug("Class " + o.getClass() 
                     + " not yet supported in Config, serializing it.");
         }
         // serialize object
