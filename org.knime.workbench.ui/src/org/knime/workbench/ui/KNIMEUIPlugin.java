@@ -32,7 +32,9 @@ import java.util.ResourceBundle;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.internal.ide.update.InstallWizardAction;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.workbench.ui.initialupdatesite.InitialUpdateSiteIntroShell;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -76,15 +78,24 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         getImageRegistry().put("knime",
                 imageDescriptorFromPlugin(PLUGIN_ID, "/icons/knime.png"));
 
-//        Display.getDefault().asyncExec(new Runnable() {
-//            public void run() {
-//                InstallWizardAction iwa = new InstallWizardAction();
-//                iwa.run();
-//            }
-//        });
+        try {
 
-        // InstallWizardAction iwa = new InstallWizardAction();
-        // iwa.run();
+            if (InitialUpdateSiteIntroShell.loadNextTimeShowup()) {
+
+                InitialUpdateSiteIntroShell shell =
+                        new InitialUpdateSiteIntroShell();
+
+                boolean update = shell.open();
+
+                if (update) {
+                    InstallWizardAction iwa = new InstallWizardAction();
+                    iwa.run();
+                }
+            }
+
+        } catch (Throwable t) {
+            // do nothing
+        }
 
     }
 
