@@ -30,10 +30,12 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * This class has been replaced by the {@link NormalizerNodeFactory}.
+ * This class has been replaced by the 
+ * {@link org.knime.base.node.preproc.normalize.NormalizerNodeFactory}.
  * 
  * @author Nicolas Cebron, University of Konstanz
- * @deprecated use {@link NormalizerNodeFactory}
+ * @deprecated use 
+ * {@link org.knime.base.node.preproc.normalize.NormalizerNodeFactory}
  */
 @Deprecated 
 public class NormalizeNodeFactory extends NodeFactory {
