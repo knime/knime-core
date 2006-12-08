@@ -21,6 +21,7 @@
  */
 package org.knime.base.node.mine.scorer;
 
+import org.knime.base.node.mine.scorer.hilitescorer.HiliteScorerNodeFactory;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -30,7 +31,9 @@ import org.knime.core.node.NodeView;
  * The factory for the scorer node.
  * 
  * @author Christoph Sieb, University of Konstanz
+ * @deprecated use {@link HiliteScorerNodeFactory}
  */
+@Deprecated
 public class ScorerNodeFactory extends NodeFactory {
     /**
      * @see org.knime.core.node.NodeFactory#createNodeModel()

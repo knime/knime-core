@@ -28,7 +28,10 @@ import org.knime.core.node.NodeView;
 
 /**
  * @author Peter Ohl, University of Konstanz
+ * @deprecated use 
+ * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeFactory}
  */
+@Deprecated
 public class ScatterPlotNodeFactory extends NodeFactory {
     /**
      * @return <b>true</b>.

@@ -223,6 +223,7 @@ public class ScatterProps extends PlotterPropertiesPanel {
      * 
      * @param tSpec a table spec containing the new columns
      */
+    @SuppressWarnings("unchecked")
     public void setSelectables(final DataTableSpec tSpec) {
         setSelectables(tSpec, DataValue.class);
     }

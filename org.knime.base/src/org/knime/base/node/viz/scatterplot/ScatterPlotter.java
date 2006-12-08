@@ -780,8 +780,8 @@ public class ScatterPlotter extends AbstractPlotter2D implements
      */
     public void hiliteSelected() {
         if (m_hiliteHdlr != null) {
-            m_hiliteHdlr
-                    .fireHiLiteEvent(getScatterPlotterDrawingPane().getSelectedSet());
+            m_hiliteHdlr.fireHiLiteEvent(
+                    getScatterPlotterDrawingPane().getSelectedSet());
             repaint();
         }
     }

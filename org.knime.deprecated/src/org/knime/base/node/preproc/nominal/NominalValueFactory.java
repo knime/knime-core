@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.preproc.nominal;
 
+import org.knime.base.node.preproc.domain.DomainNodeFactory;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -33,7 +34,9 @@ import org.knime.core.node.NodeView;
  * Factory for the nominal value collector.
  * 
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated use {@link DomainNodeFactory}
  */
+@Deprecated
 public class NominalValueFactory extends NodeFactory {
     /**
      * @see org.knime.core.node.NodeFactory#createNodeModel()

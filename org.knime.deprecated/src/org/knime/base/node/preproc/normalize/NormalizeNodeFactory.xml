@@ -2,7 +2,10 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./normalize.png" type="Manipulator" deprecated="true">
     <name>Normalizer</name>
-    <shortDescription>Normalizes the attributes of a table.</shortDescription>
+    <shortDescription>
+    	This node is obsolete! Please use the new Normailzer located in the
+    	Data Manipulation - Column category.
+    </shortDescription>
     <fullDescription>
         <intro>
 	        This node normalizes the values of all (numeric) columns. In the

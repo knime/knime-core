@@ -198,7 +198,8 @@ final class ParallelCoordinatesNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
         File f = new File(nodeInternDir, INTERNALS_FILE_NAME);
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f));
+        ObjectOutputStream out = 
+            new ObjectOutputStream(new FileOutputStream(f));
         out.writeObject(m_content);
         out.close();
     }

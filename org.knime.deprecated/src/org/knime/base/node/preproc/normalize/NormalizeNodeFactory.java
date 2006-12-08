@@ -33,6 +33,7 @@ import org.knime.core.node.NodeView;
  * This class has been replaced by the {@link NormalizerNodeFactory}.
  * 
  * @author Nicolas Cebron, University of Konstanz
+ * @deprecated use {@link NormalizerNodeFactory}
  */
 @Deprecated 
 public class NormalizeNodeFactory extends NodeFactory {

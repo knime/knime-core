@@ -28,7 +28,10 @@ import org.knime.core.node.NodeView;
 
 /**
  * @author Simona Pintillie, University of Konstanz
+ * @deprecated use 
+ *{@link org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeFactory}
  */
+@Deprecated
 public class ParallelCoordinatesNodeFactory extends NodeFactory {
 
     
@@ -67,8 +70,8 @@ public class ParallelCoordinatesNodeFactory extends NodeFactory {
 
     /**
      * @see org.knime.core.node.NodeFactory#hasDialog()
-     */@Override
-    
+     */
+    @Override
     public boolean hasDialog() {
         return true;
     }

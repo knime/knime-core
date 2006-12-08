@@ -4,8 +4,8 @@
 	<name>Nominal Values</name>
 	
 	<shortDescription>
-	    Collects and sets all nominal values for the columns selected in the
-	    dialog.
+	    This node is obsolete! Please use the new Domain Calculator located in 
+	    the Data Manipulation - Column category.
 	</shortDescription>
 	
 	<fullDescription>

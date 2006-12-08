@@ -5,7 +5,8 @@
 	<name>Parallel Coordinates</name>
 	
 	<shortDescription>
-    	Visualizes data or Fuzzy Rules in Parallel Coordinates.
+        This node is obsolete! Please use the new Parallel Coordinates located 
+        in the Data Views category.
 	</shortDescription>
 	
 	<fullDescription>

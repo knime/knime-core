@@ -4,7 +4,8 @@
 	<name>Scatterplot</name>
 	
 	<shortDescription>
-	    Creates a scatterplot of two selectable attributes.
+        This node is obsolete! Please use the new Parallel Coordinates located 
+        in the Data Views category.
 	</shortDescription>
 	
 	<fullDescription>
