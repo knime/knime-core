@@ -28,6 +28,7 @@ package org.knime.base.data.bitvector;
 import java.util.BitSet;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
@@ -52,13 +53,30 @@ public class Hex2BitVectorCellFactory extends BitVectorCellFactory {
     private int m_nrOfSetBits = 0;
 
     private int m_nrOfNotSetBits = 0;
+    
+    private boolean m_wasSuccessful;
+    
+    
+    /**
+     * Create new cell factory that provides one column given by newColSpec.
+     * 
+     * @param colSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     */
+    public Hex2BitVectorCellFactory(final DataColumnSpec colSpec, 
+            final int columnIndex) {
+        super(colSpec, columnIndex);
+    }
+
 
     /**
-     * @see BitVectorCellFactory#getReplacement(DataRow, int)
+     * 
+     * @see org.knime.core.data.container.SingleCellFactory#getCell(
+     * org.knime.core.data.DataRow)
      */
     @Override
-    public DataCell getReplacement(final DataRow row, final int column) {
-        DataCell old = row.getCell(column);
+    public DataCell getCell(final DataRow row) {
+        DataCell old = row.getCell(getColumnIndex());
         if (old.isMissing()) {
             return DataType.getMissingCell();
         }
@@ -83,12 +101,24 @@ public class Hex2BitVectorCellFactory extends BitVectorCellFactory {
                 }
                 newCell = DataType.getMissingCell();
             }
+            if (!newCell.equals(DataType.getMissingCell())){
+                m_wasSuccessful = true;
+            }
             return newCell;
         } else {
             LOGGER.debug("Unable to convert \"" + old + "\" to bit vector, "
                     + "not a string value cell.");
             return DataType.getMissingCell();
         }
+    }
+    
+    /**
+     * 
+     * @return true if at least one conversion was successful.
+     */
+    @Override
+    public boolean wasSuccessful() {
+        return m_wasSuccessful;
     }
 
     /**

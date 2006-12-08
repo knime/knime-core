@@ -77,6 +77,8 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private JRadioButton m_stringRadio;
 
     private boolean m_hasStringCol = false;
+    
+    private JCheckBox m_replaceBox;
 
 
     private static final int COMP_HEIGHT = 20;
@@ -173,8 +175,16 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(numericPanel);
         panel.add(stringPanel);
-
+        panel.add(createReplacePanel());
+        
         addTab("Default Settings", panel);
+    }
+    
+    private JPanel createReplacePanel() {
+        JPanel panel = new JPanel();
+        m_replaceBox = new JCheckBox("Replace column(s)", false);
+        panel.add(m_replaceBox);
+        return panel;
     }
 
     private JPanel createNumericInputPanel() {
@@ -294,6 +304,8 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
                 BitVectorGeneratorNodeModel.CFG_THRESHOLD, 1.0));
         m_meanPercentage.setValue(settings.getInt(
                 BitVectorGeneratorNodeModel.CFG_MEAN_THRESHOLD, 100));
+        m_replaceBox.setSelected(settings.getBoolean(
+                BitVectorGeneratorNodeModel.CFG_REPLACE, false));
         try {
             m_stringColumn.loadSettingsFrom(settings, specs);
         } catch (InvalidSettingsException e) {
@@ -319,6 +331,8 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
                 (Double)m_threshold.getValue());
         settings.addInt(BitVectorGeneratorNodeModel.CFG_MEAN_THRESHOLD,
                 (Integer)m_meanPercentage.getValue());
+        settings.addBoolean(BitVectorGeneratorNodeModel.CFG_REPLACE, 
+                m_replaceBox.isSelected());
         m_stringColumn.saveSettingsTo(settings);
     }
 }

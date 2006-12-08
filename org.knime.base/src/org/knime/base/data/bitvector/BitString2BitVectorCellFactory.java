@@ -27,6 +27,7 @@ package org.knime.base.data.bitvector;
 import java.util.BitSet;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
@@ -45,46 +46,68 @@ public class BitString2BitVectorCellFactory extends BitVectorCellFactory {
 
     private int m_nrOfNotSetBits = 0;
 
+    private boolean m_wasSuccessful = false;
+
     /**
-     * @see BitVectorCellFactory#getReplacement(
-     *      org.knime.core.data.DataRow, int)
+     * Create new cell factory that provides one column given by newColSpec.
+     * 
+     * @param colSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     */
+    public BitString2BitVectorCellFactory(final DataColumnSpec colSpec,
+            final int columnIndex) {
+        super(colSpec, columnIndex);
+    }
+
+    /**
+     * 
+     * @see org.knime.core.data.container.SingleCellFactory#getCell(
+     *      org.knime.core.data.DataRow)
      */
     @Override
-    public DataCell getReplacement(final DataRow row, final int column) {
+    public DataCell getCell(final DataRow row) {
         BitSet bitSet = new BitSet();
-        DataCell newCell = DataType.getMissingCell();
-        for (DataCell cell : row) {
-            if (!cell.getType().isCompatible(StringValue.class)) {
-                LOGGER.warn(cell + " is not a String! "
-                        + "Replacing it with missing value");
-                return newCell;
-            } else {
-                String bitString = ((StringValue)cell).getStringValue();
-                bitSet = new BitSet(bitString.length());
-                int pos = 0;
-                for (int i = 0; i < bitString.length(); i++) {
-                    char c = bitString.charAt(i);
-                    if (c == '0') {
-                        pos++;
-                        m_nrOfNotSetBits++;
-                    } else if (c == '1') {
-                        bitSet.set(pos++);
-                        m_nrOfSetBits++;
-                    } else {
-                        LOGGER.warn("Found invalid character: " + c
-                                + ". Returning missing cell!");
-                        return newCell;
+        DataCell cell = row.getCell(getColumnIndex());
+        if (!cell.getType().isCompatible(StringValue.class)) {
+            LOGGER.warn(cell + " is not a String! "
+                    + "Replacing it with missing value");
+            return DataType.getMissingCell();
+        } else {
+            String bitString = ((StringValue)cell).getStringValue();
+            bitSet = new BitSet(bitString.length());
+            int pos = 0;
+            for (int i = 0; i < bitString.length(); i++) {
+                char c = bitString.charAt(i);
+                if (c == '0') {
+                    pos++;
+                    m_nrOfNotSetBits++;
+                } else if (c == '1') {
+                    bitSet.set(pos++);
+                    m_nrOfSetBits++;
+                } else {
+                    LOGGER.warn("Found invalid character: " + c
+                            + ". Returning missing cell!");
+                    return DataType.getMissingCell();
 
-                    }
                 }
             }
         }
+        m_wasSuccessful = true;
         return new BitVectorCell(bitSet, bitSet.size());
     }
 
     /**
      * 
-     * @return the number of se bits.
+     * @see org.knime.base.data.bitvector.BitVectorCellFactory#wasSuccessful()
+     */
+    @Override
+    public boolean wasSuccessful() {
+        return m_wasSuccessful;
+    }
+
+    /**
+     * 
+     * @return the number of set bits.
      */
     @Override
     public int getNumberOfSetBits() {

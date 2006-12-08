@@ -18,14 +18,38 @@
  */
 package org.knime.base.data.bitvector;
 
-import org.knime.base.data.replace.ReplacedCellFactory;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.container.SingleCellFactory;
 
 
 /**
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public abstract class BitVectorCellFactory extends ReplacedCellFactory {
+public abstract class BitVectorCellFactory extends SingleCellFactory {
+    
+    private int m_columnIndex;
+    
+    /** 
+     * Create new cell factory that provides one column given by newColSpec.
+     *  
+     * @param columnSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     */
+    public BitVectorCellFactory(final DataColumnSpec columnSpec, 
+            final int columnIndex) {
+        super(columnSpec);
+        m_columnIndex = columnIndex;
+    }
+    
+    
+    /**
+     * 
+     * @return index of the column to replace. 
+     */
+    public int getColumnIndex() {
+        return m_columnIndex;
+    }
     
     /**
      * 
@@ -38,5 +62,12 @@ public abstract class BitVectorCellFactory extends ReplacedCellFactory {
      * @return the number of not set bits.
      */
     public abstract int getNumberOfNotSetBits();
+    
+    
+    /**
+     * 
+     * @return true if at least one conversion was successful, false otherwise.
+     */
+    public abstract boolean wasSuccessful();
 
 }
