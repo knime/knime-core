@@ -156,7 +156,7 @@ public class MLPPredictorNodeModel extends NodeModel {
                     inSpecs[0], allappSpec);
             return new DataTableSpec[]{returnspec};
         }
-        throw new InvalidSettingsException("No Predictor Parameters"
+        throw new InvalidSettingsException("No model content "
                 + "available for configuration");
     }
 
