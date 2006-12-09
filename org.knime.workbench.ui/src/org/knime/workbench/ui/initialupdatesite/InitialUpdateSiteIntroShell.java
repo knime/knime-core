@@ -271,7 +271,7 @@ public class InitialUpdateSiteIntroShell {
             String knimeHomePath = KNIMEConstants.getKNIMEHomeDir();
 
             File checkFile =
-                    new File(knimeHomePath + "\\" + NEXT_TIME_CHECK_FILE_NAME);
+                    new File(knimeHomePath + "//" + NEXT_TIME_CHECK_FILE_NAME);
             if (checkFile.exists()) {
                 checkFile.delete();
             }
