@@ -98,7 +98,7 @@ public class JoinerNodeDialog extends NodeDialogPane {
         flowPanel.add(m_suffixText);
         buttonPanel.add(flowPanel);
 
-        m_ignoreMissingRows = new JCheckBox("Remove missing rows");
+        m_ignoreMissingRows = new JCheckBox("Remove rows missing in one table");
         buttonPanel.add(m_ignoreMissingRows);
 
         JPanel finalPanel = new JPanel(new BorderLayout());

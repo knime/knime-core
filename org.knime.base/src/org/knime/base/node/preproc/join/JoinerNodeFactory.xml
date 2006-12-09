@@ -27,7 +27,7 @@
 			at the outport. As a third option you can append a suffix to duplicate
 			column names so that they are also available at the outport.
 		</option>
-		<option name="Remove missing rows">
+		<option name="Remove rows missing in one table">
 			If not all rows in both tables can be matched together, they can be
 			either removed completely from the output table (like an INNER JOIN in SQL)
 			or the missing columns rom the one table can be replaced by missing cells
@@ -35,8 +35,8 @@
 		</option>
 		</fullDescription>
     <ports>
-        <dataIn index="0" name="Left table">Table contributing to the left part of the output table.</dataIn>
-        <dataIn index="1" name="Right table">Table contributing to the right part of the output table.</dataIn>
-        <dataOut index="0" name="Joined table">Joined Table.</dataOut>
+        <dataIn index="0" name="Left table">Table contributing to the left part of the output table</dataIn>
+        <dataIn index="1" name="Right table">Table contributing to the right part of the output table</dataIn>
+        <dataOut index="0" name="Joined table">Joined Table</dataOut>
 	</ports>
 </knimeNode>
