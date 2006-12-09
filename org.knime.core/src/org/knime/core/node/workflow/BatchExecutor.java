@@ -55,14 +55,6 @@ public final class BatchExecutor {
 
         private final String m_type;
 
-        /**
-         * TODO Thorsten?
-         * 
-         * @param nodeID
-         * @param name
-         * @param value
-         * @param type
-         */
         Option(final int nodeID, final String name, final String value,
                 final String type) {
             m_nodeID = nodeID;
@@ -153,7 +145,7 @@ public final class BatchExecutor {
         if (input == null) {
             System.err.println("No input file or directory given.");
             System.exit(1);
-            workflowDir = null;
+            return;
         } else if (input.isFile()) {
             File dir = FileUtil.createTempDir("BatchExecutor");
             FileUtil.unzip(input, dir);
@@ -167,7 +159,7 @@ public final class BatchExecutor {
                 new File(workflowDir, WorkflowManager.WORKFLOW_FILE);
         if (!workflowFile.exists()) {
             workflowFile =
-                    new File(workflowFile.listFiles()[0],
+                    new File(workflowDir.listFiles()[0],
                             WorkflowManager.WORKFLOW_FILE);
         }
 
@@ -203,6 +195,9 @@ public final class BatchExecutor {
                 } else if ("String".equals(o.m_type)) {
                     settings.getNodeSettings(Node.CFG_MODEL).addString(
                             o.m_name, o.m_value);
+                } else {
+                    throw new IllegalArgumentException("Unknown option type '"
+                            + o.m_type + "'");                   
                 }
                 cont.loadSettings(settings);
             }
