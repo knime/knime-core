@@ -3,11 +3,7 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
   "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
 [
-<!ENTITY overview   SYSTEM "overview/overview.xml">
-<!ENTITY guide		SYSTEM "guide/guide.xml">
-<!ENTITY reference	SYSTEM "reference/reference.xml">
-<!ENTITY changelog	SYSTEM "appendix/appendix.xml">
-
+<!ENTITY quickstartguide   SYSTEM "quickstartguide/quickstartguide.xml">
 ]>
 
 <!-- 
@@ -23,45 +19,39 @@
 <book>
 
     <bookinfo>
-        <title>Konstanz Information Miner</title>
-		<subtitle>User Manual</subtitle>
+        <title>The Konstanz Information Miner - KNIME</title>
 
-        <releaseinfo>Version 1.0</releaseinfo>
-        <pubdate>work in progress</pubdate>
+        <releaseinfo>Version 1.2.0</releaseinfo>
 
 		<copyright>
-			<year>2003-2006</year>
+			<year>2003-2007</year>
 			<holder>Chair for Applied Computer Science, Bioinformatics and Information Mining, University of Konstanz, Germany</holder>
 		</copyright>
 
 		<address>
 			<surname>Prof. Dr. Michael R. Berthold</surname>
-			<street>Foo</street>
-			<postcode>Bar</postcode>
+			<street>Universitätsstr. 10</street>
+			<postcode>78462</postcode>
 			<city>Konstanz</city>
 			<country>Germany</country>
-			<phone>+49 (0)xxxx / xxx-xxx</phone>
-			<fax>+49 (0)xxxx / xxx-xxx</fax>
-			<email>knime@inf.uni-konstanz.de</email>
+			<fax>+49 7531 88-5132</fax>
+			<email>contact@knime.org</email>
 		</address>
 
         <legalnotice>
 			<para>All rights reserved</para>
 		</legalnotice>
     </bookinfo>
-
     
+    The full KNIME documentation and API reference can be found at 
+    <ulink url="http://www.knime.org/documentation.html">http://www.knime.org/documentation.html</ulink>    
     
     <toc/>
 
 
 <!-- ************** Link chapters here ****************** -->
 
-    &overview;
-    &guide;
-    &reference;
-    &changelog;
+	&quickstartguide;
     
-<!-- ************** Appendix ****************** -->
     
 </book>
