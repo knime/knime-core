@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.workbench.repository.ImageRepository;
 
 /**
  * This shell is intended to be shown up the first time a user starts KNIME. The
@@ -106,12 +107,12 @@ public class InitialUpdateSiteIntroShell {
 
             Shell shell = new Shell(display, SWT.ON_TOP | SWT.SHELL_TRIM);
 
-            // try {
-            // shell.setImage(ImageRepository.getImageDescriptor(
-            // "icons/knime.png").createImage());
-            // } catch (Throwable e) {
-            // // do nothing, is just the icon
-            // }
+             try {
+                shell.setImage(ImageRepository.getImageDescriptor(
+                        "icons/knime.png").createImage());
+            } catch (Throwable e) {
+                // do nothing, is just the icon
+            }
             shell.setText(m_title);
             shell.setSize(600, 400);
             shell.forceActive();
