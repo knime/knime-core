@@ -1,55 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<toc label="Konstanz Information Miner" topic="index.html">
-   <topic label="Overview" href="overview.html">
-      <topic label="About the Konstanz Information Miner" href="overview_1.html">
-         <topic label="Features" href="overview_1_1.html"/>
-         <topic label="The Vision" href="overview_1_2.html"/>
+<toc label="The Konstanz Information Miner - KNIME" topic="index.html">
+   <topic label="KNIME Quickstart Guide" href="quickstart.html">
+      <topic label="License" href="quickstart_1.html"/>
+      <topic label="Requirements" href="ch01s02.html"/>
+      <topic label="Installing KNIME" href="quickstart_2.html">
+         <topic label="Windows users" href="quickstart_2_1.html"/>
+         <topic label="Linux users" href="quickstart_2_2.html"/>
+         <topic label="Sample data sets" href="ch01s03s03.html"/>
       </topic>
-      <topic label="The Platform Components" href="overview_2.html">
-         <topic label="The Konstanz Information Miner Framework" href="overview_2_1.html"/>
-         <topic label="The Workbench GUI" href="overview_2_2.html"/>
-      </topic>
-   </topic>
-   <topic label="User Guide" href="guide.html">
-      <topic label="Getting started" href="guide_1.html">
-         <topic label="Download and Install" href="guide_1_1.html"/>
-         <topic label="Configuring the workbench" href="guide_1_2.html"/>
-         <topic label="Running the examples" href="guide_1_3.html"/>
-      </topic>
-      <topic label="Main Concepts" href="guide_2.html">
-         <topic label="The Framework" href="guide_2_1.html">
-            <topic label="Data Tables" href="guide_2_1_1.html"/>
-            <topic label="Nodes and Ports" href="guide_2_1_2.html"/>
-            <topic label="The Data Flow" href="guide_2_1_3.html"/>
-            <topic label="Property Handlers" href="guide_2_1_4.html"/>
-         </topic>
-         <topic label="The Exploration Workbench" href="guide_2_2.html">
-            <topic label="Eclipse Platform Integration" href="guide_2_2_1.html"/>
-            <topic label="The Node Repository" href="guide_2_2_2.html"/>
-            <topic label="Using the Workflow Editor" href="guide_2_2_3.html"/>
-            <topic label="Views, Wizards and others" href="guide_2_2_4.html"/>
-         </topic>
-      </topic>
-      <topic label="Writing Extensions" href="guide_3.html">
-         <topic label="The KNIME API" href="guide_3_1.html"/>
-         <topic label="Implementing the Model" href="guide_3_2.html"/>
-         <topic label="Implementing the Controller" href="guide_3_3.html"/>
-         <topic label="Implementing a View" href="guide_3_4.html"/>
-         <topic label="Implementing Property Handlers" href="guide_3_5.html"/>
-         <topic label="Packaging and Deployment" href="guide_3_6.html">
-            <topic label="Setting up an Eclipse-Plugin Project" href="guide_3_6_1.html"/>
-            <topic label="Testing the extension" href="guide_3_6_2.html"/>
-            <topic label="Export as binary plugin" href="guide_3_6_3.html"/>
-         </topic>
-      </topic>
-   </topic>
-   <topic label="Reference" href="reference.html">
-      <topic label="API JavaDoc" href="reference_1.html"/>
-      <topic label="Extension Points" href="reference_2.html"/>
-   </topic>
-   <topic label="Appendix" href="appendix.html">
-      <topic label="Changelog" href="appendix_A.html"/>
-      <topic label="License" href="appendix_B.html"/>
-      <topic label="Credits" href="appendix_C.html"/>
+      <topic label="Starting the Application" href="ch01s04.html"/>
    </topic>
 </toc>
