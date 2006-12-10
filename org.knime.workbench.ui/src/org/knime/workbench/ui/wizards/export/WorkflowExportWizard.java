@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.internal.dialogs.ExportWizard;
+import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
 
 /**
@@ -89,21 +90,27 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
      */
     @Override
     public boolean performFinish() {
+
+        // first save dirty editors
+        boolean canceled =
+                !IDEWorkbenchPlugin.getDefault().getWorkbench().saveAllEditors(
+                        true);
+        if (canceled) {
+            return false;
+        }
         final String containerName = m_page.getContainerName();
         final String fileName = m_page.getFileName().trim();
         final boolean excludeData = m_page.excludeData();
 
         // if the specified export file already exist ask the user
         // for confirmation
-        
-        
-        
+
         final File exportFile = new File(fileName);
         if (exportFile.exists()) {
 
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO
-                    | SWT.CANCEL);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
             mb.setText("File already exists...");
             mb.setMessage("File already exists.\nDo you want to "
                     + "overwrite the specified file ?");
@@ -131,10 +138,9 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         } catch (InvocationTargetException e) {
             Throwable realException = e.getTargetException();
             String message = realException.getMessage();
-           
-                message = "Problem during export: " + e.getMessage();
-           
-                
+
+            message = "Problem during export: " + e.getMessage();
+
             MessageDialog.openError(getShell(), "Error", message);
             return false;
         }
@@ -232,16 +238,17 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
         monitor.worked(1);
 
-        ArchiveFileExportOperation exportOperation = new ArchiveFileExportOperation(
-                resourceList, fileName.getPath());
+        ArchiveFileExportOperation exportOperation =
+                new ArchiveFileExportOperation(resourceList, fileName.getPath());
 
         monitor.beginTask("Write to file... " + fileName, 3);
 
         try {
             exportOperation.run(monitor);
         } catch (Throwable t) {
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_WARNING | SWT.OK);
             mb.setText("Export could not be completed...");
             mb.setMessage("Knime project could not be exported.\n Reason: "
                     + t.getMessage());
@@ -285,8 +292,9 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
     }
 
     private void throwCoreException(final String message) throws CoreException {
-        IStatus status = new Status(IStatus.ERROR,
-                "org.knime.workbench.ui", IStatus.OK, message, null);
+        IStatus status =
+                new Status(IStatus.ERROR, "org.knime.workbench.ui", IStatus.OK,
+                        message, null);
         throw new CoreException(status);
     }
 
