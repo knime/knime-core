@@ -1,6 +1,0 @@
-<?xml version='1.0'?>
-<foo:document 
-		  xmlns:foo="http://apache.org/foo"
-		  xmlns:bar="http://apache.org/bar">
-<bar:element>MyBaz</bar:element>
-</foo:document>
