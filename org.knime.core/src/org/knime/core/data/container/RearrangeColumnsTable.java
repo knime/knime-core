@@ -247,7 +247,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         DataTableSpec originalSpec = rearranger.getOriginalSpec();
         Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
         // names and types of the specs must match
-        if (!table.getDataTableSpec().equals(originalSpec)) {
+        if (!table.getDataTableSpec().equalStructure(originalSpec)) {
             throw new IllegalArgumentException(
                     "The argument table's spec does not match the original " 
                     + "spec passed in the constructor.");

@@ -392,26 +392,47 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /**
      * Returns <code>true</code> if <code>o</code> is a
-     * <code>DataTableSpec</code> equal to this. Two specs are equal if they
-     * have the same number of columns and the column specs of the same columns
-     * are equal (that implies that the order of the columns has to be the
-     * same). The domains of the column specs are not included into the
-     * comparison.
-     * 
-     * @see #equalsWithDomain(DataTableSpec)
-     * @param o the <code>DataTableSpec</code> to compare this with
-     * @return <code>true</code> if the two specs are identical, otherwise
-     *         <code>false</code>
+     * <code>DataTableSpec</code> equal to this, that is <code>o == this</code>.
+     * @param o the other <code>Object</code> to compare this with
+     * @return <code>true</code> if the two objects have the same reference,
+     *         otherwise <code>false</code>
+     * @see Object#equals(Object)
+     * @see #equalStructure(DataTableSpec)
      */
     @Override
     public boolean equals(final Object o) {
-        if (o == this) {
+        try {
+            throw new AssertionError("See the stacktrace for more details...");
+        } catch (AssertionError ae) {
+            LOGGER.coding(
+                "equals() is called, please check if you only want to compare"
+                    + " DataTableSpecs by reference (this==obj) or if you"
+                    + " intended to compare column names and types using"
+                    + " equalStructure!?!", ae);
+            ae.printStackTrace();
+        }
+        return (this == o);
+    }
+
+    /**
+     * Returns <code>true</code> if <code>spec</code> has the same column
+     * names and types. Two specs are equal if they have the same number of 
+     * columns and the column specs of the same columns are equal (that implies 
+     * that the order of the columns has to be the same). The domains, 
+     * properties, and handlers of the column specs are not included into the 
+     * comparison.
+     * 
+     * @param spec the <code>DataTableSpec</code> to compare this with
+     * @return <code>true</code> if the two specs have the same column names, 
+     *         and types, otherwise <code>false</code>
+     */
+    public boolean equalStructure(final DataTableSpec spec) {
+        if (spec == this) {
             return true;
         }
-        if (!(o instanceof DataTableSpec)) {
+        if (spec == null) {
             return false;
         }
-        DataTableSpec spec = (DataTableSpec)o;
         final int colCount = this.getNumColumns();
         // must have same number of columns to be identical
         if (spec.getNumColumns() != colCount) {
@@ -421,28 +442,34 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec thisColumn = getColumnSpec(i);
             DataColumnSpec otherColumn = spec.getColumnSpec(i);
-            if (!thisColumn.equals(otherColumn)) {
+            if (!thisColumn.equalStructure(otherColumn)) {
                 return false;
             }
         }
         // both are identical
-        return true;
-    }
+        return true;        
+    }     
+       
 
     /**
-     * Checks if both table specs are equal; in contrast to
-     * {@link #equals(Object)} the domain of the columns must be equal as well.
-     * Two specs are equal if their {@link DataColumnSpec}s are equal according
-     * to the {@link DataColumnSpec#equalsWithDomain(DataColumnSpec)} method.
+     * Checks if both {@link DataTableSpec}s are equal; in contrast to
+     * {@link #equals(Object)} the domain and properties of the columns must 
+     * be equal as well. Two specs are equal if their {@link DataColumnSpec}s 
+     * are equal according to the 
+     * {@link DataColumnSpec#equalsWithDomain(DataColumnSpec)} method.
      * This implies that both specs have to have the same number of columns and
      * the order of the columns has to be the same.
      * 
      * @param spec the <code>DataTableSpec</code> to compare this with
-     * @return <code>true</code> if the two specs are identical, otherwise
-     *         <code>false</code>
+     * @return <code>true</code> if the two specs have equal structure, domain,
+     *         and properties, otherwise <code>false</code>
+     *         
      * @see #equals(Object)
-     * @see DataColumnSpec#equalsWithDomain
+     * @see #equalStructure(DataTableSpec)
+     * @deprecated use {@link #equalStructure(DataTableSpec)} and check if 
+     *             domain and properties matches by yourself
      */
+    @Deprecated
     public boolean equalsWithDomain(final DataTableSpec spec) {
         if (spec == this) {
             return true;
@@ -466,7 +493,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         // both are identical
         return true;
     }
-
+    
     /**
      * Finds the column with the specified name in the TableSpec and returns its
      * index, or -1 if the name doesn't exist in the table. This method returns

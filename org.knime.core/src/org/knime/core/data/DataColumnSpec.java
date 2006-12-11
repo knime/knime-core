@@ -29,6 +29,7 @@ import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -195,47 +196,77 @@ public final class DataColumnSpec {
     }
 
     /**
-     * Two column specs are equal if their name and type match. For a test
-     * including the domain, see {@link #equalsWithDomain(DataColumnSpec)}.
+     * Two <code>DataColumnSpec</code>s are equal if they are the same
+     * instance, that is <code>this==obj</code>. 
      * 
-     * @param obj another column spec to compare this column to
-     * @return <code>true</code> if column name and type match
+     * @param obj another object to compare this column to
+     * @return <code>true</code> if both have the same reference,
+     *          otherwise <code>false</code>
      * 
-     * @see #equalsWithDomain(DataColumnSpec)
+     * @see #equalStructure(DataColumnSpec)
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
     public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
+        try {
+            throw new AssertionError("See the stacktrace for more details...");
+        } catch (AssertionError ae) {
+            NodeLogger.getLogger(DataColumnSpec.class).coding(
+                "equals() is called, please check if you only want to compare"
+                    + " DataColumnSpecs by reference (this==obj) or if you"
+                    + " intended to compare column names and types using"
+                    + " equalStructure!?!", ae);
+            ae.printStackTrace();
         }
-        if ((obj == null) || !(obj instanceof DataColumnSpec)) {
-            return false;
-        }
-        final DataColumnSpec spec = (DataColumnSpec)obj;
-        return getName().equals(spec.getName())
-                && getType().equals(spec.getType());
+        return (this == obj);
     }
-
+    
     /**
-     * Two column specs are equal with domain if the column name, type, domain
-     * and properties match.
+     * Two <code>DataColumnSpec</code>s are equal if they have the same
+     * column name and type. Domain info, properties, and handlers are not
+     * considered during the comparison. 
+     * 
+     * @param cspec another <code>DataColumnSpec</code> to compare this column 
+     *              to
+     * @return <code>true</code> if both have the same column name and type,
+     *          otherwise <code>false</code>
      * 
      * @see java.lang.Object#equals(java.lang.Object)
-     * @param spec the spec to check equality
-     * @return <code>true</code> if name, type, domain, and properties match
      */
-    public boolean equalsWithDomain(final DataColumnSpec spec) {
-        if (spec == this) {
+    public boolean equalStructure(final DataColumnSpec cspec) {
+        if (cspec == this) {
             return true;
         }
-        if (spec == null) {
+        if (cspec == null) {
             return false;
         }
-        return getDomain().equals(spec.getDomain())
-                && getProperties().equals(spec.getProperties())
-                && getName().equals(spec.getName())
-                && getType().equals(spec.getType());
+        return getName().equals(cspec.getName()) 
+                && getType().equals(cspec.getType());
+    }
+    
+    /**
+     * Two <code>DataColumnSpec</code>s are equal with domain if the column 
+     * name, type, domain, and properties match. Does not check if the handler
+     * matches.
+     * 
+     * @param cspec the <code>DataColumnSpec</code> to check equality
+     * @return <code>true</code> if name, type, domain, and properties match
+     * @see #equals(Object)
+     * @deprecated use {@link #equalStructure(DataColumnSpec)} and check if 
+     *             domain and properties matches by yourself
+     */
+    @Deprecated
+    public boolean equalsWithDomain(final DataColumnSpec cspec) {
+        if (cspec == this) {
+            return true;
+        }
+        if (cspec == null) {
+            return false;
+        }
+        return getDomain().equals(cspec.getDomain())
+                && getProperties().equals(cspec.getProperties())
+                && getName().equals(cspec.getName())
+                && getType().equals(cspec.getType());
     }
 
     /**
