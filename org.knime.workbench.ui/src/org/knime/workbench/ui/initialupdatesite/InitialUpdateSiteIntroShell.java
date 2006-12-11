@@ -28,10 +28,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -63,18 +65,21 @@ public class InitialUpdateSiteIntroShell {
     public boolean open() {
 
         final UpdateSiteSelectionShell updateSiteSelectionShell =
-                new UpdateSiteSelectionShell("Open the update site",
+                new UpdateSiteSelectionShell(
+                        "Open the update site",
                         "The KNIME Workbench allows you to enhance the "
                                 + "functionality of KNIME and other "
-                                + "Functionality of Eclipse.\n"
+                                + "Functionality of Eclipse\nvia the eclipse"
+                                + " update site.\n"
                                 + "If you press OK the Eclipse"
-                                + " Update Wizard opens, that guides you "
+                                + " Upate Wizard opens, that giudes you "
                                 + "through the update process.\n"
-                                + "1. Just select 'Search for new features to "
-                                + "install'\n" + "2. Press 'Next'\n"
-                                + "3. Select the KNIME update site\n"
-                                + "4. Press 'Finish'\n"
-                                + "5. Select the new features and install "
+                                + "After pressing 'OK', proceed with the following steps:\n\n"
+                                + "\t1. Just select 'Search for new features to "
+                                + "install'\n" + "\t2. Press 'Next'\n"
+                                + "\t3. Select the KNIME update site\n"
+                                + "\t4. Press 'Finish'\n"
+                                + "\t5. Select the new features and install "
                                 + "them");
 
         return updateSiteSelectionShell.update();
@@ -99,22 +104,22 @@ public class InitialUpdateSiteIntroShell {
 
         private boolean update() {
             Display display = Display.getDefault();
-//            try {
-//                display = new Display();
-//            } catch (Throwable t) {
-//                display = Display.getDefault();
-//            }
+            try {
+                display = new Display();
+            } catch (Throwable t) {
+                display = Display.getDefault();
+            }
 
-            Shell shell = new Shell(display, SWT.ON_TOP | SWT.SHELL_TRIM);
+            Shell shell = new Shell(display, SWT.ON_TOP | SWT.DIALOG_TRIM);
 
-             try {
+            try {
                 shell.setImage(ImageRepository.getImageDescriptor(
                         "icons/knime.png").createImage());
             } catch (Throwable e) {
                 // do nothing, is just the icon
             }
             shell.setText(m_title);
-            shell.setSize(600, 400);
+            // shell.setSize(600, 400);
             shell.forceActive();
             shell.forceFocus();
 
@@ -130,7 +135,7 @@ public class InitialUpdateSiteIntroShell {
 
             final Label label = new Label(shell, SWT.NONE);
             label.setText(m_text + "\n\n");
-            label.setBounds(20, 15, 300, 100);
+            // label.setBounds(20, 15, 300, 100);
             label.setLayoutData(gridData);
 
             gridData = new GridData();
@@ -147,7 +152,7 @@ public class InitialUpdateSiteIntroShell {
             final Button okButton = new Button(shell, SWT.PUSH);
             okButton.setText("OK");
             // button.setBounds(20, 270, 180, 20);
-            okButton.setSize(180, 20);
+            //okButton.setSize(180, 20);
             okButton.setLayoutData(gridData);
 
             gridData = new GridData();
@@ -157,7 +162,7 @@ public class InitialUpdateSiteIntroShell {
             final Button cancelButton = new Button(shell, SWT.PUSH);
             cancelButton.setText("Cancel");
             // cancel.setBounds(20, 270, 180, 20);
-            cancelButton.setSize(180, 20);
+            // cancelButton.setSize(180, 20);
             cancelButton.setLayoutData(gridData);
 
             gridData = new GridData();
@@ -179,7 +184,7 @@ public class InitialUpdateSiteIntroShell {
             gridData = new GridData();
             gridData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_BEGINNING;
             gridData.horizontalSpan = 1;
-            gridData.widthHint = 280;
+            // gridData.widthHint = 280;
             final Button nextTimeCheck = new Button(shell, SWT.CHECK);
             // text.setBounds(140, 270, 200, 20);
             // text.setSize(200, 20);
@@ -187,6 +192,7 @@ public class InitialUpdateSiteIntroShell {
             nextTimeCheck.setSelection(true);
 
             Composite parent = shell.getParent();
+            getPreferedSize(shell);
             if (parent != null) {
                 shell.setBounds(parent.getBounds().width / 2, parent
                         .getBounds().height / 2, 550, 255);
@@ -264,6 +270,20 @@ public class InitialUpdateSiteIntroShell {
 
             return m_update;
         }
+    }
+    
+    private Point getPreferedSize(Shell shell)
+    {
+        Control[] controls = shell.getChildren();
+//        int width = 0;
+//        int height = 0;
+        for(Control control : controls)
+        {
+            control.getSize();
+            control.getBounds();
+        }
+        
+        return null;
     }
 
     private void saveNextTimeShowup(final boolean checkNextTime) {
