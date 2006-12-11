@@ -51,6 +51,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * Abstract class which is the coordinator between the 
  * {@link HistogramDrawingPane} and the {@link AbstractHistogramDataModel}.
+ * 
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramPlotter extends AbstractPlotter {
@@ -1028,8 +1029,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.
-     * AbstractPlotter#selectClickedElement(java.awt.Point)
+     * @see AbstractPlotter#selectClickedElement(java.awt.Point)
      */
     @Override
     public void selectClickedElement(final Point clicked) {
@@ -1049,8 +1049,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.
-     * AbstractPlotter#selectElementsIn(java.awt.Rectangle)
+     * @see AbstractPlotter#selectElementsIn(java.awt.Rectangle)
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {

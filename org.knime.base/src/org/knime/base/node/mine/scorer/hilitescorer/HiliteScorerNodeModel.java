@@ -614,6 +614,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(
                 new FileInputStream(f)));
         try {
+            @SuppressWarnings("unchecked")
             HashMap<String, Object> hm =
                 (HashMap<String, Object>)in.readObject();
             m_correctCount = (Integer)hm.get("correctCount");
