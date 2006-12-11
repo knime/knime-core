@@ -475,7 +475,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             double diff = progress - m_lastProg;
             m_lastProg = progress;
             if (progressOfParent == null) {
-                return diff * m_maxProg;
+                return Math.min(m_maxProg, diff * m_maxProg);
             } else {
                 // scaled to our sub range
                 return progressOfParent + Math.min(m_maxProg, diff * m_maxProg);
