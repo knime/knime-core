@@ -71,7 +71,7 @@ public class InitialUpdateSiteIntroShell {
                         "Open the update site",
                         "The KNIME Workbench allows you to enhance the "
                                 + "functionality of KNIME and other "
-                                + "Functionality of Eclipse\nvia the eclipse"
+                                + "Functionality of Eclipse\nvia the Eclipse"
                                 + " update site.\n"
                                 + "If you press OK the Eclipse"
                                 + " Upate Wizard opens, that giudes you "
@@ -121,9 +121,12 @@ public class InitialUpdateSiteIntroShell {
 
             Shell shell = null;
             if (parentShell != null) {
-                shell = new Shell(parentShell, SWT.ON_TOP | SWT.DIALOG_TRIM);
+                shell =
+                        new Shell(parentShell, SWT.ON_TOP | SWT.DIALOG_TRIM
+                                | SWT.BORDER | SWT.TITLE);
             } else {
-                shell = new Shell(display, SWT.ON_TOP | SWT.DIALOG_TRIM);
+                shell = new Shell(display, SWT.ON_TOP | SWT.DIALOG_TRIM
+                        | SWT.BORDER | SWT.TITLE);
             }
 
             try {
@@ -202,7 +205,7 @@ public class InitialUpdateSiteIntroShell {
             gridData.heightHint = 20;
             // gridData.widthHint = 280;
             final Button nextTimeCheck = new Button(shell, SWT.CHECK);
-           // text.setBounds(140, 270, 200, 20);
+            // text.setBounds(140, 270, 200, 20);
             // text.setSize(200, 20);
             nextTimeCheck.setLayoutData(gridData);
             nextTimeCheck.setSelection(true);
@@ -217,8 +220,8 @@ public class InitialUpdateSiteIntroShell {
                 shell.setLocation(parent.getBounds().width / 2, parent
                         .getBounds().height / 2);
             } else {
-                shell.setLocation(display.getBounds().width / 2,
-                        display.getBounds().height / 2);
+                shell.setLocation(display.getBounds().width / 2, display
+                        .getBounds().height / 2);
             }
 
             okButton.setFocus();
