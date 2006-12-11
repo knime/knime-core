@@ -478,7 +478,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 return diff * m_maxProg;
             } else {
                 // scaled to our sub range
-                return progressOfParent + diff * m_maxProg;
+                return progressOfParent + Math.min(m_maxProg, diff * m_maxProg);
             }
         }
     }
