@@ -24,9 +24,9 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.internal.Workbench;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeStateListener;
 import org.knime.core.node.NodeStatus;
@@ -34,6 +34,8 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Action to execute a node and open its first view.
@@ -48,6 +50,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      * unique ID for this action.
      */
     public static final String ID = "knime.action.executeandopenview";
+
+    private IAction m_viewAction;
 
     /**
      * @param editor The workflow editor
@@ -115,8 +119,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         // check if there is at least one view
         boolean enabled = parts[0].getNodeContainer().getNumViews() > 0;
 
-//        // the node must not be an interruptible node
-//        enabled &= !parts[0].getNodeContainer().isInterruptible();
+        // // the node must not be an interruptible node
+        // enabled &= !parts[0].getNodeContainer().isInterruptible();
 
         // check if the node is executable
         enabled &= parts[0].getNodeContainer().isExecutableUpToHere();
@@ -142,15 +146,29 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             return;
         }
 
+        boolean openEmbedded =
+                KNIMEUIPlugin.getDefault().getPreferenceStore().getString(
+                        PreferenceConstants.P_CHOICE_VIEWMODE).equals(
+                        PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
+
         LOGGER.debug("Executing and opening view for one node");
 
         final NodeContainer cont = nodeParts[0].getNodeContainer();
+
+        // set the appropriate action to open the view (jframe or embedded)
+        m_viewAction = null;
+        if (openEmbedded) {
+            m_viewAction = new OpenViewEmbeddedAction(cont, 0);
+        } else {
+            m_viewAction = new OpenViewAction(cont, 0);
+        }
 
         // for interruptible nodes the view is opened immediatly
         // for all other nodes the view should first opened if the execution is
         // over
         if (cont.isInterruptible()) {
             getManager().executeUpToNode(cont.getID(), false);
+            // interruptible nodes are always displayed in a jframe
             cont.showView(0);
         } else {
             cont.addListener(new NodeStateListener() {
@@ -158,7 +176,13 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                     if (state instanceof NodeStatus.EndExecute) {
                         cont.removeListener(this);
                         if (cont.isExecuted()) {
-                            cont.showView(0);
+                            Display.getDefault().syncExec(new Runnable() {
+                                public void run() {
+                                    m_viewAction.run();
+                                };
+
+                            });
+
                         }
                     } else if (state instanceof NodeStatus.ExecutionCanceled) {
                         cont.removeListener(this);
@@ -168,15 +192,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             getManager().executeUpToNode(cont.getID(), false);
         }
 
-        try {
-            Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
-                    .showView("org.eclipse.ui.views.ProgressView");
-
-            // Give focus to the editor again. Otherwise the actions (selection)
-            // is not updated correctly.
-            getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-        } catch (PartInitException e) {
-            // ignore
-        }
+        // Give focus to the editor again. Otherwise the actions (selection)
+        // is not updated correctly.
+        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
 }
