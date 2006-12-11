@@ -34,6 +34,7 @@ import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -56,7 +57,13 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(FixedColumnHistogramNodeModel.class);
     
+    /**Default number of rows to use.*/
+    protected static final int DEFAULT_NO_OF_ROWS = 5000;
+    
     private static final String CFG_SETTINGS = "fixedColumnHistogramSettings";
+    
+    /**Settings name of the number of rows.*/
+    protected static final String CFGKEY_NO_OF_ROWS = "noOfRows";
     
     /**Settings name of the x column name.*/
     protected static final String CFGKEY_X_COLNAME = "xColumn";
@@ -66,6 +73,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     private String m_xColName;
     
     private String m_aggrColName;
+    
+    private int m_noOfRows;
 
     /** The Rule2DPlotter is the core of the view. */
     private FixedColumnHistogramPlotter m_plotter;
@@ -88,6 +97,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        settings.addInt(CFGKEY_NO_OF_ROWS, m_noOfRows);
         settings.addString(CFGKEY_X_COLNAME, m_xColName);
         settings.addString(CFGKEY_AGGR_COLNAME, m_aggrColName);
     }
@@ -117,6 +127,11 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        try {
+            m_noOfRows = settings.getInt(CFGKEY_NO_OF_ROWS);
+        } catch (Exception e) {
+            // In case of older nodes the row number is not available
+        }
         m_xColName = settings.getString(CFGKEY_X_COLNAME);
         m_aggrColName = settings.getString(CFGKEY_AGGR_COLNAME);
     }
@@ -131,6 +146,12 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
         FileInputStream in = new FileInputStream(settingsFile);
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
+        try {
+            m_noOfRows = settings.getInt(CFGKEY_NO_OF_ROWS);
+        } catch (InvalidSettingsException e1) {
+            //to prevent problems with older work flows
+            m_noOfRows = DEFAULT_NO_OF_ROWS;
+        }
         try {
             m_xColName = settings.getString(CFGKEY_X_COLNAME);
             m_aggrColName = settings.getString(CFGKEY_AGGR_COLNAME);
@@ -147,6 +168,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
         NodeSettings settings = new NodeSettings(CFG_SETTINGS);
+        settings.addInt(CFGKEY_NO_OF_ROWS, m_noOfRows);
         settings.addString(CFGKEY_X_COLNAME, m_xColName);
         settings.addString(CFGKEY_AGGR_COLNAME, m_aggrColName);
         File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
@@ -172,11 +194,17 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         m_plotter = new FixedColumnHistogramPlotter(data.getDataTableSpec(), 
                 m_properties, getInHiLiteHandler(0), m_xColName, m_aggrColName);
         m_plotter.setBackground(ColorAttr.getBackground());
+        final int noOfRows = data.getRowCount();
+        if ((m_noOfRows) < noOfRows) {
+            setWarningMessage("Only the first " + noOfRows + " of " 
+                    + noOfRows + " rows are displayed.");
+        }
         exec.setMessage("Adding data rows to histogram...");
-        final int noOfRows = inData[0].getRowCount();
         final double progressPerRow = 1.0 / noOfRows;
         double progress = 0.0;
-        for (DataRow row : data) {
+        final RowIterator rowIterator = data.iterator();
+        for (int i = 0; i < m_noOfRows && rowIterator.hasNext(); i++) {
+            final DataRow row = rowIterator.next();
             m_plotter.addDataRow(row);
             progress += progressPerRow;
             exec.setProgress(progress, "Adding data rows to histogram...");

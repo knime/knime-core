@@ -27,6 +27,7 @@ package org.knime.base.node.viz.histogram.node;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
+import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
 
 /**
  * 
@@ -40,6 +41,11 @@ public class HistogramNodeDialogPane extends DefaultNodeDialogPane {
     @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
         super();
+        addDialogComponent(new DialogComponentNumber(
+                HistogramNodeModel.CFGKEY_NO_OF_ROWS,
+                "No. of rows to display:", 1, Integer.MAX_VALUE, 
+                HistogramNodeModel.DEFAULT_NO_OF_ROWS));
+        
         DialogComponentColumnSelection colSel = 
             new DialogComponentColumnSelection(
                 HistogramNodeModel.CFGKEY_X_COLNAME,

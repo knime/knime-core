@@ -22,6 +22,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
 import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
+import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
 
 /**
  * <code>NodeDialog</code> for the "BayesianClassifier" Node.
@@ -45,6 +46,10 @@ public class FixedColumnHistogramNodeDialog extends DefaultNodeDialogPane {
     @SuppressWarnings("unchecked")
     public FixedColumnHistogramNodeDialog() {
         super();
+        addDialogComponent(new DialogComponentNumber(
+                FixedColumnHistogramNodeModel.CFGKEY_NO_OF_ROWS,
+                "No. of rows to display:", 1, Integer.MAX_VALUE, 
+                FixedColumnHistogramNodeModel.DEFAULT_NO_OF_ROWS));
         
          m_xColComp = new DialogComponentColumnSelection(
                  FixedColumnHistogramNodeModel.CFGKEY_X_COLNAME,
