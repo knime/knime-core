@@ -61,6 +61,9 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * RPropNodeModel trains a MultiLayerPerceptron with resilient backpropagation.
@@ -121,33 +124,51 @@ public class RPropNodeModel extends NodeModel {
     /*
      * Number of iterations.
      */
-    private int m_nrIterations;
+    private final SettingsModelIntegerBounded m_nrIterations =
+        new SettingsModelIntegerBounded(
+                /* config-name: */RPropNodeModel.MAXITER_KEY,
+                /* default */DEFAULTITERATIONS,
+                /* min: */1,
+                /* max: */RPropNodeModel.MAXNRITERATIONS);
 
     /*
      * Number of hidden layers.
      */
-    private int m_nrHiddenLayers;
+    private final  SettingsModelIntegerBounded m_nrHiddenLayers =
+        new SettingsModelIntegerBounded(
+                /* config-name: */RPropNodeModel.HIDDENLAYER_KEY,
+                /* default */DEFAULTHIDDENLAYERS,
+                /* min: */1,
+                /* max: */100);
 
     /*
      * Number of hidden neurons per layer.
      */
-    private int m_nrHiddenNeuronsperLayer;
+    private final SettingsModelIntegerBounded m_nrHiddenNeuronsperLayer =
+        new SettingsModelIntegerBounded(
+                /* config-name: */RPropNodeModel.NRHNEURONS_KEY,
+                /* default */DEFAULTNEURONSPERLAYER,
+                /* min: */1,
+                /* max: */100);
 
     /*
      * The class column.
      */
-    private String m_classcol;
+    private final SettingsModelString m_classcol = new SettingsModelString(
+            /* config-name: */RPropNodeModel.CLASSCOL_KEY, null);
+
+    /*
+     * Flag whether to ignore missing values
+     */
+    private final SettingsModelBoolean m_ignoreMV = new SettingsModelBoolean(
+            /* config-name: */RPropNodeModel.IGNOREMV_KEY,
+            /* default */ false);
 
     /*
      * Flag for regression
      */
     private boolean m_regression;
-
-    /*
-     * Flag whether to ignore missing values
-     */
-    private boolean m_ignoreMV;
-
+    
     /*
      * The internal Neural Network.
      */
@@ -186,9 +207,6 @@ public class RPropNodeModel extends NodeModel {
      */
     public RPropNodeModel() {
         super(1, 0, 0, 1);
-        m_nrIterations = DEFAULTITERATIONS;
-        m_nrHiddenLayers = DEFAULTHIDDENLAYERS;
-        m_nrHiddenNeuronsperLayer = DEFAULTNEURONSPERLAYER;
         m_architecture = new Architecture();
         m_mlp = new MultiLayerPerceptron();
     }
@@ -201,11 +219,11 @@ public class RPropNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_classcol != null) {
+        if (m_classcol.getStringValue() != null) {
             boolean classcolinspec = false;
             for (DataColumnSpec colspec : inSpecs[INPORT]) {
                 if (!(colspec.getName().toString().compareTo(
-                        m_classcol.toString()) == 0)) {
+                        m_classcol.getStringValue()) == 0)) {
                     if (!colspec.getType().isCompatible(DoubleValue.class)) {
                         throw new InvalidSettingsException(
                                 "Only double columns for input");
@@ -232,7 +250,8 @@ public class RPropNodeModel extends NodeModel {
                 }
             }
             if (!classcolinspec) {
-                throw new InvalidSettingsException("Class column " + m_classcol
+                throw new InvalidSettingsException("Class column " 
+                        + m_classcol.getStringValue()
                         + " not found in DataTableSpec");
             }
         } else {
@@ -258,9 +277,10 @@ public class RPropNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         // If class column is not set, it is the last column.
         DataTableSpec posSpec = inData[INPORT].getDataTableSpec();
-        if (m_classcol == null) {
-            m_classcol = posSpec.getColumnSpec(posSpec.getNumColumns() - 1)
-                    .getName();
+        if (m_classcol.getStringValue() == null) {
+            m_classcol.setStringValue(
+                    posSpec.getColumnSpec(
+                            posSpec.getNumColumns() - 1).getName());
         }
         // Determine the number of inputs and the number of outputs. Make also
         // sure that the inputs are double values.
@@ -270,7 +290,7 @@ public class RPropNodeModel extends NodeModel {
         for (DataColumnSpec colspec : posSpec) {
             // check for class column
             if (colspec.getName().toString().compareTo(
-                    m_classcol.toString()) == 0) {
+                    m_classcol.getStringValue()) == 0) {
                 if (colspec.getType().isCompatible(DoubleValue.class)) {
                     // check if the values are in range [0,1]
                     DataColumnDomain domain = colspec.getDomain();
@@ -317,8 +337,9 @@ public class RPropNodeModel extends NodeModel {
             }
         }
         m_architecture.setNrInputNeurons(nrInputs);
-        m_architecture.setNrHiddenLayers(m_nrHiddenLayers);
-        m_architecture.setNrHiddenNeurons(m_nrHiddenNeuronsperLayer);
+        m_architecture.setNrHiddenLayers(m_nrHiddenLayers.getIntValue());
+        m_architecture.setNrHiddenNeurons(
+                m_nrHiddenNeuronsperLayer.getIntValue());
         m_architecture.setNrOutputNeurons(nrOutputs);
         m_mlp = new MultiLayerPerceptron(m_architecture);
         if (m_regression) {
@@ -328,7 +349,7 @@ public class RPropNodeModel extends NodeModel {
         }
         // Convert inputs to double arrays. Values from the class column are
         // encoded as bitvectors.
-        int classColNr = posSpec.findColumnIndex(m_classcol);
+        int classColNr = posSpec.findColumnIndex(m_classcol.getStringValue());
         int nrposRows = 0;
         RowIterator rowIt = inData[INPORT].iterator();
         while (rowIt.hasNext()) {
@@ -355,7 +376,7 @@ public class RPropNodeModel extends NodeModel {
                         sample[index] = dc.getDoubleValue();
                         index++;
                     } else {
-                        if (m_ignoreMV) {
+                        if (m_ignoreMV.getBooleanValue()) {
                             add = false;
                             break;
                         } else {
@@ -394,9 +415,11 @@ public class RPropNodeModel extends NodeModel {
         m_mlp.setClassMapping(m_classmap);
         m_mlp.setInputMapping(m_inputmap);
         RProp myrprop = new RProp();
-        m_errors = new double[m_nrIterations];
-        for (int iteration = 0; iteration < m_nrIterations; iteration++) {
-            exec.setProgress((double)iteration / (double)m_nrIterations,
+        m_errors = new double[m_nrIterations.getIntValue()];
+        for (int iteration = 0; iteration < m_nrIterations.getIntValue(); 
+                iteration++) {
+            exec.setProgress((double)iteration 
+                    / (double)m_nrIterations.getIntValue(),
                     "Iteration " + iteration);
             myrprop.train(m_mlp, samplesarr, outputsarr);
             double error = 0;
@@ -440,11 +463,11 @@ public class RPropNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt(MAXITER_KEY, m_nrIterations);
-        settings.addInt(HIDDENLAYER_KEY, m_nrHiddenLayers);
-        settings.addInt(NRHNEURONS_KEY, m_nrHiddenNeuronsperLayer);
-        settings.addString(CLASSCOL_KEY, m_classcol);
-        settings.addBoolean(IGNOREMV_KEY, m_ignoreMV);
+        m_nrIterations.saveSettingsTo(settings);
+        m_nrHiddenLayers.saveSettingsTo(settings);
+        m_nrHiddenNeuronsperLayer.saveSettingsTo(settings);
+        m_classcol.saveSettingsTo(settings);
+        m_ignoreMV.saveSettingsTo(settings);
     }
 
     /**
@@ -453,27 +476,11 @@ public class RPropNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        if (settings.containsKey(MAXITER_KEY)) {
-            int tempmaxiter = settings.getInt(MAXITER_KEY);
-            if (tempmaxiter <= 0 || tempmaxiter > MAXNRITERATIONS) {
-                throw new InvalidSettingsException(
-                        "Invalid number of maximum iterations: " + tempmaxiter);
-            }
-        }
-        if (settings.containsKey(HIDDENLAYER_KEY)) {
-            int temphlayers = settings.getInt(HIDDENLAYER_KEY);
-            if (temphlayers <= 0) {
-                throw new InvalidSettingsException(
-                        "Invalid number of hidden layers: " + temphlayers);
-            }
-        }
-        if (settings.containsKey(NRHNEURONS_KEY)) {
-            int temphneurons = settings.getInt(NRHNEURONS_KEY);
-            if (temphneurons <= 0) {
-                throw new InvalidSettingsException(
-                        "Invalid number of hidden neurons: " + temphneurons);
-            }
-        }
+        m_nrIterations.validateSettings(settings);
+        m_nrHiddenLayers.validateSettings(settings);
+        m_nrHiddenNeuronsperLayer.validateSettings(settings);
+        m_classcol.validateSettings(settings);
+        m_ignoreMV.validateSettings(settings);
     }
 
     /**
@@ -482,21 +489,12 @@ public class RPropNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        if (settings.containsKey(MAXITER_KEY)) {
-            m_nrIterations = settings.getInt(MAXITER_KEY);
-        }
-        if (settings.containsKey(HIDDENLAYER_KEY)) {
-            m_nrHiddenLayers = settings.getInt(HIDDENLAYER_KEY);
-        }
-        if (settings.containsKey(NRHNEURONS_KEY)) {
-            m_nrHiddenNeuronsperLayer = settings.getInt(NRHNEURONS_KEY);
-        }
-        if (settings.containsKey(CLASSCOL_KEY)) {
-            m_classcol = settings.getString(CLASSCOL_KEY);
-        }
-        if (settings.containsKey(IGNOREMV_KEY)) {
-            m_ignoreMV = settings.getBoolean(IGNOREMV_KEY);
-        }
+
+        m_nrIterations.loadSettingsFrom(settings);
+        m_nrHiddenLayers.loadSettingsFrom(settings);
+        m_nrHiddenNeuronsperLayer.loadSettingsFrom(settings);
+        m_classcol.loadSettingsFrom(settings);
+        m_ignoreMV.loadSettingsFrom(settings);
     }
 
     /**

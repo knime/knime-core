@@ -37,6 +37,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
@@ -49,12 +50,12 @@ public class WriteTableNodeModel extends NodeModel {
     /** Config identifier for the settings object. */
     static final String CFG_FILENAME = "filename";
     
-    private String m_fileName;
+    private final SettingsModelString m_fileName =
+        new SettingsModelString(CFG_FILENAME, null);
     
     /** Creates new NodeModel with one input, no output ports. */
     public WriteTableNodeModel() {
         super(1, 0);
-        m_fileName = null;
     }
 
     /**
@@ -62,8 +63,8 @@ public class WriteTableNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_fileName != null) {
-            settings.addString(CFG_FILENAME, m_fileName);
+        if (m_fileName.getStringValue() != null) {
+            m_fileName.saveSettingsTo(settings);
         }
     }
 
@@ -73,7 +74,7 @@ public class WriteTableNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getString(CFG_FILENAME);
+        m_fileName.validateSettings(settings);
     }
 
     /**
@@ -82,7 +83,7 @@ public class WriteTableNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_fileName = settings.getString(CFG_FILENAME);
+        m_fileName.loadSettingsFrom(settings);
     }
 
     /**
@@ -92,7 +93,8 @@ public class WriteTableNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
             final ExecutionContext exec) throws Exception {
         BufferedDataTable in = inData[0];
-        DataContainer.writeToZip(in, new File(m_fileName), exec);
+        DataContainer.writeToZip(in, 
+                new File(m_fileName.getStringValue()), exec);
         return new BufferedDataTable[0];
     }
 
@@ -111,7 +113,7 @@ public class WriteTableNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
-        checkFileAccess(m_fileName);
+        checkFileAccess(m_fileName.getStringValue());
         
         return new DataTableSpec[0];
     }

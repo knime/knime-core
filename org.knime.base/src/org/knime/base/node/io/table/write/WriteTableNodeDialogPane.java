@@ -26,25 +26,24 @@ package org.knime.base.node.io.table.write;
 
 import javax.swing.JFileChooser;
 
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
-
 import org.knime.base.node.io.table.read.ReadTableNodeModel;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Dialog for the node to write arbitrary tables to a file. It only shows
  * a file chooser dialog.
  * @author wiswedel, University of Konstanz
  */
-public class WriteTableNodeDialogPane extends DefaultNodeDialogPane {
+public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
 
     /**
      * Creates new dialog.
      */
     public WriteTableNodeDialogPane() {
-        super();
         addDialogComponent(new DialogComponentFileChooser(
-                WriteTableNodeModel.CFG_FILENAME, 
+                new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""), 
                 WriteTableNodeDialogPane.class.getName(),
                 JFileChooser.SAVE_DIALOG, 
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));

@@ -25,10 +25,13 @@
 package org.knime.base.node.mine.neural.rprop;
 
 import org.knime.core.data.DataValue;
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentBoolean;
-import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
-import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The RPropNodeDialog allows to configure the settings (nr. of training
@@ -36,38 +39,49 @@ import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
  * 
  * @author Nicolas, University of Konstanz
  */
-public class RPropNodeDialog extends DefaultNodeDialogPane {
+public class RPropNodeDialog extends DefaultNodeSettingsPane {
     /**
      * Creates a new <code>NodeDialogPane</code> for the RProp neural net in
      * order to set the desired options.
      */
+    @SuppressWarnings("unchecked")
     public RPropNodeDialog() {
         super();
         this.addDialogComponent(new DialogComponentNumber(
+                new SettingsModelIntegerBounded(
         /* config-name: */RPropNodeModel.MAXITER_KEY,
+        /* default */20,
+        /* min: */1,
+        /* max: */RPropNodeModel.MAXNRITERATIONS), 
         /* label: */"Maximum number of iterations: ",
-        /* min: */1,
-        /* max: */RPropNodeModel.MAXNRITERATIONS,
-        /* default */20));
+        /* step */1));
         this.addDialogComponent(new DialogComponentNumber(
+                new SettingsModelIntegerBounded(
         /* config-name: */RPropNodeModel.HIDDENLAYER_KEY,
+        /* default */1,
+        /* min: */1,
+        /* max: */100),
         /* label: */"Number of hidden layers: ",
-        /* min: */1,
-        /* max: */100,
-        /* default */1));
+        /* step */ 1));
         this.addDialogComponent(new DialogComponentNumber(
+                new SettingsModelIntegerBounded(
         /* config-name: */RPropNodeModel.NRHNEURONS_KEY,
-        /* label: */"Number of hidden neurons per layer: ",
+        /* default */5,
         /* min: */1,
-        /* max: */100,
-        /* default */5));
-        this.addDialogComponent(new DialogComponentColumnSelection(
-        /* config-name: */RPropNodeModel.CLASSCOL_KEY,
+        /* max: */100), 
+        /* label: */"Number of hidden neurons per layer: ",
+        /* step */ 1));
+        this.addDialogComponent(new DialogComponentColumnNameSelection(
+                new SettingsModelString(
+        /* config-name: */RPropNodeModel.CLASSCOL_KEY, ""),
         /* label: */"class column: ",
         /* columns from which port?: */RPropNodeModel.INPORT,
         /* column-type filter: */DataValue.class));
+        
         this.addDialogComponent(new DialogComponentBoolean(
+                new SettingsModelBoolean(
         /* config-name: */RPropNodeModel.IGNOREMV_KEY,
-        /* label: */"Ignore Missing Values", false));
+        /* default */ false),
+        /* label: */"Ignore Missing Values"));
     }
 }

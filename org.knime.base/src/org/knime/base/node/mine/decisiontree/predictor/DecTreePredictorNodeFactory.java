@@ -28,8 +28,9 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  * 
@@ -74,15 +75,16 @@ public class DecTreePredictorNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeDialogPane() {
+        return new DefaultNodeSettingsPane() {
             {
-                this.addDialogComponent(new DialogComponentNumber(
-                /* config-name: */DecTreePredictorNodeModel.MAXCOVERED,
-                /* label: */"Maximum number of stored patterns "
-                        + "for HiLite-ing: ",
-                /* min: */0,
-                /* max: */100000,
-                /* default */50000));
+                addDialogComponent(new DialogComponentNumber(
+                        new SettingsModelIntegerBounded(
+              /* config-name: */DecTreePredictorNodeModel.MAXCOVERED,
+              /* default */50000,
+                      /* min: */0,
+                      /* max: */100000),
+                   /* label: */"Maximum number of stored patterns "
+                                + "for HiLite-ing: ", 100));
             }
         };
     }

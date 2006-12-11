@@ -43,7 +43,7 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Read ModelContent object from file.
@@ -55,7 +55,8 @@ public class PredictorReaderNodeModel extends NodeModel {
     /** key for filename entry in config object. */
     static final String FILENAME = "filename";
 
-    private String m_fileName = null; // "<no file>";
+    private final SettingsModelString m_fileName =
+            new SettingsModelString(FILENAME, null);
 
     private ModelContentRO m_predParams;
 
@@ -71,7 +72,7 @@ public class PredictorReaderNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addString(FILENAME, m_fileName);
+        m_fileName.saveSettingsTo(settings);
     }
 
     /**
@@ -80,7 +81,9 @@ public class PredictorReaderNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        checkFileAccess(settings.getString(FILENAME));
+        SettingsModelString filename =
+                m_fileName.createCloneWithValidatedValue(settings);
+        checkFileAccess(filename.getStringValue());
     }
 
     /**
@@ -89,7 +92,10 @@ public class PredictorReaderNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_fileName = checkFileAccess(settings.getString(FILENAME));
+        SettingsModelString filename =
+            m_fileName.createCloneWithValidatedValue(settings);
+        checkFileAccess(filename.getStringValue());
+        m_fileName.setStringValue(filename.getStringValue());
     }
 
     /**
@@ -120,12 +126,14 @@ public class PredictorReaderNodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             IOException {
         m_predParams = null;
-        InputStream is = new BufferedInputStream(new FileInputStream(new File(
-                m_fileName)));
-        if (m_fileName.endsWith(".gz")) {
+        InputStream is =
+                new BufferedInputStream(new FileInputStream(
+                        new File(m_fileName.getStringValue())));
+        if (m_fileName.getStringValue().endsWith(".gz")) {
             is = new GZIPInputStream(is);
         }
-        exec.setProgress(-1, "Reading from file: " + m_fileName);
+        exec.setProgress(-1, "Reading from file: " 
+                + m_fileName.getStringValue());
         m_predParams = ModelContent.loadFromXML(is);
         return new BufferedDataTable[0];
     }
@@ -145,15 +153,15 @@ public class PredictorReaderNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        checkFileAccess(m_fileName);
+        checkFileAccess(m_fileName.getStringValue());
         return new DataTableSpec[0];
     }
 
     /*
      * Helper that checks some properties for the file argument.
      * 
-     * @param fileName The file to check
-     * @throws InvalidSettingsException If that fails.
+     * @param fileName The file to check @throws InvalidSettingsException If
+     * that fails.
      */
     private String checkFileAccess(final String fileName)
             throws InvalidSettingsException {
@@ -183,26 +191,25 @@ public class PredictorReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
-            CanceledExecutionException {
-         // nothing to do here
-    }
-
-    /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // nothing to do here
     }
-    
-    
+
+    /**
+     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do here
+    }
+
 }

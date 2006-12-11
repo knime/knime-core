@@ -41,6 +41,7 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
@@ -53,7 +54,8 @@ public class PredictorWriterNodeModel extends NodeModel {
     /** key for filename entry in config object. */
     static final String FILENAME = "filename";
 
-    private String m_fileName = null; // "<no file>";
+    private final SettingsModelString m_fileName = 
+        new SettingsModelString(FILENAME, null);
 
     private ModelContentRO m_predParams;
 
@@ -69,7 +71,7 @@ public class PredictorWriterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addString(FILENAME, m_fileName);
+        m_fileName.saveSettingsTo(settings);
     }
 
     /**
@@ -78,7 +80,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getString(FILENAME);
+        m_fileName.validateSettings(settings);
     }
 
     /**
@@ -87,7 +89,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_fileName = settings.getString(FILENAME);
+        m_fileName.loadSettingsFrom(settings);
     }
 
     /**
@@ -115,21 +117,22 @@ public class PredictorWriterNodeModel extends NodeModel {
         OutputStream os = null;
         try {
             // delete original file
-            File realFile = new File(m_fileName);
+            File realFile = new File(m_fileName.getStringValue());
             if (realFile.exists()) {
                 realFile.delete();
             }
             // create temp file
-            File tempFile = new File(m_fileName + "~");
+            File tempFile = new File(m_fileName.getStringValue() + "~");
             if (tempFile.exists()) {
                 tempFile.delete();
             }
             // open stream
             os = new BufferedOutputStream(new FileOutputStream(tempFile));
-            if (m_fileName.endsWith(".gz")) {
+            if (m_fileName.getStringValue().endsWith(".gz")) {
                 os = new GZIPOutputStream(os);
             }
-            exec.setProgress(-1, "Writing to file: " + m_fileName);
+            exec.setProgress(-1, "Writing to file: " 
+                    + m_fileName.getStringValue());
             // and write ModelContent object as XML
             m_predParams.saveToXML(os);
             // and finally rename temp file to real file name
@@ -158,7 +161,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        checkFileAccess(m_fileName);
+        checkFileAccess(m_fileName.getStringValue());
         return new DataTableSpec[0];
     }
 

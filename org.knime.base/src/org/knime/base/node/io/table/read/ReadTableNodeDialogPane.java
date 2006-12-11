@@ -26,22 +26,21 @@ package org.knime.base.node.io.table.read;
 
 import javax.swing.JFileChooser;
 
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
-
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Simple dialog with just a file browser.
  * @author wiswedel, University of Konstanz
  */
-public class ReadTableNodeDialogPane extends DefaultNodeDialogPane {
+public class ReadTableNodeDialogPane extends DefaultNodeSettingsPane {
 
     /**
      */
     public ReadTableNodeDialogPane() {
-        super();
         addDialogComponent(new DialogComponentFileChooser(
-                ReadTableNodeModel.CFG_FILENAME, 
+                new SettingsModelString(ReadTableNodeModel.CFG_FILENAME, ""),
                 ReadTableNodeDialogPane.class.getName(), 
                 JFileChooser.OPEN_DIALOG, 
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));

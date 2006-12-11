@@ -24,25 +24,26 @@
  */
 package org.knime.base.node.io.predictor;
 
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
-/** Dialog for the ModelContent Reader Node - allows user to choose file name
- * and directory.
+/**
+ * Dialog for the ModelContent Reader Node - allows user to choose file name and
+ * directory.
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorReaderNodeDialog extends DefaultNodeDialogPane {
-    /** Constructor: create NodeDialog with just one default component,
-     * the file chooser entry.
+public class PredictorReaderNodeDialog extends DefaultNodeSettingsPane {
+    /**
+     * Constructor: create NodeDialog with just one default component, the file
+     * chooser entry.
      */
     public PredictorReaderNodeDialog() {
-        super();
-        DialogComponentFileChooser fcComp
-            = new DialogComponentFileChooser(PredictorReaderNodeModel.FILENAME,
-                    PredictorReaderNodeDialog.class.getName(),
-                new String[]{".pmml.gz", ".pmml"});
-        this.addDialogComponent(fcComp);
+        addDialogComponent(new DialogComponentFileChooser(
+                new SettingsModelString(PredictorReaderNodeModel.FILENAME, ""),
+                        PredictorReaderNodeDialog.class.getName(),
+                new String[]{".pmml.gz", ".pmml"}));
     }
-    
+
 }

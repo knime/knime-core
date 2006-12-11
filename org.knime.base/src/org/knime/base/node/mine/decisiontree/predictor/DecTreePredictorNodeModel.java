@@ -50,6 +50,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  * 
@@ -63,13 +64,17 @@ public class DecTreePredictorNodeModel extends NodeModel {
     public static final int INMODELPORT = 1;
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DecTreePredictorNodeModel.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DecTreePredictorNodeModel.class);
 
     /** XML tag name in configuration file for max num of covered pattern. */
     public static final String MAXCOVERED = "UseGainRatio";
 
-    private int m_maxNumCoveredPattern = 10000;
+    private final SettingsModelIntegerBounded m_maxNumCoveredPattern =
+            new SettingsModelIntegerBounded(MAXCOVERED,
+                    /* default */10000,
+                    /* min: */0,
+                    /* max: */100000);
 
     private DecisionTree m_decTree;
 
@@ -94,8 +99,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt(DecTreePredictorNodeModel.MAXCOVERED,
-                m_maxNumCoveredPattern);
+        m_maxNumCoveredPattern.saveSettingsTo(settings);
     }
 
     /**
@@ -113,10 +117,9 @@ public class DecTreePredictorNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
-            m_maxNumCoveredPattern = settings
-                    .getInt(DecTreePredictorNodeModel.MAXCOVERED);
+            m_maxNumCoveredPattern.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
-            m_maxNumCoveredPattern = 10000;
+            m_maxNumCoveredPattern.setIntValue(10000);
         }
     }
 
@@ -129,8 +132,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
             Exception {
         assert m_decTree != null;
         LOGGER.info("Decision Tree Predictor: start execution.");
-        DataTableSpec outSpec = createOutTableSpec(inData[INDATAPORT]
-                .getDataTableSpec());
+        DataTableSpec outSpec =
+                createOutTableSpec(inData[INDATAPORT].getDataTableSpec());
         DataContainer outData = new DataContainer(outSpec);
         int coveredPattern = 0;
         int nrPattern = 0;
@@ -140,9 +143,10 @@ public class DecTreePredictorNodeModel extends NodeModel {
         for (DataRow thisRow : inData[INDATAPORT]) {
             DataCell cl = null;
             try {
-                cl = m_decTree.classifyPattern(thisRow, inData[INDATAPORT]
-                        .getDataTableSpec());
-                if (coveredPattern < m_maxNumCoveredPattern) {
+                cl =
+                        m_decTree.classifyPattern(thisRow, inData[INDATAPORT]
+                                .getDataTableSpec());
+                if (coveredPattern < m_maxNumCoveredPattern.getIntValue()) {
                     // remember this one for HiLite support
                     m_decTree.addCoveredPattern(thisRow, inData[INDATAPORT]
                             .getDataTableSpec());
@@ -180,8 +184,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
             // let the user know that we did not store all available pattern
             // for HiLiting.
             this.setWarningMessage("Tree only stored first "
-                    + m_maxNumCoveredPattern + " (of " + nrPattern
-                    + ") rows for HiLiting!");
+                    + m_maxNumCoveredPattern.getIntValue() + " (of " 
+                    + nrPattern + ") rows for HiLiting!");
         }
         outData.close();
         LOGGER.info("Decision Tree Predictor: end execution.");
@@ -223,12 +227,12 @@ public class DecTreePredictorNodeModel extends NodeModel {
         return new DataTableSpec[]{createOutTableSpec(inSpecs[INDATAPORT])};
     }
 
-    private static DataTableSpec createOutTableSpec(
-            final DataTableSpec inSpec) {
-        DataColumnSpec newCol = new DataColumnSpecCreator(
-                "Prediction (DecTree)", StringCell.TYPE).createSpec();
-        DataTableSpec newColSpec = new DataTableSpec(
-                new DataColumnSpec[]{newCol});
+    private static DataTableSpec createOutTableSpec(final DataTableSpec inSpec) {
+        DataColumnSpec newCol =
+                new DataColumnSpecCreator("Prediction (DecTree)",
+                        StringCell.TYPE).createSpec();
+        DataTableSpec newColSpec =
+                new DataTableSpec(new DataColumnSpec[]{newCol});
         return new DataTableSpec(inSpec, newColSpec);
     }
 
@@ -278,8 +282,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
         File f = new File(nodeInternDir, INTERNALS_FILE_NAME);
-        ObjectOutputStream out = new ObjectOutputStream(
-                    new FileOutputStream(f));
+        ObjectOutputStream out =
+                new ObjectOutputStream(new FileOutputStream(f));
         out.writeObject(m_decTree);
         out.close();
     }

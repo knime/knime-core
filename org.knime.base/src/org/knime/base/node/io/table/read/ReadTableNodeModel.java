@@ -38,6 +38,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
@@ -52,7 +53,8 @@ public class ReadTableNodeModel extends NodeModel {
     /** The extension of the files to store, \".knime\". */
     public static final String PREFERRED_FILE_EXTENSION = ".table";
     
-    private String m_fileName;
+    private final SettingsModelString m_fileName = 
+        new SettingsModelString(CFG_FILENAME, null);
 
     /**
      * Creates new model with no inputs, one output.
@@ -66,8 +68,8 @@ public class ReadTableNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_fileName != null) {
-            settings.addString(CFG_FILENAME, m_fileName);
+        if (m_fileName.getStringValue() != null) {
+            m_fileName.saveSettingsTo(settings);
         }
 
     }
@@ -78,7 +80,7 @@ public class ReadTableNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getString(CFG_FILENAME);
+        m_fileName.validateSettings(settings);
     }
 
     /**
@@ -87,7 +89,7 @@ public class ReadTableNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_fileName = settings.getString(CFG_FILENAME);
+        m_fileName.loadSettingsFrom(settings);
     }
 
     /**
@@ -96,7 +98,7 @@ public class ReadTableNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        File f = new File(m_fileName);
+        File f = new File(m_fileName.getStringValue());
         DataTable table = DataContainer.readFromZip(f);
         BufferedDataTable out = exec.createBufferedDataTable(table, exec);
         return new BufferedDataTable[]{out};
@@ -115,11 +117,11 @@ public class ReadTableNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_fileName == null) {
+        if (m_fileName.getStringValue() == null) {
             throw new InvalidSettingsException("No file set.");
         }
         try {
-            File f = new File(m_fileName);
+            File f = new File(m_fileName.getStringValue());
             // doesn't hurt to read the table here. It will only parse
             // the spec, not the data content.
             DataTable outTable = DataContainer.readFromZip(f);

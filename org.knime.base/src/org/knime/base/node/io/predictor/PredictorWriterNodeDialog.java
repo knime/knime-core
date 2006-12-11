@@ -26,8 +26,9 @@ package org.knime.base.node.io.predictor;
 
 import javax.swing.JFileChooser;
 
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /** Dialog for the Predictor Writer Node - allows user to choose file name and
@@ -35,18 +36,16 @@ import org.knime.core.node.defaultnodedialog.DialogComponentFileChooser;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorWriterNodeDialog extends DefaultNodeDialogPane {
+public class PredictorWriterNodeDialog extends DefaultNodeSettingsPane {
 
     /** Constructor: create NodeDialog with just one default component,
      * the file chooser entry.
      */
     public PredictorWriterNodeDialog() {
-        super();
-        DialogComponentFileChooser fcComp
-        = new DialogComponentFileChooser(PredictorWriterNodeModel.FILENAME,
+        addDialogComponent(new DialogComponentFileChooser(
+                new SettingsModelString(PredictorWriterNodeModel.FILENAME, ""),
                 PredictorWriterNodeDialog.class.getName(),
-                JFileChooser.SAVE_DIALOG, new String[]{".pmml.gz", ".pmml"});
-        this.addDialogComponent(fcComp);
+                JFileChooser.SAVE_DIALOG, new String[]{".pmml.gz", ".pmml"}));
     }
     
 }
