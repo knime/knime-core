@@ -186,7 +186,9 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
                         .getBounds().height / 2, 400, 200);
             }
 
+            shell.pack();
             shell.open();
+            
 
             text.setFocus();
 
