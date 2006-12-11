@@ -410,8 +410,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#
-     *      hiLite(org.knime.core.node.property.hilite.KeyEvent)
+     * @see HiLiteListener#hiLite(KeyEvent)
      */
     public void hiLite(final KeyEvent event) {
 
@@ -427,12 +426,11 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * Checks for all hilited cells the model. If a key noted as unhilited in
-     * the event occures in a hilited cell the cell is unhilted (principle of
+     * Checks for all hilit cells the model. If a key noted as unhilit in
+     * the event occurs in a hilit cell the cell is unhilit (principle of
      * correctness!!)
      * 
-     * @see org.knime.core.node.property.hilite.HiLiteListener#
-     *      unHiLite(org.knime.core.node.property.hilite.KeyEvent)
+     * @see HiLiteListener#unHiLite(KeyEvent)
      */
     public void unHiLite(final KeyEvent event) {
 
