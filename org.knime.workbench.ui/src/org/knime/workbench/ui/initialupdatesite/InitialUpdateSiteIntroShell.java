@@ -68,7 +68,7 @@ public class InitialUpdateSiteIntroShell {
                                 + "functionality of KNIME and other "
                                 + "Functionality of Eclipse.\n"
                                 + "If you press OK the Eclipse"
-                                + " Upate Wizard opens, that giudes you "
+                                + " Update Wizard opens, that guides you "
                                 + "through the update process.\n"
                                 + "1. Just select 'Search for new features to "
                                 + "install'\n" + "2. Press 'Next'\n"
