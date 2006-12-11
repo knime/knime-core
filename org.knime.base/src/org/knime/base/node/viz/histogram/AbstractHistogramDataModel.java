@@ -37,7 +37,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.StringCell;
 
 /**
- * 
+ * Abstract class which holds all information to paint a histogram bar.
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramDataModel {

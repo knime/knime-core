@@ -30,7 +30,8 @@ import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
 import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
 
 /**
- * 
+ * The dialog of the {@link HistogramNodeModel} where the user can
+ * define the x column and the number of rows. 
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramNodeDialogPane extends DefaultNodeDialogPane {

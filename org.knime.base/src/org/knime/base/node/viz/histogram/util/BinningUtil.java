@@ -31,7 +31,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 
 /**
- * 
+ * This class provides methods to create the bins of numerical bars.
  * @author Tobias Koetter, University of Konstanz
  */
 public final class BinningUtil {

@@ -189,6 +189,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     // **********************************************
     /*--------- the drawing methods ----------------*/
     // **********************************************
+
     /**
      * @see org.knime.base.node.viz.plotter.AbstractDrawingPane#
      * paintContent(java.awt.Graphics)
@@ -445,7 +446,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     // *******Selection methods ***********************
     // **********************************************
     /**
-     * @return all row keys of rows which are belong to a selected bar
+     * @return all row keys of rows which belong to a selected bar
      */
     protected Set<DataCell> getKeys4SelectedBars() {
         if (m_bars == null) {

@@ -49,7 +49,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * 
+ * Abstract class which is the coordinator between the 
+ * {@link HistogramDrawingPane} and the {@link AbstractHistogramDataModel}.
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramPlotter extends AbstractPlotter {
@@ -209,10 +210,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
     
     /**
-     * This is called during resize, or any other pane triggered event.
-     * 
-     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
-     *  #updatePaintModel()
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter#
+     * updatePaintModel()
      */
     @Override
     public void updatePaintModel() {
@@ -1072,8 +1071,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractDrawingPane
-     *      #clearSelection()
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter#clearSelection()
      */
     @Override
     public void clearSelection() {

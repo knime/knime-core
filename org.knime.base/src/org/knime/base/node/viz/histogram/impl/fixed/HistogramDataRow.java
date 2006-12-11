@@ -23,7 +23,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 
 /**
- * 
+ * Saves all information which is needed per row to create ahistogram plotter. 
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramDataRow {

@@ -25,8 +25,8 @@ import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
 import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
 
 /**
- * <code>NodeDialog</code> for the "BayesianClassifier" Node.
- * This is the description of the Bayesian classifier
+ * The dialog of the {@link FixedColumnHistogramNodeModel} where the user can
+ * define the x and aggregation column and the number of rows.
  * 
  * @author Tobias Koetter
  */

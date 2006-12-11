@@ -44,7 +44,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- * 
+ * Abstract class which handles the default properties like x column selection.
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramProperties extends 
