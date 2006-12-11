@@ -27,7 +27,7 @@ package org.knime.base.node.viz.histogram.util;
 import junit.framework.TestCase;
 
 /**
- * This class implements the JUnit tests of the {@link BinningUtil} class
+ * This class implements the JUnit tests of the {@link BinningUtil} class.
  * @author Tobias Koetter, University of Konstanz
  */
 public class BinningUtilTest extends TestCase {
