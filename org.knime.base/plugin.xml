@@ -397,10 +397,6 @@
            factory-class="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"
            id="org.knime.base.node.preproc.normalize.NormalizeApplyNodeFactory"/>
      <node
-           category-path="/manipulation/column"
-           factory-class="org.knime.base.node.preproc.colappender.ColAppenderNodeFactory"
-           id="org.knime.base.node.preproc.colappender.ColAppenderNodeFactory"/>
-     <node
            category-path="/view"
            factory-class="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"
            id="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"/>
