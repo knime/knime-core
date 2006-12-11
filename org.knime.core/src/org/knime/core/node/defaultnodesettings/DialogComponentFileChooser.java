@@ -235,7 +235,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             throws InvalidSettingsException {
 
         String file = (String)m_fileComboBox.getSelectedItem();
-        if ((file != null) && (file.length() > 0)) {
+        if ((file != null) && (file.trim().length() > 0)) {
 
             try {
                 ((SettingsModelString)getModel()).setStringValue(file);
@@ -265,7 +265,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
         String selection = (String)box.getSelectedItem();
 
-        if (selection.length() == 0) {
+        if ((selection == null) || (selection.length() == 0)) {
             box.setBackground(Color.RED);
         } else {
             box.setForeground(Color.RED);
