@@ -54,9 +54,9 @@ public class InitialUpdateSiteIntroShell {
 
     private static final String VALUE_KEY = "checkNextTime";
 
-    private static final int WIDTH = 600;
-
-    private static final int HEIGHT = 350;
+    // private static final int WIDTH = 600;
+    //
+    // private static final int HEIGHT = 350;
 
     /**
      * This method opens a window where the user can decide whether to open the
@@ -198,9 +198,11 @@ public class InitialUpdateSiteIntroShell {
             gridData = new GridData();
             gridData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_BEGINNING;
             gridData.horizontalSpan = 1;
+            gridData.widthHint = 20;
+            gridData.heightHint = 20;
             // gridData.widthHint = 280;
             final Button nextTimeCheck = new Button(shell, SWT.CHECK);
-            // text.setBounds(140, 270, 200, 20);
+           // text.setBounds(140, 270, 200, 20);
             // text.setSize(200, 20);
             nextTimeCheck.setLayoutData(gridData);
             nextTimeCheck.setSelection(true);
@@ -212,11 +214,11 @@ public class InitialUpdateSiteIntroShell {
 
             Composite parent = shell.getParent();
             if (parent != null) {
-                shell.setBounds(parent.getBounds().width / 2, parent
-                        .getBounds().height / 2, WIDTH, HEIGHT);
+                shell.setLocation(parent.getBounds().width / 2, parent
+                        .getBounds().height / 2);
             } else {
-                shell.setBounds(display.getBounds().width / 2 - WIDTH / 2,
-                        display.getBounds().height / 2, WIDTH, HEIGHT);
+                shell.setLocation(display.getBounds().width / 2,
+                        display.getBounds().height / 2);
             }
 
             okButton.setFocus();
@@ -274,6 +276,7 @@ public class InitialUpdateSiteIntroShell {
             cancelButton.addListener(SWT.Selection, cancelListener);
 
             shell.open();
+            shell.pack(true);
 
             while (!shell.isDisposed() && !m_finished) {
                 if (!display.readAndDispatch())
