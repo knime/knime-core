@@ -27,84 +27,79 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 /**
- * Color attribute class holding properties for view objects such as selection, 
- * hilite, selection-hilite, and border color.
- * There is only one instance for each <code>Color</code>.
+ * This class holds a <code>Color</code> value as property for view objects and
+ * supports colors for selection, hilite, selection-hilite, border, and 
+ * background. A <code>ColorAttr</code> is only created once for each color.
+ * 
+ * @see java.awt.Color
  * 
  * @author Thomas Gabriel, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
 public final class ColorAttr implements Serializable {
     
-    /**
-     * The default color.
-     */
+    /** The default color attribute value, used when no color attribute set. */
     public static final ColorAttr DEFAULT;
 
-    /**
-     * The object's color.
-     */
+    /** This attribute's color. */
     private final Color m_attrColor;
     
-    /*
-     * Color variations for different settings (selection/hiliting)
-     */
+    /** This attribute's color for selection. */
     private final Color m_attrColorSelected;
+    
+    /** This attribute's color for hilite. */
     private final Color m_attrColorHilite;
+    
+    /** This attribute's color for selection and hilite. */
     private final Color m_attrColorSelectedHilite;
     
     /**
-     * The color for selection. Created like other colors with the
-     * HILITE color as base color.
-     * Color.getHSBColor(hsbVals[0], 0.2f, 0.7f);
+     * The color for selection as <code>new Color(179, 168, 143)</code>.
      */
     public static final Color SELECTED = new Color(179, 168, 143); 
     
     /**
-     * The color for hilite: orange.
+     * The color for hilite as <code>new Color(255, 181, 0)</code>.
      */
     public static final Color HILITE = new Color(255, 181, 0);
     
     /**
-     * The color for hilite and selection. Created like other colors with the
-     * HILITE color as base color.
-     * Color.getHSBColor(hsbVals[0], 0.2f, 1f);
+     * The color for selection as <code>new Color(255, 240, 204)</code>.
      */
     public static final Color SELECTED_HILITE = new Color(255, 240, 204);   
     
     /**
-     * The color for inactive points ("grayed out"): light gray.
+     * The color for inactive points, "grayed out", as 
+     * <code>Color.LIGHT_GRAY</code>.
      */
     public static final Color INACTIVE = Color.LIGHT_GRAY;
     
     /**
-     * The color for inactive points but selected: gray.
+     * The color for inactive points, "grayed out", but selected as 
+     * <code>Color.GRAY</code>.
      */
     public static final Color INACTIVE_SELECTED = Color.GRAY;
     
     /**
-     * The color of the border: dark gray.
+     * The color for border as <code>Color.DARK_GRAY</code>.
      */
     public static final Color BORDER = Color.DARK_GRAY;
     
     /**
-     * The preferred background color for the panel in which data is displayed.
+     * The color for background as <code>Color.WHITE</code>.
      */
     public static final Color BACKGROUND = Color.WHITE;
     
     /**
-     * Keeps a list of all instanciated ColorAttr with its Color as key.
-     * Prevent from using multiple instances with the same color.
+     * A map of all instanciated <code>Color</code> objects to 
+     * <code>ColorAttr</code> values to prevent multiple objects for the same
+     * color.
      */
     private static final HashMap<Color, ColorAttr> COLORATTRS;
     
-//    private static final float S_NORMAL = 1f;
-//    private static final float S_SELECT = 0.2f;
-//    private static final float B_NORMAL = 0.5f;
-//    private static final float B_HILITE = 1f;
-    
-    /*
-     * Inits Color to ColorAttr map and the default ColorAttr which is also
-     * added to this map.
+    /**
+     * Inits the default color attribute and adds it to the <code>Color</code> 
+     * to <code>ColorAttr</code> map.
      */
     static {
         COLORATTRS = new HashMap<Color, ColorAttr>();
@@ -112,6 +107,9 @@ public final class ColorAttr implements Serializable {
         COLORATTRS.put(DEFAULT.getColor(), DEFAULT);
     }  
     
+    /**
+     * Creates the default color attribute using default color settings.
+     */
     private ColorAttr() {
         m_attrColor = Color.DARK_GRAY;
         m_attrColorSelected = SELECTED;
@@ -119,74 +117,55 @@ public final class ColorAttr implements Serializable {
         m_attrColorHilite = HILITE;
     }
     
-    /*
-     * Creates a new color attribute objects with its initial color.
-     * @param attColor The color for this object.
+    /**
+     * Creates a new color attribute with the given <code>color</code>
+     * as attribute value, hilite, selected, selected and hilite color.
+     * @param color the color for this color attribute
      */
-    private ColorAttr(final Color attColor) {
-        assert (attColor != null);
-        // create color variations for HiLite and/or Selected values
-        float[] hsbVals = new float[3];
-        Color.RGBtoHSB(attColor.getRed(), attColor.getGreen(),
-                attColor.getBlue(), hsbVals);
-        // normal color with  low brightness
-//        m_attrColor = Color.getHSBColor(hsbVals[0], S_NORMAL, B_NORMAL);
-//        // selection color with lower saturation and a bit brighter
-//        m_attrColorSelected = Color.getHSBColor(hsbVals[0], S_SELECT, 
-//                    B_NORMAL + 0.2f);
-//        // hilite color with full saturation and full brightness
-//        m_attrColorHilite = Color.getHSBColor(hsbVals[0], S_NORMAL, B_HILITE);
-//        // hilite and selected with full brightness and lower saturation.
-//        m_attrColorSelectedHilite = Color.getHSBColor(hsbVals[0], S_SELECT, 
-//                B_HILITE);
-        m_attrColor = attColor;
-        m_attrColorHilite = attColor;
-        m_attrColorSelected = attColor;
-        m_attrColorSelectedHilite = attColor;
-        
-        
-        /* old version -> mixed yellow into hilited color 
-        m_attrColor = attColor;
-        m_attrColorSelected =
-            Color.getColor(null, Color.HSBtoRGB(hsbVals[0], 0.6f, 0.6f));
-        m_attrColorHilite = 
-            Color.getColor(null, Color.HSBtoRGB(hsbVals[0] + 0.1f, 1.0f, 1.0f));
-        m_attrColorSelectedHilite =
-            Color.getColor(null, Color.HSBtoRGB(hsbVals[0] + 0.1f, 0.6f, 0.6f));
-            */
+    private ColorAttr(final Color color) {
+        assert (color != null);
+        m_attrColor = color;
+        m_attrColorHilite = color;
+        m_attrColorSelected = color;
+        m_attrColorSelectedHilite = color;
     }
 
     /**
-     * Creates a new color attribute objects with its initial color.
-     * @param c The color for this object.
-     * @return The <code>ColorAttr</code> object for the given Color.
-     * @throws IllegalArgumentException If the Color is <code>null</code>.
+     * Creates a new color attribute with the given color.
+     * @param color the color for this object
+     * @return the <code>ColorAttr</code> object for the given 
+     *         <code>Color</code>
+     * @throws IllegalArgumentException if the <code>Color</code> is 
+     *         <code>null</code>
      */
-    public static ColorAttr getInstance(final Color c) {
-        if (c == null) {
+    public static ColorAttr getInstance(final Color color) {
+        if (color == null) {
             throw new IllegalArgumentException("Color can't be null.");
         }
-        ColorAttr ca = COLORATTRS.get(c);
+        ColorAttr ca = COLORATTRS.get(color);
         if (ca == null) {
-            ca = new ColorAttr(c);
-            COLORATTRS.put(c, ca);
+            ca = new ColorAttr(color);
+            COLORATTRS.put(color, ca);
         }
         return ca;
     }
     
     /**
-     * <code>getColor(false,false)</code>.
-     * @return The color for this object.
+     * Returns this attribute's color value.
+     * @return color of this attribute
+     * 
+     * @see #getColor(boolean, boolean)
      */
     public Color getColor() {
         return m_attrColor;
     }
 
     /**
-     * Returns the color for this object under certain constrains.
-     * @param selected If the border is selected.
-     * @param hilite If the border is hilite.     
-     * @return The color for this object under the given constrains.
+     * Returns the color value for this object under certain constrains.
+     * @param selected if selected property is set
+     * @param hilite if hilite property is set     
+     * @return the color for this object under the given constrains
+     * @see #getColor()
      */
     public Color getColor(final boolean selected, final boolean hilite) {
         if (selected) {
@@ -198,16 +177,17 @@ public final class ColorAttr implements Serializable {
         } else {
             if (hilite) {
                 return m_attrColorHilite;
+            } else {
+                return m_attrColor;
             }
         }
-        return m_attrColor;
     }
     
     /**
      * Returns the border color for this object under certain constrains.
-     * @param selected If the border is selected.
-     * @param hilite If the border is hilite.
-     * @return The color for this objects's border under the given constrains.
+     * @param selected if the border is selected
+     * @param hilite if the border is hilite
+     * @return the color for this objects's border under the given constrains
      */
     public Color getBorderColor(final boolean selected, final boolean hilite) {
         if (selected) {
@@ -219,12 +199,14 @@ public final class ColorAttr implements Serializable {
         } else {
             if (hilite) {
                 return HILITE;
+            } else {
+                return BORDER;
             }
         }
-        return BORDER;
     }
     
     /**
+     * Returns the preferred background color.
      * @return preferred background color
      */
     public static Color getBackground() {
@@ -232,6 +214,7 @@ public final class ColorAttr implements Serializable {
     }
     
     /**
+     * Returns the preferred color for inactive points.
      * @return preferred inactive color
      */
     public static Color getInactiveColor() {
@@ -239,18 +222,26 @@ public final class ColorAttr implements Serializable {
     }
     
     /**
-     * @param catt The other <code>ColorAttr</code>.
-     * @return <code>true</code> if the colors are equal.
+     * Compares this <code>ColorAttr</code> with the given one and returns 
+     * <code>true</code> if both have the same color value.
+     * @param ca the other <code>ColorAttr</code> to compare this one with
+     * @return <code>true</code> if the color values are equal otherwise
+     *         <code>false</code>
      * 
      * @see Color#equals(java.lang.Object)
      */
-    public boolean equals(final ColorAttr catt) {
-        return m_attrColor.equals(catt.getColor());
+    public boolean equals(final ColorAttr ca) {
+        return m_attrColor.equals(ca.getColor());
     }
     
     /**
-     * @param obj The other <code>ColorAttr</code>.
-     * @return <code>true</code> if the colors are equal.
+     * Compares this <code>ColorAttr</code> with the given 
+     * <code>Object</code> and returns 
+     * <code>true</code> if the other is an instance of <code>ColorAttr</code>
+     * and both have the same color value.
+     * @param obj the other <code>ColorAttr</code> to compare this one with
+     * @return <code>true</code> if the color values are equal otherwise
+     *         <code>false</code>
      * 
      * @see #equals(ColorAttr)
      */
@@ -260,8 +251,9 @@ public final class ColorAttr implements Serializable {
     }
     
     /**
+     * Hash code of the underlying color value.
      * @see Color#hashCode()
-     * @return The object's color value.
+     * @return the color value's hash code 
      */
     @Override
     public int hashCode() {
@@ -270,21 +262,22 @@ public final class ColorAttr implements Serializable {
     
     /**
      * A String representation for this color attribute including the 
-     * attribute, hilite, selected, selected-hilite, and border color.
-     * @return A String representation for this color properties.
+     * simple class name, attribute color, hilite, selected, selected-hilite, 
+     * border, and background color.
+     * @return a String representation for this color attribute
      * 
      * @see Color#toString()
      */
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer(getClass().getName());
-        buf.append("attribute:"       + m_attrColor.toString());
-        buf.append("hilite:"          + HILITE.toString());
-        buf.append("selected:"        + SELECTED.toString());
-        buf.append("selected-hilite:" + SELECTED_HILITE.toString());
-        buf.append("border:"          + SELECTED_HILITE.toString());
-        buf.append("background:"      + BACKGROUND.toString());
+        StringBuilder buf = new StringBuilder(getClass().getSimpleName() + ":");
+        buf.append("color="           + m_attrColor.toString() + ",");
+        buf.append("hilite="          + HILITE.toString() + ",");
+        buf.append("selected="        + SELECTED.toString() + ",");
+        buf.append("selected-hilite=" + SELECTED_HILITE.toString() + ",");
+        buf.append("border="          + SELECTED_HILITE.toString() + ",");
+        buf.append("background="      + BACKGROUND.toString());
         return buf.toString(); 
     }
     
-}   // ColorAttr
+}

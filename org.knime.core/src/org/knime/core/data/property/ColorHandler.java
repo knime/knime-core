@@ -32,25 +32,32 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
-
 /**
- * Final <code>ColorHandler</code> implementation which forwards color
- * requests to its internal <code>ColorModel</code>, both are able to
- * save and load their color settings to an <code>Config</code> object.
+ * Final <code>ColorHandler</code> implementation as container which forwards 
+ * color requests for a {@link org.knime.core.data.DataCell} to its underlying 
+ * {@link ColorModel}. The <code>ColorModel</code> can be loaded and saved
+ * from <code>Config</code> object. 
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ColorHandler implements PropertyHandler {
     
+    /** Config key for the color model class. */
+    private static final String CFG_COLOR_MODEL_CLASS = "color_model_class";
+    
+    /** Config key for the color model config. */
+    private static final String CFG_COLOR_MODEL = "color_model";
+    
     /**
-     * Knows about the color settings.
+     * Holds the color model, that is, <code>DataCell</code> to 
+     * <code>ColorAttr</code> mapping.
      */
     private final ColorModel m_model;
     
     /**
      * Create new color handler with the given <code>ColorModel</code>.
-     * @param model The color model which has the color settings.
-     * @throws IllegalArgumentException If the model is <code>null</code>.
+     * @param model the color model which has the color settings
+     * @throws IllegalArgumentException if the model is <code>null</code>
      */
     public ColorHandler(final ColorModel model) {
         if (model == null) {
@@ -61,13 +68,13 @@ public final class ColorHandler implements PropertyHandler {
     
     /**
      * Returns a <code>ColorAttr</code> object as specified by the content
-     * of the given <code>DataCell</code> requested from the underlying 
-     * <code>ColorModel</code>. If no <code>ColorAttr</code>
-     * is assigned to <i>dc</i>, this method shall return a default
-     * color, but never <code>null</code>.
+     * of the given <code>DataCell</code>. Requests are forwarded to the 
+     * underlying <code>ColorModel</code>. If no <code>ColorAttr</code>
+     * is assigned to the given <code>dc</code>, this method returns the
+     * {@link ColorAttr#DEFAULT} as default color, but never <code>null</code>.
      * 
-     * @param dc Value to be used to generate color.
-     * @return A <code>ColorAttr</code> object to be used.
+     * @param dc <code>DataCell</code> used to generate color
+     * @return a <code>ColorAttr</code> object assigned to the given cell
      * @see ColorAttr#DEFAULT
      */
     public ColorAttr getColorAttr(final DataCell dc) {
@@ -78,15 +85,12 @@ public final class ColorHandler implements PropertyHandler {
         return color;
     }
     
-    private static final String CFG_COLOR_MODEL_CLASS = "color_model_class";
-    private static final String CFG_COLOR_MODEL = "color_model";
-    
     /**
-     * Saves the <code>ColorModel</code> to the given <code>Config</code> by
-     * adding a the <code>ColorModel</code> class as String and calling
-     * <code>save()</code> within the model.
-     * @param config Color settings save to.
-     * @throws NullPointerException If the <i>config</i> is <code>null</code>.
+     * Saves the underlying <code>ColorModel</code> to the given
+     * <code>Config</code> by adding the <code>ColorModel</code> class as 
+     * String and calling {@link ColorModel#save(ConfigWO)} within the model.
+     * @param config color settings are saved to
+     * @throws NullPointerException if the <i>config</i> is <code>null</code>
      */
     public void save(final Config config) {
         assert config.keySet().isEmpty() : "Subconfig must be empty: " 
@@ -97,12 +101,15 @@ public final class ColorHandler implements PropertyHandler {
     
     /**
      * Reads the color model settings from the given <code>Config</code>, inits 
-     * the model, and returns a new <code>ColorHandler</code>.
-     * @param config Read color settings from.
-     * @return A new <code>ColorHandler</code> object.
-     * @throws InvalidSettingsException If either the class or color model
-     *         could not be read.
-     * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
+     * a new <code>ColorModel</code>, and returns a new 
+     * <code>ColorHandler</code>.
+     * @param config read color settings from
+     * @return a new <code>ColorHandler</code> object created with the color 
+     *         model settings read from <code>config</code>
+     * @throws InvalidSettingsException if either the class or color model
+     *         settings could not be read
+     * @throws NullPointerException if the <code>config</code> is 
+     *         <code>null</code> 
      */
     public static ColorHandler load(final ConfigRO config) 
             throws InvalidSettingsException {
@@ -120,9 +127,9 @@ public final class ColorHandler implements PropertyHandler {
     }
     
     /**
-     * Returns a string summary of the underlying {@link ColorModel}.
+     * Returns a String summary of the underlying {@link ColorModel}.
      * 
-     * @return a string summary
+     * @return a String summary of the <code>ColorModel</code>
      */
     @Override
     public String toString() {
@@ -131,18 +138,19 @@ public final class ColorHandler implements PropertyHandler {
     
  
     /**
-     * Interface for allowing requests for color settings. Only package visible.
+     * Interface allowing requests for {@link ColorAttr} by {@link DataCell}.
      */
     interface ColorModel {
         /**
-         * Returns the <code>ColorAttr</code> for given attribut value.
-         * @param dc The <code>DataCell</code> to get the color for.
-         * @return A <code>ColorAttr</code> object, but not <code>null</code>.
+         * Returns a <code>ColorAttr</code> for the given <code>DataCell</code>.
+         * @param dc the <code>DataCell</code> to get the color for
+         * @return a <code>ColorAttr</code> object, but not <code>null</code>
          */
         ColorAttr getColorAttr(DataCell dc);
         /**
-         * Save color model settings to the given <code>Config</code>.
-         * @param config Save settings to.
+         * Saves this <code>ColorModel</code> to the given 
+         * <code>ConfigWO</code>.
+         * @param config used to save this <code>ColorModel</code> to
          */
         void save(ConfigWO config);
     }
